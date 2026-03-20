@@ -23,9 +23,10 @@ const TYPING_INDICATOR_DURATION_MS = 10 * 1000;
 interface Props {
   activeUser: Models.User | null;
   authModalId: string;
+  isLoadingActiveUser: boolean;
 }
 
-export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
+export const DirectMessageContainer = ({ activeUser, authModalId, isLoadingActiveUser }: Props) => {
   const { conversationId = "" } = useParams<{ conversationId: string }>();
 
   const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(null);
@@ -102,6 +103,19 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
       }, TYPING_INDICATOR_DURATION_MS);
     }
   });
+
+  if (isLoadingActiveUser) {
+    return (
+      <>
+        <Helmet>
+          <title>ダイレクトメッセージ - CaX</title>
+        </Helmet>
+        <section className="px-6 py-10">
+          <p className="text-cax-text-muted text-center">読み込み中...</p>
+        </section>
+      </>
+    );
+  }
 
   if (activeUser === null) {
     return (

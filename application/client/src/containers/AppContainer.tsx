@@ -68,8 +68,8 @@ export const AppContainer = () => {
         <Suspense fallback={<div style={{ padding: "20px" }}>コンテンツ読み込み中...</div>}>
           <Routes>
             <Route element={<TimelineContainer />} path="/" />
-            <Route element={<DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />} path="/dm" />
-            <Route element={<DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />} path="/dm/:conversationId" />
+            <Route element={<DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} isLoadingActiveUser={isLoadingActiveUser} />} path="/dm" />
+            <Route element={<DirectMessageContainer activeUser={activeUser} authModalId={authModalId} isLoadingActiveUser={isLoadingActiveUser} />} path="/dm/:conversationId" />
             <Route element={<SearchContainer />} path="/search" />
             <Route element={<UserProfileContainer />} path="/users/:username" />
             <Route element={<PostContainer />} path="/posts/:postId" />
