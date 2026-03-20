@@ -5,6 +5,41 @@ import { Comment, Post } from "@web-speed-hackathon-2026/server/src/models";
 
 export const postRouter = Router();
 
+function toPostListItem(post: Post) {
+  const json = post.toJSON() as unknown as {
+    createdAt: string;
+    id: string;
+    images?: Array<{ alt: string; id: string }>;
+    movie?: { id: string } | null;
+    sound?: { artist: string; id: string; title: string } | null;
+    text: string;
+    user: {
+      id: string;
+      name: string;
+      profileImage: { alt: string; id: string };
+      username: string;
+    };
+  };
+
+  return {
+    createdAt: json.createdAt,
+    id: json.id,
+    images: json.images?.map((image) => ({ alt: image.alt, id: image.id })) ?? [],
+    movie: json.movie != null ? { id: json.movie.id } : null,
+    sound:
+      json.sound != null
+        ? { artist: json.sound.artist, id: json.sound.id, title: json.sound.title }
+        : null,
+    text: json.text,
+    user: {
+      id: json.user.id,
+      name: json.user.name,
+      profileImage: { alt: json.user.profileImage.alt, id: json.user.profileImage.id },
+      username: json.user.username,
+    },
+  };
+}
+
 function parseNumberQuery(value: unknown): number | undefined {
   if (typeof value !== "string") {
     return undefined;
@@ -35,7 +70,7 @@ postRouter.get("/posts", async (req, res) => {
     offset,
   });
 
-  return res.status(200).type("application/json").send(posts);
+  return res.status(200).type("application/json").send(posts.map(toPostListItem));
 });
 
 postRouter.get("/posts/:postId", async (req, res) => {

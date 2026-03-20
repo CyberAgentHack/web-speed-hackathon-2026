@@ -1,46 +1,27 @@
-idea0: Remove unnecessary polyfills
-- Target is modern Chrome, remove unneeded core-js polyfills
-- Fix babel targets
+Analyze the app for remaining performance issues. Report findings before making any changes.
 
-idea1: Remove client-side API validation
-- Check if DB ORM schema files are bundled into client
-- Replace with type-only imports + type assertions
+1. Bundle analysis
+   - Run webpack-bundle-analyzer and list top 10 heaviest modules still in main.js
+   - Are there any dependencies that could be removed or lazy-loaded?
 
-idea2: Replace CSS-replaceable libraries
-- Animation libraries → View Transitions API
-- Text truncation libraries → CSS line-clamp
-- Any other JS-only wrapper replaceable with CSS
+2. Network / API
+   - Find any endpoints returning unbounded or very large payloads (no pagination, all fields)
+   - Find N+1 query patterns in server routes
+   - Find any sequential API calls on page load that could be parallelized with Promise.all
+   - Check if any API responses include large text fields (e.g. description, content) that aren't needed by the UI
 
-idea3: Reduce API response size
-- Find heavy endpoints with deeply nested queries
-- Drop unused fields, add limits where only partial data is used
-- Especially check for large text fields (description etc.) bloating responses
+3. Re-render analysis
+   - Check Zustand store selectors — are any using (s) => s (subscribes to entire store)?
+   - Find any setInterval/setTimeout causing periodic re-renders
+   - Find any components re-rendering on every frame or mouse move
 
-idea4: Fix SSR
-- Check if renderToString() result is actually sent in HTML response
-- If not, wire it up to improve FCP
+4. Critical path
+   - Are there any render-blocking scripts or stylesheets in the HTML <head>?
+   - Is SSR output actually hydrating correctly on the client?
+   - Any waterfalled requests that could be preloaded or parallelized?
 
-idea5: Remove unnecessary preload tags
-- Check if HTML contains excessive preload tags
-- Remove ones that aren't needed for initial render
-
-idea6: Suppress unnecessary re-renders
-- Check for global pointer/mouse tracking causing full re-renders
-- Fix state management selectors if subscribing to entire store
-- Replace polling (setInterval) with event-driven updates where possible
-
-idea7: Check for intentional response bloat
-- Check large streaming/playlist responses for padding or random data
-- Remove if found
-
-idea8: Deduplicate video player libraries
-- Check if multiple player libraries are bundled
-- Keep only the lightest one
-
-idea9: Add DB indexes
-- Check for missing indexes on frequently queried columns
-
-idea10: Image lazy loading + CLS fix
-- Add loading="lazy" to off-screen images
-- Add aspect-ratio to prevent layout shift
-- Check if image URLs have cache-busting params that break caching
+5. Known WSH patterns (check if present)
+   - Intentional sleep/delay anywhere still remaining
+   - Cache-Control headers — are static assets getting long-term caching?
+   - Image URLs with cache-busting query params that prevent caching
+   - Any components doing expensive computation on every render that could be memoized
