@@ -6,6 +6,12 @@ export function getOptimizedImagePath(imageId: string, width: number): string {
   return `/api/v1/optimized-image/${imageId}?w=${width}&format=webp`;
 }
 
+export function getOptimizedImageSrcSet(imageId: string, widths: number[]): string {
+  return widths
+    .map((w) => `/api/v1/optimized-image/${imageId}?w=${w}&format=webp ${w}w`)
+    .join(", ");
+}
+
 export function getMoviePath(movieId: string): string {
   return `/movies/${movieId}.gif`;
 }
