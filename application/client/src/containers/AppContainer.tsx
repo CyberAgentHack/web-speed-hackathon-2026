@@ -1,61 +1,20 @@
-import { lazy, Suspense, useCallback, useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 import { Helmet, HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
+import { CrokContainer } from "@web-speed-hackathon-2026/client/src/containers/CrokContainer";
+import { DirectMessageContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer";
+import { DirectMessageListContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer";
+import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
+import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
+import { PostContainer } from "@web-speed-hackathon-2026/client/src/containers/PostContainer";
+import { SearchContainer } from "@web-speed-hackathon-2026/client/src/containers/SearchContainer";
+import { TermContainer } from "@web-speed-hackathon-2026/client/src/containers/TermContainer";
+import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
+import { UserProfileContainer } from "@web-speed-hackathon-2026/client/src/containers/UserProfileContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
-const NewPostModalContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer").then((m) => ({
-    default: m.NewPostModalContainer,
-  })),
-);
-
-const TimelineContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/TimelineContainer").then((m) => ({
-    default: m.TimelineContainer,
-  })),
-);
-const DirectMessageListContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer").then(
-    (m) => ({ default: m.DirectMessageListContainer }),
-  ),
-);
-const DirectMessageContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer").then((m) => ({
-    default: m.DirectMessageContainer,
-  })),
-);
-const SearchContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/SearchContainer").then((m) => ({
-    default: m.SearchContainer,
-  })),
-);
-const UserProfileContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/UserProfileContainer").then((m) => ({
-    default: m.UserProfileContainer,
-  })),
-);
-const PostContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/PostContainer").then((m) => ({
-    default: m.PostContainer,
-  })),
-);
-const TermContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/TermContainer").then((m) => ({
-    default: m.TermContainer,
-  })),
-);
-const CrokContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/CrokContainer").then((m) => ({
-    default: m.CrokContainer,
-  })),
-);
-const NotFoundContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/NotFoundContainer").then((m) => ({
-    default: m.NotFoundContainer,
-  })),
-);
 
 export interface SSRData {
   activeUser?: Models.User | null;
@@ -119,44 +78,38 @@ export const AppContainer = ({ ssrData }: AppContainerProps) => {
         newPostModalId={newPostModalId}
         onLogout={handleLogout}
       >
-        <Suspense fallback={null}>
-          <Routes>
-            <Route element={<TimelineContainer ssrPosts={ssrData?.posts} />} path="/" />
-            <Route
-              element={
-                <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
-              }
-              path="/dm"
-            />
-            <Route
-              element={<DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />}
-              path="/dm/:conversationId"
-            />
-            <Route element={<SearchContainer ssrPosts={ssrData?.posts} />} path="/search" />
-            <Route
-              element={
-                <UserProfileContainer ssrUser={ssrData?.user} ssrPosts={ssrData?.userPosts} />
-              }
-              path="/users/:username"
-            />
-            <Route
-              element={<PostContainer ssrPost={ssrData?.post} ssrComments={ssrData?.comments} />}
-              path="/posts/:postId"
-            />
-            <Route element={<TermContainer />} path="/terms" />
-            <Route
-              element={<CrokContainer activeUser={activeUser} authModalId={authModalId} />}
-              path="/crok"
-            />
-            <Route element={<NotFoundContainer />} path="*" />
-          </Routes>
-        </Suspense>
+        <Routes>
+          <Route element={<TimelineContainer ssrPosts={ssrData?.posts} />} path="/" />
+          <Route
+            element={
+              <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
+            }
+            path="/dm"
+          />
+          <Route
+            element={<DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />}
+            path="/dm/:conversationId"
+          />
+          <Route element={<SearchContainer ssrPosts={ssrData?.posts} />} path="/search" />
+          <Route
+            element={<UserProfileContainer ssrUser={ssrData?.user} ssrPosts={ssrData?.userPosts} />}
+            path="/users/:username"
+          />
+          <Route
+            element={<PostContainer ssrPost={ssrData?.post} ssrComments={ssrData?.comments} />}
+            path="/posts/:postId"
+          />
+          <Route element={<TermContainer />} path="/terms" />
+          <Route
+            element={<CrokContainer activeUser={activeUser} authModalId={authModalId} />}
+            path="/crok"
+          />
+          <Route element={<NotFoundContainer />} path="*" />
+        </Routes>
       </AppPage>
 
       <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
-      <Suspense fallback={null}>
-        <NewPostModalContainer id={newPostModalId} />
-      </Suspense>
+      <NewPostModalContainer id={newPostModalId} />
     </HelmetProvider>
   );
 };
