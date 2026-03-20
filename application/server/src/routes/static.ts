@@ -40,9 +40,9 @@ staticRouter.use(
     setHeaders(res, filePath) {
       if (filePath.endsWith(".html")) {
         res.setHeader("Cache-Control", "no-cache");
-      } else {
-        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        return;
       }
+      res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
     },
   }),
 );
