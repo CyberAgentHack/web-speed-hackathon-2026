@@ -32,7 +32,6 @@ const config = {
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "development",
   module: {
     rules: [
       {
