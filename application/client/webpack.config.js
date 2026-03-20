@@ -33,7 +33,7 @@ const plugins = [
     ],
   }),
   new HtmlWebpackPlugin({
-    inject: false,
+    inject: "body",
     template: path.resolve(SRC_PATH, "./index.html"),
   }),
 ];
@@ -125,12 +125,14 @@ const config = {
     },
   },
   optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
+    minimize: true,
+    splitChunks: {
+      chunks: "all",
+    },
+    concatenateModules: true,
+    usedExports: true,
+    providedExports: true,
+    sideEffects: true,
   },
   cache: {
     type: "filesystem",
