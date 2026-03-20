@@ -1,11 +1,10 @@
 import classNames from "classnames";
 import { Animator, Decoder } from "gifler";
 import { GifReader } from "omggif";
-import { RefCallback, useCallback, useRef, useState } from "react";
+import { RefCallback, useCallback, useEffect, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
@@ -16,9 +15,67 @@ interface Props {
  * クリックすると再生・一時停止を切り替えます。
  */
 export const PausableMovie = ({ src }: Props) => {
-  const { data } = useFetch(src, fetchBinary);
-
   const animatorRef = useRef<Animator>(null);
+  const [buttonElement, setButtonElement] = useState<HTMLButtonElement | null>(null);
+  const [data, setData] = useState<ArrayBuffer | null>(null);
+  const [isActivated, setIsActivated] = useState(false);
+  const buttonRef = useCallback<RefCallback<HTMLButtonElement>>((element) => {
+    setButtonElement(element);
+  }, []);
+
+  useEffect(() => {
+    if (isActivated) {
+      return;
+    }
+
+    if (buttonElement === null) {
+      return;
+    }
+
+    // Synchronize activation with the viewport intersection observer.
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setIsActivated(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "400px 0px" },
+    );
+
+    observer.observe(buttonElement);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [buttonElement, isActivated]);
+
+  useEffect(() => {
+    if (!isActivated) {
+      return;
+    }
+
+    let cancelled = false;
+
+    // Synchronize the loaded GIF binary with the network once the movie is near the viewport.
+    void fetchBinary(src).then(
+      (nextData) => {
+        if (!cancelled) {
+          setData(nextData);
+        }
+      },
+      () => {
+        if (!cancelled) {
+          setData(null);
+        }
+      },
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isActivated, src]);
+
   const canvasCallbackRef = useCallback<RefCallback<HTMLCanvasElement>>(
     (el) => {
       animatorRef.current?.stop();
@@ -67,6 +124,7 @@ export const PausableMovie = ({ src }: Props) => {
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
       <button
         aria-label="動画プレイヤー"
+        ref={buttonRef}
         className="group relative block h-full w-full"
         onClick={handleClick}
         type="button"
