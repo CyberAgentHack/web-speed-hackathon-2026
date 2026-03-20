@@ -14,26 +14,36 @@ export function useHasContentBelow(
   const [hasContentBelow, setHasContentBelow] = useState(false);
 
   useEffect(() => {
-    const check = () => {
-      const endEl = contentEndRef.current;
-      const barEl = boundaryRef.current;
-      if (endEl && barEl) {
-        const endRect = endEl.getBoundingClientRect();
-        const barRect = barEl.getBoundingClientRect();
-        setHasContentBelow(endRect.top > barRect.top);
-      }
+    const contentEl = contentEndRef.current;
+    const barEl = boundaryRef.current;
+    if (!contentEl || !barEl) return;
+
+    let io: IntersectionObserver | null = null;
+
+    // boundaryRef の高さをもとに IntersectionObserver の rootMargin を設定する。
+    // ResizeObserver コールバックはレイアウト計算後に呼ばれるため、
+    // ここで getBoundingClientRect() を読んでも強制 reflow は発生しない。
+    const createObserver = () => {
+      io?.disconnect();
+      const barHeight = barEl.getBoundingClientRect().height;
+      io = new IntersectionObserver(
+        ([entry]) => {
+          setHasContentBelow(!entry!.isIntersecting);
+        },
+        { rootMargin: `0px 0px -${barHeight}px 0px`, threshold: 0 },
+      );
+      io.observe(contentEl);
     };
 
-    check();
+    createObserver();
 
-    const ro = new ResizeObserver(check);
-    if (contentEndRef.current) ro.observe(contentEndRef.current);
-    if (boundaryRef.current) ro.observe(boundaryRef.current);
-    window.addEventListener("scroll", check, { passive: true });
+    // boundaryRef のサイズが変わったら rootMargin を更新する
+    const ro = new ResizeObserver(createObserver);
+    ro.observe(barEl);
 
     return () => {
+      io?.disconnect();
       ro.disconnect();
-      window.removeEventListener("scroll", check);
     };
   }, [contentEndRef, boundaryRef]);
 
