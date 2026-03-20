@@ -21,3 +21,23 @@ applications:
         paths:
           - node_modules/**/*
           - .pnpm-store/**/*
+    backend:
+      phases:
+        preBuild:
+          commands:
+            - nvm install 24.14.0
+            - nvm use 24.14.0
+            - corepack enable
+            - corepack prepare pnpm@10.32.1 --activate
+            - pnpm install --no-frozen-lockfile
+        build:
+          commands:
+            - pnpm --filter @web-speed-hackathon-2026/server run typecheck
+      artifacts:
+        baseDirectory: application/server
+        files:
+          - "**/*"
+      cache:
+        paths:
+          - node_modules/**/*
+          - .pnpm-store/**/*
