@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { getProfileImagePath, getProfileImageSrcSet } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   user: Models.User;
@@ -40,7 +40,10 @@ export const AccountMenu = ({ user, onLogout }: Props) => {
         <img
           alt={user.profileImage.alt}
           className="h-10 w-10 shrink-0 rounded-full object-cover"
+          loading="lazy"
           src={getProfileImagePath(user.profileImage.id)}
+          srcSet={getProfileImageSrcSet(user.profileImage.id)}
+          sizes="40px"
         />
         <div className="hidden min-w-0 flex-1 text-left lg:block">
           <div className="text-cax-text truncate text-sm font-bold">{user.name}</div>

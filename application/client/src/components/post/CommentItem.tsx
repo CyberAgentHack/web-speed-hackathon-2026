@@ -1,7 +1,7 @@
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { formatLL } from "@web-speed-hackathon-2026/client/src/utils/format_date";
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { getProfileImagePath, getProfileImageSrcSet } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   comment: Models.Comment;
@@ -18,7 +18,10 @@ export const CommentItem = ({ comment }: Props) => {
           >
             <img
               alt={comment.user.profileImage.alt}
+              loading="lazy"
               src={getProfileImagePath(comment.user.profileImage.id)}
+              srcSet={getProfileImageSrcSet(comment.user.profileImage.id)}
+              sizes="48px"
             />
           </Link>
         </div>

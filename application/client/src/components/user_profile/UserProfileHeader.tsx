@@ -3,7 +3,7 @@ import { ReactEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { formatLL } from "@web-speed-hackathon-2026/client/src/utils/format_date";
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { getProfileImagePath, getProfileImageSrcSet } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   user: Models.User;
@@ -32,6 +32,8 @@ export const UserProfileHeader = ({ user }: Props) => {
           crossOrigin="anonymous"
           onLoad={handleLoadImage}
           src={getProfileImagePath(user.profileImage.id)}
+          srcSet={getProfileImageSrcSet(user.profileImage.id)}
+          sizes="128px"
         />
       </div>
       <div className="px-4 pt-20">

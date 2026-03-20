@@ -2,7 +2,7 @@ import classNames from "classnames";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { CoveredImage } from "@web-speed-hackathon-2026/client/src/components/foundation/CoveredImage";
-import { getImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { getImagePath, getImageSrcSet } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   images: Models.Image[];
@@ -24,7 +24,12 @@ export const ImageArea = ({ images }: Props) => {
                 "row-span-2": images.length <= 2 || (images.length === 3 && idx === 0),
               })}
             >
-              <CoveredImage alt={image.alt} src={getImagePath(image.id)} />
+              <CoveredImage
+                alt={image.alt}
+                src={getImagePath(image.id)}
+                srcSet={getImageSrcSet(image.id)}
+                sizes={images.length === 1 ? "(min-width: 640px) 640px, 100vw" : "(min-width: 640px) 320px, 50vw"}
+              />
             </div>
           );
         })}

@@ -6,7 +6,7 @@ import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { fromNow } from "@web-speed-hackathon-2026/client/src/utils/format_date";
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { getProfileImagePath, getProfileImageSrcSet } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   activeUser: Models.User;
@@ -87,7 +87,10 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                     <img
                       alt={peer.profileImage.alt}
                       className="w-12 shrink-0 self-start rounded-full"
+                      loading="lazy"
                       src={getProfileImagePath(peer.profileImage.id)}
+                      srcSet={getProfileImageSrcSet(peer.profileImage.id)}
+                      sizes="48px"
                     />
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-center justify-between">
