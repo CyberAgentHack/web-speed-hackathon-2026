@@ -220,6 +220,9 @@ importers:
       '@types/compression':
         specifier: 1.8.1
         version: 1.8.1
+      '@web-speed-hackathon-2026/client':
+        specifier: workspace:*
+        version: link:../client
       '@web-speed-hackathon-2026/server':
         specifier: workspace:*
         version: 'link:'
@@ -250,6 +253,15 @@ importers:
       music-metadata:
         specifier: 11.10.3
         version: 11.10.3
+      react:
+        specifier: 19.2.0
+        version: 19.2.0
+      react-dom:
+        specifier: 19.2.0
+        version: 19.2.0(react@19.2.0)
+      react-router:
+        specifier: 7.9.4
+        version: 7.9.4(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       sequelize:
         specifier: 6.37.7
         version: 6.37.7(sqlite3@5.1.7)
@@ -293,6 +305,12 @@ importers:
       '@types/node':
         specifier: 22.18.8
         version: 22.18.8
+      '@types/react':
+        specifier: 19.2.2
+        version: 19.2.2
+      '@types/react-dom':
+        specifier: 19.2.1
+        version: 19.2.1(@types/react@19.2.2)
       '@types/serve-static':
         specifier: 1.15.9
         version: 1.15.9

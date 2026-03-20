@@ -1,4 +1,5 @@
 import { Suspense, useCallback, useEffect, useId, useState } from "react";
+import { AppBootstrapData } from "@web-speed-hackathon-2026/client/src/bootstrap";
 import { Helmet, HelmetProvider } from "@web-speed-hackathon-2026/client/src/components/foundation/Helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
@@ -40,9 +41,28 @@ function requiresResolvedActiveUser(pathname: string) {
   return pathname === "/crok" || pathname.startsWith("/dm");
 }
 
-export const AppContainer = () => {
+function scheduleDeferredTask(task: () => void) {
+  if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+    const callbackId = window.requestIdleCallback(task, { timeout: 1500 });
+    return () => {
+      window.cancelIdleCallback(callbackId);
+    };
+  }
+
+  const timeoutId = globalThis.setTimeout(task, 250);
+  return () => {
+    globalThis.clearTimeout(timeoutId);
+  };
+}
+
+interface Props {
+  bootstrap?: AppBootstrapData | null;
+}
+
+export const AppContainer = ({ bootstrap = null }: Props) => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const shouldResolveActiveUserImmediately = requiresResolvedActiveUser(pathname);
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
@@ -51,33 +71,44 @@ export const AppContainer = () => {
   const [hasResolvedActiveUser, setHasResolvedActiveUser] = useState(false);
   useEffect(() => {
     let isDisposed = false;
+    const loadActiveUser = () => {
+      void fetchJSON<Models.User>("/api/v1/me")
+        .then((user) => {
+          if (!isDisposed) {
+            setActiveUser(user);
+          }
+        })
+        .catch((error: unknown) => {
+          if (isDisposed) {
+            return;
+          }
+          if (error instanceof HTTPError && error.status === 401) {
+            setActiveUser(null);
+            return;
+          }
+          console.error(error);
+        })
+        .finally(() => {
+          if (!isDisposed) {
+            setHasResolvedActiveUser(true);
+          }
+        });
+    };
 
-    void fetchJSON<Models.User>("/api/v1/me")
-      .then((user) => {
-        if (!isDisposed) {
-          setActiveUser(user);
-        }
-      })
-      .catch((error: unknown) => {
-        if (isDisposed) {
-          return;
-        }
-        if (error instanceof HTTPError && error.status === 401) {
-          setActiveUser(null);
-          return;
-        }
-        console.error(error);
-      })
-      .finally(() => {
-        if (!isDisposed) {
-          setHasResolvedActiveUser(true);
-        }
-      });
+    if (shouldResolveActiveUserImmediately) {
+      loadActiveUser();
+    } else {
+      const cancel = scheduleDeferredTask(loadActiveUser);
+      return () => {
+        isDisposed = true;
+        cancel();
+      };
+    }
 
     return () => {
       isDisposed = true;
     };
-  }, []);
+  }, [shouldResolveActiveUserImmediately]);
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
     setActiveUser(null);
@@ -87,7 +118,7 @@ export const AppContainer = () => {
   const authModalId = useId();
   const newPostModalId = useId();
 
-  if (!hasResolvedActiveUser && requiresResolvedActiveUser(pathname)) {
+  if (!hasResolvedActiveUser && shouldResolveActiveUserImmediately) {
     return (
       <HelmetProvider>
         <Helmet>
@@ -106,7 +137,10 @@ export const AppContainer = () => {
         onLogout={handleLogout}
       >
         <Routes>
-          <Route element={<TimelineContainer />} path="/" />
+          <Route
+            element={<TimelineContainer initialPosts={bootstrap?.initialTimelinePosts} />}
+            path="/"
+          />
           <Route
             element={<DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />}
             path="/dm"

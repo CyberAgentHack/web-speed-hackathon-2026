@@ -11,6 +11,7 @@ interface ReturnValues<T> {
 }
 
 interface Options {
+  initialData?: unknown[];
   initialLimit?: number;
   pageLimit?: number;
 }
@@ -29,12 +30,19 @@ export function useInfiniteFetch<T>(
 ): ReturnValues<T> {
   const initialLimit = options.initialLimit ?? DEFAULT_INITIAL_LIMIT;
   const pageLimit = options.pageLimit ?? DEFAULT_PAGE_LIMIT;
-  const internalRef = useRef({ hasMore: true, isLoading: false, offset: 0 });
+  const initialData = options.initialData as T[] | undefined;
+  const initialOffset = initialData?.length ?? 0;
+  const bootstrappedApiPathRef = useRef(initialData != null && apiPath !== "" ? apiPath : null);
+  const internalRef = useRef({
+    hasMore: apiPath !== "" && initialData != null ? initialOffset === initialLimit : true,
+    isLoading: false,
+    offset: initialOffset,
+  });
 
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
-    data: [],
+    data: initialData ?? [],
     error: null,
-    isLoading: true,
+    isLoading: apiPath !== "" && initialData == null,
   });
 
   const fetchMore = useCallback(() => {
@@ -97,6 +105,11 @@ export function useInfiniteFetch<T>(
       return;
     }
 
+    if (bootstrappedApiPathRef.current === apiPath) {
+      return;
+    }
+
+    bootstrappedApiPathRef.current = null;
     setResult(() => ({
       data: [],
       error: null,

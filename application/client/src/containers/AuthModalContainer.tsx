@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
-import { AuthModalPage } from "@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { HTTPError, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { lazyNamed } from "@web-speed-hackathon-2026/client/src/utils/lazy";
 
 interface Props {
   id: string;
@@ -14,6 +14,14 @@ const ERROR_MESSAGES: Record<string, string> = {
   INVALID_USERNAME: "ユーザー名に使用できない文字が含まれています",
   USERNAME_TAKEN: "ユーザー名が使われています",
 };
+
+const AuthModalPageLazy = lazyNamed(
+  () =>
+    import(
+      /* webpackChunkName: "feature-auth-modal" */ "@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage"
+    ),
+  "AuthModalPage",
+);
 
 function getErrorCode(err: unknown, type: "signin" | "signup"): string {
   const responseJSON = err instanceof HTTPError ? err.responseJSON : null;
@@ -36,6 +44,7 @@ function getErrorCode(err: unknown, type: "signin" | "signup"): string {
 
 export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
+  const [isOpen, setIsOpen] = useState(false);
   const [resetKey, setResetKey] = useState(0);
   useEffect(() => {
     if (!ref.current) return;
@@ -43,6 +52,7 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
 
     const handleToggle = () => {
       // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
+      setIsOpen(element.open);
       setResetKey((key) => key + 1);
     };
     element.addEventListener("toggle", handleToggle);
@@ -76,11 +86,15 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
 
   return (
     <Modal id={id} ref={ref} closedby="any">
-      <AuthModalPage
-        key={resetKey}
-        onRequestCloseModal={handleRequestCloseModal}
-        onSubmit={handleSubmit}
-      />
+      {isOpen ? (
+        <Suspense fallback={null}>
+          <AuthModalPageLazy
+            key={resetKey}
+            onRequestCloseModal={handleRequestCloseModal}
+            onSubmit={handleSubmit}
+          />
+        </Suspense>
+      ) : null}
     </Modal>
   );
 };
