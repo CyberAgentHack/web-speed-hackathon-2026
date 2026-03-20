@@ -4,7 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CaX</title>
-    <link rel="preload" href="/fonts/ReiNoAreMincho-Regular.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- Font preload removed: 3.7MB font was competing for bandwidth with JS/LCP images.
+         With font-display:swap, text shows immediately with fallback font. -->
   </head>
   <body class="bg-cax-canvas text-cax-text">
     <div id="app"><div id="app-loader" style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-size:14px;color:#64748b">読み込み中...</div></div>
