@@ -25,6 +25,11 @@ declare namespace Models {
     user: Models.User;
   }
 
+  interface SearchResults {
+    posts: Array<Models.Post>;
+    totalCount: number;
+  }
+
   interface Image {
     alt: string;
     id: string;

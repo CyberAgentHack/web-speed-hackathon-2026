@@ -14,6 +14,7 @@ import { Button } from "../foundation/Button";
 interface Props {
   query: string;
   results: Models.Post[];
+  totalCount: number;
 }
 
 const SearchInput = ({
@@ -80,7 +81,7 @@ const SearchForm = ({ query }: Pick<Props, "query">) => {
   );
 };
 
-export const SearchPage = ({ query, results }: Props) => {
+export const SearchPage = ({ query, results, totalCount }: Props) => {
   const [isNegative, setIsNegative] = useState(false);
 
   const parsed = parseSearchQuery(query);
@@ -135,7 +136,7 @@ export const SearchPage = ({ query, results }: Props) => {
       {query && (
         <div className="px-4">
           <h2 className="text-lg font-bold">
-            {searchConditionText} の検索結果 ({results.length} 件)
+            {searchConditionText} の検索結果 ({totalCount} 件)
           </h2>
         </div>
       )}

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { Op } from "sequelize";
 
-import { Post } from "@web-speed-hackathon-2026/server/src/models";
+import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 
 export const searchRouter = Router();
@@ -10,14 +10,14 @@ searchRouter.get("/search", async (req, res) => {
   const query = req.query["q"];
 
   if (typeof query !== "string" || query.trim() === "") {
-    return res.status(200).type("application/json").send([]);
+    return res.status(200).type("application/json").send({ posts: [], totalCount: 0 });
   }
 
   const { keywords, sinceDate, untilDate } = parseSearchQuery(query);
 
   // キーワードも日付フィルターもない場合は空配列を返す
   if (!keywords && !sinceDate && !untilDate) {
-    return res.status(200).type("application/json").send([]);
+    return res.status(200).type("application/json").send({ posts: [], totalCount: 0 });
   }
 
   const searchTerm = keywords ? `%${keywords}%` : null;
@@ -35,58 +35,62 @@ searchRouter.get("/search", async (req, res) => {
   const dateWhere =
     dateConditions.length > 0 ? { createdAt: Object.assign({}, ...dateConditions) } : {};
 
-  // テキスト検索条件
-  const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
+  const where: Record<string | symbol, unknown> = {
+    ...dateWhere,
+  };
 
-  const postsByText = await Post.findAll({
+  if (searchTerm) {
+    const matchedUsers = await User.findAll({
+      attributes: ["id"],
+      where: {
+        [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
+      },
+    });
+
+    const matchedUserIds = matchedUsers.map((user) => user.id);
+
+    const searchConditions: Array<Record<string | symbol, unknown>> = [
+      { text: { [Op.like]: searchTerm } },
+    ];
+
+    if (matchedUserIds.length > 0) {
+      searchConditions.push({ userId: { [Op.in]: matchedUserIds } });
+    }
+
+    where[Op.or] = searchConditions;
+  }
+
+  const totalCount = await Post.unscoped().count({ where });
+
+  if (totalCount === 0) {
+    return res.status(200).type("application/json").send({ posts: [], totalCount: 0 });
+  }
+
+  const pagePostIds = await Post.unscoped().findAll({
+    attributes: ["id"],
     limit,
     offset,
+    order: [
+      ["createdAt", "DESC"],
+      ["id", "DESC"],
+    ],
+    where,
+  });
+
+  const orderedIds = pagePostIds.map((post) => post.id);
+
+  if (orderedIds.length === 0) {
+    return res.status(200).type("application/json").send({ posts: [], totalCount });
+  }
+
+  const orderIndex = new Map(orderedIds.map((id, index) => [id, index]));
+  const posts = await Post.findAll({
     where: {
-      ...textWhere,
-      ...dateWhere,
+      id: { [Op.in]: orderedIds },
     },
   });
 
-  // ユーザー名/名前での検索（キーワードがある場合のみ）
-  let postsByUser: typeof postsByText = [];
-  if (searchTerm) {
-    postsByUser = await Post.findAll({
-      include: [
-        {
-          association: "user",
-          attributes: { exclude: ["profileImageId"] },
-          include: [{ association: "profileImage" }],
-          required: true,
-          where: {
-            [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
-          },
-        },
-        {
-          association: "images",
-          through: { attributes: [] },
-        },
-        { association: "movie" },
-        { association: "sound" },
-      ],
-      limit,
-      offset,
-      where: dateWhere,
-    });
-  }
+  posts.sort((left, right) => (orderIndex.get(left.id) ?? 0) - (orderIndex.get(right.id) ?? 0));
 
-  const postIdSet = new Set<string>();
-  const mergedPosts: typeof postsByText = [];
-
-  for (const post of [...postsByText, ...postsByUser]) {
-    if (!postIdSet.has(post.id)) {
-      postIdSet.add(post.id);
-      mergedPosts.push(post);
-    }
-  }
-
-  mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-
-  const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
-
-  return res.status(200).type("application/json").send(result);
+  return res.status(200).type("application/json").send({ posts, totalCount });
 });

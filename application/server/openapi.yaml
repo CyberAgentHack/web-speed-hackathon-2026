@@ -195,9 +195,17 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Post"
+                type: object
+                required:
+                  - posts
+                  - totalCount
+                properties:
+                  posts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Post"
+                  totalCount:
+                    type: integer
         "404":
           $ref: "#/components/responses/NotFound"
   /posts:
