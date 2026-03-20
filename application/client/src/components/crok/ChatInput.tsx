@@ -1,4 +1,4 @@
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
+import type { Tokenizer, IpadicFeatures } from "kuromoji";
 import {
   useEffect,
   useLayoutEffect,
@@ -15,6 +15,7 @@ import {
   filterSuggestionsBM25,
 } from "@web-speed-hackathon-2026/client/src/utils/bm25_search";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { buildKuromojiTokenizer } from "@web-speed-hackathon-2026/client/src/utils/kuromoji_loader";
 
 interface Props {
   isStreaming: boolean;
@@ -96,15 +97,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     let mounted = true;
 
     const init = async () => {
-      const nextTokenizer = await new Promise<Tokenizer<IpadicFeatures>>((resolve, reject) => {
-        kuromoji.builder({ dicPath: "/dicts" }).build((err, tokenizer) => {
-          if (err != null || tokenizer == null) {
-            reject(err ?? new Error("failed to build tokenizer"));
-            return;
-          }
-          resolve(tokenizer);
-        });
-      });
+      const nextTokenizer = await buildKuromojiTokenizer();
       if (mounted) {
         setTokenizer(nextTokenizer);
       }
@@ -135,7 +128,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
       }
 
       const tokens = extractTokens(tokenizer.tokenize(inputValue));
-      const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
+      const results = await filterSuggestionsBM25(tokenizer, candidates, tokens);
 
       if (cancelled) {
         return;

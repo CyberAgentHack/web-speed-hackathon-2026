@@ -32,7 +32,16 @@ export async function convertMovie(file: File, options: Options): Promise<Blob> 
     `crop=${cropOptions}`,
     "-an",
     ...(options.extension === "mp4"
-      ? ["-c:v", "libx264", "-pix_fmt", "yuv420p", "-movflags", "+faststart"]
+      ? [
+          "-c:v",
+          "libx264",
+          "-preset",
+          "ultrafast",
+          "-pix_fmt",
+          "yuv420p",
+          "-movflags",
+          "+faststart",
+        ]
       : []),
     exportFile,
   ];

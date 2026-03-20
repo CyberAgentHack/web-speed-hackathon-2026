@@ -24,15 +24,21 @@ export const CoveredImage = ({ src }: Props) => {
 
   const { data, isLoading } = useFetch(src, fetchBinary);
 
+  const binaryStringFromArrayBuffer = useCallback((buffer: ArrayBuffer) => {
+    return new TextDecoder("latin1").decode(new Uint8Array(buffer));
+  }, []);
+
   const imageSize = useMemo(() => {
-    return data != null ? sizeOf(Buffer.from(data)) : { height: 0, width: 0 };
+    return data != null ? sizeOf(new Uint8Array(data)) : { height: 0, width: 0 };
   }, [data]);
 
   const alt = useMemo(() => {
-    const exif = data != null ? load(Buffer.from(data).toString("binary")) : null;
+    const exif = data != null ? load(binaryStringFromArrayBuffer(data)) : null;
     const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-    return raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
-  }, [data]);
+    return raw != null
+      ? new TextDecoder().decode(Uint8Array.from(raw, (char) => char.charCodeAt(0)))
+      : "";
+  }, [binaryStringFromArrayBuffer, data]);
 
   const blobUrl = useMemo(() => {
     return data != null ? URL.createObjectURL(new Blob([data])) : null;

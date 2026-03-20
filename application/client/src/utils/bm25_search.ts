@@ -1,4 +1,3 @@
-import { BM25 } from "bayesian-bm25";
 import type { Tokenizer, IpadicFeatures } from "kuromoji";
 
 const STOP_POS = new Set(["助詞", "助動詞", "記号"]);
@@ -15,13 +14,21 @@ export function extractTokens(tokens: IpadicFeatures[]): string[] {
 /**
  * BM25で候補をスコアリングして、クエリと類似度の高い上位10件を返す
  */
-export function filterSuggestionsBM25(
+let bm25Promise: Promise<typeof import("bayesian-bm25")> | null = null;
+
+async function loadBM25Module(): Promise<typeof import("bayesian-bm25")> {
+  bm25Promise ??= import("bayesian-bm25");
+  return bm25Promise;
+}
+
+export async function filterSuggestionsBM25(
   tokenizer: Tokenizer<IpadicFeatures>,
   candidates: string[],
   queryTokens: string[],
-): string[] {
+): Promise<string[]> {
   if (queryTokens.length === 0) return [];
 
+  const { BM25 } = await loadBM25Module();
   const bm25 = new BM25({ k1: 1.2, b: 0.75 });
 
   const tokenizedCandidates = candidates.map((c) => extractTokens(tokenizer.tokenize(c)));

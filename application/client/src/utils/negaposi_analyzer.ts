@@ -1,17 +1,4 @@
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
-import analyze from "negaposi-analyzer-ja";
-
-async function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
-  return await new Promise((resolve, reject) => {
-    kuromoji.builder({ dicPath: "/dicts" }).build((err, tokenizer) => {
-      if (err != null || tokenizer == null) {
-        reject(err ?? new Error("failed to build tokenizer"));
-        return;
-      }
-      resolve(tokenizer);
-    });
-  });
-}
+import { buildKuromojiTokenizer } from "@web-speed-hackathon-2026/client/src/utils/kuromoji_loader";
 
 type SentimentResult = {
   score: number;
@@ -19,7 +6,10 @@ type SentimentResult = {
 };
 
 export async function analyzeSentiment(text: string): Promise<SentimentResult> {
-  const tokenizer = await getTokenizer();
+  const [{ default: analyze }, tokenizer] = await Promise.all([
+    import("negaposi-analyzer-ja"),
+    buildKuromojiTokenizer(),
+  ]);
   const tokens = tokenizer.tokenize(text);
 
   const score = analyze(tokens);
