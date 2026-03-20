@@ -11,6 +11,9 @@ const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
 
+const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
+
+
 /** @type {import('webpack').Configuration} */
 const config = {
   devServer: {
@@ -94,6 +97,10 @@ const config = {
       inject: false,
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
+    new BundleAnalyzerPlugin({
+      analyzerMode: 'disabled', // stats.jsonファイルのみを出力
+      generateStatsFile: true,
+    })
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
