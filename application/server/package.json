@@ -11,6 +11,7 @@
         "start:local": "tsx --env-file=.env src/index.ts",
         "typecheck": "tsc --noEmit",
         "seed:generate": "tsx ./scripts/generateSeeds.ts",
+        "seed:generate:local": "tsx --env-file=.env ./scripts/generateSeeds.ts",
         "seed:insert": "tsx ./scripts/insertSeeds.ts"
     },
     "dependencies": {
@@ -34,6 +35,7 @@
         "mariadb": "3.5.2",
         "music-metadata": "11.10.3",
         "negaposi-analyzer-ja": "1.0.1",
+        "node-web-audio-api": "1.0.8",
         "sequelize": "6.37.7",
         "serve-static": "2.2.0",
         "tiny-invariant": "1.3.3",

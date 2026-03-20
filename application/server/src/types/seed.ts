@@ -35,7 +35,7 @@ export type ImageSeed = DateToString<Pick<InferAttributes<Image>, "id" | "alt" |
 
 export type MovieSeed = Pick<InferAttributes<Movie>, "id">;
 
-export type SoundSeed = Pick<InferAttributes<Sound>, "id" | "title" | "artist">;
+export type SoundSeed = Pick<InferAttributes<Sound>, "id" | "title" | "artist" | "peaks">;
 
 export type PostSeed = DateToString<
   Pick<InferAttributes<Post>, "id" | "userId" | "movieId" | "soundId" | "text" | "createdAt">
