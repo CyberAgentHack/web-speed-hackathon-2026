@@ -30,8 +30,6 @@ const config = {
   devtool: isProd ? "source-map" : "inline-source-map",
   entry: {
     main: [
-      "core-js",
-      "regenerator-runtime/runtime",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
@@ -128,7 +126,21 @@ const config = {
   },
   optimization: {
     minimize: isProd,
-    splitChunks: isProd ? { chunks: "async" } : false,
+    runtimeChunk: isProd ? "single" : false,
+    splitChunks: isProd
+      ? {
+          chunks: "all",
+          cacheGroups: {
+            defaultVendors: {
+              reuseExistingChunk: true,
+            },
+            default: {
+              minChunks: 2,
+              reuseExistingChunk: true,
+            },
+          },
+        }
+      : false,
     concatenateModules: isProd,
     usedExports: isProd,
     providedExports: isProd,
