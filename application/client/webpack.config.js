@@ -100,6 +100,7 @@ const config = {
     }),
     new HtmlWebpackPlugin({
       template: path.resolve(SRC_PATH, "./index.html"),
+      scriptLoading: "defer",
     }),
     new BundleAnalyzerPlugin({
       analyzerMode: "static",

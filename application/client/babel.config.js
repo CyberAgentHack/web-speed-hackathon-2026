@@ -8,7 +8,8 @@ module.exports = {
       {
         targets: ["last 1 Chrome version"],
         modules: false,
-        useBuiltIns: false,
+        useBuiltIns: "usage",
+        corejs: 3,
       },
     ],
     [

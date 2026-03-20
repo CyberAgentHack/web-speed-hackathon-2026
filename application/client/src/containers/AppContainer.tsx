@@ -11,6 +11,7 @@ const NewPostModalContainer = React.lazy(() =>
   import(/* webpackChunkName: "NewPost" */ "./NewPostModalContainer"),
 );
 import { fetchJSON, sendJSON } from "../utils/fetchers";
+import TimelineContainer from "./TimelineContainer";
 
 const CrokContainer = React.lazy(() =>
   import(/* webpackChunkName: "Crok" */ "./CrokContainer"),
@@ -33,9 +34,10 @@ const SearchContainer = React.lazy(() =>
 const TermContainer = React.lazy(() =>
   import(/* webpackChunkName: "Term" */ "./TermContainer"),
 );
-const TimelineContainer = React.lazy(() =>
-  import(/* webpackChunkName: "Timeline" */ "./TimelineContainer"),
-);
+// Static import for LCP optimization
+// const TimelineContainer = React.lazy(() =>
+//   import(/* webpackChunkName: "Timeline" */ "./TimelineContainer"),
+// );
 const UserProfileContainer = React.lazy(() =>
   import(/* webpackChunkName: "UserProfile" */ "./UserProfileContainer"),
 );
