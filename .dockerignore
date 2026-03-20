@@ -30,6 +30,18 @@ application/e2e
 docs
 scoring-tool
 
-# Server runtime data
+# Server runtime data (recreated or mounted at runtime)
 application/server/seeds
 application/server/upload
+
+# Server files not needed in the Docker image
+application/server/scripts
+application/server/openapi.yaml
+application/server/.gitignore
+
+# Test configs (not used in any build step)
+**/vitest.config.*
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx

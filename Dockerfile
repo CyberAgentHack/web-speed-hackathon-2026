@@ -12,27 +12,49 @@ ENV PNPM_HOME=/pnpm
 WORKDIR /app
 RUN --mount=type=cache,target=/root/.npm npm install -g pnpm@${PNPM_VERSION}
 
-FROM base AS build
+# ── deps-full: full install (for client build) ────────────────────────────────
+FROM base AS deps-full
 
 COPY ./application/package.json ./application/pnpm-lock.yaml ./application/pnpm-workspace.yaml ./
 COPY ./application/client/package.json ./client/package.json
 COPY ./application/server/package.json ./server/package.json
 RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile
 
-COPY ./application .
+# ── deps-prod: server-only prod install (runs in parallel with deps-full) ─────
+FROM base AS deps-prod
 
+COPY ./application/package.json ./application/pnpm-lock.yaml ./application/pnpm-workspace.yaml ./
+COPY ./application/client/package.json ./client/package.json
+COPY ./application/server/package.json ./server/package.json
+RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile --prod --filter @web-speed-hackathon-2026/server
+
+# ── build: compile client only (server source never needed here) ──────────────
+FROM deps-full AS build
+
+COPY ./application/client ./client
 RUN NODE_OPTIONS="--max-old-space-size=4096" pnpm build
 
-RUN --mount=type=cache,target=/pnpm/store CI=true pnpm install --frozen-lockfile --prod --filter @web-speed-hackathon-2026/server
-
+# ── final image ───────────────────────────────────────────────────────────────
 FROM base
 
-COPY --from=build /app/package.json /app/pnpm-workspace.yaml ./
+# Workspace manifests (pnpm needs these to resolve --filter server start)
+COPY --from=build /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
 COPY --from=build /app/client/package.json ./client/package.json
-COPY --from=build /app/server ./server
+
+# Server: only runtime-necessary files (no scripts/, no openapi.yaml)
+COPY ./application/server/package.json ./server/package.json
+COPY ./application/server/tsconfig.json ./server/tsconfig.json
+COPY ./application/server/database.sqlite ./server/database.sqlite
+COPY ./application/server/src ./server/src
+
+# Built client output (served as static files by the server)
 COPY --from=build /app/dist ./dist
-COPY --from=build /app/public ./public
-COPY --from=build /app/node_modules ./node_modules
+
+# Seed images — large but required at runtime
+COPY ./application/public ./public
+
+# Production node_modules (from clean server-only install, not pruned from full)
+COPY --from=deps-prod /app/node_modules ./node_modules
 
 EXPOSE 8080
 CMD [ "pnpm", "start" ]
