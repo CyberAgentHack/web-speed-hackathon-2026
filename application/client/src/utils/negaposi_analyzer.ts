@@ -1,5 +1,4 @@
 import type { Tokenizer, IpadicFeatures } from "kuromoji";
-import analyze from "negaposi-analyzer-ja";
 
 async function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
   const [{ default: Bluebird }, { default: kuromoji }] = await Promise.all([
@@ -16,7 +15,10 @@ type SentimentResult = {
 };
 
 export async function analyzeSentiment(text: string): Promise<SentimentResult> {
-  const tokenizer = await getTokenizer();
+  const [tokenizer, { default: analyze }] = await Promise.all([
+    getTokenizer(),
+    import("negaposi-analyzer-ja"),
+  ]);
   const tokens = tokenizer.tokenize(text);
 
   const score = analyze(tokens);
