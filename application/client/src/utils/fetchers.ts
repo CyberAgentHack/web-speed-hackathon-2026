@@ -1,5 +1,3 @@
-import { gzip } from "pako";
-
 interface FetchError extends Error {
   response: Response;
   responseJSON?: unknown;
@@ -42,15 +40,10 @@ export async function sendFile<T>(url: string, file: File): Promise<T> {
 }
 
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
-  const jsonString = JSON.stringify(data);
-  const uint8Array = new TextEncoder().encode(jsonString);
-  const compressed = gzip(uint8Array);
-
   const response = await fetch(url, {
     method: "POST",
-    body: compressed,
+    body: JSON.stringify(data),
     headers: {
-      "Content-Encoding": "gzip",
       "Content-Type": "application/json",
     },
   });
