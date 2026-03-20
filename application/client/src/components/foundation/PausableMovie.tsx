@@ -13,18 +13,36 @@ interface Props {
  */
 export const PausableMovie = ({ src }: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(true);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry?.isIntersecting) {
+        setIsVisible(true);
+        observer.disconnect();
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible) return;
     const video = videoRef.current;
     if (video == null) return;
 
-    // 視覚効果 off のとき動画を自動再生しない
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       video.pause();
       setIsPlaying(false);
+    } else {
+      void video.play().then(() => setIsPlaying(true));
     }
-  }, []);
+  }, [isVisible]);
 
   const handleClick = useCallback(() => {
     const video = videoRef.current;
@@ -41,32 +59,34 @@ export const PausableMovie = ({ src }: Props) => {
 
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
-      <button
-        aria-label="動画プレイヤー"
-        className="group relative block h-full w-full"
-        onClick={handleClick}
-        type="button"
-      >
-        <video
-          ref={videoRef}
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="h-full w-full object-cover"
-          src={src}
-        />
-        <div
-          className={classNames(
-            "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
-            {
-              "opacity-0 group-hover:opacity-100": isPlaying,
-            },
-          )}
+      <div ref={containerRef} className="h-full w-full">
+        <button
+          aria-label="動画プレイヤー"
+          className="group relative block h-full w-full"
+          onClick={handleClick}
+          type="button"
         >
-          <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
-        </div>
-      </button>
+          <video
+            ref={videoRef}
+            loop
+            muted
+            playsInline
+            preload={isVisible ? "auto" : "none"}
+            className="h-full w-full object-cover"
+            src={isVisible ? src : undefined}
+          />
+          <div
+            className={classNames(
+              "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
+              {
+                "opacity-0 group-hover:opacity-100": isPlaying,
+              },
+            )}
+          >
+            <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
+          </div>
+        </button>
+      </div>
     </AspectRatioBox>
   );
 };
