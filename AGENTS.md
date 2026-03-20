@@ -119,15 +119,7 @@ Dockerfile: マルチステージビルド → Fly.io（NRTリージョン、1CP
 - **E2Eテストは基本的に開発サーバー（`pnpm dev`、ポート8080）に対して実行する**。devサーバーはHMR対応のため、コード変更後に再起動する必要はない。ただし、devサーバーが起動していない場合は自分で起動せずユーザーに通知すること
 - `pnpm start`（3001）に対して E2E を実行する場合は `E2E_BASE_URL=http://localhost:3001 pnpm test`
 - Playwright が Chrome を起動する際にサンドボックスの権限エラーが発生するため、E2E テスト実行時は `dangerouslyDisableSandbox: true` で実行すること
-最初のe2e結果はこの通り。下記二つはflakyとして扱って良い。
-```
- Slow test file: [Desktop Chrome] › src/posting.test.ts (21.9s)
-  Consider running tests from slow files in parallel, see https://playwright.dev/docs/test-parallel.
-  2 flaky
-    [Desktop Chrome] › src/crok-chat.test.ts:13:3 › Crok AIチャット › サジェスト候補が表示される ──────────────
-    [Desktop Chrome] › src/dm.test.ts:38:3 › DM一覧 › 新規DM開始モーダルが初期仕様通りにバリデーションされること ───────────
-  50 passed (3.3m)
-```
+- **E2Eが失敗した場合は `agent-browser` skill を使ってブラウザで実際の画面を確認しデバッグすること**
 
 ## Ralph Workflow
 
