@@ -10,7 +10,7 @@ import { swrConfig } from "@web-speed-hackathon-2026/client/src/api/swr";
 import {
   AppContainer,
   type SSRData,
-} from "@web-speed-hackathon-2026/client/src/containers/AppContainer";
+} from "@web-speed-hackathon-2026/client/src/containers/AppContainer.ssr";
 
 export type { SSRData };
 
