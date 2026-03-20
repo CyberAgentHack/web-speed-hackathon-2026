@@ -26,4 +26,22 @@ export async function initializeSequelize() {
     storage: TEMP_PATH,
   });
   initModels(_sequelize);
+  await createIndexes(_sequelize);
+}
+
+async function createIndexes(sequelize: Sequelize) {
+  const indexes = [
+    `CREATE INDEX IF NOT EXISTS idx_posts_user_id ON Posts (userId)`,
+    `CREATE INDEX IF NOT EXISTS idx_posts_created_at ON Posts (createdAt)`,
+    `CREATE INDEX IF NOT EXISTS idx_comments_post_id ON Comments (postId)`,
+    `CREATE INDEX IF NOT EXISTS idx_direct_messages_conversation_id ON DirectMessages (conversationId)`,
+    `CREATE INDEX IF NOT EXISTS idx_direct_messages_sender_is_read ON DirectMessages (senderId, isRead)`,
+    `CREATE INDEX IF NOT EXISTS idx_dm_conversations_initiator_id ON DirectMessageConversations (initiatorId)`,
+    `CREATE INDEX IF NOT EXISTS idx_dm_conversations_member_id ON DirectMessageConversations (memberId)`,
+    `CREATE INDEX IF NOT EXISTS idx_posts_images_post_id ON PostsImagesRelations (postId)`,
+    `CREATE INDEX IF NOT EXISTS idx_posts_images_image_id ON PostsImagesRelations (imageId)`,
+    `CREATE INDEX IF NOT EXISTS idx_users_profile_image_id ON Users (profileImageId)`,
+  ];
+
+  await Promise.all(indexes.map((sql) => sequelize.query(sql)));
 }
