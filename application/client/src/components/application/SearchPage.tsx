@@ -73,7 +73,7 @@ const SearchPageComponent = ({
   const searchConditionText = useMemo(() => {
     const parts: string[] = [];
     if (parsed.keywords) {
-      parts.push(`「${parsed.keywords}」`);
+      parts.push(`「${parsed.keywords}」を含むテキスト`);
     }
     if (parsed.sinceDate) {
       parts.push(`${parsed.sinceDate} 以降`);
