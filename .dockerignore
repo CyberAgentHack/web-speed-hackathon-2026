@@ -1,6 +1,35 @@
-node_modules
-.git
-*.log
+# VCS
+**/.git
+**/.github
 
+# Logs
+**/*.log
+
+# Dependencies (reinstalled in Docker)
+**/node_modules
+**/pnpm-store
+**/.npm
+**/.cache
+
+# Build artifacts
+**/dist
+**/build
+**/coverage
+
+# Environment & secrets
+**/.env
+**/.env.*
+
+# Editor & OS
+**/.vscode
+**/.DS_Store
+**/tmp
+
+# Dev/test artifacts
+application/e2e
+docs
+scoring-tool
+
+# Server runtime data
 application/server/seeds
 application/server/upload
