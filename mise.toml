@@ -7,6 +7,18 @@ node = "24.14.0"
 _.file = ".env"
 APP_URL = "http://localhost:3000"
 
+[tasks.install]
+description = "依存パッケージをインストールする (application + scoring-tool)"
+depends = ["install:app", "install:scoring"]
+
+[tasks."install:app"]
+description = "application の依存パッケージをインストールする"
+run = "pnpm -C application install"
+
+[tasks."install:scoring"]
+description = "scoring-tool の依存パッケージをインストールする"
+run = "pnpm -C scoring-tool install"
+
 [tasks.build]
 description = "クライアントをビルドする"
 run = "pnpm -C application build"
