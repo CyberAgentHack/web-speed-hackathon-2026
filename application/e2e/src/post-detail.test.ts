@@ -111,10 +111,10 @@ test.describe("投稿詳細 - 写真", () => {
     const coveredImage = page.locator(".grid img").first();
     await expect(coveredImage).toBeVisible({ timeout: 30_000 });
 
-    const position = await coveredImage.evaluate((el) => {
-      return window.getComputedStyle(el).position;
+    const objectFit = await coveredImage.evaluate((el) => {
+      return window.getComputedStyle(el).objectFit;
     });
-    expect(position).toBe("absolute");
+    expect(objectFit).toBe("cover");
 
     const naturalWidth = await coveredImage.evaluate((el: HTMLImageElement) => el.naturalWidth);
     expect(naturalWidth).toBeGreaterThan(100);
