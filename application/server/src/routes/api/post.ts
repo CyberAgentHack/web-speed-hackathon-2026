@@ -7,8 +7,9 @@ export const postRouter = Router();
 
 postRouter.get("/posts", async (req, res) => {
   const posts = await Post.scope("withAll").findAll({
-    limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
-    offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
+    limit: req.query["limit"] != null ? Number(req.query["limit"]) : 30,
+    offset: req.query["offset"] != null ? Number(req.query["offset"]) : 0,
+    order: [["createdAt", "DESC"]],
   });
 
   return res.status(200).type("application/json").send(posts);
