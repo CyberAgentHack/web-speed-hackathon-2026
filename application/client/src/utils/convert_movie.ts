@@ -1,5 +1,3 @@
-import { loadFFmpeg } from "@web-speed-hackathon-2026/client/src/utils/load_ffmpeg";
-
 interface Options {
   extension: string;
   size?: number | undefined;
@@ -9,35 +7,38 @@ interface Options {
  * 先頭 5 秒のみ、正方形にくり抜かれた無音動画を作成します
  */
 export async function convertMovie(file: File, options: Options): Promise<Blob> {
-  const ffmpeg = await loadFFmpeg();
+  // FIXME: Crop first 5s square
+  return new Blob([file]);
 
-  const cropOptions = [
-    "'min(iw,ih)':'min(iw,ih)'",
-    options.size ? `scale=${options.size}:${options.size}` : undefined,
-  ]
-    .filter(Boolean)
-    .join(",");
-  const exportFile = `export.${options.extension}`;
+  // const ffmpeg = await loadFFmpeg();
 
-  await ffmpeg.writeFile("file", new Uint8Array(await file.arrayBuffer()));
+  // const cropOptions = [
+  //   "'min(iw,ih)':'min(iw,ih)'",
+  //   options.size ? `scale=${options.size}:${options.size}` : undefined,
+  // ]
+  //   .filter(Boolean)
+  //   .join(",");
+  // const exportFile = `export.${options.extension}`;
 
-  await ffmpeg.exec([
-    "-i",
-    "file",
-    "-t",
-    "5",
-    "-r",
-    "10",
-    "-vf",
-    `crop=${cropOptions}`,
-    "-an",
-    exportFile,
-  ]);
+  // await ffmpeg.writeFile("file", new Uint8Array(await file.arrayBuffer()));
 
-  const output = (await ffmpeg.readFile(exportFile)) as Uint8Array<ArrayBuffer>;
+  // await ffmpeg.exec([
+  //   "-i",
+  //   "file",
+  //   "-t",
+  //   "5",
+  //   "-r",
+  //   "10",
+  //   "-vf",
+  //   `crop=${cropOptions}`,
+  //   "-an",
+  //   exportFile,
+  // ]);
 
-  ffmpeg.terminate();
+  // const output = (await ffmpeg.readFile(exportFile)) as Uint8Array<ArrayBuffer>;
 
-  const blob = new Blob([output]);
-  return blob;
+  // ffmpeg.terminate();
+
+  // const blob = new Blob([output]);
+  // return blob;
 }

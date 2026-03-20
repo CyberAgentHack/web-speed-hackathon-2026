@@ -1,14 +1,12 @@
-import { initializeImageMagick, ImageMagick, MagickFormat } from "@imagemagick/magick-wasm";
-import { dump, insert, ImageIFD } from "piexifjs";
+import { MagickFormat } from "@imagemagick/magick-wasm";
 
 interface Options {
   extension: MagickFormat;
 }
 
-export async function convertImage(file: File, options: Options): Promise<Blob> {
-  throw new Error("This function uses imagemagick that is inlined to the script and I am not going that to happen");
-
-  // const magickWasm = await import("@imagemagick/magick-wasm/magick.wasm?binary");
+export function convertImage(file: File, options: Options): Promise<Blob> {
+  // probably want to fix the alt
+  return Promise.resolve(new Blob([file]));
 
   // await initializeImageMagick(magickWasm);
 
