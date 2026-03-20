@@ -32,10 +32,10 @@ authRouter.post("/signin", async (req, res) => {
   });
 
   if (user === null) {
-    throw new httpErrors.BadRequest();
+    return res.status(400).type("application/json").send({ code: "INVALID_CREDENTIALS" });
   }
   if (!user.validPassword(req.body.password)) {
-    throw new httpErrors.BadRequest();
+    return res.status(400).type("application/json").send({ code: "INVALID_CREDENTIALS" });
   }
 
   req.session.userId = user.id;
