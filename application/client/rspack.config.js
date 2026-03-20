@@ -42,7 +42,7 @@ const config = {
                 parser: { syntax: "typescript", tsx: true },
                 transform: { react: { runtime: "automatic" } },
               },
-              env: { targets: "> 0.5%, not dead" },
+              env: { targets: "last 1 Chrome version" },
             },
           },
         ],
@@ -97,6 +97,7 @@ const config = {
     process.env.RSDOCTOR && new RsdoctorRspackPlugin(),
   ].filter(Boolean),
   resolve: {
+    conditionNames: ["browser", "import", "module", "..."],
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
     alias: {
       "bayesian-bm25$": path.resolve(__dirname, "node_modules", "bayesian-bm25/dist/index.js"),
