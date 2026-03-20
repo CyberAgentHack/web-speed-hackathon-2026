@@ -51,23 +51,8 @@ const SearchPageComponent = ({
       setIsNegative(false);
       return;
     }
-
-    let isMounted = true;
-    analyzeSentiment(parsed.keywords)
-      .then((result) => {
-        if (isMounted) {
-          setIsNegative(result.label === "negative");
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setIsNegative(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
+    const result = analyzeSentiment(parsed.keywords);
+    setIsNegative(result.label === "negative");
   }, [parsed.keywords]);
 
   const searchConditionText = useMemo(() => {
