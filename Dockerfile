@@ -22,12 +22,7 @@ RUN pnpm install --frozen-lockfile
 
 COPY ./application .
 
-RUN echo "cache-bust-v2" && NODE_OPTIONS="--max-old-space-size=4096" pnpm build
-
-# Convert seed GIF movies to MP4 for native <video> playback
-RUN for gif in public/movies/*.gif; do \
-    ffmpeg -i "$gif" -c:v libx264 -crf 28 -preset fast -an -movflags +faststart -y "${gif%.gif}.mp4" && echo "Converted: $gif" || echo "Skipped: $gif"; \
-  done
+RUN echo "cache-bust-v3" && NODE_OPTIONS="--max-old-space-size=4096" pnpm build
 
 RUN CI=true pnpm install --frozen-lockfile --prod --filter @web-speed-hackathon-2026/server
 
