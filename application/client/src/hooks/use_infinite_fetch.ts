@@ -2,6 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const LIMIT = 30;
 
+function buildPagedUrl(apiPath: string, limit: number, offset: number): string {
+  const separator = apiPath.includes("?") ? "&" : "?";
+  return `${apiPath}${separator}limit=${String(limit)}&offset=${String(offset)}`;
+}
+
 interface ReturnValues<T> {
   data: Array<T>;
   error: Error | null;
@@ -13,7 +18,7 @@ export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
 ): ReturnValues<T> {
-  const internalRef = useRef({ isLoading: false, offset: 0 });
+  const internalRef = useRef({ isLoading: false, offset: 0, hasMore: true });
 
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
     data: [],
@@ -22,8 +27,8 @@ export function useInfiniteFetch<T>(
   });
 
   const fetchMore = useCallback(() => {
-    const { isLoading, offset } = internalRef.current;
-    if (isLoading) {
+    const { isLoading, offset, hasMore } = internalRef.current;
+    if (isLoading || !hasMore) {
       return;
     }
 
@@ -34,18 +39,22 @@ export function useInfiniteFetch<T>(
     internalRef.current = {
       isLoading: true,
       offset,
+      hasMore,
     };
 
-    void fetcher(apiPath).then(
-      (allData) => {
+    const pagedUrl = buildPagedUrl(apiPath, LIMIT, offset);
+
+    void fetcher(pagedUrl).then(
+      (pageData) => {
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...pageData],
           isLoading: false,
         }));
         internalRef.current = {
           isLoading: false,
           offset: offset + LIMIT,
+          hasMore: pageData.length >= LIMIT,
         };
       },
       (error) => {
@@ -57,6 +66,7 @@ export function useInfiniteFetch<T>(
         internalRef.current = {
           isLoading: false,
           offset,
+          hasMore,
         };
       },
     );
@@ -71,6 +81,7 @@ export function useInfiniteFetch<T>(
     internalRef.current = {
       isLoading: false,
       offset: 0,
+      hasMore: true,
     };
 
     fetchMore();

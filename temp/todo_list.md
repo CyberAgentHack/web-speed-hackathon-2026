@@ -3,7 +3,7 @@
 ## 優先度: 最高（TBT/INP/FCP に直結）
 
 - [x] 012-InfiniteScrollの2^18ループを除去する
-- [ ] 013-postsAPIをサーバーサイドページネーションにする
+- [x] 013-postsAPIをサーバーサイドページネーションにする
 - [x] 014-Tailwind CSSをビルド時処理に変更する
 - [x] 015-window.loadイベント待ちを即時レンダリングに変更する
 - [x] 004-jQueryをfetch APIに置き換える
