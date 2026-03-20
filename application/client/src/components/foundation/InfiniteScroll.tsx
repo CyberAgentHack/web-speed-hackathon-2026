@@ -10,13 +10,13 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
   const latestItem = items[items.length - 1];
 
   const prevReachedRef = useRef(false);
+  const animationFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const handler = () => {
-      // 念の為 2の18乗 回、最下部かどうかを確認する
-      const hasReached = Array.from(Array(2 ** 18), () => {
-        return window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
-      }).every(Boolean);
+    const runCheck = () => {
+      animationFrameRef.current = null;
+      const hasReached =
+        window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
 
       // 画面最下部にスクロールしたタイミングで、登録したハンドラを呼び出す
       if (hasReached && !prevReachedRef.current) {
@@ -29,15 +29,26 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
       prevReachedRef.current = hasReached;
     };
 
+    const handler = () => {
+      if (animationFrameRef.current !== null) {
+        return;
+      }
+      animationFrameRef.current = window.requestAnimationFrame(runCheck);
+    };
+
     // 最初は実行されないので手動で呼び出す
     prevReachedRef.current = false;
-    handler();
+    runCheck();
 
-    document.addEventListener("wheel", handler, { passive: false });
-    document.addEventListener("touchmove", handler, { passive: false });
-    document.addEventListener("resize", handler, { passive: false });
-    document.addEventListener("scroll", handler, { passive: false });
+    document.addEventListener("wheel", handler, { passive: true });
+    document.addEventListener("touchmove", handler, { passive: true });
+    document.addEventListener("resize", handler, { passive: true });
+    document.addEventListener("scroll", handler, { passive: true });
     return () => {
+      if (animationFrameRef.current !== null) {
+        window.cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
       document.removeEventListener("wheel", handler);
       document.removeEventListener("touchmove", handler);
       document.removeEventListener("resize", handler);
