@@ -1,9 +1,72 @@
-import { resolve } from "node:path";
+import { createReadStream, createWriteStream, existsSync, readdirSync, statSync } from "node:fs";
+import { resolve, extname, join } from "node:path";
+import { createBrotliCompress, createGzip, constants } from "node:zlib";
+import { pipeline } from "node:stream/promises";
 
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { bundleStats } from "rollup-plugin-bundle-stats";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
+
+const COMPRESS_EXTENSIONS = new Set([".js", ".css", ".html", ".svg", ".json", ".wasm"]);
+const COMPRESS_THRESHOLD = 1024; // bytes
+
+function compressFile(filePath: string, ext: ".br" | ".gz"): Promise<void> {
+  const outPath = filePath + ext;
+  const source = createReadStream(filePath);
+  const destination = createWriteStream(outPath);
+  const compressor =
+    ext === ".br"
+      ? createBrotliCompress({
+          params: {
+            [constants.BROTLI_PARAM_QUALITY]: constants.BROTLI_MAX_QUALITY,
+          },
+        })
+      : createGzip({ level: 9 });
+  return pipeline(source, compressor, destination);
+}
+
+function walkDir(dir: string): string[] {
+  const results: string[] = [];
+  if (!existsSync(dir)) return results;
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const fullPath = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      results.push(...walkDir(fullPath));
+    } else {
+      results.push(fullPath);
+    }
+  }
+  return results;
+}
+
+function buildCompressPlugin(): Plugin {
+  return {
+    name: "vite-plugin-compress",
+    apply: "build",
+    enforce: "post",
+    closeBundle: {
+      sequential: true,
+      order: "post",
+      async handler() {
+        const outDir = resolve(import.meta.dirname, "../dist");
+        const files = walkDir(outDir).filter((f) => {
+          const ext = extname(f);
+          if (!COMPRESS_EXTENSIONS.has(ext)) return false;
+          try {
+            return statSync(f).size >= COMPRESS_THRESHOLD;
+          } catch {
+            return false;
+          }
+        });
+
+        console.log(`\n[compress] Compressing ${files.length} files with Brotli + Gzip...`);
+        await Promise.all(files.flatMap((f) => [compressFile(f, ".br"), compressFile(f, ".gz")]));
+        console.log(`[compress] Done.\n`);
+      },
+    },
+  };
+}
 
 const ROOT = import.meta.dirname;
 const NM = resolve(ROOT, "node_modules");
@@ -12,7 +75,12 @@ export default defineConfig({
   root: resolve(ROOT, "src"),
   publicDir: resolve(ROOT, "../public"),
 
-  plugins: [react(), tailwindcss(), bundleStats({ json: true, html: false, outDir: ".." })],
+  plugins: [
+    react(),
+    tailwindcss(),
+    bundleStats({ json: true, html: false, outDir: ".." }),
+    buildCompressPlugin(),
+  ],
 
   resolve: {
     alias: {
