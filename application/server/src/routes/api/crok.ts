@@ -10,7 +10,16 @@ import { QaSuggestion } from "@web-speed-hackathon-2026/server/src/models";
 export const crokRouter = Router();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-8");
+let response: string;
+try {
+  response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-8");
+} catch {
+  // Fallback for bundled builds where __dirname differs from source layout
+  response = fs.readFileSync(
+    path.resolve(__dirname, "../src/routes/api/crok-response.md"),
+    "utf-8",
+  );
+}
 
 crokRouter.get("/crok/suggestions", async (_req, res) => {
   const suggestions = await QaSuggestion.findAll({ logging: false });
