@@ -12,11 +12,11 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
   const prevReachedRef = useRef(false);
 
   useEffect(() => {
+    let frameId: number | null = null;
+
     const handler = () => {
-      // 念の為 2の18乗 回、最下部かどうかを確認する
-      const hasReached = Array.from(Array(2 ** 18), () => {
-        return window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
-      }).every(Boolean);
+      const hasReached =
+        window.innerHeight + Math.ceil(window.scrollY) >= document.documentElement.scrollHeight;
 
       // 画面最下部にスクロールしたタイミングで、登録したハンドラを呼び出す
       if (hasReached && !prevReachedRef.current) {
@@ -29,19 +29,29 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
       prevReachedRef.current = hasReached;
     };
 
+    const scheduleHandler = () => {
+      if (frameId !== null) {
+        return;
+      }
+      frameId = window.requestAnimationFrame(() => {
+        frameId = null;
+        handler();
+      });
+    };
+
     // 最初は実行されないので手動で呼び出す
     prevReachedRef.current = false;
-    handler();
+    scheduleHandler();
 
-    document.addEventListener("wheel", handler, { passive: false });
-    document.addEventListener("touchmove", handler, { passive: false });
-    document.addEventListener("resize", handler, { passive: false });
-    document.addEventListener("scroll", handler, { passive: false });
+    window.addEventListener("resize", scheduleHandler, { passive: true });
+    window.addEventListener("scroll", scheduleHandler, { passive: true });
+
     return () => {
-      document.removeEventListener("wheel", handler);
-      document.removeEventListener("touchmove", handler);
-      document.removeEventListener("resize", handler);
-      document.removeEventListener("scroll", handler);
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
+      window.removeEventListener("resize", scheduleHandler);
+      window.removeEventListener("scroll", scheduleHandler);
     };
   }, [latestItem, fetchMore]);
 

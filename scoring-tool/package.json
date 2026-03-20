@@ -23,7 +23,6 @@
     "debug": "4.4.3",
     "ink": "6.3.1",
     "lighthouse": "12.8.2",
-    "lodash": "4.17.21",
     "merge-error-cause": "5.0.2",
     "mockdate": "3.0.5",
     "playwright": "npm:playwright-core@1.56.0",
@@ -38,7 +37,6 @@
     "@tsconfig/strictest": "2.0.8",
     "@types/common-tags": "1.8.4",
     "@types/debug": "4.1.12",
-    "@types/lodash": "4.17.20",
     "@types/react": "19.2.2",
     "oxfmt": "0.28.0",
     "oxlint": "1.43.0"

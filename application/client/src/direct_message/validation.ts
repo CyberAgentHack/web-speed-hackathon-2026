@@ -1,6 +1,6 @@
-import { FormErrors } from "redux-form";
-
 import { NewDirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
+
+type FormErrors<T> = Partial<Record<keyof T, string>>;
 
 export const validate = (
   values: NewDirectMessageFormData,

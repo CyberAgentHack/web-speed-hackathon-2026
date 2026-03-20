@@ -6,19 +6,59 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 
 import { QaSuggestion } from "@web-speed-hackathon-2026/server/src/models";
+import { getCrokSuggestionsByBM25 } from "@web-speed-hackathon-2026/server/src/utils/crok_suggestions.js";
 
 export const crokRouter = Router();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-8");
+const response = fs.readFileSync(
+  path.join(__dirname, "crok-response.md"),
+  "utf-8",
+);
 
-crokRouter.get("/crok/suggestions", async (_req, res) => {
+crokRouter.get("/crok/suggestions", async (req, res) => {
   const suggestions = await QaSuggestion.findAll({ logging: false });
-  res.json({ suggestions: suggestions.map((s) => s.question) });
+  const candidates = suggestions.map((suggestion) => suggestion.question);
+  const query = typeof req.query["q"] === "string" ? req.query["q"] : undefined;
+
+  if (query === undefined) {
+    res.json({ queryTokens: [], suggestions: candidates });
+    return;
+  }
+
+  const result = await getCrokSuggestionsByBM25(candidates, query);
+  res.json(result);
 });
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function splitResponseIntoChunks(text: string, chunkSize: number): string[] {
+  const chunks: string[] = [];
+  let i = 0;
+
+  while (i < text.length) {
+    const end = Math.min(i + chunkSize, text.length);
+    let splitAt = end;
+
+    // Prefer a natural boundary near the end of the chunk to keep UX smooth.
+    for (let j = end; j > i; j -= 1) {
+      const char = text[j - 1];
+      if (
+        char === " " || char === "\n" || char === "." || char === "、" ||
+        char === "。"
+      ) {
+        splitAt = j;
+        break;
+      }
+    }
+
+    chunks.push(text.slice(i, splitAt));
+    i = splitAt;
+  }
+
+  return chunks;
 }
 
 crokRouter.get("/crok", async (req, res) => {
@@ -32,14 +72,12 @@ crokRouter.get("/crok", async (req, res) => {
   res.flushHeaders();
 
   let messageId = 0;
+  const chunks = splitResponseIntoChunks(response, 32);
 
-  // TTFT (Time to First Token)
-  await sleep(3000);
-
-  for (const char of response) {
+  for (const chunk of chunks) {
     if (res.closed) break;
 
-    const data = JSON.stringify({ text: char, done: false });
+    const data = JSON.stringify({ text: chunk, done: false });
     res.write(`event: message\nid: ${messageId++}\ndata: ${data}\n\n`);
 
     await sleep(10);

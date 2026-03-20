@@ -1,16 +1,17 @@
 import classNames from "classnames";
 
-import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { CoveredImage } from "@web-speed-hackathon-2026/client/src/components/foundation/CoveredImage";
 import { getImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
+  fetchPriority?: "auto" | "high" | "low";
   images: Models.Image[];
+  loading?: "eager" | "lazy";
 }
 
-export const ImageArea = ({ images }: Props) => {
+export const ImageArea = ({ images, loading, fetchPriority }: Props) => {
   return (
-    <AspectRatioBox aspectHeight={9} aspectWidth={16}>
+    <div className="aspect-16/9">
       <div className="border-cax-border grid h-full w-full grid-cols-2 grid-rows-2 gap-1 overflow-hidden rounded-lg border">
         {images.map((image, idx) => {
           return (
@@ -24,11 +25,18 @@ export const ImageArea = ({ images }: Props) => {
                 "row-span-2": images.length <= 2 || (images.length === 3 && idx === 0),
               })}
             >
-              <CoveredImage src={getImagePath(image.id)} />
+              <CoveredImage
+                alt={image.alt}
+                fetchPriority={fetchPriority}
+                height={image.height}
+                loading={loading}
+                src={getImagePath(image.id)}
+                width={image.width}
+              />
             </div>
           );
         })}
       </div>
-    </AspectRatioBox>
+    </div>
   );
 };

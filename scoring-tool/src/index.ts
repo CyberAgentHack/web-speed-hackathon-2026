@@ -2,7 +2,6 @@ import * as github from "@actions/github";
 import { defineCommand, runMain } from "citty";
 import { stripIndents } from "common-tags";
 import debug from "debug";
-import _ from "lodash";
 import { inject } from "regexparam";
 
 import { calculate, TARGET_NAME_LIST } from "./calculate";
@@ -42,6 +41,11 @@ const SCORE_SECTION_LIST: Array<{
   },
 ];
 
+function round(value: number, precision: number): number {
+  const factor = 10 ** precision;
+  return Math.round((value + Number.EPSILON) * factor) / factor;
+}
+
 function formatMetricScore(result: Result, metricKey: MetricKey): string {
   if (result.error != null) {
     return "-";
@@ -67,13 +71,21 @@ function formatScoreSection({
   title: string;
 }): string {
   const scoreTable = [
-    `|テスト項目|${metrics.map(({ label, maxScore }) => `${label} (${maxScore}点)`).join("|")}|合計 (${totalMaxScore}点)|`,
+    `|テスト項目|${
+      metrics.map(({ label, maxScore }) => `${label} (${maxScore}点)`).join("|")
+    }|合計 (${totalMaxScore}点)|`,
     `|:---|${metrics.map(() => "---:").join("|")}|---:|`,
     ...results.map((result) => {
       const { error, scoreX100, target } = result;
-      const metricScoreTextList = metrics.map(({ key }) => formatMetricScore(result, key));
-      const scoreText = error != null ? "計測できません" : `${(scoreX100 / 100).toFixed(2)}`;
-      return `| ${target.name} | ${metricScoreTextList.join(" | ")} | ${scoreText} |`;
+      const metricScoreTextList = metrics.map(({ key }) =>
+        formatMetricScore(result, key)
+      );
+      const scoreText = error != null
+        ? "計測できません"
+        : `${(scoreX100 / 100).toFixed(2)}`;
+      return `| ${target.name} | ${
+        metricScoreTextList.join(" | ")
+      } | ${scoreText} |`;
     }),
   ].join("\n");
 
@@ -81,19 +93,23 @@ function formatScoreSection({
 }
 
 function formatScoreTable(results: Result[]): string {
-  return SCORE_SECTION_LIST.flatMap(({ category, metrics, title, totalMaxScore }) => {
-    const sectionResults = results.filter((result) => result.target.category === category);
-    if (sectionResults.length === 0) {
-      return [];
-    }
+  return SCORE_SECTION_LIST.flatMap(
+    ({ category, metrics, title, totalMaxScore }) => {
+      const sectionResults = results.filter((result) =>
+        result.target.category === category
+      );
+      if (sectionResults.length === 0) {
+        return [];
+      }
 
-    return formatScoreSection({
-      metrics,
-      results: sectionResults,
-      totalMaxScore,
-      title,
-    });
-  }).join("\n\n");
+      return formatScoreSection({
+        metrics,
+        results: sectionResults,
+        totalMaxScore,
+        title,
+      });
+    },
+  ).join("\n\n");
 }
 
 const command = defineCommand({
@@ -155,8 +171,12 @@ const command = defineCommand({
       participationKind = null,
     },
   }) {
-    async function sendScoreToDashboard(score: number): Promise<{ rank: number | null }> {
-      if (!dashboardServerUrl || !dashboardServerToken || !participationGitHubId) {
+    async function sendScoreToDashboard(
+      score: number,
+    ): Promise<{ rank: number | null }> {
+      if (
+        !dashboardServerUrl || !dashboardServerToken || !participationGitHubId
+      ) {
         return { rank: null };
       }
 
@@ -201,20 +221,23 @@ const command = defineCommand({
     const reporter = new Reporter({ writer });
     await reporter.initialize();
 
-    const requestedDate =
-      process.env["GITHUB_ACTIONS"] != null
-        ? new Date(
-            (github.context.eventName === "issues"
-              ? github.context.payload.issue!["created_at"]
-              : github.context.payload.comment!["created_at"]) as number,
-          )
-        : new Date();
+    const requestedDate = process.env["GITHUB_ACTIONS"] != null
+      ? new Date(
+        (github.context.eventName === "issues"
+          ? github.context.payload.issue!["created_at"]
+          : github.context.payload.comment!["created_at"]) as number,
+      )
+      : new Date();
 
-    if (competitionStartAt != null && requestedDate < new Date(competitionStartAt)) {
+    if (
+      competitionStartAt != null && requestedDate < new Date(competitionStartAt)
+    ) {
       await reporter.appendArea("fatalError", "❌ 競技開始前です");
       return;
     }
-    if (competitionEndAt != null && new Date(competitionEndAt) <= requestedDate) {
+    if (
+      competitionEndAt != null && new Date(competitionEndAt) <= requestedDate
+    ) {
       await reporter.appendArea("fatalError", "❌ 競技は終了しました");
       return;
     }
@@ -226,13 +249,17 @@ const command = defineCommand({
     ].join("\n");
 
     if (normalizedTargetName === "") {
-      await reporter.appendArea("fatalError", ["計測名一覧", "", targetListText].join("\n"));
+      await reporter.appendArea(
+        "fatalError",
+        ["計測名一覧", "", targetListText].join("\n"),
+      );
       return;
     }
 
     if (
       normalizedTargetName != null &&
-      TARGET_NAME_LIST.some((name) => name.includes(normalizedTargetName)) === false
+      TARGET_NAME_LIST.some((name) => name.includes(normalizedTargetName)) ===
+        false
     ) {
       await reporter.appendArea(
         "fatalError",
@@ -274,16 +301,20 @@ const command = defineCommand({
     try {
       const results: Result[] = [];
 
-      for await (const result of calculate({
-        baseUrl: applicationUrl,
-        targetName: normalizedTargetName,
-      })) {
+      for await (
+        const result of calculate({
+          baseUrl: applicationUrl,
+          targetName: normalizedTargetName,
+        })
+      ) {
         results.push(result);
 
         if (result.error != null) {
           await reporter.appendArea(
             "errorList",
-            `- **${result.target.name}** | ${result.error.message.replaceAll("\n", "").slice(0, 100)}`,
+            `- **${result.target.name}** | ${
+              result.error.message.replaceAll("\n", "").slice(0, 100)
+            }`,
           );
         }
 
@@ -291,8 +322,14 @@ const command = defineCommand({
       }
 
       {
-        const totalScore = _.round(_.sum(_.map(results, ({ scoreX100 }) => scoreX100)) / 100, 2);
-        const totalMaxScore = _.sum(_.map(results, ({ target }) => target.maxScore));
+        const totalScore = round(
+          results.reduce((sum, { scoreX100 }) => sum + scoreX100, 0) / 100,
+          2,
+        );
+        const totalMaxScore = results.reduce(
+          (sum, { target }) => sum + target.maxScore,
+          0,
+        );
 
         const { rank } = await sendScoreToDashboard(totalScore);
 
@@ -331,7 +368,10 @@ const command = defineCommand({
         }
       }
     } catch (err) {
-      await reporter.appendArea("fatalError", "❌ 計測に失敗しました、運営にご連絡ください");
+      await reporter.appendArea(
+        "fatalError",
+        "❌ 計測に失敗しました、運営にご連絡ください",
+      );
       throw err;
     }
   },

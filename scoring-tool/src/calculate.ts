@@ -1,6 +1,5 @@
 import { setTimeout } from "node:timers/promises";
 
-import _ from "lodash";
 import mergeErrorCause from "merge-error-cause";
 import type * as playwright from "playwright";
 import type * as puppeteer from "puppeteer";
@@ -154,6 +153,11 @@ const USER_FLOW_TARGET_LIST: Target[] = [
 const ALL_TARGET_LIST = [...LANDING_TARGET_LIST, ...USER_FLOW_TARGET_LIST];
 export const TARGET_NAME_LIST = ALL_TARGET_LIST.map(({ name }) => name);
 
+function round(value: number, precision: number): number {
+  const factor = 10 ** precision;
+  return Math.round((value + Number.EPSILON) * factor) / factor;
+}
+
 type Params = {
   baseUrl: string;
   targetName?: string;
@@ -194,7 +198,9 @@ export async function* calculate({
   targetName,
 }: Params): AsyncGenerator<Result, void, void> {
   if (targetName != null) {
-    const targets = ALL_TARGET_LIST.filter(({ name }) => name.includes(targetName));
+    const targets = ALL_TARGET_LIST.filter(({ name }) =>
+      name.includes(targetName)
+    );
     if (targets.length === 0) {
       throw new Error(`指定された計測名 \`${targetName}\` は存在しません`);
     }
@@ -206,16 +212,18 @@ export async function* calculate({
 
   const landingResults = [];
 
-  for await (const result of _calculate({
-    baseUrl,
-    targets: LANDING_TARGET_LIST,
-  })) {
+  for await (
+    const result of _calculate({
+      baseUrl,
+      targets: LANDING_TARGET_LIST,
+    })
+  ) {
     landingResults.push(result);
     yield result;
   }
 
-  const landingTotalScore = _.round(
-    _.sum(_.map(landingResults, ({ scoreX100 }) => scoreX100)) / 100,
+  const landingTotalScore = round(
+    landingResults.reduce((sum, { scoreX100 }) => sum + scoreX100, 0) / 100,
     2,
   );
 
@@ -231,10 +239,12 @@ export async function* calculate({
       };
     }
   } else {
-    for await (const result of _calculate({
-      baseUrl,
-      targets: USER_FLOW_TARGET_LIST,
-    })) {
+    for await (
+      const result of _calculate({
+        baseUrl,
+        targets: USER_FLOW_TARGET_LIST,
+      })
+    ) {
       yield result;
     }
   }

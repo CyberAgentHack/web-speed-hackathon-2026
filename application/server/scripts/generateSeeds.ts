@@ -1,8 +1,12 @@
-import { createWriteStream } from "node:fs";
+import { spawn } from "node:child_process";
+import { createWriteStream, promises as fs } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import exifr from "exifr";
 import { faker } from "@faker-js/faker/locale/ja";
+import sharp from "sharp";
+import { writeWaveformSvgFile } from "@web-speed-hackathon-2026/server/src/utils/sound_waveform";
 
 // Set seed for reproducible results
 faker.seed(123);
@@ -22,11 +26,12 @@ import type {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const seedsDir = path.resolve(__dirname, "../seeds");
+const publicDir = path.resolve(__dirname, "../../public");
 
 // ========== Existing Asset IDs from public directory ==========
 // These IDs correspond to actual files in the public directory
 
-// public/images/*.jpg (30 files)
+// public/images/*.webp (30 files)
 const EXISTING_IMAGE_IDS = [
   "029b4b75-bbcc-4aa5-8bd7-e4bb12a33cd3",
   "078c4d42-12e3-4c1d-823c-9ba552f6b066",
@@ -60,7 +65,7 @@ const EXISTING_IMAGE_IDS = [
   "f478a152-02f8-46a3-91ce-d1d7944d303a",
 ];
 
-// public/movies/*.gif (15 files)
+// public/movies/*.mp4 (15 files, fallback source is *.gif)
 const EXISTING_MOVIE_IDS = [
   "090e7491-5cdb-4a1b-88b1-1e036a45e296",
   "0c4b66bc-091e-4f76-85a3-288567cfdc12",
@@ -81,18 +86,46 @@ const EXISTING_MOVIE_IDS = [
 
 // public/sounds/*.mp3 (15 files) - with title/artist info
 const EXISTING_SOUNDS = [
-  { id: "05333292-5786-4a1f-9046-6b4863da3286", title: "Whispered Echoes", artist: "Luna Park" },
-  { id: "10b3358c-945f-428e-a7f1-1558f675ef3d", title: "Be Jammin", artist: "Mariah Decicco" },
-  { id: "2174b434-fe47-4c6a-9f30-de4d4e4c7554", title: "BeBop for Joey", artist: "Ashely Matsuo" },
-  { id: "28604fdc-0adb-40b0-bd67-ed39d61f007d", title: "Ocean Dreams", artist: "Wave Riders" },
+  {
+    id: "05333292-5786-4a1f-9046-6b4863da3286",
+    title: "Whispered Echoes",
+    artist: "Luna Park",
+  },
+  {
+    id: "10b3358c-945f-428e-a7f1-1558f675ef3d",
+    title: "Be Jammin",
+    artist: "Mariah Decicco",
+  },
+  {
+    id: "2174b434-fe47-4c6a-9f30-de4d4e4c7554",
+    title: "BeBop for Joey",
+    artist: "Ashely Matsuo",
+  },
+  {
+    id: "28604fdc-0adb-40b0-bd67-ed39d61f007d",
+    title: "Ocean Dreams",
+    artist: "Wave Riders",
+  },
   {
     id: "2abadebb-6fae-4db0-9dba-d3063d9cc2e1",
     title: "New Hero in Town",
     artist: "Henrietta Almeida",
   },
-  { id: "42232f2b-b7b2-46f8-a3de-1eefbfbbd8c2", title: "Hold on a Sec", artist: "Alexa Hillard" },
-  { id: "49a3663a-1e66-4e22-83b8-3c43f181a254", title: "Marked", artist: "Earlene Apicella" },
-  { id: "4ce92862-3d2d-47a4-975d-4b293173cec4", title: "Stunted Adventure", artist: "Rod Zepp" },
+  {
+    id: "42232f2b-b7b2-46f8-a3de-1eefbfbbd8c2",
+    title: "Hold on a Sec",
+    artist: "Alexa Hillard",
+  },
+  {
+    id: "49a3663a-1e66-4e22-83b8-3c43f181a254",
+    title: "Marked",
+    artist: "Earlene Apicella",
+  },
+  {
+    id: "4ce92862-3d2d-47a4-975d-4b293173cec4",
+    title: "Stunted Adventure",
+    artist: "Rod Zepp",
+  },
   {
     id: "5352a4a1-6a47-445d-874d-6e08f811c4f4",
     title: "Bavarian Seascape",
@@ -103,14 +136,34 @@ const EXISTING_SOUNDS = [
     title: "Adventures of Flying Jack",
     artist: "Dessie Riffe",
   },
-  { id: "5a93be41-caab-4eec-9ac1-8b57c24ccbe2", title: "Coy Koi", artist: "Minnie Sweeny" },
-  { id: "5d0cd8a0-805a-4fb8-940a-53d2dee9c87e", title: "Study and Relax", artist: "Gigi Mohan" },
-  { id: "8bb8891c-40c1-4536-8eee-2ecdac298931", title: "Big Eyes", artist: "Jone Adam" },
-  { id: "8ed91156-d15e-4a6a-87cc-87f2e8905fa3", title: "Hillbilly Swing", artist: "Nan Lykes" },
-  { id: "93b848fe-24c8-4597-a515-463a910f6ceb", title: "Midnight Jazz", artist: "Blue Note" },
+  {
+    id: "5a93be41-caab-4eec-9ac1-8b57c24ccbe2",
+    title: "Coy Koi",
+    artist: "Minnie Sweeny",
+  },
+  {
+    id: "5d0cd8a0-805a-4fb8-940a-53d2dee9c87e",
+    title: "Study and Relax",
+    artist: "Gigi Mohan",
+  },
+  {
+    id: "8bb8891c-40c1-4536-8eee-2ecdac298931",
+    title: "Big Eyes",
+    artist: "Jone Adam",
+  },
+  {
+    id: "8ed91156-d15e-4a6a-87cc-87f2e8905fa3",
+    title: "Hillbilly Swing",
+    artist: "Nan Lykes",
+  },
+  {
+    id: "93b848fe-24c8-4597-a515-463a910f6ceb",
+    title: "Midnight Jazz",
+    artist: "Blue Note",
+  },
 ];
 
-// public/images/profiles/*.jpg (30 files)
+// public/images/profiles/*.webp (30 files)
 const EXISTING_PROFILE_IMAGE_IDS = [
   "09d52cbb-28a2-4413-b220-1f8c9e80a440",
   "0aba06a6-1b56-4ebd-8218-951aaba173af",
@@ -178,15 +231,196 @@ function pickRandomN<T>(arr: T[], n: number): T[] {
   return faker.helpers.arrayElements(arr, n);
 }
 
-function generateProfileImages(): ProfileImageSeed[] {
-  // Use existing profile image IDs from public/images/profiles/
-  return EXISTING_PROFILE_IMAGE_IDS.map((id) => ({
-    id,
-    alt: "",
-  }));
+async function resolveImageFilePath(
+  filePathWithoutExtension: string,
+): Promise<string | null> {
+  const webpPath = `${filePathWithoutExtension}.webp`;
+  try {
+    await fs.access(webpPath);
+    return webpPath;
+  } catch {
+    const jpgPath = `${filePathWithoutExtension}.jpg`;
+    try {
+      await fs.access(jpgPath);
+      return jpgPath;
+    } catch {
+      return null;
+    }
+  }
 }
 
-function generateUsers(count: number, profileImages: ProfileImageSeed[]): UserSeed[] {
+async function ensureWebpImageAsset(
+  filePathWithoutExtension: string,
+  options?: {
+    fit?: keyof sharp.FitEnum;
+    height?: number;
+    quality?: number;
+    width?: number;
+  },
+): Promise<void> {
+  const {
+    width = 800,
+    height,
+    fit = "cover",
+    quality = 85,
+  } = options ?? {};
+  const webpPath = `${filePathWithoutExtension}.webp`;
+
+  const jpgPath = `${filePathWithoutExtension}.jpg`;
+
+  const converted = await sharp(jpgPath)
+    .resize({ width, height, fit })
+    .webp({ quality })
+    .toBuffer();
+  await fs.writeFile(webpPath, converted);
+}
+
+async function ensureWebpImageAssets(): Promise<void> {
+  await Promise.all([
+    ...EXISTING_IMAGE_IDS.map((id) =>
+      ensureWebpImageAsset(path.resolve(publicDir, `./images/${id}`), {
+        fit: "cover",
+        quality: 85,
+        width: 800,
+      })
+    ),
+    ...EXISTING_PROFILE_IMAGE_IDS.map((id) =>
+      ensureWebpImageAsset(path.resolve(publicDir, `./images/profiles/${id}`), {
+        fit: "cover",
+        height: 128,
+        quality: 70,
+        width: 128,
+      })
+    ),
+  ]);
+}
+
+function runFfmpeg(args: string[]): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const ffmpeg = spawn("ffmpeg", [
+      "-y",
+      "-hide_banner",
+      "-loglevel",
+      "error",
+      ...args,
+    ]);
+    let stderr = "";
+
+    ffmpeg.stderr.on("data", (chunk: Buffer) => {
+      stderr += chunk.toString("utf-8");
+    });
+
+    ffmpeg.on("close", (code) => {
+      if (code === 0) {
+        resolve();
+        return;
+      }
+
+      reject(
+        new Error(stderr.trim() || `ffmpeg exited with code ${String(code)}`),
+      );
+    });
+
+    ffmpeg.on("error", (error) => {
+      reject(error);
+    });
+  });
+}
+
+async function ensureMp4MovieAsset(movieId: string): Promise<void> {
+  const mp4Path = path.resolve(publicDir, `./movies/${movieId}.mp4`);
+  const gifPath = path.resolve(publicDir, `./movies/${movieId}.gif`);
+
+  try {
+    await fs.access(gifPath);
+  } catch {
+    return;
+  }
+
+  await runFfmpeg([
+    "-i",
+    gifPath,
+    "-c:v",
+    "libx264",
+    "-pix_fmt",
+    "yuv420p",
+    "-crf",
+    "36",
+    "-preset",
+    "veryslow",
+    "-movflags",
+    "+faststart",
+    "-an",
+    mp4Path,
+  ]);
+}
+
+async function ensureMp4MovieAssets(): Promise<void> {
+  await Promise.all(EXISTING_MOVIE_IDS.map((id) => ensureMp4MovieAsset(id)));
+}
+
+async function extractImageAlt(
+  filePathWithoutExtension: string,
+): Promise<string> {
+  const jpgPath = `${filePathWithoutExtension}.jpg`;
+  let filePath: string | null = null;
+
+  try {
+    await fs.access(jpgPath);
+    filePath = jpgPath;
+  } catch {
+    filePath = await resolveImageFilePath(filePathWithoutExtension);
+  }
+
+  if (filePath == null) {
+    return "";
+  }
+
+  try {
+    const imageBuffer = await fs.readFile(filePath);
+    const metadata = await exifr.parse(imageBuffer, true);
+    const imageDescription = metadata?.ImageDescription;
+    return typeof imageDescription === "string" ? imageDescription : "";
+  } catch {
+    return "";
+  }
+}
+
+async function extractImageSize(
+  filePathWithoutExtension: string,
+): Promise<{ width: number; height: number }> {
+  const filePath = await resolveImageFilePath(filePathWithoutExtension);
+  if (filePath == null) {
+    return { height: 0, width: 0 };
+  }
+
+  try {
+    const metadata = await sharp(filePath).metadata();
+    return {
+      height: metadata.height ?? 0,
+      width: metadata.width ?? 0,
+    };
+  } catch {
+    return { height: 0, width: 0 };
+  }
+}
+
+async function generateProfileImages(): Promise<ProfileImageSeed[]> {
+  // Use existing profile image IDs from public/images/profiles/
+  return Promise.all(
+    EXISTING_PROFILE_IMAGE_IDS.map(async (id) => ({
+      id,
+      alt: await extractImageAlt(
+        path.resolve(publicDir, `./images/profiles/${id}`),
+      ),
+    })),
+  );
+}
+
+function generateUsers(
+  count: number,
+  profileImages: ProfileImageSeed[],
+): UserSeed[] {
   const users: UserSeed[] = [];
   const usedUsernames = new Set<string>();
 
@@ -217,14 +451,23 @@ function generateUsers(count: number, profileImages: ProfileImageSeed[]): UserSe
   return users;
 }
 
-function generateImages(): ImageSeed[] {
+async function generateImages(): Promise<ImageSeed[]> {
   // Use existing image IDs from public/images/
   const baseTime = now - ONE_WEEK_MS;
-  return EXISTING_IMAGE_IDS.map((id, i) => ({
-    id,
-    alt: "",
-    createdAt: new Date(baseTime + i * 60 * 1000).toISOString(),
-  }));
+  return Promise.all(
+    EXISTING_IMAGE_IDS.map(async (id, i) => {
+      const size = await extractImageSize(
+        path.resolve(publicDir, `./images/${id}`),
+      );
+      return {
+        id,
+        alt: await extractImageAlt(path.resolve(publicDir, `./images/${id}`)),
+        createdAt: new Date(baseTime + i * 60 * 1000).toISOString(),
+        height: size.height,
+        width: size.width,
+      };
+    }),
+  );
 }
 
 function generateMovies(): MovieSeed[] {
@@ -234,13 +477,22 @@ function generateMovies(): MovieSeed[] {
   }));
 }
 
-function generateSounds(): SoundSeed[] {
+async function generateSounds(): Promise<SoundSeed[]> {
   // Use existing sound data from public/sounds/
-  return EXISTING_SOUNDS.map(({ id, title, artist }) => ({
-    id,
-    title,
-    artist,
-  }));
+  return await Promise.all(
+    EXISTING_SOUNDS.map(async ({ id, title, artist }) => {
+      await writeWaveformSvgFile(
+        path.resolve(publicDir, `./sounds/${id}.mp3`),
+        path.resolve(publicDir, `./sounds-waveforms/${id}.svg`),
+      );
+
+      return {
+        id,
+        title,
+        artist,
+      };
+    }),
+  );
 }
 
 const postTemplates = [
@@ -275,7 +527,8 @@ function generatePosts(
 
     const rand = faker.number.float({ min: 0, max: 1, fractionDigits: 2 });
     const hasMovie = rand < CONFIG.POST_MOVIE_RATIO;
-    const hasSound = !hasMovie && rand < CONFIG.POST_MOVIE_RATIO + CONFIG.POST_SOUND_RATIO;
+    const hasSound = !hasMovie &&
+      rand < CONFIG.POST_MOVIE_RATIO + CONFIG.POST_SOUND_RATIO;
 
     const post: PostSeed = {
       id: faker.string.uuid(),
@@ -294,7 +547,9 @@ function generatePosts(
     posts.push(post);
   }
 
-  return posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  return posts.sort((a, b) =>
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
 }
 
 function generatePostsImagesRelation(
@@ -306,7 +561,10 @@ function generatePostsImagesRelation(
   for (const post of posts) {
     if (post.movieId || post.soundId) continue;
 
-    const imageCount = faker.number.int({ min: 0, max: CONFIG.IMAGES_PER_POST_MAX });
+    const imageCount = faker.number.int({
+      min: 0,
+      max: CONFIG.IMAGES_PER_POST_MAX,
+    });
     if (imageCount === 0) continue;
 
     const selectedImages = pickRandomN(images, imageCount);
@@ -381,10 +639,15 @@ const dmTemplates = [
 ];
 
 // 各ユーザーの会話相手数を決定（3〜15人、平均10人）
-function determineConversationPartnersPerUser(users: UserSeed[]): Map<string, number> {
+function determineConversationPartnersPerUser(
+  users: UserSeed[],
+): Map<string, number> {
   const partnersPerUser = new Map<string, number>();
   for (const user of users) {
-    const count = Math.max(3, Math.min(15, faker.number.int({ min: 7, max: 13 })));
+    const count = Math.max(
+      3,
+      Math.min(15, faker.number.int({ min: 7, max: 13 })),
+    );
     partnersPerUser.set(user.id, count);
   }
   return partnersPerUser;
@@ -405,7 +668,8 @@ function generateConversationPairs(
 
   // 目標ペア数が多い順にソート
   const sortedUsers = [...users].sort(
-    (a, b) => (partnersPerUser.get(b.id) || 0) - (partnersPerUser.get(a.id) || 0),
+    (a, b) =>
+      (partnersPerUser.get(b.id) || 0) - (partnersPerUser.get(a.id) || 0),
   );
 
   const usedPairs = new Set<string>();
@@ -429,7 +693,10 @@ function generateConversationPairs(
 
     // ランダムに選択して必要数までペアを作る
     const needed = targetCount - currentCount;
-    const selected = faker.helpers.arrayElements(candidates, Math.min(needed, candidates.length));
+    const selected = faker.helpers.arrayElements(
+      candidates,
+      Math.min(needed, candidates.length),
+    );
 
     for (const userB of selected) {
       const pairKey = [userA.id, userB.id].sort().join(":");
@@ -457,24 +724,32 @@ function compareMessageSeedOrder(
   a: Pick<DirectMessageSeed, "id" | "createdAt">,
   b: Pick<DirectMessageSeed, "id" | "createdAt">,
 ): number {
-  const timeDiff = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+  const timeDiff = new Date(a.createdAt).getTime() -
+    new Date(b.createdAt).getTime();
   if (timeDiff !== 0) {
     return timeDiff;
   }
   return a.id.localeCompare(b.id);
 }
 
-function sortMessagesByCreatedAt<T extends Pick<DirectMessageSeed, "id" | "createdAt">>(
+function sortMessagesByCreatedAt<
+  T extends Pick<DirectMessageSeed, "id" | "createdAt">,
+>(
   messages: T[],
 ): T[] {
   return [...messages].sort(compareMessageSeedOrder);
 }
 
-function messageCreatedAtMs(message: Pick<DirectMessageSeed, "createdAt">): number {
+function messageCreatedAtMs(
+  message: Pick<DirectMessageSeed, "createdAt">,
+): number {
   return new Date(message.createdAt).getTime();
 }
 
-function splitDurationIntoRandomGaps(segmentCount: number, totalDurationMs: number): number[] {
+function splitDurationIntoRandomGaps(
+  segmentCount: number,
+  totalDurationMs: number,
+): number[] {
   if (segmentCount === 0) {
     return [];
   }
@@ -487,8 +762,9 @@ function splitDurationIntoRandomGaps(segmentCount: number, totalDurationMs: numb
   }
 
   const extraDurationMs = totalDurationMs - minimumDurationMs;
-  const weights = Array.from({ length: segmentCount }, () =>
-    faker.number.int({ min: 1, max: 100 }),
+  const weights = Array.from(
+    { length: segmentCount },
+    () => faker.number.int({ min: 1, max: 100 }),
   );
   const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
 
@@ -497,10 +773,9 @@ function splitDurationIntoRandomGaps(segmentCount: number, totalDurationMs: numb
 
   return weights.map((weight, index) => {
     accumulatedWeight += weight;
-    const boundary =
-      index === weights.length - 1
-        ? extraDurationMs
-        : Math.round((extraDurationMs * accumulatedWeight) / totalWeight);
+    const boundary = index === weights.length - 1
+      ? extraDurationMs
+      : Math.round((extraDurationMs * accumulatedWeight) / totalWeight);
     const extraGapMs = boundary - previousBoundary;
     previousBoundary = boundary;
 
@@ -513,7 +788,8 @@ function generateConversationTimestamps(messageCount: number): Date[] {
     return [];
   }
 
-  const minimumConversationDurationMs = (messageCount - 1) * DM_MIN_MESSAGE_GAP_MS;
+  const minimumConversationDurationMs = (messageCount - 1) *
+    DM_MIN_MESSAGE_GAP_MS;
   const latestMessageAtMs = faker.number.int({
     min: WEEK_START + minimumConversationDurationMs,
     max: now - 1,
@@ -527,7 +803,10 @@ function generateConversationTimestamps(messageCount: number): Date[] {
     min: minimumConversationDurationMs,
     max: latestMessageAtMs - WEEK_START,
   });
-  const gaps = splitDurationIntoRandomGaps(messageCount - 1, totalConversationDurationMs);
+  const gaps = splitDurationIntoRandomGaps(
+    messageCount - 1,
+    totalConversationDurationMs,
+  );
 
   const timestamps = [latestMessageAtMs];
   let currentTime = latestMessageAtMs;
@@ -580,7 +859,9 @@ function determineLastReadAtForUser(
   activeUserId: string,
 ): string | null {
   const sortedConversation = sortMessagesByCreatedAt(conversation);
-  const sentMessages = sortedConversation.filter((message) => message.senderId === activeUserId);
+  const sentMessages = sortedConversation.filter((message) =>
+    message.senderId === activeUserId
+  );
   const receivedMessages = sortedConversation.filter(
     (message) => message.senderId !== activeUserId,
   );
@@ -592,20 +873,21 @@ function determineLastReadAtForUser(
   const latestReceivedMessage = receivedMessages[receivedMessages.length - 1];
   const latestSentMessage = sentMessages[sentMessages.length - 1];
   // 自分が返信しているなら、その時点までに届いていた相手メッセージは既読にしておく。
-  const requiredReadMessage =
-    latestSentMessage == null
-      ? null
-      : ([...receivedMessages]
-          .reverse()
-          .find(
-            (message) => messageCreatedAtMs(message) <= messageCreatedAtMs(latestSentMessage),
-          ) ?? null);
+  const requiredReadMessage = latestSentMessage == null
+    ? null
+    : ([...receivedMessages]
+      .reverse()
+      .find(
+        (message) =>
+          messageCreatedAtMs(message) <= messageCreatedAtMs(latestSentMessage),
+      ) ?? null);
 
   const partialReadCandidates = receivedMessages.filter((message) => {
     const createdAtMs = messageCreatedAtMs(message);
-    const isAfterRequiredRead =
-      requiredReadMessage == null || createdAtMs >= messageCreatedAtMs(requiredReadMessage);
-    const isBeforeLatestReceived = createdAtMs < messageCreatedAtMs(latestReceivedMessage);
+    const isAfterRequiredRead = requiredReadMessage == null ||
+      createdAtMs >= messageCreatedAtMs(requiredReadMessage);
+    const isBeforeLatestReceived =
+      createdAtMs < messageCreatedAtMs(latestReceivedMessage);
     return isAfterRequiredRead && isBeforeLatestReceived;
   });
 
@@ -630,7 +912,9 @@ function determineLastReadAtForUser(
   return latestReceivedMessage.createdAt;
 }
 
-function generateDirectMessages(users: UserSeed[]): DirectMessageGenerationResult {
+function generateDirectMessages(
+  users: UserSeed[],
+): DirectMessageGenerationResult {
   console.log("Generating conversation pairs...");
   const partnersPerUser = determineConversationPartnersPerUser(users);
   const pairs = generateConversationPairs(users, partnersPerUser);
@@ -644,7 +928,11 @@ function generateDirectMessages(users: UserSeed[]): DirectMessageGenerationResul
   for (let i = 0; i < pairs.length; i++) {
     const [userA, userB] = pairs[i];
     const conversationId = faker.string.uuid();
-    allConversations.push({ id: conversationId, initiatorId: userA.id, memberId: userB.id });
+    allConversations.push({
+      id: conversationId,
+      initiatorId: userA.id,
+      memberId: userB.id,
+    });
 
     const messageCount = messagesPerPair[i];
     const conversation = sortMessagesByCreatedAt(
@@ -658,9 +946,11 @@ function generateDirectMessages(users: UserSeed[]): DirectMessageGenerationResul
       let isRead = false;
       // 受信者判定: 自分以外が送ったメッセージを相手が読んだか
       if (msg.senderId === userB.id && lastReadAtForA != null) {
-        isRead = new Date(msg.createdAt).getTime() <= new Date(lastReadAtForA).getTime();
+        isRead = new Date(msg.createdAt).getTime() <=
+          new Date(lastReadAtForA).getTime();
       } else if (msg.senderId === userA.id && lastReadAtForB != null) {
-        isRead = new Date(msg.createdAt).getTime() <= new Date(lastReadAtForB).getTime();
+        isRead = new Date(msg.createdAt).getTime() <=
+          new Date(lastReadAtForB).getTime();
       }
       return { ...msg, isRead };
     });
@@ -694,20 +984,26 @@ async function writeJsonlFile<T>(filename: string, data: T[]): Promise<void> {
 async function main() {
   console.log("Generating seed data...");
 
+  console.log("0. Converting seed image assets to WebP if needed...");
+  await ensureWebpImageAssets();
+
+  console.log("0.5 Converting seed movie assets to MP4...");
+  await ensureMp4MovieAssets();
+
   console.log("1. Generating ProfileImages (using existing assets)...");
-  const profileImages = generateProfileImages();
+  const profileImages = await generateProfileImages();
 
   console.log("2. Generating Users...");
   const users = generateUsers(CONFIG.USER_COUNT, profileImages);
 
   console.log("3. Generating Images (using existing assets)...");
-  const images = generateImages();
+  const images = await generateImages();
 
   console.log("4. Generating Movies (using existing assets)...");
   const movies = generateMovies();
 
   console.log("5. Generating Sounds (using existing assets)...");
-  const sounds = generateSounds();
+  const sounds = await generateSounds();
 
   console.log("6. Generating Posts...");
   const posts = generatePosts(CONFIG.POST_COUNT, users, movies, sounds);
@@ -719,8 +1015,10 @@ async function main() {
   const comments = generateComments(posts, users, CONFIG.COMMENTS_PER_POST);
 
   console.log("9. Generating DirectMessages...");
-  const { conversations: directMessageConversations, messages: directMessages } =
-    generateDirectMessages(users);
+  const {
+    conversations: directMessageConversations,
+    messages: directMessages,
+  } = generateDirectMessages(users);
 
   console.log("Writing seed files...");
 
@@ -733,7 +1031,10 @@ async function main() {
     writeJsonlFile("posts.jsonl", posts),
     writeJsonlFile("postsImagesRelation.jsonl", postsImagesRelation),
     writeJsonlFile("comments.jsonl", comments),
-    writeJsonlFile("directMessageConversations.jsonl", directMessageConversations),
+    writeJsonlFile(
+      "directMessageConversations.jsonl",
+      directMessageConversations,
+    ),
     writeJsonlFile("directMessages.jsonl", directMessages),
   ]);
 
@@ -746,7 +1047,9 @@ async function main() {
   console.log(`- Posts: ${posts.length}`);
   console.log(`- PostsImagesRelation: ${postsImagesRelation.length}`);
   console.log(`- Comments: ${comments.length}`);
-  console.log(`- DirectMessageConversations: ${directMessageConversations.length}`);
+  console.log(
+    `- DirectMessageConversations: ${directMessageConversations.length}`,
+  );
   console.log(`- DirectMessages: ${directMessages.length}`);
 }
 

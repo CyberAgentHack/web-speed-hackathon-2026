@@ -27,7 +27,9 @@ declare namespace Models {
 
   interface Image {
     alt: string;
+    height: number;
     id: string;
+    width: number;
   }
 
   interface Sound {

@@ -46,9 +46,6 @@ importers:
       lighthouse:
         specifier: 12.8.2
         version: 12.8.2(patch_hash=acce72cbff58135f1160f814d2f19adb0c58a5eaa4b1bbcb46e432d72243a924)
-      lodash:
-        specifier: 4.17.21
-        version: 4.17.21
       merge-error-cause:
         specifier: 5.0.2
         version: 5.0.2
@@ -86,9 +83,6 @@ importers:
       '@types/debug':
         specifier: 4.1.12
         version: 4.1.12
-      '@types/lodash':
-        specifier: 4.17.20
-        version: 4.17.20
       '@types/react':
         specifier: 19.2.2
         version: 19.2.2
@@ -835,9 +829,6 @@ packages:
 
   '@types/debug@4.1.12':
     resolution: {integrity: sha512-vIChWdVG3LG1SMxEvI/AK+FWJthlrqlTu7fbrlywTkkaONwk/UAGaULXRlf8vkzFBLVm0zkMdCquhL5aOjhXPQ==}
-
-  '@types/lodash@4.17.20':
-    resolution: {integrity: sha512-H3MHACvFUEiujabxhaI/ImO6gUrd8oOurg7LQtS7mbwIXA/cUqWrvBsaeJ23aZEPk1TAYkurjfMbSELfoCXlGA==}
 
   '@types/ms@2.1.0':
     resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
@@ -3140,8 +3131,6 @@ snapshots:
   '@types/debug@4.1.12':
     dependencies:
       '@types/ms': 2.1.0
-
-  '@types/lodash@4.17.20': {}
 
   '@types/ms@2.1.0': {}
 
