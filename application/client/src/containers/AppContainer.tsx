@@ -1,9 +1,10 @@
 import { lazy, Suspense, useCallback, useEffect, useId, useState } from "react";
-import { Helmet, HelmetProvider } from "react-helmet";
+import { HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
+import { PostContainer } from "@web-speed-hackathon-2026/client/src/containers/PostContainer";
 import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
 import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
@@ -36,12 +37,6 @@ const DirectMessageListContainer = lazy(() =>
   })),
 );
 
-const PostContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/PostContainer").then((m) => ({
-    default: m.PostContainer,
-  })),
-);
-
 const SearchContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/SearchContainer").then((m) => ({
     default: m.SearchContainer,
@@ -68,7 +63,7 @@ if (typeof window !== "undefined") {
   } else if (path.startsWith("/dm/")) {
     void import("@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer");
   } else if (/^\/posts\/[^/]+$/.test(path)) {
-    void import("@web-speed-hackathon-2026/client/src/containers/PostContainer");
+    // PostContainer は通常 import に切り替えたため、事前取得は不要
   }
 }
 
@@ -91,7 +86,7 @@ export const AppContainer = () => {
   // サーバーからプリロードされた /api/v1/me データがあれば初期状態に反映する
   const _preloadedMe = (() => {
     const p = typeof window !== "undefined"
-      ? (window as unknown as Record<string, unknown>).__PRELOAD_DATA__
+      ? (window as unknown as Record<string, unknown>)["__PRELOAD_DATA__"]
       : null;
     return p && typeof p === "object" && "/api/v1/me" in (p as Record<string, unknown>)
       ? { found: true, value: (p as Record<string, unknown>)["/api/v1/me"] as Models.User | null }
@@ -99,16 +94,12 @@ export const AppContainer = () => {
   })();
 
   const [activeUser, setActiveUser] = useState<Models.User | null>(_preloadedMe.found ? _preloadedMe.value : null);
-  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(!_preloadedMe.found);
 
   useEffect(() => {
     if (_preloadedMe.found) return; // プリロード済みならスキップ
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {
         setActiveUser(user);
-      })
-      .finally(() => {
-        setIsLoadingActiveUser(false);
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

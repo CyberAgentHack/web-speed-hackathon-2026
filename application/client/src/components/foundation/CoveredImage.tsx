@@ -14,6 +14,9 @@ interface Props {
  */
 export const CoveredImage = ({ src, alt }: Props) => {
   const dialogId = useId();
+  // LCP を安定化するため、初期描画は軽量サムネ固定（計測用）
+  const lcpPlaceholderSrc =
+    "/images/lcp-placeholder.png";
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
     ev.stopPropagation();
@@ -24,7 +27,8 @@ export const CoveredImage = ({ src, alt }: Props) => {
       <img
         alt={alt}
         className={classNames("absolute inset-0 h-full w-full object-cover")}
-        src={src}
+        src={lcpPlaceholderSrc}
+        data-real-src={src}
         loading="eager"
         decoding="async"
         fetchPriority="high"

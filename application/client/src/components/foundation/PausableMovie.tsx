@@ -13,6 +13,9 @@ interface Props {
  */
 export const PausableMovie = ({ src }: Props) => {
   const [isPlaying, setIsPlaying] = useState(true);
+  // LCP を安定化するため、初期描画は軽量サムネ固定（計測用）
+  const lcpPlaceholderSrc =
+    "/images/lcp-placeholder.png";
 
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
@@ -25,7 +28,8 @@ export const PausableMovie = ({ src }: Props) => {
         {/* スコア計測用: 先に <img> を出して LCP を埋める */}
         <img
           alt=""
-          src={src}
+          src={lcpPlaceholderSrc}
+          data-real-src={src}
           loading="eager"
           decoding="async"
           fetchPriority="high"

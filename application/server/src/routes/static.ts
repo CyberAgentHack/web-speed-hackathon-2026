@@ -5,7 +5,7 @@ import { Router } from "express";
 import serveStatic from "serve-static";
 import { col, Op, where } from "sequelize";
 
-import { DirectMessageConversation, Post, User } from "@web-speed-hackathon-2026/server/src/models";
+import { Comment, DirectMessageConversation, Post, User } from "@web-speed-hackathon-2026/server/src/models";
 import {
   CLIENT_DIST_PATH,
   PUBLIC_PATH,
@@ -138,8 +138,57 @@ async function buildPreloadData(req: Parameters<Parameters<typeof Router>[0]>[0]
       if (postMatch) {
         // 投稿詳細ページ
         const postId = postMatch[1];
-        const post = await Post.findByPk(postId);
+        // コメントは Speed Index に効きやすいので “最小限だけ” プリロードする
+        const [post, comments] = await Promise.all([
+          Post.findByPk(postId),
+          Comment.findAll({
+            where: { postId },
+            limit: 6,
+            order: [["createdAt", "DESC"]],
+          }),
+        ]);
+
         data[`/api/v1/posts/${postId}`] = post ? post.toJSON() : null;
+
+        data[`/api/v1/posts/${postId}/comments`] = comments.map((c) => {
+          const json = c.toJSON() as Record<string, unknown> & {
+            user?: any;
+            createdAt?: unknown;
+            text?: unknown;
+            id?: unknown;
+          };
+
+          const trimmedUser =
+            json.user != null && typeof json.user === "object"
+              ? (() => {
+                  const u = json.user as Record<string, unknown>;
+                  const profileImage =
+                    u.profileImage != null && typeof u.profileImage === "object"
+                      ? (u.profileImage as Record<string, unknown>)
+                      : null;
+
+                  return {
+                    id: u.id,
+                    username: u.username,
+                    name: u.name,
+                    profileImage:
+                      profileImage != null
+                        ? {
+                            id: profileImage.id,
+                            alt: profileImage.alt,
+                          }
+                        : null,
+                  };
+                })()
+              : null;
+
+          return {
+            id: json.id,
+            text: json.text,
+            createdAt: json.createdAt,
+            user: trimmedUser,
+          };
+        });
       }
     }
 
