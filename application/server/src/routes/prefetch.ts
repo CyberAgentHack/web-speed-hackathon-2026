@@ -75,6 +75,40 @@ async function getPrefetchData(urlPath: string, userId?: string): Promise<Record
   return data;
 }
 
+// Extract LCP image preload links from prefetch data
+function extractLcpPreloads(data: Record<string, unknown>, urlPath: string): string {
+  const links: string[] = [];
+
+  // Home: first post's first image or profile image
+  const postsKey = "/api/v1/posts?limit=30&offset=0";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const posts = data[postsKey] as any[] | undefined;
+  if (posts && posts.length > 0) {
+    const first = posts[0];
+    const firstImg = first?.images?.[0];
+    if (firstImg) {
+      links.push(`<link rel="preload" as="image" href="/images/${firstImg.id}.avif" fetchpriority="high">`);
+    }
+    const profileImg = first?.user?.profileImage;
+    if (profileImg) {
+      links.push(`<link rel="preload" as="image" href="/images/profiles/${profileImg.id}.avif">`);
+    }
+  }
+
+  // Post detail: the post's first image
+  const postMatch = urlPath.match(/^\/posts\/([^/]+)$/);
+  if (postMatch) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const post = data[`/api/v1/posts/${postMatch[1]}`] as any;
+    const postImg = post?.images?.[0];
+    if (postImg) {
+      links.push(`<link rel="preload" as="image" href="/images/${postImg.id}.avif" fetchpriority="high">`);
+    }
+  }
+
+  return links.join("");
+}
+
 // Intercept HTML requests — stream head first, then inject prefetch data
 prefetchRouter.use(async (req, res, next) => {
   const accept = req.headers.accept || "";
@@ -93,6 +127,12 @@ prefetchRouter.use(async (req, res, next) => {
 
     // Run DB queries in parallel while browser downloads CSS/JS
     const prefetchData = await getPrefetchData(req.path, req.session.userId);
+
+    // Inject LCP image preload hint for first post's image
+    const lcpPreloads = extractLcpPreloads(prefetchData, req.path);
+    if (lcpPreloads) {
+      res.write(lcpPreloads);
+    }
 
     if (Object.keys(prefetchData).length > 0) {
       res.write(`<script>window.__PREFETCH__=${JSON.stringify(prefetchData)}</script>`);
