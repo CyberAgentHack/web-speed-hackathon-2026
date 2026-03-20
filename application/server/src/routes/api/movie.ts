@@ -13,7 +13,7 @@ import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 const execFileAsync = promisify(execFile);
 
 // 変換した動画の拡張子
-const EXTENSION = "gif";
+const EXTENSION = "mp4";
 
 export const movieRouter = Router();
 
@@ -38,6 +38,10 @@ movieRouter.post("/movies", async (req, res) => {
       "-y",
       "-t", "5",
       "-vf", "crop=min(iw\\,ih):min(iw\\,ih),scale=320:320,fps=10",
+      "-vcodec", "libx264",
+      "-pix_fmt", "yuv420p",
+      "-crf", "28",
+      "-movflags", "+faststart",
       "-an",
       outputPath,
     ]);
