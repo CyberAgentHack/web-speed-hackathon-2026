@@ -21,6 +21,20 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+const STREAM_TTFT_MS = 40;
+const STREAM_CHUNK_INTERVAL_MS = 8;
+const STREAM_CHUNK_SIZE = 160;
+
+function splitIntoChunks(text: string, chunkSize: number): string[] {
+  const chunks: string[] = [];
+
+  for (let index = 0; index < text.length; index += chunkSize) {
+    chunks.push(text.slice(index, index + chunkSize));
+  }
+
+  return chunks;
+}
+
 crokRouter.get("/crok", async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
@@ -33,16 +47,16 @@ crokRouter.get("/crok", async (req, res) => {
 
   let messageId = 0;
 
-  // TTFT (Time to First Token)
-  await sleep(500);
+  // レスポンス内容とSSEの形式は維持しつつ、過剰な人工遅延だけを減らす。
+  await sleep(STREAM_TTFT_MS);
 
-  for (const char of response) {
+  for (const chunk of splitIntoChunks(response, STREAM_CHUNK_SIZE)) {
     if (res.closed) break;
 
-    const data = JSON.stringify({ text: char, done: false });
+    const data = JSON.stringify({ text: chunk, done: false });
     res.write(`event: message\nid: ${messageId++}\ndata: ${data}\n\n`);
 
-    await sleep(1);
+    await sleep(STREAM_CHUNK_INTERVAL_MS);
   }
 
   if (!res.closed) {
