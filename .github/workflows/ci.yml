@@ -21,8 +21,8 @@ jobs:
           cache: pnpm
           cache-dependency-path: application/pnpm-lock.yaml
       - run: cd application && pnpm install --frozen-lockfile
-      - run: cd application && npx oxlint .
-      - run: cd application && npx oxfmt --check .
+      - run: cd application && pnpm exec oxlint .
+      - run: cd application && pnpm exec oxfmt --check .
 
   typecheck:
     runs-on: ubuntu-latest
