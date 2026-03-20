@@ -1,13 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 
 export function useSearchParams(): [URLSearchParams] {
-  const [searchParams, setSearchParams] = useState(
-    () => new URLSearchParams(window.location.search),
-  );
-  const lastSearchRef = useRef(window.location.search);
+  const [searchParams, setSearchParams] = useState(() => new URLSearchParams(""));
+  const lastSearchRef = useRef("");
 
   useEffect(() => {
     let active = true;
+
+    // Set initial value from window.location on mount
+    const initialSearch = window.location.search;
+    if (initialSearch !== lastSearchRef.current) {
+      lastSearchRef.current = initialSearch;
+      setSearchParams(new URLSearchParams(initialSearch));
+    }
 
     const poll = () => {
       if (!active) return;
