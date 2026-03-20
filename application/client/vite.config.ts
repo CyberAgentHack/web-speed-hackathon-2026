@@ -26,6 +26,14 @@ export default defineConfig({
               test: /highlight.js/,
               name: "highlight",
             },
+            {
+              test: /katex/,
+              name: "katex",
+            },
+            {
+              test: /@imagemagick/,
+              name: "imagemagick",
+            },
           ],
         },
       },
