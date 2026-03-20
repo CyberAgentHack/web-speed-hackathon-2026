@@ -36,6 +36,45 @@ export function clearImageCache() {
   cache.clear();
 }
 
+const PREWARM_WIDTHS = [40, 96];
+
+export async function prewarmImageCache() {
+  const profileDir = path.resolve(PUBLIC_PATH, "images", "profiles");
+  let files: string[];
+  try {
+    files = (await fs.readdir(profileDir)).filter((f) => f.endsWith(".avif"));
+  } catch {
+    return;
+  }
+
+  const tasks: Array<() => Promise<void>> = [];
+  for (const file of files) {
+    for (const width of PREWARM_WIDTHS) {
+      const imagePath = `profiles/${file}`;
+      const cacheKey = `${imagePath}:${width}`;
+      if (cache.has(cacheKey)) continue;
+      const filePath = path.resolve(profileDir, file);
+      tasks.push(async () => {
+        try {
+          const buf = await sharp(filePath)
+            .resize({ width, withoutEnlargement: true })
+            .avif({ quality: 50 })
+            .toBuffer();
+          cacheSet(cacheKey, buf);
+        } catch {
+          // skip
+        }
+      });
+    }
+  }
+
+  // Process in batches of 3 (matching sharp concurrency)
+  for (let i = 0; i < tasks.length; i += 3) {
+    await Promise.all(tasks.slice(i, i + 3).map((t) => t()));
+  }
+  console.log(`[prewarm] cached ${cache.size} profile images`);
+}
+
 imageResizeRouter.get("/images/{*path}", async (req, res, next) => {
   const wParam = req.query["w"];
   if (wParam == null) return next();
