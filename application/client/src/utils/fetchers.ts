@@ -2,7 +2,9 @@ import { gzip } from "pako";
 
 async function parseJSONResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    throw new Error(`Request failed: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Request failed: ${response.status} ${response.statusText}`,
+    );
   }
   return (await response.json()) as T;
 }
@@ -13,7 +15,9 @@ export async function fetchBinary(url: string): Promise<ArrayBuffer> {
   });
 
   if (!response.ok) {
-    throw new Error(`Request failed: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Request failed: ${response.status} ${response.statusText}`,
+    );
   }
 
   return await response.arrayBuffer();

@@ -20,7 +20,9 @@ export function useSearchParams(): [URLSearchParams] {
     };
 
     const originalPushState = window.history.pushState.bind(window.history);
-    const originalReplaceState = window.history.replaceState.bind(window.history);
+    const originalReplaceState = window.history.replaceState.bind(
+      window.history,
+    );
 
     window.history.pushState = function (...args) {
       const result = originalPushState(...args);

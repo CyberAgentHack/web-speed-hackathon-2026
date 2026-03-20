@@ -29,13 +29,12 @@ const config = {
     main: [
       'core-js',
       'regenerator-runtime/runtime',
-      'jquery-binarytransport',
       path.resolve(SRC_PATH, './index.css'),
       path.resolve(SRC_PATH, './buildinfo.ts'),
       path.resolve(SRC_PATH, './index.tsx'),
     ],
   },
-  mode: 'production',
+  mode: 'none',
   module: {
     rules: [
       {
@@ -67,10 +66,8 @@ const config = {
   },
   plugins: [
     new webpack.ProvidePlugin({
-      $: 'jquery',
       AudioContext: ['standardized-audio-context', 'AudioContext'],
       Buffer: ['buffer', 'Buffer'],
-      'window.jQuery': 'jquery',
     }),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
