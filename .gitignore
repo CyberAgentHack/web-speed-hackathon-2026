@@ -239,3 +239,7 @@ bench-results/
 application/upload/**
 !application/upload/**/
 !application/upload/**/.gitkeep
+
+# SQLite WAL files
+*.sqlite-shm
+*.sqlite-wal
