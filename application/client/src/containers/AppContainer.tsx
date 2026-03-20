@@ -58,6 +58,7 @@ export const AppContainer = () => {
 
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
   const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
+  const [isAuthFlowThrottled, setIsAuthFlowThrottled] = useState(false);
   useEffect(() => {
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {
@@ -70,8 +71,29 @@ export const AppContainer = () => {
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
     setActiveUser(null);
+    // 認証フロー再開中はホームへの遷移直後だけ重いタイムライン取得を抑制する
+    setIsAuthFlowThrottled(true);
     navigate("/");
   }, [navigate]);
+
+  useEffect(() => {
+    if (!isAuthFlowThrottled) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setIsAuthFlowThrottled(false);
+    }, 12 * 1000);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [isAuthFlowThrottled]);
+
+  const handleUpdateActiveUser = useCallback((user: Models.User) => {
+    setActiveUser(user);
+    setIsAuthFlowThrottled(false);
+  }, []);
 
   const authModalId = useId();
   const newPostModalId = useId();
@@ -95,7 +117,7 @@ export const AppContainer = () => {
         onLogout={handleLogout}
       >
         <Routes>
-          <Route element={<TimelineContainer />} path="/" />
+          <Route element={<TimelineContainer suppressHeavyMedia={isAuthFlowThrottled} />} path="/" />
           <Route
             element={
               <Suspense fallback={null}>
@@ -156,7 +178,7 @@ export const AppContainer = () => {
         </Routes>
       </AppPage>
 
-      <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
+      <AuthModalContainer id={authModalId} onUpdateActiveUser={handleUpdateActiveUser} />
       <Suspense fallback={null}>
         <NewPostModalContainer id={newPostModalId} />
       </Suspense>

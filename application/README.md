@@ -28,9 +28,15 @@ CaX のアプリケーションコードです。
 
 pnpm workspaces を採用しています。
 
-- `/workspaces/server` : サーバーの実装です
-- `/workspaces/client` : クライアントの実装です
-- `/workspaces/e2e`: E2E テストと VRT の実行環境です
+- `./server` : サーバーの実装です
+- `./client` : クライアントの実装です
+- `./e2e`: E2E テストと VRT の実行環境です
+
+## 開発時の注意
+
+- サーバー起動に失敗する場合は、まず使用ポートを確認して不要プロセスを停止してください
+- `pnpm` が見つからない場合は、シェルの PATH へ `pnpm` を含むディレクトリを追加してください
+- パフォーマンス改善時は `pnpm run build` 後に `pnpm run start` で計測条件を揃えることを推奨します
 
 ## API ドキュメント
 

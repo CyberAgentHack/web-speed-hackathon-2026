@@ -35,9 +35,25 @@ https://github.com/CyberAgentHack/web-speed-hackathon-2026/issues/new?template=a
 
 開発方法は [./docs/development.md](./docs/development.md) を参照してください。
 
+## クイックスタート（最短）
+
+ローカルで最短で改善サイクルを回す手順です。
+
+1. セットアップ: `mise trust && mise install`
+
+1. アプリ起動: `cd application && pnpm install --frozen-lockfile && pnpm run build && pnpm run start`
+
+1. 計測: `cd scoring-tool && pnpm install --frozen-lockfile && pnpm start --applicationUrl http://localhost:3000`
+
+> 競技中は「1改善 -> 単体計測 -> 全体計測」の順で回すと、回帰を見つけやすくなります。
+
 ## 計測
 
 ローカルで計測する方法は [./scoring-tool/README.md](./scoring-tool/README.md) を参照してください。
+
+## 改善運用
+
+改善計画と並行実行の方針は [./docs/readme-review-and-action-plan-2026-03-20.md](./docs/readme-review-and-action-plan-2026-03-20.md) を参照してください。
 
 ## ライセンス
 
