@@ -22,9 +22,18 @@ export const UserProfileContainer = () => {
 
   if (isLoadingUser) {
     return (
-      <Helmet>
-        <title>読込中 - CaX</title>
-      </Helmet>
+      <>
+        <Helmet>
+          <title>読込中 - CaX</title>
+        </Helmet>
+        <div className="bg-cax-canvas min-h-screen p-4">
+          <div className="animate-pulse space-y-4">
+            <div className="h-16 bg-stone-200 rounded-full w-16" />
+            <div className="h-4 bg-stone-200 rounded w-1/3" />
+            <div className="h-4 bg-stone-200 rounded w-full" />
+          </div>
+        </div>
+      </>
     );
   }
 
