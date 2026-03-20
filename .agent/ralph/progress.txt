@@ -322,3 +322,48 @@ Quality Checks:
 
 Commit:
 - Message: `feat: [US-007] - ChatMessage Markdown の key={content} リマウント修正`
+
+---
+
+## 2026-03-21 - US-008 splitChunks ベンダーチャンク分離
+
+Implementation:
+- `application/client/rspack.config.js` の `optimization.splitChunks.cacheGroups` に `vendor` グループを追加し、`react` / `react-dom` / `react-redux` / `react-router` / `scheduler` / `@remix-run/router` を専用 vendor チャンクへ固定分離するよう変更
+- `vendor` グループに `filename: "scripts/vendor-[contenthash].js"` を設定し、低頻度依存のキャッシュキーを main エントリと分離
+
+Acceptance Criteria Verification:
+- AC: rspack.config.js の splitChunks.cacheGroups に vendor グループが追加されている
+  Test case: `application/client/rspack.config.js` の実装確認
+  Result: `optimization.splitChunks.cacheGroups.vendor` が追加され、対象パッケージを `node_modules` 実パスで判定する `test` と `filename: "scripts/vendor-[contenthash].js"` を持つことを確認
+- AC: react, react-dom, react-router 等が vendor チャンクに分離されている
+  Test case: `mise exec -- pnpm build`
+  Result: build ログの entrypoint 出力に `scripts/vendor-c073fecad33980a6.js` が含まれ、`main` とは別チャンクとして読み込まれることを確認
+- AC: ビルド後に vendor-[contenthash].js が生成されている
+  Test case: `find dist/scripts -maxdepth 1 -type f | sort`
+  Result: `dist/scripts/vendor-c073fecad33980a6.js` が生成されていることを確認
+- AC: pnpm build が正常に完了する
+  Test case: `mise exec -- pnpm build`
+  Result: passed（Rspack の asset size warning のみ）
+- AC: ホームページにアクセスしてタイムラインが正しく表示される
+  Test case: `mise exec -- pnpm --filter @web-speed-hackathon-2026/server exec env PORT=3011 tsx src/index.ts`; `CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/home.test.ts src/post-detail.test.ts`
+  Result: `src/home.test.ts` の `タイムラインが表示される` を含む 14 tests passed。ホームから投稿詳細への遷移も通過し、vendor 分離後の chunk 読み込みで画面表示が崩れないことを確認
+- AC: 該当箇所のE2Eテストが通っていること。E2Eは常に build & start したサーバーに対して実行する（pnpm e2e 参考）
+  Test case: `CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/home.test.ts src/post-detail.test.ts`
+  Result: passed (14 tests)
+- AC: codex skill で review を受けること。自己レビューではなく必ず新しい codex を起動して移譲し、feedback は適宜修正判断を行う
+  Test case: 別 Codex エージェント `Mendel` に working tree diff のレビューを移譲
+  Result: 重大な指摘なし。`application/client/rspack.config.js:112-119` の `vendor` cacheGroup は現行依存構成で妥当であり、`scripts/vendor-*.js` の生成も確認できているとのレビュー結果を確認
+- AC: Typecheck passes
+  Test case: `mise exec -- pnpm typecheck`
+  Result: passed
+
+Quality Checks:
+- `mise trust` -> passed (`No untrusted config files found.`)
+- `mise install` -> passed (`mise all tools are installed`)
+- `mise exec -- pnpm typecheck` -> passed
+- `mise exec -- pnpm build` -> passed (Rspack size warning only; entrypoint に `scripts/vendor-c073fecad33980a6.js` を確認)
+- `find dist/scripts -maxdepth 1 -type f | sort` -> passed (`dist/scripts/vendor-c073fecad33980a6.js` を確認)
+- `CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/home.test.ts src/post-detail.test.ts` -> passed (14 tests)
+
+Commit:
+- Message: `feat: [US-008] - splitChunks ベンダーチャンク分離`

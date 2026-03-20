@@ -139,7 +139,7 @@
         "Typecheck passes"
       ],
       "priority": 8,
-      "passes": false,
+      "passes": true,
       "notes": "現在は splitChunks で CSS のみ cacheGroup 定義があり、JS ベンダーライブラリは自動分割に任せている。明示的に vendor チャンクを分離すればデプロイ時のキャッシュヒット率が向上。"
     }
   ]

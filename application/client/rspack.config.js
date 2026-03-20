@@ -109,6 +109,15 @@ const config = {
     minimize: true,
     splitChunks: {
       chunks: "all",
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/](react|react-dom|react-redux|react-router|scheduler|@remix-run[\\/]router)[\\/]/,
+          name: "vendor",
+          filename: "scripts/vendor-[contenthash].js",
+          priority: 20,
+          enforce: true,
+        },
+      },
     },
   },
   ignoreWarnings: [],
