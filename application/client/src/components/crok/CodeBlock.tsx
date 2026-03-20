@@ -1,6 +1,28 @@
-import { ComponentProps, isValidElement, ReactElement, ReactNode } from "react";
-import SyntaxHighlighter from "react-syntax-highlighter";
-import { atomOneLight } from "react-syntax-highlighter/dist/esm/styles/hljs";
+import { ComponentProps, isValidElement, lazy, ReactElement, ReactNode, Suspense } from "react";
+
+const LazySyntaxHighlighter = lazy(async () => {
+  const [{ default: SyntaxHighlighter }, { atomOneLight }] = await Promise.all([
+    import("react-syntax-highlighter"),
+    import("react-syntax-highlighter/dist/esm/styles/hljs"),
+  ]);
+
+  return {
+    default: ({ language, code }: { language: string; code: string }) => (
+      <SyntaxHighlighter
+        customStyle={{
+          fontSize: "14px",
+          padding: "24px 16px",
+          borderRadius: "8px",
+          border: "1px solid var(--color-cax-border)",
+        }}
+        language={language}
+        style={atomOneLight}
+      >
+        {code}
+      </SyntaxHighlighter>
+    ),
+  };
+});
 
 const getLanguage = (children: ReactElement<ComponentProps<"code">>) => {
   const className = children.props.className;
@@ -20,17 +42,21 @@ export const CodeBlock = ({ children }: ComponentProps<"pre">) => {
   const code = children.props.children?.toString() ?? "";
 
   return (
-    <SyntaxHighlighter
-      customStyle={{
-        fontSize: "14px",
-        padding: "24px 16px",
-        borderRadius: "8px",
-        border: "1px solid var(--color-cax-border)",
-      }}
-      language={language}
-      style={atomOneLight}
+    <Suspense
+      fallback={
+        <pre
+          style={{
+            fontSize: "14px",
+            padding: "24px 16px",
+            borderRadius: "8px",
+            border: "1px solid var(--color-cax-border)",
+          }}
+        >
+          <code>{code}</code>
+        </pre>
+      }
     >
-      {code}
-    </SyntaxHighlighter>
+      <LazySyntaxHighlighter code={code} language={language} />
+    </Suspense>
   );
 };
