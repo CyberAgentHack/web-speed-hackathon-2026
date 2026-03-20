@@ -34,4 +34,5 @@ test.describe("ユーザー詳細", () => {
       mask: dynamicMediaMask(page),
     });
   });
+
 });

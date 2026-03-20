@@ -33,6 +33,7 @@ test.describe("投稿詳細", () => {
 
     await expect(page).toHaveTitle(/さんのつぶやき - CaX/, { timeout: 10_000 });
   });
+
 });
 
 test.describe("投稿詳細 - 動画", () => {
@@ -94,6 +95,39 @@ test.describe("投稿詳細 - 音声", () => {
     await page.waitForTimeout(1_000);
     await playButton.click();
   });
+
+  test("音声の再生位置が波形で表示される", async ({ page }) => {
+    await page.goto("/");
+    const soundArticle = page.locator('article:has(svg[viewBox="0 0 100 1"])').first();
+    await expect(soundArticle).toBeVisible({ timeout: 30_000 });
+    await soundArticle.locator("time").first().click();
+    await page.waitForURL("**/posts/*", { timeout: 10_000 });
+
+    const waveform = page.locator('svg[viewBox="0 0 100 1"]').first();
+    await expect(waveform).toBeVisible({ timeout: 30_000 });
+
+    // 波形の上にオーバーレイ（再生位置インジケーター）があることを確認
+    // SoundPlayer.tsx では currentTimeRatio に応じて left スタイルが変わるオーバーレイ div がある
+    const overlay = page.locator("[data-sound-area] .relative .absolute.opacity-75").first();
+    await expect(overlay).toBeVisible({ timeout: 30_000 });
+
+    // 再生前は left: 0% のはず
+    const initialLeft = await overlay.evaluate((el) => el.style.left);
+    expect(initialLeft).toBe("0%");
+
+    // 再生ボタンをクリック
+    const playButton = page.locator("button.rounded-full.bg-cax-accent").first();
+    await playButton.click();
+
+    // 少し待って再生位置が変わることを確認
+    await expect(async () => {
+      const currentLeft = await overlay.evaluate((el) => el.style.left);
+      expect(currentLeft).not.toBe("0%");
+    }).toPass({ timeout: 10_000 });
+
+    // 一時停止
+    await playButton.click();
+  });
 });
 
 test.describe("投稿詳細 - 写真", () => {
@@ -125,4 +159,5 @@ test.describe("投稿詳細 - 写真", () => {
       mask: dynamicMediaMask(page),
     });
   });
+
 });

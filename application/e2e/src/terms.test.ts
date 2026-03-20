@@ -21,4 +21,25 @@ test.describe("利用規約", () => {
       mask: dynamicMediaMask(page),
     });
   });
+
+  test("源ノ明朝（Noto Serif JP）フォントが適用されている", async ({ page }) => {
+    // 利用規約ページの h1 に "Rei no Are Mincho" フォントが指定されていることを確認
+    // (Source Han Serif JP = 源ノ明朝 = Noto Serif JP の改変フォント)
+    const heading = page.locator("h1").first();
+    await expect(heading).toBeVisible({ timeout: 30_000 });
+
+    // CSS の font-family に "Rei_no_Are_Mincho" (Tailwind v4 形式) または "Rei no Are Mincho" が含まれること
+    const fontFamily = await heading.evaluate((el) => {
+      return window.getComputedStyle(el).fontFamily;
+    });
+    expect(fontFamily).toMatch(/Rei.no.Are.Mincho/i);
+
+    // h2 にも同じフォントが適用されていること
+    const h2 = page.locator("h2").first();
+    await expect(h2).toBeVisible({ timeout: 10_000 });
+    const h2FontFamily = await h2.evaluate((el) => {
+      return window.getComputedStyle(el).fontFamily;
+    });
+    expect(h2FontFamily).toMatch(/Rei.no.Are.Mincho/i);
+  });
 });

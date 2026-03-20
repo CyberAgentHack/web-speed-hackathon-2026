@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { login } from "./utils";
+
 test.describe("サインイン・新規登録", () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
@@ -85,5 +87,32 @@ test.describe("サインイン・新規登録", () => {
 
     // エラーメッセージが表示される
     await expect(page.getByText("パスワードが異なります")).toBeVisible({ timeout: 10_000 });
+  });
+});
+
+test.describe("サインアウト", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 });
+  });
+
+  test("サインアウトが成功するとサイドバーにサインインボタンが出現する", async ({ page }) => {
+    // サインイン
+    await login(page);
+
+    // サインイン後、サインインボタンは表示されない
+    await expect(page.getByRole("button", { name: "サインイン" })).not.toBeVisible({ timeout: 10_000 });
+
+    // アカウントメニューボタンをクリック
+    const accountMenuButton = page.getByRole("button", { name: "アカウントメニュー" });
+    await expect(accountMenuButton).toBeVisible({ timeout: 10_000 });
+    await accountMenuButton.click();
+
+    // サインアウトボタンをクリック
+    const signoutButton = page.getByRole("button", { name: "サインアウト" });
+    await expect(signoutButton).toBeVisible({ timeout: 10_000 });
+    await signoutButton.click();
+
+    // サインインボタンが再表示される
+    await expect(page.getByRole("button", { name: "サインイン" })).toBeVisible({ timeout: 30_000 });
   });
 });
