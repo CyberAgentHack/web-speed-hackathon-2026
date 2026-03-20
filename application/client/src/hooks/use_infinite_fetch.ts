@@ -14,6 +14,8 @@ export function useInfiniteFetch<T>(
   fetcher: (apiPath: string) => Promise<T[]>,
 ): ReturnValues<T> {
   const internalRef = useRef({ isLoading: false, offset: 0 });
+  const fetcherRef = useRef(fetcher);
+  fetcherRef.current = fetcher;
 
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
     data: [],
@@ -39,7 +41,7 @@ export function useInfiniteFetch<T>(
     const params = new URLSearchParams({ limit: String(LIMIT), offset: String(offset) });
     const urlWithParams = `${apiPath}?${params.toString()}`;
 
-    void fetcher(urlWithParams).then(
+    void fetcherRef.current(urlWithParams).then(
       (data) => {
         setResult((cur) => ({
           ...cur,
@@ -63,7 +65,7 @@ export function useInfiniteFetch<T>(
         };
       },
     );
-  }, [apiPath, fetcher]);
+  }, [apiPath]);
 
   useEffect(() => {
     setResult(() => ({
