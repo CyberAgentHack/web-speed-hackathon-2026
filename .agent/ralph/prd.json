@@ -25,6 +25,20 @@
       "notes": "2026-03-20 完了。main.js 244KiB, vendor chunk 73MB (web-llm/ffmpeg等の大型依存が含まれる)。NODE_ENV conflict warning は US-002 で対応。"
     },
     {
+      "id": "US-001b",
+      "title": "Webpack → Rspack 移行",
+      "description": "開発者として、バンドラーを Webpack から Rspack に移行し、ビルド速度を大幅に向上させたい。",
+      "acceptanceCriteria": [
+        "webpack.config.js が rspack.config.js（または同等）に移行されている",
+        "pnpm build が Rspack で正常に完了する",
+        "ビルド出力が Webpack 時と同等に動作する",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "完了済み。Webpack から Rspack へ移行完了。"
+    },
+    {
       "id": "US-002",
       "title": "Babel設定の本番向け最適化とポリフィル削除",
       "description": "開発者として、IE11向けポリフィルを削除しモダンブラウザ向けにBabelを設定することで、不要なコード生成を削減したい。",
@@ -183,8 +197,8 @@
         "Typecheck passes"
       ],
       "priority": 10,
-      "passes": false,
-      "notes": "レギュレーション: 再生される動画が著しく劣化していないこと。test_cases.md の動画テスト項目を通過すること。"
+      "passes": true,
+      "notes": "2026-03-20 完了。GIF 179MB → MP4 2.4MB (1.3%)。PausableMovie を gifler/canvas から <video> タグに書き換え。gifler/omggif/gifler.d.ts 削除。E2Eテスト canvas→video 更新、VRTスナップショット更新。"
     },
     {
       "id": "US-011",

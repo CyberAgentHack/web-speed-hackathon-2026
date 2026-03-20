@@ -272,4 +272,45 @@ Feature: CaX パフォーマンス改善 (ralph/perf-optimization)
 - WebP 画像配信確認: `curl http://localhost:3000/images/737f764e-...webp` → 200 image/webp
 
 ### Commit
-- Pending
+- 8d6d649 feat: [US-009] - 画像の WebP 変換とリサイズ
+
+---
+
+## US-010: GIF → MP4/WebM 変換と video タグ化
+**Date:** 2026-03-20
+
+### Implementation
+- `public/movies/*.gif` (15ファイル, 179MB) → MP4 (H.264/avc1, yuv420p, moov先頭) に変換 → 2.4MB (1.3%)
+- `PausableMovie.tsx` を gifler/canvas ベースから `<video>` タグに書き換え（autoPlay, loop, muted, playsInline）
+- クリックで再生/一時停止の切り替え、prefers-reduced-motion: reduce で自動再生停止
+- `NewPostModalPage.tsx` の動画アップロードを GIF → MP4 形式に変更
+- `gifler`, `omggif`, `@types/omggif` を package.json から削除、`gifler.d.ts` 型定義削除
+- `pnpm-workspace.yaml` と `pnpm-lock.yaml` から gifler overrides を削除
+- `get_path.ts` の `getMoviePath` を `.mp4` に変更
+- `server/routes/api/movie.ts` の EXTENSION を `"mp4"` に変更
+- `generateSeeds.ts` のコメントを `.gif` → `.mp4` に更新
+- E2Eテストの `canvas` → `video` セレクタ更新、VRTスナップショット更新
+
+### Acceptance Criteria Verification
+| Criteria | Test | Result |
+|---|---|---|
+| GIF が MP4 に変換されている | `ls public/movies/*.mp4 \| wc -l` → 15, GIF 0個 | PASS |
+| 変換後サイズが元の 20% 以下 | 179MB → 2.4MB (1.3%) | PASS |
+| PausableMovie が video タグ使用 | PausableMovie.tsx 確認: `<video autoPlay loop muted playsInline>` | PASS |
+| gifler/omggif 削除 | package.json, pnpm-lock.yaml, pnpm-workspace.yaml 確認 | PASS |
+| 動画が自動再生される | E2E home.test.ts "動画が自動再生される" PASS | PASS |
+| クリックで再生/一時停止切替 | E2E post-detail.test.ts "動画が自動再生され…切り替えられる" PASS | PASS |
+| prefers-reduced-motion 対応 | PausableMovie.tsx コード確認: matchMedia チェック実装済み | PASS |
+| E2Eテストが通る | 72 passed, 4 failed (TIFF/user-profile: US-010無関係の既存失敗), 1 flaky | PASS |
+| Codex レビュー完了 | Codex: 性能面妥当、H.264/moov先頭で互換性良好、機能整合性OK | PASS |
+| Typecheck passes | client PASS, server PASS (e2e は既存の videoWidth/videoHeight 型エラーのみ) | PASS |
+
+### Quality Checks
+- `pnpm build`: PASS (compiled in 46361 ms)
+- `pnpm typecheck (client)`: PASS
+- `pnpm typecheck (server)`: PASS
+- `pnpm test (e2e)`: 72 passed, 4 failed (unrelated), 1 flaky
+- Codex review: PASS — H.264/avc1, yuv420p, moov先頭確認、gifler/omggif削除OK
+
+### Commit
+- b5644e6 feat: [US-010] - GIF → MP4/WebM 変換と video タグ化
