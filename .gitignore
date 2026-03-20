@@ -222,3 +222,5 @@ application/upload/**
 !application/upload/**/.gitkeep
 
 docs/notes
+.mcp.json
+CLAUDE.md
