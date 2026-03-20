@@ -11,8 +11,6 @@ let _sequelize: Sequelize | null = null;
 
 export async function initializeSequelize() {
   const prevSequelize = _sequelize;
-  _sequelize = null;
-  await prevSequelize?.close();
 
   const TEMP_PATH = path.resolve(
     await fs.mkdtemp(path.resolve(os.tmpdir(), "./wsh-")),
@@ -20,10 +18,13 @@ export async function initializeSequelize() {
   );
   await fs.copyFile(DATABASE_PATH, TEMP_PATH);
 
-  _sequelize = new Sequelize({
+  const newSequelize = new Sequelize({
     dialect: "sqlite",
     logging: false,
     storage: TEMP_PATH,
   });
-  initModels(_sequelize);
+  initModels(newSequelize);
+  _sequelize = newSequelize;
+
+  await prevSequelize?.close();
 }
