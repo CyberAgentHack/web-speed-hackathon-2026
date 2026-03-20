@@ -24,9 +24,9 @@ export function useHasContentBelow(
         const barRect = barEl.getBoundingClientRect();
         setHasContentBelow(endRect.top > barRect.top);
       }
-      scheduler.postTask(check, { priority: "user-blocking", delay: 1 });
+      scheduler.postTask(check, { priority: "background", delay: 200 });
     };
-    scheduler.postTask(check, { priority: "user-blocking", delay: 1 });
+    scheduler.postTask(check, { priority: "background", delay: 200 });
     return () => {
       active = false;
     };
