@@ -5,15 +5,23 @@ class RequestError extends Error {
   status: number;
   statusText: string;
 
-  constructor(xhr: XMLHttpRequest) {
-    super(`Request failed: ${xhr.status} ${xhr.statusText}`);
+  constructor({
+    responseText = "",
+    status,
+    statusText,
+  }: {
+    responseText?: string;
+    status: number;
+    statusText: string;
+  }) {
+    super(`Request failed: ${status} ${statusText}`);
     this.name = "RequestError";
-    this.status = xhr.status;
-    this.statusText = xhr.statusText;
+    this.status = status;
+    this.statusText = statusText;
 
-    if (xhr.responseText.length > 0) {
+    if (responseText.length > 0) {
       try {
-        this.responseJSON = JSON.parse(xhr.responseText);
+        this.responseJSON = JSON.parse(responseText);
       } catch {
         this.responseJSON = undefined;
       }
@@ -21,32 +29,17 @@ class RequestError extends Error {
   }
 }
 
-function requestArrayBuffer(url: string): Promise<ArrayBuffer> {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("GET", url, false);
-    xhr.overrideMimeType("text/plain; charset=x-user-defined");
+async function requestArrayBuffer(url: string): Promise<ArrayBuffer> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new RequestError({
+      responseText: await response.text(),
+      status: response.status,
+      statusText: response.statusText,
+    });
+  }
 
-    try {
-      xhr.send();
-    } catch (error) {
-      reject(error);
-      return;
-    }
-
-    if (xhr.status < 200 || xhr.status >= 300) {
-      reject(new RequestError(xhr));
-      return;
-    }
-
-    const responseText = xhr.responseText;
-    const buffer = new Uint8Array(responseText.length);
-    for (let index = 0; index < responseText.length; index += 1) {
-      buffer[index] = responseText.charCodeAt(index) & 0xff;
-    }
-
-    resolve(buffer.buffer);
-  });
+  return response.arrayBuffer();
 }
 
 function requestJSON<T>({
@@ -75,7 +68,13 @@ function requestJSON<T>({
     }
 
     if (xhr.status < 200 || xhr.status >= 300) {
-      reject(new RequestError(xhr));
+      reject(
+        new RequestError({
+          responseText: xhr.responseText,
+          status: xhr.status,
+          statusText: xhr.statusText,
+        }),
+      );
       return;
     }
 
@@ -88,7 +87,16 @@ export async function fetchBinary(url: string): Promise<ArrayBuffer> {
 }
 
 export async function fetchJSON<T>(url: string): Promise<T> {
-  return requestJSON<T>({ method: "GET", url });
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new RequestError({
+      responseText: await response.text(),
+      status: response.status,
+      statusText: response.statusText,
+    });
+  }
+
+  return (await response.json()) as T;
 }
 
 export async function sendFile<T>(url: string, file: File): Promise<T> {
