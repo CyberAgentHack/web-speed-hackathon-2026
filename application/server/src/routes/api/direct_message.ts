@@ -16,15 +16,26 @@ directMessageRouter.get("/dm", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversations = await DirectMessageConversation.findAll({
+  const conversations = await DirectMessageConversation.unscoped().findAll({
     where: {
       [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
+    include: [
+      { association: "initiator", include: [{ association: "profileImage" }] },
+      { association: "member", include: [{ association: "profileImage" }] },
+      {
+        association: "messages",
+        attributes: ["id", "body", "createdAt", "isRead", "senderId"],
+        include: [{ association: "sender", attributes: ["id"] }],
+        order: [["createdAt", "ASC"]],
+        required: true,
+      },
+    ],
+    order: [["createdAt", "DESC"]],
   });
 
-  // 最新メッセージの日時でソート（default scopeが全メッセージを含むため）
+  // 最新メッセージの日時でソート
   const sorted = conversations
-    .filter((c) => c.messages && c.messages.length > 0)
     .sort((a, b) => {
       const aLast = a.messages![a.messages!.length - 1]!.createdAt.getTime();
       const bLast = b.messages![b.messages!.length - 1]!.createdAt.getTime();
@@ -100,11 +111,22 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversation = await DirectMessageConversation.findOne({
+  const conversation = await DirectMessageConversation.unscoped().findOne({
     where: {
       id: req.params.conversationId,
       [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
+    include: [
+      { association: "initiator", include: [{ association: "profileImage" }] },
+      { association: "member", include: [{ association: "profileImage" }] },
+      {
+        association: "messages",
+        attributes: ["id", "body", "createdAt", "isRead", "senderId"],
+        include: [{ association: "sender", attributes: ["id"] }],
+        order: [["createdAt", "ASC"]],
+        required: false,
+      },
+    ],
   });
   if (conversation === null) {
     throw new httpErrors.NotFound();
