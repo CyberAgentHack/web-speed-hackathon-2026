@@ -55,7 +55,7 @@ export const PostItem = ({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} prioritizeLcpCandidate />
+              <ImageArea images={post.images} prioritizeLcpCandidate variant="thumb" />
             </div>
           ) : null}
           {post.movie ? (
