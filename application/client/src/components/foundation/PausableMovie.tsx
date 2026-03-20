@@ -16,7 +16,7 @@ interface Props {
  * クリックすると再生・一時停止を切り替えます。
  */
 export const PausableMovie = ({ src }: Props) => {
-  const { data, isLoading } = useFetch(src, fetchBinary);
+  const { data } = useFetch(src, fetchBinary);
 
   const animatorRef = useRef<Animator>(null);
   const canvasCallbackRef = useCallback<RefCallback<HTMLCanvasElement>>(
@@ -61,9 +61,7 @@ export const PausableMovie = ({ src }: Props) => {
     });
   }, []);
 
-  if (isLoading || data === null) {
-    return null;
-  }
+  const isReady = data !== null;
 
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
@@ -73,16 +71,20 @@ export const PausableMovie = ({ src }: Props) => {
         onClick={handleClick}
         type="button"
       >
-        <canvas ref={canvasCallbackRef} className="w-full" />
+        {isReady ? (
+          <canvas ref={canvasCallbackRef} className="w-full" />
+        ) : (
+          <div className="bg-cax-surface-subtle h-full w-full" />
+        )}
         <div
           className={classNames(
             "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
             {
-              "opacity-0 group-hover:opacity-100": isPlaying,
+              "opacity-0 group-hover:opacity-100": isPlaying && isReady,
             },
           )}
         >
-          <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
+          <FontAwesomeIcon iconType={isReady && isPlaying ? "pause" : "play"} styleType="solid" />
         </div>
       </button>
     </AspectRatioBox>

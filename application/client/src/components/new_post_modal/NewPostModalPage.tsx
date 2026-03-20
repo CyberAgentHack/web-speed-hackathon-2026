@@ -30,6 +30,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     text: "",
   });
 
+  const [hasMovieConversionError, setHasMovieConversionError] = useState(false);
   const [hasFileError, setHasFileError] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
 
@@ -47,6 +48,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
     setHasFileError(isValid !== true);
     if (isValid) {
+      setHasMovieConversionError(false);
       setIsConverting(true);
 
       void (async () => {
@@ -81,6 +83,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
     setHasFileError(isValid !== true);
     if (isValid) {
+      setHasMovieConversionError(false);
       setIsConverting(true);
 
       void import("@web-speed-hackathon-2026/client/src/utils/convert_sound")
@@ -110,11 +113,12 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
     setHasFileError(isValid !== true);
     if (isValid) {
+      setHasMovieConversionError(false);
       setIsConverting(true);
 
       void import("@web-speed-hackathon-2026/client/src/utils/convert_movie")
         .then(({ convertMovie }) => {
-          return convertMovie(file, { extension: "gif", size: undefined });
+          return convertMovie(file, { extension: "gif", size: 384 });
         })
         .then((converted) => {
           setParams((params) => ({
@@ -130,6 +134,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
         })
         .catch((error) => {
           console.error(error);
+          setHasMovieConversionError(true);
           setIsConverting(false);
         });
     }
@@ -182,14 +187,20 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       </div>
 
       <ModalSubmitButton
-        disabled={isConverting || isLoading || params.text === ""}
+        disabled={hasMovieConversionError || isConverting || isLoading || params.text === ""}
         loading={isConverting || isLoading}
       >
         {isConverting || isLoading ? "変換中" : "投稿する"}
       </ModalSubmitButton>
 
       <ModalErrorMessage>
-        {hasFileError ? "10 MB より小さくしてください" : hasError ? "投稿ができませんでした" : null}
+        {hasFileError
+          ? "10 MB より小さくしてください"
+          : hasMovieConversionError
+            ? "動画の変換に失敗しました"
+            : hasError
+              ? "投稿ができませんでした"
+              : null}
       </ModalErrorMessage>
     </form>
   );

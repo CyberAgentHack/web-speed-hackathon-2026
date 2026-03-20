@@ -32,12 +32,7 @@ const AssistantMessage = ({ content }: { content: string }) => {
         <div className="text-cax-text mb-1 text-sm font-medium">Crok</div>
         <div className="markdown text-cax-text max-w-none">
           {content ? (
-            <Markdown
-              components={{ pre: CodeBlock }}
-              key={content}
-              rehypePlugins={[rehypeKatex]}
-              remarkPlugins={[remarkMath, remarkGfm]}
-            >
+            <Markdown components={{ pre: CodeBlock }} rehypePlugins={[rehypeKatex]} remarkPlugins={[remarkMath, remarkGfm]}>
               {content}
             </Markdown>
           ) : (
