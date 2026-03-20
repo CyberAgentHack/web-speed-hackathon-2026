@@ -24,3 +24,5 @@ declare global {
     }
   }
 }
+
+declare module "negaposi-analyzer-ja";
