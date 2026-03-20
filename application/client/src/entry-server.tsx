@@ -1,11 +1,9 @@
+import { ReactNode, useCallback, useId } from "react";
 import { renderToString } from "react-dom/server";
 import { Provider } from "react-redux";
-import { StaticRouter } from "react-router";
-import { Route, Routes } from "react-router";
 import { combineReducers, legacy_createStore as createStore } from "redux";
 import { reducer as formReducer } from "redux-form";
 import { Helmet, HelmetProvider } from "react-helmet";
-import { useCallback, useId } from "react";
 
 import { SSRDataContext } from "@web-speed-hackathon-2026/client/src/contexts/SSRDataContext";
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
@@ -26,16 +24,49 @@ interface SSRPayload {
   activeUser: Models.User | null;
 }
 
+type PageName = "timeline" | "dm-list" | "dm" | "search" | "user-profile" | "post" | "terms" | "crok" | "not-found";
+
+interface PageProps {
+  activeUser: Models.User | null;
+  authModalId: string;
+  [key: string]: unknown;
+}
+
+const PAGE_MAP: Record<PageName, (props: PageProps) => ReactNode> = {
+  timeline: () => <TimelineContainer />,
+  "dm-list": ({ activeUser, authModalId }) => (
+    <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
+  ),
+  dm: ({ activeUser, authModalId, conversationId }) => (
+    <DirectMessageContainer activeUser={activeUser} authModalId={authModalId} conversationId={conversationId as string} />
+  ),
+  search: () => <SearchContainer />,
+  "user-profile": ({ username }) => <UserProfileContainer username={username as string} />,
+  post: ({ postId }) => <PostContainer postId={postId as string} />,
+  terms: () => <TermContainer />,
+  crok: ({ activeUser, authModalId }) => (
+    <CrokContainer activeUser={activeUser} authModalId={authModalId} />
+  ),
+  "not-found": () => <NotFoundContainer />,
+};
+
 const ServerApp = ({
   activeUser,
   helmetContext,
+  pageName,
+  pageProps,
 }: {
   activeUser: Models.User | null;
   helmetContext: Record<string, unknown>;
+  pageName: PageName;
+  pageProps: Record<string, unknown>;
 }) => {
   const authModalId = useId();
   const newPostModalId = useId();
   const handleLogout = useCallback(() => {}, []);
+
+  const renderPage = PAGE_MAP[pageName];
+  const content = renderPage({ activeUser, authModalId, ...pageProps });
 
   return (
     <HelmetProvider context={helmetContext}>
@@ -45,23 +76,7 @@ const ServerApp = ({
         newPostModalId={newPostModalId}
         onLogout={handleLogout}
       >
-        <Routes>
-          <Route element={<TimelineContainer />} path="/" />
-          <Route
-            element={<DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />}
-            path="/dm"
-          />
-          <Route
-            element={<DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />}
-            path="/dm/:conversationId"
-          />
-          <Route element={<SearchContainer />} path="/search" />
-          <Route element={<UserProfileContainer />} path="/users/:username" />
-          <Route element={<PostContainer />} path="/posts/:postId" />
-          <Route element={<TermContainer />} path="/terms" />
-          <Route element={<CrokContainer activeUser={activeUser} authModalId={authModalId} />} path="/crok" />
-          <Route element={<NotFoundContainer />} path="*" />
-        </Routes>
+        {content}
       </AppPage>
 
       <AuthModalContainer id={authModalId} onUpdateActiveUser={() => {}} />
@@ -77,17 +92,20 @@ function createFreshStore() {
   return createStore(rootReducer);
 }
 
-export function render(url: string, ssrData: SSRPayload) {
+export function render(pageName: string, pageProps: Record<string, unknown>, ssrData: SSRPayload) {
   const store = createFreshStore();
   const helmetContext: Record<string, unknown> = {};
 
   const html = renderToString(
     <Provider store={store}>
-      <StaticRouter location={url}>
-        <SSRDataContext.Provider value={ssrData.routeData}>
-          <ServerApp activeUser={ssrData.activeUser} helmetContext={helmetContext} />
-        </SSRDataContext.Provider>
-      </StaticRouter>
+      <SSRDataContext.Provider value={ssrData.routeData}>
+        <ServerApp
+          activeUser={ssrData.activeUser}
+          helmetContext={helmetContext}
+          pageName={pageName as PageName}
+          pageProps={pageProps}
+        />
+      </SSRDataContext.Provider>
     </Provider>,
   );
 

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router";
 import { Field, InjectedFormProps, reduxForm, WrappedFieldProps } from "redux-form";
 
 import { Timeline } from "@web-speed-hackathon-2026/client/src/components/timeline/Timeline";
@@ -39,7 +38,6 @@ const SearchPageComponent = ({
   results,
   handleSubmit,
 }: Props & InjectedFormProps<SearchFormData, Props>) => {
-  const navigate = useNavigate();
   const [isNegative, setIsNegative] = useState(false);
 
   const parsed = parseSearchQuery(query);
@@ -85,7 +83,7 @@ const SearchPageComponent = ({
 
   const onSubmit = (values: SearchFormData) => {
     const sanitizedText = sanitizeSearchText(values.searchText.trim());
-    navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
+    window.location.href = `/search?q=${encodeURIComponent(sanitizedText)}`;
   };
 
   return (

@@ -2,7 +2,6 @@
 const path = require("path");
 
 const CopyWebpackPlugin = require("copy-webpack-plugin");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const webpack = require("webpack");
 
@@ -10,6 +9,34 @@ const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
+
+class EntrypointsManifestPlugin {
+  apply(compiler) {
+    compiler.hooks.emit.tapAsync("EntrypointsManifestPlugin", (compilation, callback) => {
+      const manifest = {};
+      for (const [name, entrypoint] of compilation.entrypoints) {
+        const js = [];
+        const css = [];
+        for (const chunk of entrypoint.chunks) {
+          for (const file of chunk.files) {
+            if (file.endsWith(".js")) {
+              js.push("/" + file);
+            } else if (file.endsWith(".css")) {
+              css.push("/" + file);
+            }
+          }
+        }
+        manifest[name] = { js, css };
+      }
+      const json = JSON.stringify(manifest, null, 2);
+      compilation.assets["entrypoints.json"] = {
+        source: () => json,
+        size: () => json.length,
+      };
+      callback();
+    });
+  }
+}
 
 /** @type {import('webpack').Configuration} */
 const config = {
@@ -27,11 +54,15 @@ const config = {
   },
   devtool: false,
   entry: {
-    main: [
-      path.resolve(SRC_PATH, "./index.css"),
-      path.resolve(SRC_PATH, "./buildinfo.ts"),
-      path.resolve(SRC_PATH, "./index.tsx"),
-    ],
+    timeline: path.resolve(SRC_PATH, "./pages/timeline.tsx"),
+    "dm-list": path.resolve(SRC_PATH, "./pages/dm-list.tsx"),
+    dm: path.resolve(SRC_PATH, "./pages/dm.tsx"),
+    search: path.resolve(SRC_PATH, "./pages/search.tsx"),
+    "user-profile": path.resolve(SRC_PATH, "./pages/user-profile.tsx"),
+    post: path.resolve(SRC_PATH, "./pages/post.tsx"),
+    terms: path.resolve(SRC_PATH, "./pages/terms.tsx"),
+    crok: path.resolve(SRC_PATH, "./pages/crok.tsx"),
+    "not-found": path.resolve(SRC_PATH, "./pages/not-found.tsx"),
   },
   mode: "production",
   module: {
@@ -83,11 +114,7 @@ const config = {
         },
       ],
     }),
-    new HtmlWebpackPlugin({
-      inject: "head",
-      scriptLoading: "defer",
-      template: path.resolve(SRC_PATH, "./index.html"),
-    }),
+    new EntrypointsManifestPlugin(),
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],

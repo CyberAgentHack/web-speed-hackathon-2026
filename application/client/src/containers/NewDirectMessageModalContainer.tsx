@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router";
 import { SubmissionError } from "redux-form";
 
 import { NewDirectMessageModalPage } from "@web-speed-hackathon-2026/client/src/components/direct_message/NewDirectMessageModalPage";
@@ -27,8 +26,6 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
     };
   }, [ref]);
 
-  const navigate = useNavigate();
-
   const handleSubmit = useCallback(
     async (values: NewDirectMessageFormData) => {
       try {
@@ -36,14 +33,14 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
         const conversation = await sendJSON<Models.DirectMessageConversation>(`/api/v1/dm`, {
           peerId: user.id,
         });
-        navigate(`/dm/${conversation.id}`);
+        window.location.href = `/dm/${conversation.id}`;
       } catch {
         throw new SubmissionError({
           _error: "ユーザーが見つかりませんでした",
         });
       }
     },
-    [navigate],
+    [],
   );
 
   return (

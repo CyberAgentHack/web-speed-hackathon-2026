@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
-import { useParams } from "react-router";
 
 import { DirectMessageGate } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageGate";
 import { DirectMessagePage } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessagePage";
@@ -24,11 +23,10 @@ const TYPING_INDICATOR_DURATION_MS = 10 * 1000;
 interface Props {
   activeUser: Models.User | null;
   authModalId: string;
+  conversationId?: string;
 }
 
-export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
-  const { conversationId = "" } = useParams<{ conversationId: string }>();
-
+export const DirectMessageContainer = ({ activeUser, authModalId, conversationId = "" }: Props) => {
   const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(null);
   const [conversationError, setConversationError] = useState<Error | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
