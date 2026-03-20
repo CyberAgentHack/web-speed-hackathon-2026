@@ -1,17 +1,23 @@
-import type { MagickFormat } from "@imagemagick/magick-wasm";
+type FFmpegWorkerRequestInput =
+  | {
+      type: "convert-movie";
+      fileBuffer: ArrayBuffer;
+      extension: string;
+      size?: number;
+    }
+  | {
+      type: "extract-sound-metadata";
+      fileBuffer: ArrayBuffer;
+    }
+  | {
+      type: "convert-sound";
+      fileBuffer: ArrayBuffer;
+      extension: string;
+      artist: string;
+      title: string;
+    };
 
-interface Options {
-  extension: MagickFormat;
-}
-
-type ConvertImageWorkerRequest = {
-  id: number;
-  type: "convert";
-  fileBuffer: ArrayBuffer;
-  extension: MagickFormat;
-};
-
-type ConvertImageWorkerResponse =
+type FFmpegWorkerResponse =
   | {
       id: number;
       type: "success";
@@ -26,27 +32,29 @@ type ConvertImageWorkerResponse =
 let workerPromise: Promise<Worker> | undefined;
 let nextRequestId = 1;
 
-function getWorker(): Promise<Worker> {
+async function getWorker(): Promise<Worker> {
   if (workerPromise) {
     return workerPromise;
   }
 
   workerPromise = Promise.resolve(
-    new Worker(new URL("../workers/image_convert.worker.ts", import.meta.url), { type: "module" }),
+    new Worker(new URL("../workers/ffmpeg.worker.ts", import.meta.url), { type: "module" }),
   );
 
   return workerPromise;
 }
 
-export async function convertImage(file: File, options: Options): Promise<Blob> {
+export async function requestFFmpegWorker(
+  request: FFmpegWorkerRequestInput,
+  transfer: Transferable[] = [],
+): Promise<ArrayBuffer> {
   const worker = await getWorker();
-  const requestId = nextRequestId++;
-  const fileBuffer = await file.arrayBuffer();
+  const id = nextRequestId++;
 
   return await new Promise((resolve, reject) => {
-    const handleMessage = (event: MessageEvent<ConvertImageWorkerResponse>) => {
+    const handleMessage = (event: MessageEvent<FFmpegWorkerResponse>) => {
       const response = event.data;
-      if (response.id !== requestId) {
+      if (response.id !== id) {
         return;
       }
 
@@ -58,25 +66,18 @@ export async function convertImage(file: File, options: Options): Promise<Blob> 
         return;
       }
 
-      resolve(new Blob([response.outputBuffer]));
+      resolve(response.outputBuffer);
     };
 
     const handleError = () => {
       worker.removeEventListener("message", handleMessage);
       worker.removeEventListener("error", handleError);
-      reject(new Error("Image conversion worker failed"));
+      reject(new Error("FFmpeg worker failed"));
     };
 
     worker.addEventListener("message", handleMessage);
     worker.addEventListener("error", handleError);
 
-    const request: ConvertImageWorkerRequest = {
-      id: requestId,
-      type: "convert",
-      fileBuffer,
-      extension: options.extension,
-    };
-
-    worker.postMessage(request, [fileBuffer]);
+    worker.postMessage({ id, ...request }, transfer);
   });
 }
