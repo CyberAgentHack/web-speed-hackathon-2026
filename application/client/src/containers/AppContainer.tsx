@@ -86,18 +86,7 @@ export const AppContainer = () => {
   const authModalId = useId();
   const newPostModalId = useId();
 
-  useTitle(isLoadingActiveUser ? "読込中 - CaX" : "CaX");
-
-  if (isLoadingActiveUser) {
-    return (
-      <AppPage
-        activeUser={null}
-        authModalId={authModalId}
-        newPostModalId={newPostModalId}
-        onLogout={handleLogout}
-      />
-    );
-  }
+  useTitle("CaX");
 
   return (
     <>
