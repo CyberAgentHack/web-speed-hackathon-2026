@@ -7,6 +7,7 @@
   "scripts": {
     "build": "pnpm --filter @web-speed-hackathon-2026/client build",
     "start": "pnpm --filter @web-speed-hackathon-2026/server start",
+    "dev": "PORT=3333 pnpm --parallel --filter @web-speed-hackathon-2026/server --filter @web-speed-hackathon-2026/client dev",
     "test": "pnpm run test:unit && pnpm run test:e2e",
     "test:unit": "pnpm --filter @web-speed-hackathon-2026/server --filter @web-speed-hackathon-2026/client run test",
     "test:e2e": "pnpm --filter @web-speed-hackathon-2026/e2e test",

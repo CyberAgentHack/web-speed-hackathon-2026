@@ -33,7 +33,8 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 8080,
     proxy: {
-      "/api": "http://localhost:3000",
+      "/api/v1": `http://localhost:${process.env["PORT"] || 3333}`,
+      "/upload": `http://localhost:${process.env["PORT"] || 3333}`,
     },
   },
 
