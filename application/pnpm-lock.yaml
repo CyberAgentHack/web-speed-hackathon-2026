@@ -211,6 +211,9 @@ importers:
       connect-history-api-fallback:
         specifier: 2.0.0
         version: 2.0.0
+      encoding-japanese:
+        specifier: 2.2.0
+        version: 2.2.0
       exif-reader:
         specifier: 2.0.3
         version: 2.0.3
@@ -281,6 +284,9 @@ importers:
       '@types/connect-history-api-fallback':
         specifier: 1.5.4
         version: 1.5.4
+      '@types/encoding-japanese':
+        specifier: 2.2.1
+        version: 2.2.1
       '@types/exif-reader':
         specifier: 2.0.2
         version: 2.0.2
