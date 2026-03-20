@@ -6,12 +6,6 @@ on:
     pull_request:
         types: [opened, reopened, synchronize]
 
-# Cancel in-progress runs for the same ref to avoid queuing multiple
-# scoring jobs that each take up to 20 minutes.
-concurrency:
-    group: score-${{ github.ref }}
-    cancel-in-progress: true
-
 jobs:
     score:
         name: Build & Score
