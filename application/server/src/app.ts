@@ -1,14 +1,14 @@
 import { createNodeWebSocket } from "@hono/node-ws";
 import { Hono } from "hono";
-import { compress } from "hono/compress";
 
+import { brotliCompress } from "@web-speed-hackathon-2026/server/src/middleware/compress";
 import { sessionMiddleware, type SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
 
 export const app = new Hono<SessionEnv>();
 
 export const { upgradeWebSocket, injectWebSocket } = createNodeWebSocket({ app });
 
-app.use(compress());
+app.use(brotliCompress());
 app.use("*", sessionMiddleware);
 
 // Routes are registered after app is created to avoid circular imports
