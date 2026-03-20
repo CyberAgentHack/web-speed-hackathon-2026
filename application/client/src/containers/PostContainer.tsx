@@ -1,31 +1,22 @@
+import { useContext } from "react";
 import { Helmet } from "react-helmet";
 import { useParams } from "react-router";
 
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
 import { PostPage } from "@web-speed-hackathon-2026/client/src/components/post/PostPage";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
+import { SSRDataContext } from "@web-speed-hackathon-2026/client/src/contexts/SSRDataContext";
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
-  const { data: post, isLoading: isLoadingPost } = useFetch<Models.Post>(
-    `/api/v1/posts/${postId}`,
-    fetchJSON,
-  );
+  const ssrData = useContext(SSRDataContext);
+  const post = (ssrData?.[`/api/v1/posts/${postId}`] ?? null) as Models.Post | null;
 
-  const { data: comments, fetchMore } = useInfiniteFetch<Models.Comment>(
+  const { data: comments, fetchMore, isLoading: isLoadingComments } = useInfiniteFetch<Models.Comment>(
     `/api/v1/posts/${postId}/comments`,
     fetchJSON,
   );
-
-  if (isLoadingPost) {
-    return (
-      <Helmet>
-        <title>読込中 - CaX</title>
-      </Helmet>
-    );
-  }
 
   if (post === null) {
     return <NotFoundContainer />;
@@ -36,7 +27,7 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
       <Helmet>
         <title>{post.user.name} さんのつぶやき - CaX</title>
       </Helmet>
-      <PostPage comments={comments} post={post} />
+      <PostPage comments={comments} isLoadingComments={isLoadingComments} post={post} />
     </InfiniteScroll>
   );
 };

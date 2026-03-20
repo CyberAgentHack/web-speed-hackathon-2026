@@ -3,14 +3,19 @@ import { PostItem } from "@web-speed-hackathon-2026/client/src/components/post/P
 
 interface Props {
   comments: Models.Comment[];
+  isLoadingComments: boolean;
   post: Models.Post;
 }
 
-export const PostPage = ({ comments, post }: Props) => {
+export const PostPage = ({ comments, isLoadingComments, post }: Props) => {
   return (
     <>
       <PostItem post={post} />
-      <CommentList comments={comments} />
+      {isLoadingComments && comments.length === 0 ? (
+        <div style={{ padding: "16px", textAlign: "center" }}>読込中</div>
+      ) : (
+        <CommentList comments={comments} />
+      )}
     </>
   );
 };
