@@ -1,14 +1,15 @@
-import moment from "moment";
+import { memo } from "react";
 
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
+import { formatDate, toISOString } from "@web-speed-hackathon-2026/client/src/utils/date";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   comment: Models.Comment;
 }
 
-export const CommentItem = ({ comment }: Props) => {
+export const CommentItem = memo(function CommentItem({ comment }: Props) {
   return (
     <article className="hover:bg-cax-surface-subtle px-1 sm:px-4">
       <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
@@ -42,12 +43,12 @@ export const CommentItem = ({ comment }: Props) => {
             <TranslatableText text={comment.text} />
           </div>
           <p className="text-cax-text-muted pt-1 text-xs">
-            <time dateTime={moment(comment.createdAt).toISOString()}>
-              {moment(comment.createdAt).locale("ja").format("LL")}
+            <time dateTime={toISOString(comment.createdAt)}>
+              {formatDate(comment.createdAt)}
             </time>
           </p>
         </div>
       </div>
     </article>
   );
-};
+});
