@@ -3,6 +3,7 @@ import Express from "express";
 import morgan from "morgan";
 
 import { apiRouter } from "@web-speed-hackathon-2026/server/src/routes/api";
+import { imageResizeRouter } from "@web-speed-hackathon-2026/server/src/routes/image_resize";
 import { staticRouter } from "@web-speed-hackathon-2026/server/src/routes/static";
 import { sessionMiddleware } from "@web-speed-hackathon-2026/server/src/session";
 
@@ -26,4 +27,5 @@ app.use((_req, res, next) => {
 });
 
 app.use("/api/v1", apiRouter);
+app.use(imageResizeRouter);
 app.use(staticRouter);

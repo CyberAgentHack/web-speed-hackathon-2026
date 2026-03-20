@@ -76,7 +76,9 @@ export const CoveredImage = ({ src, loading = "lazy" }: Props) => {
           },
         )}
         loading={loading}
+        sizes="(max-width: 768px) 100vw, 600px"
         src={src}
+        srcSet={`${src}${src.includes("?") ? "&" : "?"}w=320 320w, ${src}${src.includes("?") ? "&" : "?"}w=640 640w, ${src}${src.includes("?") ? "&" : "?"}w=960 960w, ${src}${src.includes("?") ? "&" : "?"}w=1200 1200w`}
       />
 
       <button
