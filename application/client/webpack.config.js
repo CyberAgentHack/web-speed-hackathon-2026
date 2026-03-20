@@ -121,7 +121,11 @@ const config = {
       url: false,
     },
   },
-  optimization: {},
+  optimization: {
+    splitChunks: {
+      chunks: 'all',
+    },
+  },
     ignoreWarnings: [
     {
       module: /@ffmpeg/,
