@@ -97,7 +97,22 @@ async function convertMovie(request: ConvertMovieRequest): Promise<ArrayBuffer> 
   const exportFile = `export.${request.extension}`;
 
   await ffmpeg.writeFile("file", new Uint8Array(request.fileBuffer));
-  await ffmpeg.exec(["-i", "file", "-t", "5", "-r", "10", "-vf", `crop=${cropOptions}`, "-an", exportFile]);
+  await ffmpeg.exec([
+    "-i",
+    "file",
+    "-t",
+    "5",
+    "-r",
+    "10",
+    "-vf",
+    `crop=${cropOptions}`,
+    "-an",
+    "-movflags",
+    "+faststart",
+    "-pix_fmt",
+    "yuv420p",
+    exportFile,
+  ]);
 
   return await readBinaryFile(ffmpeg, exportFile);
 }

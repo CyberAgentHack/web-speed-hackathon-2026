@@ -9,6 +9,7 @@
   "scripts": {
     "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
+    "images:optimize-profiles": "tsx ./scripts/optimizeProfileImages.ts",
     "seed:generate": "tsx ./scripts/generateSeeds.ts",
     "seed:insert": "tsx ./scripts/insertSeeds.ts"
   },
@@ -25,6 +26,7 @@
     "music-metadata": "11.10.3",
     "sequelize": "6.37.7",
     "serve-static": "2.2.0",
+    "sharp": "0.34.4",
     "sqlite3": "5.1.7",
     "tsx": "4.20.6",
     "uuid": "13.0.0",
