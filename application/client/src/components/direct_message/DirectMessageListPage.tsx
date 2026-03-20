@@ -1,4 +1,4 @@
-import moment from "moment";
+// import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -12,7 +12,28 @@ interface Props {
   activeUser: Models.User;
   newDmModalId: string;
 }
+function fromNow(date: string | number | Date) {
+  const diff = Date.now() - new Date(date).getTime();
+  const rtf = new Intl.RelativeTimeFormat("ja", { numeric: "auto" });
 
+  const seconds = Math.floor(diff / 1000);
+  if (seconds < 60) return rtf.format(-seconds, "second");
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return rtf.format(-minutes, "minute");
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return rtf.format(-hours, "hour");
+
+  const days = Math.floor(hours / 24);
+  if (days < 30) return rtf.format(-days, "day");
+
+  const months = Math.floor(days / 30);
+  if (months < 12) return rtf.format(-months, "month");
+
+  const years = Math.floor(months / 12);
+  return rtf.format(-years, "year");
+}
 export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
   const [conversations, setConversations] =
     useState<Array<Models.DirectMessageConversation> | null>(null);
@@ -100,7 +121,8 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {/* {moment(lastMessage.createdAt).locale("ja").fromNow()} */
+                            fromNow(lastMessage.createdAt)}
                           </time>
                         )}
                       </div>

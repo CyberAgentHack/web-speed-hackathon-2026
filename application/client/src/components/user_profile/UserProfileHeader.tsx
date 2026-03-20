@@ -1,5 +1,5 @@
 import { FastAverageColor } from "fast-average-color";
-import moment from "moment";
+// import moment from "moment";
 import { ReactEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -43,9 +43,13 @@ export const UserProfileHeader = ({ user }: Props) => {
             <FontAwesomeIcon iconType="calendar-alt" styleType="regular" />
           </span>
           <span>
-            <time dateTime={moment(user.createdAt).toISOString()}>
-              {moment(user.createdAt).locale("ja").format("LL")}
-            </time>
+       <time dateTime={new Date(user.createdAt).toISOString()}>
+  {new Date(user.createdAt).toLocaleDateString("ja-JP", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  })}
+</time>
             からサービスを利用しています
           </span>
         </p>

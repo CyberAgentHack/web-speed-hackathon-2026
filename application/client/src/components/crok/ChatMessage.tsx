@@ -1,12 +1,36 @@
+import { ComponentProps, Suspense, lazy } from "react";
 import "katex/dist/katex.min.css";
 import Markdown from "react-markdown";
 import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 
-import { CodeBlock } from "@web-speed-hackathon-2026/client/src/components/crok/CodeBlock";
 import { TypingIndicator } from "@web-speed-hackathon-2026/client/src/components/crok/TypingIndicator";
 import { CrokLogo } from "@web-speed-hackathon-2026/client/src/components/foundation/CrokLogo";
+
+const LazyCodeBlock = lazy(async () => {
+  const module = await import("@web-speed-hackathon-2026/client/src/components/crok/CodeBlock");
+  return { default: module.CodeBlock };
+});
+
+const CodeBlockFallback = ({ children }: ComponentProps<"pre">) => {
+  return (
+    <pre
+      className="border-cax-border bg-cax-surface-subtle overflow-x-auto rounded-lg border px-4 py-6 text-sm"
+      style={{ fontSize: "14px" }}
+    >
+      {children}
+    </pre>
+  );
+};
+
+const MarkdownCodeBlock = (props: ComponentProps<"pre">) => {
+  return (
+    <Suspense fallback={<CodeBlockFallback {...props} />}>
+      <LazyCodeBlock {...props} />
+    </Suspense>
+  );
+};
 
 interface Props {
   message: Models.ChatMessage;
@@ -33,7 +57,7 @@ const AssistantMessage = ({ content }: { content: string }) => {
         <div className="markdown text-cax-text max-w-none">
           {content ? (
             <Markdown
-              components={{ pre: CodeBlock }}
+              components={{ pre: MarkdownCodeBlock }}
               key={content}
               rehypePlugins={[rehypeKatex]}
               remarkPlugins={[remarkMath, remarkGfm]}

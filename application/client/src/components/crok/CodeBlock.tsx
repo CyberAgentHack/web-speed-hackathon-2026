@@ -17,6 +17,7 @@ const isCodeElement = (children: ReactNode): children is ReactElement<ComponentP
 export const CodeBlock = ({ children }: ComponentProps<"pre">) => {
   if (!isCodeElement(children)) return <>{children}</>;
   const language = getLanguage(children);
+  console.log("Rendering code block with language:", language);
   const code = children.props.children?.toString() ?? "";
 
   return (
