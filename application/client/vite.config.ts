@@ -1,14 +1,10 @@
 import { defineConfig } from "vite";
 import babel from "vite-plugin-babel";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
-import { analyzer } from "vite-bundle-analyzer";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-  plugins: [
-    nodePolyfills(),
-    babel(),
-    // analyzer(),
-  ],
+  plugins: [nodePolyfills(), babel(), tailwindcss()],
   build: {
     outDir: "../dist",
     emptyOutDir: true,
