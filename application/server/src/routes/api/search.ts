@@ -22,10 +22,6 @@ export const searchRouter = new Hono<SessionEnv>().get("/search", async (c) => {
   const searchTerm = keywords ? `%${keywords}%` : null;
   const limitParam = c.req.query("limit");
   const offsetParam = c.req.query("offset");
-  const limitOffset = {
-    ...(limitParam != null ? { limit: Number(limitParam) } : {}),
-    ...(offsetParam != null ? { offset: Number(offsetParam) } : {}),
-  };
 
   const dateConditions: Record<symbol, Date>[] = [];
   if (sinceDate) {
@@ -42,18 +38,17 @@ export const searchRouter = new Hono<SessionEnv>().get("/search", async (c) => {
   const limit = limitParam != null ? Number(limitParam) : undefined;
   const offset = offsetParam != null ? Number(offsetParam) : undefined;
 
-  const postsByText = await Post.scope("detail").findAll({
-    ...limitOffset,
-    where: {
-      ...textWhere,
-      ...dateWhere,
-    },
+  // Step 1: Get post IDs matching text criteria (fast, no JOINs)
+  const textPostIds = await Post.unscoped().findAll({
+    attributes: ["id", "createdAt"],
+    where: { ...textWhere, ...dateWhere },
+    order: [["createdAt", "DESC"]],
+    raw: true,
   });
 
-  let postsByUser: typeof postsByText = [];
+  // Step 2: Get post IDs matching user criteria
+  let userPostIds: { id: string; createdAt: Date }[] = [];
   if (searchTerm) {
-    // User defaultScope の exclude: ["profileImageId"] と include: profileImage が
-    // 競合するため、unscoped() で userId だけ取得し、scope("detail") で投稿を取得
     const matchedUsers = await User.unscoped().findAll({
       attributes: ["id"],
       where: {
@@ -62,29 +57,41 @@ export const searchRouter = new Hono<SessionEnv>().get("/search", async (c) => {
     });
     const matchedUserIds = matchedUsers.map((u) => u.id);
     if (matchedUserIds.length > 0) {
-      postsByUser = await Post.scope("detail").findAll({
-        ...limitOffset,
-        where: {
-          ...dateWhere,
-          userId: { [Op.in]: matchedUserIds },
-        },
+      userPostIds = await Post.unscoped().findAll({
+        attributes: ["id", "createdAt"],
+        where: { ...dateWhere, userId: { [Op.in]: matchedUserIds } },
+        order: [["createdAt", "DESC"]],
+        raw: true,
       });
     }
   }
 
-  const postIdSet = new Set<string>();
-  const mergedPosts: typeof postsByText = [];
-
-  for (const post of [...postsByText, ...postsByUser]) {
-    if (!postIdSet.has(post.id)) {
-      postIdSet.add(post.id);
-      mergedPosts.push(post);
+  // Merge, deduplicate, and sort by createdAt DESC
+  const seenIds = new Set<string>();
+  const allPosts: { id: string; createdAt: Date }[] = [];
+  for (const p of [...textPostIds, ...userPostIds]) {
+    if (!seenIds.has(p.id)) {
+      seenIds.add(p.id);
+      allPosts.push(p);
     }
   }
+  allPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-  mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  // Apply pagination
+  const sliced = allPosts.slice(offset ?? 0, (offset ?? 0) + (limit ?? allPosts.length));
 
-  const result = mergedPosts.slice(offset ?? 0, (offset ?? 0) + (limit ?? mergedPosts.length));
+  if (sliced.length === 0) {
+    return c.json([] as PostResponse[]);
+  }
 
-  return c.json(result.map((p) => p.toJSON()) as unknown as PostResponse[]);
+  // Step 3: Load full details for paginated IDs only
+  const posts = await Post.scope("detail").findAll({
+    where: { id: { [Op.in]: sliced.map((p) => p.id) } },
+  });
+
+  // Restore sort order
+  const postsMap = new Map(posts.map((p) => [p.id, p]));
+  const sorted = sliced.map((s) => postsMap.get(s.id)!).filter(Boolean);
+
+  return c.json(sorted.map((p) => p.toJSON()) as unknown as PostResponse[]);
 });

@@ -8,64 +8,29 @@ interface Props {
   src: string;
 }
 
-/**
- * クリックすると再生・一時停止を切り替えます。
- * GIF を `<img>` で表示し、一時停止時は canvas にフレームをキャプチャして表示します。
- */
 export const PausableMovie = ({ src }: Props) => {
-  const imgRef = useRef<HTMLImageElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  const pauseGif = useCallback(() => {
-    const img = imgRef.current;
-    const canvas = canvasRef.current;
-    if (img == null || canvas == null) return;
-
-    canvas.width = img.naturalWidth;
-    canvas.height = img.naturalHeight;
-    const ctx = canvas.getContext("2d");
-    if (ctx != null) {
-      ctx.drawImage(img, 0, 0);
-    }
-    canvas.style.visibility = "visible";
-    img.style.visibility = "hidden";
-  }, []);
-
-  const resumeGif = useCallback(() => {
-    const img = imgRef.current;
-    const canvas = canvasRef.current;
-    if (img == null || canvas == null) return;
-
-    const currentSrc = img.src;
-    img.src = "";
-    img.src = currentSrc;
-
-    img.style.visibility = "visible";
-    canvas.style.visibility = "hidden";
-  }, []);
 
   useEffect(() => {
-    if (isLoaded && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      pauseGif();
+    const video = videoRef.current;
+    if (video == null) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      video.pause();
       setIsPlaying(false);
     }
-  }, [isLoaded, pauseGif]);
+  }, []);
 
   const handleClick = useCallback(() => {
-    setIsPlaying((prev) => {
-      if (prev) {
-        pauseGif();
-      } else {
-        resumeGif();
-      }
-      return !prev;
-    });
-  }, [pauseGif, resumeGif]);
-
-  const handleLoad = useCallback(() => {
-    setIsLoaded(true);
+    const video = videoRef.current;
+    if (video == null) return;
+    if (video.paused) {
+      void video.play();
+      setIsPlaying(true);
+    } else {
+      video.pause();
+      setIsPlaying(false);
+    }
   }, []);
 
   return (
@@ -76,19 +41,15 @@ export const PausableMovie = ({ src }: Props) => {
         onClick={handleClick}
         type="button"
       >
-        <img
-          ref={imgRef}
-          alt=""
+        <video
+          ref={videoRef}
+          autoPlay
           className="absolute inset-0 h-full w-full object-cover"
-          decoding="async"
-          loading="lazy"
-          onLoad={handleLoad}
+          loop
+          muted
+          playsInline
+          preload="metadata"
           src={src}
-        />
-        <canvas
-          ref={canvasRef}
-          className="absolute inset-0 h-full w-full object-cover"
-          style={{ visibility: "hidden" }}
         />
         <div
           className={classNames(
