@@ -22,9 +22,9 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
   const [touched, setTouched] = useState<Partial<Record<keyof AuthFormData, boolean>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof AuthFormData, string>>>({});
 
-  const errors = validate(values);
-  const hasErrors = Object.keys(errors).length > 0;
+  const isEmpty = !values.username.trim() || !values.password.trim() || (values.type === "signup" && !values.name.trim());
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -50,8 +50,10 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
       setTouched({ username: true, name: true, password: true });
       const currentErrors = validate(values);
       if (Object.keys(currentErrors).length > 0) {
+        setFieldErrors(currentErrors);
         return;
       }
+      setFieldErrors({});
       setSubmitting(true);
       setError(undefined);
       try {
@@ -91,7 +93,7 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
           value={values.username}
           onChange={handleChange}
           onBlur={handleBlur}
-          error={errors.username}
+          error={fieldErrors.username}
           touched={touched.username}
           label="ユーザー名"
           leftItem={<span className="text-cax-text-subtle leading-none">@</span>}
@@ -104,7 +106,7 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
             value={values.name}
             onChange={handleChange}
             onBlur={handleBlur}
-            error={errors.name}
+            error={fieldErrors.name}
             touched={touched.name}
             label="名前"
             autoComplete="off"
@@ -116,7 +118,7 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
           value={values.password}
           onChange={handleChange}
           onBlur={handleBlur}
-          error={errors.password}
+          error={fieldErrors.password}
           touched={touched.password}
           label="パスワード"
           autoComplete="off"
@@ -132,7 +134,7 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
         </p>
       ) : null}
 
-      <ModalSubmitButton disabled={submitting || hasErrors} loading={submitting}>
+      <ModalSubmitButton disabled={submitting || isEmpty} loading={submitting}>
         {values.type === "signin" ? "サインイン" : "登録する"}
       </ModalSubmitButton>
 
