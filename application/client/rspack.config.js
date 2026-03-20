@@ -21,7 +21,7 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "cheap-source-map",
+  devtool: "source-map",
   entry: {
     main: [
       "core-js",
@@ -32,7 +32,7 @@ const config = {
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: "development",
   module: {
     rules: [
       {
@@ -43,21 +43,21 @@ const config = {
             loader: "builtin:swc-loader",
             options: {
               jsc: {
-                parser: {
-                  syntax: "typescript",
-                  tsx: true,
-                },
-                transform: {
-                  react: {
-                    development: true,
-                    runtime: "automatic",
-                  },
+              //   parser: {
+              //     syntax: "typescript",
+              //     tsx: true,
+              //   },
+              transform: {
+                react: {
+                //       // development: true,
+                  runtime: "automatic",
                 },
               },
+              },
               env: {
-                targets: "ie 11",
-                coreJs: "3",
-                mode: undefined,
+                // targets: "ie 11",
+                // coreJs: "3",
+                // mode: undefined,
               },
             },
           },
@@ -83,7 +83,7 @@ const config = {
   output: {
     filename: "scripts/[name].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     clean: true,
     cssFilename: "styles/[name].css",
   },
@@ -108,10 +108,12 @@ const config = {
       ],
     }),
     new rspack.HtmlRspackPlugin({
-      inject: false,
+      inject: true,
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
-    process.env.ALY && new RsdoctorRspackPlugin({}),
+    process.env.ALY && new RsdoctorRspackPlugin({
+      port: 4000,
+    }),
   ].filter(Boolean),
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
