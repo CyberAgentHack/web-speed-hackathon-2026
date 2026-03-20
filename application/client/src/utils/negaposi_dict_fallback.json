@@ -1,0 +1,10 @@
+[
+  { "surface": "良い", "reading": "ヨイ", "pos": "形容詞", "rank": 1 },
+  { "surface": "よい", "reading": "ヨイ", "pos": "形容詞", "rank": 1 },
+  { "surface": "喜ぶ", "reading": "ヨロコブ", "pos": "動詞", "rank": 0.999979 },
+  { "surface": "普通", "reading": "フツウ", "pos": "名詞", "rank": 0.5 },
+  { "surface": "悪い", "reading": "ワルイ", "pos": "形容詞", "rank": -1 },
+  { "surface": "わるい", "reading": "ワルイ", "pos": "形容詞", "rank": -1 },
+  { "surface": "悲しい", "reading": "カナシイ", "pos": "形容詞", "rank": -0.9 },
+  { "surface": "嬉しい", "reading": "ウレシイ", "pos": "形容詞", "rank": 0.9 }
+]
