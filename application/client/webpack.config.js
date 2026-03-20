@@ -56,7 +56,7 @@ const config = {
     chunkFilename: isProd ? "scripts/chunk-[contenthash].js" : "scripts/chunk-[id].js",
     filename: isProd ? "scripts/[name]-[contenthash].js" : "scripts/[name].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     clean: true,
   },
   plugins: [
