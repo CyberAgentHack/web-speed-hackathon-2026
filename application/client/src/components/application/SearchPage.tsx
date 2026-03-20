@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { ChangeEvent, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Field, InjectedFormProps, reduxForm, WrappedFieldProps } from "redux-form";
 
@@ -18,23 +18,39 @@ interface Props {
   results: Models.Post[];
 }
 
-const SearchInput = ({ input, meta }: WrappedFieldProps) => (
-  <div className="flex flex-1 flex-col">
-    <input
-      {...input}
-      className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
-        meta.touched && meta.error
-          ? "border-cax-danger focus:border-cax-danger"
-          : "border-cax-border focus:border-cax-brand-strong"
-      }`}
-      placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
-      type="text"
-    />
-    {meta.touched && meta.error && (
-      <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>
-    )}
-  </div>
-);
+interface SearchInputProps extends WrappedFieldProps {
+  externalError?: string;
+  onClearExternalError?: () => void;
+}
+
+const SearchInput = ({ input, meta, externalError, onClearExternalError }: SearchInputProps) => {
+  const errorMessage = externalError || meta.error;
+  const isInvalid =
+    Boolean(errorMessage) && (Boolean(externalError) || meta.touched || meta.submitFailed);
+
+  return (
+    <div className="flex flex-1 flex-col">
+      <input
+        {...input}
+        aria-invalid={isInvalid || undefined}
+        className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
+          isInvalid
+            ? "border-cax-danger focus:border-cax-danger"
+            : "border-cax-border focus:border-cax-brand-strong"
+        }`}
+        placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
+        type="text"
+        onChange={(event: ChangeEvent<HTMLInputElement>) => {
+          if (externalError) {
+            onClearExternalError?.();
+          }
+          input.onChange(event);
+        }}
+      />
+      {isInvalid && <span className="text-cax-danger mt-1 text-xs">{errorMessage}</span>}
+    </div>
+  );
+};
 
 const SearchPageComponent = ({
   isNegative,
@@ -43,6 +59,7 @@ const SearchPageComponent = ({
   handleSubmit,
 }: Props & InjectedFormProps<SearchFormData, Props>) => {
   const navigate = useNavigate();
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const parsed = parseSearchQuery(query);
 
@@ -61,6 +78,15 @@ const SearchPageComponent = ({
   }, [parsed]);
 
   const onSubmit = (values: SearchFormData) => {
+    const errors = validate(values);
+    if (errors.searchText) {
+      setSubmitError(
+        typeof errors.searchText === "string" ? errors.searchText : "入力内容を確認してください",
+      );
+      return;
+    }
+
+    setSubmitError(null);
     const sanitizedText = sanitizeSearchText(values.searchText.trim());
     navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
   };
@@ -70,7 +96,12 @@ const SearchPageComponent = ({
       <div className="bg-cax-surface p-4 shadow">
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="flex gap-2">
-            <Field name="searchText" component={SearchInput} />
+            <Field
+              name="searchText"
+              component={SearchInput}
+              externalError={submitError}
+              onClearExternalError={() => setSubmitError(null)}
+            />
             <Button variant="primary" type="submit">
               検索
             </Button>

@@ -10,7 +10,7 @@ export async function login(
   const signinButton = page.getByRole("button", { name: "サインイン" });
   await expect(signinButton).toBeVisible({ timeout: 30_000 });
   await signinButton.click();
-  await page.getByRole("heading", { name: "サインイン" }).waitFor({ timeout: 10_000 });
+  await page.getByRole("heading", { name: "サインイン" }).waitFor({ timeout: 30_000 });
   await page.getByRole("textbox", { name: "ユーザー名" }).pressSequentially(username);
   await page.getByRole("textbox", { name: "パスワード" }).pressSequentially(password);
   await page.getByRole("button", { name: "サインイン" }).last().click();

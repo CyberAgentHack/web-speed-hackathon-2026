@@ -1,7 +1,8 @@
-import { lazy, ReactEventHandler, Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { lazy, ReactEventHandler, Suspense, useCallback, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
+import { useAfterLcp } from "@web-speed-hackathon-2026/client/src/hooks/use_after_lcp";
 import { getSoundPath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 const SoundWaveSVG = lazy(async () => {
@@ -24,37 +25,10 @@ export const SoundPlayer = ({ sound }: Props) => {
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [shouldLoadWaveform, setShouldLoadWaveform] = useState(false);
-
-  useEffect(() => {
-    const idleWindow = window as Window & {
-      cancelIdleCallback?: (id: number) => void;
-      requestIdleCallback?: (callback: () => void) => number;
-    };
-    let idleId: number | null = null;
-    let timeoutId: number | null = null;
-
-    const scheduleWaveformLoad = () => {
-      setShouldLoadWaveform(true);
-    };
-
-    if (idleWindow.requestIdleCallback) {
-      idleId = idleWindow.requestIdleCallback(scheduleWaveformLoad);
-    } else {
-      timeoutId = window.setTimeout(scheduleWaveformLoad, 500);
-    }
-
-    return () => {
-      if (idleId !== null) {
-        idleWindow.cancelIdleCallback?.(idleId);
-      }
-      if (timeoutId !== null) {
-        window.clearTimeout(timeoutId);
-      }
-    };
-  }, []);
+  const { allowNow: loadWaveformNow, canLoad: shouldLoadWaveform } = useAfterLcp();
 
   const handleTogglePlaying = useCallback(() => {
+    loadWaveformNow();
     setIsPlaying((isPlaying) => {
       if (isPlaying) {
         audioRef.current?.pause();
@@ -63,7 +37,7 @@ export const SoundPlayer = ({ sound }: Props) => {
       }
       return !isPlaying;
     });
-  }, []);
+  }, [loadWaveformNow]);
 
   return (
     <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
