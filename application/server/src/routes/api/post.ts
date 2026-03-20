@@ -5,17 +5,36 @@ import { Comment, Post } from "@web-speed-hackathon-2026/server/src/models";
 
 export const postRouter = Router();
 
+function parseLimit(value: unknown, defaultValue: number, maxValue: number): number {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n < 1) {
+    return defaultValue;
+  }
+  return Math.min(n, maxValue);
+}
+
+function parseOffset(value: unknown): number {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n < 0) {
+    return 0;
+  }
+  return n;
+}
+
 postRouter.get("/posts", async (req, res) => {
-  const posts = await Post.findAll({
-    limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
-    offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
+  const limit = parseLimit(req.query["limit"], 30, 50);
+  const offset = parseOffset(req.query["offset"]);
+
+  const posts = await Post.scope("timeline").findAll({
+    limit,
+    offset,
   });
 
   return res.status(200).type("application/json").send(posts);
 });
 
 postRouter.get("/posts/:postId", async (req, res) => {
-  const post = await Post.findByPk(req.params.postId);
+  const post = await Post.scope("detail").findByPk(req.params.postId);
 
   if (post === null) {
     throw new httpErrors.NotFound();
@@ -25,9 +44,12 @@ postRouter.get("/posts/:postId", async (req, res) => {
 });
 
 postRouter.get("/posts/:postId/comments", async (req, res) => {
+  const limit = parseLimit(req.query["limit"], 30, 100);
+  const offset = parseOffset(req.query["offset"]);
+
   const posts = await Comment.findAll({
-    limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
-    offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
+    limit,
+    offset,
     where: {
       postId: req.params.postId,
     },

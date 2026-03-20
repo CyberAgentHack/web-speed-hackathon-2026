@@ -1,40 +1,44 @@
-import $ from "jquery";
 import { gzip } from "pako";
 
+async function ensureOK(response: Response): Promise<Response> {
+  if (!response.ok) {
+    throw new Error(`${response.status} ${response.statusText}`);
+  }
+  return response;
+}
+
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "binary",
+  const response = await fetch(url, {
     method: "GET",
-    responseType: "arraybuffer",
-    url,
+    credentials: "same-origin",
   });
-  return result;
+  await ensureOK(response);
+  return await response.arrayBuffer();
 }
 
 export async function fetchJSON<T>(url: string): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "json",
+  const response = await fetch(url, {
     method: "GET",
-    url,
+    credentials: "same-origin",
+    headers: {
+      Accept: "application/json",
+    },
   });
-  return result;
+  await ensureOK(response);
+  return (await response.json()) as T;
 }
 
 export async function sendFile<T>(url: string, file: File): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    data: file,
-    dataType: "json",
+  const response = await fetch(url, {
+    method: "POST",
+    credentials: "same-origin",
     headers: {
       "Content-Type": "application/octet-stream",
     },
-    method: "POST",
-    processData: false,
-    url,
+    body: file,
   });
-  return result;
+  await ensureOK(response);
+  return (await response.json()) as T;
 }
 
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
@@ -42,17 +46,16 @@ export async function sendJSON<T>(url: string, data: object): Promise<T> {
   const uint8Array = new TextEncoder().encode(jsonString);
   const compressed = gzip(uint8Array);
 
-  const result = await $.ajax({
-    async: false,
-    data: compressed,
-    dataType: "json",
+  const response = await fetch(url, {
+    method: "POST",
+    credentials: "same-origin",
     headers: {
       "Content-Encoding": "gzip",
       "Content-Type": "application/json",
+      Accept: "application/json",
     },
-    method: "POST",
-    processData: false,
-    url,
+    body: compressed,
   });
-  return result;
+  await ensureOK(response);
+  return (await response.json()) as T;
 }

@@ -46,23 +46,53 @@ export function initPost(sequelize: Sequelize) {
         attributes: {
           exclude: ["userId", "movieId", "soundId"],
         },
-        include: [
-          {
-            association: "user",
-            attributes: { exclude: ["profileImageId"] },
-            include: [{ association: "profileImage" }],
+        order: [["id", "DESC"]],
+      },
+      scopes: {
+        timeline: {
+          attributes: {
+            exclude: ["userId", "movieId", "soundId"],
           },
-          {
-            association: "images",
-            through: { attributes: [] },
+          include: [
+            {
+              association: "user",
+              attributes: { exclude: ["profileImageId"] },
+              include: [{ association: "profileImage" }],
+            },
+            {
+              association: "images",
+              through: { attributes: [] },
+            },
+            { association: "movie" },
+            { association: "sound" },
+          ],
+          order: [
+            ["id", "DESC"],
+            ["images", "createdAt", "ASC"],
+          ],
+        },
+        detail: {
+          attributes: {
+            exclude: ["userId", "movieId", "soundId"],
           },
-          { association: "movie" },
-          { association: "sound" },
-        ],
-        order: [
-          ["id", "DESC"],
-          ["images", "createdAt", "ASC"],
-        ],
+          include: [
+            {
+              association: "user",
+              attributes: { exclude: ["profileImageId"] },
+              include: [{ association: "profileImage" }],
+            },
+            {
+              association: "images",
+              through: { attributes: [] },
+            },
+            { association: "movie" },
+            { association: "sound" },
+          ],
+          order: [
+            ["id", "DESC"],
+            ["images", "createdAt", "ASC"],
+          ],
+        },
       },
     },
   );
