@@ -18,27 +18,26 @@ interface Props {
   results: Models.Post[];
 }
 
-interface SearchInputProps {
-  submitFailed?: boolean;
-}
-
-const SearchInput = ({ input, meta, submitFailed }: WrappedFieldProps & SearchInputProps) => (
-  <div className="flex flex-1 flex-col">
-    <input
-      {...input}
-      className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
-        (meta.touched || submitFailed) && meta.error
-          ? "border-cax-danger focus:border-cax-danger"
-          : "border-cax-border focus:border-cax-brand-strong"
-      }`}
-      placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
-      type="text"
-    />
-    {(meta.touched || submitFailed) && meta.error && (
-      <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>
-    )}
-  </div>
-);
+const SearchInput = (props: WrappedFieldProps & { submitFailed?: boolean }) => {
+  const { input, meta, submitFailed } = props;
+  return (
+    <div className="flex flex-1 flex-col">
+      <input
+        {...input}
+        className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
+          (meta.touched || submitFailed) && meta.error
+            ? "border-cax-danger focus:border-cax-danger"
+            : "border-cax-border focus:border-cax-brand-strong"
+        }`}
+        placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
+        type="text"
+      />
+      {(meta.touched || submitFailed) && meta.error && (
+        <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>
+      )}
+    </div>
+  );
+};
 
 const SearchPageComponent = ({
   query,
