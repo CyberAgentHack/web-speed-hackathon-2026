@@ -56,7 +56,12 @@ export const TimelineItem = ({ post }: Props) => {
           >
             <img
               alt={post.user.profileImage.alt}
+              className="h-full w-full object-cover"
+              decoding="async"
+              fetchPriority="low"
+              height={48}
               src={getProfileImagePath(post.user.profileImage.id)}
+              width={48}
             />
           </Link>
         </div>

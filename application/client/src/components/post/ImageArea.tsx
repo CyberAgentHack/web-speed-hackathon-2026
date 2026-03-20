@@ -11,13 +11,13 @@ interface Props {
 export const ImageArea = ({ images }: Props) => {
   return (
     <AspectRatioBox aspectHeight={9} aspectWidth={16}>
-      <div className="border-cax-border grid h-full w-full grid-cols-2 grid-rows-2 gap-1 overflow-hidden rounded-lg border">
+      <div className="border-cax-border grid h-full w-full gap-1 overflow-hidden rounded-lg border [grid-template-columns:repeat(2,minmax(0,1fr))] [grid-template-rows:repeat(2,minmax(0,1fr))]">
         {images.map((image, idx) => {
           return (
             <div
               key={image.id}
               // CSS Grid で表示領域を指定する
-              className={classNames("bg-cax-surface-subtle", {
+              className={classNames("min-h-0 min-w-0 bg-cax-surface-subtle", {
                 "col-span-1": images.length !== 1,
                 "col-span-2": images.length === 1,
                 "row-span-1": images.length > 2 && (images.length !== 3 || idx !== 0),

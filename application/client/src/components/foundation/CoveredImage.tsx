@@ -47,7 +47,7 @@ export const CoveredImage = ({ src }: Props) => {
   }, []);
 
   if (isLoading || data === null || blobUrl === null) {
-    return null;
+    return <div aria-hidden className="h-full w-full bg-cax-surface-subtle" />;
   }
 
   const containerRatio = containerSize.height / containerSize.width;
