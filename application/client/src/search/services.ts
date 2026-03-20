@@ -10,15 +10,15 @@ export const sanitizeSearchText = (input: string): string => {
 };
 
 export const parseSearchQuery = (query: string) => {
-  const sinceMatch = /since:([^\s]*)/.exec(query);
-  const untilMatch = /until:([^\s]*)/.exec(query);
+  const sinceToken = /(?:^|\s)since:([^\s]*)/.exec(query)?.[1];
+  const untilToken = /(?:^|\s)until:([^\s]*)/.exec(query)?.[1];
 
   const keywords = query
     .replace(/since:.*(\d{4}-\d{2}-\d{2}).*/g, "")
     .replace(/until:.*(\d{4}-\d{2}-\d{2}).*/g, "")
     .trim();
 
-  const extractDate = (s: string | null) => {
+  const extractDate = (s: string | undefined) => {
     if (!s) return null;
     const m = /(\d{4}-\d{2}-\d{2})/.exec(s);
     return m ? m[1] : null;
@@ -26,8 +26,8 @@ export const parseSearchQuery = (query: string) => {
 
   return {
     keywords,
-    sinceDate: extractDate(sinceMatch ? sinceMatch[1] : null),
-    untilDate: extractDate(untilMatch ? untilMatch[1] : null),
+    sinceDate: extractDate(sinceToken),
+    untilDate: extractDate(untilToken),
   };
 };
 
