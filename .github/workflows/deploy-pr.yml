@@ -39,3 +39,4 @@ jobs:
               uses: superfly/fly-pr-review-apps@5d9f067254bebd0aaa77d908d6337b63f4d4f019
               with:
                   name: ${{ steps.generate-app-name.outputs.app_name }}
+                  memory: 2048
