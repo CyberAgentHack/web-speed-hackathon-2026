@@ -31,6 +31,7 @@ const config = {
       "core-js",
       "regenerator-runtime/runtime",
       "jquery-binarytransport",
+      path.resolve(SRC_PATH, "./tailwind.css"),
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
@@ -65,7 +66,7 @@ const config = {
     chunkFilename: "scripts/chunk-[contenthash].js",
     filename: "scripts/[name].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     clean: true,
   },
   plugins: [

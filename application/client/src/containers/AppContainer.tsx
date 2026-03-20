@@ -98,7 +98,7 @@ export const AppContainer = () => {
         newPostModalId={newPostModalId}
         onLogout={handleLogout}
       >
-        <Suspense fallback={null}>
+        <Suspense fallback={<div className="min-h-screen bg-cax-canvas" />}>
           <Routes>
             <Route element={<TimelineContainer />} path="/" />
             <Route
