@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { SubmissionError } from "redux-form";
 
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { AuthModalPage } from "@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
-import { sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { HTTPError, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
   id: string;
@@ -16,8 +15,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   USERNAME_TAKEN: "ユーザー名が使われています",
 };
 
-function getErrorCode(err: JQuery.jqXHR<unknown>, type: "signin" | "signup"): string {
-  const responseJSON = err.responseJSON;
+function getErrorCode(err: unknown, type: "signin" | "signup"): string {
+  const responseJSON = err instanceof HTTPError ? err.body : null;
   if (
     typeof responseJSON !== "object" ||
     responseJSON === null ||
@@ -38,19 +37,22 @@ function getErrorCode(err: JQuery.jqXHR<unknown>, type: "signin" | "signup"): st
 export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
+
+  // Synchronize with the dialog close event so the next open gets a fresh form.
   useEffect(() => {
     if (!ref.current) return;
     const element = ref.current;
 
-    const handleToggle = () => {
-      // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
+    const handleClose = () => {
       setResetKey((key) => key + 1);
     };
-    element.addEventListener("toggle", handleToggle);
+
+    element.addEventListener("close", handleClose);
+
     return () => {
-      element.removeEventListener("toggle", handleToggle);
+      element.removeEventListener("close", handleClose);
     };
-  }, [ref, setResetKey]);
+  }, []);
 
   const handleRequestCloseModal = useCallback(() => {
     ref.current?.close();
@@ -58,20 +60,25 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
 
   const handleSubmit = useCallback(
     async (values: AuthFormData) => {
+      const normalizedValues = {
+        ...values,
+        name: (values.name ?? "").trim(),
+        password: (values.password ?? "").trim(),
+        username: (values.username ?? "").trim(),
+      };
+
       try {
-        if (values.type === "signup") {
-          const user = await sendJSON<Models.User>("/api/v1/signup", values);
+        if (normalizedValues.type === "signup") {
+          const user = await sendJSON<Models.User>("/api/v1/signup", normalizedValues);
           onUpdateActiveUser(user);
         } else {
-          const user = await sendJSON<Models.User>("/api/v1/signin", values);
+          const user = await sendJSON<Models.User>("/api/v1/signin", normalizedValues);
           onUpdateActiveUser(user);
         }
         handleRequestCloseModal();
       } catch (err: unknown) {
-        const error = getErrorCode(err as JQuery.jqXHR<unknown>, values.type);
-        throw new SubmissionError({
-          _error: error,
-        });
+        const error = getErrorCode(err, normalizedValues.type);
+        throw new Error(error);
       }
     },
     [handleRequestCloseModal, onUpdateActiveUser],

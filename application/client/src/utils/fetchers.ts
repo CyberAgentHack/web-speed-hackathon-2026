@@ -1,9 +1,35 @@
-async function parseJSONResponse<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`);
+export class HTTPError extends Error {
+  readonly body: unknown;
+  readonly status: number;
+
+  constructor(response: Response, body: unknown) {
+    super(`Request failed: ${response.status}`);
+    this.body = body;
+    this.name = "HTTPError";
+    this.status = response.status;
+  }
+}
+
+async function readResponseBody(response: Response): Promise<unknown> {
+  const text = await response.text();
+  if (text === "") {
+    return null;
   }
 
-  return (await response.json()) as T;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+
+async function parseJSONResponse<T>(response: Response): Promise<T> {
+  const body = await readResponseBody(response);
+  if (!response.ok) {
+    throw new HTTPError(response, body);
+  }
+
+  return body as T;
 }
 
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {
