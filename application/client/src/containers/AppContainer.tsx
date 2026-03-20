@@ -56,7 +56,13 @@ export const AppContainer = () => {
         newPostModalId={newPostModalId}
         onLogout={handleLogout}
       >
-        <Suspense fallback={<div />}>
+        <Suspense fallback={
+          <div className="px-4 py-4">
+            <div className="h-32 w-full rounded-lg bg-cax-surface-subtle mb-2" />
+            <div className="h-32 w-full rounded-lg bg-cax-surface-subtle mb-2" />
+            <div className="h-32 w-full rounded-lg bg-cax-surface-subtle" />
+          </div>
+        }>
           <Routes>
             <Route element={<TimelineContainer />} path="/" />
             <Route

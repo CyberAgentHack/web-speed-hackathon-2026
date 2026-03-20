@@ -125,7 +125,18 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     if (conversationError != null) {
       return <NotFoundContainer />;
     }
-    return null;
+    return (
+      <div className="px-4 py-4">
+        <div className="flex items-center gap-2 mb-4 border-b pb-3">
+          <div className="h-12 w-12 rounded-full bg-cax-surface-subtle" />
+          <div className="h-4 w-24 rounded bg-cax-surface-subtle" />
+        </div>
+        <div className="space-y-3">
+          <div className="h-10 w-48 rounded-xl bg-cax-surface-subtle" />
+          <div className="h-10 w-36 rounded-xl bg-cax-surface-subtle ml-auto" />
+        </div>
+      </div>
+    );
   }
 
   return (

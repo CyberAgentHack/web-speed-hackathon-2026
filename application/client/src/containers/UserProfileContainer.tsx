@@ -29,7 +29,19 @@ export const UserProfileContainer = () => {
   }, [isLoadingUser, user]);
 
   if (isLoadingUser) {
-    return null;
+    return (
+      <div className="px-4 py-4">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="h-20 w-20 rounded-full bg-cax-surface-subtle" />
+          <div className="flex-1">
+            <div className="h-5 w-32 rounded bg-cax-surface-subtle mb-2" />
+            <div className="h-3 w-20 rounded bg-cax-surface-subtle" />
+          </div>
+        </div>
+        <div className="h-4 w-full rounded bg-cax-surface-subtle mb-2" />
+        <div className="h-4 w-2/3 rounded bg-cax-surface-subtle" />
+      </div>
+    );
   }
 
   if (user === null) {

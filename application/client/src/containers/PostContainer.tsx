@@ -28,7 +28,19 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
   }, [isLoadingPost, post]);
 
   if (isLoadingPost) {
-    return null;
+    return (
+      <div className="px-4 py-4">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="h-14 w-14 rounded-full bg-cax-surface-subtle" />
+          <div className="flex-1">
+            <div className="h-4 w-24 rounded bg-cax-surface-subtle mb-1" />
+            <div className="h-3 w-16 rounded bg-cax-surface-subtle" />
+          </div>
+        </div>
+        <div className="h-4 w-full rounded bg-cax-surface-subtle mb-2" />
+        <div className="h-4 w-3/4 rounded bg-cax-surface-subtle" />
+      </div>
+    );
   }
 
   if (post === null) {
