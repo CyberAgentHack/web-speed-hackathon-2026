@@ -6,9 +6,10 @@ import { getImagePath, getImageSrcSet } from "@web-speed-hackathon-2026/client/s
 
 interface Props {
   images: Models.Image[];
+  isLCP?: boolean;
 }
 
-export const ImageArea = ({ images }: Props) => {
+export const ImageArea = ({ images, isLCP }: Props) => {
   return (
     <AspectRatioBox aspectHeight={9} aspectWidth={16}>
       <div className="border-cax-border grid h-full w-full grid-cols-2 grid-rows-2 gap-1 overflow-hidden rounded-lg border">
@@ -29,6 +30,7 @@ export const ImageArea = ({ images }: Props) => {
                 src={getImagePath(image.id)}
                 srcSet={getImageSrcSet(image.id)}
                 sizes={images.length === 1 ? "(min-width: 640px) 640px, 100vw" : "(min-width: 640px) 320px, 50vw"}
+                isLCP={isLCP && idx === 0}
               />
             </div>
           );
