@@ -1,5 +1,5 @@
 import React, { Suspense, useCallback, useEffect, useId, useRef } from "react";
-import { Helmet, HelmetProvider } from "react-helmet";
+
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 import useSWR, { useSWRConfig } from "swr";
 
@@ -119,13 +119,7 @@ export const AppContainer = () => {
   const newPostModalId = useId();
 
   if (typeof window !== "undefined" && isLoadingActiveUser) {
-    return (
-      <HelmetProvider>
-        <Helmet>
-          <title>読込中 - CaX</title>
-        </Helmet>
-      </HelmetProvider>
-    );
+    return <title>読込中 - CaX</title>;
   }
 
   const resolvedActiveUser = activeUser ?? null;

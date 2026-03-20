@@ -1,5 +1,4 @@
 import { useCallback, useRef, useState } from "react";
-import { Helmet } from "react-helmet";
 import { useParams } from "react-router";
 import useSWR from "swr";
 
@@ -116,9 +115,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   return (
     <>
-      <Helmet>
-        <title>{peer.name} さんとのダイレクトメッセージ - CaX</title>
-      </Helmet>
+      <title>{peer.name} さんとのダイレクトメッセージ - CaX</title>
       <DirectMessagePage
         conversationError={conversationError ?? null}
         conversation={conversation}
