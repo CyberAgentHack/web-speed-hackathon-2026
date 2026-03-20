@@ -7,7 +7,7 @@ module.exports = {
         targets: "defaults",
         corejs: "3",
         modules: false,
-        useBuiltIns: false,
+        useBuiltIns: "usage",
       },
     ],
     [
