@@ -14,9 +14,7 @@ export function useHasContentBelow(
   const [hasContentBelow, setHasContentBelow] = useState(false);
 
   useEffect(() => {
-    let active = true;
     const check = () => {
-      if (!active) return;
       const endEl = contentEndRef.current;
       const barEl = boundaryRef.current;
       if (endEl && barEl) {
@@ -24,11 +22,18 @@ export function useHasContentBelow(
         const barRect = barEl.getBoundingClientRect();
         setHasContentBelow(endRect.top > barRect.top);
       }
-      scheduler.postTask(check, { priority: "user-blocking", delay: 1 });
     };
-    scheduler.postTask(check, { priority: "user-blocking", delay: 1 });
+
+    check();
+
+    const ro = new ResizeObserver(check);
+    if (contentEndRef.current) ro.observe(contentEndRef.current);
+    if (boundaryRef.current) ro.observe(boundaryRef.current);
+    window.addEventListener("scroll", check, { passive: true });
+
     return () => {
-      active = false;
+      ro.disconnect();
+      window.removeEventListener("scroll", check);
     };
   }, [contentEndRef, boundaryRef]);
 
