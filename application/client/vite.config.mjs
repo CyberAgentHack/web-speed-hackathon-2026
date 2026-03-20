@@ -2,6 +2,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -10,7 +11,7 @@ const DIST_PATH = path.resolve(__dirname, '../dist');
 const ENABLE_BUNDLE_ANALYZER = process.env.ANALYZE === 'true';
 
 export default defineConfig(async () => {
-  const plugins = [react()];
+  const plugins = [react(), tailwindcss()];
 
   if (ENABLE_BUNDLE_ANALYZER) {
     try {
