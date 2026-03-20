@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -87,7 +88,6 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
 }
 
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
   const [inputValue, setInputValue] = useState("");
@@ -95,29 +95,26 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
+  const ensureTokenizerLoaded = useCallback(() => {
+    if (tokenizer != null) {
+      return;
+    }
+
+    void loadKuromojiTokenizer()
+      .then((nextTokenizer) => {
+        setTokenizer(nextTokenizer);
+      })
+      .catch(() => {
+        setTokenizer(null);
+      });
+  }, [tokenizer]);
+
   // サジェストが更新されたら一番下にスクロール
   useLayoutEffect(() => {
     if (suggestionsRef.current && showSuggestions) {
       suggestionsRef.current.scrollTop = suggestionsRef.current.scrollHeight;
     }
   }, [suggestions, showSuggestions]);
-
-  // 初回にkuromojiトークナイザーを構築
-  useEffect(() => {
-    let mounted = true;
-
-    const init = async () => {
-      const nextTokenizer = await loadKuromojiTokenizer();
-      if (mounted) {
-        setTokenizer(nextTokenizer);
-      }
-    };
-    init();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -133,6 +130,10 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
       const candidates = await loadSuggestions();
       if (cancelled) {
         return;
+      }
+
+      if (tokenizer == null) {
+        ensureTokenizerLoaded();
       }
 
       if (!tokenizer) {
@@ -169,26 +170,11 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     return () => {
       cancelled = true;
     };
-  }, [inputValue, tokenizer]);
-
-  const adjustTextareaHeight = () => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = "auto";
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
-    }
-  };
-
-  const resetTextareaHeight = () => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
-  };
+  }, [ensureTokenizerLoaded, inputValue, tokenizer]);
 
   const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setInputValue(value);
-    adjustTextareaHeight();
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -206,7 +192,6 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
       setSuggestions([]);
       setQueryTokens([]);
       setShowSuggestions(false);
-      resetTextareaHeight();
     }
   };
 
@@ -241,9 +226,12 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
         )}
         <div className="border-cax-border bg-cax-surface-subtle focus-within:border-cax-brand-strong relative flex items-end rounded-2xl border transition-colors">
           <textarea
-            ref={textareaRef}
-            className="text-cax-text placeholder-cax-text-subtle max-h-[200px] min-h-[52px] flex-1 resize-none overflow-y-auto bg-transparent py-3 pr-2 pl-4 focus:outline-none"
+            className="text-cax-text placeholder-cax-text-subtle [field-sizing:content] max-h-[200px] min-h-[52px] flex-1 resize-none overflow-y-auto bg-transparent py-3 pr-2 pl-4 focus:outline-none"
             onChange={handleInputChange}
+            onFocus={() => {
+              ensureTokenizerLoaded();
+              void loadSuggestions();
+            }}
             onKeyDown={handleKeyDown}
             placeholder="メッセージを入力..."
             lang="ja"
