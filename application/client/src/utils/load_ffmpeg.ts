@@ -4,17 +4,35 @@ import { FFmpeg } from "@ffmpeg/ffmpeg";
 import coreUrl from "@ffmpeg/core?binary";
 import wasmUrl from "@ffmpeg/core/wasm?binary";
 
+/** FFmpegインスタンスのシングルトンキャッシュ */
+let cachedFFmpeg: FFmpeg | null = null;
+/** ロード中のPromise（重複ロード防止） */
+let loadingPromise: Promise<FFmpeg> | null = null;
+
 /**
- * FFmpegインスタンスを初期化して返す。
- * WASMバイナリはasset/resourceとして別ファイルに出力され、実行時にフェッチされる。
+ * FFmpegインスタンスをシングルトンで返す。
+ * WASMバイナリの重複ロードを防ぎ、初回以降はキャッシュを再利用する。
+ * 呼び出し側でterminate()しないこと。
  */
 export async function loadFFmpeg(): Promise<FFmpeg> {
-  const ffmpeg = new FFmpeg();
+  if (cachedFFmpeg) {
+    return cachedFFmpeg;
+  }
 
-  await ffmpeg.load({
-    coreURL: coreUrl,
-    wasmURL: wasmUrl,
-  });
+  if (loadingPromise) {
+    return loadingPromise;
+  }
 
-  return ffmpeg;
+  loadingPromise = (async () => {
+    const ffmpeg = new FFmpeg();
+    await ffmpeg.load({
+      coreURL: coreUrl,
+      wasmURL: wasmUrl,
+    });
+    cachedFFmpeg = ffmpeg;
+    loadingPromise = null;
+    return ffmpeg;
+  })();
+
+  return loadingPromise;
 }
