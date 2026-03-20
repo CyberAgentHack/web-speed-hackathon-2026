@@ -92,6 +92,7 @@ const config = {
     alias: {
       "bayesian-bm25$": path.resolve(__dirname, "node_modules", "bayesian-bm25/dist/index.js"),
       ["kuromoji$"]: path.resolve(__dirname, "node_modules", "kuromoji/build/kuromoji.js"),
+      "../dict/pn_ja.dic.json$": path.resolve(SRC_PATH, "data/pn_ja.dic.json"),
     },
     fallback: {
       fs: false,
