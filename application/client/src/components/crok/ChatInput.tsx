@@ -1,5 +1,4 @@
-import Bluebird from "bluebird";
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
+import type { IpadicFeatures, Tokenizer } from "kuromoji";
 import {
   useEffect,
   useLayoutEffect,
@@ -20,6 +19,21 @@ import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 interface Props {
   isStreaming: boolean;
   onSendMessage: (message: string) => void;
+}
+
+async function buildTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
+  const kuromoji = await import("kuromoji");
+
+  return new Promise((resolve, reject) => {
+    kuromoji.default.builder({ dicPath: "/dicts" }).build((error, nextTokenizer) => {
+      if (error != null || nextTokenizer == null) {
+        reject(error ?? new Error("Tokenizer initialization failed"));
+        return;
+      }
+
+      resolve(nextTokenizer);
+    });
+  });
 }
 
 // トークン単位でハイライト
@@ -80,6 +94,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
+  const [isTokenizerLoading, setIsTokenizerLoading] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
@@ -92,29 +107,36 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   }, [suggestions, showSuggestions]);
 
-  // 初回にkuromojiトークナイザーを構築
   useEffect(() => {
-    let mounted = true;
+    if (tokenizer !== null || isTokenizerLoading || !inputValue.trim()) {
+      return;
+    }
 
-    const init = async () => {
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
-      if (mounted) {
-        setTokenizer(nextTokenizer);
-      }
-    };
-    init();
+    let mounted = true;
+    setIsTokenizerLoading(true);
+
+    void buildTokenizer()
+      .then((nextTokenizer) => {
+        if (mounted) {
+          setTokenizer(nextTokenizer);
+        }
+      })
+      .finally(() => {
+        if (mounted) {
+          setIsTokenizerLoading(false);
+        }
+      });
 
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [inputValue, isTokenizerLoading, tokenizer]);
 
   useEffect(() => {
     let cancelled = false;
 
     const updateSuggestions = async () => {
-      if (!tokenizer || !inputValue.trim()) {
+      if (isTokenizerLoading || tokenizer == null || !inputValue.trim()) {
         setSuggestions([]);
         setQueryTokens([]);
         setShowSuggestions(false);
@@ -145,7 +167,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     return () => {
       cancelled = true;
     };
-  }, [inputValue, tokenizer]);
+  }, [inputValue, isTokenizerLoading, tokenizer]);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
