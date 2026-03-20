@@ -1,5 +1,6 @@
-import moment from "moment";
 import { MouseEventHandler, useCallback } from "react";
+
+import { formatLL, toISOString } from "@web-speed-hackathon-2026/client/src/utils/date";
 import { Link, useNavigate } from "react-router";
 
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
@@ -56,6 +57,8 @@ export const TimelineItem = ({ post }: Props) => {
           >
             <img
               alt={post.user.profileImage.alt}
+              loading="lazy"
+              decoding="async"
               src={getProfileImagePath(post.user.profileImage.id)}
             />
           </Link>
@@ -76,8 +79,8 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={toISOString(post.createdAt)}>
+                {formatLL(post.createdAt)}
               </time>
             </Link>
           </p>
