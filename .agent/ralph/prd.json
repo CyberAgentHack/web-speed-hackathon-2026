@@ -448,8 +448,75 @@
         "Typecheck passes"
       ],
       "priority": 25,
+      "passes": true,
+      "notes": "2026-03-21 完了。Sound モデルに peaks カラム追加、シード生成時に ffmpeg で PCM 変換→100チャンク平均振幅を事前計算。SoundWaveSVG からクライアント fetch + decodeAudioData を完全廃止し、props で peaks を受け取るのみに。"
+    },
+    {
+      "id": "US-026",
+      "title": "web-llm 翻訳のサーバーサイド移行とクライアント依存除去",
+      "description": "開発者として、@mlc-ai/web-llm（~50MB）によるブラウザ内翻訳をサーバーサイド API に移行し、クライアントバンドルから web-llm・common-tags・json-repair-js・langs を完全に除去したい。",
+      "acceptanceCriteria": [
+        "サーバーに翻訳エンドポイント（例: POST /api/v1/translate）が追加されている",
+        "サーバー側で翻訳処理が実行される（LLM ライブラリまたは代替手段）",
+        "クライアントの create_translator.ts から @mlc-ai/web-llm のインポートが削除されている",
+        "TranslatableText.tsx がサーバー API 経由で翻訳結果を取得している",
+        "package.json から @mlc-ai/web-llm が削除されている",
+        "rspack.config.js の @ffmpeg alias のみ残り、web-llm 関連設定が不要になっている",
+        "翻訳ボタンを押すと翻訳結果が表示される",
+        "dist/scripts/ の最大チャンクサイズが 5MB 未満である",
+        "E2Eテスト（cd application/e2e && pnpm test）が通る",
+        "Typecheck passes"
+      ],
+      "priority": 26,
       "passes": false,
-      "notes": "現在 SoundWaveSVG はクライアントで音声全体を fetch → AudioContext.decodeAudioData → 100チャンクの平均振幅を計算している。事前計算すればクライアントの音声 fetch と CPU コストを完全に排除できる。"
+      "notes": "現在 create_translator.ts が @mlc-ai/web-llm を dynamic import しているが、splitChunks により 51MB の vendor チャンクに含まれ初期ロードをブロックしている。サーバー移行で50MB+のクライアント依存を完全排除できる。"
+    },
+    {
+      "id": "US-027",
+      "title": "CSS チャンク分割による FOUC 修正",
+      "description": "開発者として、splitChunks による CSS チャンク分割で発生している FOUC（Flash of Unstyled Content）を修正し、全ページでスタイルが即座に適用されるようにしたい。",
+      "acceptanceCriteria": [
+        "dist/styles/ に出力される CSS ファイルが main.css のみ（または全 CSS がレンダーブロッキングで読み込まれる）",
+        "サインインモーダル表示時にスタイル未適用の瞬間が発生しない",
+        "ページ遷移時にスタイル未適用の瞬間が発生しない",
+        "E2Eテスト（cd application/e2e && pnpm test）が通る",
+        "Typecheck passes"
+      ],
+      "priority": 27,
+      "passes": false,
+      "notes": "現在 splitChunks: { chunks: 'all' } により CSS も分割され、323.css (23KB) が動的ロードされている。dist/index.html には main.css のみが <link> タグで含まれ、323.css は JS チャンクロード時に動的注入されるため FOUC が発生する。"
+    },
+    {
+      "id": "US-028",
+      "title": "CLS 改善（画像・動画の width/height 明示）",
+      "description": "開発者として、img/video タグに width/height を明示し、レイアウトシフトをゼロに近づけたい。",
+      "acceptanceCriteria": [
+        "CoveredImage の img タグに width/height（または aspect-ratio）が明示されている",
+        "PausableMovie の video タグに width/height（または aspect-ratio）が明示されている",
+        "プロフィール画像の img タグに width/height が明示されている",
+        "Lighthouse の CLS スコアが 0.1 未満である",
+        "E2Eテスト（cd application/e2e && pnpm test）が通る",
+        "Typecheck passes"
+      ],
+      "priority": 28,
+      "passes": false,
+      "notes": "CLS はレイアウトの安定性を測定する指標。画像や動画の寸法が未指定だと、リソース読み込み後にレイアウトがずれて CLS が悪化する。"
+    },
+    {
+      "id": "US-029",
+      "title": "再レンダリング抑制と TBT/INP 改善",
+      "description": "開発者として、不要な再レンダリングを抑制し、TBT（Total Blocking Time）と INP（Interaction to Next Paint）を改善したい。",
+      "acceptanceCriteria": [
+        "redux-form の状態更新が不要なコンポーネントの再レンダリングを引き起こしていない",
+        "スクロール・ポインター追跡などの高頻度イベントが適切にデバウンス/スロットルされている",
+        "React DevTools Profiler で不要な再レンダリングが確認されない",
+        "Lighthouse の TBT が 500ms 未満である",
+        "E2Eテスト（cd application/e2e && pnpm test）が通る",
+        "Typecheck passes"
+      ],
+      "priority": 29,
+      "passes": false,
+      "notes": "TBT/INP はメインスレッドのブロッキングに直結する。redux-form のグローバル state 更新や高頻度イベントハンドラが再レンダリングを引き起こしている可能性がある。"
     }
   ]
 }

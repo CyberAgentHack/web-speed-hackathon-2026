@@ -17,6 +17,7 @@ interface ConvertResult {
   mp3Buffer: Buffer;
   artist: string;
   title: string;
+  peaks: number[];
 }
 
 /**
@@ -55,8 +56,9 @@ export async function convertAndExtractSound(input: Buffer): Promise<ConvertResu
 
     const mp3Buffer = await fs.readFile(outputPath);
     const { artist, title } = await extractMetadata(metaPath);
+    const peaks = await extractPeaks(outputPath, tmpDir);
 
-    return { mp3Buffer, artist, title };
+    return { mp3Buffer, artist, title, peaks };
   } finally {
     await fs.rm(tmpDir, { recursive: true, force: true });
   }
@@ -96,4 +98,42 @@ function parseFFmetadata(ffmetadata: string): Partial<Record<string, string>> {
         return [line.slice(0, idx)!.trim().toLowerCase(), line.slice(idx + 1)!.trim()];
       }),
   );
+}
+
+const PEAK_CHUNKS = 100;
+
+/**
+ * 音声ファイルから100個のピーク値を抽出する
+ * ffmpegでモノラルs16le PCMに変換し、チャンク平均を計算
+ */
+export async function extractPeaks(audioPath: string, tmpDir: string): Promise<number[]> {
+  const pcmPath = path.join(tmpDir, `pcm-${randomUUID()}.raw`);
+
+  await new Promise<void>((resolve, reject) => {
+    ffmpeg(audioPath)
+      .outputOptions(["-ac", "1", "-f", "s16le", "-acodec", "pcm_s16le"])
+      .output(pcmPath)
+      .on("end", () => resolve())
+      .on("error", (err: Error) => reject(err))
+      .run();
+  });
+
+  const pcmBuffer = await fs.readFile(pcmPath);
+  const samples = new Int16Array(pcmBuffer.buffer, pcmBuffer.byteOffset, pcmBuffer.byteLength / 2);
+
+  const chunkSize = Math.ceil(samples.length / PEAK_CHUNKS);
+  const peaks: number[] = [];
+
+  for (let i = 0; i < samples.length; i += chunkSize) {
+    const end = Math.min(i + chunkSize, samples.length);
+    let sum = 0;
+    for (let j = i; j < end; j++) {
+      sum += Math.abs(samples[j]!);
+    }
+    peaks.push(sum / (end - i));
+  }
+
+  // 0-1 に正規化
+  const max = Math.max(...peaks, 1);
+  return peaks.map((p) => Math.round((p / max) * 1000) / 1000);
 }

@@ -1,8 +1,15 @@
-import { createWriteStream } from "node:fs";
+import { createWriteStream, promises as fs } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { faker } from "@faker-js/faker/locale/ja";
+import ffmpegPath from "ffmpeg-static";
+import ffmpeg from "fluent-ffmpeg";
+
+if (ffmpegPath) {
+  ffmpeg.setFfmpegPath(ffmpegPath);
+}
 
 // Set seed for reproducible results
 faker.seed(123);
@@ -234,13 +241,46 @@ function generateMovies(): MovieSeed[] {
   }));
 }
 
-function generateSounds(): SoundSeed[] {
-  // Use existing sound data from public/sounds/
-  return EXISTING_SOUNDS.map(({ id, title, artist }) => ({
-    id,
-    title,
-    artist,
-  }));
+async function computePeaksForFile(filePath: string): Promise<number[]> {
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "peaks-"));
+  const pcmPath = path.join(tmpDir, "pcm.raw");
+  try {
+    await new Promise<void>((resolve, reject) => {
+      ffmpeg(filePath)
+        .outputOptions(["-ac", "1", "-f", "s16le", "-acodec", "pcm_s16le"])
+        .output(pcmPath)
+        .on("end", () => resolve())
+        .on("error", (err: Error) => reject(err))
+        .run();
+    });
+    const pcmBuffer = await fs.readFile(pcmPath);
+    const samples = new Int16Array(pcmBuffer.buffer, pcmBuffer.byteOffset, pcmBuffer.byteLength / 2);
+    const chunkSize = Math.ceil(samples.length / 100);
+    const peaks: number[] = [];
+    for (let i = 0; i < samples.length; i += chunkSize) {
+      const end = Math.min(i + chunkSize, samples.length);
+      let sum = 0;
+      for (let j = i; j < end; j++) {
+        sum += Math.abs(samples[j]!);
+      }
+      peaks.push(sum / (end - i));
+    }
+    const max = Math.max(...peaks, 1);
+    return peaks.map((p) => Math.round((p / max) * 1000) / 1000);
+  } finally {
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  }
+}
+
+async function generateSounds(): Promise<SoundSeed[]> {
+  const publicSoundsDir = path.resolve(__dirname, "../../public/sounds");
+  const results: SoundSeed[] = [];
+  for (const { id, title, artist } of EXISTING_SOUNDS) {
+    const filePath = path.join(publicSoundsDir, `${id}.mp3`);
+    const peaks = await computePeaksForFile(filePath);
+    results.push({ id, title, artist, peaks });
+  }
+  return results;
 }
 
 const postTemplates = [
@@ -706,8 +746,8 @@ async function main() {
   console.log("4. Generating Movies (using existing assets)...");
   const movies = generateMovies();
 
-  console.log("5. Generating Sounds (using existing assets)...");
-  const sounds = generateSounds();
+  console.log("5. Generating Sounds (using existing assets, computing peaks)...");
+  const sounds = await generateSounds();
 
   console.log("6. Generating Posts...");
   const posts = generatePosts(CONFIG.POST_COUNT, users, movies, sounds);

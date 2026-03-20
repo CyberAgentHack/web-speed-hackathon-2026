@@ -32,8 +32,9 @@ soundRouter.post("/sounds", async (req, res) => {
   let mp3Buffer: Buffer;
   let artist: string;
   let title: string;
+  let peaks: number[];
   try {
-    ({ mp3Buffer, artist, title } = await convertAndExtractSound(req.body));
+    ({ mp3Buffer, artist, title, peaks } = await convertAndExtractSound(req.body));
   } catch {
     throw new httpErrors.BadRequest("Failed to convert audio file");
   }
@@ -42,5 +43,5 @@ soundRouter.post("/sounds", async (req, res) => {
   await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds"), { recursive: true });
   await fs.writeFile(filePath, mp3Buffer);
 
-  return res.status(200).type("application/json").send({ artist, id: soundId, title });
+  return res.status(200).type("application/json").send({ artist, id: soundId, peaks, title });
 });

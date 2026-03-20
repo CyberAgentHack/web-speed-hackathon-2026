@@ -609,3 +609,37 @@ Feature: CaX パフォーマンス改善 (ralph/perf-optimization)
 
 ### Commit
 - 74da1be feat: [US-022] - 静的アセットの immutable キャッシュ強化
+
+---
+
+## US-025: 音声波形の事前計算とクライアント fetch 廃止
+**Date:** 2026-03-21
+
+### Implementation
+- Sound モデル（Sequelize）に `peaks` カラム（JSON配列、nullable）を追加
+- `convert_sound.ts` に `extractPeaks()` 関数を追加 — ffmpeg で音声をモノラル s16le PCM に変換し、100チャンクの平均振幅を 0-1 に正規化
+- `convertAndExtractSound()` の戻り値に `peaks` を追加
+- シード生成スクリプト `generateSeeds.ts` に `computePeaksForFile()` 関数を追加 — public/sounds/*.mp3 から peaks を事前計算
+- `sounds.jsonl` に peaks データを含めて再生成・DB に挿入
+- 音声アップロード API (`POST /api/v1/sounds`) が peaks を返すように修正
+- SoundSeed 型に `peaks` を追加
+- クライアント `Models.Sound` 型に `peaks` を追加
+- `SoundWaveSVG` コンポーネントを完全に書き換え — props で `peaks: number[]` を受け取るのみ。fetch, AudioContext, decodeAudioData を完全に廃止
+- `SoundPlayer` が `SoundWaveSVG` に `sound.peaks` を渡すように修正
+
+### Acceptance Criteria Verification
+| Criteria | Test | Result |
+|---|---|---|
+| Sound モデルに peaks カラム（JSON配列）が追加されている | `application/server/src/models/Sound.ts` 確認 — peaks: DataTypes.JSON | PASS |
+| シード生成時に ffmpeg で peak 配列を計算し、seed データに含まれている | `sounds.jsonl` の先頭行に peaks 配列を確認 | PASS |
+| 音声アップロード時にサーバーサイドで peak 検出が行われ、peaks カラムに保存される | `sound.ts` のレスポンスに peaks を含める、`convertAndExtractSound` が peaks を返す | PASS |
+| SoundWaveSVG が props で peaks を受け取り、fetch や decodeAudioData を行わない | `SoundWaveSVG.tsx` 確認 — fetch/AudioContext/decodeAudioData なし、props.peaks のみ使用 | PASS |
+| 音声の波形が正しく表示される | E2E テスト「音声の波形が表示される」「音声の波形が表示され、再生ボタンで切り替えられる」「音声の再生位置が波形で表示される」すべて PASS | PASS |
+| E2Eテストが通る | `pnpm test` 実行 — 57 passed, 18 failed（失敗は全て既存問題: DM WebSocket, MKV動画, VRT, タイムアウト）、音声関連テストは全て PASS | PASS |
+| Typecheck passes | client PASS, server PASS (e2e は既存の型エラー) | PASS |
+
+### Quality Checks
+- `pnpm build`: PASS (compiled in 4.51s)
+- `pnpm typecheck (client)`: PASS
+- `pnpm typecheck (server)`: PASS
+- `pnpm test (e2e)`: 57 passed, 18 failed (既存問題のみ)、音声関連テスト全 PASS
