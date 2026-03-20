@@ -5,7 +5,7 @@ import { SubmissionError } from "redux-form";
 import { NewDirectMessageModalPage } from "@web-speed-hackathon-2026/client/src/components/direct_message/NewDirectMessageModalPage";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { NewDirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
-import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { fetchJSON, HTTPError, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
   id: string;
@@ -14,6 +14,7 @@ interface Props {
 export const NewDirectMessageModalContainer = ({ id }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
+  // Synchronize the form reset key with the dialog open/close state.
   useEffect(() => {
     if (!ref.current) return;
     const element = ref.current;
@@ -36,10 +37,15 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
         const conversation = await sendJSON<Models.DirectMessageConversation>(`/api/v1/dm`, {
           peerId: user.id,
         });
+        ref.current?.close();
         navigate(`/dm/${conversation.id}`);
-      } catch {
+      } catch (error) {
+        const errorMessage =
+          error instanceof HTTPError && error.status === 404
+            ? "ユーザーが見つかりませんでした"
+            : "DMの開始に失敗しました";
         throw new SubmissionError({
-          _error: "ユーザーが見つかりませんでした",
+          _error: errorMessage,
         });
       }
     },

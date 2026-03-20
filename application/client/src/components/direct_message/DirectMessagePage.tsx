@@ -19,6 +19,7 @@ interface Props {
   conversationError: Error | null;
   conversation: Models.DirectMessageConversation;
   activeUser: Models.User;
+  isRealtimeReady: boolean;
   isPeerTyping: boolean;
   isSubmitting: boolean;
   onTyping: () => void;
@@ -29,12 +30,14 @@ export const DirectMessagePage = ({
   conversationError,
   conversation,
   activeUser,
+  isRealtimeReady,
   isPeerTyping,
   isSubmitting,
   onTyping,
   onSubmit,
 }: Props) => {
   const formRef = useRef<HTMLFormElement>(null);
+  const messageListContainerRef = useRef<HTMLDivElement>(null);
   const textAreaId = useId();
 
   const peer =
@@ -43,7 +46,6 @@ export const DirectMessagePage = ({
   const [text, setText] = useState("");
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
-  const scrollHeightRef = useRef(0);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -73,17 +75,15 @@ export const DirectMessagePage = ({
     [onSubmit, text],
   );
 
+  // Synchronize the scroll container with the latest rendered DM messages.
   useEffect(() => {
-    const id = setInterval(() => {
-      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
-      if (height !== scrollHeightRef.current) {
-        scrollHeightRef.current = height;
-        window.scrollTo(0, height);
-      }
-    }, 1);
+    const element = messageListContainerRef.current;
+    if (element == null) {
+      return;
+    }
 
-    return () => clearInterval(id);
-  }, []);
+    element.scrollTop = element.scrollHeight;
+  }, [conversation.messages.length]);
 
   if (conversationError != null) {
     return (
@@ -95,6 +95,9 @@ export const DirectMessagePage = ({
 
   return (
     <section className="bg-cax-surface flex min-h-[calc(100vh-(--spacing(12)))] flex-col lg:min-h-screen">
+      <p className="sr-only" data-testid="dm-realtime-status">
+        {isRealtimeReady ? "ready" : "connecting"}
+      </p>
       <header className="border-cax-border bg-cax-surface sticky top-0 z-10 flex items-center gap-2 border-b px-4 py-3">
         <img
           loading="lazy"
@@ -112,7 +115,10 @@ export const DirectMessagePage = ({
         </div>
       </header>
 
-      <div className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8">
+      <div
+        ref={messageListContainerRef}
+        className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8"
+      >
         {conversation.messages.length === 0 && (
           <p className="text-cax-text-muted text-center text-sm">
             まだメッセージはありません。最初のメッセージを送信してみましょう。
@@ -125,6 +131,7 @@ export const DirectMessagePage = ({
 
             return (
               <li
+                key={message.id}
                 className={classNames(
                   "flex flex-col w-full",
                   isActiveUserSend ? "items-end" : "items-start",
