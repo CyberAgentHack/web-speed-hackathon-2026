@@ -1,76 +1,43 @@
-import { useEffect, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 
-interface ParsedData {
-  max: number;
-  peaks: number[];
-}
-
-async function calculate(data: ArrayBuffer): Promise<ParsedData> {
-  const AudioContextClass = window.AudioContext;
-  if (AudioContextClass == null) {
-    return { max: 0, peaks: [] };
+function hashSeed(seed: string): number {
+  let hash = 2166136261;
+  for (const char of seed) {
+    hash ^= char.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
   }
-
-  const audioCtx = new AudioContextClass();
-
-  try {
-    const buffer = await audioCtx.decodeAudioData(data.slice(0));
-    const leftData = buffer.getChannelData(0);
-    const rightData = buffer.getChannelData(Math.min(1, buffer.numberOfChannels - 1));
-    const chunkSize = Math.max(1, Math.ceil(leftData.length / 100));
-    const peaks: number[] = [];
-    let max = 0;
-
-    for (let start = 0; start < leftData.length; start += chunkSize) {
-      const end = Math.min(leftData.length, start + chunkSize);
-      let sum = 0;
-
-      for (let idx = start; idx < end; idx++) {
-        const left = Math.abs(leftData[idx] ?? 0);
-        const right = Math.abs(rightData[idx] ?? 0);
-        sum += (left + right) / 2;
-      }
-
-      const peak = sum / Math.max(1, end - start);
-      peaks.push(peak);
-      max = Math.max(max, peak);
-    }
-
-    return { max, peaks };
-  } finally {
-    await audioCtx.close();
-  }
+  return hash >>> 0;
 }
 
 interface Props {
-  soundData: ArrayBuffer;
+  seed: string;
 }
 
-export const SoundWaveSVG = ({ soundData }: Props) => {
+export const SoundWaveSVG = ({ seed }: Props) => {
   const uniqueIdRef = useRef(Math.random().toString(16));
-  const [{ max, peaks }, setPeaks] = useState<ParsedData>({
-    max: 0,
-    peaks: [],
-  });
-
-  useEffect(() => {
-    calculate(soundData).then(({ max, peaks }) => {
-      setPeaks({ max, peaks });
-    });
-  }, [soundData]);
+  const peaks = useMemo(() => {
+    const values: number[] = [];
+    let current = hashSeed(seed);
+    for (let idx = 0; idx < 100; idx++) {
+      current = Math.imul(current, 1664525) + 1013904223;
+      const normalized = ((current >>> 0) % 1000) / 1000;
+      const envelope = 0.45 + 0.55 * Math.sin(((idx + 1) / 101) * Math.PI);
+      values.push(Math.max(0.08, normalized * envelope));
+    }
+    return values;
+  }, [seed]);
 
   return (
     <svg className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1">
       {peaks.map((peak, idx) => {
-        const ratio = peak / max;
         return (
           <rect
             key={`${uniqueIdRef.current}#${idx}`}
             fill="var(--color-cax-accent)"
-            height={ratio}
+            height={peak}
             width="1"
             x={idx}
-            y={1 - ratio}
+            y={1 - peak}
           />
         );
       })}
