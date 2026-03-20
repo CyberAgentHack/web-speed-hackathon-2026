@@ -3,6 +3,7 @@ import httpErrors from "http-errors";
 import { Op } from "sequelize";
 
 import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
+import { getSequelize } from "@web-speed-hackathon-2026/server/src/sequelize";
 import {
   DirectMessage,
   DirectMessageConversation,
@@ -21,6 +22,86 @@ async function findConversationIdsByUserId(userId: string) {
   });
 
   return conversations.map((conversation) => conversation.id);
+}
+
+type LatestMessageRow = {
+  body: string;
+  conversationId: string;
+  createdAt: string;
+  id: string;
+  isRead: number;
+  senderId: string;
+  updatedAt: string;
+};
+
+type UnreadRow = {
+  conversationId: string;
+  unreadCount: number;
+};
+
+async function findLatestMessagesByConversationIds(conversationIds: string[]) {
+  if (conversationIds.length === 0) {
+    return new Map<string, LatestMessageRow>();
+  }
+
+  const sequelize = getSequelize();
+  const placeholders = conversationIds.map(() => "?").join(", ");
+  const rows = (await sequelize.query(
+    `
+      SELECT id, conversationId, senderId, body, isRead, createdAt, updatedAt
+      FROM (
+        SELECT
+          id,
+          conversationId,
+          senderId,
+          body,
+          isRead,
+          createdAt,
+          updatedAt,
+          ROW_NUMBER() OVER (
+            PARTITION BY conversationId
+            ORDER BY createdAt DESC, id DESC
+          ) AS rowNumber
+        FROM DirectMessages
+        WHERE conversationId IN (${placeholders})
+      )
+      WHERE rowNumber = 1
+    `,
+    {
+      raw: true,
+      replacements: conversationIds,
+      type: "SELECT",
+    },
+  )) as LatestMessageRow[];
+
+  return new Map(rows.map((row) => [row.conversationId, row]));
+}
+
+async function findUnreadConversationIds(conversationIds: string[], userId: string) {
+  if (conversationIds.length === 0) {
+    return new Set<string>();
+  }
+
+  const sequelize = getSequelize();
+  const placeholders = conversationIds.map(() => "?").join(", ");
+  const rows = (await sequelize.query(
+    `
+      SELECT conversationId, COUNT(*) AS unreadCount
+      FROM DirectMessages
+      WHERE
+        conversationId IN (${placeholders})
+        AND isRead = 0
+        AND senderId != ?
+      GROUP BY conversationId
+    `,
+    {
+      raw: true,
+      replacements: [...conversationIds, userId],
+      type: "SELECT",
+    },
+  )) as UnreadRow[];
+
+  return new Set(rows.map((row) => row.conversationId));
 }
 
 directMessageRouter.get("/dm", async (req, res) => {
@@ -44,64 +125,24 @@ directMessageRouter.get("/dm", async (req, res) => {
     return res.status(200).type("application/json").send([]);
   }
 
-  const messages = await DirectMessage.unscoped().findAll({
-    attributes: ["id", "conversationId", "senderId", "body", "isRead", "createdAt", "updatedAt"],
-    order: [["createdAt", "DESC"]],
-    where: {
-      conversationId: conversationIds,
-    },
-  });
-
-  const conversationMetadata = new Map<
-    string,
-    {
-      hasUnread: boolean;
-      lastMessage: {
-        body: string;
-        createdAt: Date;
-        id: string;
-        isRead: boolean;
-        senderId: string;
-        updatedAt: Date;
-      } | null;
-    }
-  >();
-
-  for (const message of messages) {
-    const current = conversationMetadata.get(message.conversationId) ?? {
-      hasUnread: false,
-      lastMessage: null,
-    };
-    if (current.lastMessage === null) {
-      current.lastMessage = {
-        body: message.body,
-        createdAt: message.createdAt,
-        id: message.id,
-        isRead: message.isRead,
-        senderId: message.senderId,
-        updatedAt: message.updatedAt,
-      };
-    }
-    if (message.senderId !== req.session.userId && !message.isRead) {
-      current.hasUnread = true;
-    }
-    conversationMetadata.set(message.conversationId, current);
-  }
+  const [latestMessages, unreadConversationIds] = await Promise.all([
+    findLatestMessagesByConversationIds(conversationIds),
+    findUnreadConversationIds(conversationIds, req.session.userId),
+  ]);
 
   const sorted = conversations
     .map((conversation) => {
-      const metadata = conversationMetadata.get(conversation.id);
-      if (metadata?.lastMessage == null) {
+      const lastMessage = latestMessages.get(conversation.id);
+      if (lastMessage == null) {
         return null;
       }
 
       return {
         ...conversation.toJSON(),
-        hasUnread: metadata.hasUnread,
+        hasUnread: unreadConversationIds.has(conversation.id),
         lastMessage: {
-          ...metadata.lastMessage,
-          createdAt: metadata.lastMessage.createdAt.toISOString(),
-          updatedAt: metadata.lastMessage.updatedAt.toISOString(),
+          ...lastMessage,
+          isRead: Boolean(lastMessage.isRead),
         },
       };
     })
