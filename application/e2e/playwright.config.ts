@@ -1,14 +1,9 @@
-import os from "node:os";
-
 import { defineConfig, devices } from "@playwright/test";
 
 const BASE_URL = process.env["E2E_BASE_URL"] ?? "http://localhost:3000";
 
-// PCスペックやチューニングの進み具合によってテストの安定性が変わるため、E2E_WORKERSの数を調整しながら利用してください
-// デフォルトでは、論理CPUの数の半分を利用します
-const WORKERS = process.env["E2E_WORKERS"]
-  ? Number(process.env["E2E_WORKERS"])
-  : Math.max(1, Math.floor(os.cpus().length / 2));
+// 共有状態を書き換えるE2Eが多いため、デフォルトは単一workerで安定性を優先します
+const WORKERS = process.env["E2E_WORKERS"] ? Number(process.env["E2E_WORKERS"]) : 1;
 
 export default defineConfig({
   globalSetup: "./globalSetup.ts",
@@ -18,7 +13,7 @@ export default defineConfig({
       maxDiffPixelRatio: 0.03,
     },
   },
-  fullyParallel: true,
+  fullyParallel: false,
   workers: WORKERS,
   projects: [
     {
@@ -34,8 +29,14 @@ export default defineConfig({
   use: {
     baseURL: BASE_URL,
     headless: true,
-    trace: "off",
+    trace: "retain-on-failure",
     navigationTimeout: 30_000,
     actionTimeout: 30_000,
+  },
+  webServer: {
+    command: "pnpm --dir .. build && pnpm --dir .. start",
+    reuseExistingServer: true,
+    timeout: 600_000,
+    url: BASE_URL,
   },
 });

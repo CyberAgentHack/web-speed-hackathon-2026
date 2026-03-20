@@ -17,6 +17,10 @@ test.describe("Crok AIチャット", () => {
       mask: dynamicMediaMask(page),
     });
 
+    await expect(page.getByTestId("crok-suggestions-status")).toHaveText("ready", {
+      timeout: 60_000,
+    });
+
     const chatInput = page.getByPlaceholder("メッセージを入力...");
     await chatInput.pressSequentially("TypeScriptの型");
 
