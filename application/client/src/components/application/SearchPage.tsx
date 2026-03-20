@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { Field, InjectedFormProps, reduxForm, WrappedFieldProps } from "redux-form";
+import {
+  Field,
+  InjectedFormProps,
+  reducer as formReducer,
+  reduxForm,
+  WrappedFieldProps,
+} from "redux-form";
 
 import { Timeline } from "@web-speed-hackathon-2026/client/src/components/timeline/Timeline";
 import {
@@ -9,9 +15,11 @@ import {
 } from "@web-speed-hackathon-2026/client/src/search/services";
 import { SearchFormData } from "@web-speed-hackathon-2026/client/src/search/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/search/validation";
-import { analyzeSentiment } from "@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer";
+import { registerReducer } from "@web-speed-hackathon-2026/client/src/store";
 
 import { Button } from "../foundation/Button";
+
+registerReducer("form", formReducer);
 
 interface Props {
   query: string;
@@ -53,7 +61,8 @@ const SearchPageComponent = ({
     }
 
     let isMounted = true;
-    analyzeSentiment(parsed.keywords)
+    import("@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer")
+      .then(({ analyzeSentiment }) => analyzeSentiment(parsed.keywords))
       .then((result) => {
         if (isMounted) {
           setIsNegative(result.label === "negative");

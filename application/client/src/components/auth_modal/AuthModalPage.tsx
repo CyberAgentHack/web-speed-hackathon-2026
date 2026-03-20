@@ -1,5 +1,11 @@
 import { useSelector } from "react-redux";
-import { Field, formValueSelector, InjectedFormProps, reduxForm } from "redux-form";
+import {
+  Field,
+  formValueSelector,
+  InjectedFormProps,
+  reducer as formReducer,
+  reduxForm,
+} from "redux-form";
 
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/auth/validation";
@@ -7,6 +13,9 @@ import { FormInputField } from "@web-speed-hackathon-2026/client/src/components/
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/components/modal/ModalErrorMessage";
 import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/components/modal/ModalSubmitButton";
+import { registerReducer } from "@web-speed-hackathon-2026/client/src/store";
+
+registerReducer("form", formReducer);
 
 interface Props {
   onRequestCloseModal: () => void;

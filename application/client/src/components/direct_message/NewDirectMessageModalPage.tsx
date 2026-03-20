@@ -1,4 +1,4 @@
-import { Field, InjectedFormProps, reduxForm } from "redux-form";
+import { Field, InjectedFormProps, reducer as formReducer, reduxForm } from "redux-form";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FormInputField } from "@web-speed-hackathon-2026/client/src/components/foundation/FormInputField";
@@ -6,6 +6,9 @@ import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/componen
 import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/components/modal/ModalSubmitButton";
 import { NewDirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/direct_message/validation";
+import { registerReducer } from "@web-speed-hackathon-2026/client/src/store";
+
+registerReducer("form", formReducer);
 
 interface Props {
   id: string;

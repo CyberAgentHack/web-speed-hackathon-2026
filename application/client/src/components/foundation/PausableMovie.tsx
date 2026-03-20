@@ -1,69 +1,59 @@
 import classNames from "classnames";
-import { Animator, Decoder } from "gifler";
-import { GifReader } from "omggif";
-import { RefCallback, useCallback, useRef, useState } from "react";
+import { RefObject, useCallback, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
-import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
   src: string;
+}
+
+function captureCurrentFrame(imageRef: RefObject<HTMLImageElement | null>): string | null {
+  const image = imageRef.current;
+  if (image == null || image.naturalWidth === 0 || image.naturalHeight === 0) {
+    return null;
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  const context = canvas.getContext("2d");
+  if (context == null) {
+    return null;
+  }
+
+  context.drawImage(image, 0, 0);
+  return canvas.toDataURL("image/png");
 }
 
 /**
  * クリックすると再生・一時停止を切り替えます。
  */
 export const PausableMovie = ({ src }: Props) => {
-  const { data, isLoading } = useFetch(src, fetchBinary);
-
-  const animatorRef = useRef<Animator>(null);
-  const canvasCallbackRef = useCallback<RefCallback<HTMLCanvasElement>>(
-    (el) => {
-      animatorRef.current?.stop();
-
-      if (el === null || data === null) {
-        return;
-      }
-
-      // GIF を解析する
-      const reader = new GifReader(new Uint8Array(data));
-      const frames = Decoder.decodeFramesSync(reader);
-      const animator = new Animator(reader, frames);
-
-      animator.animateInCanvas(el);
-      animator.onFrame(frames[0]!);
-
-      // 視覚効果 off のとき GIF を自動再生しない
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        setIsPlaying(false);
-        animator.stop();
-      } else {
-        setIsPlaying(true);
-        animator.start();
-      }
-
-      animatorRef.current = animator;
-    },
-    [data],
-  );
+  const imageRef = useRef<HTMLImageElement>(null);
+  const readyCanvasRef = useRef<HTMLCanvasElement>(null);
+  const handleLoadImage = useCallback(() => {
+    const image = imageRef.current;
+    const canvas = readyCanvasRef.current;
+    if (image == null || canvas == null) {
+      return;
+    }
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+  }, []);
 
   const [isPlaying, setIsPlaying] = useState(true);
+  const [pausedFrameUrl, setPausedFrameUrl] = useState<string | null>(null);
   const handleClick = useCallback(() => {
     setIsPlaying((isPlaying) => {
       if (isPlaying) {
-        animatorRef.current?.stop();
+        setPausedFrameUrl(captureCurrentFrame(imageRef));
       } else {
-        animatorRef.current?.start();
+        setPausedFrameUrl(null);
       }
       return !isPlaying;
     });
   }, []);
-
-  if (isLoading || data === null) {
-    return null;
-  }
 
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
@@ -73,7 +63,22 @@ export const PausableMovie = ({ src }: Props) => {
         onClick={handleClick}
         type="button"
       >
-        <canvas ref={canvasCallbackRef} className="w-full" />
+        <canvas
+          ref={readyCanvasRef}
+          aria-hidden={true}
+          className="pointer-events-none absolute inset-0 h-full w-full opacity-0"
+        />
+        {pausedFrameUrl == null ? (
+          <img
+            alt=""
+            className="h-full w-full object-cover"
+            ref={imageRef}
+            onLoad={handleLoadImage}
+            src={src}
+          />
+        ) : (
+          <img alt="" className="h-full w-full object-cover" src={pausedFrameUrl} />
+        )}
         <div
           className={classNames(
             "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",

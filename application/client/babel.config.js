@@ -1,21 +1,25 @@
-module.exports = {
-  presets: [
-    ["@babel/preset-typescript"],
-    [
-      "@babel/preset-env",
-      {
-        targets: "ie 11",
-        corejs: "3",
-        modules: "commonjs",
-        useBuiltIns: false,
-      },
+module.exports = (api) => {
+  const isProduction = api.env("production");
+
+  return {
+    presets: [
+      ["@babel/preset-typescript"],
+      [
+        "@babel/preset-env",
+        {
+          modules: false,
+          targets: {
+            chrome: "123",
+          },
+        },
+      ],
+      [
+        "@babel/preset-react",
+        {
+          development: !isProduction,
+          runtime: "automatic",
+        },
+      ],
     ],
-    [
-      "@babel/preset-react",
-      {
-        development: true,
-        runtime: "automatic",
-      },
-    ],
-  ],
+  };
 };

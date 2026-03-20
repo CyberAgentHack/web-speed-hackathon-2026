@@ -1,4 +1,4 @@
-import { FormErrors } from "redux-form";
+import type { FormErrors } from "redux-form";
 
 import {
   parseSearchQuery,
