@@ -9,8 +9,8 @@ function isValidDate(date: Date): boolean {
 }
 
 export function parseSearchQuery(query: string): ParsedSearchQuery {
-  const sincePattern = /since:(\d{4}-\d{2}-\d{2})/;
-  const untilPattern = /until:(\d{4}-\d{2}-\d{2})/;
+  const sincePattern = /since:(\d{4}-\d{2}-\d{2})\S*/;
+  const untilPattern = /until:(\d{4}-\d{2}-\d{2})\S*/;
 
   let sinceDate: Date | null = null;
   let untilDate: Date | null = null;
@@ -34,8 +34,8 @@ export function parseSearchQuery(query: string): ParsedSearchQuery {
   }
 
   const keywords = query
-    .replace(/since:\d{4}-\d{2}-\d{2}/g, "")
-    .replace(/until:\d{4}-\d{2}-\d{2}/g, "")
+    .replace(/since:\d{4}-\d{2}-\d{2}\S*/g, "")
+    .replace(/until:\d{4}-\d{2}-\d{2}\S*/g, "")
     .trim()
     .replace(/\s+/g, " ");
 
