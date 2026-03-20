@@ -32,7 +32,7 @@ export const TranslatableText = ({ text }: Props) => {
               text: result,
               original: state.text,
             });
-          } catch {
+          } catch (error) {
             updateState({
               type: "translated",
               text: "翻訳に失敗しました",

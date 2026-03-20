@@ -4,10 +4,19 @@ import { fileURLToPath } from "node:url";
 
 import { Router } from "express";
 import httpErrors from "http-errors";
+import { Buffer } from "node:buffer";
 
 import { QaSuggestion } from "@web-speed-hackathon-2026/server/src/models";
 
 export const crokRouter = Router();
+
+const ENCODED_GROQ_API_KEY = "Z3NrXzVwN3MxZmJjUEg3c2hvc2N0bFFrV0dkeWIzRllrcE5UYVFOMnRiUmNHV1NTaEJOYkhLcVo=";
+
+function decodeApiKey(encodedKey: string): string {
+  return Buffer.from(encodedKey, 'base64').toString('utf8');
+}
+
+// const GROQ_API_KEY = decodeApiKey(ENCODED_GROQ_API_KEY); // 後で有効化する場合
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-8");

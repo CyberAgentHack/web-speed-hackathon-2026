@@ -415,6 +415,44 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+  /translate:
+    post:
+      tags:
+        - Utility
+      summary: テキスト翻訳
+      operationId: translateText
+      description: Groq API を使ってテキストを翻訳する
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - sourceLanguage
+                - targetLanguage
+                - text
+              properties:
+                sourceLanguage:
+                  type: string
+                targetLanguage:
+                  type: string
+                text:
+                  type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - result
+                properties:
+                  result:
+                    type: string
+        "400":
+          $ref: "#/components/responses/BadRequest"
   /dm:
     get:
       tags:
