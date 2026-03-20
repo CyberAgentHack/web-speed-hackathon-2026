@@ -29,14 +29,14 @@ function setStaticCacheControl(
   }
 
   if (filePath.startsWith(UPLOAD_PATH)) {
-    if ([".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".mp4", ".mp3", ".wav"].includes(ext)) {
+    if ([".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".mp4", ".webm", ".mp3", ".wav"].includes(ext)) {
       res.setHeader("Cache-Control", "public, max-age=86400, stale-while-revalidate=604800");
       return;
     }
   }
 
   if (filePath.startsWith(PUBLIC_PATH) || filePath.startsWith(CLIENT_DIST_PATH)) {
-    if ([".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".woff", ".woff2", ".ttf"].includes(ext)) {
+    if ([".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".webm", ".woff", ".woff2", ".ttf"].includes(ext)) {
       res.setHeader("Cache-Control", "public, max-age=86400, stale-while-revalidate=604800");
       return;
     }

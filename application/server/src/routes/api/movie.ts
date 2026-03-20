@@ -8,12 +8,12 @@ import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import {
-  convertMovieToGif,
+  convertMovieToWebm,
   MediaConversionError,
 } from "@web-speed-hackathon-2026/server/src/utils/convert_media";
 
 // 変換した動画の拡張子
-const EXTENSION = "gif";
+const EXTENSION = "webm";
 
 export const movieRouter = Router();
 
@@ -31,7 +31,7 @@ movieRouter.post("/movies", async (req, res) => {
   }
 
   const movieId = uuidv4();
-  const converted = await convertMovieToGif(req.body).catch((error: unknown) => {
+  const converted = await convertMovieToWebm(req.body).catch((error: unknown) => {
     if (error instanceof MediaConversionError) {
       throw new httpErrors.BadRequest("Invalid file type");
     }
