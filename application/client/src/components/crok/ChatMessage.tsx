@@ -1,12 +1,19 @@
 import "katex/dist/katex.min.css";
-import Markdown from "react-markdown";
-import rehypeKatex from "rehype-katex";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
+import React, { lazy, Suspense } from "react";
 
 import { CodeBlock } from "@web-speed-hackathon-2026/client/src/components/crok/CodeBlock";
 import { TypingIndicator } from "@web-speed-hackathon-2026/client/src/components/crok/TypingIndicator";
 import { CrokLogo } from "@web-speed-hackathon-2026/client/src/components/foundation/CrokLogo";
+
+const Markdown = lazy(() => import("react-markdown"));
+const remarkGfm = import("remark-gfm").then((m) => m.default);
+const remarkMath = import("remark-math").then((m) => m.default);
+const rehypeKatex = import("rehype-katex").then((m) => m.default);
+let plugins: { remarkPlugins: any[]; rehypePlugins: any[] } | null = null;
+const getPlugins = async () => {
+  if (!plugins) plugins = { remarkPlugins: [await remarkMath, await remarkGfm], rehypePlugins: [await rehypeKatex] };
+  return plugins;
+};
 
 interface Props {
   message: Models.ChatMessage;
@@ -23,6 +30,8 @@ const UserMessage = ({ content }: { content: string }) => {
 };
 
 const AssistantMessage = ({ content }: { content: string }) => {
+  const [loadedPlugins, setLoadedPlugins] = React.useState(plugins);
+  React.useEffect(() => { if (!loadedPlugins) getPlugins().then(setLoadedPlugins); }, []);
   return (
     <div className="mb-6 flex gap-4">
       <div className="h-8 w-8 shrink-0">
@@ -31,15 +40,17 @@ const AssistantMessage = ({ content }: { content: string }) => {
       <div className="min-w-0 flex-1">
         <div className="text-cax-text mb-1 text-sm font-medium">Crok</div>
         <div className="markdown text-cax-text max-w-none">
-          {content ? (
-            <Markdown
-              components={{ pre: CodeBlock }}
-              key={content}
-              rehypePlugins={[rehypeKatex]}
-              remarkPlugins={[remarkMath, remarkGfm]}
-            >
-              {content}
-            </Markdown>
+          {content && loadedPlugins ? (
+            <Suspense fallback={<TypingIndicator />}>
+              <Markdown
+                components={{ pre: CodeBlock }}
+                key={content}
+                rehypePlugins={loadedPlugins.rehypePlugins}
+                remarkPlugins={loadedPlugins.remarkPlugins}
+              >
+                {content}
+              </Markdown>
+            </Suspense>
           ) : (
             <TypingIndicator />
           )}

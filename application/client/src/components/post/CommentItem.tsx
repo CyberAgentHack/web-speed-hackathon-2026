@@ -1,6 +1,6 @@
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
-import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { formatLL, toISOString } from "@web-speed-hackathon-2026/client/src/utils/date";
+import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
@@ -43,7 +43,9 @@ export const CommentItem = ({ comment }: Props) => {
             <TranslatableText text={comment.text} />
           </div>
           <p className="text-cax-text-muted pt-1 text-xs">
-            <time dateTime={toISOString(comment.createdAt)}>{formatLL(comment.createdAt)}</time>
+            <time dateTime={toISOString(comment.createdAt)}>
+              {formatLL(comment.createdAt)}
+            </time>
           </p>
         </div>
       </div>

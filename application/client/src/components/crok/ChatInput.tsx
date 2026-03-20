@@ -1,5 +1,3 @@
-import Bluebird from "bluebird";
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
 import {
   useEffect,
   useLayoutEffect,
@@ -11,9 +9,9 @@ import {
 } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import {
-  extractTokens,
-  filterSuggestionsBM25,
+import type {
+  extractTokens as ExtractTokensFn,
+  filterSuggestionsBM25 as FilterSuggestionsBM25Fn,
 } from "@web-speed-hackathon-2026/client/src/utils/bm25_search";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
@@ -79,7 +77,8 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
+  const [tokenizer, setTokenizer] = useState<any>(null);
+  const [bm25Utils, setBm25Utils] = useState<{ extractTokens: typeof ExtractTokensFn; filterSuggestionsBM25: typeof FilterSuggestionsBM25Fn } | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
@@ -92,44 +91,47 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   }, [suggestions, showSuggestions]);
 
-  // 初回にkuromojiトークナイザーを構築
-  useEffect(() => {
-    let mounted = true;
-
-    const init = async () => {
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
+  // 初回入力時にkuromojiトークナイザーを構築（遅延初期化）
+  const initStarted = useRef(false);
+  const initKuromoji = () => {
+    if (initStarted.current || tokenizer) return;
+    initStarted.current = true;
+    (async () => {
+      const [Bluebird, kuromoji, bm25] = await Promise.all([
+        import("bluebird"),
+        import("kuromoji"),
+        import("@web-speed-hackathon-2026/client/src/utils/bm25_search"),
+      ]);
+      const builder = Bluebird.default.promisifyAll(kuromoji.default.builder({ dicPath: "/dicts" }));
       const nextTokenizer = await builder.buildAsync();
-      if (mounted) {
-        setTokenizer(nextTokenizer);
-      }
-    };
-    init();
+      setTokenizer(nextTokenizer);
+      setBm25Utils({ extractTokens: bm25.extractTokens, filterSuggestionsBM25: bm25.filterSuggestionsBM25 });
+    })();
+  };
 
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  const suggestionsCache = useRef<string[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     const updateSuggestions = async () => {
-      if (!tokenizer || !inputValue.trim()) {
+      if (!tokenizer || !bm25Utils || !inputValue.trim()) {
         setSuggestions([]);
         setQueryTokens([]);
         setShowSuggestions(false);
         return;
       }
 
-      const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-        "/api/v1/crok/suggestions",
-      );
-      if (cancelled) {
-        return;
+      let candidates = suggestionsCache.current;
+      if (!candidates) {
+        const res = await fetchJSON<{ suggestions: string[] }>("/api/v1/crok/suggestions");
+        if (cancelled) return;
+        candidates = res.suggestions;
+        suggestionsCache.current = candidates;
       }
 
-      const tokens = extractTokens(tokenizer.tokenize(inputValue));
-      const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
+      const tokens = bm25Utils.extractTokens(tokenizer.tokenize(inputValue));
+      const results = bm25Utils.filterSuggestionsBM25(tokenizer, candidates, tokens);
 
       if (cancelled) {
         return;
@@ -140,12 +142,13 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
       setShowSuggestions(results.length > 0);
     };
 
-    void updateSuggestions();
+    const timer = setTimeout(updateSuggestions, 300);
 
     return () => {
       cancelled = true;
+      clearTimeout(timer);
     };
-  }, [inputValue, tokenizer]);
+  }, [inputValue, tokenizer, bm25Utils]);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
@@ -165,6 +168,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     const value = e.target.value;
     setInputValue(value);
     adjustTextareaHeight();
+    initKuromoji();
   };
 
   const handleSuggestionClick = (suggestion: string) => {

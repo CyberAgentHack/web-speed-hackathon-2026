@@ -1,5 +1,3 @@
-import { gzip } from "pako";
-
 async function throwIfNotOk(res: Response): Promise<void> {
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -30,12 +28,23 @@ export async function sendFile<T>(url: string, file: File): Promise<T> {
 }
 
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
-  const compressed = gzip(new TextEncoder().encode(JSON.stringify(data)));
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Encoding": "gzip", "Content-Type": "application/json" },
-    body: compressed,
-  });
+  const body = JSON.stringify(data);
+  // 小さいペイロードはgzip不要、大きい場合のみ動的importで圧縮
+  let res: Response;
+  if (body.length > 1024) {
+    const { gzip } = await import("pako");
+    res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Encoding": "gzip", "Content-Type": "application/json" },
+      body: gzip(new TextEncoder().encode(body)),
+    });
+  } else {
+    res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+    });
+  }
   await throwIfNotOk(res);
   return res.json() as Promise<T>;
 }

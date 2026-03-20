@@ -11,8 +11,8 @@ import {
 } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
 import { formatHm } from "@web-speed-hackathon-2026/client/src/utils/date";
+import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
@@ -140,7 +140,9 @@ export const DirectMessagePage = ({
                   {message.body}
                 </p>
                 <div className="flex gap-1 text-xs">
-                  <time dateTime={message.createdAt}>{formatHm(message.createdAt)}</time>
+                  <time dateTime={message.createdAt}>
+                    {formatHm(message.createdAt)}
+                  </time>
                   {isActiveUserSend && message.isRead && (
                     <span className="text-cax-text-muted">既読</span>
                   )}

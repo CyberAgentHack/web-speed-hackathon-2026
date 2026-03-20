@@ -6,8 +6,6 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const webpack = require("webpack");
 
-const TerserPlugin = require("terser-webpack-plugin");
-
 const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
@@ -65,20 +63,19 @@ const config = {
     clean: true,
   },
   plugins: [
-    new webpack.ProvidePlugin({
-      AudioContext: ["standardized-audio-context", "AudioContext"],
-    }),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
       NODE_ENV: "production",
     }),
+    // Force React/related packages to use production builds
     new webpack.NormalModuleReplacementPlugin(
       /[\\/]cjs[\\/].*\.development\.js$/,
       (resource) => {
         const r = resource.createData?.resource || resource.request;
         if (!r) return;
+        // Some packages use .production.js, others use .production.min.js
         const prodPath = r.replace(".development.js", ".production.js");
         const prodMinPath = r.replace(".development.js", ".production.min.js");
         const fs = require("fs");
@@ -140,16 +137,30 @@ const config = {
   },
   optimization: {
     minimize: true,
-    minimizer: [
-      new TerserPlugin({
-        terserOptions: {
-          ecma: 2020,
-        },
-      }),
-    ],
     splitChunks: {
-      chunks: "all",
+      chunks: "initial",
+      maxInitialRequests: 10,
+      cacheGroups: {
+        // react-dom を単独チャンクに (最大のライブラリ)
+        reactDom: {
+          test: /[\\/]node_modules[\\/](react-dom|scheduler)[\\/]/,
+          name: "react-dom",
+          priority: 20,
+          chunks: "initial",
+        },
+        // react-router を別チャンクに
+        router: {
+          test: /[\\/]node_modules[\\/]react-router[\\/]/,
+          name: "router",
+          priority: 15,
+          chunks: "initial",
+        },
+      },
     },
+    concatenateModules: true,
+    usedExports: true,
+    providedExports: true,
+    sideEffects: true,
   },
   cache: false,
   ignoreWarnings: [

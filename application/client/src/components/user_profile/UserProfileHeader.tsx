@@ -43,7 +43,9 @@ export const UserProfileHeader = ({ user }: Props) => {
             <FontAwesomeIcon iconType="calendar-alt" styleType="regular" />
           </span>
           <span>
-            <time dateTime={toISOString(user.createdAt)}>{formatLL(user.createdAt)}</time>
+            <time dateTime={toISOString(user.createdAt)}>
+              {formatLL(user.createdAt)}
+            </time>
             からサービスを利用しています
           </span>
         </p>

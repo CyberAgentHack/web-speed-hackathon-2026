@@ -15,10 +15,9 @@ app.use(sessionMiddleware);
 app.use(bodyParser.json());
 app.use(bodyParser.raw({ limit: "10mb" }));
 
+// API のみ Cache-Control: max-age=0 を設定（静的ファイルは serve-static の設定に任せる）
 app.use("/api/v1", (_req, res, next) => {
-  res.header({
-    "Cache-Control": "max-age=0, no-transform",
-  });
+  res.header({ "Cache-Control": "max-age=0", Connection: "close" });
   return next();
 });
 
