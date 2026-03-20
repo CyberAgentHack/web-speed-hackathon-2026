@@ -29,6 +29,9 @@ pnpm run build
 # サーバーを起動（application/ で実行）
 pnpm run start
 # → http://localhost:3000 でアクセス
+
+# バンドル解析（dist/report.html に出力）
+ANALYZE=true NODE_ENV=production pnpm --filter @web-speed-hackathon-2026/client build
 ```
 
 ### 型チェック・フォーマット
@@ -79,29 +82,44 @@ pnpm --filter @web-speed-hackathon-2026/server run seed:insert
 ### フロントエンド（`application/client/`）
 
 - **React 19** + **React Router v7** + **Redux**（redux-form 専用。アプリ状態は props で管理）
-- **Webpack 5** + **Babel** でビルド（`NODE_ENV=development` でビルドされる）
+- **Webpack 5** + **Babel** でビルド（`NODE_ENV=production` でビルドされる）
+- **TailwindCSS v4** を PostCSS 経由でビルド時に処理（CDN 不使用）
 - エントリポイント: `src/index.tsx` → `AppContainer` がルーティングを担う
+- ルートコンテナは `React.lazy` + `Suspense` で遅延ロード
 - `src/containers/` がデータフェッチ・ロジック、`src/components/` が描画を担う分離構成
-- API 通信は `src/utils/fetchers.ts` に集約（jQuery の `$.ajax` を使用、`async: false` の同期 XHR）
+- API 通信は `src/utils/fetchers.ts` に集約（`fetch` API 使用、`HttpError` クラスでエラー統一）
 - ログイン中ユーザーは `AppContainer` が保持し、子コンポーネントへ props で渡す
+
+#### 主要な実装方針
+
+- **画像表示**: `CoveredImage` は `object-fit: cover`、`AspectRatioBox` は CSS `aspect-ratio` で実装
+- **日付フォーマット**: `src/utils/format_date.ts` で `Intl.DateTimeFormat` / `Intl.RelativeTimeFormat` を使用
+- **検索トークナイズ**: `Intl.Segmenter("ja", { granularity: "word" })` でトークン分割（kuromoji 不使用）
+- **センチメント解析**: `Intl.Segmenter` + `negaposi-analyzer-ja`（kuromoji 不使用）
+- **翻訳**: `POST /api/v1/translate` サーバーAPIを呼び出す（Web LLM 不使用）
+- **音声・動画アップロード**: 生ファイルをそのままサーバーに送信し、サーバー側で変換
 
 ### バックエンド（`application/server/`）
 
 - **Express 5** + **Sequelize** + **SQLite**
 - API は `/api/v1/*` に集約（`src/routes/api/`）
 - **初期化 API の仕様**: `POST /api/v1/initialize` が呼ばれると、`sequelize.ts` が master の SQLite ファイルを tmpdir にコピーして再接続する
-- レスポンスはすべて `Cache-Control: max-age=0, no-transform` が付与されている
+- レスポンスには `Cache-Control: max-age=0, no-transform` が付与されている
 - Crok（AI チャット）エンドポイント（`GET /api/v1/crok`）は Server-Sent Events で実装。SSE プロトコルの変更は禁止
 
-### パフォーマンス上の問題点（意図的に劣化させてある箇所）
+#### サーバー側変換処理
 
-競技課題として以下が含まれている（最適化の余地）:
+- **音声変換** (`src/utils/convert_to_mp3.ts`): `fluent-ffmpeg` + `@ffmpeg-installer/ffmpeg` で任意フォーマット → MP3
+- **動画変換** (`src/utils/convert_to_gif.ts`): 同上で任意フォーマット → 5秒/10fps/正方形クロップ GIF
+- **翻訳** (`src/routes/api/translate.ts`): `@vitalets/google-translate-api` で `POST /api/v1/translate`
+- **音声メタデータ** (`src/utils/extract_metadata_from_sound.ts`): `music-metadata` で ID3 タグ読み取り
 
-- `fetchers.ts`: jQuery の `async: false`（同期 XHR）でブロッキング通信
-- `fetchers.ts`: `sendJSON` がリクエストを pako で gzip 圧縮してから送信
-- クライアント依存: `@ffmpeg/ffmpeg`・`@imagemagick/magick-wasm`・`@mlc-ai/web-llm` など重量級 WASM ライブラリを含む
-- 検索: BM25 をクライアントサイドで実行（`src/utils/bm25_search.ts`）、形態素解析に kuromoji を使用
-- サーバー: `Cache-Control: max-age=0, no-transform` でキャッシュ無効化
+### 静的アセット
+
+- `public/images/profiles/*.jpg`: プロフィール画像（256×256px にリサイズ済み）
+- `public/images/*.jpg`: 投稿画像（幅 1152px にリサイズ済み）
+- `public/movies/*.gif`: 投稿動画（GIF）
+- `public/sounds/*.mp3`: 投稿音声
 
 ## レギュレーション上の注意点
 
