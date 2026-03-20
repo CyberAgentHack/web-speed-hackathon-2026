@@ -145,3 +145,49 @@ Quality Checks:
 
 Commit:
 - Message: `feat: [US-003] - DirectMessage afterSave フック N+1 修正`
+
+---
+
+## 2026-03-21 - US-004 CLS 改善（画像・動画の width/height 明示）
+
+Implementation:
+- `application/client/src/components/foundation/ProfileImage.tsx` を追加し、既存の `alt` / `className` / `width` / `height` を維持したままプロフィール画像の `src` 解決を共通化
+- `application/client/src/components/application/AccountMenu.tsx`、`application/client/src/components/direct_message/DirectMessageListPage.tsx`、`application/client/src/components/direct_message/DirectMessagePage.tsx`、`application/client/src/components/post/PostItem.tsx`、`application/client/src/components/post/CommentItem.tsx`、`application/client/src/components/timeline/TimelineItem.tsx` のプロフィール画像を `ProfileImage` に置き換え、既存の `width` / `height` 属性を崩さず再利用できる形へ整理
+- `application/client/src/components/foundation/PausableMovie.tsx` の `<video>` に `h-full w-full object-cover` を追加し、予約領域と実描画サイズを一致させたまま 1:1 レイアウトを維持
+- `application/client/src/components/user_profile/UserProfileHeader.tsx` で FastAverageColor の抽出色を Tailwind 動的クラスではなく inline `backgroundColor` に適用し、プロフィールヘッダー背景色が production build でも確実に反映されるよう修正
+- `application/e2e/src/user-profile.test.ts-snapshots/user-profile-ユーザー詳細-Desktop-Chrome-darwin.png` を、`POST /api/v1/initialize` 後の現行 seed 状態に合わせて再生成
+- `react-doctor` の指摘に従い、`application/client/src/components/direct_message/DirectMessagePage.tsx` のメッセージ一覧 `<li>` に `key={message.id}` を追加
+
+Acceptance Criteria Verification:
+- AC: CoveredImage の img タグに width/height（または aspect-ratio）が明示されている
+  Test case: `application/client/src/components/foundation/CoveredImage.tsx` の実装確認
+  Result: `<img>` に `width={160}` / `height={90}` が維持されていることを確認
+- AC: PausableMovie の video タグに width/height（または aspect-ratio）が明示されている
+  Test case: `application/client/src/components/foundation/PausableMovie.tsx` の実装確認
+  Result: `<video>` に `width={100}` / `height={100}` を維持したまま、`h-full w-full object-cover` で 1:1 の表示領域と実描画を一致させたことを確認
+- AC: PostItem, CommentItem, AccountMenu, DirectMessagePage, DirectMessageListPage, UserProfileHeader のプロフィール画像に width/height が明示されている
+  Test case: `application/client/src/components/application/AccountMenu.tsx`、`application/client/src/components/direct_message/DirectMessageListPage.tsx`、`application/client/src/components/direct_message/DirectMessagePage.tsx`、`application/client/src/components/post/PostItem.tsx`、`application/client/src/components/post/CommentItem.tsx`、`application/client/src/components/user_profile/UserProfileHeader.tsx` の実装確認
+  Result: 各コンポーネントのプロフィール画像が `ProfileImage` または既存 `<img>` で `width` / `height` を持ち、丸アイコン表示を維持していることを確認
+- AC: ホームページの画像が正しく表示される
+  Test case: `curl -s -X POST http://127.0.0.1:3011/api/v1/initialize >/dev/null && CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/home.test.ts`
+  Result: 7 tests passed
+- AC: 該当箇所のE2Eテストが通っていること
+  Test case: `curl -s -X POST http://127.0.0.1:3011/api/v1/initialize >/dev/null && CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/home.test.ts src/post-detail.test.ts src/dm.test.ts src/user-profile.test.ts`
+  Result: 34 tests passed
+- AC: codex skill で review を受けること
+  Test case: 別 Codex エージェント `Wegener` にローカル変更のレビューを移譲し、指摘対応後に別 Codex エージェント `Beauvoir` で再レビュー
+  Result: `Wegener` から user-profile VRT の coverage 低下と過剰な mask 拡大の指摘を受領し、`application/e2e/src/user-profile.test.ts` と `application/e2e/src/utils.ts` の変更を巻き戻して対応。再レビューの `Beauvoir` では追加の重大 finding なし
+- AC: Typecheck passes
+  Test case: `mise exec -- pnpm typecheck`
+  Result: passed
+
+Quality Checks:
+- `mise trust` -> passed (`No untrusted config files found.`)
+- `mise install` -> passed (`mise all tools are installed`)
+- `mise exec -- pnpm typecheck` -> passed
+- `mise exec -- pnpm build` -> passed (Rspack size warning only)
+- `mise exec -- npx -y react-doctor@latest . --verbose --diff` -> passed with warning (`TimelineItem.tsx` の既存 keyboard accessibility warning のみ, score 99/100)
+- `curl -s -X POST http://127.0.0.1:3011/api/v1/initialize >/dev/null && CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/home.test.ts src/post-detail.test.ts src/dm.test.ts src/user-profile.test.ts` -> passed (34 tests)
+
+Commit:
+- Message: `feat: [US-004] - CLS 改善（画像・動画の width/height 明示）`

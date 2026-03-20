@@ -49,11 +49,11 @@ export const PausableMovie = ({ src }: Props) => {
         <video
           ref={videoRef}
           autoPlay
+          height={100}
+          className="w-full"
           loop
           muted
           playsInline
-          className="w-full"
-          height={100}
           src={src}
           width={100}
         />

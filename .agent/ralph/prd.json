@@ -71,7 +71,7 @@
         "Typecheck passes"
       ],
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "notes": "AspectRatioBox でカバーされているコンテンツ画像/動画は CSS aspect-ratio が効いているが、プロフィール画像（丸アイコン）は Tailwind クラスのみで width/height 属性が未指定。"
     },
     {

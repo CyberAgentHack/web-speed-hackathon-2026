@@ -1,12 +1,12 @@
 import { MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
+import { ProfileImage } from "@web-speed-hackathon-2026/client/src/components/foundation/ProfileImage";
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
 import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
 import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { formatDate, toISOString } from "@web-speed-hackathon-2026/client/src/utils/format_date";
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Element): boolean => {
   while (target !== null && target instanceof Element) {
@@ -54,11 +54,10 @@ export const TimelineItem = ({ post }: Props) => {
             className="border-cax-border bg-cax-surface-subtle block h-12 w-12 overflow-hidden rounded-full border hover:opacity-75 sm:h-16 sm:w-16"
             to={`/users/${post.user.username}`}
           >
-            <img
-              alt={post.user.profileImage.alt}
+            <ProfileImage
               height={200}
               loading="lazy"
-              src={getProfileImagePath(post.user.profileImage.id)}
+              profileImage={post.user.profileImage}
               width={200}
             />
           </Link>

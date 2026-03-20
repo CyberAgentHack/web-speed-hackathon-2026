@@ -1,7 +1,7 @@
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
+import { ProfileImage } from "@web-speed-hackathon-2026/client/src/components/foundation/ProfileImage";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { formatDate, toISOString } from "@web-speed-hackathon-2026/client/src/utils/format_date";
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   comment: Models.Comment;
@@ -16,11 +16,10 @@ export const CommentItem = ({ comment }: Props) => {
             className="border-cax-border bg-cax-surface-subtle block h-8 w-8 overflow-hidden rounded-full border hover:opacity-75 sm:h-12 sm:w-12"
             to={`/users/${comment.user.username}`}
           >
-            <img
-              alt={comment.user.profileImage.alt}
+            <ProfileImage
               height={200}
               loading="lazy"
-              src={getProfileImagePath(comment.user.profileImage.id)}
+              profileImage={comment.user.profileImage}
               width={200}
             />
           </Link>
