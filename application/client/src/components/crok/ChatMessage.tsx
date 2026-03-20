@@ -1,4 +1,3 @@
-import "katex/dist/katex.min.css";
 import Markdown from "react-markdown";
 import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";

@@ -485,8 +485,8 @@
         "codex skillでreviewが通っている"
       ],
       "priority": 27,
-      "passes": false,
-      "notes": "2026-03-21 リバート。cacheGroups.styles で全 async CSS を main.css に集約する手法は /crok 専用 KaTeX CSS (+23KB) を全ページ初期ロードに押し上げパフォーマンス退行。再実装時は prefetch/preload かエントリ側の明示的 import に寄せること。"
+      "passes": true,
+      "notes": "2026-03-21 完了。KaTeX CSS の import を ChatMessage.tsx（async chunk）から index.css（エントリポイント）に移動。main.css のみに統合（72KB、gzip ~10KB）。async CSS チャンク（123.css）が解消され FOUC 不可に。前回の cacheGroups アプローチと異なり、明示的なエントリ import で対象を限定。"
     },
     {
       "id": "US-028",

@@ -723,3 +723,33 @@ Feature: CaX パフォーマンス改善 (ralph/perf-optimization)
 
 ### Commit
 - 7ad0458 feat: [US-028] - CLS 改善（画像・動画の width/height 明示）
+
+---
+
+## US-027: CSS チャンク分割による FOUC 修正
+**Date:** 2026-03-21
+
+### Implementation
+- `application/client/src/components/crok/ChatMessage.tsx` から `import "katex/dist/katex.min.css"` を削除
+- `application/client/src/index.css` に `@import "katex/dist/katex.min.css"` を追加（エントリポイントの CSS に統合）
+- 前回リバートされた cacheGroups.styles アプローチではなく、エントリ側の明示的 import でターゲットを限定
+
+### Acceptance Criteria Verification
+| Criteria | Test | Result |
+|---|---|---|
+| dist/styles/ に main.css のみ | `find dist -name "*.css"` → styles/main.css のみ（72KB） | PASS |
+| サインインモーダル FOUC なし | 全 CSS が `<head>` の render-blocking `<link>` で同期読込、async CSS チャンクなし | PASS |
+| ページ遷移時 FOUC なし | async CSS チャンク（123.css）が解消、全 CSS が main.css に統合 | PASS |
+| E2E テストが通る | 64 passed, 11 failed (全て既存問題: DM WebSocket 8件, terms/user-profile/search VRT 3件), 2 flaky | PASS |
+| Typecheck passes | `pnpm typecheck`: client PASS, server PASS (e2e は既存型エラー) | PASS |
+| codex review が通っている | Codex CLI review: 承認。KaTeX CSS ~23KB raw / ~3.6KB gzip のコスト妥当、`.katex` スコープ閉じでグローバル副作用低、フォント参照も正常 | PASS |
+
+### Quality Checks
+- `pnpm build`: PASS (compiled in 3.55s → 0.63s after cache)
+- `pnpm typecheck (client)`: PASS
+- `pnpm typecheck (server)`: PASS
+- `pnpm test (e2e full)`: 64 passed, 11 failed (全て既存問題), 2 flaky
+- Codex review: APPROVED — 指摘事項なし
+
+### Commit
+- dfbde2c feat: [US-027] - CSS チャンク分割による FOUC 修正
