@@ -6,16 +6,14 @@ import { RefCallback, useCallback, useRef, useState } from "react";
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
+import { useIntersectionObserver } from "@web-speed-hackathon-2026/client/src/hooks/use_intersection_observer";
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
   src: string;
 }
 
-/**
- * クリックすると再生・一時停止を切り替えます。
- */
-export const PausableMovie = ({ src }: Props) => {
+const PausableMovieInner = ({ src }: Props) => {
   const { data, isLoading } = useFetch(src, fetchBinary);
 
   const animatorRef = useRef<Animator>(null);
@@ -94,6 +92,26 @@ export const PausableMovie = ({ src }: Props) => {
           <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
         </div>
       </button>
+    </AspectRatioBox>
+  );
+};
+
+/**
+ * ビューポートに近づいたタイミングで GIF バイナリの取得・描画を開始します。
+ */
+export const PausableMovie = ({ src }: Props) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isVisible = useIntersectionObserver(containerRef, { rootMargin: "200px" });
+
+  return (
+    <AspectRatioBox aspectHeight={1} aspectWidth={1}>
+      <div ref={containerRef} className="h-full w-full">
+        {isVisible ? (
+          <PausableMovieInner src={src} />
+        ) : (
+          <img alt="" className="h-full w-full object-cover" src={src} />
+        )}
+      </div>
     </AspectRatioBox>
   );
 };
