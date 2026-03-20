@@ -119,7 +119,6 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
           error={errors.password}
           touched={touched.password}
           label="パスワード"
-          type="password"
           autoComplete={values.type === "signup" ? "new-password" : "current-password"}
         />
       </div>

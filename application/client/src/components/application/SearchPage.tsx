@@ -109,6 +109,7 @@ export const SearchPage = ({ query, results, initialValues }: Props) => {
                     ? "border-cax-danger focus:border-cax-danger"
                     : "border-cax-border focus:border-cax-brand-strong"
                 }`}
+                aria-label="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
                 placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
                 type="text"
               />
