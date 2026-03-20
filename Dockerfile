@@ -28,7 +28,6 @@ RUN --mount=type=cache,target=/pnpm/store CI=true pnpm install --frozen-lockfile
 FROM base
 
 COPY --from=build /app /app
-COPY --from=build /app/package.json /app/pnpm-workspace.yaml ./
 
 EXPOSE 8080
 CMD [ "pnpm", "start" ]
