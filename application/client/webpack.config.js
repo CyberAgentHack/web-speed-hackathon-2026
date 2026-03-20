@@ -10,6 +10,7 @@ const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
+const isProduction = true;
 
 /** @type {import('webpack').Configuration} */
 const config = {
@@ -25,7 +26,7 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: isProduction ? false : "inline-source-map",
   entry: {
     main: [
       "core-js",
@@ -35,7 +36,7 @@ const config = {
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: isProduction ? "production" : "development",
   module: {
     rules: [
       {
@@ -58,9 +59,9 @@ const config = {
     ],
   },
   output: {
-    chunkFilename: "scripts/chunk-[contenthash].js",
+    chunkFilename: isProduction ? "scripts/chunk-[contenthash].js" : "scripts/[name].js",
     chunkFormat: false,
-    filename: "scripts/[name].js",
+    filename: isProduction ? "scripts/[name]-[contenthash].js" : "scripts/[name].js",
     path: DIST_PATH,
     publicPath: "auto",
     clean: true,
@@ -77,7 +78,7 @@ const config = {
       NODE_ENV: "development",
     }),
     new MiniCssExtractPlugin({
-      filename: "styles/[name].css",
+      filename: isProduction ? "styles/[name]-[contenthash].css" : "styles/[name].css",
     }),
     new CopyWebpackPlugin({
       patterns: [
@@ -88,7 +89,8 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: "body",
+      scriptLoading: "defer",
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
   ],
@@ -126,13 +128,19 @@ const config = {
   },
   optimization: {
     minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
+    runtimeChunk: "single",
+    splitChunks: {
+      chunks: "all",
+      cacheGroups: {
+        vendors: {
+          test: /[\\/]node_modules[\\/]/,
+          name: "vendors",
+          chunks: "all",
+        },
+      },
+    },
   },
-  cache: false,
+  cache: isProduction ? { type: "filesystem" } : false,
   ignoreWarnings: [
     {
       module: /@ffmpeg/,
