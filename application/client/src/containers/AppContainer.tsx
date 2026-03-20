@@ -70,17 +70,6 @@ export const AppContainer = () => {
   const authModalId = useId();
   const newPostModalId = useId();
 
-  // モーダルの遅延マウント: 初期ロード時のメインスレッドブロックを回避しつつ、
-  // サインインフロー等で素早くモーダルを利用可能にする。
-  // requestIdleCallbackはメインスレッドビジー時に大幅に遅延するため、
-  // setTimeout(0)で次のマイクロタスク後に確実にマウントする。
-  const [modalsLoaded, setModalsLoaded] = useState(false);
-  useEffect(() => {
-    const id = setTimeout(() => {
-      setModalsLoaded(true);
-    }, 0);
-    return () => clearTimeout(id);
-  }, []);
 
   return (
     <HelmetProvider>
@@ -116,12 +105,10 @@ export const AppContainer = () => {
         </Suspense>
       </AppPage>
 
-      {modalsLoaded && (
-        <Suspense>
-          <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
-          <NewPostModalContainer id={newPostModalId} />
-        </Suspense>
-      )}
+      <Suspense>
+        <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
+        <NewPostModalContainer id={newPostModalId} />
+      </Suspense>
     </HelmetProvider>
   );
 };
