@@ -1,30 +1,32 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+
+function subscribe(callback: () => void) {
+  window.addEventListener("popstate", callback);
+
+  // Monkey-patch pushState/replaceState to detect SPA navigation
+  const origPushState = history.pushState.bind(history);
+  const origReplaceState = history.replaceState.bind(history);
+  history.pushState = (...args) => {
+    origPushState(...args);
+    callback();
+  };
+  history.replaceState = (...args) => {
+    origReplaceState(...args);
+    callback();
+  };
+
+  return () => {
+    window.removeEventListener("popstate", callback);
+    history.pushState = origPushState;
+    history.replaceState = origReplaceState;
+  };
+}
+
+function getSnapshot() {
+  return window.location.search;
+}
 
 export function useSearchParams(): [URLSearchParams] {
-  const [searchParams, setSearchParams] = useState(
-    () => new URLSearchParams(window.location.search),
-  );
-  const lastSearchRef = useRef(window.location.search);
-
-  useEffect(() => {
-    let active = true;
-
-    const poll = () => {
-      if (!active) return;
-      const currentSearch = window.location.search;
-      if (currentSearch !== lastSearchRef.current) {
-        lastSearchRef.current = currentSearch;
-        setSearchParams(new URLSearchParams(currentSearch));
-      }
-      scheduler.postTask(poll, { priority: "user-blocking", delay: 1 });
-    };
-
-    scheduler.postTask(poll, { priority: "user-blocking", delay: 1 });
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  return [searchParams];
+  const search = useSyncExternalStore(subscribe, getSnapshot);
+  return [new URLSearchParams(search)];
 }
