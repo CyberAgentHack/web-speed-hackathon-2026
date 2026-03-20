@@ -14,13 +14,25 @@ interface ReturnValues {
   reset: () => void;
 }
 
+const STREAM_UPDATE_INTERVAL_MS = 50;
+
 export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
   const [content, setContent] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const contentRef = useRef("");
+  const flushTimeoutRef = useRef<number | null>(null);
+
+  const flushContent = useCallback(() => {
+    flushTimeoutRef.current = null;
+    setContent(contentRef.current);
+  }, []);
 
   const stop = useCallback(() => {
+    if (flushTimeoutRef.current !== null) {
+      window.clearTimeout(flushTimeoutRef.current);
+      flushTimeoutRef.current = null;
+    }
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
@@ -49,6 +61,11 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
 
         const isDone = options.onDone?.(data) ?? false;
         if (isDone) {
+          if (flushTimeoutRef.current !== null) {
+            window.clearTimeout(flushTimeoutRef.current);
+            flushTimeoutRef.current = null;
+          }
+          setContent(contentRef.current);
           options.onComplete?.(contentRef.current);
           stop();
           return;
@@ -56,7 +73,10 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
 
         const newContent = options.onMessage(data, contentRef.current);
         contentRef.current = newContent;
-        setContent(newContent);
+
+        if (flushTimeoutRef.current === null) {
+          flushTimeoutRef.current = window.setTimeout(flushContent, STREAM_UPDATE_INTERVAL_MS);
+        }
       };
 
       eventSource.onerror = (error) => {
@@ -64,7 +84,7 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
         stop();
       };
     },
-    [options, stop],
+    [flushContent, options, stop],
   );
 
   return { content, isStreaming, start, stop, reset };

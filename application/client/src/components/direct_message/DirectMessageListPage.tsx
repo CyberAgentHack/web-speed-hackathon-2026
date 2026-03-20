@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
-import { formatRelativeJaTime } from "@web-speed-hackathon-2026/client/src/utils/format_datetime";
+import { formatJaRelativeTime } from "@web-speed-hackathon-2026/client/src/utils/format_datetime";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
@@ -105,7 +105,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {formatRelativeJaTime(lastMessage.createdAt)}
+                            {formatJaRelativeTime(lastMessage.createdAt)}
                           </time>
                         )}
                       </div>

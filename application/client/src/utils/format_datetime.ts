@@ -24,9 +24,9 @@ export function formatJaTime(value: Date | string): string {
   return jaTimeFormatter.format(toDate(value));
 }
 
-export function formatRelativeJaTime(value: Date | string, now = new Date()): string {
-  const date = toDate(value);
-  const diffMs = date.getTime() - now.getTime();
+export function formatJaRelativeTime(value: Date | string, now: Date = new Date()): string {
+  const target = toDate(value);
+  const diffMs = target.getTime() - now.getTime();
   const diffSeconds = Math.round(diffMs / 1000);
   const absSeconds = Math.abs(diffSeconds);
 
