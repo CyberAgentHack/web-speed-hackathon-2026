@@ -13,6 +13,27 @@ interface Params {
   targetLanguage: string;
 }
 
+/** Web LLMエンジンのシングルトンキャッシュ（数GBのモデル再ロード防止） */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let cachedEngine: any = null;
+let enginePromise: Promise<any> | null = null;
+
+/** Web LLMエンジンをシングルトンで取得する */
+async function getMLCEngine() {
+  if (cachedEngine) return cachedEngine;
+  if (enginePromise) return enginePromise;
+
+  enginePromise = (async () => {
+    const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
+    const engine = await CreateMLCEngine("gemma-2-2b-jpn-it-q4f16_1-MLC");
+    cachedEngine = engine;
+    enginePromise = null;
+    return engine;
+  })();
+
+  return enginePromise;
+}
+
 export async function createTranslator(params: Params): Promise<Translator> {
   const sourceLang = langs.where("1", params.sourceLanguage);
   invariant(sourceLang, `Unsupported source language code: ${params.sourceLanguage}`);
@@ -20,9 +41,7 @@ export async function createTranslator(params: Params): Promise<Translator> {
   const targetLang = langs.where("1", params.targetLanguage);
   invariant(targetLang, `Unsupported target language code: ${params.targetLanguage}`);
 
-  // web-llm は巨大なので動的importでバンドルから分離する
-  const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
-  const engine = await CreateMLCEngine("gemma-2-2b-jpn-it-q4f16_1-MLC");
+  const engine = await getMLCEngine();
 
   return {
     async translate(text: string): Promise<string> {
@@ -56,7 +75,7 @@ export async function createTranslator(params: Params): Promise<Translator> {
       return String(parsed.result);
     },
     [Symbol.dispose]: () => {
-      engine.unload();
+      // シングルトンのためunloadしない（次回再利用）
     },
   };
 }

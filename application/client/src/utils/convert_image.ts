@@ -6,13 +6,25 @@ interface Options {
   extension: MagickFormat;
 }
 
+/** ImageMagick WASM初期化のキャッシュ（重複フェッチ・初期化防止） */
+let initPromise: Promise<void> | null = null;
+
+/** ImageMagick WASMを一度だけ初期化する */
+async function ensureImageMagickInitialized(): Promise<void> {
+  if (!initPromise) {
+    initPromise = fetch(magickWasmUrl)
+      .then((res) => res.arrayBuffer())
+      .then((wasmBinary) => initializeImageMagick(wasmBinary));
+  }
+  return initPromise;
+}
+
 /**
  * 画像をImageMagick WASMで変換する。
- * WASMバイナリはasset/resourceとして別ファイルに出力され、実行時にフェッチされる。
+ * WASM初期化はシングルトンでキャッシュし、重複ロードを防ぐ。
  */
 export async function convertImage(file: File, options: Options): Promise<Blob> {
-  const wasmBinary = await fetch(magickWasmUrl).then((res) => res.arrayBuffer());
-  await initializeImageMagick(wasmBinary);
+  await ensureImageMagickInitialized();
 
   const byteArray = new Uint8Array(await file.arrayBuffer());
 
