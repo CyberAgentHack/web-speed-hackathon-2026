@@ -15,7 +15,13 @@ interface Props {
 
 export const PostItem = ({ post }: Props) => {
   return (
-    <article className="px-1 sm:px-4">
+    <article
+      className="px-1 sm:px-4"
+      style={{
+        containIntrinsicSize: "auto 36rem",
+        contentVisibility: "auto",
+      }}
+    >
       <div className="border-cax-border border-b px-4 pt-4 pb-4">
         <div className="flex items-center justify-center">
           <div className="shrink-0 grow-0 pr-2">

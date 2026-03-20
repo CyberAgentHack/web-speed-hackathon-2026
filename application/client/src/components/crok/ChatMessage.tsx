@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 import "katex/dist/katex.min.css";
 import Markdown from "react-markdown";
 import rehypeKatex from "rehype-katex";
@@ -57,9 +59,9 @@ const AssistantMessage = ({ content, streaming = false }: { content: string; str
   );
 };
 
-export const ChatMessage = ({ message, streaming = false }: Props) => {
+export const ChatMessage = memo(({ message, streaming = false }: Props) => {
   if (message.role === "user") {
     return <UserMessage content={message.content} />;
   }
   return <AssistantMessage content={message.content} streaming={streaming} />;
-};
+});
