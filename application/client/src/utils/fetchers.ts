@@ -1,7 +1,22 @@
+interface APIError extends Error {
+  responseJSON?: unknown;
+  status: number;
+}
+
 async function fetchOrThrow(url: string, options?: RequestInit): Promise<Response> {
   const response = await fetch(url, options);
   if (!response.ok) {
-    throw new Error(`${response.status} ${response.statusText}`);
+    const error = new Error(`${response.status} ${response.statusText}`) as APIError;
+    error.status = response.status;
+    const contentType = response.headers.get("Content-Type") ?? "";
+    if (contentType.includes("application/json")) {
+      try {
+        error.responseJSON = await response.json();
+      } catch {
+        // keep fallback error message when response is not valid JSON
+      }
+    }
+    throw error;
   }
   return response;
 }
@@ -27,37 +42,10 @@ export async function sendFile<T>(url: string, file: File): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-async function gzip(data: Uint8Array<ArrayBuffer>): Promise<Uint8Array<ArrayBuffer>> {
-  const stream = new CompressionStream("gzip");
-  const writer = stream.writable.getWriter();
-  void writer.write(data);
-  void writer.close();
-  const chunks: Uint8Array<ArrayBuffer>[] = [];
-  const reader = stream.readable.getReader();
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    chunks.push(value);
-  }
-  const totalLength = chunks.reduce((sum, c) => sum + c.length, 0);
-  const result = new Uint8Array(totalLength);
-  let offset = 0;
-  for (const chunk of chunks) {
-    result.set(chunk, offset);
-    offset += chunk.length;
-  }
-  return result as Uint8Array<ArrayBuffer>;
-}
-
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
-  const jsonString = JSON.stringify(data);
-  const uint8Array = new TextEncoder().encode(jsonString) as Uint8Array<ArrayBuffer>;
-  const compressed = await gzip(uint8Array);
-
   const response = await fetchOrThrow(url, {
-    body: compressed,
+    body: JSON.stringify(data),
     headers: {
-      "Content-Encoding": "gzip",
       "Content-Type": "application/json",
     },
     method: "POST",

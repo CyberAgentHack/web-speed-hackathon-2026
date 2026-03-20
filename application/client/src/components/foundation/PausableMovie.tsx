@@ -14,7 +14,7 @@ export const PausableMovie = ({ src }: Props) => {
   const movieRef = useRef<HTMLVideoElement>(null);
   const readyCanvasRef = useRef<HTMLCanvasElement>(null);
   const { isNearViewport, targetRef } = useNearViewport<HTMLButtonElement>({
-    rootMargin: "320px 0px",
+    rootMargin: "0px 0px",
   });
   const handleLoadMovie = useCallback(() => {
     const movie = movieRef.current;
@@ -61,7 +61,7 @@ export const PausableMovie = ({ src }: Props) => {
           loop={true}
           muted={true}
           playsInline={true}
-          preload="auto"
+          preload="metadata"
           onLoadedMetadata={handleLoadMovie}
           src={isNearViewport ? src : undefined}
         />

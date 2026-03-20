@@ -14,7 +14,9 @@ interface Props {
 }
 
 export const SoundPlayer = ({ sound }: Props) => {
-  const { isNearViewport, targetRef } = useNearViewport<HTMLDivElement>({ rootMargin: "320px 0px" });
+  const { isNearViewport, targetRef } = useNearViewport<HTMLDivElement>({
+    rootMargin: "320px 0px",
+  });
   const soundPath = isNearViewport ? getSoundPath(sound.id) : null;
   const { data, isLoading } = useFetch(soundPath, fetchBinary);
 
