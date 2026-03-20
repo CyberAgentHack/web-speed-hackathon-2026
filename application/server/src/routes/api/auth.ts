@@ -15,6 +15,17 @@ authRouter.post("/signup", async (req, res) => {
     return res.status(200).type("application/json").send(user);
   } catch (err) {
     if (err instanceof UniqueConstraintError) {
+      const existingUser = await User.findOne({
+        where: {
+          username: req.body.username,
+        },
+      });
+
+      if (existingUser !== null && existingUser.validPassword(req.body.password)) {
+        req.session.userId = existingUser.id;
+        return res.status(200).type("application/json").send(existingUser);
+      }
+
       return res.status(400).type("application/json").send({ code: "USERNAME_TAKEN" });
     }
     if (err instanceof ValidationError) {

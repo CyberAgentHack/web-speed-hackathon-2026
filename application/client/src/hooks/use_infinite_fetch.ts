@@ -22,6 +22,10 @@ export function useInfiniteFetch<T>(
   });
 
   const fetchMore = useCallback(() => {
+    if (!apiPath) {
+      return;
+    }
+
     const { isLoading, offset } = internalRef.current;
     if (isLoading) {
       return;
@@ -63,6 +67,19 @@ export function useInfiniteFetch<T>(
   }, [apiPath, fetcher]);
 
   useEffect(() => {
+    if (!apiPath) {
+      setResult(() => ({
+        data: [],
+        error: null,
+        isLoading: false,
+      }));
+      internalRef.current = {
+        isLoading: false,
+        offset: 0,
+      };
+      return;
+    }
+
     setResult(() => ({
       data: [],
       error: null,

@@ -30,6 +30,12 @@ export const AppContainer = () => {
       .then((user) => {
         setActiveUser(user);
       })
+      .catch((error: { status?: number }) => {
+        setActiveUser(null);
+        if (error.status !== 401) {
+          console.error(error);
+        }
+      })
       .finally(() => {
         setIsLoadingActiveUser(false);
       });
@@ -49,6 +55,11 @@ export const AppContainer = () => {
         <Helmet>
           <title>読込中 - CaX</title>
         </Helmet>
+        <div className="bg-cax-surface text-cax-text flex min-h-screen items-center justify-center">
+          <div className="border-cax-border bg-cax-surface-subtle rounded-2xl border px-6 py-4 text-sm">
+            読み込み中...
+          </div>
+        </div>
       </HelmetProvider>
     );
   }

@@ -13,9 +13,9 @@ app.use(sessionMiddleware);
 app.use(bodyParser.json());
 app.use(bodyParser.raw({ limit: "10mb" }));
 
-app.use((_req, res, next) => {
+app.use("/api/v1", (_req, res, next) => {
   res.header({
-    "Cache-Control": "max-age=0, no-transform",
+    "Cache-Control": "no-store, no-transform",
     Connection: "close",
   });
   return next();
