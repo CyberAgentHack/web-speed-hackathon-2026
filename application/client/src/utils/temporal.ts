@@ -10,24 +10,20 @@ const jaRelativeTimeFormatter = new Intl.RelativeTimeFormat("ja-JP", {
   numeric: "auto",
 });
 
-const toInstant = (isoLike: string): Temporal.Instant =>
-  Temporal.Instant.from(isoLike);
-
-const toDate = (instant: Temporal.Instant): Date =>
-  new Date(instant.epochMilliseconds);
+const toDate = (isoLike: string): Date => new Date(isoLike);
 
 export const toIsoDateTime = (isoLike: string): string =>
-  toInstant(isoLike).toString();
+  toDate(isoLike).toISOString();
 
 export const formatJaLongDate = (isoLike: string): string =>
-  jaLongDateFormatter.format(toDate(toInstant(isoLike)));
+  jaLongDateFormatter.format(toDate(isoLike));
 
 export const formatJaHourMinute = (isoLike: string): string =>
-  jaHourMinuteFormatter.format(toDate(toInstant(isoLike)));
+  jaHourMinuteFormatter.format(toDate(isoLike));
 
 export const formatJaRelativeTime = (isoLike: string): string => {
-  const targetMs = toInstant(isoLike).epochMilliseconds;
-  const nowMs = Temporal.Now.instant().epochMilliseconds;
+  const targetMs = toDate(isoLike).getTime();
+  const nowMs = Date.now();
   const diffSeconds = Math.round((targetMs - nowMs) / 1000);
   const absSeconds = Math.abs(diffSeconds);
 
