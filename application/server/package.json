@@ -45,6 +45,7 @@
     "@types/node": "22.18.8",
     "@types/serve-static": "1.15.9",
     "@types/ws": "8.18.1",
+    "piexifjs": "1.0.6",
     "typescript": "5.9.3"
   },
   "engines": {
