@@ -26,15 +26,13 @@ test.describe("GET /posts", () => {
     const api = new ApiClient(request);
     const posts = await (await api.getPosts({ limit: 5 })).json();
 
-    // Sequelize detail scope + eager loading + subQuery による実際の順序をスナップショット固定
-    // id DESC でも createdAt DESC でもない（eager loading の JOIN が ORDER BY を壊す既知の挙動）
-    // Drizzle 移行後もこの順序を維持するか、正しい createdAt DESC に修正する
+    // id DESC でソートされる（defaultScope + detail scope の order 指定）
     const expectedIds = [
-      "126968c6-890f-494d-922f-208c160d06a4",
-      "5f38db05-a0f3-4712-b513-79d4cfe26a16",
-      "d1bd6ba1-b5ba-4129-a16d-e1f898c3de1a",
-      "cfa17c11-e119-45f5-8389-f00036b77afb",
-      "64d8f48f-28f3-46a5-8e58-6b6543dcad25",
+      "fff790f5-99ea-432f-8f79-21d3d49efd1a",
+      "ffec432e-af82-44ec-9916-bdbd95492013",
+      "ffe1378a-69b1-4397-bced-82c6a455a363",
+      "ffc87987-0971-4d9d-80b2-6b8d19f8d7de",
+      "ffb89956-8354-4599-9595-3d9fb04e4005",
     ];
     const actualIds = posts.map((p: { id: string }) => p.id);
     expect(actualIds).toEqual(expectedIds);
