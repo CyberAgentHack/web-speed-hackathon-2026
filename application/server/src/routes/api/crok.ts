@@ -12,14 +12,17 @@ export const crokRouter = Router();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-8");
 
-crokRouter.get("/crok/suggestions", async (_req, res) => {
-  const suggestions = await QaSuggestion.findAll({ logging: false });
-  res.json({ suggestions: suggestions.map((s) => s.question) });
-});
+// In-memory cache for QaSuggestions
+let cachedSuggestions: string[] = [];
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+export async function initializeCrokCache(): Promise<void> {
+  const suggestions = await QaSuggestion.findAll({ logging: false });
+  cachedSuggestions = suggestions.map((s) => s.question);
 }
+
+crokRouter.get("/crok/suggestions", (_req, res) => {
+  res.json({ suggestions: cachedSuggestions });
+});
 
 crokRouter.get("/crok", async (req, res) => {
   if (req.session.userId === undefined) {

@@ -26,4 +26,8 @@ export async function initializeSequelize() {
     storage: TEMP_PATH,
   });
   initModels(_sequelize);
+
+  // Enable WAL mode for concurrent read access during benchmark testing
+  // This prevents write locks from blocking all read operations
+  await _sequelize.query("PRAGMA journal_mode = WAL");
 }
