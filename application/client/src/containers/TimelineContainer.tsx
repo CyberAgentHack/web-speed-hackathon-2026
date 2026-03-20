@@ -16,11 +16,15 @@ export const TimelineContainer = () => {
 
   const { data, setSize, isValidating } = useSWRInfinite<Models.Post[]>(getKey, {
     revalidateFirstPage: false,
-    ...(ssrPosts ? { fallbackData: [ssrPosts], revalidateOnMount: false } : {}),
+    ...(ssrPosts ? { fallbackData: [ssrPosts], revalidateOnMount: true } : {}),
   });
 
   const posts = data ? data.flat() : (ssrPosts ?? []);
-  const hasMore = data ? (data[data.length - 1]?.length ?? 0) >= PAGE_SIZE : true;
+  // SSR は少数の投稿だけ描画するので、fallbackData のサイズで hasMore を判定しない
+  const hasMore =
+    data && data.length > 0 && data[0] !== ssrPosts
+      ? (data[data.length - 1]?.length ?? 0) >= PAGE_SIZE
+      : true;
 
   return (
     <InfiniteScroll

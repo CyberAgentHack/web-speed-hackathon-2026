@@ -68,17 +68,23 @@ function csrFallbackHtml(): string {
 
 function buildPreloadHints(ssrData: SSRData): string {
   const hints: string[] = [];
-  const firstPosts = (ssrData.posts ?? ssrData.userPosts ?? []) as Array<{
-    images?: Array<{ id: string }>;
-    movie?: { id: string } | null;
-  }>;
-  for (const post of firstPosts.slice(0, 5)) {
+
+  // Collect posts to scan for preloadable media
+  type PostLike = { images?: Array<{ id: string }>; movie?: { id: string } | null };
+  const posts: PostLike[] = [];
+  if (ssrData.post) posts.push(ssrData.post as PostLike);
+  if (ssrData.posts) posts.push(...(ssrData.posts as PostLike[]));
+  if (ssrData.userPosts) posts.push(...(ssrData.userPosts as PostLike[]));
+
+  for (const post of posts.slice(0, 5)) {
     if (post.movie) {
       hints.push(`<link rel="preload" as="video" href="/movies/${post.movie.id}.mp4">`);
       break;
     }
     if (post.images && post.images.length > 0) {
-      hints.push(`<link rel="preload" as="image" href="/images/${post.images[0]!.id}.jpg">`);
+      hints.push(
+        `<link rel="preload" as="image" href="/images/${post.images[0]!.id}.jpg" fetchpriority="high">`,
+      );
       break;
     }
   }
@@ -104,7 +110,9 @@ function planSSRFetches(urlPath: string): Record<string, string> | null {
   const pathname = parsed.pathname;
 
   if (pathname === "/") {
-    return { posts: "/api/v1/posts?limit=30&offset=0" };
+    // SSR では最初の2件だけ描画（HTML サイズ削減で LCP 改善）。
+    // 残りはクライアント SWR が取得する。
+    return { posts: "/api/v1/posts?limit=2&offset=0" };
   }
 
   const postMatch = pathname.match(/^\/posts\/([^/]+)$/);
@@ -192,17 +200,13 @@ if (inlinedTemplateHtml) {
   }
 }
 
-function buildSSRHeadInjection(ssrData: SSRData): string {
-  const preloadHints = buildPreloadHints(ssrData);
-  const ssrDataScript = `<script>window.__SSR_DATA__=${JSON.stringify(ssrData).replace(/</g, "\\u003c")}</script>`;
-  return preloadHints + ssrDataScript;
-}
-
 function buildSSRStream(reactStream: ReadableStream, ssrData: SSRData): ReadableStream {
   const encoder = new TextEncoder();
-  const headInjection = buildSSRHeadInjection(ssrData);
-  const before = htmlBefore;
-  const after = htmlAfter.replace("<!--ssr-head-->", headInjection);
+  const preloadHints = buildPreloadHints(ssrData);
+  const ssrDataScript = `<script>window.__SSR_DATA__=${JSON.stringify(ssrData).replace(/</g, "\\u003c")}</script>`;
+  // Preload hints go in <head> so browser discovers them early
+  const before = htmlBefore.replace("</head>", preloadHints + "\n</head>");
+  const after = htmlAfter.replace("<!--ssr-head-->", ssrDataScript);
 
   let phase: "before" | "react" | "after" | "done" = "before";
   let reactReader: ReadableStreamDefaultReader<Uint8Array>;

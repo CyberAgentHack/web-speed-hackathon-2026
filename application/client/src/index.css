@@ -2,7 +2,7 @@
 
 @layer normalize, theme, base, components, utilities;
 
-@import "normalize.css" layer(normalize);
+/* normalize.css removed — modern browsers don't need it (saves ~2KB) */
 
 @layer base {
   button:not(:disabled),

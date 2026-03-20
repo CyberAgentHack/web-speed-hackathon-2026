@@ -10,7 +10,7 @@ import {
   countUnreadMessages,
   emitDmNotifications,
   findConversationWithRelations,
-  findConversations,
+  findConversationsForList,
   findUserWithProfile,
 } from "@web-speed-hackathon-2026/server/src/db/queries";
 import {
@@ -149,21 +149,14 @@ export const directMessageRouter = new Hono<SessionEnv>()
       throw new HTTPException(401);
     }
 
-    const conversations = await findConversations(userId);
+    const conversations = await findConversationsForList(userId);
 
-    const filtered = conversations
-      .filter((conv) => conv.messages.length > 0)
-      .sort((a, b) => {
-        const aLast = a.messages[a.messages.length - 1]!.createdAt;
-        const bLast = b.messages[b.messages.length - 1]!.createdAt;
-        return bLast.localeCompare(aLast);
-      });
-
-    const result = filtered.map((conv) => ({
+    const result = conversations.map((conv) => ({
       ...serializeConversation(conv as Parameters<typeof serializeConversation>[0]),
       messages: conv.messages.map((m) =>
         serializeDirectMessage(m as Parameters<typeof serializeDirectMessage>[0]),
       ),
+      hasUnread: conv.hasUnread,
     }));
 
     return c.json(result as unknown as DirectMessageConversationResponse[]);
