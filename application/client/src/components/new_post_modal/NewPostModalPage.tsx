@@ -1,13 +1,8 @@
-import { MagickFormat } from "@imagemagick/magick-wasm";
 import { ChangeEventHandler, FormEventHandler, useCallback, useState } from "react";
-
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/components/modal/ModalErrorMessage";
 import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/components/modal/ModalSubmitButton";
 import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/AttachFileInputButton";
-import { convertImage } from "@web-speed-hackathon-2026/client/src/utils/convert_image";
-import { convertMovie } from "@web-speed-hackathon-2026/client/src/utils/convert_movie";
-import { convertSound } from "@web-speed-hackathon-2026/client/src/utils/convert_sound";
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
@@ -45,13 +40,16 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     }));
   }, []);
 
-  const handleChangeImages = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
+  const handleChangeImages = useCallback<ChangeEventHandler<HTMLInputElement>>(async (ev) => {
     const files = Array.from(ev.currentTarget.files ?? []).slice(0, 4);
     const isValid = files.every((file) => file.size <= MAX_UPLOAD_BYTES_LIMIT);
 
     setHasFileError(isValid !== true);
     if (isValid) {
       setIsConverting(true);
+
+      const { MagickFormat } = await import("@imagemagick/magick-wasm");
+      const { convertImage } = await import("@web-speed-hackathon-2026/client/src/utils/convert_image");
 
       Promise.all(
         files.map((file) =>
@@ -74,13 +72,15 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     }
   }, []);
 
-  const handleChangeSound = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
+  const handleChangeSound = useCallback<ChangeEventHandler<HTMLInputElement>>(async (ev) => {
     const file = Array.from(ev.currentTarget.files ?? [])[0]!;
     const isValid = file.size <= MAX_UPLOAD_BYTES_LIMIT;
 
     setHasFileError(isValid !== true);
     if (isValid) {
       setIsConverting(true);
+
+      const { convertSound } = await import("@web-speed-hackathon-2026/client/src/utils/convert_sound");
 
       convertSound(file, { extension: "mp3" }).then((converted) => {
         setParams((params) => ({
@@ -95,13 +95,15 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     }
   }, []);
 
-  const handleChangeMovie = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
+  const handleChangeMovie = useCallback<ChangeEventHandler<HTMLInputElement>>(async (ev) => {
     const file = Array.from(ev.currentTarget.files ?? [])[0]!;
     const isValid = file.size <= MAX_UPLOAD_BYTES_LIMIT;
 
     setHasFileError(isValid !== true);
     if (isValid) {
       setIsConverting(true);
+
+      const { convertMovie } = await import("@web-speed-hackathon-2026/client/src/utils/convert_movie");
 
       convertMovie(file, { extension: "gif", size: undefined })
         .then((converted) => {
