@@ -1,8 +1,3 @@
-import { stripIndents } from "common-tags";
-import * as JSONRepairJS from "json-repair-js";
-import langs from "langs";
-import invariant from "tiny-invariant";
-
 interface Translator {
   translate(text: string): Promise<string>;
   [Symbol.dispose](): void;
@@ -14,17 +9,24 @@ interface Params {
 }
 
 export async function createTranslator(params: Params): Promise<Translator> {
+  const { default: langs } = await import("langs");
+
   const sourceLang = langs.where("1", params.sourceLanguage);
-  invariant(sourceLang, `Unsupported source language code: ${params.sourceLanguage}`);
+  if (!sourceLang) throw new Error(`Unsupported source language code: ${params.sourceLanguage}`);
 
   const targetLang = langs.where("1", params.targetLanguage);
-  invariant(targetLang, `Unsupported target language code: ${params.targetLanguage}`);
+  if (!targetLang) throw new Error(`Unsupported target language code: ${params.targetLanguage}`);
 
   const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
   const engine = await CreateMLCEngine("gemma-2-2b-jpn-it-q4f16_1-MLC");
 
   return {
     async translate(text: string): Promise<string> {
+      const [{ stripIndents }, JSONRepairJS] = await Promise.all([
+        import("common-tags"),
+        import("json-repair-js"),
+      ]);
+
       const reply = await engine.chat.completions.create({
         messages: [
           {
@@ -44,15 +46,14 @@ export async function createTranslator(params: Params): Promise<Translator> {
       });
 
       const content = reply.choices[0]!.message.content;
-      invariant(content, "No content in the reply from the translation engine.");
+      if (!content) throw new Error("No content in the reply from the translation engine.");
 
       const parsed = JSONRepairJS.loads(content);
-      invariant(
-        parsed != null && "result" in parsed,
-        "The translation result is missing in the reply.",
-      );
+      if (parsed == null || !("result" in parsed)) {
+        throw new Error("The translation result is missing in the reply.");
+      }
 
-      return String(parsed.result);
+      return String((parsed as { result: unknown }).result);
     },
     [Symbol.dispose]: () => {
       void engine.unload();

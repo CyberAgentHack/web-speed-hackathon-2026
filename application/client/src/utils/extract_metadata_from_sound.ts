@@ -1,5 +1,3 @@
-import { loadFFmpeg } from "@web-speed-hackathon-2026/client/src/utils/load_ffmpeg";
-
 interface SoundMetadata {
   artist: string;
   title: string;
@@ -11,6 +9,7 @@ const UNKNOWN_TITLE = "Unknown Title";
 
 export async function extractMetadataFromSound(data: File): Promise<SoundMetadata> {
   try {
+    const { loadFFmpeg } = await import("@web-speed-hackathon-2026/client/src/utils/load_ffmpeg");
     const ffmpeg = await loadFFmpeg();
 
     const exportFile = "meta.txt";

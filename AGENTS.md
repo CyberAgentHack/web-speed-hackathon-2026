@@ -38,13 +38,6 @@ git checkout main
 - `actions/checkout` と `actions/setup-node` はローカルでスキップ
 - `.github/workflows/bench.yml` が scoring-tool と bench/run-all.sh を順に実行
 
-## 改善方針
-
-以下の「初期構成」は最も遅い状態のベースライン。レギュレーション違反しない限り、構成はどんどん変えてよい。
-改善時は変更前の構成をここで確認し、何を変えたかを把握できるようにする。
-
----
-
 ## 開発環境
 
 `nix develop` で開発に必要なツールが揃う（Node.js 24, pnpm, sqlite, chromium 等）。
@@ -65,30 +58,30 @@ git checkout main
 ```bash
 cd application
 pnpm install
-pnpm build                                          # client webpack build → dist/
+pnpm build                                          # Vite build → dist/ + dist-ssr/
 pnpm --filter @web-speed-hackathon-2026/server seed:generate
 pnpm --filter @web-speed-hackathon-2026/server seed:insert
-pnpm start                                          # server → http://localhost:3000
+PORT=3333 pnpm start                                # server → http://localhost:3333
 ```
+
+> **注意:** Port 3000 は vibe-kanban が常時使用しているため、このプロジェクトでは **PORT=3333** を使う。
+> VRT/E2E 実行時は `E2E_BASE_URL=http://localhost:3333` を設定すること。
 
 dev server (HMR) を使う場合:
 
 ```bash
-pnpm --filter @web-speed-hackathon-2026/client build  # webpack-dev-server on :8080, proxy /api → :3000
+pnpm --filter @web-speed-hackathon-2026/client dev   # Vite dev server on :8080, proxy /api → :3333
 ```
 
-## アーキテクチャ概要（初期構成 / 最遅状態のベースライン）
-
-> この構成は改善前のスナップショット。改善により自由に変更してよい。
-> ただしレギュレーション（`docs/regulation.md`）は常に遵守すること。
+## アーキテクチャ概要（現在の構成）
 
 ### ディレクトリ構成
 
 ```
 application/
-├── client/          # React SPA (webpack, Tailwind v4 CDN)
-├── server/          # Express API + static serving (SQLite, Sequelize)
-├── e2e/             # E2E テスト
+├── client/          # React SPA + SSR (Vite, Tailwind v4 local)
+├── server/          # Hono API + SSR + static serving (SQLite, Sequelize)
+├── e2e/             # Playwright E2E/VRT テスト
 └── package.json     # ワークスペースルート (pnpm workspace)
 scoring-tool/        # Lighthouse ベースの計測ツール
 bench/               # ベンチマーク用スクリプト
@@ -97,16 +90,15 @@ bench/               # ベンチマーク用スクリプト
 ### Server (`application/server/`)
 
 **エントリ:** `src/index.ts` → `src/app.ts`
-- Express 5 + SQLite (Sequelize ORM)
-- HTTP on `0.0.0.0:3000`
+- **Hono 4** + `@hono/node-server` + `@hono/node-ws`
+- SQLite (Sequelize ORM)
+- HTTP on `0.0.0.0:PORT` (デフォルト 3000, 開発時は 3333)
 - DB は `database.sqlite` を起動時に tmp へコピー
 
-**ミドルウェア (順序):**
-1. WebSocket サポート (カスタム ws アダプタ)
-2. express-session (メモリストア, secret="secret")
-3. bodyParser.json
-4. Raw body parser (10MB limit, ファイルアップロード用)
-5. Cache-Control: no-store ヘッダ
+**キャッシュ戦略:**
+- HTML: `no-cache`（常に再検証）
+- ハッシュ付きアセット (JS/CSS): `public, max-age=31536000, immutable`
+- アップロードコンテンツ: `public, max-age=86400`
 
 **API エンドポイント (`/api/v1`):**
 
@@ -133,47 +125,46 @@ User, Post, Comment, Image, Movie, Sound, ProfileImage, DirectMessage, DirectMes
 - `/public` — 公開アセット
 - `/upload` — アップロードファイル (images/, movies/, sounds/)
 - `/dist` — クライアントビルド成果物
-- history API fallback (SPA)
-- ETags/Last-Modified 無効
+- SSR fallback（history API 代替）
 
 ### Client (`application/client/`)
 
-**ビルド:** Webpack 5 (`webpack.config.js`)
-- mode: none, minimize: false, splitChunks: false (意図的に最適化無効)
-- Babel (TypeScript strip + IE11 target) → 108MB の main.js
-- dev-server: `:8080`, proxy `/api` → `:3000`
+**ビルド:** Vite 8 (`vite.config.ts`)
+- ハッシュ付きチャンク分割: `scripts/chunk-[hash].js`
+- SSR ビルド: `vite.config.ssr.ts` → `dist-ssr/entry-server.js`
+
+**レンダリング:** SSR + Client Hydration
+- サーバー: `renderToPipeableStream` でストリーミング SSR
+- クライアント: `hydrateRoot` で hydration（SSR データなしの場合は `createRoot` で CSR フォールバック）
+- SSR データ: `window.__SSR_DATA__` 経由で posts, user 等を渡す
 
 **フレームワーク:** React 19 + React Router v7 + Redux (redux-form のみ)
 
 **ルーティング:**
 
-| パス | コンテナ | 内容 |
-|------|---------|------|
-| `/` | TimelineContainer | タイムライン (無限スクロール) |
-| `/dm` | DirectMessageListContainer | DM 一覧 |
-| `/dm/:conversationId` | DirectMessageContainer | DM チャット |
-| `/search` | SearchContainer | 検索 |
-| `/users/:username` | UserProfileContainer | ユーザープロフィール |
-| `/posts/:postId` | PostContainer | 投稿詳細 |
-| `/terms` | TermContainer | 利用規約 |
-| `/crok` | CrokContainer | AI チャット |
+| パス | コンテナ | SSR |
+|------|---------|-----|
+| `/` | TimelineContainer | posts |
+| `/search` | SearchContainer | posts |
+| `/users/:username` | UserProfileContainer | user, userPosts |
+| `/posts/:postId` | PostContainer | - |
+| `/dm` | DirectMessageListContainer | - |
+| `/dm/:conversationId` | DirectMessageContainer | - |
+| `/terms` | TermContainer | - |
+| `/crok` | CrokContainer | - |
 
-**重量級依存:**
+**データ取得:** Native fetch API (`useFetch`, `useInfiniteFetch`, `useSSE`, `useWebSocket`)
+- 30件ずつ offset ベースページネーション
+
+**重量級依存（未解消）:**
 - `@ffmpeg/ffmpeg` + `@ffmpeg/core` — 動画→GIF 変換 (WASM)
 - `@imagemagick/magick-wasm` — 画像→JPEG 変換 (WASM)
 - `@mlc-ai/web-llm` — クライアントサイド LLM 推論
 - `kuromoji` — 日本語形態素解析
 - `negaposi-analyzer-ja` — 日本語感情分析 (3.29MB JSON dict)
-- `bayesian-bm25` — BM25 検索ランキング
 - `katex` + `react-syntax-highlighter` + `react-markdown` — リッチコンテンツ表示
-- `jquery` + `jquery-binarytransport` — HTTP 通信 (gzip 圧縮)
-- `moment`, `lodash`, `bluebird`, `core-js` — ユーティリティ
 
-**スタイリング:** Tailwind CSS v4 (CDN), PostCSS, カスタムカラートークン (cax-*)
-
-**データ取得:** カスタムフック (`useFetch`, `useInfiniteFetch`, `useSSE`, `useWebSocket`)
-- jQuery AJAX ラッパー (`fetchJSON`, `sendJSON` with gzip)
-- 30件ずつ offset ベースページネーション
+**スタイリング:** Tailwind CSS v4 (ローカル, `@tailwindcss/vite` プラグイン)
 
 ### レギュレーション上の変更不可項目（サマリ）
 
@@ -184,15 +175,10 @@ User, Post, Comment, Image, Movie, Sound, ProfileImage, DirectMessage, DirectMes
 - VRT・手動テストが通ること（機能落ち・デザイン差異NG）
 - `fly.toml` 変更禁止（Fly.io デプロイ時）
 
-### 初期構成の主なボトルネック（改善候補）
+### 残ボトルネック（改善候補）
 
-| # | カテゴリ | ボトルネック | 根拠 |
+| # | カテゴリ | ボトルネック | 備考 |
 |---|---------|-------------|------|
-| 1 | ビルド | Webpack `mode: none`, `minimize: false`, `splitChunks: false` → 108MB main.js | 全コードが未圧縮1ファイル |
-| 2 | Polyfill | `core-js` + `regenerator-runtime` + Babel IE11 target | 最新Chrome不要のpolyfill大量 |
-| 3 | WASM | FFmpeg / ImageMagick / WebLLM がクライアントにバンドル | 初期ロードで巨大WASMダウンロード |
-| 4 | レガシーライブラリ | jQuery, Bluebird, Moment, Lodash (全量) | ネイティブAPIで代替可能 |
-| 5 | キャッシュ | `Cache-Control: max-age=0`, ETags無効 | 再訪問でも全リソース再取得 |
-| 6 | 接続 | `Connection: close` | Keep-Alive無効で接続コスト増 |
-| 7 | レンダリング | CSR only, `window.load` でマウント | FCP/LCP遅延 |
-| 8 | 重量コンポーネント | KaTeX, react-syntax-highlighter, kuromoji辞書 | 遅延ロードなし |
+| 1 | WASM | FFmpeg / ImageMagick / WebLLM がクライアントにバンドル | 初期ロードで巨大WASMダウンロード |
+| 2 | 重量コンポーネント | KaTeX, react-syntax-highlighter, kuromoji辞書 | 遅延ロードの余地あり |
+| 3 | DB | Sequelize ORM のオーバーヘッド | Drizzle 等への移行候補 |

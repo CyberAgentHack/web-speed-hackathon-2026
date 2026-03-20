@@ -45,9 +45,6 @@ importers:
       bayesian-bm25:
         specifier: 0.4.0
         version: 0.4.0
-      buffer:
-        specifier: 6.0.3
-        version: 6.0.3
       classnames:
         specifier: 2.5.1
         version: 2.5.1
@@ -60,15 +57,9 @@ importers:
       fast-average-color:
         specifier: 9.5.0
         version: 9.5.0
-      gifler:
-        specifier: github:themadcreator/gifler#v0.3.0
-        version: https://codeload.github.com/themadcreator/gifler/tar.gz/89484cb3db174c584a3138e89664f0167a7760c1
       hono:
         specifier: 4.12.8
         version: 4.12.8
-      image-size:
-        specifier: 2.0.2
-        version: 2.0.2
       json-repair-js:
         specifier: 1.0.0
         version: 1.0.0
@@ -87,12 +78,6 @@ importers:
       normalize.css:
         specifier: 8.0.1
         version: 8.0.1
-      omggif:
-        specifier: 1.0.10
-        version: 1.0.10
-      pako:
-        specifier: 2.1.0
-        version: 2.1.0
       piexifjs:
         specifier: 1.0.6
         version: 1.0.6
@@ -129,9 +114,6 @@ importers:
       remark-math:
         specifier: 6.0.0
         version: 6.0.0
-      standardized-audio-context:
-        specifier: 25.3.77
-        version: 25.3.77
       tailwindcss:
         specifier: 4.2.1
         version: 4.2.1
@@ -163,12 +145,6 @@ importers:
       '@types/node':
         specifier: 22.18.8
         version: 22.18.8
-      '@types/omggif':
-        specifier: 1.0.5
-        version: 1.0.5
-      '@types/pako':
-        specifier: 2.0.4
-        version: 2.0.4
       '@types/piexifjs':
         specifier: 1.0.0
         version: 1.0.0
@@ -1179,12 +1155,6 @@ packages:
   '@types/node@22.18.8':
     resolution: {integrity: sha512-pAZSHMiagDR7cARo/cch1f3rXy0AEXwsVsVH09FcyeJVAzCnGgmYis7P3JidtTUjyadhTeSo8TgRPswstghDaw==}
 
-  '@types/omggif@1.0.5':
-    resolution: {integrity: sha512-gDQJflz1rOgEcUXkMAl80bDGN46f5mp8GbcM5dyvq+zsFV6YRBRtmNxlJJ5mjY77T7BRkRFzdIBVmK90QYhCxA==}
-
-  '@types/pako@2.0.4':
-    resolution: {integrity: sha512-VWDCbrLeVXJM9fihYodcLiIv0ku+AlOa/TQ1SvYOaBuyrSKgEcro95LJyIsJ4vSo6BXIxOKxiJAat04CmST9Fw==}
-
   '@types/piexifjs@1.0.0':
     resolution: {integrity: sha512-PPiGeCkmkZQgYjvqtjD3kp4OkbCox2vEFVuK4DaLVOIazJLAXk+/ujbizkIPH5CN4AnN9Clo5ckzUlaj3+SzCA==}
 
@@ -1308,10 +1278,6 @@ packages:
   async@2.6.4:
     resolution: {integrity: sha512-mzo5dfJYwAn29PeiJ0zvwTo04zj8HDJj0Mn8TD7sno7q12prdbnasKJHhkm2c1LgrhlJ0teaea8860oxi51mGA==}
 
-  automation-events@7.1.13:
-    resolution: {integrity: sha512-1Hay5TQPzxsskSqPTH3YXyzE9Iirz82zZDse2vr3+kOR7Sc7om17qIEPsESchlNX0EgKxANwR40i2g/O3GM1Tw==}
-    engines: {node: '>=18.2.0'}
-
   bail@2.0.2:
     resolution: {integrity: sha512-0xO6mYd7JB2YesxDKplafRpsiOzPt9V02ddPCLbY1xYGPOX24NTyN50qnUxgCPcSoYMhKpAuBTjQoRZCAkUDRw==}
 
@@ -1334,9 +1300,6 @@ packages:
   bl@4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
 
-  bluebird@3.7.2:
-    resolution: {integrity: sha512-XpNj6GDQzdfW+r2Wnn7xiSAd7TM3jzkxGXBGTtWKuSXv1xUV+azxAm8jdWZN06QTQk+2N2XB9jRDkvbmQmcRtg==}
-
   brace-expansion@1.1.12:
     resolution: {integrity: sha512-9T9UjW3r0UW5c1Q7GTwllptXwhvYmEzFhzMfZ9H7FQWt+uZePjZPjBP/W1ZEyZ1twGWom5/56TF4lPcqjnDHcg==}
 
@@ -1345,9 +1308,6 @@ packages:
 
   buffer@5.7.1:
     resolution: {integrity: sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==}
-
-  buffer@6.0.3:
-    resolution: {integrity: sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==}
 
   cacache@15.3.0:
     resolution: {integrity: sha512-VVdYzXEn+cnbXpFgWs5hTT7OScegHVmLhJIR8Ufqk3iFD6A6j5iSX1KuBTfNEv4tdJWE2PzA6IVFtcLC7fN9wQ==}
@@ -1611,10 +1571,6 @@ packages:
   get-tsconfig@4.13.0:
     resolution: {integrity: sha512-1VKTZJCwBrvbd+Wn3AOgQP/2Av+TfTCOlE4AcRJE72W1ksZXbAx8PPBR9RzgTeSPzlPMHrbANMH3LbltH73wxQ==}
 
-  gifler@https://codeload.github.com/themadcreator/gifler/tar.gz/89484cb3db174c584a3138e89664f0167a7760c1:
-    resolution: {tarball: https://codeload.github.com/themadcreator/gifler/tar.gz/89484cb3db174c584a3138e89664f0167a7760c1}
-    version: 0.3.0
-
   github-from-package@0.0.0:
     resolution: {integrity: sha512-SyHy3T1v2NUXn29OsWdxmK6RwHD+vkj3v8en8AOBZ1wBQ/hCAQ5bAQTD02kW4W9tUp/3Qh6J8r9EvntiyCmOOw==}
 
@@ -1694,11 +1650,6 @@ packages:
 
   ieee754@1.2.1:
     resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
-
-  image-size@2.0.2:
-    resolution: {integrity: sha512-IRqXKlaXwgSMAMtpNzZa1ZAe8m+Sa1770Dhk8VkSsP9LS+iHD62Zd8FQKs8fbPiagBE7BzoFX23cxFnwshpV6w==}
-    engines: {node: '>=16.x'}
-    hasBin: true
 
   imurmurhash@0.1.4:
     resolution: {integrity: sha512-JmXMZ6wuvDmLiHEml9ykzqO6lwFbof0GG4IkcGaENdCRDDmMVnny7s5HsIgHCbaq0w2MyPhDqkhTUgS2LU2PHA==}
@@ -2258,9 +2209,6 @@ packages:
   obug@2.1.1:
     resolution: {integrity: sha512-uTqF9MuPraAQ+IsnPf366RG4cP9RtUi7MLO1N3KEc+wb0a6yKpeL0lmk2IB1jY5KHPAlTc6T/JRdC/YqxHNwkQ==}
 
-  omggif@1.0.10:
-    resolution: {integrity: sha512-LMJTtvgc/nugXj0Vcrrs68Mn2D1r0zf630VNtqtpI1FEO7e+O9FP4gqs9AcnBaSEeoHIPm28u6qgPR0oyEpGSw==}
-
   once@1.4.0:
     resolution: {integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==}
 
@@ -2298,9 +2246,6 @@ packages:
   p-try@2.2.0:
     resolution: {integrity: sha512-R4nPAVTAU0B9D35/Gk3uJf/7XYbQcyohSKdvAxIRSNghFl4e71hVoGnBNQz9cWaXxO2I10KTC+3jMdvvoKw6dQ==}
     engines: {node: '>=6'}
-
-  pako@2.1.0:
-    resolution: {integrity: sha512-w+eufiZ1WuJYgPXbV/PO3NCMEc3xqylkKHzp8bxp1uW4qaSNQUkwmLLEc3kKsfz8lpV1F8Ht3U1Cm+9Srog2ug==}
 
   parse-entities@4.0.2:
     resolution: {integrity: sha512-GG2AQYWoLgL877gQIKeRPGO1xF9+eG1ujIb5soS5gPvLQ1y2o8FL90w2QWNdf9I361Mpp7726c+lj3U0qK1uGw==}
@@ -2666,9 +2611,6 @@ packages:
 
   stackback@0.0.2:
     resolution: {integrity: sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==}
-
-  standardized-audio-context@25.3.77:
-    resolution: {integrity: sha512-Ki9zNz6pKcC5Pi+QPjPyVsD9GwJIJWgryji0XL9cAJXMGyn+dPOf6Qik1AHei0+UNVcc4BOCa0hWLBzlwqsW/A==}
 
   std-env@4.0.0:
     resolution: {integrity: sha512-zUMPtQ/HBY3/50VbpkupYHbRroTRZJPRLvreamgErJVys0ceuzMkD44J/QjqhHjOzK42GQ3QZIeFG1OYfOtKqQ==}
@@ -3603,10 +3545,6 @@ snapshots:
     dependencies:
       undici-types: 6.21.0
 
-  '@types/omggif@1.0.5': {}
-
-  '@types/pako@2.0.4': {}
-
   '@types/piexifjs@1.0.0': {}
 
   '@types/prismjs@1.26.5': {}
@@ -3734,11 +3672,6 @@ snapshots:
     dependencies:
       lodash: 4.17.21
 
-  automation-events@7.1.13:
-    dependencies:
-      '@babel/runtime': 7.28.4
-      tslib: 2.8.1
-
   bail@2.0.2: {}
 
   balanced-match@1.0.2:
@@ -3763,8 +3696,6 @@ snapshots:
       inherits: 2.0.4
       readable-stream: 3.6.2
 
-  bluebird@3.7.2: {}
-
   brace-expansion@1.1.12:
     dependencies:
       balanced-match: 1.0.2
@@ -3774,11 +3705,6 @@ snapshots:
   buffer-from@1.1.2: {}
 
   buffer@5.7.1:
-    dependencies:
-      base64-js: 1.5.1
-      ieee754: 1.2.1
-
-  buffer@6.0.3:
     dependencies:
       base64-js: 1.5.1
       ieee754: 1.2.1
@@ -4040,11 +3966,6 @@ snapshots:
     dependencies:
       resolve-pkg-maps: 1.0.0
 
-  gifler@https://codeload.github.com/themadcreator/gifler/tar.gz/89484cb3db174c584a3138e89664f0167a7760c1:
-    dependencies:
-      bluebird: 3.7.2
-      omggif: 1.0.10
-
   github-from-package@0.0.0: {}
 
   glob@7.2.3:
@@ -4184,8 +4105,6 @@ snapshots:
       safer-buffer: 2.1.2
 
   ieee754@1.2.1: {}
-
-  image-size@2.0.2: {}
 
   imurmurhash@0.1.4:
     optional: true
@@ -4951,8 +4870,6 @@ snapshots:
 
   obug@2.1.1: {}
 
-  omggif@1.0.10: {}
-
   once@1.4.0:
     dependencies:
       wrappy: 1.0.2
@@ -5016,8 +4933,6 @@ snapshots:
     optional: true
 
   p-try@2.2.0: {}
-
-  pako@2.1.0: {}
 
   parse-entities@4.0.2:
     dependencies:
@@ -5463,12 +5378,6 @@ snapshots:
     optional: true
 
   stackback@0.0.2: {}
-
-  standardized-audio-context@25.3.77:
-    dependencies:
-      '@babel/runtime': 7.28.4
-      automation-events: 7.1.13
-      tslib: 2.8.1
 
   std-env@4.0.0: {}
 

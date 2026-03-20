@@ -169,23 +169,11 @@
 }
 
 @font-face {
-  /* Source Han Serif JP Regular の Y 軸を 1/1.43 に縮小した改変フォント */
   font-family: "Rei no Are Mincho";
   font-display: swap;
-  src:
-    url(/fonts/ReiNoAreMincho-Regular.woff2) format("woff2"),
-    url(/fonts/ReiNoAreMincho-Regular.otf) format("opentype");
-  font-weight: normal;
-}
-
-@font-face {
-  /* Source Han Serif JP Heavy の Y 軸を 1/1.43 に縮小した改変フォント */
-  font-family: "Rei no Are Mincho";
-  font-display: swap;
-  src:
-    url(/fonts/ReiNoAreMincho-Heavy.woff2) format("woff2"),
-    url(/fonts/ReiNoAreMincho-Heavy.otf) format("opentype");
+  src: url(/fonts/ReiNoAreMincho-Heavy-subset.woff2) format("woff2");
   font-weight: bold;
+  unicode-range: U+30-39, U+44, U+49, U+3044, U+304A, U+305F, U+306E, U+306F, U+3073, U+307E, U+3088, U+30B5, U+30B6, U+30B9, U+30C9, U+30D1, U+30D3, U+30E6, U+30EF, U+30FB, U+30FC, U+4E8B, U+4EBA, U+4F1A, U+4F5C, U+4F9B, U+4FDD, U+500B, U+505C, U+514D, U+5185, U+5224, U+5229, U+5236, U+52D9, U+53D6, U+5426, U+5831, U+5909, U+5BB9, U+60C5, U+6255, U+6271, U+62B9, U+62E0, U+63D0, U+652F, U+6599, U+65B9, U+66F4, U+672C, U+6761, U+6A29, U+6B62, U+6CD5, U+6D88, U+6E21, U+6E96, U+7406, U+7528, U+767B, U+77E5, U+7981, U+7B2C, U+7B49, U+7BA1, U+7D04, U+7D61, U+7FA9, U+8457, U+88C1, U+898F, U+8A3C, U+8A8D, U+8B72, U+8CAC, U+8F44, U+9000, U+901A, U+9023, U+9069, U+91D1, U+9332, U+9650, U+9805, U+FF08, U+FF09;
 }
 
 .font-awesome {

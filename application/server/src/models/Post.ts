@@ -48,6 +48,7 @@ export function initPost(sequelize: Sequelize) {
         },
         order: [["id", "DESC"]],
       },
+      indexes: [{ fields: ["createdAt"] }, { fields: ["userId"] }],
       scopes: {
         withUser: {
           include: [

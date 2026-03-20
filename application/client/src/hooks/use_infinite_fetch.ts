@@ -64,21 +64,14 @@ export function useInfiniteFetch<T>(
     );
   }, [apiPath, fetcher]);
 
+  const initialFetchDone = useRef(hasInitial);
   useEffect(() => {
-    if (hasInitial) return;
-
-    setResult(() => ({
-      data: [],
-      error: null,
-      isLoading: true,
-    }));
-    internalRef.current = {
-      isLoading: false,
-      offset: 0,
-    };
+    if (initialFetchDone.current) return;
+    initialFetchDone.current = true;
 
     fetchMore();
-  }, [fetchMore, hasInitial]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return {
     ...result,
