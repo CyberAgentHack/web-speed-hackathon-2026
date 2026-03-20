@@ -25,6 +25,7 @@
     "express-session": "1.18.2",
     "file-type": "21.1.1",
     "http-errors": "2.0.0",
+    "iconv-lite": "0.7.2",
     "music-metadata": "11.10.3",
     "sequelize": "6.37.7",
     "serve-static": "2.2.0",
