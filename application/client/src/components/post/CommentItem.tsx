@@ -21,7 +21,9 @@ export const CommentItem = ({ comment }: Props) => {
           >
             <img
               alt={comment.user.profileImage.alt}
+              height={200}
               src={getProfileImagePath(comment.user.profileImage.id)}
+              width={200}
             />
           </Link>
         </div>

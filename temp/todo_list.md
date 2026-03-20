@@ -26,7 +26,7 @@
 - [x] 018-静的アセットのキャッシュヘッダーを有効化する
 - [x] 019-Connection closeヘッダーを除去する
 - [x] 027-1msポーリングをイベントリスナーに置き換える(setInterval/postTask)
-- [ ] 028-font-displayをblockからswapに変更する
+- [x] 028-font-displayをblockからswapに変更する
 - [x] 029-PausableMovie/SoundPlayerにIntersectionObserverで遅延fetchする
 - [x] 030-DM APIで全メッセージ返却をやめて最新1件+ページネーションにする
 
@@ -49,7 +49,7 @@
 
 ## 優先度: 低（CLS/追加改善）
 
-- [ ] 009-フォント読み込みを最適化する
+- [x] 009-フォント読み込みを最適化する（OTF→woff2変換済み）
 - [ ] 010-CSSをクリティカルCSS分離する
 - [ ] 035-フォントのpreloadヘッダーを追加する
 - [ ] 036-タイムラインに仮想スクロールを導入する

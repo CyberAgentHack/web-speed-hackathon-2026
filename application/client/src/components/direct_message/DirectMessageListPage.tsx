@@ -24,9 +24,8 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     }
 
     try {
-      const conversations = await fetchJSON<Array<Models.DirectMessageConversationSummary>>(
-        "/api/v1/dm",
-      );
+      const conversations =
+        await fetchJSON<Array<Models.DirectMessageConversationSummary>>("/api/v1/dm");
       setConversations(conversations);
       setError(null);
     } catch (error) {
@@ -80,7 +79,9 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                     <img
                       alt={peer.profileImage.alt}
                       className="w-12 shrink-0 self-start rounded-full"
+                      height={200}
                       src={getProfileImagePath(peer.profileImage.id)}
+                      width={200}
                     />
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-center justify-between">
