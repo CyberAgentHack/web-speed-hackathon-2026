@@ -15,21 +15,30 @@ staticRouter.use(history());
 
 staticRouter.use(
   serveStatic(UPLOAD_PATH, {
-    etag: false,
-    lastModified: false,
+    etag: true,
+    lastModified: true,
+    setHeaders: (res) => {
+      res.setHeader("Cache-Control", "no-cache");
+    },
   }),
 );
 
 staticRouter.use(
   serveStatic(PUBLIC_PATH, {
-    etag: false,
-    lastModified: false,
+    etag: true,
+    lastModified: true,
+    setHeaders: (res) => {
+      res.setHeader("Cache-Control", "no-cache");
+    },
   }),
 );
 
 staticRouter.use(
   serveStatic(CLIENT_DIST_PATH, {
-    etag: false,
-    lastModified: false,
+    etag: true,
+    lastModified: true,
+    setHeaders: (res) => {
+      res.setHeader("Cache-Control", "no-cache");
+    },
   }),
 );
