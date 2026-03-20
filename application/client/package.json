@@ -19,6 +19,7 @@
     "classnames": "2.5.1",
     "common-tags": "1.8.2",
     "core-js": "3.45.1",
+    "dayjs": "1.11.20",
     "encoding-japanese": "2.2.0",
     "fast-average-color": "9.5.0",
     "gifler": "github:themadcreator/gifler#v0.3.0",
