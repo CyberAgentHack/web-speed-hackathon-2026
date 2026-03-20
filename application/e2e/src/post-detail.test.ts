@@ -103,6 +103,7 @@ test.describe("投稿詳細 - 写真", () => {
 
   test("写真がcover拡縮し、画像サイズが著しく荒くない", async ({ page }) => {
     await page.goto("/");
+    await page.locator("article").first().waitFor({ timeout: 3_000 });
     const imageArticle = page.locator("article:has(.grid img)").first();
     await expect(imageArticle).toBeVisible({ timeout: 3_000 });
     await imageArticle.click();

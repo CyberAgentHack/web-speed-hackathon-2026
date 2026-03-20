@@ -1,5 +1,5 @@
 ---
-status: ready
+status: done
 priority: p1
 issue_id: "012"
 tags: [client, performance, cls, layout-shift]

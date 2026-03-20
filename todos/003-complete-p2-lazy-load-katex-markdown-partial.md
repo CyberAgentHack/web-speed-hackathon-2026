@@ -1,5 +1,5 @@
 ---
-status: ready
+status: done
 priority: p2
 issue_id: "003"
 tags: [webpack, performance, code-splitting, katex, react-markdown]

@@ -1,5 +1,5 @@
 ---
-status: ready
+status: done
 priority: p1
 issue_id: "001"
 tags: [webpack, performance, code-splitting, react]

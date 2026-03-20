@@ -1,5 +1,5 @@
 ---
-status: ready
+status: done
 priority: p2
 issue_id: "001"
 tags: [server, performance, database, sequelize]

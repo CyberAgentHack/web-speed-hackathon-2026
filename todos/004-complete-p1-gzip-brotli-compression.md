@@ -1,5 +1,5 @@
 ---
-status: ready
+status: done
 priority: p1
 issue_id: "004"
 tags: [server, performance, compression, transfer-size]
