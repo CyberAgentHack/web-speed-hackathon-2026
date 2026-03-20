@@ -3,7 +3,6 @@ import { Animator, Decoder } from "gifler";
 import { GifReader } from "omggif";
 import { RefCallback, useCallback, useRef, useState } from "react";
 
-import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
@@ -62,11 +61,11 @@ export const PausableMovie = ({ src }: Props) => {
   }, []);
 
   if (isLoading || data === null) {
-    return null;
+    return <div className="w-full aspect-square bg-(--color-cax-canvas)" />;
   }
 
   return (
-    <AspectRatioBox aspectHeight={1} aspectWidth={1}>
+    <div className="w-full aspect-square">
       <button
         aria-label="動画プレイヤー"
         className="group relative block h-full w-full"
@@ -85,6 +84,6 @@ export const PausableMovie = ({ src }: Props) => {
           <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
         </div>
       </button>
-    </AspectRatioBox>
+    </div>
   );
 };

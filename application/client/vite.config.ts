@@ -4,7 +4,11 @@ import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { analyzer } from "vite-bundle-analyzer";
 
 export default defineConfig({
-  plugins: [nodePolyfills(), babel(), analyzer()],
+  plugins: [
+    nodePolyfills(),
+    babel(),
+    // analyzer(),
+  ],
   build: {
     outDir: "../dist",
     emptyOutDir: true,
