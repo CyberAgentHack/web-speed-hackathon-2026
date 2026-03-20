@@ -25,12 +25,14 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
 /**
  * @typedef {object} Props
  * @property {Models.Post} post
+ * @property {boolean} prioritizeMedia
  */
 interface Props {
   post: Models.Post;
+  prioritizeMedia?: boolean;
 }
 
-export const TimelineItem = ({ post }: Props) => {
+export const TimelineItem = ({ post, prioritizeMedia = false }: Props) => {
   const navigate = useNavigate();
   const createdAtIso = toIsoDateTime(post.createdAt);
   const createdAtLabel = formatJaLongDate(post.createdAt);
@@ -91,17 +93,21 @@ export const TimelineItem = ({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea
+                fetchPriority={prioritizeMedia ? "high" : "auto"}
+                images={post.images}
+                loading={prioritizeMedia ? "eager" : "lazy"}
+              />
             </div>
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
+              <MovieArea movie={post.movie} preload={prioritizeMedia ? "auto" : "metadata"} />
             </div>
           ) : null}
           {post.sound ? (
             <div className="relative mt-2 w-full">
-              <SoundArea sound={post.sound} />
+              <SoundArea prioritizeMedia={prioritizeMedia} sound={post.sound} />
             </div>
           ) : null}
         </div>
