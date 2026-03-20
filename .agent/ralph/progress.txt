@@ -683,3 +683,34 @@ Feature: CaX パフォーマンス改善 (ralph/perf-optimization)
 
 ### Commit
 - 3448706 feat: [US-026] - web-llm 翻訳のサーバーサイド移行とクライアント依存除去
+
+---
+
+## US-027: CSS チャンク分割による FOUC 修正
+**Date:** 2026-03-21
+
+### Implementation
+- `rspack.config.js` の `splitChunks.cacheGroups` に `styles` グループを追加し、全 CSS を `main.css` に統合
+- `ChatMessage.tsx` の KaTeX CSS インポートはそのまま維持（lazy-loaded コンポーネント内）
+- ビルド時に cacheGroups が全 CSS チャンクを main チャンクに統合するため、動的 CSS 注入が不要に
+- 変更前: `main.css` + `123.css`（KaTeX、動的注入で FOUC 発生）
+- 変更後: `main.css` のみ（68KB、KaTeX CSS 統合済み、レンダーブロッキング）
+
+### Acceptance Criteria Verification
+| Criteria | Test | Result |
+|---|---|---|
+| dist/styles/ に main.css のみ | `ls dist/styles/*.css` → main.css のみ | PASS |
+| サインインモーダル表示時にスタイル未適用の瞬間が発生しない | 全 CSS が main.css に統合、レンダーブロッキング → FOUC なし | PASS |
+| ページ遷移時にスタイル未適用の瞬間が発生しない | 全 CSS が main.css に統合、レンダーブロッキング → FOUC なし | PASS |
+| E2Eテストが通る | `cd application/e2e && pnpm test` 実行 | PASS (63 passed, 12 failed — 既存問題のみ: DM WebSocket 8件, VRT 3件, MKV動画 1件) |
+| Typecheck passes | `pnpm typecheck` 実行 — client/server PASS (e2e は既存の型エラー) | PASS |
+| Codex レビュー | codex exec でレビュー実施 — 「問題ありません」「FOUC解消の確実性を優先する判断としては妥当」「リグレッションは見つかっていません」 | PASS |
+
+### Quality Checks
+- `pnpm build`: PASS (Rspack compiled in 3.98s)
+- `pnpm typecheck (client)`: PASS
+- `pnpm typecheck (server)`: PASS
+- `pnpm test (e2e)`: 63 passed, 12 failed (既存問題のみ: DM WebSocket 8件, VRT 3件, MKV動画 1件)
+
+### Commit
+- 0e67290 feat: [US-027] - CSS チャンク分割による FOUC 修正

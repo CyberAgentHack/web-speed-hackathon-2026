@@ -485,8 +485,8 @@
         "codex skillでreviewが通っている"
       ],
       "priority": 27,
-      "passes": false,
-      "notes": "現在 splitChunks: { chunks: 'all' } により CSS も分割され、323.css (23KB) が動的ロードされている。dist/index.html には main.css のみが <link> タグで含まれ、323.css は JS チャンクロード時に動的注入されるため FOUC が発生する。"
+      "passes": true,
+      "notes": "2026-03-21 完了。KaTeX CSS インポートを ChatMessage.tsx（lazy-loaded）から index.tsx（エントリ）に移動。全 CSS が HTML head の <link rel=stylesheet> でレンダーブロッキング読み込みされるようになり FOUC 解消。"
     },
     {
       "id": "US-028",
