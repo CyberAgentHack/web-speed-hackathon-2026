@@ -1,58 +1,53 @@
-import $ from "jquery";
-import { gzip } from "pako";
+export class FetchError extends Error {
+  readonly status: number;
+  readonly responseJSON: unknown;
+
+  constructor(status: number, responseJSON: unknown) {
+    super(`HTTP ${status}`);
+    this.name = "FetchError";
+    this.status = status;
+    this.responseJSON = responseJSON;
+  }
+}
+
+async function throwIfError(res: Response): Promise<void> {
+  if (!res.ok) {
+    let responseJSON: unknown = null;
+    try {
+      responseJSON = await res.json();
+    } catch {}
+    throw new FetchError(res.status, responseJSON);
+  }
+}
 
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "binary",
-    method: "GET",
-    responseType: "arraybuffer",
-    url,
-  });
-  return result;
+  const res = await fetch(url);
+  await throwIfError(res);
+  return res.arrayBuffer();
 }
 
 export async function fetchJSON<T>(url: string): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "json",
-    method: "GET",
-    url,
-  });
-  return result;
+  const res = await fetch(url);
+  await throwIfError(res);
+  return res.json();
 }
 
 export async function sendFile<T>(url: string, file: File): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    data: file,
-    dataType: "json",
-    headers: {
-      "Content-Type": "application/octet-stream",
-    },
+  const res = await fetch(url, {
+    body: file,
+    headers: { "Content-Type": "application/octet-stream" },
     method: "POST",
-    processData: false,
-    url,
   });
-  return result;
+  await throwIfError(res);
+  return res.json();
 }
 
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
-  const jsonString = JSON.stringify(data);
-  const uint8Array = new TextEncoder().encode(jsonString);
-  const compressed = gzip(uint8Array);
-
-  const result = await $.ajax({
-    async: false,
-    data: compressed,
-    dataType: "json",
-    headers: {
-      "Content-Encoding": "gzip",
-      "Content-Type": "application/json",
-    },
+  const res = await fetch(url, {
+    body: JSON.stringify(data),
+    headers: { "Content-Type": "application/json" },
     method: "POST",
-    processData: false,
-    url,
   });
-  return result;
+  await throwIfError(res);
+  return res.json();
 }

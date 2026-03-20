@@ -1,7 +1,7 @@
 import classNames from "classnames";
 import { Animator, Decoder } from "gifler";
 import { GifReader } from "omggif";
-import { RefCallback, useCallback, useRef, useState } from "react";
+import { MouseEvent, RefCallback, useCallback, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -50,7 +50,8 @@ export const PausableMovie = ({ src }: Props) => {
   );
 
   const [isPlaying, setIsPlaying] = useState(true);
-  const handleClick = useCallback(() => {
+  const handleClick = useCallback((ev: MouseEvent) => {
+    ev.stopPropagation();
     setIsPlaying((isPlaying) => {
       if (isPlaying) {
         animatorRef.current?.stop();
@@ -62,7 +63,11 @@ export const PausableMovie = ({ src }: Props) => {
   }, []);
 
   if (isLoading || data === null) {
-    return null;
+    return (
+      <AspectRatioBox aspectHeight={1} aspectWidth={1}>
+        <div className="bg-cax-surface-subtle h-full w-full" />
+      </AspectRatioBox>
+    );
   }
 
   return (
@@ -82,7 +87,10 @@ export const PausableMovie = ({ src }: Props) => {
             },
           )}
         >
-          <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
+          <FontAwesomeIcon
+            iconType={isPlaying ? "pause" : "play"}
+            styleType="solid"
+          />
         </div>
       </button>
     </AspectRatioBox>

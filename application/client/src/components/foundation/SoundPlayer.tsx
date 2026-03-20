@@ -1,4 +1,4 @@
-import { ReactEventHandler, useCallback, useMemo, useRef, useState } from "react";
+import { MouseEvent, ReactEventHandler, useCallback, useMemo, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -26,7 +26,8 @@ export const SoundPlayer = ({ sound }: Props) => {
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const handleTogglePlaying = useCallback(() => {
+  const handleTogglePlaying = useCallback((ev: MouseEvent) => {
+    ev.stopPropagation();
     setIsPlaying((isPlaying) => {
       if (isPlaying) {
         audioRef.current?.pause();

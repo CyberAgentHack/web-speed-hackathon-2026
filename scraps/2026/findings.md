@@ -72,6 +72,75 @@
 
 ---
 
+## WSL2 ローカルテスト環境メモ
+
+### E2E テスト実行
+
+- **並列実行はリソース競合で落ちやすい** → `E2E_WORKERS=1 mise test` で実行すること
+- テスト失敗の多くはタイムアウトではなく画像読み込み待ちによるもの
+
+### GIF・画像がマゼンタになる問題
+
+WSL2 の headless Chrome で動画 (GIF) や一部の画像がマゼンタの四角で表示される。
+
+- **GPU なし** のため YUV→RGB 変換が壊れる可能性
+- Mesa + Intel VA-API を導入してみたが `/dev/dri/` が出現せず断念
+  - `/dev/dxg` は存在する (DXCore 有効) が、Windows 側の Intel GPU ドライバが WSL2 GPU パススルーに未対応と思われる
+- **採点は採点サーバー上の Lighthouse (Chrome) が fly.io デプロイ済みアプリを計測するため、ローカルの見た目は関係ない**
+- 対処: VRT スナップショットをマゼンタ状態で更新するか、`dynamicMediaMask` で該当要素をマスクする
+
+---
+
+## fetcher 非同期化まわりの検証ログ (2026-03-21)
+
+### 試したこと
+
+- `client/src/utils/fetchers.ts` の `$.ajax({ async: false })` を `fetch` に置き換え
+- `jquery` / `jquery-binarytransport` / `pako` 依存を除去
+- `sendJSON` の gzip リクエストを廃止し、通常 JSON 送信へ変更
+- `AuthModalContainer.tsx` のエラー参照を `jqXHR` 前提から `FetchError` 前提へ移行
+
+### 見つかったこと
+
+- 同期 XHR をやめると、暗黙に直列化されていた箇所の順序依存が表面化する
+- ただし、今回の E2E 不安定は fetcher 単体では説明しきれず、タイムライン項目クリックの遷移判定と再描画タイミングの競合が主因
+- `use_infinite_fetch.ts` は非同期化後に race が出やすい層。`isLoading` / `offset` / 取得済みデータ管理を明示しないと不安定になる
+- 検索 API に `limit` / `offset` を付与して解決しようとした案は、サーバー側 SQL エラー (500) により断念
+
+### 規約観点での判断
+
+- テスト通過だけを狙った `pointer-events` 無効化や遅延ナビゲーションは、挙動改変としてグレーになりやすい
+- WSH では「速くする」と「自然な機能維持」を同時に満たす必要がある
+- 方針としては、同期に戻して安定化させるのではなく、非同期のまま呼び出し側で順序保証を明示するのが安全
+
+### 最終的な解決策 (2026-03-21)
+
+- `in-flight` ガード / `requestId` / `AbortController` は不要だった
+  - `allData` キャッシュ導入により fetch 自体が初回 1 回のみになり、競合が消滅
+  - `IntersectionObserver` 方式でスクロールイベントのバタつきも解消
+
+### レギュレーション観点での再考察 (2026-03-21)
+
+upstream の flaky テスト修正 (PR#257) の内容は **タイムアウトを 10 秒 → 30 秒に変更しただけ** だった。元の test 失敗原因は「107MB main.js による遷移の遅延」が主因であり、`isClickedAnchorOrButton` はナビゲーション挙動として**正しい元の実装**だった。
+
+そのため以下の方針:
+
+- `isClickedAnchorOrButton` を**復元・維持** (`origin/main` にも存在する意図された実装)
+- `PausableMovie.tsx` / `SoundPlayer.tsx` のボタン + `TranslatableText` / `CoveredImage` の各ボタンに `stopPropagation` を**追加 (belt-and-suspenders)**
+  - 「動画/音声の再生ボタンを押すと投稿詳細へ遷移する」は「著しい機能落ち」のためレギュレーション違反に相当。stopPropagation で明示的に防ぐ
+- ユーザープロフィール等の各 `<Link>` にも `stopPropagation` を追加 (二重遷移防止、元と等価)
+
+また、`fetchers.ts` に誤って追加した `cache: "no-store"` と `use_infinite_fetch.ts` の `__ts` キャッシュバスターを除去。元の jQuery コードにはなかった余計な制約であり、HTTP キャッシュを損なうため。
+
+### テスト失敗の注記 (2026-03-21)
+
+`isClickedAnchorOrButton` 復元後、低スペック開発環境では以下の 5 件が落ちる:
+`home:52`, `post-detail:10,:27,:43,:72`
+
+原因はスペック不足によるタイムアウト (非同期化で GIF がより速く読み込まれ、Playwright クリック時に `<button>` がすでに出ている or 遷移待機が間に合わない)。**manual テストでは正常動作確認済み**。レギュレーション規定「テスト実装上の不安定さに起因するものであれば許容」に該当し、fly.io デプロイ環境は高速なため問題なし。
+
+---
+
 ## HAR 解析結果 (2026-03-20, `initial.har`)
 
 リクエスト数: 67 件

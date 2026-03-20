@@ -72,6 +72,7 @@ export const CoveredImage = ({ src }: Props) => {
         type="button"
         command="show-modal"
         commandfor={dialogId}
+        onClick={(ev) => ev.stopPropagation()}
       >
         ALT を表示する
       </button>

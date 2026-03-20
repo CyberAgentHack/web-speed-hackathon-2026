@@ -14,7 +14,8 @@ interface Props {
 export const TranslatableText = ({ text }: Props) => {
   const [state, updateState] = useState<State>({ type: "idle", text });
 
-  const handleClick = useCallback(() => {
+  const handleClick = useCallback((ev: React.MouseEvent) => {
+    ev.stopPropagation();
     switch (state.type) {
       case "idle": {
         (async () => {

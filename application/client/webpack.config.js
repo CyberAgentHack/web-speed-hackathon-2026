@@ -28,7 +28,6 @@ const config = {
   },
   entry: {
     main: [
-      "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
@@ -68,9 +67,7 @@ const config = {
       ? [new BundleAnalyzerPlugin({ analyzerMode: "static", reportFilename: "bundle-report.html", open: true })]
       : []),
     new webpack.ProvidePlugin({
-      $: "jquery",
       Buffer: ["buffer", "Buffer"],
-      "window.jQuery": "jquery",
     }),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),

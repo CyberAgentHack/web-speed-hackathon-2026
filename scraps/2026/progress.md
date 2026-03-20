@@ -39,7 +39,7 @@
 ## 未対応 (優先順)
 
 - [x] **Phase 2**: `standardized-audio-context` (466 KB) を除去 — `webpack.config.js` の `ProvidePlugin` から削除 (`AudioContext` はネイティブ実装済み)
-- [ ] **Phase 2**: `fetchers.ts` を `fetch` に置き換え → `jquery` (285 KB) + `jquery-binarytransport` + 同期 XHR (TBT) を除去。`sendJSON` の gzip 圧縮はサーバー対応を先に確認
+- [x] **Phase 2**: `fetchers.ts` を `fetch` に置き換え → `jquery` (285 KB) + `jquery-binarytransport` + `pako` + 同期 XHR (TBT) を除去。`bodyParser.json()` が `Content-Encoding: gzip` を自動デコードするため gzip なしで送信しても問題なし
 - [ ] **Phase 2**: `lodash` (544 KB) → ネイティブ JS に置き換え (`SoundWaveSVG.tsx` 等)
 - [ ] **Phase 2**: `moment` (176 KB) → `day.js` に置き換え
 - [ ] **Phase 4**: 動画を GIF → WebM/MP4 に変換して配信
