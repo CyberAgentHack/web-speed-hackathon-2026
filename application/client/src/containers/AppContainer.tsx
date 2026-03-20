@@ -2,12 +2,12 @@ import { useCallback, useEffect, useId, useState, lazy, Suspense } from "react";
 import { Helmet, HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
-// 犯人候補1: AppPage (これを一旦外す)
-// import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
+// 1. AppPage のインポートを復活させる
+import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
-// コンテナ類はそのまま
+// コンテナ類（TimelineContainer は軽量化したデバッグ版が呼ばれます）
 const TimelineContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/TimelineContainer").then(m => ({ default: m.TimelineContainer })));
 const DirectMessageListContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer").then(m => ({ default: m.DirectMessageListContainer })));
 const DirectMessageContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer").then(m => ({ default: m.DirectMessageContainer })));
@@ -17,6 +17,8 @@ const PostContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/co
 const TermContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/TermContainer").then(m => ({ default: m.TermContainer })));
 const CrokContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/CrokContainer").then(m => ({ default: m.CrokContainer })));
 const NotFoundContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/NotFoundContainer").then(m => ({ default: m.NotFoundContainer })));
+
+const NewPostModalContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer").then(m => ({ default: m.NewPostModalContainer })));
 
 export const AppContainer = () => {
   const { pathname } = useLocation();
@@ -42,6 +44,7 @@ export const AppContainer = () => {
   }, [navigate]);
 
   const authModalId = useId();
+  const newPostModalId = useId();
 
   if (isLoadingActiveUser) {
     return <div style={{ padding: "20px" }}>読み込み中...</div>;
@@ -49,14 +52,13 @@ export const AppContainer = () => {
 
   return (
     <HelmetProvider>
-      {/* 
-         【バイパス実施】 
-         AppPage を消して、素の div で Routes を囲みます。
-         これで 4点 のままなら、犯人は TimelineContainer です。
-      */}
-      <div style={{ border: "10px solid red", minHeight: "100vh", padding: "20px" }}>
-        <h1 style={{ color: "red" }}>⚠️ AppPage バイパス中 (デバッグモード)</h1>
-        
+      {/* 2. 素の div を AppPage に戻す。props も忘れずに。 */}
+      <AppPage
+        activeUser={activeUser}
+        authModalId={authModalId}
+        newPostModalId={newPostModalId}
+        onLogout={handleLogout}
+      >
         <Suspense fallback={<div style={{ padding: "20px" }}>コンテンツ読込中...</div>}>
           <Routes>
             <Route element={<TimelineContainer />} path="/" />
@@ -70,9 +72,16 @@ export const AppContainer = () => {
             <Route element={<NotFoundContainer />} path="*" />
           </Routes>
         </Suspense>
-      </div>
+      </AppPage>
 
       <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
+
+      {/* 投稿モーダルは重いライブラリを呼ぶので Suspense で囲う */}
+      {activeUser && (
+        <Suspense fallback={null}>
+          <NewPostModalContainer id={newPostModalId} />
+        </Suspense>
+      )}
     </HelmetProvider>
   );
 };
