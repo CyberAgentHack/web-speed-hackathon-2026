@@ -4,6 +4,10 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 
 import { Comment, Post, PostsImagesRelation } from "@web-speed-hackathon-2026/server/src/models";
+import {
+  augmentPostResponse,
+  augmentPostsResponse,
+} from "@web-speed-hackathon-2026/server/src/utils/augment_post_response";
 
 export const postRouter = Router();
 
@@ -13,7 +17,7 @@ postRouter.get("/posts", async (req, res) => {
     offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
   });
 
-  return res.status(200).type("application/json").send(posts);
+  return res.status(200).type("application/json").send(await augmentPostsResponse(posts));
 });
 
 postRouter.get("/posts/:postId", async (req, res) => {
@@ -23,7 +27,7 @@ postRouter.get("/posts/:postId", async (req, res) => {
     throw new httpErrors.NotFound();
   }
 
-  return res.status(200).type("application/json").send(post);
+  return res.status(200).type("application/json").send(await augmentPostResponse(post));
 });
 
 postRouter.get("/posts/:postId/comments", async (req, res) => {
@@ -67,5 +71,5 @@ postRouter.post("/posts", async (req, res) => {
     throw new httpErrors.InternalServerError();
   }
 
-  return res.status(200).type("application/json").send(createdPost);
+  return res.status(200).type("application/json").send(await augmentPostResponse(createdPost));
 });

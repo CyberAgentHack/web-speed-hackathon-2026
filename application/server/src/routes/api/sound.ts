@@ -12,6 +12,7 @@ import {
   MediaConversionError,
 } from "@web-speed-hackathon-2026/server/src/utils/convert_media";
 import { extractMetadataFromSound } from "@web-speed-hackathon-2026/server/src/utils/extract_metadata_from_sound";
+import { createSoundWaveform } from "@web-speed-hackathon-2026/server/src/utils/sound_waveform";
 
 // 変換した音声の拡張子
 const EXTENSION = "mp3";
@@ -48,5 +49,8 @@ soundRouter.post("/sounds", async (req, res) => {
   await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds"), { recursive: true });
   await fs.writeFile(filePath, converted);
 
-  return res.status(200).type("application/json").send({ artist, id: soundId, title });
+  return res
+    .status(200)
+    .type("application/json")
+    .send({ artist, id: soundId, title, waveform: createSoundWaveform(converted) });
 });

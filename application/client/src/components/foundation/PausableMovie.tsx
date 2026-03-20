@@ -13,7 +13,10 @@ interface Props {
  */
 export const PausableMovie = ({ src }: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const wrapperRef = useRef<HTMLButtonElement>(null);
+  const wasPausedManuallyRef = useRef(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   useEffect(() => {
@@ -30,15 +33,39 @@ export const PausableMovie = ({ src }: Props) => {
   }, []);
 
   useEffect(() => {
+    const element = wrapperRef.current;
+    if (element == null) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        setIsVisible(entries.some((entry) => entry.isIntersecting));
+      },
+      {
+        threshold: 0.5,
+      },
+    );
+
+    observer.observe(element);
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
     const video = videoRef.current;
     if (video == null) {
       return;
     }
 
-    if (prefersReducedMotion) {
+    if (prefersReducedMotion || !isVisible) {
       video.pause();
-      video.currentTime = 0;
       setIsPlaying(false);
+      return;
+    }
+
+    if (wasPausedManuallyRef.current) {
       return;
     }
 
@@ -50,7 +77,7 @@ export const PausableMovie = ({ src }: Props) => {
         setIsPlaying(false);
       },
     );
-  }, [prefersReducedMotion, src]);
+  }, [isVisible, prefersReducedMotion, src]);
 
   const handleClick = useCallback(() => {
     const video = videoRef.current;
@@ -59,6 +86,7 @@ export const PausableMovie = ({ src }: Props) => {
     }
 
     if (video.paused) {
+      wasPausedManuallyRef.current = false;
       void video.play().then(
         () => {
           setIsPlaying(true);
@@ -70,6 +98,7 @@ export const PausableMovie = ({ src }: Props) => {
       return;
     }
 
+    wasPausedManuallyRef.current = true;
     video.pause();
     setIsPlaying(false);
   }, []);
@@ -85,6 +114,7 @@ export const PausableMovie = ({ src }: Props) => {
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
       <button
+        ref={wrapperRef}
         aria-label="動画プレイヤー"
         className="group relative block h-full w-full"
         onClick={handleClick}

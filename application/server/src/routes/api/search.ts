@@ -2,7 +2,9 @@ import { Router } from "express";
 import { Op } from "sequelize";
 
 import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
+import { augmentPostsResponse } from "@web-speed-hackathon-2026/server/src/utils/augment_post_response";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
+import { isNegativeSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/search_sentiment";
 
 export const searchRouter = Router();
 
@@ -10,14 +12,14 @@ searchRouter.get("/search", async (req, res) => {
   const query = req.query["q"];
 
   if (typeof query !== "string" || query.trim() === "") {
-    return res.status(200).type("application/json").send([]);
+    return res.status(200).type("application/json").send({ isNegativeQuery: false, posts: [] });
   }
 
   const { keywords, sinceDate, untilDate } = parseSearchQuery(query);
 
   // キーワードも日付フィルターもない場合は空配列を返す
   if (!keywords && !sinceDate && !untilDate) {
-    return res.status(200).type("application/json").send([]);
+    return res.status(200).type("application/json").send({ isNegativeQuery: false, posts: [] });
   }
 
   const searchTerm = keywords ? `%${keywords}%` : null;
@@ -88,5 +90,8 @@ searchRouter.get("/search", async (req, res) => {
 
   const result = mergedPosts.slice(offset, limit != null ? offset + limit : mergedPosts.length);
 
-  return res.status(200).type("application/json").send(result);
+  return res.status(200).type("application/json").send({
+    isNegativeQuery: isNegativeSearchQuery(keywords),
+    posts: await augmentPostsResponse(result),
+  });
 });

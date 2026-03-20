@@ -6,21 +6,33 @@ import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use
 import { useSearchParams } from "@web-speed-hackathon-2026/client/src/hooks/use_search_params";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
+interface SearchResponse {
+  isNegativeQuery: boolean;
+  posts: Models.Post[];
+}
+
 export const SearchContainer = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
 
-  const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>(
+  const { data: responses, fetchMore } = useInfiniteFetch<SearchResponse>(
     query ? `/api/v1/search?q=${encodeURIComponent(query)}` : "",
     fetchJSON,
   );
+  const posts = responses.flatMap((response) => response.posts);
+  const isNegativeQuery = responses[0]?.isNegativeQuery ?? false;
 
   return (
     <InfiniteScroll fetchMore={fetchMore} items={posts}>
       <Helmet>
         <title>検索 - CaX</title>
       </Helmet>
-      <SearchPage query={query} results={posts} initialValues={{ searchText: query }} />
+      <SearchPage
+        query={query}
+        results={posts}
+        isNegativeQuery={isNegativeQuery}
+        initialValues={{ searchText: query }}
+      />
     </InfiniteScroll>
   );
 };
