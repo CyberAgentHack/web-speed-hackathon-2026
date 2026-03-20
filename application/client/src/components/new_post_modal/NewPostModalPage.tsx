@@ -10,8 +10,13 @@ import { convertSound } from "@web-speed-hackathon-2026/client/src/utils/convert
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
+interface ImageWithAlt {
+  file: File;
+  alt: string;
+}
+
 interface SubmitParams {
-  images: File[];
+  images: ImageWithAlt[];
   movie: File | undefined;
   sound: File | undefined;
   text: string;
@@ -55,14 +60,17 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       Promise.all(
         files.map((file) =>
           convertImage(file, { extension: "Webp" }).then(
-            (blob) => new File([blob], "converted.webp", { type: "image/webp" }),
+            (result) => ({
+              file: new File([result.blob], "converted.webp", { type: "image/webp" }),
+              alt: result.alt,
+            }),
           ),
         ),
       )
-        .then((convertedFiles) => {
+        .then((convertedImages) => {
           setParams((params) => ({
             ...params,
-            images: convertedFiles,
+            images: convertedImages,
             movie: undefined,
             sound: undefined,
           }));
@@ -144,7 +152,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       <div className="text-cax-text flex w-full items-center justify-evenly">
         <AttachFileInputButton
           accept="image/*"
-          active={params.images.length !== 0}
+          active={params.images.length > 0}
           icon={<FontAwesomeIcon iconType="images" styleType="solid" />}
           label="画像を添付"
           onChange={handleChangeImages}

@@ -2,7 +2,12 @@ interface Options {
   extension: string;
 }
 
-export async function convertImage(file: File, options: Options): Promise<Blob> {
+interface ConvertImageResult {
+  blob: Blob;
+  alt: string;
+}
+
+export async function convertImage(file: File, options: Options): Promise<ConvertImageResult> {
   const { initializeImageMagick, ImageMagick, MagickFormat } =
     await import("@imagemagick/magick-wasm");
   const { default: magickWasm } = await import("@imagemagick/magick-wasm/magick.wasm?binary");
@@ -17,12 +22,12 @@ export async function convertImage(file: File, options: Options): Promise<Blob> 
     ImageMagick.read(byteArray, (img) => {
       img.format = format;
 
-      const comment = img.comment;
+      const comment = img.comment ?? "";
 
       img.write((output) => {
         // piexifjs は JPEG のみ対応のため、JPEG 以外のフォーマットでは exif 埋め込みをスキップする
-        if (comment == null || format !== MagickFormat.Jpg) {
-          resolve(new Blob([output as Uint8Array<ArrayBuffer>]));
+        if (comment === "" || format !== MagickFormat.Jpg) {
+          resolve({ blob: new Blob([output as Uint8Array<ArrayBuffer>]), alt: comment });
           return;
         }
 
@@ -35,7 +40,7 @@ export async function convertImage(file: File, options: Options): Promise<Blob> 
         const exifStr = dump({ "0th": { [ImageIFD.ImageDescription]: descriptionBinary } });
         const outputWithExif = insert(exifStr, binary);
         const bytes = Uint8Array.from(outputWithExif.split("").map((c) => c.charCodeAt(0)));
-        resolve(new Blob([bytes]));
+        resolve({ blob: new Blob([bytes]), alt: comment });
       });
     });
   });
