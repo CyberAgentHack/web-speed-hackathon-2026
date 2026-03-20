@@ -12,5 +12,9 @@ export async function loadFFmpeg(): Promise<FFmpeg> {
     }),
   });
 
+  // ffmpeg.on("log", ({ message }) => {
+  //   console.log("[ffmpeg]", message);
+  // });
+
   return ffmpeg;
 }

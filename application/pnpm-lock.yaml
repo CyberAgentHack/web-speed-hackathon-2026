@@ -27,9 +27,6 @@ importers:
       '@ffmpeg/ffmpeg':
         specifier: 0.12.15
         version: 0.12.15
-      '@imagemagick/magick-wasm':
-        specifier: 0.0.37
-        version: 0.0.37
       '@mlc-ai/web-llm':
         specifier: 0.2.80
         version: 0.2.80

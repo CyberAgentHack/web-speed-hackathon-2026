@@ -61,7 +61,7 @@ const config = {
     chunkFilename: "scripts/chunk-[contenthash].js",
     filename: "scripts/[name].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     clean: true,
   },
   plugins: [
@@ -125,11 +125,6 @@ const config = {
         __dirname,
         "node_modules",
         "@ffmpeg/core/dist/umd/ffmpeg-core.wasm",
-      ),
-      "@imagemagick/magick-wasm/magick.wasm$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@imagemagick/magick-wasm/dist/magick.wasm",
       ),
     },
     fallback: {
