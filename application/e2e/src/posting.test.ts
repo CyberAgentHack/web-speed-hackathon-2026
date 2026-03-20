@@ -7,7 +7,7 @@ import { dynamicMediaMask, login, waitForVisibleMedia } from "./utils";
 test.describe("投稿機能", () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
-    await login(page);
+    await login(page, "gg3i6j6");
   });
 
   test("テキストの投稿ができる", async ({ page }) => {

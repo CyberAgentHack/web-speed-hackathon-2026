@@ -42,13 +42,13 @@ test.describe("投稿詳細 - 動画", () => {
 
   test("動画が自動再生され、クリックで一時停止・再生を切り替えられる", async ({ page }) => {
     await page.goto("/");
-    const movieArticle = page.locator("article:has(canvas)").first();
+    const movieArticle = page.locator('article:has(button[aria-label="動画プレイヤー"])').first();
     await expect(movieArticle).toBeVisible({ timeout: 30_000 });
     await movieArticle.locator("time").first().click();
     await page.waitForURL("**/posts/*", { timeout: 30_000 });
 
-    const canvas = page.locator("canvas").first();
-    await expect(canvas).toBeVisible({ timeout: 30_000 });
+    const videoPlayer = page.locator('button[aria-label="動画プレイヤー"]').first();
+    await expect(videoPlayer).toBeVisible({ timeout: 30_000 });
 
     // VRT: 動画再生中
     await waitForVisibleMedia(page);
@@ -57,11 +57,10 @@ test.describe("投稿詳細 - 動画", () => {
     });
 
     // クリックで一時停止
-    const movieButton = page.locator("button:has(canvas)").first();
-    await movieButton.click();
+    await videoPlayer.click();
 
     // 再度クリックして再生再開
-    await movieButton.click();
+    await videoPlayer.click();
   });
 });
 
