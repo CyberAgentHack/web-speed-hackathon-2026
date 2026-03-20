@@ -34,4 +34,24 @@ test.describe("ユーザー詳細", () => {
       mask: dynamicMediaMask(page),
     });
   });
+
+  test("サービス利用開始の日時が正しく表示されること", async ({ page }) => {
+    await page.goto("/users/o6yq16leo");
+
+    // 「からサービスを利用しています」テキストが表示されること
+    await expect(page.getByText("からサービスを利用しています")).toBeVisible({ timeout: 3_000 });
+
+    // time要素にdatetime属性が設定されていること
+    const timeElement = page.locator("header time");
+    await expect(timeElement).toBeVisible({ timeout: 3_000 });
+
+    const datetime = await timeElement.getAttribute("datetime");
+    expect(datetime).toBeTruthy();
+    // ISO 8601形式であること
+    expect(new Date(datetime!).getTime()).not.toBeNaN();
+
+    // 日本語の日付表示がされていること（例: "2026年1月1日"）
+    const dateText = await timeElement.innerText();
+    expect(dateText).toMatch(/\d{4}年\d{1,2}月\d{1,2}日/);
+  });
 });
