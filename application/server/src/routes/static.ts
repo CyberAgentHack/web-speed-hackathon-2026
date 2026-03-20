@@ -34,5 +34,8 @@ staticRouter.use(
   serveStatic(CLIENT_DIST_PATH, {
     etag: false,
     lastModified: false,
+    setHeaders: (res) => {
+      res.set("Cache-Control", "public, max-age=31536000");
+    },
   }),
 );
