@@ -34,7 +34,7 @@
 - [ ] 008-動画・音声ファイルを最適化する
 - [x] 020-momentをIntl.DateTimeFormatに置き換える
 - [ ] 021-重いライブラリを動的importにする(web-llm,katex,kuromoji等)
-- [ ] 022-SequelizeのdefaultScopeを最適化する
+- [x] 022-SequelizeのdefaultScopeを最適化する
 - [ ] 023-devtoolのsource-mapを本番で無効化する
 - [ ] 031-imgタグにloading="lazy"を追加する
 - [ ] 032-Font Awesome SVGスプライトを使用アイコンのみに絞る
