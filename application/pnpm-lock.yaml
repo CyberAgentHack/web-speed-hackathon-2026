@@ -21,12 +21,6 @@ importers:
 
   client:
     dependencies:
-      '@ffmpeg/core':
-        specifier: 0.12.10
-        version: 0.12.10
-      '@ffmpeg/ffmpeg':
-        specifier: 0.12.15
-        version: 0.12.15
       '@imagemagick/magick-wasm':
         specifier: 0.0.37
         version: 0.0.37
@@ -226,12 +220,6 @@ importers:
       '@faker-js/faker':
         specifier: 10.3.0
         version: 10.3.0
-      '@ffmpeg/core':
-        specifier: 0.12.10
-        version: 0.12.10
-      '@ffmpeg/ffmpeg':
-        specifier: 0.12.15
-        version: 0.12.15
       '@google-cloud/translate':
         specifier: 9.3.0
         version: 9.3.0
@@ -974,18 +962,6 @@ packages:
   '@faker-js/faker@10.3.0':
     resolution: {integrity: sha512-It0Sne6P3szg7JIi6CgKbvTZoMjxBZhcv91ZrqrNuaZQfB5WoqYYbzCUOq89YR+VY8juY9M1vDWmDDa2TzfXCw==}
     engines: {node: ^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0, npm: '>=10'}
-
-  '@ffmpeg/core@0.12.10':
-    resolution: {integrity: sha512-dzNplnn2Nxle2c2i2rrDhqcB19q9cglCkWnoMTDN9Q9l3PvdjZWd1HfSPjCNWc/p8Q3CT+Es9fWOR0UhAeYQZA==}
-    engines: {node: '>=16.x'}
-
-  '@ffmpeg/ffmpeg@0.12.15':
-    resolution: {integrity: sha512-1C8Obr4GsN3xw+/1Ww6PFM84wSQAGsdoTuTWPOj2OizsRDLT4CXTaVjPhkw6ARyDus1B9X/L2LiXHqYYsGnRFw==}
-    engines: {node: '>=18.x'}
-
-  '@ffmpeg/types@0.12.4':
-    resolution: {integrity: sha512-k9vJQNBGTxE5AhYDtOYR5rO5fKsspbg51gbcwtbkw2lCdoIILzklulcjJfIDwrtn7XhDeF2M+THwJ2FGrLeV6A==}
-    engines: {node: '>=16.x'}
 
   '@google-cloud/common@6.0.0':
     resolution: {integrity: sha512-IXh04DlkLMxWgYLIUYuHHKXKOUwPDzDgke1ykkkJPe48cGIS9kkL2U/o0pm4ankHLlvzLF/ma1eO86n/bkumIA==}
@@ -4660,14 +4636,6 @@ snapshots:
     optional: true
 
   '@faker-js/faker@10.3.0': {}
-
-  '@ffmpeg/core@0.12.10': {}
-
-  '@ffmpeg/ffmpeg@0.12.15':
-    dependencies:
-      '@ffmpeg/types': 0.12.4
-
-  '@ffmpeg/types@0.12.4': {}
 
   '@google-cloud/common@6.0.0':
     dependencies:
