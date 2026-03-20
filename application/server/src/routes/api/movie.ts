@@ -23,26 +23,26 @@ movieRouter.post("/movies", async (req, res) => {
   }
 
   const type = await fileTypeFromBuffer(req.body);
-  if (type === undefined || type.ext !== "gif") {
+  if (type === undefined || (!type.mime.startsWith("video/") && !type.mime.startsWith("image/"))) {
     throw new httpErrors.BadRequest("Invalid file type");
   }
 
   const movieId = uuidv4();
   const moviesDir = path.resolve(UPLOAD_PATH, "movies");
-  const gifPath = path.resolve(moviesDir, `${movieId}.gif`);
+  const inputPath = path.resolve(moviesDir, `${movieId}_input.${type.ext}`);
   const webmPath = path.resolve(moviesDir, `${movieId}.webm`);
 
   await fs.mkdir(moviesDir, { recursive: true });
-  await fs.writeFile(gifPath, req.body);
+  await fs.writeFile(inputPath, req.body);
 
   await execFileAsync("ffmpeg", [
-    "-y", "-i", gifPath,
+    "-y", "-i", inputPath,
     "-c:v", "libvpx-vp9", "-b:v", "0", "-crf", "33", "-an",
     "-deadline", "realtime", "-cpu-used", "8",
     webmPath,
   ]);
 
-  await fs.unlink(gifPath);
+  await fs.unlink(inputPath);
 
   return res.status(200).type("application/json").send({ id: movieId });
 });
