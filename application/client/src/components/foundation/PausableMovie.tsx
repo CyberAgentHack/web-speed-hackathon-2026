@@ -22,6 +22,7 @@ export const PausableMovie = ({ src, thumbnailSrc }: Props) => {
       <img
         alt=""
         className="h-full w-full object-cover"
+        fetchPriority={thumbnailSrc && !playing ? "high" : undefined}
         onClick={thumbnailSrc && !playing ? handleClick : undefined}
         src={playing || !thumbnailSrc ? src : thumbnailSrc}
         style={thumbnailSrc && !playing ? { cursor: "pointer" } : undefined}
