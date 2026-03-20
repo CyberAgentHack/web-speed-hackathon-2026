@@ -10,6 +10,8 @@ import {
 
 export const staticRouter = Router();
 
+const CACHE_LONG = "public, max-age=31536000, immutable";
+
 // SPA 対応のため、ファイルが存在しないときに index.html を返す
 staticRouter.use(history());
 
@@ -18,7 +20,7 @@ staticRouter.use(
     etag: true,
     lastModified: true,
     setHeaders(res) {
-      res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      res.setHeader("Cache-Control", CACHE_LONG);
     },
   }),
 );
@@ -28,7 +30,7 @@ staticRouter.use(
     etag: true,
     lastModified: true,
     setHeaders(res) {
-      res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      res.setHeader("Cache-Control", CACHE_LONG);
     },
   }),
 );
@@ -42,7 +44,7 @@ staticRouter.use(
         res.setHeader("Cache-Control", "no-cache");
         return;
       }
-      res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      res.setHeader("Cache-Control", CACHE_LONG);
     },
   }),
 );
