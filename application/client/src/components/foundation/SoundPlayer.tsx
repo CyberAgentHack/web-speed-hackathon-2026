@@ -1,10 +1,8 @@
-import { ReactEventHandler, useCallback, useRef, useState } from "react";
+import { ReactEventHandler, useCallback, useEffect, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { SoundWaveSVG } from "@web-speed-hackathon-2026/client/src/components/foundation/SoundWaveSVG";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
-import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getSoundPath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
@@ -13,8 +11,8 @@ interface Props {
 
 export const SoundPlayer = ({ sound }: Props) => {
   const soundPath = getSoundPath(sound.id, sound.extension);
-  const { data, isLoading } = useFetch(soundPath, fetchBinary);
 
+  const [soundData, setSoundData] = useState<ArrayBuffer | null>(null);
   const [currentTimeRatio, setCurrentTimeRatio] = useState(0);
   const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>((ev) => {
     const el = ev.currentTarget;
@@ -34,9 +32,16 @@ export const SoundPlayer = ({ sound }: Props) => {
     });
   }, []);
 
-  if (isLoading || data === null) {
-    return null;
-  }
+  // Fetch sound data for waveform in idle time
+  useEffect(() => {
+    const idle = requestIdleCallback(() => {
+      fetch(soundPath)
+        .then((res) => res.arrayBuffer())
+        .then(setSoundData)
+        .catch(() => {});
+    });
+    return () => cancelIdleCallback(idle);
+  }, [soundPath]);
 
   return (
     <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
@@ -61,7 +66,7 @@ export const SoundPlayer = ({ sound }: Props) => {
           <AspectRatioBox aspectHeight={1} aspectWidth={10}>
             <div className="relative h-full w-full">
               <div className="absolute inset-0 h-full w-full">
-                <SoundWaveSVG soundData={data} />
+                {soundData !== null ? <SoundWaveSVG soundData={soundData} /> : null}
               </div>
               <div
                 className="bg-cax-surface-subtle absolute inset-0 h-full w-full opacity-75"
