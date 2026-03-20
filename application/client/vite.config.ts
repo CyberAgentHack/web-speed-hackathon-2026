@@ -4,18 +4,6 @@ import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 
-// Inject jQuery globals for legacy plugins like jquery-binarytransport
-function jqueryGlobalPlugin() {
-  return {
-    name: "jquery-global",
-    transform(code: string, id: string) {
-      if (id.includes("jquery-binarytransport")) {
-        return `import jQuery from "jquery"; const $ = jQuery; window.jQuery = jQuery; window.$ = $;\n${code}`;
-      }
-    },
-  };
-}
-
 // https://vite.dev/config/
 export default defineConfig({
   resolve: {
@@ -46,15 +34,11 @@ export default defineConfig({
       "/sprites": { target: "http://localhost:3000" },
     },
   },
-  optimizeDeps: {
-    exclude: ["jquery-binarytransport"],
-  },
   build: {
     outDir: path.resolve(__dirname, "../dist"),
     emptyOutDir: true,
   },
   plugins: [
-    jqueryGlobalPlugin(),
     react(),
     tailwindcss(),
     babel({ presets: [reactCompilerPreset()] }),

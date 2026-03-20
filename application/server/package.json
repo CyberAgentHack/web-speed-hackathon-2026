@@ -8,13 +8,13 @@
   "main": "src/index.js",
   "scripts": {
     "start": "tsx src/index.ts",
+    "dev": "tsx --watch src/index.ts",
     "typecheck": "tsc --noEmit",
     "seed:generate": "tsx ./scripts/generateSeeds.ts",
     "seed:insert": "tsx ./scripts/insertSeeds.ts"
   },
   "dependencies": {
     "@tsconfig/strictest": "2.0.8",
-    "@web-speed-hackathon-2026/server": "workspace:*",
     "bcrypt": "6.0.0",
     "body-parser": "2.2.0",
     "connect-history-api-fallback": "2.0.0",

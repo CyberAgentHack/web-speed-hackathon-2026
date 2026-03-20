@@ -1,8 +1,3 @@
-import $ from "jquery";
-(window as any).jQuery = $;
-(window as any).$ = $;
-await import("jquery-binarytransport");
-
 import "./index.css";
 import "./buildinfo";
 
