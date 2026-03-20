@@ -1,7 +1,9 @@
-import moment from "moment";
-
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
+import {
+  formatLongDateJa,
+  toISOString,
+} from "@web-speed-hackathon-2026/client/src/utils/date_format";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
@@ -10,7 +12,10 @@ interface Props {
 
 export const CommentItem = ({ comment }: Props) => {
   return (
-    <article className="hover:bg-cax-surface-subtle px-1 sm:px-4">
+    <article
+      className="hover:bg-cax-surface-subtle px-1 sm:px-4"
+      style={{ containIntrinsicSize: "220px", contentVisibility: "auto" }}
+    >
       <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
         <div className="shrink-0 grow-0 pr-2 sm:pr-4">
           <Link
@@ -42,9 +47,7 @@ export const CommentItem = ({ comment }: Props) => {
             <TranslatableText text={comment.text} />
           </div>
           <p className="text-cax-text-muted pt-1 text-xs">
-            <time dateTime={moment(comment.createdAt).toISOString()}>
-              {moment(comment.createdAt).locale("ja").format("LL")}
-            </time>
+            <time dateTime={toISOString(comment.createdAt)}>{formatLongDateJa(comment.createdAt)}</time>
           </p>
         </div>
       </div>

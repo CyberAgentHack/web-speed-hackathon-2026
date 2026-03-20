@@ -1,14 +1,10 @@
-import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { SubmissionError } from "redux-form";
 
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
+import { AuthModalPage } from "@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { HTTPError, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
-
-const LazyAuthModalPage = lazy(async () => {
-  const module = await import("@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage");
-  return { default: module.AuthModalPage };
-});
 
 interface Props {
   id: string;
@@ -41,7 +37,6 @@ function getErrorCode(err: unknown, type: "signin" | "signup"): string {
 
 export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
-  const [hasOpened, setHasOpened] = useState(false);
   const [resetKey, setResetKey] = useState(0);
   useEffect(() => {
     if (!ref.current) return;
@@ -50,7 +45,6 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
     const handleToggle = () => {
       // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
       setResetKey((key) => key + 1);
-      setHasOpened((current) => current || element.open);
     };
     element.addEventListener("toggle", handleToggle);
     return () => {
@@ -85,15 +79,11 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
 
   return (
     <Modal id={id} ref={ref} closedby="any">
-      {hasOpened ? (
-        <Suspense fallback={null}>
-          <LazyAuthModalPage
-            key={resetKey}
-            onRequestCloseModal={handleRequestCloseModal}
-            onSubmit={handleSubmit}
-          />
-        </Suspense>
-      ) : null}
+      <AuthModalPage
+        key={resetKey}
+        onRequestCloseModal={handleRequestCloseModal}
+        onSubmit={handleSubmit}
+      />
     </Modal>
   );
 };

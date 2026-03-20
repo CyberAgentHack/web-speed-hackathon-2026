@@ -21,6 +21,7 @@ const SearchInput = ({ input, meta }: WrappedFieldProps) => (
   <div className="flex flex-1 flex-col">
     <input
       {...input}
+      aria-label="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
       className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
         meta.touched && meta.error
           ? "border-cax-danger focus:border-cax-danger"
@@ -52,21 +53,32 @@ const SearchPageComponent = ({
     }
 
     let isMounted = true;
-    void import("@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer")
-      .then(({ analyzeSentiment }) => analyzeSentiment(parsed.keywords))
-      .then((result) => {
-        if (isMounted) {
-          setIsNegative(result.label === "negative");
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setIsNegative(false);
-        }
-      });
+    const run = () => {
+      void import("@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer")
+        .then(({ analyzeSentiment }) => analyzeSentiment(parsed.keywords))
+        .then((result) => {
+          if (isMounted) {
+            setIsNegative(result.label === "negative");
+          }
+        })
+        .catch(() => {
+          if (isMounted) {
+            setIsNegative(false);
+          }
+        });
+    };
+
+    const timerId = window.setTimeout(() => {
+      if ("requestIdleCallback" in window) {
+        window.requestIdleCallback(run, { timeout: 5000 });
+      } else {
+        run();
+      }
+    }, 2000);
 
     return () => {
       isMounted = false;
+      window.clearTimeout(timerId);
     };
   }, [parsed.keywords]);
 

@@ -70,6 +70,7 @@ searchRouter.get("/search", async (req, res) => {
       ],
       limit,
       offset,
+      subQuery: false,
       where: dateWhere,
     });
   }

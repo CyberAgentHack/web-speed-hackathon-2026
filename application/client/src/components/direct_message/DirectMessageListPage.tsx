@@ -1,10 +1,10 @@
-import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
+import { formatRelativeFromNowJa } from "@web-speed-hackathon-2026/client/src/utils/date_format";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
@@ -85,7 +85,11 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
               .some((m) => !m.isRead);
 
             return (
-              <li className="grid" key={conversation.id}>
+              <li
+                className="grid"
+                key={conversation.id}
+                style={{ containIntrinsicSize: "120px", contentVisibility: "auto" }}
+              >
                 <Link className="hover:bg-cax-surface-subtle px-4" to={`/dm/${conversation.id}`}>
                   <div className="border-cax-border flex gap-4 border-b px-4 pt-2 pb-4">
                     <img
@@ -104,7 +108,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {formatRelativeFromNowJa(lastMessage.createdAt)}
                           </time>
                         )}
                       </div>
