@@ -3,6 +3,7 @@ node_modules
 **/dist
 .git
 *.log
+scoring-tool
 
 application/server/seeds
 application/server/upload
