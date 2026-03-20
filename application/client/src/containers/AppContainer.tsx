@@ -77,7 +77,7 @@ export const AppContainer = () => {
       </AppPage>
 
       <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
-      <NewPostModalContainer id={newPostModalId} />
+      {activeUser ? <NewPostModalContainer id={newPostModalId} /> : null}
     </HelmetProvider>
   );
 };
