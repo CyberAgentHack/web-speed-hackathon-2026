@@ -1,6 +1,6 @@
 import { Router } from "express";
 import httpErrors from "http-errors";
-import { col, where, Op } from "sequelize";
+import { Op } from "sequelize";
 
 import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
 import {
@@ -16,20 +16,33 @@ directMessageRouter.get("/dm", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversations = await DirectMessageConversation.findAll({
+  const conversations = await DirectMessageConversation.unscoped().findAll({
     where: {
-      [Op.and]: [
-        { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
-        where(col("messages.id"), { [Op.not]: null }),
-      ],
+      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
-    order: [[col("messages.createdAt"), "DESC"]],
+    include: [
+      { association: "initiator", include: [{ association: "profileImage" }] },
+      { association: "member", include: [{ association: "profileImage" }] },
+      {
+        association: "messages",
+        required: true,
+        limit: 1,
+        order: [["createdAt", "DESC"]],
+        include: [{ association: "sender", include: [{ association: "profileImage" }] }],
+      },
+    ],
   });
 
-  const sorted = conversations.map((c) => ({
-    ...c.toJSON(),
-    messages: c.messages?.reverse(),
-  }));
+  const sorted = [...conversations]
+    .sort((a, b) => {
+      const aTime = a.messages?.[0]?.createdAt?.getTime() ?? 0;
+      const bTime = b.messages?.[0]?.createdAt?.getTime() ?? 0;
+      return bTime - aTime;
+    })
+    .map((c) => ({
+      ...c.toJSON(),
+      messages: c.messages,
+    }));
 
   return res.status(200).type("application/json").send(sorted);
 });

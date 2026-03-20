@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { Op } from "sequelize";
 
-import { Post } from "@web-speed-hackathon-2026/server/src/models";
+import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 
 export const searchRouter = Router();
@@ -23,70 +23,60 @@ searchRouter.get("/search", async (req, res) => {
   const searchTerm = keywords ? `%${keywords}%` : null;
   const limit = req.query["limit"] != null ? Number(req.query["limit"]) : undefined;
   const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
+  const where: Record<string | symbol, unknown> = {};
 
-  // 日付条件を構築
-  const dateConditions: Record<symbol, Date>[] = [];
-  if (sinceDate) {
-    dateConditions.push({ [Op.gte]: sinceDate });
+  if (sinceDate || untilDate) {
+    const createdAt: Record<symbol, Date> = {};
+    if (sinceDate) {
+      createdAt[Op.gte] = sinceDate;
+    }
+    if (untilDate) {
+      createdAt[Op.lte] = untilDate;
+    }
+    where["createdAt"] = createdAt;
   }
-  if (untilDate) {
-    dateConditions.push({ [Op.lte]: untilDate });
+
+  if (searchTerm) {
+    const users = await User.unscoped().findAll({
+      attributes: ["id"],
+      where: {
+        [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
+      },
+    });
+    const userIds = users.map((user) => user.id);
+
+    where[Op.or] = [
+      { text: { [Op.like]: searchTerm } },
+      ...(userIds.length > 0 ? [{ userId: { [Op.in]: userIds } }] : []),
+    ];
   }
-  const dateWhere =
-    dateConditions.length > 0 ? { createdAt: Object.assign({}, ...dateConditions) } : {};
 
-  // テキスト検索条件
-  const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
-
-  const postsByText = await Post.findAll({
+  const idRows = await Post.unscoped().findAll({
+    attributes: ["id"],
     limit,
     offset,
+    order: [
+      ["createdAt", "DESC"],
+      ["id", "DESC"],
+    ],
+    where,
+  });
+  const postIds = idRows.map((row) => row.id);
+
+  if (postIds.length === 0) {
+    return res.status(200).type("application/json").send([]);
+  }
+
+  const posts = await Post.findAll({
     where: {
-      ...textWhere,
-      ...dateWhere,
+      id: postIds,
     },
   });
 
-  // ユーザー名/名前での検索（キーワードがある場合のみ）
-  let postsByUser: typeof postsByText = [];
-  if (searchTerm) {
-    postsByUser = await Post.findAll({
-      include: [
-        {
-          association: "user",
-          attributes: { exclude: ["profileImageId"] },
-          include: [{ association: "profileImage" }],
-          required: true,
-          where: {
-            [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
-          },
-        },
-        {
-          association: "images",
-          through: { attributes: [] },
-        },
-        { association: "movie" },
-        { association: "sound" },
-      ],
-      limit,
-      offset,
-      where: dateWhere,
-    });
-  }
+  const postById = new Map(posts.map((post) => [post.id, post]));
+  const orderedPosts = postIds
+    .map((postId) => postById.get(postId))
+    .filter((post): post is Post => post !== undefined);
 
-  const postIdSet = new Set<string>();
-  const mergedPosts: typeof postsByText = [];
-
-  for (const post of [...postsByText, ...postsByUser]) {
-    if (!postIdSet.has(post.id)) {
-      postIdSet.add(post.id);
-      mergedPosts.push(post);
-    }
-  }
-
-  mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-
-  const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
-
-  return res.status(200).type("application/json").send(result);
+  return res.status(200).type("application/json").send(orderedPosts);
 });
