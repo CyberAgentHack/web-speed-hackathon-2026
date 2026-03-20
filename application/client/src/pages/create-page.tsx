@@ -36,6 +36,11 @@ export function createPage(renderContent: (props: { activeUser: Models.User | nu
     const hasSSRData = ssrData?.activeUser !== undefined;
     const [activeUser, setActiveUser] = useState<Models.User | null>(hasSSRData ? (ssrData?.activeUser ?? null) : null);
     const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(!hasSSRData);
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+      setIsMounted(true);
+    }, []);
 
     useEffect(() => {
       if (hasSSRData) return;
@@ -74,10 +79,12 @@ export function createPage(renderContent: (props: { activeUser: Models.User | nu
           {renderContent({ activeUser, authModalId })}
         </AppPage>
 
-        <Suspense fallback={null}>
-          <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
-          <NewPostModalContainer id={newPostModalId} />
-        </Suspense>
+        {isMounted && (
+          <Suspense fallback={null}>
+            <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
+            <NewPostModalContainer id={newPostModalId} />
+          </Suspense>
+        )}
       </SSRDataContext.Provider>
     );
   };
