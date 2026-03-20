@@ -11,8 +11,6 @@ let _sequelize: Sequelize | null = null;
 
 export async function initializeSequelize() {
   const prevSequelize = _sequelize;
-  _sequelize = null;
-  await prevSequelize?.close();
 
   const TEMP_PATH = path.resolve(
     await fs.mkdtemp(path.resolve(os.tmpdir(), "./wsh-")),
@@ -20,14 +18,20 @@ export async function initializeSequelize() {
   );
   await fs.copyFile(DATABASE_PATH, TEMP_PATH);
 
-  _sequelize = new Sequelize({
+  const nextSequelize = new Sequelize({
     dialect: "sqlite",
     logging: false,
     storage: TEMP_PATH,
   });
-  initModels(_sequelize);
+  initModels(nextSequelize);
 
   // Enable WAL mode for concurrent read access during benchmark testing
   // This prevents write locks from blocking all read operations
-  await _sequelize.query("PRAGMA journal_mode = WAL");
+  await nextSequelize.query("PRAGMA journal_mode = WAL");
+
+  // Swap to the new instance before closing the old one
+  _sequelize = nextSequelize;
+
+  // Close old connection after models are rebound
+  await prevSequelize?.close().catch(() => {});
 }
