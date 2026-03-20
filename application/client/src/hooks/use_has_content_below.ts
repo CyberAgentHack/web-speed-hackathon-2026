@@ -1,4 +1,4 @@
-import { RefObject, useEffect, useState } from "react";
+import { type RefObject, useEffect, useState } from "react";
 
 /**
  * contentEndRef の要素が boundaryRef の要素より下にあるかを監視する。

@@ -56,3 +56,5 @@ https://github.com/CyberAgentHack/web-speed-hackathon-2026-scoring/issues/new?te
     - (Original Font) Source Han Serif JP: OFT 1.1 by Adobe http://www.adobe.com/
 - Text
   - 太宰治『走れメロス』（1940年）
+
+deploy

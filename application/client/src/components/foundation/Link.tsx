@@ -1,13 +1,12 @@
-import { AnchorHTMLAttributes, forwardRef } from "react";
-import { To, useHref } from "react-router";
+import { type To, Link as RrLink } from "react-router";
 
-type Props = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href"> & {
+type Props = {
   to: To;
+  children: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
 };
 
-export const Link = forwardRef<HTMLAnchorElement, Props>(({ to, ...props }, ref) => {
-  const href = useHref(to);
-  return <a ref={ref} href={href} {...props} />;
-});
-
-Link.displayName = "Link";
+export const Link = ({ to, ...props }: Props) => {
+  return <RrLink to={to} {...props} />;
+};

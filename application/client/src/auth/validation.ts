@@ -1,6 +1,6 @@
-import { FormErrors } from "redux-form";
+import type { FormErrors } from "redux-form";
 
-import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
+import type { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 
 export const validate = (values: AuthFormData): FormErrors<AuthFormData> => {
   const errors: FormErrors<AuthFormData> = {};
@@ -21,7 +21,8 @@ export const validate = (values: AuthFormData): FormErrors<AuthFormData> => {
   }
 
   if (!/^[a-zA-Z0-9_]*$/.test(normalizedUsername)) {
-    errors.username = "ユーザー名に使用できるのは英数字とアンダースコア(_)のみです";
+    errors.username =
+      "ユーザー名に使用できるのは英数字とアンダースコア(_)のみです";
   }
   if (normalizedUsername.length === 0) {
     errors.username = "ユーザー名を入力してください";

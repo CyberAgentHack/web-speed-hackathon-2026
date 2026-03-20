@@ -1,9 +1,35 @@
-import _ from "lodash";
 import { useEffect, useRef, useState } from "react";
 
 interface ParsedData {
   max: number;
   peaks: number[];
+}
+
+function zip<T, U, V>(
+  a: Iterable<T>,
+  b: Iterable<U>,
+  fn: (a: T, b: U) => V,
+): V[] {
+  const result: V[] = [];
+  const aIter = a[Symbol.iterator]();
+  const bIter = b[Symbol.iterator]();
+  while (true) {
+    const aNext = aIter.next();
+    const bNext = bIter.next();
+    if (aNext.done || bNext.done) {
+      break;
+    }
+    result.push(fn(aNext.value, bNext.value));
+  }
+  return result;
+}
+
+function chunk<T>(array: T[], size: number): T[][] {
+  const result: T[][] = [];
+  for (let i = 0; i < array.length; i += size) {
+    result.push(array.slice(i, i + size));
+  }
+  return result;
 }
 
 async function calculate(data: ArrayBuffer): Promise<ParsedData> {
@@ -12,18 +38,20 @@ async function calculate(data: ArrayBuffer): Promise<ParsedData> {
   // 音声をデコードする
   const buffer = await audioCtx.decodeAudioData(data.slice(0));
   // 左の音声データの絶対値を取る
-  const leftData = _.map(buffer.getChannelData(0), Math.abs);
+  const leftData = buffer.getChannelData(0).map((value) => Math.abs(value));
   // 右の音声データの絶対値を取る
-  const rightData = _.map(buffer.getChannelData(1), Math.abs);
+  const rightData = buffer.getChannelData(1).map((value) => Math.abs(value));
 
   // 左右の音声データの平均を取る
-  const normalized = _.map(_.zip(leftData, rightData), _.mean);
+  const normalized = zip(leftData, rightData, (a, b) => (a + b) / 2);
   // 100 個の chunk に分ける
-  const chunks = _.chunk(normalized, Math.ceil(normalized.length / 100));
+  const chunks = chunk(normalized, Math.ceil(normalized.length / 100));
   // chunk ごとに平均を取る
-  const peaks = _.map(chunks, _.mean);
+  const peaks = chunks.map(
+    (chunk) => chunk.reduce((sum, value) => sum + value, 0) / chunk.length,
+  );
   // chunk の平均の中から最大値を取る
-  const max = _.max(peaks) ?? 0;
+  const max = Math.max(...peaks, 0);
 
   return { max, peaks };
 }
@@ -46,7 +74,11 @@ export const SoundWaveSVG = ({ soundData }: Props) => {
   }, [soundData]);
 
   return (
-    <svg className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1">
+    <svg
+      className="h-full w-full"
+      preserveAspectRatio="none"
+      viewBox="0 0 100 1"
+    >
       {peaks.map((peak, idx) => {
         const ratio = peak / max;
         return (

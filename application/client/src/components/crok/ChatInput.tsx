@@ -1,7 +1,4 @@
-import Bluebird from "bluebird";
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
 import {
-  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -9,13 +6,9 @@ import {
   type FormEvent,
   type KeyboardEvent,
 } from "react";
-
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import {
-  extractTokens,
-  filterSuggestionsBM25,
-} from "@web-speed-hackathon-2026/client/src/utils/bm25_search";
-import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { useDebounceEffect } from "../../hooks/use_debounce_effect";
+import { fetchSuggestions } from "../../utils/fetch_with_cache";
 
 interface Props {
   isStreaming: boolean;
@@ -23,7 +16,10 @@ interface Props {
 }
 
 // トークン単位でハイライト
-function highlightMatchByTokens(text: string, queryTokens: string[]): React.ReactNode {
+function highlightMatchByTokens(
+  text: string,
+  queryTokens: string[],
+): React.ReactNode {
   if (queryTokens.length === 0) return text;
 
   const lowerText = text.toLowerCase();
@@ -79,7 +75,6 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
@@ -92,79 +87,42 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   }, [suggestions, showSuggestions]);
 
-  // 初回にkuromojiトークナイザーを構築
-  useEffect(() => {
-    let mounted = true;
+  useDebounceEffect(
+    () => {
+      let cancelled = false;
 
-    const init = async () => {
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
-      if (mounted) {
-        setTokenizer(nextTokenizer);
-      }
-    };
-    init();
+      const updateSuggestions = async () => {
+        if (!inputValue.trim()) {
+          setSuggestions([]);
+          setQueryTokens([]);
+          setShowSuggestions(false);
+          return;
+        }
 
-    return () => {
-      mounted = false;
-    };
-  }, []);
+        const { suggestions: candidates, tokens } =
+          await fetchSuggestions(inputValue);
+        if (cancelled) {
+          return;
+        }
 
-  useEffect(() => {
-    let cancelled = false;
+        setQueryTokens(tokens);
+        setSuggestions(candidates);
+        setShowSuggestions(candidates.length > 0);
+      };
 
-    const updateSuggestions = async () => {
-      if (!tokenizer || !inputValue.trim()) {
-        setSuggestions([]);
-        setQueryTokens([]);
-        setShowSuggestions(false);
-        return;
-      }
+      void updateSuggestions();
 
-      const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-        "/api/v1/crok/suggestions",
-      );
-      if (cancelled) {
-        return;
-      }
-
-      const tokens = extractTokens(tokenizer.tokenize(inputValue));
-      const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
-
-      if (cancelled) {
-        return;
-      }
-
-      setQueryTokens(tokens);
-      setSuggestions(results);
-      setShowSuggestions(results.length > 0);
-    };
-
-    void updateSuggestions();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [inputValue, tokenizer]);
-
-  const adjustTextareaHeight = () => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = "auto";
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
-    }
-  };
-
-  const resetTextareaHeight = () => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
-  };
+      return () => {
+        cancelled = true;
+      };
+    },
+    100,
+    [inputValue],
+  );
 
   const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setInputValue(value);
-    adjustTextareaHeight();
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -182,7 +140,6 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
       setSuggestions([]);
       setQueryTokens([]);
       setShowSuggestions(false);
-      resetTextareaHeight();
     }
   };
 
@@ -218,7 +175,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
         <div className="border-cax-border bg-cax-surface-subtle focus-within:border-cax-brand-strong relative flex items-end rounded-2xl border transition-colors">
           <textarea
             ref={textareaRef}
-            className="text-cax-text placeholder-cax-text-subtle max-h-[200px] min-h-[52px] flex-1 resize-none overflow-y-auto bg-transparent py-3 pr-2 pl-4 focus:outline-none"
+            className="text-cax-text field-sizing-content placeholder-cax-text-subtle max-h-[200px] min-h-[52px] flex-1 resize-none overflow-y-auto bg-transparent py-3 pr-2 pl-4 focus:outline-none"
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             placeholder="メッセージを入力..."
@@ -240,7 +197,9 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
           </div>
         </div>
         <p className="text-cax-text-subtle mt-2 text-center text-xs">
-          {isStreaming ? "AIが応答を生成中..." : "Crok AIは間違いを起こす可能性があります。"}
+          {isStreaming
+            ? "AIが応答を生成中..."
+            : "Crok AIは間違いを起こす可能性があります。"}
         </p>
       </form>
     </div>

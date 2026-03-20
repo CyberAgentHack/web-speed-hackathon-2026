@@ -74,7 +74,9 @@ async function readJsonlFileBatched<T>(
       }
     } catch {
       console.error(`Error parsing JSON in ${filename} at line ${lineNumber}`);
-      throw new Error(`Invalid JSONL format in ${filename} at line ${lineNumber}`);
+      throw new Error(
+        `Invalid JSONL format in ${filename} at line ${lineNumber}`,
+      );
     }
   }
 
@@ -85,9 +87,12 @@ async function readJsonlFileBatched<T>(
 
 export async function insertSeeds(sequelize: Sequelize) {
   await sequelize.transaction(async (transaction) => {
-    await readJsonlFileBatched<ProfileImageSeed>("profileImages.jsonl", async (batch) => {
-      await ProfileImage.bulkCreate(batch, { transaction });
-    });
+    await readJsonlFileBatched<ProfileImageSeed>(
+      "profileImages.jsonl",
+      async (batch) => {
+        await ProfileImage.bulkCreate(batch, { transaction });
+      },
+    );
     await readJsonlFileBatched<ImageSeed>("images.jsonl", async (batch) => {
       await Image.bulkCreate(batch, { transaction });
     });
@@ -118,11 +123,22 @@ export async function insertSeeds(sequelize: Sequelize) {
         await DirectMessageConversation.bulkCreate(batch, { transaction });
       },
     );
-    await readJsonlFileBatched<DirectMessageSeed>("directMessages.jsonl", async (batch) => {
-      await DirectMessage.bulkCreate(batch, { transaction });
-    });
-    await readJsonlFileBatched<QaSuggestionSeed>("qaSuggestions.jsonl", async (batch) => {
-      await QaSuggestion.bulkCreate(batch, { transaction });
-    });
+    await readJsonlFileBatched<DirectMessageSeed>(
+      "directMessages.jsonl",
+      async (batch) => {
+        await DirectMessage.bulkCreate(batch, { transaction });
+      },
+    );
+    await readJsonlFileBatched<QaSuggestionSeed>(
+      "qaSuggestions.jsonl",
+      async (batch) => {
+        await QaSuggestion.bulkCreate(batch, { transaction });
+      },
+    );
   });
+
+  // DirectMessagesを降順で取得するためのインデックス
+  await sequelize.query(
+    "CREATE INDEX idx_messages_conversation_created ON DirectMessages (conversationId, createdAt DESC)",
+  );
 }

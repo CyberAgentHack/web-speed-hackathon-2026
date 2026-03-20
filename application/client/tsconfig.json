@@ -6,12 +6,20 @@
     "jsx": "react-jsx",
     "target": "esnext",
     "lib": ["DOM", "ESNext"],
+    "types": ["vite/client"],
     "module": "esnext",
     "moduleResolution": "bundler",
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
     "paths": {
       "@web-speed-hackathon-2026/client/*": ["./*"]
     },
     "exactOptionalPropertyTypes": false
   },
-  "include": ["./src", "./types"]
+  "include": ["./src", "./types"],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
 }

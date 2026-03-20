@@ -1,5 +1,4 @@
 import { useCallback, useMemo, useState } from "react";
-import { Helmet } from "react-helmet";
 
 import { CrokGate } from "@web-speed-hackathon-2026/client/src/components/crok/CrokGate";
 import { CrokPage } from "@web-speed-hackathon-2026/client/src/components/crok/CrokPage";
@@ -23,7 +22,10 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
         setMessages((prev) => {
           const lastMessage = prev[prev.length - 1];
           if (lastMessage?.role === "assistant") {
-            return [...prev.slice(0, -1), { ...lastMessage, content: finalContent }];
+            return [
+              ...prev.slice(0, -1),
+              { ...lastMessage, content: finalContent },
+            ];
           }
           return prev;
         });
@@ -72,16 +74,21 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
 
   if (!activeUser) {
     return (
-      <CrokGate headline="Crokを利用するにはサインインしてください" authModalId={authModalId} />
+      <CrokGate
+        headline="Crokを利用するにはサインインしてください"
+        authModalId={authModalId}
+      />
     );
   }
 
   return (
     <>
-      <Helmet>
-        <title>Crok - CaX</title>
-      </Helmet>
-      <CrokPage isStreaming={isStreaming} messages={displayMessages} onSendMessage={sendMessage} />
+      <title>Crok - CaX</title>
+      <CrokPage
+        isStreaming={isStreaming}
+        messages={displayMessages}
+        onSendMessage={sendMessage}
+      />
     </>
   );
 };

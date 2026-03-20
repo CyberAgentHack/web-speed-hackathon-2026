@@ -1,4 +1,9 @@
-import { ComponentProps, isValidElement, ReactElement, ReactNode } from "react";
+import {
+  type ComponentProps,
+  isValidElement,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import SyntaxHighlighter from "react-syntax-highlighter";
 import { atomOneLight } from "react-syntax-highlighter/dist/esm/styles/hljs";
 
@@ -11,7 +16,9 @@ const getLanguage = (children: ReactElement<ComponentProps<"code">>) => {
   return "javascript";
 };
 
-const isCodeElement = (children: ReactNode): children is ReactElement<ComponentProps<"code">> =>
+const isCodeElement = (
+  children: ReactNode,
+): children is ReactElement<ComponentProps<"code">> =>
   isValidElement(children) && children.type === "code";
 
 export const CodeBlock = ({ children }: ComponentProps<"pre">) => {

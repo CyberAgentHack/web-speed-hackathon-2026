@@ -1,0 +1,53 @@
+import type { IpadicFeatures, Tokenizer } from "kuromoji";
+import { BM25 } from "bayesian-bm25";
+
+const STOP_POS = new Set(["助詞", "助動詞", "記号"]);
+
+export function extractTokens(tokens: IpadicFeatures[]): string[] {
+  return tokens
+    .filter(
+      (t) => t.surface_form !== "" && t.pos !== "" && !STOP_POS.has(t.pos),
+    )
+    .map((t) => t.surface_form.toLowerCase());
+}
+
+const zipWith = <S, T, U>(a: S[], b: T[], handler: (a: S, b: T) => U) => {
+  const result: U[] = [];
+  for (let i = 0; i < a.length; i++) {
+    result.push(handler(a[i]!, b[i]!));
+  }
+  return result;
+};
+
+/**
+ * BM25で候補をスコアリングして、クエリと類似度の高い上位10件を返す
+ */
+export function filterSuggestionsBM25(
+  tokenizer: Tokenizer<IpadicFeatures>,
+  candidates: string[],
+  queryTokens: string[],
+): string[] {
+  if (queryTokens.length === 0) return [];
+
+  const bm25 = new BM25({ k1: 1.2, b: 0.75 });
+
+  const tokenizedCandidates = candidates.map((c) =>
+    extractTokens(tokenizer.tokenize(c)),
+  );
+  bm25.index(tokenizedCandidates);
+
+  const results = zipWith(
+    candidates,
+    bm25.getScores(queryTokens),
+    (text, score) => {
+      return { text, score };
+    },
+  );
+
+  // スコアが高い（＝類似度が高い）ものが下に来るように、上位10件を取得する
+  return results
+    .filter((r) => r.score > 0)
+    .toSorted((a, b) => a.score - b.score)
+    .slice(-10)
+    .map((s) => s.text);
+}

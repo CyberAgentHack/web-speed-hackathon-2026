@@ -1,11 +1,10 @@
-import moment from "moment";
-
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
 import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
 import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { formatDate } from "../../utils/format-date";
 
 interface Props {
   post: Models.Post;
@@ -52,12 +51,12 @@ export const PostItem = ({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea images={post.images} isFv />
             </div>
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
+              <MovieArea movie={post.movie} isFv />
             </div>
           ) : null}
           {post.sound ? (
@@ -66,9 +65,12 @@ export const PostItem = ({ post }: Props) => {
             </div>
           ) : null}
           <p className="mt-2 text-sm sm:mt-4">
-            <Link className="text-cax-text-muted hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+            <Link
+              className="text-cax-text-muted hover:underline"
+              to={`/posts/${post.id}`}
+            >
+              <time dateTime={new Date(post.createdAt).toISOString()}>
+                {formatDate(post.createdAt, "yyyy年M月d日")}
               </time>
             </Link>
           </p>

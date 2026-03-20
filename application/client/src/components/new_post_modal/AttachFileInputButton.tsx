@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { ChangeEventHandler, ReactNode } from "react";
+import type { ChangeEventHandler, ReactNode } from "react";
 
 interface Props {
   accept: string;
@@ -9,7 +9,13 @@ interface Props {
   onChange: ChangeEventHandler<HTMLInputElement>;
 }
 
-export const AttachFileInputButton = ({ accept, active, icon, label, onChange }: Props) => {
+export const AttachFileInputButton = ({
+  accept,
+  active,
+  icon,
+  label,
+  onChange,
+}: Props) => {
   return (
     <label className="focus-within:outline-cax-brand relative flex cursor-pointer items-center justify-center overflow-hidden rounded-full focus-within:outline-2 focus-within:outline-offset-2">
       <span

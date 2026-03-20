@@ -1,4 +1,3 @@
-import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -7,15 +6,22 @@ import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { formatDateFromNow } from "../../utils/format-date";
 
 interface Props {
   activeUser: Models.User;
   newDmModalId: string;
 }
 
+type DmConversation = Omit<Models.DirectMessageConversation, "messages"> & {
+  lastMessage: Models.DirectMessage | null;
+  lastPeerMessage: Models.DirectMessage | null;
+};
+
 export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
-  const [conversations, setConversations] =
-    useState<Array<Models.DirectMessageConversation> | null>(null);
+  const [conversations, setConversations] = useState<DmConversation[] | null>(
+    null,
+  );
   const [error, setError] = useState<Error | null>(null);
 
   const loadConversations = useCallback(async () => {
@@ -24,7 +30,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     }
 
     try {
-      const conversations = await fetchJSON<Array<Models.DirectMessageConversation>>("/api/v1/dm");
+      const conversations = await fetchJSON<DmConversation[]>("/api/v1/dm");
       setConversations(conversations);
       setError(null);
     } catch (error) {
@@ -53,7 +59,9 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
           <Button
             command="show-modal"
             commandfor={newDmModalId}
-            leftItem={<FontAwesomeIcon iconType="paper-plane" styleType="solid" />}
+            leftItem={
+              <FontAwesomeIcon iconType="paper-plane" styleType="solid" />
+            }
           >
             新しくDMを始める
           </Button>
@@ -61,7 +69,9 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
       </header>
 
       {error != null ? (
-        <p className="text-cax-danger px-4 py-6 text-center text-sm">DMの取得に失敗しました</p>
+        <p className="text-cax-danger px-4 py-6 text-center text-sm">
+          DMの取得に失敗しました
+        </p>
       ) : conversations.length === 0 ? (
         <p className="text-cax-text-muted px-4 py-6 text-center">
           まだDMで会話した相手がいません。
@@ -69,20 +79,21 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
       ) : (
         <ul data-testid="dm-list">
           {conversations.map((conversation) => {
-            const { messages } = conversation;
+            const { lastMessage, lastPeerMessage } = conversation;
             const peer =
               conversation.initiator.id !== activeUser.id
                 ? conversation.initiator
                 : conversation.member;
 
-            const lastMessage = messages.at(-1);
-            const hasUnread = messages
-              .filter((m) => m.sender.id === peer.id)
-              .some((m) => !m.isRead);
+            const hasUnread =
+              lastPeerMessage != null && !lastPeerMessage.isRead;
 
             return (
               <li className="grid" key={conversation.id}>
-                <Link className="hover:bg-cax-surface-subtle px-4" to={`/dm/${conversation.id}`}>
+                <Link
+                  className="hover:bg-cax-surface-subtle px-4"
+                  to={`/dm/${conversation.id}`}
+                >
                   <div className="border-cax-border flex gap-4 border-b px-4 pt-2 pb-4">
                     <img
                       alt={peer.profileImage.alt}
@@ -93,18 +104,22 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-bold">{peer.name}</p>
-                          <p className="text-cax-text-muted text-xs">@{peer.username}</p>
+                          <p className="text-cax-text-muted text-xs">
+                            @{peer.username}
+                          </p>
                         </div>
                         {lastMessage != null && (
                           <time
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {formatDateFromNow(lastMessage.createdAt)}
                           </time>
                         )}
                       </div>
-                      <p className="mt-1 line-clamp-2 text-sm wrap-anywhere">{lastMessage?.body}</p>
+                      <p className="mt-1 line-clamp-2 text-sm wrap-anywhere">
+                        {lastMessage?.body}
+                      </p>
                       {hasUnread ? (
                         <span className="bg-cax-brand-soft text-cax-brand mt-2 inline-flex w-fit rounded-full px-3 py-0.5 text-xs">
                           未読

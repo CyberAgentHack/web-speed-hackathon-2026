@@ -1,10 +1,10 @@
-import { Field, InjectedFormProps, reduxForm } from "redux-form";
+import { Field, type InjectedFormProps, reduxForm } from "redux-form";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FormInputField } from "@web-speed-hackathon-2026/client/src/components/foundation/FormInputField";
 import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/components/modal/ModalErrorMessage";
 import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/components/modal/ModalSubmitButton";
-import { NewDirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
+import type { NewDirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/direct_message/validation";
 
 interface Props {
@@ -29,12 +29,17 @@ const NewDirectMessageModalPageComponent = ({
           props={{
             label: "ユーザー名",
             placeholder: "username",
-            leftItem: <span className="text-cax-text-subtle leading-none">@</span>,
+            leftItem: (
+              <span className="text-cax-text-subtle leading-none">@</span>
+            ),
           }}
         />
 
         <div className="grid gap-y-2">
-          <ModalSubmitButton disabled={submitting || invalid} loading={submitting}>
+          <ModalSubmitButton
+            disabled={submitting || invalid}
+            loading={submitting}
+          >
             DMを開始
           </ModalSubmitButton>
           <Button variant="secondary" command="close" commandfor={id}>
@@ -48,7 +53,10 @@ const NewDirectMessageModalPageComponent = ({
   );
 };
 
-export const NewDirectMessageModalPage = reduxForm<NewDirectMessageFormData, Props>({
+export const NewDirectMessageModalPage = reduxForm<
+  NewDirectMessageFormData,
+  Props
+>({
   form: "newDirectMessage",
   validate,
   initialValues: {

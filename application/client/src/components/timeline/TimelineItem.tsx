@@ -1,5 +1,4 @@
-import moment from "moment";
-import { MouseEventHandler, useCallback } from "react";
+import { type MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
@@ -7,8 +6,12 @@ import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/
 import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { formatDate } from "../../utils/format-date";
 
-const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Element): boolean => {
+const isClickedAnchorOrButton = (
+  target: EventTarget | null,
+  currentTarget: Element,
+): boolean => {
   while (target !== null && target instanceof Element) {
     const tagName = target.tagName.toLowerCase();
     if (["button", "a"].includes(tagName)) {
@@ -28,9 +31,10 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
  */
 interface Props {
   post: Models.Post;
+  isFv: boolean;
 }
 
-export const TimelineItem = ({ post }: Props) => {
+export const TimelineItem = ({ post, isFv }: Props) => {
   const navigate = useNavigate();
 
   /**
@@ -39,7 +43,10 @@ export const TimelineItem = ({ post }: Props) => {
   const handleClick = useCallback<MouseEventHandler>(
     (ev) => {
       const isSelectedText = document.getSelection()?.isCollapsed === false;
-      if (!isClickedAnchorOrButton(ev.target, ev.currentTarget) && !isSelectedText) {
+      if (
+        !isClickedAnchorOrButton(ev.target, ev.currentTarget) &&
+        !isSelectedText
+      ) {
         navigate(`/posts/${post.id}`);
       }
     },
@@ -47,7 +54,10 @@ export const TimelineItem = ({ post }: Props) => {
   );
 
   return (
-    <article className="hover:bg-cax-surface-subtle px-1 sm:px-4" onClick={handleClick}>
+    <article
+      className="hover:bg-cax-surface-subtle px-1 sm:px-4"
+      onClick={handleClick}
+    >
       <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
         <div className="shrink-0 grow-0 pr-2 sm:pr-4">
           <Link
@@ -55,8 +65,10 @@ export const TimelineItem = ({ post }: Props) => {
             to={`/users/${post.user.username}`}
           >
             <img
-              alt={post.user.profileImage.alt}
               src={getProfileImagePath(post.user.profileImage.id)}
+              alt={post.user.profileImage.alt}
+              loading={isFv ? "eager" : "lazy"}
+              decoding="async"
             />
           </Link>
         </div>
@@ -75,9 +87,12 @@ export const TimelineItem = ({ post }: Props) => {
               @{post.user.username}
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
-            <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+            <Link
+              className="text-cax-text-muted pr-1 hover:underline"
+              to={`/posts/${post.id}`}
+            >
+              <time dateTime={new Date(post.createdAt).toISOString()}>
+                {formatDate(post.createdAt, "yyyy年M月d日")}
               </time>
             </Link>
           </p>
@@ -86,12 +101,12 @@ export const TimelineItem = ({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea images={post.images} isFv={isFv} />
             </div>
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
+              <MovieArea movie={post.movie} isFv={isFv} />
             </div>
           ) : null}
           {post.sound ? (

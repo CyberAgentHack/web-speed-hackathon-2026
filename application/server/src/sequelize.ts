@@ -27,3 +27,5 @@ export async function initializeSequelize() {
   });
   initModels(_sequelize);
 }
+
+export { _sequelize as sequelize };

@@ -1,5 +1,10 @@
-import { combineReducers, legacy_createStore as createStore, Dispatch, UnknownAction } from "redux";
-import { reducer as formReducer, FormAction } from "redux-form";
+import {
+  combineReducers,
+  legacy_createStore as createStore,
+  type Dispatch,
+  type UnknownAction,
+} from "redux";
+import { reducer as formReducer, type FormAction } from "redux-form";
 
 const rootReducer = combineReducers({
   form: formReducer,

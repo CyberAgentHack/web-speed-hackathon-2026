@@ -10,9 +10,15 @@ export async function login(
   const signinButton = page.getByRole("button", { name: "サインイン" });
   await expect(signinButton).toBeVisible({ timeout: 30_000 });
   await signinButton.click();
-  await page.getByRole("heading", { name: "サインイン" }).waitFor({ timeout: 30_000 });
-  await page.getByRole("textbox", { name: "ユーザー名" }).pressSequentially(username);
-  await page.getByRole("textbox", { name: "パスワード" }).pressSequentially(password);
+  await page
+    .getByRole("heading", { name: "サインイン" })
+    .waitFor({ timeout: 10_000 });
+  await page
+    .getByRole("textbox", { name: "ユーザー名" })
+    .pressSequentially(username);
+  await page
+    .getByRole("textbox", { name: "パスワード" })
+    .pressSequentially(password);
   await page.getByRole("button", { name: "サインイン" }).last().click();
   await page.getByRole("link", { name: "Crok" }).waitFor({ timeout: 30_000 });
 }
@@ -28,17 +34,20 @@ export async function waitForVisibleMedia(page: Page): Promise<void> {
         return rect.bottom > 0 && rect.top < vh;
       }
 
-      const imgs = Array.from(document.querySelectorAll("main img")).filter(isInViewport);
+      const imgs = Array.from(document.querySelectorAll("main img")).filter(
+        isInViewport,
+      );
 
       const imgsOk = imgs.every(
         (img) =>
-          (img as HTMLImageElement).naturalWidth > 0 && (img as HTMLImageElement).naturalHeight > 0,
+          (img as HTMLImageElement).naturalWidth > 0 &&
+          (img as HTMLImageElement).naturalHeight > 0,
       );
 
       // ビューポート内の動画コンテナに canvas または video が出現しているか
-      const movieAreas = Array.from(document.querySelectorAll("main [data-movie-area]")).filter(
-        isInViewport,
-      );
+      const movieAreas = Array.from(
+        document.querySelectorAll("main [data-movie-area]"),
+      ).filter(isInViewport);
       const moviesReady = movieAreas.every((area) => {
         const canvas = area.querySelector("canvas");
         const video = area.querySelector("video");
@@ -48,10 +57,12 @@ export async function waitForVisibleMedia(page: Page): Promise<void> {
       });
 
       // ビューポート内の音声コンテナに svg（波形）が出現しているか
-      const soundAreas = Array.from(document.querySelectorAll("main [data-sound-area]")).filter(
-        isInViewport,
+      const soundAreas = Array.from(
+        document.querySelectorAll("main [data-sound-area]"),
+      ).filter(isInViewport);
+      const soundsReady = soundAreas.every(
+        (area) => area.querySelector("svg") !== null,
       );
-      const soundsReady = soundAreas.every((area) => area.querySelector("svg") !== null);
 
       return imgsOk && moviesReady && soundsReady;
     });
@@ -61,7 +72,11 @@ export async function waitForVisibleMedia(page: Page): Promise<void> {
 
 /** GIF動画をマスク（フレームが毎回変わるため） */
 export function dynamicMediaMask(page: Page) {
-  return [page.locator("canvas"), page.locator("video"), page.locator("img[src$='.gif']")];
+  return [
+    page.locator("canvas"),
+    page.locator("video"),
+    page.locator("img[src$='.gif']"),
+  ];
 }
 
 export async function waitForImageToLoad(imageLocator: Locator): Promise<void> {
@@ -90,7 +105,9 @@ export async function waitForAllImagesToLoad(
   await expect(async () => {
     await locator.scrollIntoViewIfNeeded();
     await expect(locator).toBeVisible();
-    await expect(images.count()).resolves.toBeGreaterThanOrEqual(expectedNumberOfImages);
+    await expect(images.count()).resolves.toBeGreaterThanOrEqual(
+      expectedNumberOfImages,
+    );
   }).toPass();
 
   const count = await images.count();
@@ -101,7 +118,8 @@ export async function waitForAllImagesToLoad(
 
 export async function scrollEntire(page: Page): Promise<void> {
   await page.evaluate(async () => {
-    const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+    const delay = (ms: number) =>
+      new Promise((resolve) => setTimeout(resolve, ms));
     for (let i = 0; i < document.body.scrollHeight; i += 100) {
       window.scrollTo(0, i);
       await delay(50);

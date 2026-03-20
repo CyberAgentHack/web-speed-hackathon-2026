@@ -1,5 +1,5 @@
-import { ReactNode, useId } from "react";
-import { WrappedFieldProps } from "redux-form";
+import { type ReactNode, useId } from "react";
+import type { WrappedFieldProps } from "redux-form";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { Input } from "@web-speed-hackathon-2026/client/src/components/foundation/Input";
@@ -10,7 +10,14 @@ interface Props extends WrappedFieldProps {
   rightItem?: ReactNode;
 }
 
-export const FormInputField = ({ label, leftItem, rightItem, input, meta, ...props }: Props) => {
+export const FormInputField = ({
+  label,
+  leftItem,
+  rightItem,
+  input,
+  meta,
+  ...props
+}: Props) => {
   const inputId = useId();
   const errorMessageId = useId();
   const isInvalid = meta.touched && meta.error;
