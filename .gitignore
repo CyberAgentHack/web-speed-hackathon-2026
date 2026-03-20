@@ -225,3 +225,5 @@ application/upload/**
 OPTIMIZATION_PLAN.md
 ROLLBACK.md
 LCP_OPTIMIZATION.md
+
+CODE_ANALYSIS.md

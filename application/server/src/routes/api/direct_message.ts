@@ -16,7 +16,7 @@ directMessageRouter.get("/dm", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversations = await DirectMessageConversation.findAll({
+  const conversations = await DirectMessageConversation.scope("withMessages").findAll({
     where: {
       [Op.and]: [
         { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
@@ -100,7 +100,7 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversation = await DirectMessageConversation.findOne({
+  const conversation = await DirectMessageConversation.scope("withMessages").findOne({
     where: {
       id: req.params.conversationId,
       [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
