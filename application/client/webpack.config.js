@@ -4,6 +4,7 @@ const path = require("path");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 const webpack = require("webpack");
 
 const SRC_PATH = path.resolve(__dirname, "./src");
@@ -12,6 +13,8 @@ const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
 
 const isProd = process.env.NODE_ENV === "production";
+const analyze =
+  process.env.ANALYZE === "1" || process.env.ANALYZE === "true";
 
 /** @type {import('webpack').Configuration} */
 const config = {
@@ -96,6 +99,16 @@ const config = {
       inject: false,
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
+    ...(analyze
+      ? [
+          new BundleAnalyzerPlugin({
+            analyzerMode: "static",
+            defaultSizes: "gzip",
+            openAnalyzer: process.env.CI !== "true" && process.env.CI !== "1",
+            reportFilename: path.join(DIST_PATH, "bundle-report.html"),
+          }),
+        ]
+      : []),
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
