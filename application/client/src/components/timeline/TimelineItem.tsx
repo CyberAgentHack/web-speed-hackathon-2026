@@ -11,8 +11,14 @@ import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/
 const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Element): boolean => {
   while (target !== null && target instanceof Element) {
     const tagName = target.tagName.toLowerCase();
-    if (["button", "a"].includes(tagName)) {
+    if (tagName === "a") {
       return true;
+    }
+    if (tagName === "button") {
+      const button = target as HTMLButtonElement;
+      if (button.closest("[data-timeline-clickthrough]") === null) {
+        return true;
+      }
     }
     if (currentTarget === target) {
       return false;
@@ -90,12 +96,12 @@ export const TimelineItem = ({ post }: Props) => {
             </div>
           ) : null}
           {post.movie ? (
-            <div className="relative mt-2 w-full">
+            <div className="relative mt-2 w-full" data-timeline-clickthrough>
               <MovieArea movie={post.movie} />
             </div>
           ) : null}
           {post.sound ? (
-            <div className="relative mt-2 w-full">
+            <div className="relative mt-2 w-full" data-timeline-clickthrough>
               <SoundArea sound={post.sound} />
             </div>
           ) : null}
