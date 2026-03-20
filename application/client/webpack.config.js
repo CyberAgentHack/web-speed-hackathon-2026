@@ -125,7 +125,7 @@ const config = {
   },
   optimization: isProd
     ? {
-      splitChunks: { chunks: all },
+      splitChunks: { chunks: 'all' },
     }
     : {
       minimize: false,
