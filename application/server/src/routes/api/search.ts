@@ -38,9 +38,11 @@ searchRouter.get("/search", async (req, res) => {
   // テキスト検索条件
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
+  // マージ後にスライスするため、各クエリは offset + limit 分まで取得すれば十分
+  const maxFetch = limit != null && offset != null ? offset + limit : undefined;
+
   const postsByText = await Post.findAll({
-    limit,
-    offset,
+    limit: maxFetch,
     where: {
       ...textWhere,
       ...dateWhere,
@@ -67,8 +69,7 @@ searchRouter.get("/search", async (req, res) => {
         { association: "movie" },
         { association: "sound" },
       ],
-      limit,
-      offset,
+      limit: maxFetch,
       where: dateWhere,
     });
   }
@@ -83,7 +84,9 @@ searchRouter.get("/search", async (req, res) => {
     }
   }
 
-  mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  mergedPosts.sort(
+    (a, b) => b.createdAt.getTime() - a.createdAt.getTime() || b.id.localeCompare(a.id),
+  );
 
   const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
 
