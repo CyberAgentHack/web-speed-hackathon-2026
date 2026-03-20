@@ -16,7 +16,8 @@ interface Props {
  * クリックすると再生・一時停止を切り替えます。
  */
 export const PausableMovie = ({ src }: Props) => {
-  const { data, isLoading } = useFetch(src, fetchBinary);
+  const { data, error, isLoading } = useFetch(src, fetchBinary);
+  const isReady = !isLoading && error === null && data !== null;
 
   const animatorRef = useRef<Animator>(null);
   const canvasCallbackRef = useCallback<RefCallback<HTMLCanvasElement>>(
@@ -51,6 +52,10 @@ export const PausableMovie = ({ src }: Props) => {
 
   const [isPlaying, setIsPlaying] = useState(true);
   const handleClick = useCallback(() => {
+    if (!isReady) {
+      return;
+    }
+
     setIsPlaying((isPlaying) => {
       if (isPlaying) {
         animatorRef.current?.stop();
@@ -59,31 +64,46 @@ export const PausableMovie = ({ src }: Props) => {
       }
       return !isPlaying;
     });
-  }, []);
-
-  if (isLoading || data === null) {
-    return null;
-  }
+  }, [isReady]);
 
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
       <button
+        aria-busy={isLoading}
         aria-label="動画プレイヤー"
-        className="group relative block h-full w-full"
+        className="group relative block h-full w-full disabled:cursor-default"
+        disabled={!isReady}
         onClick={handleClick}
         type="button"
       >
-        <canvas ref={canvasCallbackRef} className="w-full" />
-        <div
-          className={classNames(
-            "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
-            {
-              "opacity-0 group-hover:opacity-100": isPlaying,
-            },
-          )}
-        >
-          <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
-        </div>
+        {isReady ? (
+          <>
+            <canvas ref={canvasCallbackRef} className="h-full w-full" />
+            <div
+              className={classNames(
+                "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
+                {
+                  "opacity-0 group-hover:opacity-100": isPlaying,
+                },
+              )}
+            >
+              <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
+            </div>
+          </>
+        ) : (
+          <div
+            className={classNames(
+              "flex h-full w-full items-center justify-center bg-cax-surface-subtle text-cax-text-muted",
+              {
+                "animate-pulse": isLoading,
+              },
+            )}
+          >
+            <span className="rounded-full bg-cax-surface-raised/80 px-3 py-1 text-xs font-bold tracking-[0.2em]">
+              Loading...
+            </span>
+          </div>
+        )}
       </button>
     </AspectRatioBox>
   );

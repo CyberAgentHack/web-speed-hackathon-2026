@@ -52,7 +52,7 @@ export const PostItem = ({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea fetchPriority="auto" images={post.images} loading="eager" />
             </div>
           ) : null}
           {post.movie ? (
