@@ -2,18 +2,14 @@ import { initializeImageMagick, ImageMagick, MagickFormat } from "@imagemagick/m
 import magickWasm from "@imagemagick/magick-wasm/magick.wasm?binary";
 import { dump, insert, ImageIFD } from "piexifjs";
 
-interface Options {
-  extension: MagickFormat;
-}
-
-export async function convertImage(file: File, options: Options): Promise<Blob> {
+export async function convertImage(file: File): Promise<Blob> {
   await initializeImageMagick(magickWasm);
 
   const byteArray = new Uint8Array(await file.arrayBuffer());
 
   return new Promise((resolve) => {
     ImageMagick.read(byteArray, (img) => {
-      img.format = options.extension;
+      img.format = MagickFormat.Jpg;
 
       const comment = img.comment;
 
