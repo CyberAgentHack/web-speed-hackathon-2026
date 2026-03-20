@@ -4,12 +4,15 @@ const path = require("path");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 const webpack = require("webpack");
 
 const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
+
+const isProd = process.env.NODE_ENV === "production";
 
 /** @type {import('webpack').Configuration} */
 const config = {
@@ -25,7 +28,7 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: isProd ? false : "cheap-module-source-map",
   entry: {
     main: [
       "core-js",
@@ -36,7 +39,7 @@ const config = {
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: isProd ? "production" : "development",
   module: {
     rules: [
       {
@@ -60,8 +63,7 @@ const config = {
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
-    filename: "scripts/[name].js",
+    filename: isProd ? "scripts/[name].[contenthash].js" : "scripts/[name].js",
     path: DIST_PATH,
     publicPath: "auto",
     clean: true,
@@ -77,10 +79,10 @@ const config = {
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
+      NODE_ENV: isProd ? "production" : "development",
     }),
     new MiniCssExtractPlugin({
-      filename: "styles/[name].css",
+      filename: isProd ? "styles/[name].[contenthash].css" : "styles/[name].css",
     }),
     new CopyWebpackPlugin({
       patterns: [
@@ -91,9 +93,10 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: true,
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
+    new BundleAnalyzerPlugin(),
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
@@ -127,15 +130,26 @@ const config = {
       url: false,
     },
   },
-  optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
-  },
-  cache: false,
+  optimization: isProd
+    ? {
+        minimize: true,
+        splitChunks: {
+          chunks: "all",
+        },
+        concatenateModules: true,
+        usedExports: true,
+        providedExports: true,
+        sideEffects: true,
+      }
+    : {
+        minimize: false,
+        splitChunks: false,
+        concatenateModules: false,
+        usedExports: false,
+        providedExports: false,
+        sideEffects: false,
+      },
+  cache: isProd ? false : { type: "filesystem" },
   ignoreWarnings: [
     {
       module: /@ffmpeg/,

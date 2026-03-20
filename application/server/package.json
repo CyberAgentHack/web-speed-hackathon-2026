@@ -7,7 +7,8 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "start": "tsx src/index.ts",
+    "start": "NODE_ENV=production tsx src/index.ts",
+    "dev": "NODE_ENV=development tsx --watch src/index.ts",
     "typecheck": "tsc --noEmit",
     "seed:generate": "tsx ./scripts/generateSeeds.ts",
     "seed:insert": "tsx ./scripts/insertSeeds.ts"
@@ -38,9 +39,11 @@
     "@types/express": "5.0.3",
     "@types/express-session": "1.18.2",
     "@types/http-errors": "2.0.5",
+    "@types/morgan": "1.9.10",
     "@types/node": "22.18.8",
     "@types/serve-static": "1.15.9",
     "@types/ws": "8.18.1",
+    "morgan": "1.10.1",
     "typescript": "5.9.3"
   },
   "engines": {
