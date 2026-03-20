@@ -61,3 +61,9 @@ jobs:
               with:
                   name: ${{ steps.generate-app-name.outputs.app_name }}
                   image: registry.fly.io/${{ steps.generate-app-name.outputs.app_name }}:latest
+
+            - name: Set secrets on Fly.io app
+              if: github.event.action != 'closed'
+              run: |
+                  fly secrets set OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
+                    --app ${{ steps.generate-app-name.outputs.app_name }} --stage
