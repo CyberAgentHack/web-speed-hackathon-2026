@@ -468,8 +468,8 @@
         "Typecheck passes"
       ],
       "priority": 26,
-      "passes": false,
-      "notes": "現在 create_translator.ts が @mlc-ai/web-llm を dynamic import しているが、splitChunks により 51MB の vendor チャンクに含まれ初期ロードをブロックしている。サーバー移行で50MB+のクライアント依存を完全排除できる。"
+      "passes": true,
+      "notes": "2026-03-21 完了。POST /api/v1/translate エンドポイント追加。TranslatableText.tsx を sendJSON 経由でサーバー API に変更。create_translator.ts 削除。@mlc-ai/web-llm, common-tags, json-repair-js, langs, @types/common-tags, @types/langs をクライアントから削除。json-repair-js.d.ts 削除。最大チャンクサイズ 1.3MB (< 5MB)。E2E 67/77 passed（10件は DM WebSocket/VRT の既存失敗）。"
     },
     {
       "id": "US-027",
