@@ -51,9 +51,6 @@ importers:
       common-tags:
         specifier: 1.8.2
         version: 1.8.2
-      core-js:
-        specifier: 3.45.1
-        version: 3.45.1
       encoding-japanese:
         specifier: 2.2.0
         version: 2.2.0
@@ -78,9 +75,6 @@ importers:
       langs:
         specifier: 2.0.0
         version: 2.0.0
-      lodash:
-        specifier: 4.17.21
-        version: 4.17.21
       negaposi-analyzer-ja:
         specifier: 1.0.1
         version: 1.0.1
@@ -169,9 +163,6 @@ importers:
       '@types/langs':
         specifier: 2.0.5
         version: 2.0.5
-      '@types/lodash':
-        specifier: 4.17.20
-        version: 4.17.20
       '@types/node':
         specifier: 22.18.8
         version: 22.18.8
@@ -1691,9 +1682,6 @@ packages:
   '@types/langs@2.0.5':
     resolution: {integrity: sha512-DIUKT4mkbTBxSrX6lmnQR888ObeFVVo1uNEqBH5/ddQHpnG4CA24DibpK7aO8QAcJEZUTcIx0F96TWuzVT9Z4g==}
 
-  '@types/lodash@4.17.20':
-    resolution: {integrity: sha512-H3MHACvFUEiujabxhaI/ImO6gUrd8oOurg7LQtS7mbwIXA/cUqWrvBsaeJ23aZEPk1TAYkurjfMbSELfoCXlGA==}
-
   '@types/mdast@4.0.4':
     resolution: {integrity: sha512-kGaNbPh1k7AFzgpud/gMdvIm5xuECykRR+JnWKQno9TAXVa6WIVCGTPvYGekIDL4uwCZQSYbUxNBSb1aUo79oA==}
 
@@ -2204,9 +2192,6 @@ packages:
 
   core-js-compat@3.45.1:
     resolution: {integrity: sha512-tqTt5T4PzsMIZ430XGviK4vzYSoeNJ6CXODi6c/voxOT6IZqBht5/EKaSNnYiEjjRYxjVz7DQIsOsY0XNi8PIA==}
-
-  core-js@3.45.1:
-    resolution: {integrity: sha512-L4NPsJlCfZsPeXukyzHFlg/i7IIVwHSItR0wg0FLNqYClJ4MQYTYLbC7EkjKYRLZF2iof2MUgN0EGy7MdQFChg==}
 
   core-util-is@1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
@@ -6064,8 +6049,6 @@ snapshots:
 
   '@types/langs@2.0.5': {}
 
-  '@types/lodash@4.17.20': {}
-
   '@types/mdast@4.0.4':
     dependencies:
       '@types/unist': 3.0.3
@@ -6645,8 +6628,6 @@ snapshots:
   core-js-compat@3.45.1:
     dependencies:
       browserslist: 4.26.3
-
-  core-js@3.45.1: {}
 
   core-util-is@1.0.3: {}
 

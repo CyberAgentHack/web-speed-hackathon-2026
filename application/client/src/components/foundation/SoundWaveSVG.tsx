@@ -1,4 +1,3 @@
-import _ from "lodash";
 import { useEffect, useRef, useState } from "react";
 
 interface ParsedData {
@@ -6,24 +5,41 @@ interface ParsedData {
   peaks: number[];
 }
 
+function average(values: number[]): number {
+  if (values.length === 0) {
+    return 0;
+  }
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function chunkValues(values: number[], chunkSize: number): number[][] {
+  const chunks: number[][] = [];
+  for (let index = 0; index < values.length; index += chunkSize) {
+    chunks.push(values.slice(index, index + chunkSize));
+  }
+  return chunks;
+}
+
 async function calculate(data: ArrayBuffer): Promise<ParsedData> {
   const audioCtx = new AudioContext();
 
   // 音声をデコードする
   const buffer = await audioCtx.decodeAudioData(data.slice(0));
+  const rightChannelData =
+    buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : buffer.getChannelData(0);
   // 左の音声データの絶対値を取る
-  const leftData = _.map(buffer.getChannelData(0), Math.abs);
+  const leftData = Array.from(buffer.getChannelData(0), Math.abs);
   // 右の音声データの絶対値を取る
-  const rightData = _.map(buffer.getChannelData(1), Math.abs);
+  const rightData = Array.from(rightChannelData, Math.abs);
 
   // 左右の音声データの平均を取る
-  const normalized = _.map(_.zip(leftData, rightData), _.mean);
+  const normalized = leftData.map((left, index) => average([left, rightData[index] ?? left]));
   // 100 個の chunk に分ける
-  const chunks = _.chunk(normalized, Math.ceil(normalized.length / 100));
+  const chunks = chunkValues(normalized, Math.max(1, Math.ceil(normalized.length / 100)));
   // chunk ごとに平均を取る
-  const peaks = _.map(chunks, _.mean);
+  const peaks = chunks.map(average);
   // chunk の平均の中から最大値を取る
-  const max = _.max(peaks) ?? 0;
+  const max = peaks.reduce((currentMax, peak) => Math.max(currentMax, peak), 0);
 
   return { max, peaks };
 }
