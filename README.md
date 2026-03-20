@@ -1,4 +1,4 @@
-# Web Speed Hackathon 2026
+# Web Speed Hackathon 2026 team pythonista
 
 **"Web Speed Hackathon 2026" は、非常に重たい Web アプリをチューニングして、いかに高速にするかを競う競技です。**
 
