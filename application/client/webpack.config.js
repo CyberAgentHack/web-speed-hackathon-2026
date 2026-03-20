@@ -45,8 +45,15 @@ const config = {
     rules: [
       {
         exclude: /node_modules/,
-        test: /\.(jsx?|tsx?|mjs|cjs)$/,
-        use: [{ loader: "babel-loader" }],
+        loader: "esbuild-loader",
+        options: {
+          target: "chrome140",
+          tsconfig: "tsconfig.json",
+        },
+        resolve: {
+          fullySpecified: false,
+        },
+        test: /\.[jt]sx?$/,
       },
       {
         test: /\.css$/i,
