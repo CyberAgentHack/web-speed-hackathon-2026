@@ -59,6 +59,12 @@ export const AppContainer = () => {
 
   const navRoot = document.getElementById("ccss-nav-root");
 
+  // Remove static fallback nav inserted in index.html (FCP用) — React portal に置き換える
+  useEffect(() => {
+    const staticNav = navRoot?.querySelector("nav");
+    if (staticNav) staticNav.remove();
+  }, [navRoot]);
+
   return (
     <HelmetProvider>
       {navRoot
