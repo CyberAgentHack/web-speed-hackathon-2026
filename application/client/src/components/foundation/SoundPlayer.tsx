@@ -1,4 +1,4 @@
-import { ReactEventHandler, useCallback, useMemo, useRef, useState } from "react";
+import { ReactEventHandler, useCallback, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -12,16 +12,13 @@ interface Props {
 }
 
 export const SoundPlayer = ({ sound }: Props) => {
-  const { data, isLoading } = useFetch(getSoundPath(sound.id), fetchBinary);
-
-  const blobUrl = useMemo(() => {
-    return data !== null ? URL.createObjectURL(new Blob([data])) : null;
-  }, [data]);
+  const soundPath = getSoundPath(sound.id);
+  const { data } = useFetch(soundPath, fetchBinary);
 
   const [currentTimeRatio, setCurrentTimeRatio] = useState(0);
   const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>((ev) => {
     const el = ev.currentTarget;
-    setCurrentTimeRatio(el.currentTime / el.duration);
+    setCurrentTimeRatio((el.currentTime || 0) / (el.duration || 1));
   }, []);
 
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -31,19 +28,15 @@ export const SoundPlayer = ({ sound }: Props) => {
       if (isPlaying) {
         audioRef.current?.pause();
       } else {
-        audioRef.current?.play();
+        audioRef.current?.play().catch(() => {});
       }
       return !isPlaying;
     });
   }, []);
 
-  if (isLoading || data === null || blobUrl === null) {
-    return null;
-  }
-
   return (
     <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
-      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} src={blobUrl} />
+      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} src={soundPath} preload="metadata" />
       <div className="p-2">
         <button
           className="bg-cax-accent text-cax-surface-raised flex h-8 w-8 items-center justify-center rounded-full text-sm hover:opacity-75"
@@ -64,7 +57,7 @@ export const SoundPlayer = ({ sound }: Props) => {
           <AspectRatioBox aspectHeight={1} aspectWidth={10}>
             <div className="relative h-full w-full">
               <div className="absolute inset-0 h-full w-full">
-                <SoundWaveSVG soundData={data} />
+                {data && <SoundWaveSVG soundData={data} />}
               </div>
               <div
                 className="bg-cax-surface-subtle absolute inset-0 h-full w-full opacity-75"
