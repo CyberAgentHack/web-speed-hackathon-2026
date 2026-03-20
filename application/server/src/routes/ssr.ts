@@ -6,7 +6,10 @@ import { Hono } from "hono";
 
 import { CLIENT_DIST_PATH, SSR_DIST_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import type { SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
-import { getServerData } from "@web-speed-hackathon-2026/server/src/ssr/getServerData";
+import {
+  getServerData,
+  type SSRData,
+} from "@web-speed-hackathon-2026/server/src/ssr/getServerData";
 
 // Production で使う index.html テンプレートを起動時に読み込み
 let templateHtml = "";
@@ -14,6 +17,27 @@ try {
   templateHtml = fs.readFileSync(path.resolve(CLIENT_DIST_PATH, "index.html"), "utf-8");
 } catch {
   console.warn("SSR: index.html not found in dist, SSR will be disabled");
+}
+
+// Critical CSS inlining: CSS ファイルを読み込んでインライン化
+let inlinedTemplateHtml = templateHtml;
+if (templateHtml) {
+  const cssLinkMatch = templateHtml.match(/<link rel="stylesheet"[^>]*href="([^"]+)"[^>]*>/);
+  if (cssLinkMatch) {
+    const cssHref = cssLinkMatch[1]!;
+    try {
+      const cssPath = path.resolve(CLIENT_DIST_PATH, cssHref.replace(/^\//, ""));
+      const cssContent = fs.readFileSync(cssPath, "utf-8");
+      inlinedTemplateHtml = templateHtml.replace(cssLinkMatch[0], `<style>${cssContent}</style>`);
+    } catch {
+      console.warn("SSR: CSS file not found for inlining, keeping link tag");
+    }
+  }
+  // フォント preload を <head> に追加
+  inlinedTemplateHtml = inlinedTemplateHtml.replace(
+    "</head>",
+    `<link rel="preload" as="font" type="font/woff2" href="/fonts/ReiNoAreMincho-Heavy-subset.woff2" crossorigin>\n</head>`,
+  );
 }
 
 // SSR バンドルの読み込み
@@ -27,7 +51,20 @@ try {
 }
 
 function csrFallbackHtml(): string {
-  return templateHtml.replace("<!--ssr-outlet-->", "").replace("<!--ssr-head-->", "");
+  return inlinedTemplateHtml.replace("<!--ssr-outlet-->", "").replace("<!--ssr-head-->", "");
+}
+
+function buildPreloadHints(ssrData: SSRData): string {
+  const hints: string[] = [];
+  // LCP 画像 preload: タイムラインの最初の投稿の最初の画像
+  const firstPosts = ssrData.posts ?? ssrData.userPosts ?? [];
+  for (const post of firstPosts.slice(0, 1)) {
+    if (post.images && post.images.length > 0) {
+      hints.push(`<link rel="preload" as="image" href="/images/${post.images[0]!.id}.jpg">`);
+      break;
+    }
+  }
+  return hints.join("\n");
 }
 
 // 未ログインユーザー向け SSR キャッシュ（パス → HTML 文字列）
@@ -37,9 +74,10 @@ export function clearSsrCache() {
   ssrCache.clear();
 }
 
-async function renderToString(url: string, ssrData: any): Promise<string> {
-  const [beforeOutlet, afterOutlet] = templateHtml.split("<!--ssr-outlet-->");
-  const ssrDataScript = `<script>window.__SSR_DATA__=${JSON.stringify(ssrData).replace(/</g, "\\u003c")}</script>`;
+async function renderToString(url: string, ssrData: SSRData): Promise<string> {
+  const [beforeOutlet, afterOutlet] = inlinedTemplateHtml.split("<!--ssr-outlet-->");
+  const preloadHints = buildPreloadHints(ssrData);
+  const ssrDataScript = `${preloadHints}<script>window.__SSR_DATA__=${JSON.stringify(ssrData).replace(/</g, "\\u003c")}</script>`;
   const afterWithHead = afterOutlet!.replace("<!--ssr-head-->", ssrDataScript);
 
   return new Promise<string>((resolve, reject) => {
@@ -60,7 +98,7 @@ async function renderToString(url: string, ssrData: any): Promise<string> {
     const { pipe } = ssrRender!(url, ssrData, {
       onShellReady() {
         if (didError) return;
-        collectStream.unshift(Buffer.from(beforeOutlet!));
+        chunks.push(Buffer.from(beforeOutlet!));
         pipe(collectStream);
         collectStream.on("finish", () => {
           resolve(Buffer.concat(chunks).toString("utf-8"));
