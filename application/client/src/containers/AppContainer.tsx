@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useId, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useId, useState } from "react";
 import { Helmet, HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
-import { CrokContainer } from "@web-speed-hackathon-2026/client/src/containers/CrokContainer";
 import { DirectMessageContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer";
 import { DirectMessageListContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer";
 import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
@@ -15,6 +14,12 @@ import { TermContainer } from "@web-speed-hackathon-2026/client/src/containers/T
 import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
 import { UserProfileContainer } from "@web-speed-hackathon-2026/client/src/containers/UserProfileContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+
+const CrokContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/CrokContainer").then((module) => ({
+    default: module.CrokContainer,
+  })),
+);
 
 export const AppContainer = () => {
   const { pathname } = useLocation();
@@ -67,7 +72,11 @@ export const AppContainer = () => {
           <Route element={<PostContainer />} path="/posts/:postId" />
           <Route element={<TermContainer />} path="/terms" />
           <Route
-            element={<CrokContainer activeUser={activeUser} authModalId={authModalId} />}
+            element={
+              <Suspense fallback={null}>
+                <CrokContainer activeUser={activeUser} authModalId={authModalId} />
+              </Suspense>
+            }
             path="/crok"
           />
           <Route element={<NotFoundContainer />} path="*" />
