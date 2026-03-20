@@ -16,8 +16,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   USERNAME_TAKEN: "ユーザー名が使われています",
 };
 
-function getErrorCode(err: { responseJSON?: unknown }, type: "signin" | "signup"): string {
-  const responseJSON = err.responseJSON;
+function getErrorCode(err: unknown, type: "signin" | "signup"): string {
+  const responseJSON = (err as { responseJSON?: unknown })?.responseJSON;
   if (
     typeof responseJSON !== "object" ||
     responseJSON === null ||

@@ -22,6 +22,14 @@ export async function sendFile<T>(url: string, file: File): Promise<T> {
   return response.json();
 }
 
+export class HTTPError extends Error {
+  responseJSON: unknown;
+  constructor(status: number, responseJSON: unknown) {
+    super(`HTTP ${status}`);
+    this.responseJSON = responseJSON;
+  }
+}
+
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
   const response = await fetch(url, {
     method: "POST",
@@ -30,6 +38,9 @@ export async function sendJSON<T>(url: string, data: object): Promise<T> {
     },
     body: JSON.stringify(data),
   });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    throw new HTTPError(response.status, body);
+  }
   return response.json();
 }
