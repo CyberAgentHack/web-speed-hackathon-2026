@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { SubmissionError } from "redux-form";
 
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { AuthModalPage } from "@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage";
@@ -16,7 +15,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   USERNAME_TAKEN: "ユーザー名が使われています",
 };
 
-function getErrorCode(err: unknown, type: "signin" | "signup"): string {
+function getErrorMessage(err: unknown, type: "signin" | "signup"): string {
   if (!(err instanceof FetchError)) {
     return type === "signup" ? "登録に失敗しました" : "パスワードが異なります";
   }
@@ -39,7 +38,6 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
     const element = ref.current;
 
     const handleToggle = () => {
-      // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
       setResetKey((key) => key + 1);
     };
     element.addEventListener("toggle", handleToggle);
@@ -64,10 +62,7 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
         }
         handleRequestCloseModal();
       } catch (err: unknown) {
-        const error = getErrorCode(err, values.type);
-        throw new SubmissionError({
-          _error: error,
-        });
+        throw new Error(getErrorMessage(err, values.type));
       }
     },
     [handleRequestCloseModal, onUpdateActiveUser],

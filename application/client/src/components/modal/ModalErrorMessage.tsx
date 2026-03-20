@@ -3,7 +3,7 @@ import classNames from "classnames";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 
 interface Props {
-  children: string | null;
+  children: string | null | undefined;
 }
 
 export const ModalErrorMessage = ({ children }: Props) => {
