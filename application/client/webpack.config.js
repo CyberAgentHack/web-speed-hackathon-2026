@@ -123,21 +123,6 @@ const config = {
         "node_modules",
         "kuromoji/build/kuromoji.js",
       ),
-      "@ffmpeg/ffmpeg$": _resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/ffmpeg/dist/esm/index.js",
-      ),
-      "@ffmpeg/core$": _resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/core/dist/umd/ffmpeg-core.js",
-      ),
-      "@ffmpeg/core/wasm$": _resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/core/dist/umd/ffmpeg-core.wasm",
-      ),
     },
     fallback: {
       fs: false,
@@ -155,13 +140,6 @@ const config = {
     providedExports: true,
     sideEffects: true,
   },
-  ignoreWarnings: [
-    {
-      module: /@ffmpeg/,
-      message:
-        /Critical dependency: the request of a dependency is an expression/,
-    },
-  ],
 };
 
 export default config;
