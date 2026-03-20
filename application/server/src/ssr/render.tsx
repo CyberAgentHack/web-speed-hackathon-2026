@@ -21,8 +21,10 @@ function getMainCss(): string | null {
   const stylesDir = path.join(CLIENT_DIST_PATH, "styles");
   if (!fs.existsSync(stylesDir)) return null;
   const cssFiles = fs.readdirSync(stylesDir).filter((f) => f.endsWith(".css"));
-  if (cssFiles.length === 0) return null;
-  mainCssContent = fs.readFileSync(path.join(stylesDir, cssFiles[0]!), "utf-8");
+  // エントリCSS（index.*.css）を優先、なければ最初のCSSファイル
+  const mainCssFile = cssFiles.find((f) => f.startsWith("index.")) ?? cssFiles[0];
+  if (!mainCssFile) return null;
+  mainCssContent = fs.readFileSync(path.join(stylesDir, mainCssFile), "utf-8");
   return mainCssContent;
 }
 
@@ -83,6 +85,13 @@ export async function renderAppShell(url: string, data: SSRData): Promise<string
       `<style>${css}</style>`,
     );
   }
+
+  // フォントpreload（CSS解析前にフォント取得を開始）
+  const fontPreloads = [
+    '<link rel="preload" as="font" type="font/woff2" href="/fonts/ReiNoAreMincho-Regular.woff2" crossorigin>',
+    '<link rel="preload" as="font" type="font/woff2" href="/fonts/ReiNoAreMincho-Heavy.woff2" crossorigin>',
+  ].join("");
+  html = html.replace("</head>", `${fontPreloads}</head>`);
 
   // キャッシュに保存
   ssrCache.set(url, { html, timestamp: Date.now() });
