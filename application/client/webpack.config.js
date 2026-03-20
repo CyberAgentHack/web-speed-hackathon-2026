@@ -25,7 +25,7 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  // devtool: "inline-source-map",
   entry: {
     main: [
       "core-js",
@@ -36,14 +36,35 @@ const config = {
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  // mode: "none",
+  mode: "production",
   module: {
     rules: [
-      {
-        exclude: /node_modules/,
-        test: /\.(jsx?|tsx?|mjs|cjs)$/,
-        use: [{ loader: "babel-loader" }],
+      // {
+      //   exclude: /node_modules/,
+      //   test: /\.(jsx?|tsx?|mjs|cjs)$/,
+      //   use: [{ loader: "babel-loader" }],
+      // },
+          {
+      test: /\.[jt]sx?$/,
+      exclude: /node_modules/,
+      use: {
+        loader: "swc-loader",
+        options: {
+          jsc: {
+            parser: {
+              syntax: "typescript", // TS使わないなら "ecmascript"
+              tsx: true,
+            },
+            transform: {
+              react: {
+                runtime: "automatic",
+              },
+            },
+          },
+        },
       },
+    },
       {
         test: /\.css$/i,
         use: [
@@ -77,7 +98,7 @@ const config = {
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
+      NODE_ENV: "production",
     }),
     new MiniCssExtractPlugin({
       filename: "styles/[name].css",
@@ -128,14 +149,14 @@ const config = {
     },
   },
   optimization: {
-    minimize: false,
-    splitChunks: false,
+    minimize: true,
+     splitChunks: false,
     concatenateModules: false,
     usedExports: false,
     providedExports: false,
     sideEffects: false,
   },
-  cache: false,
+  cache: true,
   ignoreWarnings: [
     {
       module: /@ffmpeg/,
