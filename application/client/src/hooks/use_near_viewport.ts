@@ -9,6 +9,12 @@ interface Result<T extends Element> {
   targetRef: RefCallback<T>;
 }
 
+function isElementNearViewport(target: Element, rootMargin: string): boolean {
+  const marginTop = Number.parseFloat(rootMargin.split(" ")[0] ?? "0");
+  const rect = target.getBoundingClientRect();
+  return rect.bottom >= -marginTop && rect.top <= window.innerHeight + marginTop;
+}
+
 export function useNearViewport<T extends Element>({
   rootMargin = "256px 0px",
 }: Options = {}): Result<T> {
@@ -26,6 +32,11 @@ export function useNearViewport<T extends Element>({
     }
 
     if (target == null) {
+      return;
+    }
+
+    if (isElementNearViewport(target, rootMargin)) {
+      setIsNearViewport(true);
       return;
     }
 

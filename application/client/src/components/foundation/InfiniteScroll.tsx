@@ -1,22 +1,44 @@
-import { ReactNode, useEffect, useRef } from "react";
+import { ReactNode, useEffect, useState } from "react";
 
 interface Props {
   children: ReactNode;
   items: any[];
   fetchMore: () => void;
+  waitForScroll?: boolean;
 }
 
-export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
+export const InfiniteScroll = ({ children, fetchMore, items, waitForScroll = false }: Props) => {
   const latestItem = items[items.length - 1];
-  const sentinelRef = useRef<HTMLDivElement>(null);
+  const [sentinel, setSentinel] = useState<HTMLDivElement | null>(null);
+  const [hasScrolled, setHasScrolled] = useState(!waitForScroll);
 
   useEffect(() => {
-    if (latestItem === undefined || sentinelRef.current == null) {
+    if (!waitForScroll) {
+      return;
+    }
+
+    const handleScroll = () => {
+      if (window.scrollY > 0) {
+        setHasScrolled(true);
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [waitForScroll]);
+
+  useEffect(() => {
+    if (latestItem === undefined || sentinel == null) {
       return;
     }
 
     const observer = new IntersectionObserver(
       (entries) => {
+        if (!hasScrolled) {
+          return;
+        }
         if (entries.some((entry) => entry.isIntersecting)) {
           fetchMore();
         }
@@ -26,17 +48,17 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
       },
     );
 
-    observer.observe(sentinelRef.current);
+    observer.observe(sentinel);
 
     return () => {
       observer.disconnect();
     };
-  }, [latestItem, fetchMore]);
+  }, [latestItem, fetchMore, hasScrolled, sentinel]);
 
   return (
     <>
       {children}
-      <div ref={sentinelRef} className="h-px w-full" />
+      <div ref={setSentinel} className="h-px w-full" />
     </>
   );
 };

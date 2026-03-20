@@ -21,18 +21,25 @@ export async function convertMovie(file: File, options: Options): Promise<Blob> 
 
   await ffmpeg.writeFile("file", new Uint8Array(await file.arrayBuffer()));
 
-  await ffmpeg.exec([
-    "-i",
-    "file",
-    "-t",
-    "5",
-    "-r",
-    "10",
-    "-vf",
-    `crop=${cropOptions}`,
-    "-an",
-    exportFile,
-  ]);
+  const baseArgs = ["-i", "file", "-t", "5", "-r", "10", "-vf", `crop=${cropOptions}`, "-an"];
+  if (options.extension === "mp4") {
+    await ffmpeg.exec([
+      ...baseArgs,
+      "-c:v",
+      "libx264",
+      "-pix_fmt",
+      "yuv420p",
+      "-preset",
+      "veryfast",
+      "-crf",
+      "28",
+      "-movflags",
+      "+faststart",
+      exportFile,
+    ]);
+  } else {
+    await ffmpeg.exec([...baseArgs, exportFile]);
+  }
 
   const output = (await ffmpeg.readFile(exportFile)) as Uint8Array<ArrayBuffer>;
 

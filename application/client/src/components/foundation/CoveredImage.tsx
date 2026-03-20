@@ -2,7 +2,6 @@ import { MouseEvent, useCallback, useId, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
-import { useNearViewport } from "@web-speed-hackathon-2026/client/src/hooks/use_near_viewport";
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
@@ -15,7 +14,6 @@ interface Props {
  */
 export const CoveredImage = ({ src, alt }: Props) => {
   const dialogId = useId();
-  const { isNearViewport, targetRef } = useNearViewport<HTMLDivElement>({ rootMargin: "320px 0px" });
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
     ev.stopPropagation();
@@ -52,13 +50,13 @@ export const CoveredImage = ({ src, alt }: Props) => {
   }, [isLoadingAlt, resolvedAlt, src]);
 
   return (
-    <div className="relative h-full w-full overflow-hidden" ref={targetRef}>
+    <div className="relative h-full w-full overflow-hidden">
       <img
         alt={resolvedAlt}
         className="absolute inset-0 h-full w-full object-cover"
         decoding="async"
         loading="lazy"
-        src={isNearViewport ? src : undefined}
+        src={src}
       />
 
       <button
