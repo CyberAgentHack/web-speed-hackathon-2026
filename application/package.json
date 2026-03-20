@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "pnpm --filter @web-speed-hackathon-2026/client dev",
     "build": "pnpm --filter @web-speed-hackathon-2026/client build",
+    "build:analyze": "ANALYZE=true NODE_ENV=production pnpm --filter @web-speed-hackathon-2026/client build",
     "start": "pnpm --filter @web-speed-hackathon-2026/server start",
     "typecheck": "pnpm run --recursive typecheck",
     "format": "pnpm run format:oxlint && pnpm run format:oxfmt",
