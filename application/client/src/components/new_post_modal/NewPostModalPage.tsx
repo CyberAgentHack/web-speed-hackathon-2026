@@ -6,8 +6,6 @@ import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/componen
 import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/components/modal/ModalSubmitButton";
 import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/AttachFileInputButton";
 import { convertImage } from "@web-speed-hackathon-2026/client/src/utils/convert_image";
-import { convertMovie } from "@web-speed-hackathon-2026/client/src/utils/convert_movie";
-import { convertSound } from "@web-speed-hackathon-2026/client/src/utils/convert_sound";
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
@@ -80,18 +78,12 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
     setHasFileError(isValid !== true);
     if (isValid) {
-      setIsConverting(true);
-
-      convertSound(file, { extension: "mp3" }).then((converted) => {
-        setParams((params) => ({
-          ...params,
-          images: [],
-          movie: undefined,
-          sound: new File([converted], "converted.mp3", { type: "audio/mpeg" }),
-        }));
-
-        setIsConverting(false);
-      });
+      setParams((params) => ({
+        ...params,
+        images: [],
+        movie: undefined,
+        sound: file,
+      }));
     }
   }, []);
 
@@ -101,22 +93,12 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
     setHasFileError(isValid !== true);
     if (isValid) {
-      setIsConverting(true);
-
-      convertMovie(file, { extension: "gif", size: undefined })
-        .then((converted) => {
-          setParams((params) => ({
-            ...params,
-            images: [],
-            movie: new File([converted], "converted.gif", {
-              type: "image/gif",
-            }),
-            sound: undefined,
-          }));
-
-          setIsConverting(false);
-        })
-        .catch(console.error);
+      setParams((params) => ({
+        ...params,
+        images: [],
+        movie: file,
+        sound: undefined,
+      }));
     }
   }, []);
 
@@ -170,7 +152,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
         disabled={isConverting || isLoading || params.text === ""}
         loading={isConverting || isLoading}
       >
-        {isConverting || isLoading ? "変換中" : "投稿する"}
+        {isConverting || isLoading ? "送信中" : "投稿する"}
       </ModalSubmitButton>
 
       <ModalErrorMessage>

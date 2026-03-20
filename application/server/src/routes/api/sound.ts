@@ -9,8 +9,7 @@ import { v4 as uuidv4 } from "uuid";
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import { extractMetadataFromSound } from "@web-speed-hackathon-2026/server/src/utils/extract_metadata_from_sound";
 
-// 変換した音声の拡張子
-const EXTENSION = "mp3";
+const ALLOWED_AUDIO_EXTENSIONS = new Set(["mp3", "wav", "ogg", "m4a", "flac"]);
 
 export const soundRouter = Router();
 
@@ -23,17 +22,18 @@ soundRouter.post("/sounds", async (req, res) => {
   }
 
   const type = await fileTypeFromBuffer(req.body);
-  if (type === undefined || type.ext !== EXTENSION) {
+  if (type === undefined || !ALLOWED_AUDIO_EXTENSIONS.has(type.ext)) {
     throw new httpErrors.BadRequest("Invalid file type");
   }
 
   const soundId = uuidv4();
+  const ext = type.ext;
 
   const { artist, title } = await extractMetadataFromSound(req.body);
 
-  const filePath = path.resolve(UPLOAD_PATH, `./sounds/${soundId}.${EXTENSION}`);
+  const filePath = path.resolve(UPLOAD_PATH, `./sounds/${soundId}.${ext}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds"), { recursive: true });
   await fs.writeFile(filePath, req.body);
 
-  return res.status(200).type("application/json").send({ artist, id: soundId, title });
+  return res.status(200).type("application/json").send({ artist, id: soundId, title, extension: ext });
 });

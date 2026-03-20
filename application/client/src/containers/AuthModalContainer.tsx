@@ -11,28 +11,12 @@ interface Props {
   onUpdateActiveUser: (user: Models.User) => void;
 }
 
-const ERROR_MESSAGES: Record<string, string> = {
-  INVALID_USERNAME: "ユーザー名に使用できない文字が含まれています",
-  USERNAME_TAKEN: "ユーザー名が使われています",
-};
-
-function getErrorCode(err: JQuery.jqXHR<unknown>, type: "signin" | "signup"): string {
-  const responseJSON = err.responseJSON;
-  if (
-    typeof responseJSON !== "object" ||
-    responseJSON === null ||
-    !("code" in responseJSON) ||
-    typeof responseJSON.code !== "string" ||
-    !Object.keys(ERROR_MESSAGES).includes(responseJSON.code)
-  ) {
-    if (type === "signup") {
-      return "登録に失敗しました";
-    } else {
-      return "パスワードが異なります";
-    }
+function getErrorCode(_err: unknown, type: "signin" | "signup"): string {
+  if (type === "signup") {
+    return "登録に失敗しました";
+  } else {
+    return "パスワードが異なります";
   }
-
-  return ERROR_MESSAGES[responseJSON.code]!;
 }
 
 export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
@@ -68,7 +52,7 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
         }
         handleRequestCloseModal();
       } catch (err: unknown) {
-        const error = getErrorCode(err as JQuery.jqXHR<unknown>, values.type);
+        const error = getErrorCode(err, values.type);
         throw new SubmissionError({
           _error: error,
         });

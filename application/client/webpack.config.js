@@ -15,10 +15,6 @@ const ANALYZE_MODE =
   process.env.ANALYZE === "static" ? "static" : process.env.ANALYZE ? "server" : null;
 
 const plugins = [
-  new webpack.ProvidePlugin({
-    $: "jquery",
-    "window.jQuery": "jquery",
-  }),
   new webpack.DefinePlugin({
     "process.env.BUILD_DATE": JSON.stringify(new Date().toISOString()),
     // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
@@ -71,7 +67,6 @@ const config = {
   devtool: "source-map",
   entry: {
     main: [
-      "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
@@ -104,7 +99,7 @@ const config = {
     chunkFormat: "array-push",
     filename: "scripts/[name].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     clean: true,
   },
   plugins,
@@ -113,21 +108,6 @@ const config = {
     alias: {
       "bayesian-bm25$": path.resolve(__dirname, "node_modules", "bayesian-bm25/dist/index.js"),
       ["kuromoji$"]: path.resolve(__dirname, "node_modules", "kuromoji/build/kuromoji.js"),
-      "@ffmpeg/ffmpeg$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/ffmpeg/dist/esm/index.js",
-      ),
-      "@ffmpeg/core$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/core/dist/umd/ffmpeg-core.js",
-      ),
-      "@ffmpeg/core/wasm$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/core/dist/umd/ffmpeg-core.wasm",
-      ),
       "@imagemagick/magick-wasm/magick.wasm$": path.resolve(
         __dirname,
         "node_modules",
@@ -153,12 +133,7 @@ const config = {
   cache: {
     type: "filesystem",
   },
-  ignoreWarnings: [
-    {
-      module: /@ffmpeg/,
-      message: /Critical dependency: the request of a dependency is an expression/,
-    },
-  ],
+  ignoreWarnings: [],
 };
 
 module.exports = config;

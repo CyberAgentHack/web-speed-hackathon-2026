@@ -32,11 +32,13 @@ declare namespace Models {
 
   interface Sound {
     artist: string;
+    extension: string;
     id: string;
     title: string;
   }
 
   interface Movie {
+    extension: string;
     id: string;
   }
 

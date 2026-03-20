@@ -11,7 +11,7 @@ export const MovieArea = ({ movie }: Props) => {
       className="border-cax-border bg-cax-surface-subtle relative h-full w-full overflow-hidden rounded-lg border"
       data-movie-area
     >
-      <PausableMovie src={getMoviePath(movie.id)} />
+      <PausableMovie src={getMoviePath(movie.id, movie.extension)} />
     </div>
   );
 };
