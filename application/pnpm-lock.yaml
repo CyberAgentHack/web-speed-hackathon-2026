@@ -45,9 +45,6 @@ importers:
       fast-average-color:
         specifier: 9.5.0
         version: 9.5.0
-      image-size:
-        specifier: 2.0.2
-        version: 2.0.2
       json-repair-js:
         specifier: 1.0.0
         version: 1.0.0
@@ -72,9 +69,6 @@ importers:
       normalize.css:
         specifier: 8.0.1
         version: 8.0.1
-      piexifjs:
-        specifier: 1.0.6
-        version: 1.0.6
       react:
         specifier: 19.2.0
         version: 19.2.0
@@ -145,9 +139,6 @@ importers:
       '@types/node':
         specifier: 22.18.8
         version: 22.18.8
-      '@types/piexifjs':
-        specifier: 1.0.0
-        version: 1.0.0
       '@types/react':
         specifier: 19.2.2
         version: 19.2.2
@@ -1381,9 +1372,6 @@ packages:
   '@types/node@22.18.8':
     resolution: {integrity: sha512-pAZSHMiagDR7cARo/cch1f3rXy0AEXwsVsVH09FcyeJVAzCnGgmYis7P3JidtTUjyadhTeSo8TgRPswstghDaw==}
 
-  '@types/piexifjs@1.0.0':
-    resolution: {integrity: sha512-PPiGeCkmkZQgYjvqtjD3kp4OkbCox2vEFVuK4DaLVOIazJLAXk+/ujbizkIPH5CN4AnN9Clo5ckzUlaj3+SzCA==}
-
   '@types/prismjs@1.26.5':
     resolution: {integrity: sha512-AUZTa7hQ2KY5L7AmtSiqxlhWxb4ina0yd8hNbl4TWuqnv/pFP0nDMb3YrfSBf4hJVGLh2YEIBfKaBW/9UEl6IQ==}
 
@@ -2485,11 +2473,6 @@ packages:
   ieee754@1.2.1:
     resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
 
-  image-size@2.0.2:
-    resolution: {integrity: sha512-IRqXKlaXwgSMAMtpNzZa1ZAe8m+Sa1770Dhk8VkSsP9LS+iHD62Zd8FQKs8fbPiagBE7BzoFX23cxFnwshpV6w==}
-    engines: {node: '>=16.x'}
-    hasBin: true
-
   import-fresh@3.3.1:
     resolution: {integrity: sha512-TR3KfrTZTYLPB6jUjfx6MF9WcWrHL9su5TObK4ZkYgBdWKPOFoSoQIdEuTuR82pmtxH2spWG9h6etwfr1pLBqQ==}
     engines: {node: '>=6'}
@@ -3318,9 +3301,6 @@ packages:
   picomatch@4.0.3:
     resolution: {integrity: sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q==}
     engines: {node: '>=12'}
-
-  piexifjs@1.0.6:
-    resolution: {integrity: sha512-0wVyH0cKohzBQ5Gi2V1BuxYpxWfxF3cSqfFXfPIpl5tl9XLS5z4ogqhUCD20AbHi0h9aJkqXNJnkVev6gwh2ag==}
 
   pify@2.3.0:
     resolution: {integrity: sha512-udgsAY+fTnvv7kI7aaxbqwWNb0AHiB0qBO89PZKPkoTmGOgdbrHDKD+0B2X4uTfJ/FT1R09r9gTsjUjNJotuog==}
@@ -5361,8 +5341,6 @@ snapshots:
     dependencies:
       undici-types: 6.21.0
 
-  '@types/piexifjs@1.0.0': {}
-
   '@types/prismjs@1.26.5': {}
 
   '@types/qs@6.14.0': {}
@@ -6631,8 +6609,6 @@ snapshots:
 
   ieee754@1.2.1: {}
 
-  image-size@2.0.2: {}
-
   import-fresh@3.3.1:
     dependencies:
       parent-module: 1.0.1
@@ -7659,8 +7635,6 @@ snapshots:
   picomatch@2.3.1: {}
 
   picomatch@4.0.3: {}
-
-  piexifjs@1.0.6: {}
 
   pify@2.3.0: {}
 
