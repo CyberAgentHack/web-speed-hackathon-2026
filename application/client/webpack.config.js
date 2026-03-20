@@ -25,7 +25,7 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: process.env.NODE_ENV === "production" ? "source-map" : "inline-source-map",
   entry: {
     main: [
       "core-js",
@@ -36,7 +36,7 @@ const config = {
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: process.env.NODE_ENV || "development",
   module: {
     rules: [
       {
@@ -56,12 +56,16 @@ const config = {
         resourceQuery: /binary/,
         type: "asset/bytes",
       },
+      {
+        test: /\.wasm$/,
+        type: "asset/resource",
+      },
     ],
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
     chunkFormat: false,
-    filename: "scripts/[name].js",
+    filename: "scripts/[name].[contenthash].js", // コンテンツハッシュ追加
     path: DIST_PATH,
     publicPath: "auto",
     clean: true,
@@ -77,7 +81,7 @@ const config = {
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
+      NODE_ENV: process.env.NODE_ENV || "development",
     }),
     new MiniCssExtractPlugin({
       filename: "styles/[name].css",
@@ -91,7 +95,7 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: true,
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
   ],
@@ -128,14 +132,32 @@ const config = {
     },
   },
   optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
+    minimize: false, // Terserの問題を回避するため無効化。splitChunksと他の最適化で十分なパフォーマンス改善が得られる。
+    splitChunks: {
+      chunks: 'all',
+      minSize: 20000, // 20KB以上のモジュールを分割対象に
+      maxInitialRequests: 10, // 初期ロード時の最大リクエスト数制限
+      maxAsyncRequests: 10, // 非同期ロード時の最大リクエスト数制限
+      cacheGroups: {
+        vendors: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all',
+          priority: 10,
+        },
+        default: {
+          minChunks: 2,
+          priority: -20,
+          reuseExistingChunk: true,
+        },
+      },
+    },
+    concatenateModules: true,
+    usedExports: true,
+    providedExports: true,
+    sideEffects: true,
   },
-  cache: false,
+  cache: true,
   ignoreWarnings: [
     {
       module: /@ffmpeg/,
