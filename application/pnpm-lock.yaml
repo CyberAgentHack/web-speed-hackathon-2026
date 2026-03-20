@@ -36,9 +36,6 @@ importers:
       common-tags:
         specifier: 1.8.2
         version: 1.8.2
-      fast-average-color:
-        specifier: 9.5.0
-        version: 9.5.0
       json-repair-js:
         specifier: 1.0.0
         version: 1.0.0
@@ -1609,10 +1606,6 @@ packages:
 
   extend@3.0.2:
     resolution: {integrity: sha512-fjquC59cD7CyW6urNXK0FBufkZcoiGG80wTuPujX590cB5Ttln20E2UB4S/WARVqhXffZl2LNgS+gQdPIIim/g==}
-
-  fast-average-color@9.5.0:
-    resolution: {integrity: sha512-nC6x2YIlJ9xxgkMFMd1BNoM1ctMjNoRKfRliPmiEWW3S6rLTHiQcy9g3pt/xiKv/D0NAAkhb9VyV+WJFvTqMGg==}
-    engines: {node: '>= 12'}
 
   fault@1.0.4:
     resolution: {integrity: sha512-CJ0HCB5tL5fYTEA7ToAq5+kTwd++Borf1/bifxd9iT70QcXr4MRrO3Llf8Ifs70q+SJcGHFtnIE/Nw6giCtECA==}
@@ -4174,8 +4167,6 @@ snapshots:
       - supports-color
 
   extend@3.0.2: {}
-
-  fast-average-color@9.5.0: {}
 
   fault@1.0.4:
     dependencies:

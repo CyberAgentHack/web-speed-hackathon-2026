@@ -808,13 +808,16 @@ components:
   schemas:
     ProfileImage:
       type: object
-      required: [id, alt]
+      required: [id, alt, averageColor]
       properties:
         id:
           type: string
           format: uuid
         alt:
           type: string
+        averageColor:
+          type: string
+          nullable: true
 
     User:
       type: object

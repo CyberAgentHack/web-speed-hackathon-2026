@@ -12,6 +12,7 @@ declare namespace Models {
 
   interface ProfileImage {
     alt: string;
+    averageColor: string | null;
     id: string;
   }
 

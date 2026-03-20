@@ -21,7 +21,7 @@ type DateToString<T> = {
 
 export type ProfileImageSeed = Pick<
   InferAttributes<ProfileImage>,
-  "id" | "alt"
+  "id" | "alt" | "averageColor"
 >;
 
 export type UserSeed = DateToString<

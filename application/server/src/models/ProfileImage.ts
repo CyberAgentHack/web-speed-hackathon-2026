@@ -13,6 +13,7 @@ export class ProfileImage extends Model<
 > {
   declare id: string;
   declare alt: string;
+  declare averageColor: string | null;
 }
 
 export function initProfileImage(sequelize: Sequelize) {
@@ -21,6 +22,11 @@ export function initProfileImage(sequelize: Sequelize) {
       alt: {
         allowNull: false,
         defaultValue: "",
+        type: DataTypes.STRING,
+      },
+      averageColor: {
+        allowNull: true,
+        defaultValue: null,
         type: DataTypes.STRING,
       },
       id: {

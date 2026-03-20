@@ -405,12 +405,34 @@ async function extractImageSize(
   }
 }
 
+async function extractAverageColor(
+  filePathWithoutExtension: string,
+): Promise<string | null> {
+  const filePath = await resolveImageFilePath(filePathWithoutExtension);
+  if (filePath == null) {
+    return null;
+  }
+
+  try {
+    const stats = await sharp(filePath).stats();
+    const [red, green, blue] = stats.channels
+      .slice(0, 3)
+      .map(({ mean }) => Math.round(mean));
+    return `rgb(${red}, ${green}, ${blue})`;
+  } catch {
+    return null;
+  }
+}
+
 async function generateProfileImages(): Promise<ProfileImageSeed[]> {
   // Use existing profile image IDs from public/images/profiles/
   return Promise.all(
     EXISTING_PROFILE_IMAGE_IDS.map(async (id) => ({
       id,
       alt: await extractImageAlt(
+        path.resolve(publicDir, `./images/profiles/${id}`),
+      ),
+      averageColor: await extractAverageColor(
         path.resolve(publicDir, `./images/profiles/${id}`),
       ),
     })),
@@ -987,8 +1009,9 @@ async function main() {
   console.log("0. Converting seed image assets to WebP if needed...");
   await ensureWebpImageAssets();
 
-  console.log("0.5 Converting seed movie assets to MP4...");
-  await ensureMp4MovieAssets();
+  // 高速化のためにスキップ
+  // console.log("0.5 Converting seed movie assets to MP4...");
+  // await ensureMp4MovieAssets();
 
   console.log("1. Generating ProfileImages (using existing assets)...");
   const profileImages = await generateProfileImages();
