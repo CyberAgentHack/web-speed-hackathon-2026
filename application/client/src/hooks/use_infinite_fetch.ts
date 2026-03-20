@@ -13,7 +13,7 @@ export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
 ): ReturnValues<T> {
-  const internalRef = useRef({ isLoading: false, offset: 0 });
+  const internalRef = useRef({ isLoading: false, offset: 0, hasMore: true });
 
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
     data: [],
@@ -23,7 +23,7 @@ export function useInfiniteFetch<T>(
 
   const fetchMore = useCallback(() => {
     const { isLoading, offset } = internalRef.current;
-    if (isLoading) {
+    if (isLoading || !apiPath) {
       return;
     }
 
@@ -34,18 +34,23 @@ export function useInfiniteFetch<T>(
     internalRef.current = {
       isLoading: true,
       offset,
+      hasMore: internalRef.current.hasMore,
     };
 
-    void fetcher(apiPath).then(
-      (allData) => {
+    const separator = apiPath.includes("?") ? "&" : "?";
+    const paginatedUrl = `${apiPath}${separator}limit=${LIMIT}&offset=${offset}`;
+
+    void fetcher(paginatedUrl).then(
+      (pageData) => {
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...pageData],
           isLoading: false,
         }));
         internalRef.current = {
           isLoading: false,
           offset: offset + LIMIT,
+          hasMore: pageData.length >= LIMIT,
         };
       },
       (error) => {
@@ -57,6 +62,7 @@ export function useInfiniteFetch<T>(
         internalRef.current = {
           isLoading: false,
           offset,
+          hasMore: internalRef.current.hasMore,
         };
       },
     );
@@ -71,6 +77,7 @@ export function useInfiniteFetch<T>(
     internalRef.current = {
       isLoading: false,
       offset: 0,
+      hasMore: true,
     };
 
     fetchMore();

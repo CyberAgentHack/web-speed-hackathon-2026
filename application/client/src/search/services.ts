@@ -20,8 +20,8 @@ export const parseSearchQuery = (query: string) => {
   const untilMatch = untilPattern.exec(untilPart);
 
   const keywords = query
-    .replace(/since:.*(\d{4}-\d{2}-\d{2}).*/g, "")
-    .replace(/until:.*(\d{4}-\d{2}-\d{2}).*/g, "")
+    .replace(/since:[^\s]*/g, "")
+    .replace(/until:[^\s]*/g, "")
     .trim();
 
   const extractDate = (s: string | null) => {
