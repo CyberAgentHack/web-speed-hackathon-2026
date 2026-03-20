@@ -3,15 +3,14 @@ import { NavigationItem } from "@web-speed-hackathon-2026/client/src/components/
 import { DirectMessageNotificationBadge } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageNotificationBadge";
 import { CrokLogo } from "@web-speed-hackathon-2026/client/src/components/foundation/CrokLogo";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
+import { MODAL_IDS } from "@web-speed-hackathon-2026/client/src/constants";
 
 interface Props {
   activeUser: Models.User | null;
-  authModalId: string;
-  newPostModalId: string;
   onLogout: () => void;
 }
 
-export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }: Props) => {
+export const Navigation = ({ activeUser, onLogout }: Props) => {
   return (
     <nav className="border-cax-border bg-cax-surface fixed right-0 bottom-0 left-0 z-10 h-12 border-t lg:relative lg:h-full lg:w-48 lg:border-t-0 lg:border-r">
       <div className="relative grid grid-flow-col items-center justify-evenly lg:fixed lg:flex lg:h-full lg:w-48 lg:flex-col lg:justify-between lg:p-2">
@@ -38,7 +37,7 @@ export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }
             <NavigationItem
               icon={<FontAwesomeIcon iconType="edit" styleType="solid" />}
               command="show-modal"
-              commandfor={newPostModalId}
+              commandfor={MODAL_IDS.NEW_POST}
               text="投稿する"
             />
           ) : null}
@@ -54,7 +53,7 @@ export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }
               icon={<FontAwesomeIcon iconType="sign-in-alt" styleType="solid" />}
               text="サインイン"
               command="show-modal"
-              commandfor={authModalId}
+              commandfor={MODAL_IDS.AUTH}
             />
           ) : null}
           {activeUser !== null ? (

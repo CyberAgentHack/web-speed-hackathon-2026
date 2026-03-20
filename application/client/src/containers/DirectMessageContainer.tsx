@@ -21,10 +21,9 @@ const TYPING_INDICATOR_DURATION_MS = 10 * 1000;
 
 interface Props {
   activeUser: Models.User | null;
-  authModalId: string;
 }
 
-export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
+export const DirectMessageContainer = ({ activeUser }: Props) => {
   const { conversationId = "" } = useParams<{ conversationId: string }>();
 
   const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(null);
@@ -106,7 +105,6 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     return (
       <DirectMessageGate
         headline="DMを利用するにはサインインしてください"
-        authModalId={authModalId}
       />
     );
   }

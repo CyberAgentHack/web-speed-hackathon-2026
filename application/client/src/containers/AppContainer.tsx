@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useId } from "react";
+import { useEffect } from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
@@ -37,47 +37,31 @@ export const AppContainer = () => {
     await signOutMutation.mutateAsync();
   };
 
-  const authModalId = useId();
-  const newPostModalId = useId();
-
   if (isLoadingActiveUser) {
     return <title>読込中 - CaX</title>;
   }
 
   return (
     <>
-      <AppPage
-        activeUser={activeUser}
-        authModalId={authModalId}
-        newPostModalId={newPostModalId}
-        onLogout={handleLogout}
-      >
+      <AppPage activeUser={activeUser} onLogout={handleLogout}>
         <Routes>
           <Route element={<TimelineContainer />} path="/" />
+          <Route element={<DirectMessageListContainer activeUser={activeUser} />} path="/dm" />
           <Route
-            element={
-              <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
-            }
-            path="/dm"
-          />
-          <Route
-            element={<DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />}
+            element={<DirectMessageContainer activeUser={activeUser} />}
             path="/dm/:conversationId"
           />
           <Route element={<SearchContainer />} path="/search" />
           <Route element={<UserProfileContainer />} path="/users/:username" />
           <Route element={<PostContainer />} path="/posts/:postId" />
           <Route element={<TermContainer />} path="/terms" />
-          <Route
-            element={<CrokContainer activeUser={activeUser} authModalId={authModalId} />}
-            path="/crok"
-          />
+          <Route element={<CrokContainer activeUser={activeUser} />} path="/crok" />
           <Route element={<NotFoundContainer />} path="*" />
         </Routes>
       </AppPage>
 
-      <AuthModalContainer id={authModalId} />
-      <NewPostModalContainer id={newPostModalId} />
+      <AuthModalContainer />
+      <NewPostModalContainer />
     </>
   );
 };

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
+import { MODAL_IDS } from "@web-speed-hackathon-2026/client/src/constants";
 import { NewPostModalPage } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage";
 import { sendFile, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
@@ -25,11 +26,7 @@ async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promis
   return sendJSON("/api/v1/posts", payload);
 }
 
-interface Props {
-  id: string;
-}
-
-export const NewPostModalContainer = ({ id }: Props) => {
+export const NewPostModalContainer = () => {
   const dialogId = useId();
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
@@ -75,7 +72,7 @@ export const NewPostModalContainer = ({ id }: Props) => {
   );
 
   return (
-    <Modal aria-labelledby={dialogId} id={id} ref={ref} closedby="any">
+    <Modal aria-labelledby={dialogId} id={MODAL_IDS.NEW_POST} ref={ref} closedby="any">
       <NewPostModalPage
         key={resetKey}
         id={dialogId}

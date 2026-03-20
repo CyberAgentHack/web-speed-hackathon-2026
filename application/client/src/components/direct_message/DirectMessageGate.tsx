@@ -1,15 +1,15 @@
+import { MODAL_IDS } from "@web-speed-hackathon-2026/client/src/constants";
+
 interface Props {
   headline: string;
   description?: string;
   buttonLabel?: string;
-  authModalId: string;
 }
 
 export const DirectMessageGate = ({
   headline,
   description = "サインインするとダイレクトメッセージ機能をご利用いただけます。",
   buttonLabel = "サインイン",
-  authModalId,
 }: Props) => {
   return (
     <>
@@ -21,7 +21,7 @@ export const DirectMessageGate = ({
           className="bg-cax-brand text-cax-surface-raised hover:bg-cax-brand-strong inline-flex items-center justify-center rounded-full px-6 py-2 shadow"
           type="button"
           command="show-modal"
-          commandfor={authModalId}
+          commandfor={MODAL_IDS.AUTH}
         >
           {buttonLabel}
         </button>

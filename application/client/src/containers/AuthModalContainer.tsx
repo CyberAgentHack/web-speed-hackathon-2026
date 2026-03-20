@@ -4,13 +4,10 @@ import { SubmissionError } from "redux-form";
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { AuthModalPage } from "@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
+import { MODAL_IDS } from "@web-speed-hackathon-2026/client/src/constants";
 import { FetchError } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 import { useSignIn, useSignUp } from "../auth/hooks";
-
-interface Props {
-  id: string;
-}
 
 const ERROR_MESSAGES: Record<string, string> = {
   INVALID_USERNAME: "ユーザー名に使用できない文字が含まれています",
@@ -36,7 +33,7 @@ function getErrorCode(err: unknown, type: "signin" | "signup"): string {
   return ERROR_MESSAGES[responseJSON.code]!;
 }
 
-export const AuthModalContainer = ({ id }: Props) => {
+export const AuthModalContainer = () => {
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
   useEffect(() => {
@@ -76,7 +73,7 @@ export const AuthModalContainer = ({ id }: Props) => {
   };
 
   return (
-    <Modal id={id} ref={ref} closedby="any">
+    <Modal id={MODAL_IDS.AUTH} ref={ref} closedby="any">
       <AuthModalPage
         key={resetKey}
         onRequestCloseModal={handleRequestCloseModal}
