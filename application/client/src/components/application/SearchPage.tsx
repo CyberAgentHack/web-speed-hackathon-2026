@@ -19,23 +19,18 @@ interface Props {
 }
 
 const SearchInput = ({ input, meta }: WrappedFieldProps) => {
-  const showError = (meta.touched || meta.submitFailed) && meta.error;
+  const hasError = (meta.touched || meta.submitFailed) && meta.error;
   return (
-    <div className="flex flex-1 flex-col">
-      <input
-        {...input}
-        className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
-          showError
-            ? "border-cax-danger focus:border-cax-danger"
-            : "border-cax-border focus:border-cax-brand-strong"
-        }`}
-        placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
-        type="text"
-      />
-      {showError && (
-        <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>
-      )}
-    </div>
+    <input
+      {...input}
+      className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
+        hasError
+          ? "border-cax-danger focus:border-cax-danger"
+          : "border-cax-border focus:border-cax-brand-strong"
+      }`}
+      placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
+      type="text"
+    />
   );
 };
 
@@ -46,6 +41,7 @@ const SearchPageComponent = ({
 }: Props & InjectedFormProps<SearchFormData, Props>) => {
   const navigate = useNavigate();
   const [isNegative, setIsNegative] = useState(false);
+  const [submitError, setSubmitError] = useState<string | undefined>(undefined);
 
   const parsed = parseSearchQuery(query);
 
@@ -88,19 +84,37 @@ const SearchPageComponent = ({
   }, [parsed]);
 
   const onSubmit = (values: SearchFormData) => {
+    setSubmitError(undefined);
     const sanitizedText = sanitizeSearchText(values.searchText.trim());
     navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
+  };
+
+  const handleClick = () => {
+    const formEl = document.querySelector<HTMLInputElement>('input[name="searchText"]');
+    const currentValue = formEl?.value ?? "";
+    const errors = validate({ searchText: currentValue });
+    if (errors.searchText) {
+      setSubmitError(errors.searchText as string);
+    } else {
+      setSubmitError(undefined);
+      handleSubmit(onSubmit)();
+    }
   };
 
   return (
     <div className="flex flex-col gap-4">
       <div className="bg-cax-surface p-4 shadow">
         <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="flex gap-2">
-            <Field name="searchText" component={SearchInput} />
-            <Button variant="primary" type="submit">
-              検索
-            </Button>
+          <div className="flex flex-1 flex-col">
+            <div className="flex gap-2">
+              <Field name="searchText" component={SearchInput} />
+              <Button variant="primary" type="button" onClick={handleClick}>
+                検索
+              </Button>
+            </div>
+            {submitError && (
+              <span className="text-cax-danger mt-1 text-xs">{submitError}</span>
+            )}
           </div>
         </form>
         <p className="text-cax-text-muted mt-2 text-xs">

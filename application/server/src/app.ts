@@ -3,6 +3,8 @@ import compression from "compression";
 import Express from "express";
 
 import { apiRouter } from "@web-speed-hackathon-2026/server/src/routes/api";
+import { imageOptimizerRouter } from "@web-speed-hackathon-2026/server/src/routes/image_optimizer";
+import { movieOptimizerRouter } from "@web-speed-hackathon-2026/server/src/routes/movie_optimizer";
 import { staticRouter } from "@web-speed-hackathon-2026/server/src/routes/static";
 import { sessionMiddleware } from "@web-speed-hackathon-2026/server/src/session";
 
@@ -18,8 +20,9 @@ app.use(bodyParser.raw({ limit: "10mb" }));
 app.use("/api/v1", (_req, res, next) => {
   res.header({
     "Cache-Control": "no-cache, no-transform",
-    Connection: "close",
   });
   return next();
 }, apiRouter);
+app.use(imageOptimizerRouter);
+app.use(movieOptimizerRouter);
 app.use(staticRouter);

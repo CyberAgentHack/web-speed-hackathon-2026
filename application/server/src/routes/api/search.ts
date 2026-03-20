@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { Op } from "sequelize";
 
-import { Post } from "@web-speed-hackathon-2026/server/src/models";
+import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 
 export const searchRouter = Router();
@@ -46,12 +46,24 @@ searchRouter.get("/search", async (req, res) => {
     ];
   }
 
-  const posts = await Post.findAll({
+  // Find matching post IDs first using unscoped to avoid eager loading JOINs
+  const matchedRows = await Post.unscoped().findAll({
+    attributes: ["id"],
+    include: [{ model: User.unscoped(), as: "user", attributes: [] }],
+    where: whereClause,
     limit,
     offset,
-    where: whereClause,
+    order: [["id", "DESC"]],
     subQuery: false,
+    raw: true,
   });
+
+  // Fetch full posts with default scope (eager loading)
+  const posts = matchedRows.length > 0
+    ? await Post.findAll({
+        where: { id: matchedRows.map((r: { id: string }) => r.id) },
+      })
+    : [];
 
   return res.status(200).type("application/json").send(posts);
 });

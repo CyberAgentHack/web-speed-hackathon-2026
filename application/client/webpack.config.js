@@ -63,10 +63,6 @@ const config = {
     clean: true,
   },
   plugins: [
-    new webpack.ProvidePlugin({
-      AudioContext: ["standardized-audio-context", "AudioContext"],
-      Buffer: ["buffer", "Buffer"],
-    }),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
@@ -94,26 +90,6 @@ const config = {
     alias: {
       "bayesian-bm25$": path.resolve(__dirname, "node_modules", "bayesian-bm25/dist/index.js"),
       ["kuromoji$"]: path.resolve(__dirname, "node_modules", "kuromoji/build/kuromoji.js"),
-      "@ffmpeg/ffmpeg$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/ffmpeg/dist/esm/index.js",
-      ),
-      "@ffmpeg/core$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/core/dist/umd/ffmpeg-core.js",
-      ),
-      "@ffmpeg/core/wasm$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/core/dist/umd/ffmpeg-core.wasm",
-      ),
-      "@imagemagick/magick-wasm/magick.wasm$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@imagemagick/magick-wasm/dist/magick.wasm",
-      ),
     },
     fallback: {
       fs: false,
@@ -128,6 +104,12 @@ const config = {
       maxInitialRequests: 20,
       maxAsyncRequests: 20,
       cacheGroups: {
+        nlp: {
+          test: /[\\/]node_modules[\\/](kuromoji|negaposi|bayesian-bm25)[\\/]/,
+          name: "nlp",
+          chunks: "async",
+          priority: 10,
+        },
         vendor: {
           test: /[\\/]node_modules[\\/]/,
           name: "vendor",
@@ -141,12 +123,7 @@ const config = {
     providedExports: true,
     sideEffects: true,
   },
-  ignoreWarnings: [
-    {
-      module: /@ffmpeg/,
-      message: /Critical dependency: the request of a dependency is an expression/,
-    },
-  ],
+  ignoreWarnings: [],
 };
 
 module.exports = config;

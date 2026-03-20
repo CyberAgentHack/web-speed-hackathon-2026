@@ -5,18 +5,6 @@ interface ParsedData {
   peaks: number[];
 }
 
-function mean(arr: (number | undefined)[]): number {
-  let sum = 0;
-  let count = 0;
-  for (const v of arr) {
-    if (v != null) {
-      sum += v;
-      count++;
-    }
-  }
-  return count === 0 ? 0 : sum / count;
-}
-
 async function calculate(data: ArrayBuffer): Promise<ParsedData> {
   const audioCtx = new AudioContext();
 
@@ -50,24 +38,58 @@ async function calculate(data: ArrayBuffer): Promise<ParsedData> {
 }
 
 interface Props {
-  soundData: ArrayBuffer;
+  soundUrl: string;
 }
 
-export const SoundWaveSVG = ({ soundData }: Props) => {
+export const SoundWaveSVG = ({ soundUrl }: Props) => {
   const uniqueIdRef = useRef(Math.random().toString(16));
+  const containerRef = useRef<SVGSVGElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
   const [{ max, peaks }, setPeaks] = useState<ParsedData>({
     max: 0,
     peaks: [],
   });
 
   useEffect(() => {
-    calculate(soundData).then(({ max, peaks }) => {
-      setPeaks({ max, peaks });
-    });
-  }, [soundData]);
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible) return;
+
+    let cancelled = false;
+    fetch(soundUrl)
+      .then((res) => res.arrayBuffer())
+      .then((data) => {
+        if (!cancelled) {
+          return calculate(data);
+        }
+      })
+      .then((result) => {
+        if (!cancelled && result) {
+          setPeaks(result);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [soundUrl, isVisible]);
 
   return (
-    <svg className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1">
+    <svg ref={containerRef} className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1">
       {peaks.map((peak, idx) => {
         const ratio = peak / max;
         return (
