@@ -59,7 +59,6 @@ const config = {
   },
   output: {
     chunkFilename: isProd ? "scripts/chunk-[contenthash].js" : "scripts/chunk-[id].js",
-    chunkFormat: false,
     filename: isProd ? "scripts/[name]-[contenthash].js" : "scripts/[name].js",
     path: DIST_PATH,
     publicPath: "auto",
@@ -127,14 +126,18 @@ const config = {
       url: false,
     },
   },
-  optimization: isProd ? {} : {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
-  },
+  optimization: isProd
+    ? {
+      splitChunks: { chunks: all },
+    }
+    : {
+      minimize: false,
+      splitChunks: false,
+      concatenateModules: false,
+      usedExports: false,
+      providedExports: false,
+      sideEffects: false,
+    },
   cache: !isProd,
   ignoreWarnings: [
     {
