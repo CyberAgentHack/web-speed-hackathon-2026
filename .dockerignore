@@ -1,6 +1,11 @@
-node_modules
+**/node_modules
 .git
 *.log
 
+application/.pnpm-store
+application/dist
+application/e2e
+application/server/dist
 application/server/seeds
 application/server/upload
+scoring-tool

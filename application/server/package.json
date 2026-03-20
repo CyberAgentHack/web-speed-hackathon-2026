@@ -7,7 +7,9 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
+    "build": "node ./scripts/build.mjs",
     "start": "tsx src/index.ts",
+    "start:prod": "node dist/index.js",
     "typecheck": "tsc --noEmit",
     "seed:generate": "tsx ./scripts/generateSeeds.ts",
     "seed:insert": "tsx ./scripts/insertSeeds.ts"
@@ -46,6 +48,7 @@
     "@types/node": "22.18.8",
     "@types/serve-static": "1.15.9",
     "@types/ws": "8.18.1",
+    "esbuild": "0.25.11",
     "typescript": "5.9.3"
   },
   "engines": {
