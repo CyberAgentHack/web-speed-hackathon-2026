@@ -49,5 +49,10 @@ export async function sendJSON<T>(url: string, data: object): Promise<T> {
     },
     method: "POST",
   });
+
+  if (!response.ok) {
+    throw { responseJSON: await response.json() };
+  }
+
   return parseJSONResponse<T>(response);
 }
