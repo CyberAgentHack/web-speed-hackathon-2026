@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
+import { ValiError } from "valibot";
 
 import { authRouter } from "@web-speed-hackathon-2026/server/src/routes/api/auth";
 import { crokRouter } from "@web-speed-hackathon-2026/server/src/routes/api/crok";
@@ -30,6 +31,9 @@ export type ApiType = typeof apiRouter;
 apiRouter.onError((err, c) => {
   if (err instanceof HTTPException) {
     return c.json({ message: err.message }, err.status);
+  }
+  if (err instanceof ValiError) {
+    return c.json({ message: "Bad Request" }, 400);
   }
   console.error(err);
   return c.json({ message: err.message }, 500);

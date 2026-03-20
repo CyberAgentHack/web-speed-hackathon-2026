@@ -2,6 +2,7 @@ import { and, eq, or } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { v4 as uuidv4 } from "uuid";
+import * as v from "valibot";
 
 import { upgradeWebSocket } from "@web-speed-hackathon-2026/server/src/app";
 import { getDb } from "@web-speed-hackathon-2026/server/src/db";
@@ -27,6 +28,14 @@ import type {
   DirectMessageConversationResponse,
   DirectMessageResponse,
 } from "@web-speed-hackathon-2026/server/src/types/api";
+
+const CreateDmBody = v.object({
+  peerId: v.string(),
+});
+
+const SendMessageBody = v.object({
+  body: v.pipe(v.string(), v.trim(), v.minLength(1)),
+});
 
 export const directMessageRouter = new Hono<SessionEnv>()
   .get("/dm", async (c) => {
@@ -60,8 +69,8 @@ export const directMessageRouter = new Hono<SessionEnv>()
       throw new HTTPException(401);
     }
 
-    const body = await c.req.json();
-    const peer = await findUserWithProfile(eq(users.id, body?.peerId));
+    const body = v.parse(CreateDmBody, await c.req.json());
+    const peer = await findUserWithProfile(eq(users.id, body.peerId));
     if (!peer) {
       throw new HTTPException(404);
     }
@@ -107,11 +116,7 @@ export const directMessageRouter = new Hono<SessionEnv>()
       throw new HTTPException(401);
     }
 
-    const reqBody = await c.req.json();
-    const body: unknown = reqBody?.body;
-    if (typeof body !== "string" || body.trim().length === 0) {
-      throw new HTTPException(400);
-    }
+    const reqBody = v.parse(SendMessageBody, await c.req.json());
 
     const db = getDb();
     const conversationId = c.req.param("conversationId");
@@ -138,7 +143,7 @@ export const directMessageRouter = new Hono<SessionEnv>()
     db.insert(directMessages)
       .values({
         id: messageId,
-        body: body.trim(),
+        body: reqBody.body,
         conversationId: conversation.id,
         senderId: userId,
         isRead: false,

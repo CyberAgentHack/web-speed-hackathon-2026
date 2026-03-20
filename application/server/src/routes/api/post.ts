@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { v4 as uuidv4 } from "uuid";
+import * as v from "valibot";
 
 import { getDb, getSqlite } from "@web-speed-hackathon-2026/server/src/db";
 import {
@@ -16,6 +17,13 @@ import {
 import type { SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
 import type { CommentResponse, PostResponse } from "@web-speed-hackathon-2026/server/src/types/api";
 import { parsePagination } from "@web-speed-hackathon-2026/server/src/utils/parse_pagination";
+
+const CreatePostBody = v.object({
+  text: v.string(),
+  images: v.optional(v.array(v.object({ id: v.string() }))),
+  movie: v.optional(v.object({ id: v.string() })),
+  sound: v.optional(v.object({ id: v.string() })),
+});
 
 export const postRouter = new Hono<SessionEnv>()
   .get("/posts", async (c) => {
@@ -41,7 +49,7 @@ export const postRouter = new Hono<SessionEnv>()
       throw new HTTPException(401);
     }
 
-    const body = await c.req.json();
+    const body = v.parse(CreatePostBody, await c.req.json());
     const db = getDb();
     const sqlite = getSqlite();
     const postId = uuidv4();

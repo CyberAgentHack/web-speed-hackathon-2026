@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { v4 as uuidv4 } from "uuid";
+import * as v from "valibot";
 
 import { getDb } from "@web-speed-hackathon-2026/server/src/db";
 import { findUserWithProfile } from "@web-speed-hackathon-2026/server/src/db/queries";
@@ -11,9 +12,21 @@ import { serializeUser } from "@web-speed-hackathon-2026/server/src/db/serialize
 import type { SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
 import type { UserResponse } from "@web-speed-hackathon-2026/server/src/types/api";
 
+const SignupBody = v.object({
+  username: v.string(),
+  name: v.string(),
+  password: v.string(),
+  description: v.optional(v.string()),
+});
+
+const SigninBody = v.object({
+  username: v.string(),
+  password: v.string(),
+});
+
 export const authRouter = new Hono<SessionEnv>()
   .post("/signup", async (c) => {
-    const body = await c.req.json();
+    const body = v.parse(SignupBody, await c.req.json());
 
     if (!/^[a-z0-9_-]+$/i.test(body.username)) {
       return c.json({ code: "INVALID_USERNAME" as const }, 400);
@@ -47,7 +60,7 @@ export const authRouter = new Hono<SessionEnv>()
     return c.json<UserResponse>(serializeUser(user!) as unknown as UserResponse);
   })
   .post("/signin", async (c) => {
-    const body = await c.req.json();
+    const body = v.parse(SigninBody, await c.req.json());
     const db = getDb();
 
     const row = db.select().from(users).where(eq(users.username, body.username)).get();

@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
+import * as v from "valibot";
 
 import { getDb } from "@web-speed-hackathon-2026/server/src/db";
 import {
@@ -16,6 +17,13 @@ import {
 import type { SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
 import type { PostResponse, UserResponse } from "@web-speed-hackathon-2026/server/src/types/api";
 import { parsePagination } from "@web-speed-hackathon-2026/server/src/utils/parse_pagination";
+
+const UpdateProfileBody = v.object({
+  name: v.optional(v.string()),
+  description: v.optional(v.string()),
+  password: v.optional(v.string()),
+  profileImageId: v.optional(v.string()),
+});
 
 export const userRouter = new Hono<SessionEnv>()
   .get("/me", async (c) => {
@@ -39,7 +47,7 @@ export const userRouter = new Hono<SessionEnv>()
       throw new HTTPException(404);
     }
 
-    const body = await c.req.json();
+    const body = v.parse(UpdateProfileBody, await c.req.json());
     const db = getDb();
     const updates: Record<string, unknown> = {
       ...body,
