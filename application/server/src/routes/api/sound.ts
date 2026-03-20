@@ -1,15 +1,18 @@
+import { execFile } from "child_process";
 import { promises as fs } from "fs";
+import os from "os";
 import path from "path";
+import { promisify } from "util";
 
 import { Router } from "express";
-import { fileTypeFromBuffer } from "file-type";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import { extractMetadataFromSound } from "@web-speed-hackathon-2026/server/src/utils/extract_metadata_from_sound";
 
-// 変換した音声の拡張子
+const execFileAsync = promisify(execFile);
+
 const EXTENSION = "mp3";
 
 export const soundRouter = Router();
@@ -22,18 +25,33 @@ soundRouter.post("/sounds", async (req, res) => {
     throw new httpErrors.BadRequest();
   }
 
-  const type = await fileTypeFromBuffer(req.body);
-  if (type === undefined || type.ext !== EXTENSION) {
-    throw new httpErrors.BadRequest("Invalid file type");
-  }
-
   const soundId = uuidv4();
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "sound-"));
+  const inputPath = path.join(tmpDir, "input");
+  const outputPath = path.join(tmpDir, `output.${EXTENSION}`);
 
-  const { artist, title } = await extractMetadataFromSound(req.body);
+  try {
+    await fs.writeFile(inputPath, req.body);
 
-  const filePath = path.resolve(UPLOAD_PATH, `./sounds/${soundId}.${EXTENSION}`);
-  await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds"), { recursive: true });
-  await fs.writeFile(filePath, req.body);
+    await execFileAsync(
+      "ffmpeg",
+      ["-y", "-i", inputPath, "-vn", outputPath],
+      { maxBuffer: 10 * 1024 * 1024 },
+    );
 
-  return res.status(200).type("application/json").send({ artist, id: soundId, title });
+    const outputData = await fs.readFile(outputPath);
+
+    const { artist, title } = await extractMetadataFromSound(outputData);
+
+    await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds"), { recursive: true });
+    const filePath = path.resolve(UPLOAD_PATH, `./sounds/${soundId}.${EXTENSION}`);
+    await fs.writeFile(filePath, outputData);
+
+    return res.status(200).type("application/json").send({ artist, id: soundId, title });
+  } catch (err) {
+    console.error("[sound upload] ffmpeg error:", err);
+    throw new httpErrors.BadRequest("Sound conversion failed");
+  } finally {
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  }
 });
