@@ -1,5 +1,6 @@
-import { promises as fs } from "fs";
-import path from "path";
+import fs from "node:fs";
+import { promises as fsp } from "node:fs";
+import path from "node:path";
 
 import { Hono } from "hono";
 import sharp from "sharp";
@@ -8,7 +9,6 @@ import { PUBLIC_PATH, UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/p
 import type { SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
 
 const avifCache = new Map<string, Buffer>();
-const webpCache = new Map<string, Buffer>();
 
 export const imageOptimizationRouter = new Hono<SessionEnv>();
 
@@ -19,42 +19,45 @@ imageOptimizationRouter.get("*", async (c, next) => {
 
   const acceptHeader = c.req.header("accept") ?? "";
   const supportsAvif = acceptHeader.includes("image/avif");
-  const supportsWebp = acceptHeader.includes("image/webp");
 
-  if (!supportsAvif && !supportsWebp) {
+  if (!supportsAvif) {
     return next();
   }
 
   const requestPath = decodeURIComponent(c.req.path);
-  const cacheKey = requestPath;
+  const avifPath = requestPath.replace(/\.(jpg|jpeg|png)$/i, ".avif");
 
-  // AVIF has highest priority
-  if (supportsAvif) {
-    if (avifCache.has(cacheKey)) {
+  // 1. Check in-memory cache
+  if (avifCache.has(requestPath)) {
+    c.header("Content-Type", "image/avif");
+    c.header("Cache-Control", "public, max-age=86400");
+    c.header("Vary", "Accept");
+    return c.body(new Uint8Array(avifCache.get(requestPath)!));
+  }
+
+  // 2. Check for pre-generated AVIF file on disk
+  const avifCandidates = [path.join(UPLOAD_PATH, avifPath), path.join(PUBLIC_PATH, avifPath)];
+  for (const candidate of avifCandidates) {
+    if (fs.existsSync(candidate)) {
+      const buf = fs.readFileSync(candidate);
+      avifCache.set(requestPath, buf as Buffer);
       c.header("Content-Type", "image/avif");
       c.header("Cache-Control", "public, max-age=86400");
       c.header("Vary", "Accept");
-      return c.body(new Uint8Array(avifCache.get(cacheKey)!));
-    }
-  } else if (supportsWebp) {
-    if (webpCache.has(cacheKey)) {
-      c.header("Content-Type", "image/webp");
-      c.header("Cache-Control", "public, max-age=86400");
-      c.header("Vary", "Accept");
-      return c.body(new Uint8Array(webpCache.get(cacheKey)!));
+      return c.body(new Uint8Array(buf));
     }
   }
 
-  const candidates = [path.join(UPLOAD_PATH, requestPath), path.join(PUBLIC_PATH, requestPath)];
-
+  // 3. Fall back to on-the-fly conversion for uploaded images
+  const jpgCandidates = [path.join(UPLOAD_PATH, requestPath), path.join(PUBLIC_PATH, requestPath)];
   let originalPath: string | null = null;
-  for (const candidate of candidates) {
+  for (const candidate of jpgCandidates) {
     try {
-      await fs.access(candidate);
+      await fsp.access(candidate);
       originalPath = candidate;
       break;
     } catch {
-      // File not found in this directory, try next
+      // not found
     }
   }
 
@@ -63,25 +66,12 @@ imageOptimizationRouter.get("*", async (c, next) => {
   }
 
   try {
-    if (supportsAvif) {
-      const avifBuffer = await sharp(originalPath).avif({ quality: 63, effort: 4 }).toBuffer();
-
-      avifCache.set(cacheKey, avifBuffer);
-
-      c.header("Content-Type", "image/avif");
-      c.header("Cache-Control", "public, max-age=86400");
-      c.header("Vary", "Accept");
-      return c.body(new Uint8Array(avifBuffer));
-    }
-
-    const webpBuffer = await sharp(originalPath).webp({ quality: 80 }).toBuffer();
-
-    webpCache.set(cacheKey, webpBuffer);
-
-    c.header("Content-Type", "image/webp");
+    const avifBuffer = await sharp(originalPath).avif({ quality: 63, effort: 4 }).toBuffer();
+    avifCache.set(requestPath, avifBuffer);
+    c.header("Content-Type", "image/avif");
     c.header("Cache-Control", "public, max-age=86400");
     c.header("Vary", "Accept");
-    return c.body(new Uint8Array(webpBuffer));
+    return c.body(new Uint8Array(avifBuffer));
   } catch {
     return next();
   }

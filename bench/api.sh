@@ -38,13 +38,13 @@ fi
 
 # テスト対象エンドポイント（GET のみ — POST は副作用あるため除外）
 declare -A ENDPOINTS=(
-  [get_posts]="/api/v1/posts"
+  [get_posts]="/api/v1/posts?limit=30&offset=0"
   [get_post_detail]="/api/v1/posts/ff93a168-ea7c-4202-9879-672382febfda"
-  [get_post_comments]="/api/v1/posts/ff93a168-ea7c-4202-9879-672382febfda/comments"
-  [get_search]="/api/v1/search?q=test"
+  [get_post_comments]="/api/v1/posts/ff93a168-ea7c-4202-9879-672382febfda/comments?limit=30&offset=0"
+  [get_search]="/api/v1/search?q=test&limit=30&offset=0"
   [get_crok_suggestions]="/api/v1/crok/suggestions"
   [get_user]="/api/v1/users/o6yq16leo"
-  [get_user_posts]="/api/v1/users/o6yq16leo/posts"
+  [get_user_posts]="/api/v1/users/o6yq16leo/posts?limit=30&offset=0"
   [ssr_home]="/"
   [ssr_post]="/posts/ff93a168-ea7c-4202-9879-672382febfda"
   [ssr_search]="/search"

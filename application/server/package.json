@@ -12,7 +12,8 @@
     "test": "bun test --preload ./src/test/setup.ts",
     "typecheck": "tsc --noEmit",
     "seed:generate": "bun ./scripts/generateSeeds.ts",
-    "seed:insert": "bun ./scripts/insertSeeds.ts"
+    "seed:insert": "bun ./scripts/insertSeeds.ts",
+    "pregenerate:avif": "bun ./scripts/pregenerate-avif.ts"
   },
   "dependencies": {
     "@huggingface/transformers": "3.8.1",

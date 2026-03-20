@@ -406,13 +406,15 @@ describe("API Integration Tests", () => {
       expect(res.headers.get("Content-Type")).toBe("image/avif");
     });
 
-    test("Accept: image/webp → Content-Type: image/webp", async () => {
+    test("Accept: image/webp (no avif) → Content-Type: image/jpeg (fallback)", async () => {
       await routesReady;
       const res = await app.request(`/images/${imageId}.jpg`, {
         headers: { Accept: "image/webp,*/*" },
       });
       expect(res.status).toBe(200);
-      expect(res.headers.get("Content-Type")).toBe("image/webp");
+      // WebP support was removed; only AVIF is negotiated
+      const contentType = res.headers.get("Content-Type");
+      expect(contentType).toContain("image/jpeg");
     });
 
     test("No Accept header → Content-Type: image/jpeg", async () => {
