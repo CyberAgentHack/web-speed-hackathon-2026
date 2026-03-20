@@ -1,4 +1,3 @@
-import history from "connect-history-api-fallback";
 import type { Response } from "express";
 import { Router } from "express";
 import serveStatic from "serve-static";
@@ -26,9 +25,6 @@ function setPublicAssetCache(_res: unknown, _filePath: string) {
   const res = _res as Response;
   res.setHeader("Cache-Control", `public, max-age=${YEAR_IN_SECONDS}, immutable`);
 }
-
-// SPA 対応のため、ファイルが存在しないときに index.html を返す
-staticRouter.use(history());
 
 staticRouter.use(
   serveStatic(UPLOAD_PATH, {

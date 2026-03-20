@@ -37,16 +37,22 @@ const NewPostModalContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer").then((m) => ({ default: m.NewPostModalContainer })),
 );
 
-export const AppContainer = () => {
+interface Props {
+  ssrActiveUser?: Models.User | null;
+}
+
+export const AppContainer = ({ ssrActiveUser }: Props) => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
-  const [activeUser, setActiveUser] = useState<Models.User | null>(null);
-  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
+  const hasSSRData = ssrActiveUser !== undefined;
+  const [activeUser, setActiveUser] = useState<Models.User | null>(hasSSRData ? ssrActiveUser : null);
+  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(!hasSSRData);
   useEffect(() => {
+    if (hasSSRData) return;
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {
         setActiveUser(user);
@@ -54,7 +60,7 @@ export const AppContainer = () => {
       .finally(() => {
         setIsLoadingActiveUser(false);
       });
-  }, [setActiveUser, setIsLoadingActiveUser]);
+  }, [hasSSRData]);
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
     setActiveUser(null);

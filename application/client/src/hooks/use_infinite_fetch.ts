@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
+
+import { SSRDataContext } from "@web-speed-hackathon-2026/client/src/contexts/SSRDataContext";
 
 const LIMIT = 30;
 
@@ -13,12 +15,19 @@ export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
 ): ReturnValues<T> {
-  const internalRef = useRef({ isLoading: false, offset: 0 });
+  const ssrData = useContext(SSRDataContext);
+  const ssrValue = ssrData?.[apiPath] as T[] | undefined;
+  const skipRef = useRef(ssrValue !== undefined);
+
+  const internalRef = useRef({
+    isLoading: false,
+    offset: ssrValue !== undefined ? ssrValue.length : 0,
+  });
 
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
-    data: [],
+    data: ssrValue !== undefined ? ssrValue : [],
     error: null,
-    isLoading: true,
+    isLoading: ssrValue !== undefined ? false : true,
   });
 
   const fetchMore = useCallback(() => {
@@ -63,6 +72,11 @@ export function useInfiniteFetch<T>(
   }, [apiPath, fetcher]);
 
   useEffect(() => {
+    if (skipRef.current) {
+      skipRef.current = false;
+      return;
+    }
+
     setResult(() => ({
       data: [],
       error: null,
