@@ -1,6 +1,7 @@
 /// <reference types="webpack-dev-server" />
 const path = require("path");
 
+const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
@@ -10,6 +11,8 @@ const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
+const isDevelopment = process.env['NODE_ENV'] === 'development';
+const useAnalyzer = isDevelopment;
 
 /** @type {import('webpack').Configuration} */
 const config = {
@@ -25,7 +28,7 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: isDevelopment ? 'eval-cheap-module-source-map' : false,
   entry: {
     main: [
       "core-js",
@@ -36,7 +39,7 @@ const config = {
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: isDevelopment ? 'development' : 'production',
   module: {
     rules: [
       {
@@ -60,7 +63,6 @@ const config = {
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
     filename: "scripts/[name].js",
     path: DIST_PATH,
     publicPath: "auto",
@@ -91,9 +93,12 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: 'body',
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
+    ...(useAnalyzer
+      ? [new BundleAnalyzerPlugin({ analyzerMode: "static", openAnalyzer: true })]
+      : []),
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
@@ -128,10 +133,35 @@ const config = {
     },
   },
   optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
+    minimize: true,
+    splitChunks: {
+      chunks: 'all',
+      cacheGroups: {
+        react: {
+          test: /[\\/]node_modules[\\/](react|react-dom|react-router|redux|react-redux|redux-form|scheduler)[\\/]/,
+          name: 'vendor-react',
+          chunks: 'all',
+          priority: 30,
+          enforce: true,
+        },
+        heavy: {
+          test: /[\\/]node_modules[\\/](@ffmpeg|@imagemagick|@mlc-ai|kuromoji|bayesian-bm25|negaposi-analyzer-ja)[\\/]/,
+          name: 'vendor-heavy',
+          chunks: 'all',
+          priority: 20,
+          enforce: true,
+        },
+        vendors: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendor',
+          chunks: 'all',
+          priority: 10,
+          enforce: true,
+        },
+      },
+    },
+    concatenateModules: true,
+    usedExports: true,
     providedExports: false,
     sideEffects: false,
   },
