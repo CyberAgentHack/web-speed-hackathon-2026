@@ -22,7 +22,10 @@
 - [x] デッドコード `extract_metadata_from_sound.ts` を削除
 - [x] `negaposi-analyzer-ja` + `kuromoji` + `bayesian-bm25` + `bluebird` → サーバー側 `POST /api/v1/sentiment` + `GET /api/v1/crok/suggestions/search` に移行
   - サジェスト候補のハイライトは `queryTokens` をレスポンスに含めてクライアントに渡す形で対応 (名詞ハイライト要件を維持)
-- main.js: **107.8 MB → ~12 MiB** に削減
+- [x] `react-syntax-highlighter` → `ChatMessage` で `React.lazy` + `Suspense` に変更、highlight.js チャンクを main.js から分離
+  - メッセージ送信時 (`CrokContainer.sendMessage`) に `import()` で prefetch 開始、コードブロック描画までの sleep 時間内にロード完了する設計
+  - **light ビルド + 言語絞り込みを採用しなかった理由**: `Light` ビルドの自動検出は登録済み言語の中からしか選ばないため、全言語入りビルドと自動検出結果が変わりシンタックスハイライトの色付きが変化する。挙動変更禁止のため full ビルドのまま遅延ロードで対応
+- main.js: **107.8 MB → ~12 MiB** に削減 (highlight.js 遅延分離で更に削減)
 
 ### Phase 3: 遅延除去・ReDoS 修正
 
@@ -35,7 +38,6 @@
 
 ## 未対応 (優先順)
 
-- [ ] **Phase 2**: `react-syntax-highlighter` → light ビルド + 必要言語のみ登録
 - [ ] **Phase 4**: 動画を GIF → WebM/MP4 に変換して配信
 - [ ] **Phase 4**: 画像を AVIF/WebP + リサイズして配信
 - [ ] **Phase 4**: 音声を MP3 → Opus に変換して配信

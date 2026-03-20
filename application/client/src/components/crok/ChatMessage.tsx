@@ -1,12 +1,24 @@
 import "katex/dist/katex.min.css";
+import { ComponentProps, lazy, Suspense } from "react";
 import Markdown from "react-markdown";
 import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 
-import { CodeBlock } from "@web-speed-hackathon-2026/client/src/components/crok/CodeBlock";
 import { TypingIndicator } from "@web-speed-hackathon-2026/client/src/components/crok/TypingIndicator";
 import { CrokLogo } from "@web-speed-hackathon-2026/client/src/components/foundation/CrokLogo";
+
+const LazyCodeBlock = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/components/crok/CodeBlock").then((m) => ({
+    default: m.CodeBlock,
+  })),
+);
+
+const PreRenderer = (props: ComponentProps<"pre">) => (
+  <Suspense fallback={<pre {...props} />}>
+    <LazyCodeBlock {...props} />
+  </Suspense>
+);
 
 interface Props {
   message: Models.ChatMessage;
@@ -33,7 +45,7 @@ const AssistantMessage = ({ content }: { content: string }) => {
         <div className="markdown text-cax-text max-w-none">
           {content ? (
             <Markdown
-              components={{ pre: CodeBlock }}
+              components={{ pre: PreRenderer }}
               key={content}
               rehypePlugins={[rehypeKatex]}
               remarkPlugins={[remarkMath, remarkGfm]}

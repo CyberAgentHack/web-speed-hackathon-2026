@@ -53,6 +53,9 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
     (userInput: string) => {
       if (!userInput.trim() || isStreaming) return;
 
+      // コードブロックが描画される前に highlight.js の prefetch を開始する
+      void import("@web-speed-hackathon-2026/client/src/components/crok/CodeBlock");
+
       const userMessage: Models.ChatMessage = {
         role: "user",
         content: userInput,
