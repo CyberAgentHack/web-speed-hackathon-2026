@@ -7,7 +7,7 @@ import json from "react-syntax-highlighter/dist/esm/languages/hljs/json";
 import python from "react-syntax-highlighter/dist/esm/languages/hljs/python";
 import typescript from "react-syntax-highlighter/dist/esm/languages/hljs/typescript";
 import xml from "react-syntax-highlighter/dist/esm/languages/hljs/xml";
-import { atomOneLight } from "react-syntax-highlighter/dist/esm/styles/hljs";
+import atomOneLight from "react-syntax-highlighter/dist/esm/styles/hljs/atom-one-light";
 
 SyntaxHighlighter.registerLanguage("bash", bash);
 SyntaxHighlighter.registerLanguage("css", css);

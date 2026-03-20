@@ -11,12 +11,10 @@
   },
   "dependencies": {
     "@web-speed-hackathon-2026/client": "workspace:*",
-    "buffer": "6.0.3",
     "classnames": "2.5.1",
     "fast-average-color": "9.5.0",
     "katex": "0.16.25",
     "normalize.css": "8.0.1",
-    "pako": "2.1.0",
     "piexifjs": "1.0.6",
     "react": "19.2.0",
     "react-dom": "19.2.0",
@@ -28,8 +26,7 @@
     "redux-form": "8.3.10",
     "rehype-katex": "7.0.1",
     "remark-gfm": "4.0.1",
-    "remark-math": "6.0.0",
-    "standardized-audio-context": "25.3.77"
+    "remark-math": "6.0.0"
   },
   "devDependencies": {
     "@babel/core": "7.28.4",
@@ -40,8 +37,6 @@
     "@tsconfig/strictest": "2.0.8",
     "@types/encoding-japanese": "2.2.1",
     "@types/node": "22.18.8",
-    "@types/omggif": "1.0.5",
-    "@types/pako": "2.0.4",
     "@types/piexifjs": "1.0.0",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.1",

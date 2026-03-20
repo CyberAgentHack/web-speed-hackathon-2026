@@ -26,9 +26,13 @@ export const CoveredImage = ({ src }: Props) => {
   const alt = useMemo(() => {
     if (data == null) return "";
     try {
-      const exif = load(Buffer.from(data).toString("binary"));
+      const binary = Array.from(new Uint8Array(data), (b) => String.fromCharCode(b)).join("");
+      const exif = load(binary);
       const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-      return raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
+      if (raw == null) return "";
+      const bytes = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+      return new TextDecoder().decode(bytes);
     } catch {
       return "";
     }
