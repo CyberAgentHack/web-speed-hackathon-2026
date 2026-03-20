@@ -177,6 +177,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
 
   useEffect(() => {
     let cancelled = false;
+    let debounceId: ReturnType<typeof setTimeout> | null = null;
 
     const updateSuggestions = async () => {
       if (!inputValue.trim()) {
@@ -212,10 +213,25 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
       }
     };
 
-    void updateSuggestions();
+    if (!inputValue.trim()) {
+      setSuggestions([]);
+      setQueryTokens([]);
+      setShowSuggestions(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    setShowSuggestions(false);
+    debounceId = setTimeout(() => {
+      void updateSuggestions();
+    }, 250);
 
     return () => {
       cancelled = true;
+      if (debounceId !== null) {
+        clearTimeout(debounceId);
+      }
     };
   }, [inputValue]);
 
