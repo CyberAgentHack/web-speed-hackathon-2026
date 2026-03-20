@@ -22,6 +22,7 @@
     "express-session": "1.18.2",
     "file-type": "21.1.1",
     "http-errors": "2.0.0",
+    "image-size": "1.1.1",
     "kuromoji": "0.1.2",
     "music-metadata": "11.10.3",
     "negaposi-analyzer-ja": "1.0.1",

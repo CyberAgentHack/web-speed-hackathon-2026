@@ -1,7 +1,6 @@
 import classNames from "classnames";
-import sizeOf from "image-size";
 import { load, ImageIFD } from "piexifjs";
-import { MouseEvent, RefCallback, useCallback, useId, useMemo, useState } from "react";
+import { MouseEvent, RefCallback, useCallback, useEffect, useId, useMemo, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
@@ -10,6 +9,8 @@ import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers
 
 interface Props {
   src: string;
+  width: number;
+  height: number;
 }
 
 function isJpeg(data: ArrayBuffer): boolean {
@@ -20,7 +21,7 @@ function isJpeg(data: ArrayBuffer): boolean {
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
-export const CoveredImage = ({ src }: Props) => {
+export const CoveredImage = ({ src, width, height }: Props) => {
   const dialogId = useId();
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
@@ -30,8 +31,8 @@ export const CoveredImage = ({ src }: Props) => {
   const { data, isLoading } = useFetch(src, fetchBinary);
 
   const imageSize = useMemo(() => {
-    return data != null ? sizeOf(Buffer.from(data)) : { height: 0, width: 0 };
-  }, [data]);
+    return { height, width };
+  }, [height, width]);
 
   const alt = useMemo(() => {
     if (data == null || isJpeg(data) === false) {
@@ -50,6 +51,12 @@ export const CoveredImage = ({ src }: Props) => {
   const blobUrl = useMemo(() => {
     return data != null ? URL.createObjectURL(new Blob([data])) : null;
   }, [data]);
+
+  // Clean up blob URL to prevent memory leak
+  useEffect(() => {
+    if (!blobUrl) return;
+    return () => URL.revokeObjectURL(blobUrl);
+  }, [blobUrl]);
 
   const [containerSize, setContainerSize] = useState({ height: 0, width: 0 });
   const callbackRef = useCallback<RefCallback<HTMLDivElement>>((el) => {
@@ -70,6 +77,8 @@ export const CoveredImage = ({ src }: Props) => {
     <div ref={callbackRef} className="relative h-full w-full overflow-hidden">
       <img
         alt={alt}
+        width={width}
+        height={height}
         className={classNames(
           "absolute left-1/2 top-1/2 max-w-none -translate-x-1/2 -translate-y-1/2",
           {

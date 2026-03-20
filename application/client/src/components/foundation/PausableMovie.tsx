@@ -10,12 +10,14 @@ import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers
 
 interface Props {
   src: string;
+  width?: number;
+  height?: number;
 }
 
 /**
- * クリックすると再生・一時停止を切り替えます。
+ * クリックすると再生/一時停止を切り替える GIF プレイヤー。
  */
-export const PausableMovie = ({ src }: Props) => {
+export const PausableMovie = ({ src, width, height }: Props) => {
   const { data, isLoading } = useFetch(src, fetchBinary);
 
   const animatorRef = useRef<Animator>(null);
@@ -27,7 +29,6 @@ export const PausableMovie = ({ src }: Props) => {
         return;
       }
 
-      // GIF を解析する
       const reader = new GifReader(new Uint8Array(data));
       const frames = Decoder.decodeFramesSync(reader);
       const animator = new Animator(reader, frames);
@@ -35,7 +36,6 @@ export const PausableMovie = ({ src }: Props) => {
       animator.animateInCanvas(el);
       animator.onFrame(frames[0]!);
 
-      // 視覚効果 off のとき GIF を自動再生しない
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         setIsPlaying(false);
         animator.stop();
@@ -51,40 +51,41 @@ export const PausableMovie = ({ src }: Props) => {
 
   const [isPlaying, setIsPlaying] = useState(true);
   const handleClick = useCallback(() => {
-    setIsPlaying((isPlaying) => {
-      if (isPlaying) {
+    setIsPlaying((currentIsPlaying) => {
+      if (currentIsPlaying) {
         animatorRef.current?.stop();
       } else {
         animatorRef.current?.start();
       }
-      return !isPlaying;
+
+      return !currentIsPlaying;
     });
   }, []);
 
-  if (isLoading || data === null) {
-    return null;
-  }
-
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
-      <button
-        aria-label="動画プレイヤー"
-        className="group relative block h-full w-full"
-        onClick={handleClick}
-        type="button"
-      >
-        <canvas ref={canvasCallbackRef} className="w-full" />
-        <div
-          className={classNames(
-            "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
-            {
-              "opacity-0 group-hover:opacity-100": isPlaying,
-            },
-          )}
+      {isLoading || data === null ? (
+        <div aria-hidden="true" className="h-full w-full animate-pulse bg-cax-surface-subtle" />
+      ) : (
+        <button
+          aria-label="動画プレイヤー"
+          className="group relative block h-full w-full"
+          onClick={handleClick}
+          type="button"
         >
-          <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
-        </div>
-      </button>
+          <canvas ref={canvasCallbackRef} className="h-full w-full" width={width} height={height} />
+          <div
+            className={classNames(
+              "absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-cax-overlay/50 text-3xl text-cax-surface-raised",
+              {
+                "opacity-0 group-hover:opacity-100": isPlaying,
+              },
+            )}
+          >
+            <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
+          </div>
+        </button>
+      )}
     </AspectRatioBox>
   );
 };
