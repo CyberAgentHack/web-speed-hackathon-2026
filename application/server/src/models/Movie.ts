@@ -25,7 +25,7 @@ export function initMovie(sequelize: Sequelize) {
       extension: {
         type: DataTypes.VIRTUAL,
         get() {
-          return this.getDataValue("extension") || "webp";
+          return this.getDataValue("extension") || "mp4";
         },
       },
     },

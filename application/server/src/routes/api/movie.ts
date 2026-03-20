@@ -12,7 +12,7 @@ import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
 const execFileAsync = promisify(execFile);
 
-const OUTPUT_EXTENSION = "webp";
+const OUTPUT_EXTENSION = "mp4";
 
 export const movieRouter = Router();
 
@@ -32,14 +32,15 @@ movieRouter.post("/movies", async (req, res) => {
   try {
     await fs.writeFile(inputPath, req.body);
 
-    // Convert to WebP animation: first 5 seconds, square crop, 10fps, 500px, no audio
+    // Convert to MP4: first 5 seconds, square crop, 10fps, 500px, no audio
     await execFileAsync("ffmpeg", [
       "-i", inputPath,
       "-t", "5",
       "-r", "10",
       "-vf", "crop='min(iw,ih)':'min(iw,ih)',scale=500:500",
       "-an",
-      "-loop", "0",
+      "-pix_fmt", "yuv420p",
+      "-movflags", "+faststart",
       "-y",
       outputPath,
     ]);

@@ -13,11 +13,9 @@ interface Props {
  */
 export const PausableMovie = ({ src }: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const isAnimatedImage = src.endsWith(".gif") || src.endsWith(".webp");
 
   const [isPlaying, setIsPlaying] = useState(true);
   const handleClick = useCallback(() => {
-    if (isAnimatedImage) return;
     setIsPlaying((isPlaying) => {
       if (isPlaying) {
         videoRef.current?.pause();
@@ -26,7 +24,7 @@ export const PausableMovie = ({ src }: Props) => {
       }
       return !isPlaying;
     });
-  }, [isAnimatedImage]);
+  }, []);
 
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
@@ -36,31 +34,25 @@ export const PausableMovie = ({ src }: Props) => {
         onClick={handleClick}
         type="button"
       >
-        {isAnimatedImage ? (
-          <img className="h-full w-full object-cover" loading="lazy" src={src} alt="" />
-        ) : (
-          <video
-            ref={videoRef}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="h-full w-full object-cover"
-            src={src}
-          />
-        )}
-        {!isAnimatedImage && (
-          <div
-            className={classNames(
-              "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
-              {
-                "opacity-0 group-hover:opacity-100": isPlaying,
-              },
-            )}
-          >
-            <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
-          </div>
-        )}
+        <video
+          ref={videoRef}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="h-full w-full object-cover"
+          src={src}
+        />
+        <div
+          className={classNames(
+            "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
+            {
+              "opacity-0 group-hover:opacity-100": isPlaying,
+            },
+          )}
+        >
+          <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
+        </div>
       </button>
     </AspectRatioBox>
   );
