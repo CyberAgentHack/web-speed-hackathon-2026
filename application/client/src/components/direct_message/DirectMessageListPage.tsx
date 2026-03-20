@@ -11,11 +11,12 @@ import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/
 interface Props {
   activeUser: Models.User;
   newDmModalId: string;
+  initialConversations?: Array<Models.DirectMessageConversation> | null;
 }
 
-export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
+export const DirectMessageListPage = ({ activeUser, newDmModalId, initialConversations }: Props) => {
   const [conversations, setConversations] =
-    useState<Array<Models.DirectMessageConversation> | null>(null);
+    useState<Array<Models.DirectMessageConversation> | null>(initialConversations ?? null);
   const [error, setError] = useState<Error | null>(null);
 
   const loadConversations = useCallback(async () => {
@@ -34,8 +35,9 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
   }, [activeUser]);
 
   useEffect(() => {
+    if (initialConversations != null) return;
     void loadConversations();
-  }, [loadConversations]);
+  }, [loadConversations, initialConversations]);
 
   useWs("/api/v1/dm/unread", () => {
     void loadConversations();
@@ -76,7 +78,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                 : conversation.member;
 
             const lastMessage = messages.at(-1);
-            const hasUnread = messages
+            const hasUnread = conversation.hasUnread ?? messages
               .filter((m) => m.sender.id === peer.id)
               .some((m) => !m.isRead);
 

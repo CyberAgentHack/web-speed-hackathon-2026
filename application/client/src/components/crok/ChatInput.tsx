@@ -1,5 +1,3 @@
-import Bluebird from "bluebird";
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
 import {
   useEffect,
   useLayoutEffect,
@@ -11,24 +9,18 @@ import {
 } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import {
-  extractTokens,
-  filterSuggestionsBM25,
-} from "@web-speed-hackathon-2026/client/src/utils/bm25_search";
-import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
   isStreaming: boolean;
   onSendMessage: (message: string) => void;
 }
 
-// トークン単位でハイライト
 function highlightMatchByTokens(text: string, queryTokens: string[]): React.ReactNode {
   if (queryTokens.length === 0) return text;
 
   const lowerText = text.toLowerCase();
 
-  // テキスト内でクエリトークンにマッチする範囲を収集
   const ranges: { start: number; end: number }[] = [];
   for (const token of queryTokens) {
     let pos = 0;
@@ -42,7 +34,6 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
 
   if (ranges.length === 0) return text;
 
-  // 範囲をソートしてマージ
   ranges.sort((a, b) => a.start - b.start);
   const merged: { start: number; end: number }[] = [ranges[0]!];
   for (let i = 1; i < ranges.length; i++) {
@@ -79,65 +70,46 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  // サジェストが更新されたら一番下にスクロール
   useLayoutEffect(() => {
     if (suggestionsRef.current && showSuggestions) {
       suggestionsRef.current.scrollTop = suggestionsRef.current.scrollHeight;
     }
   }, [suggestions, showSuggestions]);
 
-  // 初回にkuromojiトークナイザーを構築
-  useEffect(() => {
-    let mounted = true;
-
-    const init = async () => {
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
-      if (mounted) {
-        setTokenizer(nextTokenizer);
-      }
-    };
-    init();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
   useEffect(() => {
     let cancelled = false;
 
     const updateSuggestions = async () => {
-      if (!tokenizer || !inputValue.trim()) {
+      if (!inputValue.trim()) {
         setSuggestions([]);
         setQueryTokens([]);
         setShowSuggestions(false);
         return;
       }
 
-      const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-        "/api/v1/crok/suggestions",
-      );
-      if (cancelled) {
-        return;
+      try {
+        const result = await sendJSON<{ suggestions: string[]; queryTokens: string[] }>(
+          "/api/v1/crok/suggestions/filter",
+          { query: inputValue },
+        );
+
+        if (cancelled) return;
+
+        setQueryTokens(result.queryTokens);
+        setSuggestions(result.suggestions);
+        setShowSuggestions(result.suggestions.length > 0);
+      } catch {
+        if (!cancelled) {
+          setSuggestions([]);
+          setQueryTokens([]);
+          setShowSuggestions(false);
+        }
       }
-
-      const tokens = extractTokens(tokenizer.tokenize(inputValue));
-      const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
-
-      if (cancelled) {
-        return;
-      }
-
-      setQueryTokens(tokens);
-      setSuggestions(results);
-      setShowSuggestions(results.length > 0);
     };
 
     void updateSuggestions();
@@ -145,7 +117,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     return () => {
       cancelled = true;
     };
-  }, [inputValue, tokenizer]);
+  }, [inputValue]);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;

@@ -1,11 +1,11 @@
 import { lazy, Suspense, useCallback, useEffect, useId, useState } from "react";
-import { Helmet, HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
 import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { consumeSSRData, getSSRData } from "@web-speed-hackathon-2026/client/src/utils/ssr_data";
 
 const CrokContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/CrokContainer").then(m => ({ default: m.CrokContainer })));
 const DirectMessageContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer").then(m => ({ default: m.DirectMessageContainer })));
@@ -24,9 +24,14 @@ export const AppContainer = () => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
-  const [activeUser, setActiveUser] = useState<Models.User | null>(null);
-  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
+  const initialData = getSSRData();
+  const [activeUser, setActiveUser] = useState<Models.User | null>(initialData?.activeUser ?? null);
+  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(!initialData);
   useEffect(() => {
+    if (initialData) {
+      consumeSSRData();
+      return;
+    }
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {
         setActiveUser(user);
@@ -45,17 +50,11 @@ export const AppContainer = () => {
   const newPostModalId = useId();
 
   if (isLoadingActiveUser) {
-    return (
-      <HelmetProvider>
-        <Helmet>
-          <title>読込中 - CaX</title>
-        </Helmet>
-      </HelmetProvider>
-    );
+    return <title>読込中 - CaX</title>;
   }
 
   return (
-    <HelmetProvider>
+    <>
       <AppPage
         activeUser={activeUser}
         authModalId={authModalId}
@@ -92,6 +91,6 @@ export const AppContainer = () => {
       <Suspense fallback={null}>
         <NewPostModalContainer id={newPostModalId} />
       </Suspense>
-    </HelmetProvider>
+    </>
   );
 };

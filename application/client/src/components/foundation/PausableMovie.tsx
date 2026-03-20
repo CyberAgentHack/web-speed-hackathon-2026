@@ -9,17 +9,19 @@ interface Props {
 }
 
 export const PausableMovie = ({ src }: Props) => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const rafRef = useRef<number>(0);
+  const isVisibleRef = useRef(false);
+  const userPausedRef = useRef(false);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isReady, setIsReady] = useState(false);
 
-  useEffect(() => {
+  const startDrawLoop = useCallback(() => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (!video || !canvas || !isReady) return;
-
+    if (!video || !canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
@@ -33,23 +35,63 @@ export const PausableMovie = ({ src }: Props) => {
       }
       rafRef.current = requestAnimationFrame(drawFrame);
     };
+    rafRef.current = requestAnimationFrame(drawFrame);
+  }, []);
+
+  const stopDrawLoop = useCallback(() => {
+    cancelAnimationFrame(rafRef.current);
+  }, []);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const visible = entry!.isIntersecting;
+        isVisibleRef.current = visible;
+
+        const video = videoRef.current;
+        if (!video || !isReady) return;
+
+        if (visible && !userPausedRef.current) {
+          video.play();
+          setIsPlaying(true);
+          startDrawLoop();
+        } else {
+          video.pause();
+          stopDrawLoop();
+          if (!visible) setIsPlaying(false);
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [isReady, startDrawLoop, stopDrawLoop]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !isReady) return;
 
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      userPausedRef.current = true;
       setIsPlaying(false);
       video.pause();
-      if (video.videoWidth > 0) {
+      const canvas = canvasRef.current;
+      const ctx = canvas?.getContext("2d");
+      if (canvas && ctx && video.videoWidth > 0) {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         ctx.drawImage(video, 0, 0);
       }
-    } else {
-      rafRef.current = requestAnimationFrame(drawFrame);
+    } else if (isVisibleRef.current) {
+      startDrawLoop();
     }
 
-    return () => {
-      cancelAnimationFrame(rafRef.current);
-    };
-  }, [isReady]);
+    return () => stopDrawLoop();
+  }, [isReady, startDrawLoop, stopDrawLoop]);
 
   const handleClick = useCallback(() => {
     const video = videoRef.current;
@@ -57,27 +99,37 @@ export const PausableMovie = ({ src }: Props) => {
 
     if (isPlaying) {
       video.pause();
-      cancelAnimationFrame(rafRef.current);
+      stopDrawLoop();
+      userPausedRef.current = true;
       setIsPlaying(false);
     } else {
       video.play();
+      userPausedRef.current = false;
       setIsPlaying(true);
+      startDrawLoop();
     }
-  }, [isPlaying]);
+  }, [isPlaying, startDrawLoop, stopDrawLoop]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video && video.readyState >= 2) {
+      setIsReady(true);
+    }
+  }, []);
 
   const handleLoadedData = useCallback(() => {
     setIsReady(true);
   }, []);
 
   return (
-    <>
-      {/* Video element: sr-only so it loads/plays but is visually hidden */}
+    <div ref={containerRef}>
       <video
         ref={videoRef}
         autoPlay
         loop
         muted
         playsInline
+        preload="none"
         className="sr-only"
         src={src}
         onLoadedData={handleLoadedData}
@@ -104,6 +156,6 @@ export const PausableMovie = ({ src }: Props) => {
           </button>
         ) : null}
       </AspectRatioBox>
-    </>
+    </div>
   );
 };

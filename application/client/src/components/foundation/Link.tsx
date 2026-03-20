@@ -1,13 +1,10 @@
-import { AnchorHTMLAttributes, forwardRef } from "react";
-import { To, useHref } from "react-router";
+import { forwardRef } from "react";
+import { Link as RouterLink, type LinkProps } from "react-router";
 
-type Props = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href"> & {
-  to: To;
-};
+type Props = LinkProps;
 
 export const Link = forwardRef<HTMLAnchorElement, Props>(({ to, ...props }, ref) => {
-  const href = useHref(to);
-  return <a ref={ref} href={href} {...props} />;
+	return <RouterLink ref={ref} to={to} {...props} />;
 });
 
 Link.displayName = "Link";

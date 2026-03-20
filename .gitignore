@@ -222,3 +222,5 @@ application/upload/**
 !application/upload/**/.gitkeep
 
 .direnv
+
+build

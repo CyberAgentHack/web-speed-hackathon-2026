@@ -49,7 +49,7 @@ searchRouter.get("/search", async (req, res) => {
   // Find matching post IDs first using unscoped to avoid eager loading JOINs
   const matchedRows = await Post.unscoped().findAll({
     attributes: ["id"],
-    include: [{ model: User.unscoped(), as: "user", attributes: [] }],
+    include: [{ model: User.unscoped(), as: "user", attributes: ["id", "username", "name"] }],
     where: whereClause,
     limit,
     offset,

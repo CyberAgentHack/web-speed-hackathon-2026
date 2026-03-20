@@ -10,14 +10,35 @@ export const imageOptimizerRouter = Router();
 
 const cache = new Map<string, Buffer>();
 
+function detectBestFormat(acceptHeader: string | undefined): { format: "avif" | "webp" | "jpeg"; contentType: string } {
+  if (acceptHeader?.includes("image/avif")) {
+    return { format: "avif", contentType: "image/avif" };
+  }
+  if (acceptHeader?.includes("image/webp")) {
+    return { format: "webp", contentType: "image/webp" };
+  }
+  return { format: "jpeg", contentType: "image/jpeg" };
+}
+
+function applyFormat(pipeline: sharp.Sharp, format: "avif" | "webp" | "jpeg", quality: number): sharp.Sharp {
+  switch (format) {
+    case "avif":
+      return pipeline.avif({ quality, effort: 4 });
+    case "webp":
+      return pipeline.webp({ quality });
+    default:
+      return pipeline.jpeg({ quality });
+  }
+}
+
 imageOptimizerRouter.get("/images/profiles/:id.jpg", async (req, res, next) => {
   const { id } = req.params;
-  const acceptsWebP = req.headers.accept?.includes("image/webp") ?? false;
-  const cacheKey = `profile:${id}:${acceptsWebP ? "webp" : "jpg"}`;
+  const { format, contentType } = detectBestFormat(req.headers.accept);
+  const cacheKey = `profile:${id}:${format}`;
 
   const cached = cache.get(cacheKey);
   if (cached) {
-    res.setHeader("Content-Type", acceptsWebP ? "image/webp" : "image/jpeg");
+    res.setHeader("Content-Type", contentType);
     res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
     return res.send(cached);
   }
@@ -42,16 +63,7 @@ imageOptimizerRouter.get("/images/profiles/:id.jpg", async (req, res, next) => {
   }
 
   try {
-    let pipeline = sharp(fileBuffer).resize(96, 96, { fit: "cover" });
-    let contentType: string;
-
-    if (acceptsWebP) {
-      pipeline = pipeline.webp({ quality: 80 });
-      contentType = "image/webp";
-    } else {
-      pipeline = pipeline.jpeg({ quality: 80 });
-      contentType = "image/jpeg";
-    }
+    const pipeline = applyFormat(sharp(fileBuffer).resize(96, 96, { fit: "cover" }), format, 60);
 
     const optimized = await pipeline.toBuffer();
     cache.set(cacheKey, optimized);
@@ -66,12 +78,12 @@ imageOptimizerRouter.get("/images/profiles/:id.jpg", async (req, res, next) => {
 
 imageOptimizerRouter.get("/images/:id.jpg", async (req, res, next) => {
   const { id } = req.params;
-  const acceptsWebP = req.headers.accept?.includes("image/webp") ?? false;
-  const cacheKey = `image:${id}:${acceptsWebP ? "webp" : "jpg"}`;
+  const { format, contentType } = detectBestFormat(req.headers.accept);
+  const cacheKey = `image:${id}:${format}`;
 
   const cached = cache.get(cacheKey);
   if (cached) {
-    res.setHeader("Content-Type", acceptsWebP ? "image/webp" : "image/jpeg");
+    res.setHeader("Content-Type", contentType);
     res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
     return res.send(cached);
   }
@@ -96,19 +108,11 @@ imageOptimizerRouter.get("/images/:id.jpg", async (req, res, next) => {
   }
 
   try {
-    let pipeline = sharp(fileBuffer).resize(330, undefined, {
-      fit: "inside",
-      withoutEnlargement: true,
-    });
-    let contentType: string;
-
-    if (acceptsWebP) {
-      pipeline = pipeline.webp({ quality: 70 });
-      contentType = "image/webp";
-    } else {
-      pipeline = pipeline.jpeg({ quality: 70 });
-      contentType = "image/jpeg";
-    }
+    const pipeline = applyFormat(
+      sharp(fileBuffer).resize(163, undefined, { fit: "inside", withoutEnlargement: true }),
+      format,
+      60,
+    );
 
     const optimized = await pipeline.toBuffer();
     cache.set(cacheKey, optimized);

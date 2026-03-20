@@ -1,6 +1,6 @@
 import { Router } from "express";
 import httpErrors from "http-errors";
-import { col, where, Op } from "sequelize";
+import { col, where, Op, QueryTypes } from "sequelize";
 
 import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
 import {
@@ -16,20 +16,60 @@ directMessageRouter.get("/dm", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversations = await DirectMessageConversation.scope("withMessages").findAll({
+  const userId = req.session.userId!;
+  const sequelize = DirectMessageConversation.sequelize!;
+  const msgTable = DirectMessage.getTableName() as string;
+
+  const conversations = await DirectMessageConversation.findAll({
     where: {
-      [Op.and]: [
-        { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
-        where(col("messages.id"), { [Op.not]: null }),
-      ],
+      [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
     },
-    order: [[col("messages.createdAt"), "DESC"]],
   });
 
-  const sorted = conversations.map((c) => ({
-    ...c.toJSON(),
-    messages: c.messages?.reverse(),
-  }));
+  if (conversations.length === 0) {
+    return res.status(200).type("application/json").send([]);
+  }
+
+  const convIds = conversations.map((c) => c.id);
+
+  const lastMsgRows = await sequelize.query<{ id: string; conversationId: string }>(
+    `SELECT dm.id, dm.conversationId FROM "${msgTable}" dm
+     INNER JOIN (
+       SELECT conversationId, MAX(createdAt) as maxCreated
+       FROM "${msgTable}" WHERE conversationId IN (:convIds)
+       GROUP BY conversationId
+     ) latest ON dm.conversationId = latest.conversationId AND dm.createdAt = latest.maxCreated`,
+    { replacements: { convIds }, type: QueryTypes.SELECT },
+  );
+
+  const lastMessages = await DirectMessage.findAll({
+    where: { id: lastMsgRows.map((r) => r.id) },
+  });
+
+  const unreadRows = await sequelize.query<{ conversationId: string }>(
+    `SELECT DISTINCT conversationId FROM "${msgTable}"
+     WHERE conversationId IN (:convIds) AND senderId != :userId AND isRead = 0`,
+    { replacements: { convIds, userId }, type: QueryTypes.SELECT },
+  );
+  const unreadSet = new Set(unreadRows.map((r) => r.conversationId));
+
+  const msgByConv = new Map<string, object>();
+  for (const msg of lastMessages) {
+    msgByConv.set(msg.conversationId, msg.toJSON());
+  }
+
+  const sorted = conversations
+    .filter((c) => msgByConv.has(c.id))
+    .sort((a, b) => {
+      const msgA = msgByConv.get(a.id) as { createdAt: string };
+      const msgB = msgByConv.get(b.id) as { createdAt: string };
+      return new Date(msgB.createdAt).getTime() - new Date(msgA.createdAt).getTime();
+    })
+    .map((c) => ({
+      ...c.toJSON(),
+      messages: [msgByConv.get(c.id)!],
+      hasUnread: unreadSet.has(c.id),
+    }));
 
   return res.status(200).type("application/json").send(sorted);
 });
