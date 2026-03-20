@@ -13,11 +13,17 @@ export async function fetchBinary(url: string): Promise<ArrayBuffer> {
   return buffer;
 }
 
-export async function fetchJSON<T>(url: string): Promise<T> {
-  const result = await fetch(url, {
-    method: "GET",
-    credentials: "include",
-  });
+export async function fetchJSON<T>(
+  url: string,
+  query?: Record<string, string>,
+): Promise<T> {
+  const result = await fetch(
+    query ? `${url}?${new URLSearchParams(query).toString()}` : url,
+    {
+      method: "GET",
+      credentials: "include",
+    },
+  );
   if (!result.ok) {
     throw new Error(`Failed to fetch: ${result.status} ${result.statusText}`);
   }
