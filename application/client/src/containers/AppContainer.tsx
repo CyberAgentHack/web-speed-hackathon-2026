@@ -86,6 +86,7 @@ export const AppContainer = () => {
         <Helmet>
           <title>読込中 - CaX</title>
         </Helmet>
+        <div className="bg-cax-canvas min-h-screen" />
       </HelmetProvider>
     );
   }
