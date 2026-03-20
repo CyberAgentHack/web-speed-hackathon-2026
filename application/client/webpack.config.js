@@ -124,7 +124,16 @@ const config = {
   },
   optimization: {
     minimize: true,
-    splitChunks: false,
+    splitChunks: {
+      chunks: "all",
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: "vendor",
+          chunks: "initial",
+        },
+      },
+    },
     concatenateModules: true,
     usedExports: true,
     providedExports: true,
