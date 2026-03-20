@@ -24,9 +24,14 @@ export const AppContainer = () => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
-  const [activeUser, setActiveUser] = useState<Models.User | null>(null);
-  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
+  const hasInitialData = typeof window !== "undefined" && "__INITIAL_USER__" in (window as any);
+  const initialUser = hasInitialData ? (window as any).__INITIAL_USER__ ?? null : null;
+  const [activeUser, setActiveUser] = useState<Models.User | null>(initialUser);
+  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(!hasInitialData);
   useEffect(() => {
+    if (hasInitialData) {
+      return;
+    }
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {
         setActiveUser(user);
@@ -34,7 +39,7 @@ export const AppContainer = () => {
       .finally(() => {
         setIsLoadingActiveUser(false);
       });
-  }, [setActiveUser, setIsLoadingActiveUser]);
+  }, []);
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
     setActiveUser(null);

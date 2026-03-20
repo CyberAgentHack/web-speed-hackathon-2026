@@ -232,12 +232,21 @@ importers:
 
   server:
     dependencies:
+      '@dr.pogodin/react-helmet':
+        specifier: 3.1.1
+        version: 3.1.1(react@19.2.0)
       '@tsconfig/strictest':
         specifier: 2.0.8
         version: 2.0.8
       '@types/compression':
         specifier: 1.8.1
         version: 1.8.1
+      '@types/react':
+        specifier: 19.2.2
+        version: 19.2.2
+      '@types/react-dom':
+        specifier: 19.2.1
+        version: 19.2.1(@types/react@19.2.2)
       '@web-speed-hackathon-2026/server':
         specifier: workspace:*
         version: 'link:'
@@ -247,6 +256,9 @@ importers:
       body-parser:
         specifier: 2.2.0
         version: 2.2.0
+      classnames:
+        specifier: 2.5.1
+        version: 2.5.1
       compression:
         specifier: 1.8.1
         version: 1.8.1
@@ -268,6 +280,24 @@ importers:
       music-metadata:
         specifier: 11.10.3
         version: 11.10.3
+      react:
+        specifier: 19.2.0
+        version: 19.2.0
+      react-dom:
+        specifier: 19.2.0
+        version: 19.2.0(react@19.2.0)
+      react-redux:
+        specifier: 9.2.0
+        version: 9.2.0(@types/react@19.2.2)(react@19.2.0)(redux@5.0.1)
+      react-router:
+        specifier: 7.9.4
+        version: 7.9.4(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      redux:
+        specifier: 5.0.1
+        version: 5.0.1
+      redux-form:
+        specifier: 8.3.10
+        version: 8.3.10(react-redux@9.2.0(@types/react@19.2.2)(react@19.2.0)(redux@5.0.1))(react@19.2.0)(redux@5.0.1)
       sequelize:
         specifier: 6.37.7
         version: 6.37.7(sqlite3@5.1.7)
@@ -864,6 +894,10 @@ packages:
     resolution: {integrity: sha512-Q/N6JNWvIvPnLDvjlE1OUBLPQHH6l3CltCEsHIujp45zQUSSh8K+gHnaEX45yAT1nyngnINhvWtzN+Nb9D8RAQ==}
     engines: {node: '>=6.9.0'}
 
+  '@babel/runtime@7.29.2':
+    resolution: {integrity: sha512-JiDShH45zKHWyGe4ZNVRrCjBz8Nh9TMmZG1kh4QTK8hCBTWBi8Da+i7s1fJw7/lYpM4ccepSNfqzZ/QvABBi5g==}
+    engines: {node: '>=6.9.0'}
+
   '@babel/template@7.27.2':
     resolution: {integrity: sha512-LPDZ85aEJyYSd18/DkjNh4/y1ntkE5KwUHWTiqgRxruuZL2F1yuHligVHLvcHY2vMHXttKFpJn6LwfI7cw7ODw==}
     engines: {node: '>=6.9.0'}
@@ -1164,6 +1198,11 @@ packages:
 
   '@dr.pogodin/react-helmet@3.0.4':
     resolution: {integrity: sha512-TesfNpzO12qcbyqKyWGDIYTdwVxD3pJv75rE/zhKUq/k9yxeP0BpOdHQ5cc1zA3j/GyY7CuIZjAUXmsxqI1/yw==}
+    peerDependencies:
+      react: '19'
+
+  '@dr.pogodin/react-helmet@3.1.1':
+    resolution: {integrity: sha512-+OvGxbL8s5DqG8Je2jPUnlKJJeRnqRAeLOzOoJctCj4EEKdjXmCrnJhRugT/Ma5skB77sItqqQcTaE5J6uGEaQ==}
     peerDependencies:
       react: '19'
 
@@ -5515,6 +5554,8 @@ snapshots:
 
   '@babel/runtime@7.28.4': {}
 
+  '@babel/runtime@7.29.2': {}
+
   '@babel/template@7.27.2':
     dependencies:
       '@babel/code-frame': 7.27.1
@@ -5835,6 +5876,11 @@ snapshots:
   '@dr.pogodin/react-helmet@3.0.4(react@19.2.0)':
     dependencies:
       '@babel/runtime': 7.28.4
+      react: 19.2.0
+
+  '@dr.pogodin/react-helmet@3.1.1(react@19.2.0)':
+    dependencies:
+      '@babel/runtime': 7.29.2
       react: 19.2.0
 
   '@esbuild/aix-ppc64@0.25.11':

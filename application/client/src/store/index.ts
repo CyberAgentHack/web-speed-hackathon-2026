@@ -8,4 +8,5 @@ const rootReducer = combineReducers({
 export type RootState = ReturnType<typeof rootReducer>;
 export type AppDispatch = Dispatch<UnknownAction | FormAction>;
 
-export const store = createStore(rootReducer);
+export const createAppStore = () => createStore(rootReducer);
+export const store = createAppStore();
