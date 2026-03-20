@@ -59,9 +59,9 @@ export async function waitForVisibleMedia(page: Page): Promise<void> {
   }).toPass({ timeout: 60_000 });
 }
 
-/** GIF動画をマスク（フレームが毎回変わるため） */
+/** 動画をマスク（フレームが毎回変わるため） */
 export function dynamicMediaMask(page: Page) {
-  return [page.locator("canvas"), page.locator("video"), page.locator("img[src$='.gif']")];
+  return [page.locator("canvas"), page.locator("video"), page.locator("img[src$='.mp4']")];
 }
 
 export async function waitForImageToLoad(imageLocator: Locator): Promise<void> {

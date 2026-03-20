@@ -60,7 +60,7 @@ const EXISTING_IMAGE_IDS = [
   "f478a152-02f8-46a3-91ce-d1d7944d303a",
 ];
 
-// public/movies/*.gif (15 files)
+// public/movies/*.mp4 (15 files)
 const EXISTING_MOVIE_IDS = [
   "090e7491-5cdb-4a1b-88b1-1e036a45e296",
   "0c4b66bc-091e-4f76-85a3-288567cfdc12",
