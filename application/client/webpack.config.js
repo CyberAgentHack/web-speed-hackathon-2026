@@ -33,7 +33,8 @@ const config = {
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "development",
+  mode: "production",
+  // mode: "development",
   module: {
     rules: [
       {
@@ -124,6 +125,20 @@ const config = {
     minimize: false,
     splitChunks: {
       chunks: "all",
+      maxInitialRequests: Infinity,
+      minSize: 20 * 1024, // 20KB
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name(module) {
+            const match = module.context.match(
+              /[\\/]node_modules[\\/](?:\.pnpm[\\/])?(.*?)(?:[\\/]|$)/,
+            );
+            const packageName = match ? match[1] : "vendor";
+            return `vendor/${packageName.replace("@", "")}`;
+          },
+        },
+      },
     },
   },
   cache: {
