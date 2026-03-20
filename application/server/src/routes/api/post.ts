@@ -7,7 +7,7 @@ export const postRouter = Router();
 
 postRouter.get("/posts", async (req, res) => {
   const limit =
-    req.query["limit"] != null ? Math.min(Number(req.query["limit"]), 20) : 10;
+    req.query["limit"] != null ? Math.min(Number(req.query["limit"]), 10) : 5;
   const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
   const posts = await Post.findAll({
     limit,
@@ -29,7 +29,7 @@ postRouter.get("/posts/:postId", async (req, res) => {
 
 postRouter.get("/posts/:postId/comments", async (req, res) => {
   const limit =
-    req.query["limit"] != null ? Math.min(Number(req.query["limit"]), 20) : 10;
+    req.query["limit"] != null ? Math.min(Number(req.query["limit"]), 10) : 5;
   const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
   const posts = await Comment.findAll({
     limit,
