@@ -14,6 +14,8 @@
     "generate:image-thumbnails:dry-run": "node ./scripts/generate-image-thumbnails.mjs",
     "compress:public-assets": "node ./scripts/compress-public-assets.mjs --apply",
     "compress:public-assets:dry-run": "node ./scripts/compress-public-assets.mjs",
+    "recompress:public-media": "node ./scripts/recompress-public-media.mjs --apply",
+    "recompress:public-media:dry-run": "node ./scripts/recompress-public-media.mjs",
     "typecheck": "pnpm run --recursive typecheck",
     "format": "pnpm run format:oxlint && pnpm run format:oxfmt",
     "format:oxlint": "oxlint --fix",

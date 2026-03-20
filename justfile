@@ -114,6 +114,16 @@ analyze-lighthouse-mobile:
 analyze-lighthouse-desktop:
   pnpm --dir {{app_dir}} run analyze:lighthouse:desktop
 
+# `application` で既存の `public/images/**/*.webp` と `public/movies/**/*.webm` を再圧縮候補として dry-run し、サイズが減るものだけ `reports/public-media-recompression-report.json` にまとめる。
+[group('分析')]
+recompress-public-media:
+  pnpm --dir {{app_dir}} run recompress:public-media:dry-run
+
+# `application` で既存の `public/images/**/*.webp` と `public/movies/**/*.webm` を再圧縮し、しきい値以上に軽くなったファイルだけ上書きする。適用後は VRT と手動確認を前提に使う。
+[group('分析')]
+recompress-public-media-apply:
+  pnpm --dir {{app_dir}} run recompress:public-media
+
 # `analyze-bundle` と `analyze-lighthouse` を順番に実行し、bundle 可視化と Lighthouse の両方のレポートをまとめて更新する。
 [group('分析')]
 analyze-all: analyze-bundle analyze-lighthouse
