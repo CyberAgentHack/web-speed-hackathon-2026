@@ -10,7 +10,7 @@ const yieldToMain = () => new Promise<void>((r) => setTimeout(r, 0));
 async function calculate(data: ArrayBuffer): Promise<ParsedData> {
   const audioCtx = new AudioContext();
   // slice(0)を避けてtransferable対応バッファを直接渡す
-  const buffer = await audioCtx.decodeAudioData(data);
+  const buffer = await audioCtx.decodeAudioData(data.slice(0));
 
   await yieldToMain();
 

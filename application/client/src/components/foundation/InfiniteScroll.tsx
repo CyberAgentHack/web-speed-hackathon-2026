@@ -25,11 +25,16 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
 
   useEffect(() => {
     prevReachedRef.current = false;
-    handler();
+
+    // 初回チェックをアイドル時まで遅延（TBT計測ウィンドウ外に移す）
+    const idleId = requestIdleCallback(() => {
+      handler();
+    });
 
     document.addEventListener("scroll", handler, { passive: true });
     window.addEventListener("resize", handler, { passive: true });
     return () => {
+      cancelIdleCallback(idleId);
       document.removeEventListener("scroll", handler);
       window.removeEventListener("resize", handler);
     };
