@@ -14,12 +14,12 @@ import { getImageAspectRatio, getMovieAspectRatio } from "@web-speed-hackathon-2
 
 interface Props {
   post: Models.Post;
+  prioritizeMedia?: boolean;
 }
 
-export const PostItem = ({ post }: Props) => {
+export const PostItem = ({ post, prioritizeMedia = false }: Props) => {
   const imageAspectRatio = getImageAspectRatio(post.images[0]);
   const movieAspectRatio = getMovieAspectRatio(post.movie);
-
   return (
     <article className="px-1 sm:px-4">
       <div className="border-cax-border border-b px-4 pt-4 pb-4">
@@ -61,35 +61,56 @@ export const PostItem = ({ post }: Props) => {
             <TranslatableText text={post.text} />
           </div>
           {post.images?.length > 0 ? (
-            <DeferredMount
-              className="relative mt-2 w-full"
-              placeholder={
-                <AspectRatioMediaPlaceholder
-                  aspectHeight={imageAspectRatio.aspectHeight}
-                  aspectWidth={imageAspectRatio.aspectWidth}
-                />
-              }
-            >
-              <ImageArea images={post.images} />
-            </DeferredMount>
+            prioritizeMedia ? (
+              <div className="relative mt-2 w-full">
+                <ImageArea images={post.images} prioritizeFirstImage />
+              </div>
+            ) : (
+              <DeferredMount
+                className="relative mt-2 w-full"
+                placeholder={
+                  <AspectRatioMediaPlaceholder
+                    aspectHeight={imageAspectRatio.aspectHeight}
+                    aspectWidth={imageAspectRatio.aspectWidth}
+                  />
+                }
+              >
+                <ImageArea images={post.images} />
+              </DeferredMount>
+            )
           ) : null}
           {post.movie ? (
-            <DeferredMount
-              className="relative mt-2 w-full"
-              placeholder={
-                <AspectRatioMediaPlaceholder
-                  aspectHeight={movieAspectRatio.aspectHeight}
-                  aspectWidth={movieAspectRatio.aspectWidth}
-                />
-              }
-            >
-              <MovieArea movie={post.movie} />
-            </DeferredMount>
+            prioritizeMedia ? (
+              <div className="relative mt-2 w-full">
+                <MovieArea movie={post.movie} prioritizeLoad />
+              </div>
+            ) : (
+              <DeferredMount
+                className="relative mt-2 w-full"
+                placeholder={
+                  <AspectRatioMediaPlaceholder
+                    aspectHeight={movieAspectRatio.aspectHeight}
+                    aspectWidth={movieAspectRatio.aspectWidth}
+                  />
+                }
+              >
+                <MovieArea movie={post.movie} />
+              </DeferredMount>
+            )
           ) : null}
           {post.sound ? (
-            <DeferredMount className="relative mt-2 w-full" placeholder={<SoundMediaPlaceholder />}>
-              <SoundArea sound={post.sound} />
-            </DeferredMount>
+            prioritizeMedia ? (
+              <div className="relative mt-2 w-full">
+                <SoundArea deferWaveform sound={post.sound} />
+              </div>
+            ) : (
+              <DeferredMount
+                className="relative mt-2 w-full"
+                placeholder={<SoundMediaPlaceholder />}
+              >
+                <SoundArea sound={post.sound} />
+              </DeferredMount>
+            )
           ) : null}
           <p className="mt-2 text-sm sm:mt-4">
             <Link className="text-cax-text-muted hover:underline" to={`/posts/${post.id}`}>

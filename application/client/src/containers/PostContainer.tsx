@@ -8,10 +8,36 @@ import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
+function getBootstrappedPost(postId: string | undefined): Models.Post | undefined {
+  if (postId == null) {
+    return undefined;
+  }
+
+  const element = document.getElementById("bootstrapped-post");
+  if (
+    element == null ||
+    element.getAttribute("data-post-id") !== postId ||
+    element.textContent == null ||
+    element.textContent === ""
+  ) {
+    return undefined;
+  }
+
+  try {
+    return JSON.parse(element.textContent) as Models.Post;
+  } catch {
+    return undefined;
+  }
+}
+
 const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
+  const initialPost = getBootstrappedPost(postId);
   const { data: post, isLoading: isLoadingPost } = useFetch<Models.Post>(
     `/api/v1/posts/${postId}`,
     fetchJSON,
+    {
+      initialData: initialPost,
+    },
   );
 
   const { data: comments, fetchMore } = useInfiniteFetch<Models.Comment>(

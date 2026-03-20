@@ -71,10 +71,52 @@ async function renderHomeIndexHtml(): Promise<string> {
   return clientIndexHtml.replace("</head>", `    ${preloadTag}\n  </head>`);
 }
 
+function serializeForHtml(value: unknown): string {
+  return JSON.stringify(value).replace(/</g, "\\u003c");
+}
+
+function buildPostPreloadTag(post: Post): string {
+  const firstImage = post.get("images") as Array<{ id: string }> | null;
+  const movie = post.get("movie") as { id: string } | null;
+
+  if (firstImage != null && firstImage.length > 0) {
+    return `<link rel="preload" as="image" href="/images/${firstImage[0]!.id}.webp" fetchpriority="high" />`;
+  }
+
+  if (movie != null) {
+    return `<link rel="preload" as="image" href="/movies/${movie.id}.jpg" fetchpriority="high" />`;
+  }
+
+  return "";
+}
+
+async function renderPostIndexHtml(postId: string): Promise<string> {
+  const post = await Post.findByPk(postId);
+  if (post == null) {
+    return clientIndexHtml;
+  }
+
+  const preloadTag = buildPostPreloadTag(post);
+  const bootstrapTag = `<script id="bootstrapped-post" type="application/json" data-post-id="${postId}">${serializeForHtml(post.toJSON())}</script>`;
+
+  return clientIndexHtml
+    .replace("</head>", `${preloadTag !== "" ? `    ${preloadTag}\n` : ""}  </head>`)
+    .replace('<div id="app">', `${bootstrapTag}\n    <div id="app">`);
+}
+
 staticRouter.get("/", async (_req, res, next) => {
   try {
     res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
     res.type("html").send(await renderHomeIndexHtml());
+  } catch (error) {
+    next(error);
+  }
+});
+
+staticRouter.get("/posts/:postId", async (req, res, next) => {
+  try {
+    res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+    res.type("html").send(await renderPostIndexHtml(req.params.postId));
   } catch (error) {
     next(error);
   }

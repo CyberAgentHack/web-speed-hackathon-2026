@@ -6,17 +6,32 @@ interface ReturnValues<T> {
   isLoading: boolean;
 }
 
+interface Options<T> {
+  initialData?: T | null;
+}
+
 export function useFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T>,
+  options?: Options<T>,
 ): ReturnValues<T> {
+  const hasInitialData = options?.initialData !== undefined;
   const [result, setResult] = useState<ReturnValues<T>>({
-    data: null,
+    data: options?.initialData ?? null,
     error: null,
-    isLoading: true,
+    isLoading: !hasInitialData,
   });
 
   useEffect(() => {
+    if (hasInitialData) {
+      setResult(() => ({
+        data: options?.initialData ?? null,
+        error: null,
+        isLoading: false,
+      }));
+      return;
+    }
+
     setResult(() => ({
       data: null,
       error: null,
@@ -39,7 +54,7 @@ export function useFetch<T>(
         }));
       },
     );
-  }, [apiPath, fetcher]);
+  }, [apiPath, fetcher, hasInitialData, options?.initialData]);
 
   return result;
 }

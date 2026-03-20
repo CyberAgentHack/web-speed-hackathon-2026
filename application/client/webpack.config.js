@@ -9,11 +9,125 @@ import webpackBundleAnalyzer from "webpack-bundle-analyzer";
 
 const __dirname = import.meta.dirname;
 const { ProvidePlugin, EnvironmentPlugin } = webpack;
+const { Compilation, sources } = webpack;
 
 const SRC_PATH = _resolve(__dirname, "./src");
 const PUBLIC_PATH = _resolve(__dirname, "../public");
 const UPLOAD_PATH = _resolve(__dirname, "../upload");
 const DIST_PATH = _resolve(__dirname, "../dist");
+
+/**
+ * CSS 内容は変えずに、配信時の空白とコメントだけを削る。
+ * 追加依存なしで Lighthouse の "Minify CSS" を解消するための最小実装。
+ * @param {string} css
+ */
+const minifyCss = (css) => {
+  let result = "";
+  let inString = false;
+  let stringQuote = "";
+  let pendingSpace = false;
+
+  for (let index = 0; index < css.length; index += 1) {
+    const char = css[index];
+    const next = css[index + 1];
+
+    if (inString) {
+      result += char;
+      if (char === "\\") {
+        index += 1;
+        result += css[index] ?? "";
+        continue;
+      }
+      if (char === stringQuote) {
+        inString = false;
+        stringQuote = "";
+      }
+      continue;
+    }
+
+    if (char === "/" && next === "*") {
+      index += 2;
+      while (index < css.length) {
+        const commentChar = css[index];
+        const commentNext = css[index + 1];
+        if (commentChar === "*" && commentNext === "/") {
+          index += 1;
+          break;
+        }
+        index += 1;
+      }
+      pendingSpace = false;
+      continue;
+    }
+
+    if (char === "'" || char === "\"") {
+      if (
+        pendingSpace &&
+        result.length > 0 &&
+        !/[{:;,>~,(]/.test(result.at(-1) ?? "")
+      ) {
+        result += " ";
+      }
+      pendingSpace = false;
+      inString = true;
+      stringQuote = char;
+      result += char;
+      continue;
+    }
+
+    if (/\s/.test(char)) {
+      pendingSpace = true;
+      continue;
+    }
+
+    if (
+      pendingSpace &&
+      result.length > 0 &&
+      !/[{:;,>~,(]/.test(result.at(-1) ?? "") &&
+      !/[}:;,>~,)]/.test(char)
+    ) {
+      result += " ";
+    }
+    pendingSpace = false;
+    result += char;
+  }
+
+  return result
+    .replace(/\s*([{}:;,>~,])\s*/g, "$1")
+    .replace(/;}/g, "}");
+};
+
+class CssMinifyPlugin {
+  apply(compiler) {
+    compiler.hooks.compilation.tap("CssMinifyPlugin", (compilation) => {
+      compilation.hooks.processAssets.tap(
+        {
+          name: "CssMinifyPlugin",
+          stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE,
+        },
+        (assets) => {
+          for (const assetName of Object.keys(assets)) {
+            if (!assetName.endsWith(".css")) {
+              continue;
+            }
+
+            const asset = compilation.getAsset(assetName);
+            if (asset == null) {
+              continue;
+            }
+
+            const originalCss = asset.source.source().toString();
+            const minifiedCss = minifyCss(originalCss);
+            compilation.updateAsset(
+              assetName,
+              new sources.RawSource(minifiedCss),
+            );
+          }
+        },
+      );
+    });
+  }
+}
 
 /** @type {import('webpack').Configuration} */
 const config = {
@@ -90,6 +204,7 @@ const config = {
     new MiniCssExtractPlugin({
       filename: "styles/[name].css",
     }),
+    new CssMinifyPlugin(),
     new CopyWebpackPlugin({
       patterns: [
         {
