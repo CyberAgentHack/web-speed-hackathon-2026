@@ -1,46 +1,94 @@
+const DATE_TOKEN_RE = /\b(from|since|until)\s*:?\s*(\d{4}-\d{2}-\d{2})\d*/gi;
+const DATE_VALUE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+const normalizeDateTokenKey = (key: string): "since" | "until" | null => {
+  const normalizedKey = key.toLowerCase();
+
+  if (normalizedKey === "from" || normalizedKey === "since") {
+    return "since";
+  }
+
+  if (normalizedKey === "until") {
+    return "until";
+  }
+
+  return null;
+};
+
+const extractDateFilters = (query: string) => {
+  const keywords: string[] = [];
+  let sinceDate: string | null = null;
+  let untilDate: string | null = null;
+
+  for (const token of query.split(/\s+/)) {
+    if (!token) {
+      continue;
+    }
+
+    const separatorIndex = token.indexOf(":");
+    if (separatorIndex <= 0) {
+      keywords.push(token);
+      continue;
+    }
+
+    const key = normalizeDateTokenKey(token.slice(0, separatorIndex));
+    if (!key) {
+      keywords.push(token);
+      continue;
+    }
+
+    const rawValue = token.slice(separatorIndex + 1);
+    if (key === "since") {
+      sinceDate = rawValue || null;
+      continue;
+    }
+
+    untilDate = rawValue || null;
+  }
+
+  return {
+    keywords: keywords.join(" "),
+    sinceDate,
+    untilDate,
+  };
+};
+
 export const sanitizeSearchText = (input: string): string => {
   let text = input;
 
   text = text.replace(
-    /\b(from|until)\s*:?\s*(\d{4}-\d{2}-\d{2})\d*/gi,
-    (_m, key, date) => `${key}:${date}`,
+    DATE_TOKEN_RE,
+    (_match, key: string, date: string) => `${normalizeDateTokenKey(key) ?? key}:${date}`,
   );
 
   return text;
 };
 
 export const parseSearchQuery = (query: string) => {
-  const sincePattern = /since:((\d|\d\d|\d\d\d\d-\d\d-\d\d)+)+$/;
-  const untilPattern = /until:((\d|\d\d|\d\d\d\d-\d\d-\d\d)+)+$/;
-
-  const sincePart = query.match(/since:[^\s]*/)?.[0] || "";
-  const untilPart = query.match(/until:[^\s]*/)?.[0] || "";
-
-  const sinceMatch = sincePattern.exec(sincePart);
-  const untilMatch = untilPattern.exec(untilPart);
-
-  const keywords = query
-    .replace(/since:.*(\d{4}-\d{2}-\d{2}).*/g, "")
-    .replace(/until:.*(\d{4}-\d{2}-\d{2}).*/g, "")
-    .trim();
-
-  const extractDate = (s: string | null) => {
-    if (!s) return null;
-    const m = /(\d{4}-\d{2}-\d{2})/.exec(s);
-    return m ? m[1] : null;
-  };
+  const { keywords, sinceDate, untilDate } = extractDateFilters(query.trim());
 
   return {
     keywords,
-    sinceDate: extractDate(sinceMatch ? sinceMatch[1]! : null),
-    untilDate: extractDate(untilMatch ? untilMatch[1]! : null),
+    sinceDate,
+    untilDate,
   };
 };
 
 export const isValidDate = (dateStr: string): boolean => {
-  const slowDateLike = /^(\d+)+-(\d+)+-(\d+)+$/;
-  if (!slowDateLike.test(dateStr)) return false;
+  if (!DATE_VALUE_RE.test(dateStr)) {
+    return false;
+  }
 
-  const date = new Date(dateStr);
-  return !Number.isNaN(date.getTime());
+  const year = Number(dateStr.slice(0, 4));
+  const month = Number(dateStr.slice(5, 7));
+  const day = Number(dateStr.slice(8, 10));
+
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  return (
+    !Number.isNaN(date.getTime()) &&
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
 };

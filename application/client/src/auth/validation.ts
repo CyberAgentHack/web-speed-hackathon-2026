@@ -2,6 +2,19 @@ import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 
 export type AuthFormErrors = Partial<Record<keyof AuthFormData, string>>;
 
+const USERNAME_RE = /^[A-Za-z0-9_]*$/;
+const LETTER_OR_NUMBER_RE = /^[\p{Letter}\p{Number}]$/u;
+
+const hasSymbolCharacter = (value: string): boolean => {
+  for (const char of value) {
+    if (!LETTER_OR_NUMBER_RE.test(char)) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
 export const validate = (values: AuthFormData): AuthFormErrors => {
   const errors: AuthFormErrors = {};
 
@@ -13,14 +26,14 @@ export const validate = (values: AuthFormData): AuthFormErrors => {
     errors.name = "名前を入力してください";
   }
 
-  if (/^(?:[^\P{Letter}&&\P{Number}]*){16,}$/v.test(normalizedPassword)) {
+  if (normalizedPassword.length > 0 && !hasSymbolCharacter(normalizedPassword)) {
     errors.password = "パスワードには記号を含める必要があります";
   }
   if (normalizedPassword.length === 0) {
     errors.password = "パスワードを入力してください";
   }
 
-  if (!/^[a-zA-Z0-9_]*$/.test(normalizedUsername)) {
+  if (!USERNAME_RE.test(normalizedUsername)) {
     errors.username = "ユーザー名に使用できるのは英数字とアンダースコア(_)のみです";
   }
   if (normalizedUsername.length === 0) {
