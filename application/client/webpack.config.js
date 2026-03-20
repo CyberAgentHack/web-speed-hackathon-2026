@@ -35,7 +35,7 @@ const config = {
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: "production",
   module: {
     rules: [
       {
@@ -94,13 +94,13 @@ const config = {
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
     process.env.ANALYZE === "true" &&
-      new BundleAnalyzerPlugin({
-        analyzerMode: "static",
-        openAnalyzer: false,
-        generateStatsFile: true,
-        statsFilename: "stats.json",
-        reportFilename: "report.html",
-      }),
+    new BundleAnalyzerPlugin({
+      analyzerMode: "static",
+      openAnalyzer: false,
+      generateStatsFile: true,
+      statsFilename: "stats.json",
+      reportFilename: "report.html",
+    }),
   ].filter(Boolean),
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
