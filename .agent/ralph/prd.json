@@ -14,7 +14,8 @@
         "DirectMessageConversation モデルに initiatorId, memberId のインデックスが追加されている",
         "sequelize.sync() または同等の方法でインデックスが DB に反映される",
         "POST /api/v1/initialize 後もインデックスが有効である",
-        "E2Eテスト（cd application/e2e && pnpm test src/home.test.ts）が通る",
+        "該当箇所のE2Eテストが通っていること。E2Eは常に build & start したサーバーに対して実行する（pnpm e2e 参考）",
+        "codex skill で review を受けること。自己レビューではなく必ず新しい codex を起動して移譲し、feedback は適宜修正判断を行う",
         "Typecheck passes"
       ],
       "priority": 1,
@@ -31,7 +32,8 @@
         "GET /dm/:conversationId/messages 等の個別エンドポイントでメッセージを取得する設計になっている",
         "DM一覧ページで会話リストが正しく表示される",
         "DM個別ページでメッセージが正しく表示される",
-        "E2Eテスト（cd application/e2e && pnpm test src/dm.test.ts）が通る",
+        "該当箇所のE2Eテストが通っていること。E2Eは常に build & start したサーバーに対して実行する（pnpm e2e 参考）",
+        "codex skill で review を受けること。自己レビューではなく必ず新しい codex を起動して移譲し、feedback は適宜修正判断を行う",
         "Typecheck passes"
       ],
       "priority": 2,
@@ -47,7 +49,8 @@
         "ResizeObserver、MutationObserver、または WebSocket メッセージ受信時のコールバックで代替されている",
         "DM ページでメッセージが追加された際に自動的に最下部にスクロールする",
         "DM ページの操作時にメインスレッドのブロッキングが発生しない",
-        "E2Eテスト（cd application/e2e && pnpm test src/dm.test.ts）が通る",
+        "該当箇所のE2Eテストが通っていること。E2Eは常に build & start したサーバーに対して実行する（pnpm e2e 参考）",
+        "codex skill で review を受けること。自己レビューではなく必ず新しい codex を起動して移譲し、feedback は適宜修正判断を行う",
         "Typecheck passes"
       ],
       "priority": 3,
@@ -63,7 +66,8 @@
         "未読メッセージカウントのクエリが効率化されている",
         "DM でメッセージ送受信が正常に動作する",
         "WebSocket 経由の未読通知が正しく動作する",
-        "E2Eテスト（cd application/e2e && pnpm test src/dm.test.ts）が通る",
+        "該当箇所のE2Eテストが通っていること。E2Eは常に build & start したサーバーに対して実行する（pnpm e2e 参考）",
+        "codex skill で review を受けること。自己レビューではなく必ず新しい codex を起動して移譲し、feedback は適宜修正判断を行う",
         "Typecheck passes"
       ],
       "priority": 4,
@@ -79,7 +83,8 @@
         "PausableMovie の video タグに width/height（または aspect-ratio）が明示されている",
         "PostItem, CommentItem, AccountMenu, DirectMessagePage, DirectMessageListPage, UserProfileHeader のプロフィール画像に width/height が明示されている",
         "ホームページの画像が正しく表示される",
-        "E2Eテスト（cd application/e2e && pnpm test src/home.test.ts）が通る",
+        "該当箇所のE2Eテストが通っていること。E2Eは常に build & start したサーバーに対して実行する（pnpm e2e 参考）",
+        "codex skill で review を受けること。自己レビューではなく必ず新しい codex を起動して移譲し、feedback は適宜修正判断を行う",
         "Typecheck passes"
       ],
       "priority": 5,
@@ -96,7 +101,8 @@
         "DirectMessageListPage の会話リスト項目が React.memo でラップされている（または別コンポーネントに抽出してラップ）",
         "タイムラインの無限スクロールが正しく動作する",
         "コメントの表示・投稿が正しく動作する",
-        "E2Eテスト（cd application/e2e && pnpm test src/home.test.ts）が通る",
+        "該当箇所のE2Eテストが通っていること。E2Eは常に build & start したサーバーに対して実行する（pnpm e2e 参考）",
+        "codex skill で review を受けること。自己レビューではなく必ず新しい codex を起動して移譲し、feedback は適宜修正判断を行う",
         "Typecheck passes"
       ],
       "priority": 6,
@@ -111,7 +117,8 @@
         "SoundPlayer.tsx の onTimeUpdate による setState が最適化されている（rAF デバウンス、CSS animation、または ref ベースの DOM 更新）",
         "音声再生中のプログレスバーが滑らかに動く",
         "音声の再生・一時停止が正しく動作する",
-        "E2Eテスト（cd application/e2e && pnpm test src/post-detail.test.ts）が通る",
+        "該当箇所のE2Eテストが通っていること。E2Eは常に build & start したサーバーに対して実行する（pnpm e2e 参考）",
+        "codex skill で review を受けること。自己レビューではなく必ず新しい codex を起動して移譲し、feedback は適宜修正判断を行う",
         "Typecheck passes"
       ],
       "priority": 7,
@@ -126,7 +133,8 @@
         "FastAverageColor の mode が 'speed' に変更されている、または Web Worker で実行されている、または CSS のデフォルト色で代替されている",
         "ユーザープロフィールページのヘッダー背景色が正しく表示される",
         "プロフィールページ表示時にメインスレッドが長時間ブロックされない",
-        "E2Eテスト（cd application/e2e && pnpm test src/user-profile.test.ts）が通る",
+        "該当箇所のE2Eテストが通っていること。E2Eは常に build & start したサーバーに対して実行する（pnpm e2e 参考）",
+        "codex skill で review を受けること。自己レビューではなく必ず新しい codex を起動して移譲し、feedback は適宜修正判断を行う",
         "Typecheck passes"
       ],
       "priority": 8,
@@ -141,7 +149,8 @@
         "ChatMessage.tsx の Markdown コンポーネントから key={content} が削除されている",
         "Crok チャットでストリーミングレスポンスが正しく表示される",
         "数式（KaTeX）やコードブロック（syntax highlighting）が正しくレンダリングされる",
-        "E2Eテスト（cd application/e2e && pnpm test src/crok.test.ts）が通る",
+        "該当箇所のE2Eテストが通っていること。E2Eは常に build & start したサーバーに対して実行する（pnpm e2e 参考）",
+        "codex skill で review を受けること。自己レビューではなく必ず新しい codex を起動して移譲し、feedback は適宜修正判断を行う",
         "Typecheck passes"
       ],
       "priority": 9,
@@ -158,6 +167,8 @@
         "ビルド後に vendor-[contenthash].js が生成されている",
         "pnpm build が正常に完了する",
         "ホームページにアクセスしてタイムラインが正しく表示される",
+        "該当箇所のE2Eテストが通っていること。E2Eは常に build & start したサーバーに対して実行する（pnpm e2e 参考）",
+        "codex skill で review を受けること。自己レビューではなく必ず新しい codex を起動して移譲し、feedback は適宜修正判断を行う",
         "Typecheck passes"
       ],
       "priority": 10,
