@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const LIMIT = 30;
+const LIMIT = 10;
 
 function buildPagedUrl(apiPath: string, limit: number, offset: number): string {
   const separator = apiPath.includes("?") ? "&" : "?";
