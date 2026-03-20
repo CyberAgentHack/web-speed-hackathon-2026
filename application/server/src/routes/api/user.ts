@@ -50,6 +50,7 @@ userRouter.get("/users/:username", async (req, res) => {
 
 userRouter.get("/users/:username/posts", async (req, res) => {
   const user = await User.findOne({
+    attributes: ["id"],
     where: {
       username: req.params.username,
     },
