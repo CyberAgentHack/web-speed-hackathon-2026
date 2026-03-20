@@ -17,7 +17,7 @@
 - [x] デッドコード `extract_metadata_from_sound.ts` を削除
 - [x] `negaposi-analyzer-ja` + `kuromoji` + `bayesian-bm25` → サーバー側 `POST /api/v1/sentiment` + `GET /api/v1/crok/suggestions/search` に移行 (名詞ハイライト要件は `queryTokens` をレスポンスに含めて維持)
 - [x] `react-syntax-highlighter` → `React.lazy` + `Suspense` で遅延分離。`CrokContainer.sendMessage` 時に prefetch 開始 (full ビルドのまま — Light ビルドは自動言語検出結果が変わり挙動変更禁止に抵触するため)
-- [x] main.js: **107.8 MB → ~12 MiB** に削減
+- [x] main.js: **107.8 MB → ~12 MiB → ~896 KiB** に削減 (Phase 4 ① 後)
 - [x] `DirectMessagePage.tsx`: `setInterval(..., 1)` → `useEffect` + `scrollTo` に置換 (`b2761b2`)
 - [x] `AspectRatioBox.tsx`: `setTimeout(calcStyle, 500)` → `ResizeObserver` に置換 (`b2761b2`)
 - [x] ReDoS: `validation.ts`・`services.ts` の 4 箇所を修正 (`1d7d824`)
@@ -28,15 +28,15 @@
 - [x] `lodash` (544 KB) → ネイティブ JS に置き換え (`SoundWaveSVG.tsx`)
 - [x] `moment` (176 KB) → `dayjs` に置き換え (6 ファイル。plugin 設定は `index.tsx` で一括登録)
 - [x] `crok.ts`: `sleep(3000)` / `sleep(10)` は仕様として**維持** (除去禁止)
-- [ ] **Phase 4 ①** GIF → WebM (VP9) 変換 + `PausableMovie.tsx` を native `<video>` 化 ← **次にやること**
-  - `public/movies/*.gif` を ffmpeg で WebM (VP9) に変換 (`-crf 33 -b:v 0 -cpu-used 4 -an`)
-  - ユーザーアップロード `server/src/routes/api/movie.ts` も `.webm` 出力に変更 (VP8 推奨、速度優先)
+- [x] **Phase 4 ①** GIF → WebM (VP9) 変換 + `PausableMovie.tsx` を native `<video>` 化
+  - `public/movies/*.gif` (15 本・180 MB) を ffmpeg VP9 で変換 → **43 MB** (76% 削減)
+  - `server/src/routes/api/movie.ts`: `EXTENSION = "webm"`、ffmpeg を VP8 出力に変更
   - `get_path.ts`: `getMoviePath` の拡張子 `.gif` → `.webm`
   - `PausableMovie.tsx`: `gifler` + canvas → native `<video autoplay loop muted playsInline>` に書き換え
     - `gifler` / `omggif` / `bluebird` がバンドルから消える
     - `aria-label="動画プレイヤー"` の button は維持 (E2E テスト要件)
     - `prefers-reduced-motion` 対応維持
-- [ ] **Phase 4 ②** `AppContainer.tsx` のルートレベル `React.lazy()` + `<Suspense>` 化
+- [ ] **Phase 4 ②** `AppContainer.tsx` のルートレベル `React.lazy()` + `<Suspense>` 化 ← **次にやること**
   - 全 10 コンテナが static import → entry chunk に全部入っている
   - 各 Route の element を `lazy(() => import("..."))` に変更し entry chunk を大幅削減
 - [ ] **Phase 4 ③** MP3 → WebM/Opus 変換
@@ -48,4 +48,3 @@
   - `public/images/*.jpg` を sharp で quality 75 に再圧縮 (WebP/AVIF は `piexifjs` が JPEG-only のため非推奨)
   - `server/src/routes/api/image.ts` で quality パラメータ追加
 - [ ] **Phase 5** gzip 圧縮・N+1 改善 (キャッシュは採点ツールが毎回 cold start で実行するため WSH スコアに効果なし → 対象外)
-- [ ] デプロイ後スコア再計測 (運営インフラ修正待ち)
