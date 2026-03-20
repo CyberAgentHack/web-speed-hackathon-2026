@@ -61,7 +61,7 @@ export const AppContainer = () => {
         onLogout={handleLogout}
       >
         <Suspense fallback={null}>
-        {!isLoadingActiveUser && <Routes>
+        <Routes>
           <Route element={<TimelineContainer />} path="/" />
           <Route
             element={
@@ -82,7 +82,7 @@ export const AppContainer = () => {
             path="/crok"
           />
           <Route element={<NotFoundContainer />} path="*" />
-        </Routes>}
+        </Routes>
         </Suspense>
       </AppPage>
 
