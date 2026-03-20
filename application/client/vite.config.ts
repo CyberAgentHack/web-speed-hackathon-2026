@@ -9,7 +9,7 @@ export default defineConfig({
   root: './src',
   plugins: [
     react(),
-    unstableRolldownAdapter(analyzer()),
+    // unstableRolldownAdapter(analyzer()),
   ],
   resolve: {
     alias: {
