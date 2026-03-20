@@ -64,6 +64,12 @@ export function initPost(sequelize: Sequelize) {
           ["images", "createdAt", "ASC"],
         ],
       },
+      indexes: [
+        { fields: ["userId"] },
+        { fields: ["movieId"] },
+        { fields: ["soundId"] },
+        { fields: ["createdAt"] },
+      ],
     },
   );
 }
