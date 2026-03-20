@@ -11,6 +11,8 @@ const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
 
+const isProd = process.env.NODE_ENV === "production";
+
 /** @type {import('webpack').Configuration} */
 const config = {
   devServer: {
@@ -25,24 +27,35 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: isProd ? false : "eval-cheap-module-source-map",
   entry: {
     main: [
-      "core-js",
-      "regenerator-runtime/runtime",
+      ...(isProd ? [] : ["core-js", "regenerator-runtime/runtime"]),
       "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: isProd ? "production" : "development",
   module: {
     rules: [
       {
-        exclude: /node_modules/,
+        exclude: (modulePath) => {
+          if (!modulePath.includes(`${path.sep}node_modules${path.sep}`)) {
+            return false;
+          }
+          return !/node_modules[/\\]react-syntax-highlighter([/\\]|$)/.test(modulePath);
+        },
         test: /\.(jsx?|tsx?|mjs|cjs)$/,
-        use: [{ loader: "babel-loader" }],
+        use: [
+          {
+            loader: "babel-loader",
+            options: {
+              envName: isProd ? "production" : "development",
+            },
+          },
+        ],
       },
       {
         test: /\.css$/i,
@@ -59,9 +72,8 @@ const config = {
     ],
   },
   output: {
-    chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
-    filename: "scripts/[name].js",
+    chunkFilename: isProd ? "scripts/chunk-[contenthash:8].js" : "scripts/chunk-[contenthash].js",
+    filename: isProd ? "scripts/[name].[contenthash:8].js" : "scripts/[name].js",
     path: DIST_PATH,
     publicPath: "auto",
     clean: true,
@@ -75,12 +87,11 @@ const config = {
     }),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
-      // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
+      NODE_ENV: isProd ? "production" : "development",
     }),
     new MiniCssExtractPlugin({
-      filename: "styles/[name].css",
+      filename: isProd ? "styles/[name].[contenthash:8].css" : "styles/[name].css",
     }),
     new CopyWebpackPlugin({
       patterns: [
@@ -91,7 +102,8 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: "body",
+      scriptLoading: "defer",
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
   ],
@@ -127,14 +139,27 @@ const config = {
       url: false,
     },
   },
-  optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
-  },
+  optimization: isProd
+    ? {
+        splitChunks: {
+          chunks: "all",
+          cacheGroups: {
+            heavy: {
+              chunks: "async",
+              priority: 30,
+              test: /[\\/]node_modules[\\/](@ffmpeg|@imagemagick)[\\/]/,
+            },
+          },
+        },
+      }
+    : {
+        minimize: false,
+        splitChunks: false,
+        concatenateModules: false,
+        usedExports: false,
+        providedExports: false,
+        sideEffects: false,
+      },
   cache: false,
   ignoreWarnings: [
     {

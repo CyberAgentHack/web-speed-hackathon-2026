@@ -29,7 +29,15 @@ staticRouter.use(
 
 staticRouter.use(
   serveStatic(CLIENT_DIST_PATH, {
-    etag: false,
-    lastModified: false,
+    etag: true,
+    lastModified: true,
+    setHeaders: (res, filePath) => {
+      const normalized = filePath.replaceAll("\\", "/");
+      if (normalized.includes("/scripts/") || normalized.includes("/styles/")) {
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      } else if (normalized.endsWith("index.html")) {
+        res.setHeader("Cache-Control", "no-cache");
+      }
+    },
   }),
 );

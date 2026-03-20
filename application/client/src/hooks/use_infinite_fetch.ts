@@ -2,6 +2,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const LIMIT = 30;
 
+function appendPaginationParams(url: string, limit: number, offset: number): string {
+  if (url === "") {
+    return "";
+  }
+  const joiner = url.includes("?") ? "&" : "?";
+  return `${url}${joiner}limit=${String(limit)}&offset=${String(offset)}`;
+}
+
 interface ReturnValues<T> {
   data: Array<T>;
   error: Error | null;
@@ -27,6 +35,16 @@ export function useInfiniteFetch<T>(
       return;
     }
 
+    if (apiPath === "") {
+      setResult({
+        data: [],
+        error: null,
+        isLoading: false,
+      });
+      internalRef.current = { isLoading: false, offset: 0 };
+      return;
+    }
+
     setResult((cur) => ({
       ...cur,
       isLoading: true,
@@ -36,11 +54,13 @@ export function useInfiniteFetch<T>(
       offset,
     };
 
-    void fetcher(apiPath).then(
-      (allData) => {
+    const pageUrl = appendPaginationParams(apiPath, LIMIT, offset);
+
+    void fetcher(pageUrl).then(
+      (pageData) => {
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...pageData],
           isLoading: false,
         }));
         internalRef.current = {
@@ -63,18 +83,27 @@ export function useInfiniteFetch<T>(
   }, [apiPath, fetcher]);
 
   useEffect(() => {
-    setResult(() => ({
+    setResult({
       data: [],
       error: null,
       isLoading: true,
-    }));
+    });
     internalRef.current = {
       isLoading: false,
       offset: 0,
     };
 
+    if (apiPath === "") {
+      setResult({
+        data: [],
+        error: null,
+        isLoading: false,
+      });
+      return;
+    }
+
     fetchMore();
-  }, [fetchMore]);
+  }, [apiPath, fetchMore]);
 
   return {
     ...result,
