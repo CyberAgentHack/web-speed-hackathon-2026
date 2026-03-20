@@ -1,7 +1,6 @@
 /// <reference types="webpack-dev-server" />
 const path = require("path");
 
-const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const webpack = require("webpack");
@@ -26,7 +25,7 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: "source-map",
   entry: {
     main: [
       path.resolve(SRC_PATH, "./index.css"),
@@ -75,14 +74,6 @@ const config = {
     }),
     new MiniCssExtractPlugin({
       filename: "styles/[name].css",
-    }),
-    new CopyWebpackPlugin({
-      patterns: [
-        {
-          from: path.resolve(__dirname, "node_modules/katex/dist/fonts"),
-          to: path.resolve(DIST_PATH, "styles/fonts"),
-        },
-      ],
     }),
     new HtmlWebpackPlugin({
       inject: true,
