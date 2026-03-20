@@ -17,8 +17,6 @@ const ANALYZE_MODE =
 const plugins = [
   new webpack.ProvidePlugin({
     $: "jquery",
-    AudioContext: ["standardized-audio-context", "AudioContext"],
-    Buffer: ["buffer", "Buffer"],
     "window.jQuery": "jquery",
   }),
   new webpack.DefinePlugin({

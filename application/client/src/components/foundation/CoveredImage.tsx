@@ -12,6 +12,28 @@ interface Props {
   src: string;
 }
 
+const BINARY_CHUNK_SIZE = 0x8000;
+
+function bytesToBinaryString(bytes: Uint8Array): string {
+  let binary = "";
+
+  for (let idx = 0; idx < bytes.length; idx += BINARY_CHUNK_SIZE) {
+    binary += String.fromCharCode(...bytes.subarray(idx, idx + BINARY_CHUNK_SIZE));
+  }
+
+  return binary;
+}
+
+function binaryStringToBytes(value: string): Uint8Array {
+  const bytes = new Uint8Array(value.length);
+
+  for (let idx = 0; idx < value.length; idx += 1) {
+    bytes[idx] = value.charCodeAt(idx);
+  }
+
+  return bytes;
+}
+
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
@@ -23,16 +45,19 @@ export const CoveredImage = ({ src }: Props) => {
   }, []);
 
   const { data, isLoading } = useFetch(src, fetchBinary);
+  const bytes = useMemo(() => {
+    return data != null ? new Uint8Array(data) : null;
+  }, [data]);
 
   const imageSize = useMemo(() => {
-    return data != null ? sizeOf(Buffer.from(data)) : { height: 0, width: 0 };
-  }, [data]);
+    return bytes != null ? sizeOf(bytes) : { height: 0, width: 0 };
+  }, [bytes]);
 
   const alt = useMemo(() => {
-    const exif = data != null ? load(Buffer.from(data).toString("binary")) : null;
+    const exif = bytes != null ? load(bytesToBinaryString(bytes)) : null;
     const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-    return raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
-  }, [data]);
+    return raw != null ? new TextDecoder().decode(binaryStringToBytes(raw)) : "";
+  }, [bytes]);
 
   const blobUrl = useMemo(() => {
     return data != null ? URL.createObjectURL(new Blob([data])) : null;
