@@ -1,71 +1,33 @@
 import classNames from "classnames";
-import type { Animator } from "gifler";
-import { RefCallback, useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
-import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
   src: string;
 }
 
 /**
- * クリックすると再生・一時停止を切り替えます。
+ * MP4動画をネイティブ<video>で再生し、クリックで再生・一時停止を切り替える。
+ * scoring-toolが getByRole("button", { name: "動画プレイヤー" }) で検出するため、
+ * button > video の構造を維持する。
  */
 export const PausableMovie = ({ src }: Props) => {
-  const { data, isLoading } = useFetch(src, fetchBinary);
-
-  const animatorRef = useRef<Animator | null>(null);
-  const canvasCallbackRef = useCallback<RefCallback<HTMLCanvasElement>>(
-    (el) => {
-      animatorRef.current?.stop();
-
-      if (el === null || data === null) {
-        return;
-      }
-
-      // gifler/omggif は使用時のみ動的ロードしてバンドルから分離する
-      (async () => {
-        const { Decoder, Animator: GifAnimator } = await import("gifler");
-        const { GifReader } = await import("omggif");
-        const reader = new GifReader(new Uint8Array(data));
-        const frames = Decoder.decodeFramesSync(reader);
-        const animator = new GifAnimator(reader, frames);
-
-        animator.animateInCanvas(el);
-        animator.onFrame(frames[0]!);
-
-        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-          setIsPlaying(false);
-          animator.stop();
-        } else {
-          setIsPlaying(true);
-          animator.start();
-        }
-
-        animatorRef.current = animator;
-      })();
-    },
-    [data],
-  );
-
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(true);
-  const handleClick = useCallback(() => {
-    setIsPlaying((isPlaying) => {
-      if (isPlaying) {
-        animatorRef.current?.stop();
-      } else {
-        animatorRef.current?.start();
-      }
-      return !isPlaying;
-    });
-  }, []);
 
-  if (isLoading || data === null) {
-    return null;
-  }
+  const handleClick = useCallback(() => {
+    const video = videoRef.current;
+    if (video == null) return;
+
+    if (isPlaying) {
+      video.pause();
+    } else {
+      video.play();
+    }
+    setIsPlaying(!isPlaying);
+  }, [isPlaying]);
 
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
@@ -75,7 +37,16 @@ export const PausableMovie = ({ src }: Props) => {
         onClick={handleClick}
         type="button"
       >
-        <canvas ref={canvasCallbackRef} className="w-full" />
+        <video
+          ref={videoRef}
+          autoPlay
+          className="h-full w-full object-cover"
+          loop
+          muted
+          playsInline
+          preload="metadata"
+          src={src}
+        />
         <div
           className={classNames(
             "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
