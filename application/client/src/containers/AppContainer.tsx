@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useId, useState } from "react";
 import { HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
+import type { AuthStatus } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
 import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
@@ -52,24 +53,34 @@ const UserProfileContainer = lazy(async () => {
 export const AppContainer = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  // Synchronize the browser scroll position with route changes.
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
+  const [authStatus, setAuthStatus] = useState<AuthStatus>("loading");
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
 
+  // Synchronize with the server session to resolve the current auth state.
   useEffect(() => {
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {
         setActiveUser(user);
+        setAuthStatus("signedIn");
       })
       .catch(() => {
         setActiveUser(null);
+        setAuthStatus("signedOut");
       });
+  }, []);
+  const handleUpdateActiveUser = useCallback((user: Models.User) => {
+    setActiveUser(user);
+    setAuthStatus("signedIn");
   }, []);
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
     setActiveUser(null);
+    setAuthStatus("signedOut");
     navigate("/");
   }, [navigate]);
 
@@ -80,6 +91,7 @@ export const AppContainer = () => {
     <HelmetProvider>
       <AppPage
         activeUser={activeUser}
+        authStatus={authStatus}
         authModalId={authModalId}
         newPostModalId={newPostModalId}
         onLogout={handleLogout}
@@ -89,12 +101,22 @@ export const AppContainer = () => {
             <Route element={<TimelineContainer />} path="/" />
             <Route
               element={
-                <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
+                <DirectMessageListContainer
+                  activeUser={activeUser}
+                  authModalId={authModalId}
+                  authStatus={authStatus}
+                />
               }
               path="/dm"
             />
             <Route
-              element={<DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />}
+              element={
+                <DirectMessageContainer
+                  activeUser={activeUser}
+                  authModalId={authModalId}
+                  authStatus={authStatus}
+                />
+              }
               path="/dm/:conversationId"
             />
             <Route element={<SearchContainer />} path="/search" />
@@ -102,7 +124,13 @@ export const AppContainer = () => {
             <Route element={<PostContainer />} path="/posts/:postId" />
             <Route element={<TermContainer />} path="/terms" />
             <Route
-              element={<CrokContainer activeUser={activeUser} authModalId={authModalId} />}
+              element={
+                <CrokContainer
+                  activeUser={activeUser}
+                  authModalId={authModalId}
+                  authStatus={authStatus}
+                />
+              }
               path="/crok"
             />
             <Route element={<NotFoundContainer />} path="*" />
@@ -110,7 +138,7 @@ export const AppContainer = () => {
         </Suspense>
       </AppPage>
 
-      <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
+      <AuthModalContainer id={authModalId} onUpdateActiveUser={handleUpdateActiveUser} />
       <NewPostModalContainer id={newPostModalId} />
     </HelmetProvider>
   );

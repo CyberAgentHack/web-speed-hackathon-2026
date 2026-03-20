@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useParams } from "react-router";
 
+import type { AuthStatus } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { DirectMessageGate } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageGate";
 import { DirectMessagePage } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessagePage";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
@@ -22,10 +23,11 @@ const TYPING_INDICATOR_DURATION_MS = 10 * 1000;
 
 interface Props {
   activeUser: Models.User | null;
+  authStatus: AuthStatus;
   authModalId: string;
 }
 
-export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
+export const DirectMessageContainer = ({ activeUser, authStatus, authModalId }: Props) => {
   const { conversationId = "" } = useParams<{ conversationId: string }>();
 
   const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(null);
@@ -102,6 +104,14 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
       }, TYPING_INDICATOR_DURATION_MS);
     }
   });
+
+  if (authStatus === "loading") {
+    return (
+      <Helmet>
+        <title>読込中 - CaX</title>
+      </Helmet>
+    );
+  }
 
   if (activeUser === null) {
     return (
