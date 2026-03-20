@@ -14,7 +14,12 @@ app.use(bodyParser.json());
 app.use(bodyParser.raw({ limit: "10mb" }));
 
 app.use("/api/v1", (_req, res, next) => {
-  res.setHeader("Cache-Control", "no-store");
+  res.setHeader(
+    "Cache-Control",
+    _req.method === "GET" || _req.method === "HEAD"
+      ? "private, max-age=10, stale-while-revalidate=50"
+      : "no-store",
+  );
   next();
 });
 app.use("/api/v1", apiRouter);

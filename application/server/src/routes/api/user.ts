@@ -9,6 +9,7 @@ userRouter.get("/me", async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
   }
+  res.setHeader("Cache-Control", "no-store");
   const user = await User.findByPk(req.session.userId);
 
   if (user === null) {
