@@ -7,9 +7,8 @@ module.exports = {
       "@babel/preset-env",
       {
         targets: isProd ? "last 2 Chrome versions, last 2 Firefox versions, last 2 Safari versions" : "last 1 Chrome version",
-        corejs: "3",
         modules: false,
-        useBuiltIns: isProd ? "usage" : false,
+        useBuiltIns: false,
       },
     ],
     [
