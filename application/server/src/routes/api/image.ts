@@ -8,8 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
-// 変換した画像の拡張子
-const EXTENSION = "jpg";
+const ALLOWED_IMAGE_MIMES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 export const imageRouter = Router();
 
@@ -22,13 +21,14 @@ imageRouter.post("/images", async (req, res) => {
   }
 
   const type = await fileTypeFromBuffer(req.body);
-  if (type === undefined || type.ext !== EXTENSION) {
+  if (type === undefined || !ALLOWED_IMAGE_MIMES.includes(type.mime)) {
     throw new httpErrors.BadRequest("Invalid file type");
   }
 
   const imageId = uuidv4();
 
-  const filePath = path.resolve(UPLOAD_PATH, `./images/${imageId}.${EXTENSION}`);
+  // 常に jpg として保存（クライアントの getImagePath は .jpg を期待するため）
+  const filePath = path.resolve(UPLOAD_PATH, `./images/${imageId}.jpg`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
   await fs.writeFile(filePath, req.body);
 

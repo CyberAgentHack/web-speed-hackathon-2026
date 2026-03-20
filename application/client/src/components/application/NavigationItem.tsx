@@ -43,6 +43,14 @@ export const NavigationItem = ({ badge, href, icon, command, commandfor, text }:
           type="button"
           command={command}
           commandfor={commandfor}
+          onClick={() => {
+            if (commandfor && command === "show-modal") {
+              const el = document.getElementById(commandfor);
+              if (el instanceof HTMLDialogElement && !el.open) {
+                el.showModal();
+              }
+            }
+          }}
         >
           {content}
         </button>

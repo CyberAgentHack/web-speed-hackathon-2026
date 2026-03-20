@@ -7,17 +7,17 @@ import {
   sanitizeSearchText,
 } from "@web-speed-hackathon-2026/client/src/search/services";
 import { validate } from "@web-speed-hackathon-2026/client/src/search/validation";
-import { analyzeSentiment } from "@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer";
 
 import { Button } from "../foundation/Button";
 
 interface Props {
   query: string;
   results: Models.Post[];
+  isLoading: boolean;
   initialValues?: { searchText: string };
 }
 
-export const SearchPage = ({ query, results, initialValues }: Props) => {
+export const SearchPage = ({ query, results, isLoading, initialValues }: Props) => {
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState(initialValues?.searchText ?? "");
   const [error, setError] = useState<string | undefined>();
@@ -37,7 +37,8 @@ export const SearchPage = ({ query, results, initialValues }: Props) => {
     }
 
     let isMounted = true;
-    analyzeSentiment(parsed.keywords)
+    import("@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer")
+      .then(({ analyzeSentiment }) => analyzeSentiment(parsed.keywords!))
       .then((result) => {
         if (isMounted) {
           setIsNegative(result.label === "negative");
@@ -146,7 +147,7 @@ export const SearchPage = ({ query, results, initialValues }: Props) => {
         </article>
       )}
 
-      {query && results.length === 0 ? (
+      {query && !isLoading && results.length === 0 ? (
         <div className="text-cax-text-muted flex items-center justify-center p-8">
           検索結果が見つかりませんでした
         </div>
