@@ -66,12 +66,6 @@ importers:
       image-size:
         specifier: 2.0.2
         version: 2.0.2
-      jquery:
-        specifier: 3.7.1
-        version: 3.7.1
-      jquery-binarytransport:
-        specifier: 1.0.0
-        version: 1.0.0
       json-repair-js:
         specifier: 1.0.0
         version: 1.0.0
@@ -3018,13 +3012,6 @@ packages:
   jiti@2.6.1:
     resolution: {integrity: sha512-ekilCSN1jwRvIbgeg/57YFh8qQDNbwDb9xT/qu2DAHbFFZUicIl4ygVaAvzveMhMVr3LnpSKTNnwt8PoOfmKhQ==}
     hasBin: true
-
-  jquery-binarytransport@1.0.0:
-    resolution: {integrity: sha512-vqEyfGDHgZ/VrqOpfEuU+BCOl0QAF1EeWQjpk66PEwkErmuNCD2eNFnEn767PWCQ4mtvitFmjLes7ApyGe8byw==}
-    engines: {node: '>=0.4.0'}
-
-  jquery@3.7.1:
-    resolution: {integrity: sha512-m4avr8yL8kmFN8psrbFFFmB/If14iN5o9nw/NgnnM+kybDJpRsAynV2BsfpTYrTRysYUdADVD7CkUUizgkpLfg==}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -7543,10 +7530,6 @@ snapshots:
       supports-color: 8.1.1
 
   jiti@2.6.1: {}
-
-  jquery-binarytransport@1.0.0: {}
-
-  jquery@3.7.1: {}
 
   js-tokens@4.0.0: {}
 
