@@ -20,8 +20,6 @@ export const CoveredImage = ({ image }: Props) => {
     ev.stopPropagation();
   }, []);
 
-  console.log(image);
-
   return (
     <div className="relative h-full w-full overflow-hidden">
       <img
