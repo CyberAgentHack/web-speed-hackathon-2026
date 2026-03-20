@@ -31,15 +31,18 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(null);
   const [conversationError, setConversationError] = useState<Error | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingConversation, setIsLoadingConversation] = useState(true);
 
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadConversation = useCallback(async () => {
     if (activeUser == null) {
+      setIsLoadingConversation(false);
       return;
     }
 
+    setIsLoadingConversation(true);
     try {
       const data = await fetchJSON<Models.DirectMessageConversation>(
         `/api/v1/dm/${conversationId}`,
@@ -49,6 +52,8 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     } catch (error) {
       setConversation(null);
       setConversationError(error as Error);
+    } finally {
+      setIsLoadingConversation(false);
     }
   }, [activeUser, conversationId]);
 
@@ -116,7 +121,26 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     if (conversationError != null) {
       return <NotFoundContainer />;
     }
-    return null;
+    if (isLoadingConversation) {
+      return (
+        <section className="px-6 py-10">
+          <p className="text-cax-text-muted text-sm">メッセージを読み込み中です...</p>
+        </section>
+      );
+    }
+    return (
+      <section className="px-6 py-10">
+        <p className="text-cax-danger text-sm">メッセージの取得に失敗しました</p>
+      </section>
+    );
+  }
+
+  if (conversation.initiator == null || conversation.member == null) {
+    return (
+      <section className="px-6 py-10">
+        <p className="text-cax-danger text-sm">会話情報の取得に失敗しました</p>
+      </section>
+    );
   }
 
   const peer =

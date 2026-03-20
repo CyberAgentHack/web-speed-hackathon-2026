@@ -6,7 +6,7 @@ import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 export const TimelineContainer = () => {
-  const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>("/api/v1/posts", fetchJSON);
+  const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>("/api/v1/posts", fetchJSON, 8);
 
   return (
     <InfiniteScroll fetchMore={fetchMore} items={posts}>
