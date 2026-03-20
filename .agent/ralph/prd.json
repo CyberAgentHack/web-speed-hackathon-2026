@@ -367,8 +367,8 @@
         "Typecheck passes"
       ],
       "priority": 20,
-      "passes": false,
-      "notes": "kuromoji は辞書ファイル (public/kuromoji/) も読み込むため、初期バンドルに含めるメリットがない。使用時にオンデマンドで読み込む方が効率的。"
+      "passes": true,
+      "notes": "2026-03-20 完了。ChatInput.tsx の static import → dynamic import(`await import('kuromoji')`)に変更。bm25_search.ts は type-only import のため変更不要。negaposi_analyzer.ts は US-019 で削除済み。kuromoji は crok ページアクセス時にのみ動的ロードされ、初期バンドルから分離。"
     },
     {
       "id": "US-021",

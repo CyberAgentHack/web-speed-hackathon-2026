@@ -547,3 +547,36 @@ Feature: CaX パフォーマンス改善 (ralph/perf-optimization)
 
 ### Commit
 - c38e3ca feat: [US-019] - bluebird → native Promise 置換
+
+---
+
+## US-020: kuromoji を dynamic import に変更
+**Date:** 2026-03-20
+
+### Implementation
+- `ChatInput.tsx` の `import kuromoji from "kuromoji"` を `import type { Tokenizer, IpadicFeatures } from "kuromoji"` に変更（型のみの静的インポート）
+- `ChatInput.tsx` の useEffect 内で `const kuromoji = await import("kuromoji")` による dynamic import に変更
+- `kuromoji.builder(...)` を `kuromoji.default.builder(...)` に変更（dynamic import の default export アクセス）
+- `bm25_search.ts` は元から `import type` のみのため変更不要（Tokenizer インスタンスは ChatInput から引数経由で受け取る）
+- `negaposi_analyzer.ts` は US-019 で既に削除済みのため対応不要
+
+### Acceptance Criteria Verification
+| Criteria | Test | Result |
+|---|---|---|
+| ChatInput.tsx の kuromoji が dynamic import | ChatInput.tsx L99 `const kuromoji = await import("kuromoji")` 確認 | PASS |
+| bm25_search.ts の kuromoji が dynamic import | 型のみのインポート（`import type`）のため実行時の kuromoji モジュールは ChatInput 経由で動的ロード | PASS |
+| negaposi_analyzer.ts の kuromoji が dynamic import | US-019 で削除済み、対応不要 | PASS (N/A) |
+| 検索機能が正しく動作する | E2E search.test.ts 17/17 passed | PASS |
+| crok チャットが正しく動作する | E2E crok-chat.test.ts 8/8 passed | PASS |
+| E2Eテストが通る | crok-chat 8/8, search 17/17 全通過 | PASS |
+| Typecheck passes | client PASS, server PASS (e2e は既存の型エラー) | PASS |
+
+### Quality Checks
+- `pnpm build`: PASS (compiled in 5.71s, main.js 42KB — kuromoji は分離チャンクへ)
+- `pnpm typecheck (client)`: PASS
+- `pnpm typecheck (server)`: PASS
+- `pnpm test (e2e crok-chat)`: 8/8 passed
+- `pnpm test (e2e search)`: 17/17 passed
+
+### Commit
+- 8f7c3db feat: [US-020] - kuromoji を dynamic import に変更

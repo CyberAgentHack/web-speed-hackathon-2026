@@ -1,4 +1,4 @@
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
+import type { Tokenizer, IpadicFeatures } from "kuromoji";
 import {
   useEffect,
   useLayoutEffect,
@@ -96,8 +96,9 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     let mounted = true;
 
     const init = async () => {
+      const kuromoji = await import("kuromoji");
       const nextTokenizer = await new Promise<Tokenizer<IpadicFeatures>>((resolve, reject) => {
-        kuromoji.builder({ dicPath: "/dicts" }).build((err, tokenizer) => {
+        kuromoji.default.builder({ dicPath: "/dicts" }).build((err, tokenizer) => {
           if (err) reject(err);
           else resolve(tokenizer);
         });
