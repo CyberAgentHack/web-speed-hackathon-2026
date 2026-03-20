@@ -1,0 +1,922 @@
+openapi: 3.0.3
+info:
+  title: Web Speed Hackathon 2026 API
+  version: 1.0.0
+
+servers:
+  - url: /api/v1
+
+tags:
+  - name: Auth
+    description: 認証
+  - name: Users
+    description: ユーザー
+  - name: Posts
+    description: 投稿
+  - name: Assets
+    description: アセットアップロード
+  - name: DirectMessages
+    description: ダイレクトメッセージ
+  - name: Search
+    description: 検索
+  - name: Crok
+    description: AI チャット
+  - name: Initialize
+    description: 初期化
+
+paths:
+  /signup:
+    post:
+      tags:
+        - Auth
+      summary: サインアップ
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+                - name
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                name:
+                  type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    enum:
+                      - USERNAME_TAKEN
+                      - INVALID_USERNAME
+  /signin:
+    post:
+      tags:
+        - Auth
+      summary: サインイン
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Bad Request
+  /signout:
+    post:
+      tags:
+        - Auth
+      summary: サインアウト
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+  /me:
+    get:
+      tags:
+        - Users
+      summary: ログインユーザー情報
+      operationId: getCurrentUser
+      security:
+        - session: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags:
+        - Users
+      summary: ログインユーザー情報更新
+      operationId: updateCurrentUser
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /users/{username}:
+    get:
+      tags:
+        - Users
+      summary: ユーザー取得
+      operationId: getUser
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /users/{username}/posts:
+    get:
+      tags:
+        - Users
+      summary: ユーザーの投稿一覧
+      operationId: getUserPosts
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /posts:
+    get:
+      tags:
+        - Posts
+      summary: 投稿一覧取得
+      operationId: getPosts
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
+    post:
+      tags:
+        - Posts
+      summary: 投稿作成
+      operationId: createPost
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text:
+                  type: string
+                movie:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                sound:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                images:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /posts/{postId}:
+    get:
+      tags:
+        - Posts
+      summary: 投稿取得
+      operationId: getPost
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /posts/{postId}/comments:
+    get:
+      tags:
+        - Posts
+      summary: 投稿のコメント一覧
+      operationId: getPostComments
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comment"
+  /images:
+    post:
+      tags:
+        - Assets
+      summary: 画像アップロード
+      operationId: uploadImage
+      description: バイナリデータを直接送信（上限 10 MB、JPG のみ）
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /movies:
+    post:
+      tags:
+        - Assets
+      summary: 動画アップロード
+      operationId: uploadMovie
+      description: バイナリデータを直接送信（上限 10 MB、GIF のみ）
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /sounds:
+    post:
+      tags:
+        - Assets
+      summary: 音声アップロード
+      operationId: uploadSound
+      description: バイナリデータを直接送信（上限 10 MB、MP3 のみ）
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                  - artist
+                  - title
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  artist:
+                    type: string
+                  title:
+                    type: string
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /dm:
+    get:
+      tags:
+        - DirectMessages
+      summary: DM 会話一覧取得
+      description: 最新メッセージの新しい順で返し、メッセージが1件もない会話は含みません。
+      operationId: getDirectMessageConversations
+      security:
+        - session: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DirectMessageConversation"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags:
+        - DirectMessages
+      summary: DM 会話を作成
+      operationId: createConversation
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - peerId
+              properties:
+                peerId:
+                  type: string
+                  format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DirectMessageConversation"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /dm/read:
+    head:
+      tags:
+        - DirectMessages
+      summary: 未読 DM チャンネルがあるか（WebSocket 通信）
+      operationId: connectDirectMessageUnreadChannel
+      security:
+        - session: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [type, payload]
+                properties:
+                  type:
+                    type: string
+                    enum: ["dm:unread"]
+                  payload:
+                    type: object
+                    required: [unreadCount]
+                    properties:
+                      unreadCount:
+                        type: integer
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /dm/{conversationId}:
+    get:
+      tags:
+        - DirectMessages
+      summary: DM 会話取得
+      operationId: getConversation
+      security:
+        - session: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DirectMessageConversation"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    head:
+      tags:
+        - DirectMessages
+      summary: DM 会話の状況更新（WebSocket 通信）
+      operationId: connectDirectMessageConversation
+      security:
+        - session: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    required: [type, payload]
+                    properties:
+                      type:
+                        type: string
+                        enum: ["dm:conversation:message"]
+                      payload:
+                        $ref: "#/components/schemas/DirectMessage"
+                  - type: object
+                    required: [type, payload]
+                    properties:
+                      type:
+                        type: string
+                        enum: ["dm:conversation:typing"]
+                      payload:
+                        type: object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /dm/{conversationId}/messages:
+    post:
+      tags:
+        - DirectMessages
+      summary: DM メッセージ送信
+      operationId: createDirectMessage
+      security:
+        - session: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body:
+                  type: string
+                  minLength: 1
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DirectMessage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /dm/{conversationId}/read:
+    post:
+      tags:
+        - DirectMessages
+      summary: DM 既読にする
+      operationId: markDirectMessagesRead
+      security:
+        - session: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /dm/{conversationId}/typing:
+    post:
+      tags:
+        - DirectMessages
+      summary: タイピング状態を送信
+      operationId: sendTyping
+      security:
+        - session: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /search:
+    get:
+      tags:
+        - Search
+      summary: 投稿検索
+      operationId: searchPosts
+      description: |
+        テキスト・ユーザー名・名前で投稿を検索する。
+        クエリ内に `from:YYYY-MM-DD` / `until:YYYY-MM-DD` を含めると日付フィルタが適用される。
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: 検索クエリ
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
+  /crok/suggestions:
+    get:
+      tags:
+        - Crok
+      summary: チャット候補取得
+      operationId: getCrokSuggestions
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - suggestions
+                properties:
+                  suggestions:
+                    type: array
+                    items:
+                      type: string
+  /crok:
+    get:
+      tags:
+        - Crok
+      summary: AI チャット（SSE ストリーミング）
+      operationId: chatWithCrok
+      description: Server-Sent Events で AI レスポンスを1文字ずつストリーミング返却する。
+      security:
+        - session: []
+      parameters:
+        - name: prompt
+          in: query
+          required: true
+          schema:
+            type: string
+          description: ユーザーの質問
+      responses:
+        "200":
+          description: OK
+          content:
+            text/event-stream:
+              schema:
+                description: |
+                  各チャンクは SSE イベントとして送信される
+                type: object
+                properties:
+                  text:
+                    type: string
+                  done:
+                    type: boolean
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /initialize:
+    post:
+      tags:
+        - Initialize
+      summary: データベース初期化
+      operationId: initialize
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+
+components:
+  securitySchemes:
+    session:
+      type: apiKey
+      in: cookie
+      name: connect.sid
+      description: express-session によるセッション Cookie
+
+  parameters:
+    limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+      description: 取得件数
+    offset:
+      name: offset
+      in: query
+      required: false
+      schema:
+        type: integer
+      description: オフセット
+
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+
+  schemas:
+    ProfileImage:
+      type: object
+      required: [id, alt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        alt:
+          type: string
+
+    User:
+      type: object
+      required: [id, username, name, description, createdAt, profileImage]
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        profileImage:
+          $ref: "#/components/schemas/ProfileImage"
+
+    Image:
+      type: object
+      required: [id, alt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        alt:
+          type: string
+
+    Movie:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+          format: uuid
+
+    Sound:
+      type: object
+      required: [id, title, artist]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        artist:
+          type: string
+
+    Post:
+      type: object
+      required: [id, text, createdAt, user, images]
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        user:
+          $ref: "#/components/schemas/User"
+        movie:
+          $ref: "#/components/schemas/Movie"
+          nullable: true
+        sound:
+          $ref: "#/components/schemas/Sound"
+          nullable: true
+        images:
+          type: array
+          items:
+            $ref: "#/components/schemas/Image"
+
+    Comment:
+      type: object
+      required: [id, text, createdAt, user]
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        user:
+          $ref: "#/components/schemas/User"
+
+    DirectMessageConversation:
+      type: object
+      required: [id, initiator, member]
+      properties:
+        id:
+          type: string
+        initiator:
+          $ref: "#/components/schemas/User"
+        member:
+          $ref: "#/components/schemas/User"
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/DirectMessage"
+
+    DirectMessage:
+      type: object
+      required: [id, body, senderId, conversationId, isRead, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+        body:
+          type: string
+        senderId:
+          type: string
+          format: uuid
+        conversationId:
+          type: string
+        isRead:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        sender:
+          $ref: "#/components/schemas/User"

@@ -1,0 +1,50 @@
+{
+  "name": "@web-speed-hackathon-2026/scoring-tool",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MPL-2.0",
+  "author": "CyberAgent, Inc.",
+  "type": "module",
+  "scripts": {
+    "format": "pnpm run format:oxlint && pnpm run format:oxfmt",
+    "format:oxlint": "oxlint --fix",
+    "format:oxfmt": "oxfmt",
+    "start": "tsx ./src/index.ts"
+  },
+  "dependencies": {
+    "@actions/artifact": "2.3.2",
+    "@actions/github": "6.0.1",
+    "@inkkit/ink-markdown": "1.0.0",
+    "@playwright/test": "1.56.0",
+    "citty": "0.1.6",
+    "common-tags": "1.8.2",
+    "consola": "3.4.2",
+    "date-fns": "4.1.0",
+    "debug": "4.4.3",
+    "ink": "6.3.1",
+    "lighthouse": "12.8.2",
+    "lodash": "4.17.21",
+    "merge-error-cause": "5.0.2",
+    "mockdate": "3.0.5",
+    "playwright": "npm:playwright-core@1.56.0",
+    "puppeteer": "npm:puppeteer-core@24.23.0",
+    "react": "19.2.0",
+    "regexparam": "3.0.0",
+    "storycrawler": "5.0.1",
+    "tsx": "4.20.6",
+    "typescript": "5.8.2"
+  },
+  "devDependencies": {
+    "@tsconfig/strictest": "2.0.8",
+    "@types/common-tags": "1.8.4",
+    "@types/debug": "4.1.12",
+    "@types/lodash": "4.17.20",
+    "@types/react": "19.2.2",
+    "oxfmt": "0.28.0",
+    "oxlint": "1.43.0"
+  },
+  "engines": {
+    "node": "24.14.0"
+  },
+  "packageManager": "pnpm@10.32.1"
+}

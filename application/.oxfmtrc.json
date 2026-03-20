@@ -1,0 +1,9 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "ignorePatterns": [],
+  "sortImports": {
+    "internalPattern": ["@web-speed-hackathon-2026/"],
+    "groups": ["builtin", "external", "internal", "parent", "sibling", "index"]
+  },
+  "sortTailwindcss": {}
+}

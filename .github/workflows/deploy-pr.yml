@@ -1,0 +1,39 @@
+name: Deploy Review App
+on:
+    pull_request:
+        types: [opened, reopened, synchronize, closed]
+
+env:
+    FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+    FLY_REGION: nrt
+    FLY_ORG: wsh-2026
+
+jobs:
+    review_app:
+        runs-on: ubuntu-latest
+        outputs:
+            url: ${{ steps.deploy.outputs.url }}
+        concurrency:
+            group: pr-${{ github.event.number }}
+
+        environment:
+            name: deployment
+            url: ${{ steps.deploy.outputs.url }}
+
+        steps:
+            - name: Get code
+              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+            - name: Generate valid app name
+              id: generate-app-name
+              run: |
+                  APP_NAME=$(grep -oP 'app = "\K[^"]+' fly.toml)
+                  APP_NAME="pr-${{ github.event.number }}-${APP_NAME}"
+                  echo "app_name=${APP_NAME}" >> $GITHUB_OUTPUT
+                  echo "Generated app name: ${APP_NAME}"
+
+            - name: Deploy PR app to Fly.io
+              id: deploy
+              uses: superfly/fly-pr-review-apps@5d9f067254bebd0aaa77d908d6337b63f4d4f019
+              with:
+                  name: ${{ steps.generate-app-name.outputs.app_name }}
