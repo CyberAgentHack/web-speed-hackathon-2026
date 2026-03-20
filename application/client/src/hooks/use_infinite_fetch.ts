@@ -36,11 +36,14 @@ export function useInfiniteFetch<T>(
       offset,
     };
 
-    void fetcher(apiPath).then(
-      (allData) => {
+    const params = new URLSearchParams({ limit: String(LIMIT), offset: String(offset) });
+    const urlWithParams = `${apiPath}?${params.toString()}`;
+
+    void fetcher(urlWithParams).then(
+      (data) => {
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...data],
           isLoading: false,
         }));
         internalRef.current = {
