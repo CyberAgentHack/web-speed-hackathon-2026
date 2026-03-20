@@ -27,7 +27,12 @@ staticRouter.use(
 
 staticRouter.use(
   serveStatic(CLIENT_DIST_PATH, {
-    maxAge: "1y",
-    immutable: true,
+    setHeaders: (res, path) => {
+      if (path.endsWith(".html")) {
+        res.setHeader("Cache-Control", "max-age=0, no-transform");
+      } else {
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      }
+    },
   }),
 );
