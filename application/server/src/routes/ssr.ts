@@ -52,7 +52,10 @@ let ssrRender: RenderFn | null = null;
 try {
   const ssrPath = path.resolve(SSR_DIST_PATH, "entry-server.js");
   console.log("SSR: loading from", ssrPath);
-  const ssrModule = await import(ssrPath);
+  // Cache busting: Bun の ESM キャッシュは動的 import のパスが同一だと
+  // ファイル変更を検知しない（bun --watch のソフトリスタートで残る）。
+  // タイムスタンプ付きクエリで強制再読み込みする。
+  const ssrModule = await import(`${ssrPath}?v=${Date.now()}`);
   ssrRender = ssrModule.render;
   console.log("SSR: renderer loaded, type:", typeof ssrRender);
 } catch (e: unknown) {
@@ -82,11 +85,8 @@ function buildPreloadHints(ssrData: SSRData): string {
   return hints.join("\n");
 }
 
-// 未ログインユーザー向け SSR キャッシュ（パス → HTML 文字列）
-const ssrCache = new Map<string, string>();
-
 export function clearSsrCache() {
-  ssrCache.clear();
+  // ストリームベースの SSR ではリクエストごとにレンダリングする
 }
 
 // app.request() で内部 API を叩いて JSON を返す（HTTP オーバーヘッドなし）
@@ -180,31 +180,59 @@ async function fetchSSRData(urlPath: string, cookie?: string): Promise<SSRData |
   return ssrData;
 }
 
-async function readableStreamToString(stream: ReadableStream): Promise<string> {
-  const reader = stream.getReader();
-  const decoder = new TextDecoder();
-  const chunks: string[] = [];
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    chunks.push(decoder.decode(value, { stream: true }));
+// HTML テンプレートを <!--ssr-outlet--> で分割して前後パーツを事前計算
+let htmlBefore = "";
+let htmlAfter = "";
+if (inlinedTemplateHtml) {
+  const outletMarker = "<!--ssr-outlet-->";
+  const idx = inlinedTemplateHtml.indexOf(outletMarker);
+  if (idx !== -1) {
+    htmlBefore = inlinedTemplateHtml.slice(0, idx);
+    htmlAfter = inlinedTemplateHtml.slice(idx + outletMarker.length);
   }
-  chunks.push(decoder.decode());
-  return chunks.join("");
 }
 
-async function renderToString(url: string, ssrData: SSRData): Promise<string> {
-  const stream = await ssrRender!(url, ssrData);
-  // Wait for all Suspense boundaries to resolve before reading
-  await (stream as any).allReady;
-  const appHtml = await readableStreamToString(stream);
-
+function buildSSRHeadInjection(ssrData: SSRData): string {
   const preloadHints = buildPreloadHints(ssrData);
-  const ssrDataScript = `${preloadHints}<script>window.__SSR_DATA__=${JSON.stringify(ssrData).replace(/</g, "\\u003c")}</script>`;
+  const ssrDataScript = `<script>window.__SSR_DATA__=${JSON.stringify(ssrData).replace(/</g, "\\u003c")}</script>`;
+  return preloadHints + ssrDataScript;
+}
 
-  return inlinedTemplateHtml
-    .replace("<!--ssr-outlet-->", appHtml)
-    .replace("<!--ssr-head-->", ssrDataScript);
+function buildSSRStream(reactStream: ReadableStream, ssrData: SSRData): ReadableStream {
+  const encoder = new TextEncoder();
+  const headInjection = buildSSRHeadInjection(ssrData);
+  const before = htmlBefore;
+  const after = htmlAfter.replace("<!--ssr-head-->", headInjection);
+
+  let phase: "before" | "react" | "after" | "done" = "before";
+  let reactReader: ReadableStreamDefaultReader<Uint8Array>;
+
+  return new ReadableStream({
+    start() {
+      reactReader = reactStream.getReader();
+    },
+    async pull(controller) {
+      if (phase === "before") {
+        controller.enqueue(encoder.encode(before));
+        phase = "react";
+        return;
+      }
+      if (phase === "react") {
+        const { done, value } = await reactReader.read();
+        if (!done) {
+          controller.enqueue(value);
+          return;
+        }
+        phase = "after";
+      }
+      if (phase === "after") {
+        controller.enqueue(encoder.encode(after));
+        phase = "done";
+        return;
+      }
+      controller.close();
+    },
+  });
 }
 
 export const ssrRouter = new Hono<SessionEnv>();
@@ -220,22 +248,8 @@ ssrRouter.get("*", async (c) => {
   }
 
   try {
-    const session = c.get("session");
-    const userId = session.get()?.userId;
-
-    // URL: パス + クエリストリング
     const url = new URL(c.req.url);
     const fullPath = url.pathname + url.search;
-
-    // 未ログインなら SSR キャッシュを使う
-    if (!userId) {
-      const cached = ssrCache.get(fullPath);
-      if (cached) {
-        c.header("Content-Type", "text/html; charset=utf-8");
-        c.header("Cache-Control", "no-cache");
-        return c.body(cached);
-      }
-    }
 
     const cookie = c.req.header("Cookie");
     const ssrData = await fetchSSRData(fullPath, cookie);
@@ -245,16 +259,12 @@ ssrRouter.get("*", async (c) => {
       return c.html(csrFallbackHtml());
     }
 
-    const html = await renderToString(fullPath, ssrData);
-
-    // 未ログインならキャッシュに保存
-    if (!userId) {
-      ssrCache.set(fullPath, html);
-    }
+    const reactStream = await ssrRender!(fullPath, ssrData);
+    const responseStream = buildSSRStream(reactStream, ssrData);
 
     c.header("Content-Type", "text/html; charset=utf-8");
     c.header("Cache-Control", "no-cache");
-    return c.body(html);
+    return c.body(responseStream);
   } catch (error: unknown) {
     console.error("SSR handler error:", error);
     c.header("Cache-Control", "no-cache");

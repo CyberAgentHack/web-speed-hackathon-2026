@@ -1,5 +1,4 @@
 import { useRef } from "react";
-import { Helmet } from "react-helmet";
 import { useParams } from "react-router";
 import useSWR from "swr";
 import useSWRInfinite from "swr/infinite";
@@ -31,15 +30,11 @@ export const UserProfileContainer = () => {
     ...(ssrUserPosts ? { fallbackData: [ssrUserPosts], revalidateOnMount: false } : {}),
   });
 
-  const posts = data ? data.flat() : [];
+  const posts = data ? data.flat() : (ssrUserPosts ?? []);
   const hasMore = data ? (data[data.length - 1]?.length ?? 0) >= PAGE_SIZE : true;
 
   if (isLoadingUser) {
-    return (
-      <Helmet>
-        <title>読込中 - CaX</title>
-      </Helmet>
-    );
+    return <title>読込中 - CaX</title>;
   }
 
   if (user === null) {
@@ -53,9 +48,7 @@ export const UserProfileContainer = () => {
       hasMore={hasMore}
       isLoading={isValidating}
     >
-      <Helmet>
-        <title>{user!.name} さんのタイムライン - CaX</title>
-      </Helmet>
+      <title>{user!.name} さんのタイムライン - CaX</title>
       <UserProfilePage timeline={posts} user={user!} />
     </InfiniteScroll>
   );

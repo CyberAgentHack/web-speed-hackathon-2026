@@ -1,5 +1,4 @@
 import { useRef } from "react";
-import { Helmet } from "react-helmet";
 import useSWRInfinite from "swr/infinite";
 
 import { getSSRData } from "@web-speed-hackathon-2026/client/src/api/ssr-data";
@@ -20,7 +19,7 @@ export const TimelineContainer = () => {
     ...(ssrPosts ? { fallbackData: [ssrPosts], revalidateOnMount: false } : {}),
   });
 
-  const posts = data ? data.flat() : [];
+  const posts = data ? data.flat() : (ssrPosts ?? []);
   const hasMore = data ? (data[data.length - 1]?.length ?? 0) >= PAGE_SIZE : true;
 
   return (
@@ -30,9 +29,7 @@ export const TimelineContainer = () => {
       hasMore={hasMore}
       isLoading={isValidating}
     >
-      <Helmet>
-        <title>タイムライン - CaX</title>
-      </Helmet>
+      <title>タイムライン - CaX</title>
       <TimelinePage timeline={posts} />
     </InfiniteScroll>
   );

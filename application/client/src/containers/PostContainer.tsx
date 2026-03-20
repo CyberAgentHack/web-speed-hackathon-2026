@@ -1,5 +1,4 @@
 import { useRef } from "react";
-import { Helmet } from "react-helmet";
 import { useParams } from "react-router";
 import useSWR from "swr";
 import useSWRInfinite from "swr/infinite";
@@ -30,15 +29,11 @@ const PostContainerContent = ({ postId }: { postId: string }) => {
     ...(ssrComments ? { fallbackData: [ssrComments], revalidateOnMount: false } : {}),
   });
 
-  const comments = data ? data.flat() : [];
+  const comments = data ? data.flat() : (ssrComments ?? []);
   const hasMore = data ? (data[data.length - 1]?.length ?? 0) >= PAGE_SIZE : true;
 
   if (isLoadingPost) {
-    return (
-      <Helmet>
-        <title>読込中 - CaX</title>
-      </Helmet>
-    );
+    return <title>読込中 - CaX</title>;
   }
 
   if (post === null) {
@@ -52,9 +47,7 @@ const PostContainerContent = ({ postId }: { postId: string }) => {
       hasMore={hasMore}
       isLoading={isValidating}
     >
-      <Helmet>
-        <title>{post!.user.name} さんのつぶやき - CaX</title>
-      </Helmet>
+      <title>{post!.user.name} さんのつぶやき - CaX</title>
       <PostPage comments={comments} post={post!} />
     </InfiniteScroll>
   );
