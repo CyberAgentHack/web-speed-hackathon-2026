@@ -220,3 +220,8 @@ $RECYCLE.BIN/
 application/upload/**
 !application/upload/**/
 !application/upload/**/.gitkeep
+
+.devcontainer/
+.claude
+z.md
+devdocs/
