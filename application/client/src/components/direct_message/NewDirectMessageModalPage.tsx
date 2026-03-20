@@ -1,3 +1,4 @@
+import { FormEvent } from "react";
 import { Field, InjectedFormProps, reduxForm } from "redux-form";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -13,18 +14,22 @@ interface Props {
 }
 
 const NewDirectMessageModalPageComponent = ({
-  id,
   invalid,
   error,
   submitting,
   handleSubmit,
   onClose,
 }: Props & InjectedFormProps<NewDirectMessageFormData, Props>) => {
+  const handleFormSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void handleSubmit(event);
+  };
+
   return (
-    <div className="grid gap-y-6">
+    <form className="grid gap-y-6" onSubmit={handleFormSubmit}>
       <h2 className="text-center text-2xl font-bold">新しくDMを始める</h2>
 
-      <form className="flex flex-col gap-y-6" onSubmit={handleSubmit}>
+      <div className="flex flex-col gap-y-6">
         <Field
           name="username"
           component={FormInputField}
@@ -45,8 +50,8 @@ const NewDirectMessageModalPageComponent = ({
         </div>
 
         <ModalErrorMessage>{error}</ModalErrorMessage>
-      </form>
-    </div>
+      </div>
+    </form>
   );
 };
 

@@ -112,19 +112,26 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     );
   }
 
+  const peer =
+    conversation != null
+      ? conversation.initiator.id !== activeUser.id
+        ? conversation.initiator
+        : conversation.member
+      : null;
+
+  useEffect(() => {
+    if (peer == null) {
+      return;
+    }
+    setPageTitle(`${peer.name} さんとのダイレクトメッセージ - CaX`);
+  }, [peer]);
+
   if (conversation == null) {
     if (conversationError != null) {
       return <NotFoundContainer />;
     }
     return null;
   }
-
-  const peer =
-    conversation.initiator.id !== activeUser?.id ? conversation.initiator : conversation.member;
-
-  useEffect(() => {
-    setPageTitle(`${peer.name} さんとのダイレクトメッセージ - CaX`);
-  }, [peer.name]);
 
   return (
     <DirectMessagePage

@@ -40,10 +40,12 @@ export const NewDirectMessageModalContainer = forwardRef<HTMLDialogElement, Prop
     const handleSubmit = useCallback(
       async (values: NewDirectMessageFormData) => {
         try {
-          const user = await fetchJSON<Models.User>(`/api/v1/users/${values.username}`);
+          const normalizedUsername = values.username.trim().replace(/^@/, "");
+          const user = await fetchJSON<Models.User>(`/api/v1/users/${normalizedUsername}`);
           const conversation = await sendJSON<Models.DirectMessageConversation>(`/api/v1/dm`, {
             peerId: user.id,
           });
+          internalRef.current?.close();
           navigate(`/dm/${conversation.id}`);
         } catch {
           throw new SubmissionError({
