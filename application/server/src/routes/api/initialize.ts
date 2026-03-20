@@ -16,6 +16,7 @@ initializeRouter.post("/initialize", async (_req, res) => {
   sessionStore.clear();
   // uploadディレクトリをクリア
   await fs.rm(UPLOAD_PATH, { force: true, recursive: true });
+  await fs.mkdir(UPLOAD_PATH, { recursive: true });
 
   return res.status(200).type("application/json").send({});
 });

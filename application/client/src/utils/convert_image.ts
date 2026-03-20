@@ -1,12 +1,14 @@
-import { initializeImageMagick, ImageMagick, MagickFormat } from "@imagemagick/magick-wasm";
-import magickWasm from "@imagemagick/magick-wasm/magick.wasm?binary";
 import { dump, insert, ImageIFD } from "piexifjs";
 
 interface Options {
-  extension: MagickFormat;
+  extension: any;
 }
 
 export async function convertImage(file: File, options: Options): Promise<Blob> {
+  // Dynamic import to avoid bundling imagemagick into the main bundle
+  const { initializeImageMagick, ImageMagick } = await import("@imagemagick/magick-wasm");
+  const { default: magickWasm } = await import("@imagemagick/magick-wasm/magick.wasm?binary");
+
   await initializeImageMagick(magickWasm);
 
   const byteArray = new Uint8Array(await file.arrayBuffer());
@@ -23,7 +25,7 @@ export async function convertImage(file: File, options: Options): Promise<Blob> 
           return;
         }
 
-        // ImageMagick では EXIF の ImageDescription フィールドに保存されているデータが
+        // ImageMagick では EXIF の ImageDescription フィールドに保存されている データが
         // 非標準の Comment フィールドに移されてしまうため
         // piexifjs を使って ImageDescription フィールドに書き込む
         const binary = Array.from(output as Uint8Array<ArrayBuffer>)

@@ -25,18 +25,16 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: process.env.NODE_ENV === "production" ? "source-map" : "eval-source-map",
   entry: {
     main: [
-      "core-js",
-      "regenerator-runtime/runtime",
       "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: process.env.NODE_ENV === "production" ? "production" : "development",
   module: {
     rules: [
       {
@@ -54,25 +52,22 @@ const config = {
       },
       {
         resourceQuery: /binary/,
-        type: "asset/bytes",
+        type: "asset/resource",
+        generator: {
+          filename: "binaries/[name].[contenthash][ext]",
+        },
       },
     ],
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
-    filename: "scripts/[name].js",
+    chunkFormat: "array-push",
+    filename: "scripts/[name].[contenthash].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     clean: true,
   },
   plugins: [
-    new webpack.ProvidePlugin({
-      $: "jquery",
-      AudioContext: ["standardized-audio-context", "AudioContext"],
-      Buffer: ["buffer", "Buffer"],
-      "window.jQuery": "jquery",
-    }),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
@@ -80,7 +75,7 @@ const config = {
       NODE_ENV: "development",
     }),
     new MiniCssExtractPlugin({
-      filename: "styles/[name].css",
+      filename: "styles/[name].[contenthash].css",
     }),
     new CopyWebpackPlugin({
       patterns: [
@@ -91,7 +86,7 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: true,
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
   ],
@@ -128,14 +123,12 @@ const config = {
     },
   },
   optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
+    minimize: process.env.NODE_ENV === "production",
+    splitChunks: {
+      chunks: "all",
+    },
   },
-  cache: false,
+  cache: true,
   ignoreWarnings: [
     {
       module: /@ffmpeg/,

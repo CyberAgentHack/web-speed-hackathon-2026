@@ -1,4 +1,5 @@
 import classNames from "classnames";
+import { Buffer } from "buffer";
 import sizeOf from "image-size";
 import { load, ImageIFD } from "piexifjs";
 import { MouseEvent, RefCallback, useCallback, useId, useMemo, useState } from "react";
