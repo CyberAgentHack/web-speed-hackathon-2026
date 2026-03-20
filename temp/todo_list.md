@@ -35,7 +35,7 @@
 - [x] 006-シード画像をAVIFに事前変換する
 - [x] 011-ユーザーアップロード画像をサーバー側でAVIF変換する
 - [x] 005-FFmpeg WASMを遅延読み込みにする
-- [ ] 008-動画・音声ファイルを最適化する
+- [x] 008-動画・音声ファイルを最適化する
 - [x] 020-momentをIntl.DateTimeFormatに置き換える
 - [ ] 021-重いライブラリを動的importにする(web-llm,katex,kuromoji等)
 - [x] 022-SequelizeのdefaultScopeを最適化する
