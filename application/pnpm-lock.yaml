@@ -63,12 +63,6 @@ importers:
       gifler:
         specifier: github:themadcreator/gifler#v0.3.0
         version: https://codeload.github.com/themadcreator/gifler/tar.gz/89484cb3db174c584a3138e89664f0167a7760c1
-      jquery:
-        specifier: 3.7.1
-        version: 3.7.1
-      jquery-binarytransport:
-        specifier: 1.0.0
-        version: 1.0.0
       json-repair-js:
         specifier: 1.0.0
         version: 1.0.0
@@ -96,9 +90,6 @@ importers:
       omggif:
         specifier: 1.0.10
         version: 1.0.10
-      pako:
-        specifier: 2.1.0
-        version: 2.1.0
       piexifjs:
         specifier: 1.0.6
         version: 1.0.6
@@ -3126,13 +3117,6 @@ packages:
     resolution: {integrity: sha512-ekilCSN1jwRvIbgeg/57YFh8qQDNbwDb9xT/qu2DAHbFFZUicIl4ygVaAvzveMhMVr3LnpSKTNnwt8PoOfmKhQ==}
     hasBin: true
 
-  jquery-binarytransport@1.0.0:
-    resolution: {integrity: sha512-vqEyfGDHgZ/VrqOpfEuU+BCOl0QAF1EeWQjpk66PEwkErmuNCD2eNFnEn767PWCQ4mtvitFmjLes7ApyGe8byw==}
-    engines: {node: '>=0.4.0'}
-
-  jquery@3.7.1:
-    resolution: {integrity: sha512-m4avr8yL8kmFN8psrbFFFmB/If14iN5o9nw/NgnnM+kybDJpRsAynV2BsfpTYrTRysYUdADVD7CkUUizgkpLfg==}
-
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
@@ -3741,9 +3725,6 @@ packages:
   p-try@2.2.0:
     resolution: {integrity: sha512-R4nPAVTAU0B9D35/Gk3uJf/7XYbQcyohSKdvAxIRSNghFl4e71hVoGnBNQz9cWaXxO2I10KTC+3jMdvvoKw6dQ==}
     engines: {node: '>=6'}
-
-  pako@2.1.0:
-    resolution: {integrity: sha512-w+eufiZ1WuJYgPXbV/PO3NCMEc3xqylkKHzp8bxp1uW4qaSNQUkwmLLEc3kKsfz8lpV1F8Ht3U1Cm+9Srog2ug==}
 
   param-case@3.0.4:
     resolution: {integrity: sha512-RXlj7zCYokReqWpOPH9oYivUzLYZ5vAPIfEmCTNViosC78F8F0H9y7T7gG2M39ymgutxF5gcFEsyZQSph9Bp3A==}
@@ -7810,10 +7791,6 @@ snapshots:
 
   jiti@2.6.1: {}
 
-  jquery-binarytransport@1.0.0: {}
-
-  jquery@3.7.1: {}
-
   js-tokens@4.0.0: {}
 
   js-yaml@4.1.0:
@@ -8659,8 +8636,6 @@ snapshots:
       retry: 0.13.1
 
   p-try@2.2.0: {}
-
-  pako@2.1.0: {}
 
   param-case@3.0.4:
     dependencies:
