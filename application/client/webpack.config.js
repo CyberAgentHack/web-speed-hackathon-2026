@@ -10,6 +10,25 @@ const SRC_PATH = path.resolve(__dirname, './src');
 const PUBLIC_PATH = path.resolve(__dirname, '../public');
 const UPLOAD_PATH = path.resolve(__dirname, '../upload');
 const DIST_PATH = path.resolve(__dirname, '../dist');
+const ENABLE_BUNDLE_ANALYZER = process.env.ANALYZE === 'true';
+
+const bundleAnalyzerPlugins = [];
+if (ENABLE_BUNDLE_ANALYZER) {
+  try {
+    const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+    bundleAnalyzerPlugins.push(
+      new BundleAnalyzerPlugin({
+        analyzerMode: 'static',
+        openAnalyzer: false,
+        reportFilename: path.resolve(DIST_PATH, 'bundle-report.html'),
+      }),
+    );
+  } catch {
+    throw new Error(
+      'webpack-bundle-analyzer is required when ANALYZE=true. Install it with: pnpm add -D webpack-bundle-analyzer',
+    );
+  }
+}
 
 /** @type {import('webpack').Configuration} */
 const config = {
@@ -88,26 +107,11 @@ const config = {
       inject: false,
       template: path.resolve(SRC_PATH, './index.html'),
     }),
+    ...bundleAnalyzerPlugins,
   ],
   resolve: {
     extensions: ['.tsx', '.ts', '.mjs', '.cjs', '.jsx', '.js'],
-    alias: {
-      '@ffmpeg/ffmpeg$': path.resolve(
-        __dirname,
-        'node_modules',
-        '@ffmpeg/ffmpeg/dist/esm/index.js',
-      ),
-      '@ffmpeg/core$': path.resolve(
-        __dirname,
-        'node_modules',
-        '@ffmpeg/core/dist/umd/ffmpeg-core.js',
-      ),
-      '@ffmpeg/core/wasm$': path.resolve(
-        __dirname,
-        'node_modules',
-        '@ffmpeg/core/dist/umd/ffmpeg-core.wasm',
-      ),
-    },
+    alias: {},
     fallback: {
       fs: false,
       path: false,

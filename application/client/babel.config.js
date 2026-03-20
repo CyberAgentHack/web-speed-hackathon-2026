@@ -1,20 +1,11 @@
 module.exports = {
   presets: [
-    ["@babel/preset-typescript"],
+    ['@babel/preset-typescript'],
     [
-      "@babel/preset-env",
-      {
-        targets: "ie 11",
-        corejs: "3",
-        modules: "commonjs",
-        useBuiltIns: false,
-      },
-    ],
-    [
-      "@babel/preset-react",
+      '@babel/preset-react',
       {
         development: true,
-        runtime: "automatic",
+        runtime: 'automatic',
       },
     ],
   ],
