@@ -5,8 +5,11 @@
   "license": "MPL-2.0",
   "author": "CyberAgent, Inc.",
   "scripts": {
-    "build": "NODE_ENV=development webpack",
-    "typecheck": "tsc"
+    "build:dev": "NODE_ENV=development webpack",
+    "build:prod": "NODE_ENV=production webpack",
+    "build": "pnpm build:prod",
+    "typecheck": "tsc",
+    "analyze": "NODE_ENV=production webpack --json > stats.json && echo 'Bundle analysis complete. See stats.json'"
   },
   "dependencies": {
     "@ffmpeg/core": "0.12.10",

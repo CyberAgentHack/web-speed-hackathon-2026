@@ -1,8 +1,11 @@
 import Bluebird from "bluebird";
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
 import analyze from "negaposi-analyzer-ja";
 
-async function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
+async function getTokenizer(): Promise<any> {
+  // 動的インポート
+  const kuromoji = await import("kuromoji");
+  // Tokenizer型を動的インポートから取得できないのでanyを使用
+
   const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
   return await builder.buildAsync();
 }
