@@ -102,6 +102,62 @@ export function calculateHackathonScore(
         : details,
     });
   }
+
+  // TBT が 0 のときだけ詳細を出して、Long Task 等が実際に
+  // どれだけ発生しているかを確認する
+  const tbtAudit = audits["total-blocking-time"] as
+    | (Result["audits"]["total-blocking-time"] & {
+        numericValue?: number;
+        displayValue?: string;
+        details?: unknown;
+      })
+    | undefined;
+  const tbtNumericValue = (tbtAudit as any)?.numericValue as number | undefined;
+  if (
+    tbtAudit != null &&
+    ((tbtAudit.score === 0 || tbtAudit.score == null || tbtAudit.score <= 0.2) ||
+      (tbtNumericValue != null && tbtNumericValue > 5000))
+  ) {
+    consola.info("[debug] total-blocking-time:", {
+      score: tbtAudit.score,
+      numericValue: tbtNumericValue,
+      displayValue: (tbtAudit as any).displayValue,
+    });
+
+    // long-tasks / mainthread-work-breakdown は別 audit として取る
+    const longTasksAudit = audits["long-tasks"] as any;
+    const mainThreadBreakdownAudit = audits["mainthread-work-breakdown"] as any;
+
+    // details の形が固まってないことがあるので、ここは短く要約して出す
+    const longTasksDetails = longTasksAudit?.details;
+    let longTasksSummary: unknown = null;
+    if (Array.isArray(longTasksDetails?.items)) {
+      longTasksSummary = longTasksDetails.items.slice(0, 5).map((it: any) => ({
+        durationMs: it?.duration,
+        at: it?.attribution?.[0]?.url ?? it?.attribution?.[0]?.script ?? null,
+      }));
+    } else if (Array.isArray(longTasksDetails?.longTasks)) {
+      longTasksSummary = longTasksDetails.longTasks.slice(0, 5);
+    }
+
+    const mainThreadBreakdownDetails = mainThreadBreakdownAudit?.details;
+    const mainThreadSummary = mainThreadBreakdownDetails
+      ? Object.fromEntries(
+          Object.entries(mainThreadBreakdownDetails)
+            .filter(([k]) => ["mainThreadTasks", "items", "total"].includes(k) === false)
+            .slice(0, 5),
+        )
+      : null;
+
+    consola.info("[debug] long-tasks / mainthread-work-breakdown:", {
+      longTasksScore: longTasksAudit?.score,
+      longTasksSummary,
+      mainThreadBreakdownScore: mainThreadBreakdownAudit?.score,
+      mainThreadBreakdownDetailsPreview: mainThreadSummary,
+      longTasksDetailsRawPreview: JSON.stringify(longTasksDetails)?.slice(0, 1200) ?? null,
+      mainThreadBreakdownDetailsRawPreview: JSON.stringify(mainThreadBreakdownDetails)?.slice(0, 1200) ?? null,
+    });
+  }
   const breakdown: MetricScoreBreakdown[] = [
     {
       earnedX100: _toEarnedX100(audits["cumulative-layout-shift"]?.score, 25),

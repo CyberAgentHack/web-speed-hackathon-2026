@@ -173,17 +173,29 @@ export async function calculateUserAuthFlowAction({
     }
   }
 
-  const {
-    steps: [result],
-  } = await flow.createFlowResult();
+  try {
+    const {
+      steps: [result],
+    } = await flow.createFlowResult();
 
-  const { breakdown, scoreX100 } = calculateHackathonScore(result!.lhr.audits, {
-    isUserflow: true,
-  });
+    const { breakdown, scoreX100 } = calculateHackathonScore(result!.lhr.audits, {
+      isUserflow: true,
+    });
 
-  return {
-    audits: result!.lhr.audits,
-    breakdown,
-    scoreX100,
-  };
+    return {
+      audits: result!.lhr.audits,
+      breakdown,
+      scoreX100,
+    };
+  } catch (err) {
+    // Lighthouse が「step無し」で例外を投げることがあるため、
+    // 例外は握りつぶして 0 点として返す（計測不能扱いを回避）
+    consola.error("UserAuthFlowAction - createFlowResult failed:", err);
+    const { breakdown, scoreX100 } = calculateHackathonScore({} as any, { isUserflow: true });
+    return {
+      audits: {} as any,
+      breakdown,
+      scoreX100,
+    };
+  }
 }

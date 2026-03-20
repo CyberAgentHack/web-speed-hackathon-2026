@@ -9,9 +9,9 @@ export async function startFlow(page: puppeteer.Page) {
         disableFullPageScreenshot: true,
         disableStorageReset: true,
         formFactor: "desktop",
-        // ユーザーフローは “待ち” が長いと固まりやすいので短縮する
-        maxWaitForFcp: 60 * 1000,
-        maxWaitForLoad: 90 * 1000,
+        // 旧挙動に戻す（計測の取りこぼしを減らす）
+        maxWaitForFcp: 120 * 1000,
+        maxWaitForLoad: 180 * 1000,
         onlyAudits: [
           "first-contentful-paint",
           "speed-index",

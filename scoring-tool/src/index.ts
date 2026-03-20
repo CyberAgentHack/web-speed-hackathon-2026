@@ -294,6 +294,11 @@ const command = defineCommand({
         const totalScore = _.round(_.sum(_.map(results, ({ scoreX100 }) => scoreX100)) / 100, 2);
         const totalMaxScore = _.sum(_.map(results, ({ target }) => target.maxScore));
 
+        // Ink/Writer 経由だとログに出ないことがあるため、確実に数値を標準出力へ出す
+        // （合計が 500 を超えたかの判定用）
+        // eslint-disable-next-line no-console
+        console.log(`TOTAL_SCORE ${totalScore.toFixed(2)} / ${totalMaxScore.toFixed(2)}`);
+
         const { rank } = await sendScoreToDashboard(totalScore);
 
         if (rank != null) {
