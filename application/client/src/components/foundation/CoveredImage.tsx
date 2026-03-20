@@ -1,10 +1,7 @@
-import classNames from "classnames";
-import { MouseEvent, RefCallback, useCallback, useEffect, useId, useState } from "react";
+import { MouseEvent, useCallback, useId } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
-import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
   src: string;
@@ -20,67 +17,16 @@ export const CoveredImage = ({ src }: Props) => {
     ev.stopPropagation();
   }, []);
 
-  const { data, isLoading } = useFetch(src, fetchBinary);
-
-  const [imageSize, setImageSize] = useState({ height: 0, width: 0, type: undefined as string | undefined });
-  const [alt, setAlt] = useState("");
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!data) return;
-    
-    const url = URL.createObjectURL(new Blob([data]));
-    setBlobUrl(url);
-
-    import("../../utils/worker_manager").then(async ({ WorkerManager }) => {
-      try {
-        // 画像サイズを Worker で取得
-        const size = await WorkerManager.request<any>("getImageSize", data.slice(0));
-        setImageSize(size);
-
-        // EXIF 解析
-        if (size.type && ["jpg", "jpeg"].includes(size.type)) {
-          const exifAlt = await WorkerManager.request<string>("extractExif", data.slice(0));
-          setAlt(exifAlt);
-        }
-      } catch (err) {
-        console.error("Worker error:", err);
-      }
-    });
-
-    return () => {
-      URL.revokeObjectURL(url);
-    };
-  }, [data]);
-
-  const [containerSize, setContainerSize] = useState({ height: 0, width: 0 });
-  const callbackRef = useCallback<RefCallback<HTMLDivElement>>((el) => {
-    if (!el) return;
-    setContainerSize({
-      height: el.clientHeight,
-      width: el.clientWidth,
-    });
-  }, []);
-
-  if (isLoading || data === null || blobUrl === null) {
-    return <div className="bg-cax-surface-subtle h-full w-full animate-pulse rounded-lg" />;
-  }
-
-  const containerRatio = containerSize.height / containerSize.width;
-  const imageRatio = imageSize?.height / imageSize?.width;
+  const alt = "画像";
 
   return (
-    <div ref={callbackRef} className="relative h-full w-full overflow-hidden">
+    <div className="relative h-full w-full overflow-hidden">
       <img
         alt={alt}
-        className={classNames(
-          "absolute left-1/2 top-1/2 max-w-none -translate-x-1/2 -translate-y-1/2",
-          {
-            "w-auto h-full": containerRatio > imageRatio,
-            "w-full h-auto": containerRatio <= imageRatio,
-          },
-        )}
-        src={blobUrl}
+        className="h-full w-full object-cover"
+        src={src}
+        loading="lazy"
+        decoding="async"
       />
 
       <button
