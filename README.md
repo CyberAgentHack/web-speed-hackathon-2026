@@ -39,6 +39,25 @@ https://github.com/CyberAgentHack/web-speed-hackathon-2026/issues/new?template=a
 
 ローカルで計測する方法は [./scoring-tool/README.md](./scoring-tool/README.md) を参照してください。
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## ライセンス
 
 - Code
