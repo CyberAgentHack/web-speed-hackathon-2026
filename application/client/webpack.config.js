@@ -11,6 +11,8 @@ const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
 
+const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
+
 /** @type {import('webpack').Configuration} */
 const config = {
   devServer: {
@@ -90,6 +92,11 @@ const config = {
     new HtmlWebpackPlugin({
       inject: false,
       template: path.resolve(SRC_PATH, "./index.html"),
+    }),
+    new BundleAnalyzerPlugin({
+      analyzerMode: "static",
+      openAnalyzer: false,
+      reportFilename: path.resolve(DIST_PATH, "bundle-report.html"),
     }),
   ],
   resolve: {
