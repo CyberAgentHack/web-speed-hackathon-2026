@@ -60,3 +60,8 @@ body:has(#ccss-account-menu:checked) .account-menu-dropdown {
   max-height: 90vh;
   overflow-y: auto;
 }
+
+/* Hide static fallback nav once React portal renders the React nav */
+#ccss-nav-root:has(nav + nav) > nav:first-child {
+  display: none;
+}
