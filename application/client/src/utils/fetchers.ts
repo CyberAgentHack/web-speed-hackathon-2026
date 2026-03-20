@@ -1,40 +1,40 @@
-import $ from "jquery";
 import { gzip } from "pako";
 
+export class FetchError extends Error {
+  responseJSON: unknown;
+  constructor(status: number, body: unknown) {
+    super(`HTTP ${status}`);
+    this.responseJSON = body;
+  }
+}
+
+async function handleResponse<T>(res: Response): Promise<T> {
+  const body = await res.json();
+  if (!res.ok) {
+    throw new FetchError(res.status, body);
+  }
+  return body as T;
+}
+
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "binary",
-    method: "GET",
-    responseType: "arraybuffer",
-    url,
-  });
-  return result;
+  const res = await fetch(url);
+  return res.arrayBuffer();
 }
 
 export async function fetchJSON<T>(url: string): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "json",
-    method: "GET",
-    url,
-  });
-  return result;
+  const res = await fetch(url);
+  return handleResponse<T>(res);
 }
 
 export async function sendFile<T>(url: string, file: File): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    data: file,
-    dataType: "json",
+  const res = await fetch(url, {
+    method: "POST",
     headers: {
       "Content-Type": "application/octet-stream",
     },
-    method: "POST",
-    processData: false,
-    url,
+    body: file,
   });
-  return result;
+  return handleResponse<T>(res);
 }
 
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
@@ -42,17 +42,13 @@ export async function sendJSON<T>(url: string, data: object): Promise<T> {
   const uint8Array = new TextEncoder().encode(jsonString);
   const compressed = gzip(uint8Array);
 
-  const result = await $.ajax({
-    async: false,
-    data: compressed,
-    dataType: "json",
+  const res = await fetch(url, {
+    method: "POST",
     headers: {
       "Content-Encoding": "gzip",
       "Content-Type": "application/json",
     },
-    method: "POST",
-    processData: false,
-    url,
+    body: compressed,
   });
-  return result;
+  return handleResponse<T>(res);
 }
