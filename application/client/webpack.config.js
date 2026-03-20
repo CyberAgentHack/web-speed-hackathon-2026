@@ -1,6 +1,7 @@
 /// <reference types="webpack-dev-server" />
 const path = require("path");
 
+const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
@@ -63,6 +64,9 @@ const config = {
     clean: true,
   },
   plugins: [
+    ...(process.env.ANALYZE === "true"
+      ? [new BundleAnalyzerPlugin({ analyzerMode: "static", reportFilename: "bundle-report.html", open: true })]
+      : []),
     new webpack.ProvidePlugin({
       $: "jquery",
       AudioContext: ["standardized-audio-context", "AudioContext"],
