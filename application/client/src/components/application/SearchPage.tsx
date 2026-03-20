@@ -4,12 +4,12 @@ import { Field, InjectedFormProps, reduxForm, WrappedFieldProps } from "redux-fo
 
 import { Timeline } from "@web-speed-hackathon-2026/client/src/components/timeline/Timeline";
 import {
+  fetchSentimentByQuery,
   parseSearchQuery,
   sanitizeSearchText,
 } from "@web-speed-hackathon-2026/client/src/search/services";
 import { SearchFormData } from "@web-speed-hackathon-2026/client/src/search/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/search/validation";
-import { analyzeSentiment } from "@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer";
 
 import { Button } from "../foundation/Button";
 
@@ -23,8 +23,8 @@ const SearchInput = ({ input, meta }: WrappedFieldProps) => (
     <input
       {...input}
       className={`flex-1 rounded border px-4 py-2 focus:outline-none ${meta.touched && meta.error
-          ? "border-cax-danger focus:border-cax-danger"
-          : "border-cax-border focus:border-cax-brand-strong"
+        ? "border-cax-danger focus:border-cax-danger"
+        : "border-cax-border focus:border-cax-brand-strong"
         }`}
       placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
       type="text"
@@ -52,12 +52,17 @@ const SearchPageComponent = ({
     }
 
     let isMounted = true;
-    analyzeSentiment(parsed.keywords)
+    fetchSentimentByQuery(parsed.keywords)
       .then((result) => {
         if (isMounted) {
           setIsNegative(result.label === "negative");
         }
       })
+      .catch(() => {
+        if (isMounted) {
+          setIsNegative(false);
+        }
+      });
 
     return () => {
       isMounted = false;

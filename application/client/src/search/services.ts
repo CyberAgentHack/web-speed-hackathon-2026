@@ -1,3 +1,7 @@
+import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+
+import type { SentimentResult } from "./types";
+
 export const sanitizeSearchText = (input: string): string => {
   let text = input;
 
@@ -44,3 +48,11 @@ export const isValidDate = (dateStr: string): boolean => {
   const date = new Date(dateStr);
   return !Number.isNaN(date.getTime());
 };
+
+export async function fetchSentimentByQuery(
+  query: string,
+): Promise<SentimentResult> {
+  return await fetchJSON<SentimentResult>(
+    `/api/v1/search/sentiment?q=${encodeURIComponent(query)}`,
+  );
+}
