@@ -52,12 +52,12 @@ export const PostItem = ({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea images={post.images} isFv />
             </div>
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
+              <MovieArea movie={post.movie} isFv />
             </div>
           ) : null}
           {post.sound ? (
@@ -66,7 +66,10 @@ export const PostItem = ({ post }: Props) => {
             </div>
           ) : null}
           <p className="mt-2 text-sm sm:mt-4">
-            <Link className="text-cax-text-muted hover:underline" to={`/posts/${post.id}`}>
+            <Link
+              className="text-cax-text-muted hover:underline"
+              to={`/posts/${post.id}`}
+            >
               <time dateTime={moment(post.createdAt).toISOString()}>
                 {moment(post.createdAt).locale("ja").format("LL")}
               </time>
