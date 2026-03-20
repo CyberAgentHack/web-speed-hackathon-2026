@@ -60,7 +60,6 @@ const config = {
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
     filename: "scripts/[name]-[contenthash].js",
     path: DIST_PATH,
     publicPath: "auto",
@@ -115,11 +114,13 @@ const config = {
   },
   optimization: {
     minimize: true,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
+    splitChunks: {
+      chunks: "all",
+    },
+    concatenateModules: true,
+    usedExports: true,
+    providedExports: true,
+    sideEffects: true,
   },
   cache: false,
   ignoreWarnings: [],
