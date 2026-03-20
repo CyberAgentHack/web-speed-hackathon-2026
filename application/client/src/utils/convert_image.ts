@@ -3,7 +3,7 @@ import magickWasm from "@imagemagick/magick-wasm/magick.wasm?binary";
 import { dump, insert, ImageIFD } from "piexifjs";
 
 interface Options {
-  extension: MagickFormat;
+  extension: string;
 }
 
 export async function convertImage(file: File, options: Options): Promise<Blob> {
