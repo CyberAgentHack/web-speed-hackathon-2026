@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router";
 import { SubmissionError, reset } from "redux-form";
@@ -18,14 +18,8 @@ export const NewDirectMessageModalContainer = forwardRef<HTMLDialogElement, Prop
     const dispatch = useDispatch();
     const [resetKey, setResetKey] = useState(0);
 
-    // Forward the ref to the parent
-    useEffect(() => {
-      if (typeof ref === "function") {
-        ref(internalRef.current);
-      } else if (ref) {
-        (ref as any).current = internalRef.current;
-      }
-    }, [ref]);
+    // Use useImperativeHandle to forward the ref
+    useImperativeHandle(ref, () => internalRef.current as HTMLDialogElement);
 
     useEffect(() => {
       if (!internalRef.current) return;
