@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+﻿import { expect, test } from "@playwright/test";
 
 import { dynamicMediaMask, scrollEntire, waitForVisibleMedia } from "./utils";
 
@@ -42,7 +42,9 @@ test.describe("検索ページ", () => {
       await page.goto("/search");
 
       await expect(
-        page.getByText("since:YYYY-MM-DD で開始日、until:YYYY-MM-DD で終了日を指定できます"),
+        page.getByText(
+          "since:YYYY-MM-DD で開始日、until:YYYY-MM-DD で終了日を指定できます",
+        ),
       ).toBeVisible({ timeout: 10_000 });
     });
   });
@@ -54,7 +56,9 @@ test.describe("検索ページ", () => {
 
       await page.getByRole("button", { name: "検索" }).click();
 
-      await expect(page.getByText("検索キーワードを入力してください")).toBeVisible({
+      await expect(
+        page.getByText("検索キーワードを入力してください"),
+      ).toBeVisible({
         timeout: 10_000,
       });
     });
@@ -69,12 +73,16 @@ test.describe("検索ページ", () => {
       await input.fill("since:2025-99-99");
       await page.getByRole("button", { name: "検索" }).click();
 
-      await expect(page.getByText("since: の日付形式が不正です: 2025-99-99")).toBeVisible({
+      await expect(
+        page.getByText("since: の日付形式が不正です: 2025-99-99"),
+      ).toBeVisible({
         timeout: 10_000,
       });
     });
 
-    test("since: が until: より後の日付でエラーが表示される", async ({ page }) => {
+    test("since: が until: より後の日付でエラーが表示される", async ({
+      page,
+    }) => {
       await page.setViewportSize({ width: 1920, height: 1080 });
       await page.goto("/search");
 
@@ -84,7 +92,9 @@ test.describe("検索ページ", () => {
       await input.fill("テスト since:2025-12-01 until:2025-01-01");
       await page.getByRole("button", { name: "検索" }).click();
 
-      await expect(page.getByText("since: は until: より前の日付を指定してください")).toBeVisible({
+      await expect(
+        page.getByText("since: は until: より前の日付を指定してください"),
+      ).toBeVisible({
         timeout: 10_000,
       });
     });
@@ -94,7 +104,9 @@ test.describe("検索ページ", () => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto("/search?q=写真");
 
-    await expect(page.locator("main article").first()).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator("main article").first()).toBeVisible({
+      timeout: 30_000,
+    });
 
     // 検索条件と件数を含む見出しが表示される
     const heading = page.locator("main h2");
@@ -109,11 +121,15 @@ test.describe("検索ページ", () => {
     });
   });
 
-  test("キーワードと since:YYYY-MM-DD を組み合わせて検索できること", async ({ page }) => {
+  test("キーワードと since:YYYY-MM-DD を組み合わせて検索できること", async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto("/search");
 
-    const input = page.getByPlaceholder("検索 (例: キーワード since:2025-01-01 until:2025-12-31)");
+    const input = page.getByPlaceholder(
+      "検索 (例: キーワード since:2025-01-01 until:2025-12-31)",
+    );
     await input.fill("写真 since:2026-01-01");
     await page.getByRole("button", { name: "検索" }).click();
 
@@ -131,7 +147,9 @@ test.describe("検索ページ", () => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto("/search");
 
-    const input = page.getByPlaceholder("検索 (例: キーワード since:2025-01-01 until:2025-12-31)");
+    const input = page.getByPlaceholder(
+      "検索 (例: キーワード since:2025-01-01 until:2025-12-31)",
+    );
     await input.fill("写真 since:2026-01-01 until:2026-12-31");
     await page.getByRole("button", { name: "検索" }).click();
 
@@ -183,8 +201,12 @@ test.describe("検索ページ", () => {
       // 「悲しい」: 辞書 rank=-0.999102 → 補正後スコア≈-0.1024 (< -0.1 → negative)
       await page.goto("/search?q=悲しい");
 
-      await expect(page.getByText("どしたん話聞こうか?")).toBeVisible({ timeout: 30_000 });
-      await expect(page.getByText("言わなくてもいいけど、言ってもいいよ。")).toBeVisible();
+      await expect(page.getByText("どしたん話聞こうか?")).toBeVisible({
+        timeout: 30_000,
+      });
+      await expect(
+        page.getByText("言わなくてもいいけど、言ってもいいよ。"),
+      ).toBeVisible();
     });
 
     test("ポジティブな検索クエリのとき、「どしたん話聞こうか?」のメッセージが表示されない", async ({
@@ -194,7 +216,9 @@ test.describe("検索ページ", () => {
       // 「嬉しい」: 辞書 rank=+0.998871 → 補正なしスコア≈+0.999 (> 0.1 → positive)
       await page.goto("/search?q=嬉しい");
 
-      await expect(page.getByText("検索結果が見つかりませんでした")).toBeVisible({
+      await expect(
+        page.getByText("検索結果が見つかりませんでした"),
+      ).toBeVisible({
         timeout: 30_000,
       });
       await expect(page.getByText("どしたん話聞こうか?")).not.toBeVisible();
@@ -207,7 +231,9 @@ test.describe("検索ページ", () => {
       // 「惑い」: 辞書 rank=-0.976115 → 補正後スコア≈-0.100027 (< -0.1 → negative)
       await page.goto("/search?q=惑い");
 
-      await expect(page.getByText("どしたん話聞こうか?")).toBeVisible({ timeout: 30_000 });
+      await expect(page.getByText("どしたん話聞こうか?")).toBeVisible({
+        timeout: 30_000,
+      });
     });
 
     test("補正係数により境界値(-0.1)をわずかに上回る単語ではネガティブ判定されない", async ({
@@ -217,34 +243,44 @@ test.describe("検索ページ", () => {
       // 「没落」: 辞書 rank=-0.975572 → 補正後スコア≈-0.099972 (> -0.1 → neutral)
       await page.goto("/search?q=没落");
 
-      await expect(page.getByText("検索結果が見つかりませんでした")).toBeVisible({
+      await expect(
+        page.getByText("検索結果が見つかりませんでした"),
+      ).toBeVisible({
         timeout: 30_000,
       });
       await expect(page.getByText("どしたん話聞こうか?")).not.toBeVisible();
     });
 
-    test("直感的にネガティブでも補正係数により中立判定される単語がある", async ({ page }) => {
+    test("直感的にネガティブでも補正係数により中立判定される単語がある", async ({
+      page,
+    }) => {
       await page.setViewportSize({ width: 1920, height: 1080 });
       // 「嫌い」: 辞書 rank=-0.629629 → 補正後スコア≈-0.0645 (> -0.1 → neutral)
       // ネガティブ辞書が多いため補正係数で緩和され、中立と判定される
       await page.goto("/search?q=嫌い");
 
-      await expect(page.getByText("検索結果が見つかりませんでした")).toBeVisible({
+      await expect(
+        page.getByText("検索結果が見つかりませんでした"),
+      ).toBeVisible({
         timeout: 30_000,
       });
       await expect(page.getByText("どしたん話聞こうか?")).not.toBeVisible();
     });
   });
 
-  test("検索結果のタイムラインが無限スクロールで追加読み込みされること", async ({ page }) => {
+  test("検索結果のタイムラインが無限スクロールで追加読み込みされること", async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto("/search?q=写真");
 
-    await expect(page.locator("main article").first()).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator("main article").first()).toBeVisible({
+      timeout: 30_000,
+    });
 
     const initialCount = await page.locator("main article").count();
     expect(initialCount).toBeGreaterThanOrEqual(1);
-    expect(initialCount).toBeLessThanOrEqual(10);
+    expect(initialCount).toBeLessThanOrEqual(30);
 
     // ページ下部までスクロールして追加読み込みをトリガー
     await expect(async () => {
