@@ -72,6 +72,23 @@ const config = {
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
       NODE_ENV: "production",
     }),
+    // Force React/related packages to use production builds
+    new webpack.NormalModuleReplacementPlugin(
+      /[\\/]cjs[\\/].*\.development\.js$/,
+      (resource) => {
+        const r = resource.createData?.resource || resource.request;
+        if (!r) return;
+        // Some packages use .production.js, others use .production.min.js
+        const prodPath = r.replace(".development.js", ".production.js");
+        const prodMinPath = r.replace(".development.js", ".production.min.js");
+        const fs = require("fs");
+        const replacement = fs.existsSync(prodPath) ? prodPath : fs.existsSync(prodMinPath) ? prodMinPath : null;
+        if (replacement) {
+          if (resource.createData?.resource) resource.createData.resource = replacement;
+          if (resource.request?.includes(".development.js")) resource.request = resource.request.replace(".development.js", replacement.endsWith(".min.js") ? ".production.min.js" : ".production.js");
+        }
+      },
+    ),
     new MiniCssExtractPlugin({
       filename: "styles/[name].css",
     }),
