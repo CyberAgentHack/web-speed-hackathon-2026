@@ -28,20 +28,22 @@ function buildPaginatedPath(apiPath: string, offset: number, limit: number): str
   return query === "" ? path : `${path}?${query}`;
 }
 
-export function buildSsrInfiniteCacheKey(apiPath: string): string {
+export function buildSsrInfiniteCacheKey(apiPath: string, limit?: number): string {
+  const effectiveLimit = limit ?? INFINITE_LIMIT;
   const getKey: SWRInfiniteKeyLoader = (index) => {
     if (apiPath === "") {
       return null;
     }
 
-    return buildPaginatedPath(apiPath, index * INFINITE_LIMIT, INFINITE_LIMIT);
+    return buildPaginatedPath(apiPath, index * effectiveLimit, effectiveLimit);
   };
 
   return unstable_serialize(getKey);
 }
 
-export function getSsrFirstPagePath(apiPath: string): string {
-  return buildPaginatedPath(apiPath, 0, INFINITE_LIMIT);
+export function getSsrFirstPagePath(apiPath: string, limit?: number): string {
+  const effectiveLimit = limit ?? INFINITE_LIMIT;
+  return buildPaginatedPath(apiPath, 0, effectiveLimit);
 }
 
 /**

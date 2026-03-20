@@ -109,13 +109,14 @@ async function buildSsrFallback(
 
   if (pathname === "/") {
     const apiPath = "/api/v1/posts";
+    const homeLimit = 10;
     const firstPage = await fetchSsrJson<Models.Post[]>(
       req,
-      getSsrFirstPagePath(apiPath),
+      getSsrFirstPagePath(apiPath, homeLimit),
     );
     if (firstPage !== undefined) {
-      fallback[getSsrFirstPagePath(apiPath)] = firstPage;
-      fallback[buildSsrInfiniteCacheKey(apiPath)] = [firstPage];
+      fallback[getSsrFirstPagePath(apiPath, homeLimit)] = firstPage;
+      fallback[buildSsrInfiniteCacheKey(apiPath, homeLimit)] = [firstPage];
     }
   }
 
@@ -165,14 +166,18 @@ async function buildSsrFallback(
     const query = url.searchParams.get("q") ?? "";
     if (query !== "") {
       const searchApiPath = `/api/v1/search?q=${encodeURIComponent(query)}`;
+      const searchLimit = 30;
       const postsFirstPage = await fetchSsrJson<Models.Post[]>(
         req,
-        getSsrFirstPagePath(searchApiPath),
+        getSsrFirstPagePath(searchApiPath, searchLimit),
       );
 
       if (postsFirstPage !== undefined) {
-        fallback[getSsrFirstPagePath(searchApiPath)] = postsFirstPage;
-        fallback[buildSsrInfiniteCacheKey(searchApiPath)] = [postsFirstPage];
+        fallback[getSsrFirstPagePath(searchApiPath, searchLimit)] =
+          postsFirstPage;
+        fallback[buildSsrInfiniteCacheKey(searchApiPath, searchLimit)] = [
+          postsFirstPage,
+        ];
       }
     }
   }

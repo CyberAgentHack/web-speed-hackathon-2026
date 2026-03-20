@@ -29,6 +29,7 @@ interface ReturnValues<T> {
 
 interface Options<T> {
   initialData?: Array<T>;
+  limit?: number;
 }
 
 export function useInfiniteFetch<T>(
@@ -38,12 +39,13 @@ export function useInfiniteFetch<T>(
 ): ReturnValues<T> {
   const initialData = options?.initialData ?? EMPTY_LIST;
   const hasInitialData = initialData.length > 0;
+  const limit = options?.limit ?? LIMIT;
 
   const getKey: SWRInfiniteKeyLoader = (index) => {
     if (apiPath === "") {
       return null;
     }
-    return buildPaginatedPath(apiPath, index * LIMIT, LIMIT);
+    return buildPaginatedPath(apiPath, index * limit, limit);
   };
 
   const { data, error, isLoading, setSize } = useSWRInfinite(
@@ -78,8 +80,8 @@ export function useInfiniteFetch<T>(
       return false;
     }
 
-    return lastPage.length === LIMIT;
-  }, [apiPath, data]);
+    return lastPage.length === limit;
+  }, [apiPath, data, limit]);
 
   const fetchMore = useCallback(() => {
     if (apiPath === "") {
