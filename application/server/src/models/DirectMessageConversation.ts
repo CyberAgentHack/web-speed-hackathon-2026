@@ -50,14 +50,12 @@ export function initDirectMessageConversation(sequelize: Sequelize) {
         include: [
           { association: "initiator", include: [{ association: "profileImage" }] },
           { association: "member", include: [{ association: "profileImage" }] },
-          {
-            association: "messages",
-            include: [{ association: "sender", include: [{ association: "profileImage" }] }],
-            order: [["createdAt", "ASC"]],
-            required: false,
-          },
         ],
       },
     },
   );
+
+  // Add indexes for foreign keys to improve query performance
+  DirectMessageConversation.addIndex({ fields: ['initiatorId'] });
+  DirectMessageConversation.addIndex({ fields: ['memberId'] });
 }

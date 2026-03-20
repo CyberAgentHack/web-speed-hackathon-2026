@@ -63,9 +63,6 @@ importers:
       gifler:
         specifier: github:themadcreator/gifler#v0.3.0
         version: https://codeload.github.com/themadcreator/gifler/tar.gz/c3259b071c7782f85d4928a5f03d0b378ed003b5
-      image-size:
-        specifier: 2.0.2
-        version: 2.0.2
       jquery:
         specifier: 3.7.1
         version: 3.7.1
@@ -102,9 +99,6 @@ importers:
       pako:
         specifier: 2.1.0
         version: 2.1.0
-      piexifjs:
-        specifier: 1.0.6
-        version: 1.0.6
       react:
         specifier: 19.2.0
         version: 19.2.0
@@ -193,9 +187,6 @@ importers:
       '@types/pako':
         specifier: 2.0.4
         version: 2.0.4
-      '@types/piexifjs':
-        specifier: 1.0.0
-        version: 1.0.0
       '@types/react':
         specifier: 19.2.2
         version: 19.2.2
@@ -268,6 +259,9 @@ importers:
       '@tsconfig/strictest':
         specifier: 2.0.8
         version: 2.0.8
+      '@types/compression':
+        specifier: ^1.8.1
+        version: 1.8.1
       '@web-speed-hackathon-2026/server':
         specifier: workspace:*
         version: 'link:'
@@ -277,6 +271,9 @@ importers:
       body-parser:
         specifier: 2.2.0
         version: 2.2.0
+      compression:
+        specifier: ^1.8.1
+        version: 1.8.1
       connect-history-api-fallback:
         specifier: 2.0.0
         version: 2.0.0
@@ -1637,6 +1634,9 @@ packages:
   '@types/common-tags@1.8.4':
     resolution: {integrity: sha512-S+1hLDJPjWNDhcGxsxEbepzaxWqURP/o+3cP4aa2w7yBXgdcmKGQtZzP8JbyfOd0m+33nh+8+kvxYE2UJtBDkg==}
 
+  '@types/compression@1.8.1':
+    resolution: {integrity: sha512-kCFuWS0ebDbmxs0AXYn6e2r2nrGAb5KwQhknjSPSPgJcGd8+HVSILlUyFhGqML2gk39HcG7D1ydW9/qpYkN00Q==}
+
   '@types/connect-history-api-fallback@1.5.4':
     resolution: {integrity: sha512-n6Cr2xS1h4uAulPRdlw6Jl6s1oG8KrVilPN2yUITEs+K48EzMJJ3W1xy8K5eWuFvjp3R74AOIGSmp2UfBJ8HFw==}
 
@@ -1729,9 +1729,6 @@ packages:
 
   '@types/pako@2.0.4':
     resolution: {integrity: sha512-VWDCbrLeVXJM9fihYodcLiIv0ku+AlOa/TQ1SvYOaBuyrSKgEcro95LJyIsJ4vSo6BXIxOKxiJAat04CmST9Fw==}
-
-  '@types/piexifjs@1.0.0':
-    resolution: {integrity: sha512-PPiGeCkmkZQgYjvqtjD3kp4OkbCox2vEFVuK4DaLVOIazJLAXk+/ujbizkIPH5CN4AnN9Clo5ckzUlaj3+SzCA==}
 
   '@types/prismjs@1.26.5':
     resolution: {integrity: sha512-AUZTa7hQ2KY5L7AmtSiqxlhWxb4ina0yd8hNbl4TWuqnv/pFP0nDMb3YrfSBf4hJVGLh2YEIBfKaBW/9UEl6IQ==}
@@ -2855,11 +2852,6 @@ packages:
   ieee754@1.2.1:
     resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
 
-  image-size@2.0.2:
-    resolution: {integrity: sha512-IRqXKlaXwgSMAMtpNzZa1ZAe8m+Sa1770Dhk8VkSsP9LS+iHD62Zd8FQKs8fbPiagBE7BzoFX23cxFnwshpV6w==}
-    engines: {node: '>=16.x'}
-    hasBin: true
-
   import-fresh@3.3.1:
     resolution: {integrity: sha512-TR3KfrTZTYLPB6jUjfx6MF9WcWrHL9su5TObK4ZkYgBdWKPOFoSoQIdEuTuR82pmtxH2spWG9h6etwfr1pLBqQ==}
     engines: {node: '>=6'}
@@ -3619,9 +3611,6 @@ packages:
   picomatch@4.0.3:
     resolution: {integrity: sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q==}
     engines: {node: '>=12'}
-
-  piexifjs@1.0.6:
-    resolution: {integrity: sha512-0wVyH0cKohzBQ5Gi2V1BuxYpxWfxF3cSqfFXfPIpl5tl9XLS5z4ogqhUCD20AbHi0h9aJkqXNJnkVev6gwh2ag==}
 
   pify@2.3.0:
     resolution: {integrity: sha512-udgsAY+fTnvv7kI7aaxbqwWNb0AHiB0qBO89PZKPkoTmGOgdbrHDKD+0B2X4uTfJ/FT1R09r9gTsjUjNJotuog==}
@@ -6003,6 +5992,11 @@ snapshots:
 
   '@types/common-tags@1.8.4': {}
 
+  '@types/compression@1.8.1':
+    dependencies:
+      '@types/express': 5.0.3
+      '@types/node': 22.18.8
+
   '@types/connect-history-api-fallback@1.5.4':
     dependencies:
       '@types/express-serve-static-core': 5.1.0
@@ -6114,8 +6108,6 @@ snapshots:
   '@types/omggif@1.0.5': {}
 
   '@types/pako@2.0.4': {}
-
-  '@types/piexifjs@1.0.0': {}
 
   '@types/prismjs@1.26.5': {}
 
@@ -7419,8 +7411,6 @@ snapshots:
 
   ieee754@1.2.1: {}
 
-  image-size@2.0.2: {}
-
   import-fresh@3.3.1:
     dependencies:
       parent-module: 1.0.1
@@ -8400,8 +8390,6 @@ snapshots:
   picomatch@2.3.1: {}
 
   picomatch@4.0.3: {}
-
-  piexifjs@1.0.6: {}
 
   pify@2.3.0: {}
 

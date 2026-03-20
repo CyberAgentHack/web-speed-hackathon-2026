@@ -23,6 +23,13 @@ directMessageRouter.get("/dm", async (req, res) => {
         where(col("messages.id"), { [Op.not]: null }),
       ],
     },
+    include: [
+      {
+        association: "messages",
+        include: [{ association: "sender", include: [{ association: "profileImage" }] }],
+        required: false,
+      },
+    ],
     order: [[col("messages.createdAt"), "DESC"]],
   });
 
@@ -105,6 +112,14 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
       id: req.params.conversationId,
       [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
+    include: [
+      {
+        association: "messages",
+        include: [{ association: "sender", include: [{ association: "profileImage" }] }],
+        order: [["createdAt", "ASC"]],
+        required: false,
+      },
+    ],
   });
   if (conversation === null) {
     throw new httpErrors.NotFound();

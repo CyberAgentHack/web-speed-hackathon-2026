@@ -55,4 +55,8 @@ export function initComment(sequelize: Sequelize) {
       },
     },
   );
+
+  // Add indexes for foreign keys to improve query performance
+  Comment.addIndex({ fields: ['userId'] });
+  Comment.addIndex({ fields: ['postId'] });
 }

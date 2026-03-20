@@ -38,4 +38,8 @@ export function initPostsImagesRelation(sequelize: Sequelize) {
       sequelize,
     },
   );
+
+  // Add indexes for foreign keys to improve query performance
+  PostsImagesRelation.addIndex({ fields: ['postId'] });
+  PostsImagesRelation.addIndex({ fields: ['imageId'] });
 }

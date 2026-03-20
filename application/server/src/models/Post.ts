@@ -66,4 +66,9 @@ export function initPost(sequelize: Sequelize) {
       },
     },
   );
+
+  // Add indexes for foreign keys to improve query performance
+  Post.addIndex({ fields: ['userId'] });
+  Post.addIndex({ fields: ['movieId'] });
+  Post.addIndex({ fields: ['soundId'] });
 }
