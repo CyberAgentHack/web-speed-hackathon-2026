@@ -61,16 +61,14 @@ export const PausableMovie = ({ src }: Props) => {
     });
   }, []);
 
-  if (isLoading || data === null) {
-    return null;
-  }
-
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
       <button
         aria-label="動画プレイヤー"
         className="group relative block h-full w-full"
         onClick={handleClick}
+        disabled={isLoading}
+        aria-busy={isLoading || undefined}
         type="button"
       >
         <canvas ref={canvasCallbackRef} className="w-full" />

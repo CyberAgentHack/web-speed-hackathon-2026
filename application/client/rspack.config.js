@@ -95,7 +95,7 @@ const config = {
     chunkFilename: "scripts/[name]-[contenthash].js",
     filename: "scripts/[name].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     enabledWasmLoadingTypes: ["fetch"],
     clean: true,
   },

@@ -6,7 +6,9 @@ interface ParsedData {
   peaks: number[];
 }
 
-async function calculate(data: ArrayBuffer): Promise<ParsedData> {
+async function calculate(src: string): Promise<ParsedData> {
+  const res = await fetch(src);
+  const data = await res.arrayBuffer();
   const audioCtx = new AudioContext();
 
   // 音声をデコードする
@@ -29,10 +31,10 @@ async function calculate(data: ArrayBuffer): Promise<ParsedData> {
 }
 
 interface Props {
-  soundData: ArrayBuffer;
+  src: string;
 }
 
-export const SoundWaveSVG = ({ soundData }: Props) => {
+export const SoundWaveSVG = ({ src }: Props) => {
   const uniqueIdRef = useRef(Math.random().toString(16));
   const [{ max, peaks }, setPeaks] = useState<ParsedData>({
     max: 0,
@@ -40,10 +42,10 @@ export const SoundWaveSVG = ({ soundData }: Props) => {
   });
 
   useEffect(() => {
-    calculate(soundData).then(({ max, peaks }) => {
+    calculate(src).then(({ max, peaks }) => {
       setPeaks({ max, peaks });
     });
-  }, [soundData]);
+  }, [src]);
 
   return (
     <svg className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1">

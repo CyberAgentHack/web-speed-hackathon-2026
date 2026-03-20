@@ -256,6 +256,9 @@ importers:
       connect-history-api-fallback:
         specifier: 2.0.0
         version: 2.0.0
+      exif-parser:
+        specifier: 0.1.12
+        version: 0.1.12
       express:
         specifier: 5.1.0
         version: 5.1.0
@@ -2163,6 +2166,9 @@ packages:
   events@3.3.0:
     resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
     engines: {node: '>=0.8.x'}
+
+  exif-parser@0.1.12:
+    resolution: {integrity: sha512-c2bQfLNbMzLPmzQuOr8fy0csy84WmwnER81W88DzTp9CYNPJ6yzOj2EZAh9pywYpqHnshVLHQJ8WzldAyfY+Iw==}
 
   exit-hook@4.0.0:
     resolution: {integrity: sha512-Fqs7ChZm72y40wKjOFXBKg7nJZvQJmewP5/7LtePDdnah/+FH9Hp5sgMujSCMPXlxOAW2//1jrW9pnsY7o20vQ==}
@@ -6030,6 +6036,8 @@ snapshots:
 
   events@3.3.0:
     optional: true
+
+  exif-parser@0.1.12: {}
 
   exit-hook@4.0.0: {}
 

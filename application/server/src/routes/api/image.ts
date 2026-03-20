@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 
+import exif from "exif-parser";
 import { Router } from "express";
 import { fileTypeFromBuffer } from "file-type";
 import httpErrors from "http-errors";
@@ -32,5 +33,9 @@ imageRouter.post("/images", async (req, res) => {
   await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
   await fs.writeFile(filePath, req.body);
 
-  return res.status(200).type("application/json").send({ id: imageId });
+  const parser = exif.create(req.body);
+  const exifData = parser.parse();
+  const alt = exifData?.tags?.ImageDescription || "";
+
+  return res.status(200).type("application/json").send({ id: imageId, alt });
 });

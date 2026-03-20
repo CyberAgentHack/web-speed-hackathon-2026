@@ -1,8 +1,9 @@
-import { createWriteStream } from "node:fs";
+import { createWriteStream, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { faker } from "@faker-js/faker/locale/ja";
+import exif from "exif-parser";
 
 // Set seed for reproducible results
 faker.seed(123);
@@ -81,18 +82,46 @@ const EXISTING_MOVIE_IDS = [
 
 // public/sounds/*.mp3 (15 files) - with title/artist info
 const EXISTING_SOUNDS = [
-  { id: "05333292-5786-4a1f-9046-6b4863da3286", title: "Whispered Echoes", artist: "Luna Park" },
-  { id: "10b3358c-945f-428e-a7f1-1558f675ef3d", title: "Be Jammin", artist: "Mariah Decicco" },
-  { id: "2174b434-fe47-4c6a-9f30-de4d4e4c7554", title: "BeBop for Joey", artist: "Ashely Matsuo" },
-  { id: "28604fdc-0adb-40b0-bd67-ed39d61f007d", title: "Ocean Dreams", artist: "Wave Riders" },
+  {
+    id: "05333292-5786-4a1f-9046-6b4863da3286",
+    title: "Whispered Echoes",
+    artist: "Luna Park",
+  },
+  {
+    id: "10b3358c-945f-428e-a7f1-1558f675ef3d",
+    title: "Be Jammin",
+    artist: "Mariah Decicco",
+  },
+  {
+    id: "2174b434-fe47-4c6a-9f30-de4d4e4c7554",
+    title: "BeBop for Joey",
+    artist: "Ashely Matsuo",
+  },
+  {
+    id: "28604fdc-0adb-40b0-bd67-ed39d61f007d",
+    title: "Ocean Dreams",
+    artist: "Wave Riders",
+  },
   {
     id: "2abadebb-6fae-4db0-9dba-d3063d9cc2e1",
     title: "New Hero in Town",
     artist: "Henrietta Almeida",
   },
-  { id: "42232f2b-b7b2-46f8-a3de-1eefbfbbd8c2", title: "Hold on a Sec", artist: "Alexa Hillard" },
-  { id: "49a3663a-1e66-4e22-83b8-3c43f181a254", title: "Marked", artist: "Earlene Apicella" },
-  { id: "4ce92862-3d2d-47a4-975d-4b293173cec4", title: "Stunted Adventure", artist: "Rod Zepp" },
+  {
+    id: "42232f2b-b7b2-46f8-a3de-1eefbfbbd8c2",
+    title: "Hold on a Sec",
+    artist: "Alexa Hillard",
+  },
+  {
+    id: "49a3663a-1e66-4e22-83b8-3c43f181a254",
+    title: "Marked",
+    artist: "Earlene Apicella",
+  },
+  {
+    id: "4ce92862-3d2d-47a4-975d-4b293173cec4",
+    title: "Stunted Adventure",
+    artist: "Rod Zepp",
+  },
   {
     id: "5352a4a1-6a47-445d-874d-6e08f811c4f4",
     title: "Bavarian Seascape",
@@ -103,11 +132,31 @@ const EXISTING_SOUNDS = [
     title: "Adventures of Flying Jack",
     artist: "Dessie Riffe",
   },
-  { id: "5a93be41-caab-4eec-9ac1-8b57c24ccbe2", title: "Coy Koi", artist: "Minnie Sweeny" },
-  { id: "5d0cd8a0-805a-4fb8-940a-53d2dee9c87e", title: "Study and Relax", artist: "Gigi Mohan" },
-  { id: "8bb8891c-40c1-4536-8eee-2ecdac298931", title: "Big Eyes", artist: "Jone Adam" },
-  { id: "8ed91156-d15e-4a6a-87cc-87f2e8905fa3", title: "Hillbilly Swing", artist: "Nan Lykes" },
-  { id: "93b848fe-24c8-4597-a515-463a910f6ceb", title: "Midnight Jazz", artist: "Blue Note" },
+  {
+    id: "5a93be41-caab-4eec-9ac1-8b57c24ccbe2",
+    title: "Coy Koi",
+    artist: "Minnie Sweeny",
+  },
+  {
+    id: "5d0cd8a0-805a-4fb8-940a-53d2dee9c87e",
+    title: "Study and Relax",
+    artist: "Gigi Mohan",
+  },
+  {
+    id: "8bb8891c-40c1-4536-8eee-2ecdac298931",
+    title: "Big Eyes",
+    artist: "Jone Adam",
+  },
+  {
+    id: "8ed91156-d15e-4a6a-87cc-87f2e8905fa3",
+    title: "Hillbilly Swing",
+    artist: "Nan Lykes",
+  },
+  {
+    id: "93b848fe-24c8-4597-a515-463a910f6ceb",
+    title: "Midnight Jazz",
+    artist: "Blue Note",
+  },
 ];
 
 // public/images/profiles/*.jpg (30 files)
@@ -178,11 +227,18 @@ function pickRandomN<T>(arr: T[], n: number): T[] {
   return faker.helpers.arrayElements(arr, n);
 }
 
+function resolveImageDescription(imagePath: string): string {
+  const image = readFileSync(imagePath);
+  const parser = exif.create(image);
+  const exifData = parser.parse();
+  return exifData?.tags?.ImageDescription || "";
+}
+
 function generateProfileImages(): ProfileImageSeed[] {
   // Use existing profile image IDs from public/images/profiles/
   return EXISTING_PROFILE_IMAGE_IDS.map((id) => ({
     id,
-    alt: "",
+    alt: resolveImageDescription(path.resolve(__dirname, `../../public/images/profiles/${id}.jpg`)),
   }));
 }
 
@@ -220,11 +276,15 @@ function generateUsers(count: number, profileImages: ProfileImageSeed[]): UserSe
 function generateImages(): ImageSeed[] {
   // Use existing image IDs from public/images/
   const baseTime = now - ONE_WEEK_MS;
-  return EXISTING_IMAGE_IDS.map((id, i) => ({
-    id,
-    alt: "",
-    createdAt: new Date(baseTime + i * 60 * 1000).toISOString(),
-  }));
+  return EXISTING_IMAGE_IDS.map((id, i) => {
+    const alt = resolveImageDescription(path.resolve(__dirname, `../../public/images/${id}.jpg`));
+
+    return {
+      id,
+      alt,
+      createdAt: new Date(baseTime + i * 60 * 1000).toISOString(),
+    };
+  });
 }
 
 function generateMovies(): MovieSeed[] {
@@ -306,7 +366,10 @@ function generatePostsImagesRelation(
   for (const post of posts) {
     if (post.movieId || post.soundId) continue;
 
-    const imageCount = faker.number.int({ min: 0, max: CONFIG.IMAGES_PER_POST_MAX });
+    const imageCount = faker.number.int({
+      min: 0,
+      max: CONFIG.IMAGES_PER_POST_MAX,
+    });
     if (imageCount === 0) continue;
 
     const selectedImages = pickRandomN(images, imageCount);
@@ -644,7 +707,11 @@ function generateDirectMessages(users: UserSeed[]): DirectMessageGenerationResul
   for (let i = 0; i < pairs.length; i++) {
     const [userA, userB] = pairs[i];
     const conversationId = faker.string.uuid();
-    allConversations.push({ id: conversationId, initiatorId: userA.id, memberId: userB.id });
+    allConversations.push({
+      id: conversationId,
+      initiatorId: userA.id,
+      memberId: userB.id,
+    });
 
     const messageCount = messagesPerPair[i];
     const conversation = sortMessagesByCreatedAt(
