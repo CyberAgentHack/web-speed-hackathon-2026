@@ -40,6 +40,9 @@ export function initComment(sequelize: Sequelize) {
     },
     {
       sequelize,
+      indexes: [
+        { fields: ["postId", "createdAt"] },
+      ],
       defaultScope: {
         attributes: {
           exclude: ["userId", "postId"],
