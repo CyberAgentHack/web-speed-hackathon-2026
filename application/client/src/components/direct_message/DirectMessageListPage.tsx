@@ -14,9 +14,16 @@ interface Props {
   newDmModalId: string;
 }
 
+interface ConversationSummary {
+  id: string;
+  initiator: Models.User;
+  member: Models.User;
+  lastMessage: Pick<Models.DirectMessage, "body" | "createdAt"> | null;
+  hasUnread: boolean;
+}
+
 export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
-  const [conversations, setConversations] =
-    useState<Array<Models.DirectMessageConversation> | null>(null);
+  const [conversations, setConversations] = useState<Array<ConversationSummary> | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
   const loadConversations = useCallback(async () => {
@@ -25,7 +32,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     }
 
     try {
-      const conversations = await fetchJSON<Array<Models.DirectMessageConversation>>("/api/v1/dm");
+      const conversations = await fetchJSON<Array<ConversationSummary>>("/api/v1/dm");
       setConversations(conversations);
       setError(null);
     } catch (error) {
@@ -70,16 +77,11 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
       ) : (
         <ul data-testid="dm-list">
           {conversations.map((conversation) => {
-            const { messages } = conversation;
             const peer =
               conversation.initiator.id !== activeUser.id
                 ? conversation.initiator
                 : conversation.member;
-
-            const lastMessage = messages.at(-1);
-            const hasUnread = messages
-              .filter((m) => m.sender.id === peer.id)
-              .some((m) => !m.isRead);
+            const { lastMessage } = conversation;
 
             return (
               <li className="grid" key={conversation.id}>
@@ -107,7 +109,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                         )}
                       </div>
                       <p className="mt-1 line-clamp-2 text-sm wrap-anywhere">{lastMessage?.body}</p>
-                      {hasUnread ? (
+                      {conversation.hasUnread ? (
                         <span className="bg-cax-brand-soft text-cax-brand mt-2 inline-flex w-fit rounded-full px-3 py-0.5 text-xs">
                           未読
                         </span>
