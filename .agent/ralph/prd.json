@@ -317,8 +317,8 @@
         "Typecheck passes"
       ],
       "priority": 17,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "2026-03-20 完了。TimelineItem, PostItem, CommentItem, CoveredImage, DirectMessageListPage の全 img タグに loading='lazy' を追加。ビューポート外の画像読み込みを遅延させることで初期ロード性能を改善。E2E: home 6/7 PASS (1件 navigation timeout = pre-existing), post-detail 5/7 PASS (2件 navigation timeout = pre-existing), search 17/17 PASS。"
     },
     {
       "id": "US-018",

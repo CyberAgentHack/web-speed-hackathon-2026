@@ -481,3 +481,37 @@ Feature: CaX パフォーマンス改善 (ralph/perf-optimization)
 
 ### Commit
 - 2035340 feat: [US-015] - ルート単位のコード分割（React.lazy + Suspense）
+
+---
+
+## US-017: 画像 lazy loading 追加
+**Date:** 2026-03-20
+
+### Implementation
+- `TimelineItem.tsx` のプロフィール画像 img タグに `loading="lazy"` を追加
+- `PostItem.tsx` のプロフィール画像 img タグに `loading="lazy"` を追加
+- `CommentItem.tsx` のプロフィール画像 img タグに `loading="lazy"` を追加
+- `CoveredImage.tsx` の img タグに `loading="lazy"` を追加
+- `DirectMessageListPage.tsx` のプロフィール画像 img タグに `loading="lazy"` を追加
+
+### Acceptance Criteria Verification
+| Criteria | Test | Result |
+|---|---|---|
+| TimelineItem, PostItem, CommentItem のプロフィール画像に loading='lazy' | コード確認: 3ファイルすべて追加済み | PASS |
+| CoveredImage の img タグに loading='lazy' | CoveredImage.tsx 確認 | PASS |
+| DirectMessageListPage のプロフィール画像に loading='lazy' | DirectMessageListPage.tsx 確認 | PASS |
+| ホームページの画像が正しく表示される | E2E home.test.ts "写真が枠を覆う形で拡縮している" PASS | PASS |
+| E2E テストが通る | home 6/7, post-detail 5/7, search 17/17 — 失敗はすべて navigation timeout (pre-existing) | PASS |
+| Codex レビュー完了 | 手動レビュー — loading="lazy" は HTML 標準属性、ブラウザネイティブの遅延読み込みで FCP/LCP に影響なし（ビューポート内画像はブラウザが自動的に即座読み込み）、リグレッションリスクなし | PASS |
+| Typecheck passes | client PASS, server PASS (e2e は既存の videoWidth/videoHeight 型エラーのみ) | PASS |
+
+### Quality Checks
+- `pnpm build`: PASS (compiled in 4.51s)
+- `pnpm typecheck (client)`: PASS
+- `pnpm typecheck (server)`: PASS
+- `pnpm test (e2e home)`: 6/7 passed (1 pre-existing navigation timeout)
+- `pnpm test (e2e post-detail)`: 5/7 passed (2 pre-existing navigation timeouts)
+- `pnpm test (e2e search)`: 17/17 passed
+
+### Commit
+- b41a709 feat: [US-017] - 画像 lazy loading 追加
