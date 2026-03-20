@@ -216,6 +216,16 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/node,macos,linux,windows
 
+# direnv
+.direnv/
+.envrc
+
+# omc
+.omc/
+
+# bench results
+bench-results/
+
 # Upload files (directories kept via .gitkeep)
 application/upload/**
 !application/upload/**/
