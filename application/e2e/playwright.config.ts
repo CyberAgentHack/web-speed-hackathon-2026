@@ -23,8 +23,17 @@ export default defineConfig({
   workers: WORKERS,
   projects: [
     {
+      name: "API Contract",
+      testMatch: "**/src/api/!(initialize)*.api.test.ts",
+    },
+    {
+      name: "API Initialize",
+      testMatch: "**/src/api/initialize.api.test.ts",
+      dependencies: ["API Contract"],
+    },
+    {
       name: "Desktop Chrome",
-      testMatch: "**/src/**/*.test.ts",
+      testMatch: "**/src/*.test.ts",
       use: {
         ...devices["Desktop Chrome"],
         ...(CHROMIUM_PATH
