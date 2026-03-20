@@ -4,6 +4,7 @@ import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { SoundWaveSVG } from "@web-speed-hackathon-2026/client/src/components/foundation/SoundWaveSVG";
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
+import { useInViewport } from "@web-speed-hackathon-2026/client/src/hooks/use_in_viewport";
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getSoundPath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
@@ -12,7 +13,8 @@ interface Props {
 }
 
 export const SoundPlayer = ({ sound }: Props) => {
-  const { data, isLoading } = useFetch(getSoundPath(sound.id), fetchBinary);
+  const [containerRef, isInViewport] = useInViewport("200px");
+  const { data } = useFetch(isInViewport ? getSoundPath(sound.id) : null, fetchBinary);
 
   const blobUrl = useMemo(() => {
     return data !== null ? URL.createObjectURL(new Blob([data])) : null;
@@ -37,16 +39,15 @@ export const SoundPlayer = ({ sound }: Props) => {
     });
   }, []);
 
-  if (isLoading || data === null || blobUrl === null) {
-    return null;
-  }
+  const isReady = data !== null && blobUrl !== null;
 
   return (
-    <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
-      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} src={blobUrl} />
+    <div ref={containerRef} className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
+      {isReady ? <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} src={blobUrl} /> : null}
       <div className="p-2">
         <button
           className="bg-cax-accent text-cax-surface-raised flex h-8 w-8 items-center justify-center rounded-full text-sm hover:opacity-75"
+          disabled={!isReady}
           onClick={handleTogglePlaying}
           type="button"
         >
@@ -60,19 +61,21 @@ export const SoundPlayer = ({ sound }: Props) => {
         <p className="text-cax-text-muted overflow-hidden text-sm text-ellipsis whitespace-nowrap">
           {sound.artist}
         </p>
-        <div className="pt-2">
-          <AspectRatioBox aspectHeight={1} aspectWidth={10}>
-            <div className="relative h-full w-full">
-              <div className="absolute inset-0 h-full w-full">
-                <SoundWaveSVG soundData={data} />
+        {isReady ? (
+          <div className="pt-2">
+            <AspectRatioBox aspectHeight={1} aspectWidth={10}>
+              <div className="relative h-full w-full">
+                <div className="absolute inset-0 h-full w-full">
+                  <SoundWaveSVG soundData={data} />
+                </div>
+                <div
+                  className="bg-cax-surface-subtle absolute inset-0 h-full w-full opacity-75"
+                  style={{ left: `${currentTimeRatio * 100}%` }}
+                ></div>
               </div>
-              <div
-                className="bg-cax-surface-subtle absolute inset-0 h-full w-full opacity-75"
-                style={{ left: `${currentTimeRatio * 100}%` }}
-              ></div>
-            </div>
-          </AspectRatioBox>
-        </div>
+            </AspectRatioBox>
+          </div>
+        ) : null}
       </div>
     </div>
   );

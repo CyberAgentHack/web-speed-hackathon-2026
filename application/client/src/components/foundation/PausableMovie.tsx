@@ -3,9 +3,9 @@ import { Animator, Decoder } from "gifler";
 import { GifReader } from "omggif";
 import { RefCallback, useCallback, useRef, useState } from "react";
 
-import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
+import { useInViewport } from "@web-speed-hackathon-2026/client/src/hooks/use_in_viewport";
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
@@ -14,11 +14,14 @@ interface Props {
 
 /**
  * クリックすると再生・一時停止を切り替えます。
+ * ビューポート付近に入るまでフェッチ・デコードを遅延します。
  */
 export const PausableMovie = ({ src }: Props) => {
-  const { data, isLoading } = useFetch(src, fetchBinary);
+  const [containerRef, isInViewport] = useInViewport("200px");
+  const { data } = useFetch(isInViewport ? src : null, fetchBinary);
 
   const animatorRef = useRef<Animator>(null);
+  const decodedDataRef = useRef<ArrayBuffer | null>(null);
   const canvasCallbackRef = useCallback<RefCallback<HTMLCanvasElement>>(
     (el) => {
       animatorRef.current?.stop();
@@ -27,8 +30,21 @@ export const PausableMovie = ({ src }: Props) => {
         return;
       }
 
+      // 同じデータを二重デコードしない
+      if (decodedDataRef.current === data) {
+        // canvas 要素が変わっただけなら既存 animator を再接続
+        if (animatorRef.current) {
+          animatorRef.current.animateInCanvas(el);
+          animatorRef.current.start();
+        }
+        return;
+      }
+
       // メインスレッドを解放してから GIF を解析する
       setTimeout(() => {
+        if (decodedDataRef.current === data) return;
+        decodedDataRef.current = data;
+
         const reader = new GifReader(new Uint8Array(data));
         const frames = Decoder.decodeFramesSync(reader);
         const animator = new Animator(reader, frames);
@@ -62,30 +78,28 @@ export const PausableMovie = ({ src }: Props) => {
     });
   }, []);
 
-  if (isLoading || data === null) {
-    return null;
-  }
-
   return (
-    <AspectRatioBox aspectHeight={1} aspectWidth={1}>
-      <button
-        aria-label="動画プレイヤー"
-        className="group relative block h-full w-full"
-        onClick={handleClick}
-        type="button"
-      >
-        <canvas ref={canvasCallbackRef} className="w-full" />
-        <div
-          className={classNames(
-            "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
-            {
-              "opacity-0 group-hover:opacity-100": isPlaying,
-            },
-          )}
+    <div ref={containerRef} className="relative w-full" style={{ aspectRatio: "1 / 1" }}>
+      {data !== null ? (
+        <button
+          aria-label="動画プレイヤー"
+          className="group relative block h-full w-full"
+          onClick={handleClick}
+          type="button"
         >
-          <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
-        </div>
-      </button>
-    </AspectRatioBox>
+          <canvas ref={canvasCallbackRef} className="w-full" />
+          <div
+            className={classNames(
+              "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
+              {
+                "opacity-0 group-hover:opacity-100": isPlaying,
+              },
+            )}
+          >
+            <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
+          </div>
+        </button>
+      ) : null}
+    </div>
   );
 };
