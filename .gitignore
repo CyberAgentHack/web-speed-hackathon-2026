@@ -223,3 +223,4 @@ application/upload/**
 application/server/database.sqlite
 !application/upload/**/
 !application/upload/**/.gitkeep
+results
