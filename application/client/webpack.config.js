@@ -129,7 +129,28 @@ const config = {
   },
   optimization: {
     minimize: false,
-    splitChunks: false,
+    runtimeChunk: "single",
+    splitChunks: {
+      chunks: "all",
+      maxInitialRequests: 25,
+      cacheGroups: {
+        framework: {
+          test: /[\\/]node_modules[\\/](react|react-dom|redux|react-redux|history|react-router|react-router-dom)[\\/]/,
+          name: "framework",
+          priority: 30,
+        },
+        mediaTools: {
+          test: /[\\/]node_modules[\\/](@ffmpeg|@imagemagick)[\\/]/,
+          name: "media-tools",
+          priority: 25,
+        },
+        vendors: {
+          test: /[\\/]node_modules[\\/]/,
+          name: "vendors",
+          priority: 10,
+        },
+      },
+    },
     concatenateModules: false,
     usedExports: false,
     providedExports: false,
