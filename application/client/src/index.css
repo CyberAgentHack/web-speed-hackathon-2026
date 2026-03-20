@@ -18,6 +18,13 @@
   font-weight: bold;
 }
 
+@layer base {
+  /* Tailwind v4 が有効にする text-autospace を無効化（日本語+英数字境界の不要な空白を除去） */
+  body {
+    text-autospace: normal;
+  }
+}
+
 .font-awesome {
   height: 1em;
   vertical-align: -0.125em;
