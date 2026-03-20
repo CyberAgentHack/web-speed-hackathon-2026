@@ -42,6 +42,7 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
         const conversation = await sendJSON<CreateConversationResponse>(`/api/v1/dm`, {
           username: normalizedUsername,
         });
+        ref.current?.close();
         navigate(`/dm/${conversation.id}`);
       } catch {
         throw new SubmissionError({
@@ -49,7 +50,7 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
         });
       }
     },
-    [navigate],
+    [navigate, ref],
   );
 
   return (

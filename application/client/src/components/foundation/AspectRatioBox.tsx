@@ -14,17 +14,26 @@ export const AspectRatioBox = ({ aspectHeight, aspectWidth, children }: Props) =
   const [clientHeight, setClientHeight] = useState(0);
 
   useEffect(() => {
+    const element = ref.current;
+    if (element == null) {
+      return;
+    }
+
     // clientWidth とアスペクト比から clientHeight を計算する
     function calcStyle() {
-      const clientWidth = ref.current?.clientWidth ?? 0;
-      setClientHeight((clientWidth / aspectWidth) * aspectHeight);
+      const clientWidth = element.clientWidth;
+      setClientHeight(clientWidth === 0 ? 0 : (clientWidth / aspectWidth) * aspectHeight);
     }
-    setTimeout(() => calcStyle(), 500);
 
-    // ウィンドウサイズが変わるたびに計算する
-    window.addEventListener("resize", calcStyle, { passive: false });
+    calcStyle();
+
+    const resizeObserver = new ResizeObserver(() => {
+      calcStyle();
+    });
+    resizeObserver.observe(element);
+
     return () => {
-      window.removeEventListener("resize", calcStyle);
+      resizeObserver.disconnect();
     };
   }, [aspectHeight, aspectWidth]);
 

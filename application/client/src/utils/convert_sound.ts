@@ -7,17 +7,19 @@ interface Options {
 
 export async function convertSound(file: File, options: Options): Promise<Blob> {
   const ffmpeg = await loadFFmpeg();
+  const jobId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const inputFile = `sound-${jobId}.input`;
 
-  const exportFile = `export.${options.extension}`;
+  const exportFile = `sound-${jobId}.${options.extension}`;
 
-  await ffmpeg.writeFile("file", new Uint8Array(await file.arrayBuffer()));
+  await ffmpeg.writeFile(inputFile, new Uint8Array(await file.arrayBuffer()));
 
   // 文字化けを防ぐためにメタデータを抽出して付与し直す
   const metadata = await extractMetadataFromSound(file);
 
   await ffmpeg.exec([
     "-i",
-    "file",
+    inputFile,
     "-metadata",
     `artist=${metadata.artist}`,
     "-metadata",
@@ -27,8 +29,8 @@ export async function convertSound(file: File, options: Options): Promise<Blob> 
   ]);
 
   const output = (await ffmpeg.readFile(exportFile)) as Uint8Array<ArrayBuffer>;
-
-  ffmpeg.terminate();
+  await ffmpeg.deleteFile(inputFile).catch(() => {});
+  await ffmpeg.deleteFile(exportFile).catch(() => {});
 
   const blob = new Blob([output]);
   return blob;

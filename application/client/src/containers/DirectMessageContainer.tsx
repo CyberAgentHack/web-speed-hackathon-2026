@@ -4,7 +4,6 @@ import { useParams } from "react-router";
 
 import { DirectMessageGate } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageGate";
 import { DirectMessagePage } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessagePage";
-import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
@@ -20,6 +19,12 @@ interface DmTypingEvent {
 
 const TYPING_INDICATOR_DURATION_MS = 10 * 1000;
 const TYPING_EVENT_THROTTLE_MS = 1000;
+const INITIAL_CONVERSATION_RETRY_COUNT = 5;
+const INITIAL_CONVERSATION_RETRY_DELAY_MS = 200;
+
+function sleep(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
 
 interface Props {
   activeUser: Models.User | null;
@@ -36,21 +41,33 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTypingSentAtRef = useRef(0);
+  const hasLoadedConversationRef = useRef(false);
 
   const loadConversation = useCallback(async () => {
     if (activeUser == null) {
       return;
     }
 
-    try {
-      const data = await fetchJSON<Models.DirectMessageConversation>(
-        `/api/v1/dm/${conversationId}`,
-      );
-      setConversation(data);
-      setConversationError(null);
-    } catch (error) {
-      setConversation(null);
-      setConversationError(error as Error);
+    const maxAttempts = hasLoadedConversationRef.current ? 1 : INITIAL_CONVERSATION_RETRY_COUNT;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
+        const data = await fetchJSON<Models.DirectMessageConversation>(
+          `/api/v1/dm/${conversationId}`,
+        );
+        hasLoadedConversationRef.current = true;
+        setConversation(data);
+        setConversationError(null);
+        return;
+      } catch (error) {
+        if (attempt === maxAttempts) {
+          setConversation(null);
+          setConversationError(error as Error);
+          return;
+        }
+
+        await sleep(INITIAL_CONVERSATION_RETRY_DELAY_MS);
+      }
     }
   }, [activeUser, conversationId]);
 
@@ -90,6 +107,9 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   useEffect(() => {
     lastTypingSentAtRef.current = 0;
+    hasLoadedConversationRef.current = false;
+    setConversation(null);
+    setConversationError(null);
   }, [conversationId]);
 
   useWs(
@@ -131,12 +151,6 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
         authModalId={authModalId}
       />
     );
-  }
-
-  if (conversation == null) {
-    if (conversationError != null) {
-      return <NotFoundContainer />;
-    }
   }
 
   const peer =

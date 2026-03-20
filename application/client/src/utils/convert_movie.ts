@@ -10,6 +10,8 @@ interface Options {
  */
 export async function convertMovie(file: File, options: Options): Promise<Blob> {
   const ffmpeg = await loadFFmpeg();
+  const jobId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const inputFile = `movie-${jobId}.input`;
 
   const cropOptions = [
     "'min(iw,ih)':'min(iw,ih)'",
@@ -17,17 +19,17 @@ export async function convertMovie(file: File, options: Options): Promise<Blob> 
   ]
     .filter(Boolean)
     .join(",");
-  const exportFile = `export.${options.extension}`;
+  const exportFile = `movie-${jobId}.${options.extension}`;
 
-  await ffmpeg.writeFile("file", new Uint8Array(await file.arrayBuffer()));
+  await ffmpeg.writeFile(inputFile, new Uint8Array(await file.arrayBuffer()));
 
   await ffmpeg.exec([
     "-i",
-    "file",
+    inputFile,
     "-t",
     "5",
     "-r",
-    "10",
+    "5",
     "-vf",
     `crop=${cropOptions}`,
     "-an",
@@ -35,8 +37,8 @@ export async function convertMovie(file: File, options: Options): Promise<Blob> 
   ]);
 
   const output = (await ffmpeg.readFile(exportFile)) as Uint8Array<ArrayBuffer>;
-
-  ffmpeg.terminate();
+  await ffmpeg.deleteFile(inputFile).catch(() => {});
+  await ffmpeg.deleteFile(exportFile).catch(() => {});
 
   const blob = new Blob([output]);
   return blob;

@@ -2,6 +2,7 @@ import classNames from "classnames";
 import moment from "moment";
 import {
   ChangeEvent,
+  memo,
   useCallback,
   useId,
   useRef,
@@ -24,6 +25,99 @@ interface Props {
   onTyping: () => void;
   onSubmit: (params: DirectMessageFormData) => Promise<void>;
 }
+
+type ConversationBodyProps = {
+  activeUser: Models.User;
+  conversation: Models.DirectMessageConversation | null;
+  conversationError: Error | null;
+  isPeerTyping: boolean;
+  peer: Models.User | null;
+};
+
+const ConversationBody = memo(
+  ({ activeUser, conversation, conversationError, isPeerTyping, peer }: ConversationBodyProps) => {
+    if (conversationError != null) {
+      return (
+        <section className="px-6 py-10">
+          <p className="text-cax-danger text-sm">メッセージの取得に失敗しました</p>
+        </section>
+      );
+    }
+
+    return (
+      <>
+        <header className="border-cax-border bg-cax-surface sticky top-0 z-10 flex items-center gap-2 border-b px-4 py-3">
+          <img
+            alt={peer?.profileImage.alt ?? "プロフィール画像"}
+            className="h-12 w-12 rounded-full object-cover"
+            src={peer == null ? undefined : getProfileImagePath(peer.profileImage.id)}
+          />
+          <div className="min-w-0">
+            <h1 className="overflow-hidden text-xl font-bold text-ellipsis whitespace-nowrap">
+              {peer?.name ?? "ダイレクトメッセージ"}
+            </h1>
+            <p className="text-cax-text-muted overflow-hidden text-xs text-ellipsis whitespace-nowrap">
+              {peer == null ? "会話を読み込み中…" : `@${peer.username}`}
+            </p>
+          </div>
+        </header>
+
+        <div className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8">
+          {(conversation == null || conversation.messages.length === 0) && (
+            <p className="text-cax-text-muted text-center text-sm">
+              {conversation == null
+                ? "会話を読み込んでいます。入力欄は先に利用できます。"
+                : "まだメッセージはありません。最初のメッセージを送信してみましょう。"}
+            </p>
+          )}
+
+          <ul className="grid gap-3" data-testid="dm-message-list">
+            {(conversation?.messages ?? []).map((message) => {
+              const isActiveUserSend = message.sender.id === activeUser.id;
+
+              return (
+                <li
+                  className={classNames(
+                    "flex flex-col w-full",
+                    isActiveUserSend ? "items-end" : "items-start",
+                  )}
+                >
+                  <p
+                    className={classNames(
+                      "max-w-3/4 rounded-xl border px-4 py-2 text-sm whitespace-pre-wrap leading-relaxed wrap-anywhere",
+                      isActiveUserSend
+                        ? "rounded-br-sm border-transparent bg-cax-brand text-cax-surface-raised"
+                        : "rounded-bl-sm border-cax-border bg-cax-surface text-cax-text",
+                    )}
+                  >
+                    {message.body}
+                  </p>
+                  <div className="flex gap-1 text-xs">
+                    <time dateTime={message.createdAt}>
+                      {moment(message.createdAt).locale("ja").format("HH:mm")}
+                    </time>
+                    {isActiveUserSend && message.isRead && (
+                      <span className="text-cax-text-muted">既読</span>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        <div className="sticky bottom-12 z-10 lg:bottom-0">
+          {isPeerTyping && peer != null && (
+            <p className="bg-cax-surface-raised/75 text-cax-brand absolute inset-x-0 top-0 -translate-y-full px-4 py-1 text-xs">
+              <span className="font-bold">{peer.name}</span>さんが入力中…
+            </p>
+          )}
+        </div>
+      </>
+    );
+  },
+);
+ConversationBody.displayName = "ConversationBody";
 
 export const DirectMessagePage = ({
   conversationError,
@@ -84,83 +178,17 @@ export const DirectMessagePage = ({
     return () => window.cancelAnimationFrame(id);
   }, [conversation?.messages.length, isPeerTyping]);
 
-  if (conversationError != null) {
-    return (
-      <section className="px-6 py-10">
-        <p className="text-cax-danger text-sm">メッセージの取得に失敗しました</p>
-      </section>
-    );
-  }
-
   return (
     <section className="bg-cax-surface flex min-h-[calc(100vh-(--spacing(12)))] flex-col lg:min-h-screen">
-      <header className="border-cax-border bg-cax-surface sticky top-0 z-10 flex items-center gap-2 border-b px-4 py-3">
-        <img
-          alt={peer.profileImage.alt}
-          className="h-12 w-12 rounded-full object-cover"
-          src={peer == null ? undefined : getProfileImagePath(peer.profileImage.id)}
-        />
-        <div className="min-w-0">
-          <h1 className="overflow-hidden text-xl font-bold text-ellipsis whitespace-nowrap">
-            {peer?.name ?? "ダイレクトメッセージ"}
-          </h1>
-          <p className="text-cax-text-muted overflow-hidden text-xs text-ellipsis whitespace-nowrap">
-            {peer == null ? "会話を読み込み中…" : `@${peer.username}`}
-          </p>
-        </div>
-      </header>
-
-      <div className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8">
-        {(conversation == null || conversation.messages.length === 0) && (
-          <p className="text-cax-text-muted text-center text-sm">
-            {conversation == null
-              ? "会話を読み込んでいます。入力欄は先に利用できます。"
-              : "まだメッセージはありません。最初のメッセージを送信してみましょう。"}
-          </p>
-        )}
-
-        <ul className="grid gap-3" data-testid="dm-message-list">
-          {(conversation?.messages ?? []).map((message) => {
-            const isActiveUserSend = message.sender.id === activeUser.id;
-
-            return (
-              <li
-                className={classNames(
-                  "flex flex-col w-full",
-                  isActiveUserSend ? "items-end" : "items-start",
-                )}
-              >
-                <p
-                  className={classNames(
-                    "max-w-3/4 rounded-xl border px-4 py-2 text-sm whitespace-pre-wrap leading-relaxed wrap-anywhere",
-                    isActiveUserSend
-                      ? "rounded-br-sm border-transparent bg-cax-brand text-cax-surface-raised"
-                      : "rounded-bl-sm border-cax-border bg-cax-surface text-cax-text",
-                  )}
-                >
-                  {message.body}
-                </p>
-                <div className="flex gap-1 text-xs">
-                  <time dateTime={message.createdAt}>
-                    {moment(message.createdAt).locale("ja").format("HH:mm")}
-                  </time>
-                  {isActiveUserSend && message.isRead && (
-                    <span className="text-cax-text-muted">既読</span>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+      <ConversationBody
+        activeUser={activeUser}
+        conversation={conversation}
+        conversationError={conversationError}
+        isPeerTyping={isPeerTyping}
+        peer={peer}
+      />
 
       <div className="sticky bottom-12 z-10 lg:bottom-0">
-        {isPeerTyping && peer != null && (
-          <p className="bg-cax-surface-raised/75 text-cax-brand absolute inset-x-0 top-0 -translate-y-full px-4 py-1 text-xs">
-            <span className="font-bold">{peer.name}</span>さんが入力中…
-          </p>
-        )}
-
         <form
           className="border-cax-border bg-cax-surface flex items-end gap-2 border-t p-4"
           onSubmit={handleSubmit}

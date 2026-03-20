@@ -1,6 +1,6 @@
-import { Suspense, lazy, useCallback, useEffect, useId, useState } from "react";
-import { Helmet, HelmetProvider } from "react-helmet";
-import { Route, Routes, useLocation, useNavigate } from "react-router";
+import { Suspense, lazy, useCallback, useEffect, useId, useRef, useState } from "react";
+import { HelmetProvider } from "react-helmet";
+import { Route, Routes, useLocation } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
@@ -37,22 +37,27 @@ const PostContainer = lazy(() =>
 
 export const AppContainer = () => {
   const { pathname } = useLocation();
-  const navigate = useNavigate();
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
+  const ignoreInitialMeRequestRef = useRef(false);
   useEffect(() => {
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {
-        setActiveUser(user);
+        if (!ignoreInitialMeRequestRef.current) {
+          setActiveUser(user);
+        }
       })
       .catch(() => {
-        setActiveUser(null);
+        if (!ignoreInitialMeRequestRef.current) {
+          setActiveUser(null);
+        }
       });
   }, [setActiveUser]);
   const handleLogout = useCallback(async () => {
+    ignoreInitialMeRequestRef.current = true;
     await sendJSON("/api/v1/signout", {});
     setActiveUser(null);
   }, []);
@@ -117,7 +122,13 @@ export const AppContainer = () => {
         </Routes>
       </AppPage>
 
-      <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
+      <AuthModalContainer
+        id={authModalId}
+        onUpdateActiveUser={(user) => {
+          ignoreInitialMeRequestRef.current = true;
+          setActiveUser(user);
+        }}
+      />
       <NewPostModalContainer id={newPostModalId} />
     </HelmetProvider>
   );

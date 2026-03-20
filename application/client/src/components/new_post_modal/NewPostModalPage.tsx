@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components
 import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/components/modal/ModalErrorMessage";
 import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/components/modal/ModalSubmitButton";
 import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/AttachFileInputButton";
+import { extractImageAlt } from "@web-speed-hackathon-2026/client/src/utils/extract_image_alt";
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
@@ -27,7 +28,7 @@ const loadSoundConverter = async () => {
 };
 
 interface SubmitParams {
-  images: File[];
+  images: { alt: string; file: File }[];
   movie: File | undefined;
   sound: File | undefined;
   text: string;
@@ -71,11 +72,13 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       loadImageConverter()
         .then((convertImage) => {
           return Promise.all(
-            files.map((file) =>
-              convertImage(file).then(
-                (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
-              ),
-            ),
+            files.map(async (file) => {
+              const [alt, blob] = await Promise.all([extractImageAlt(file), convertImage(file)]);
+              return {
+                alt,
+                file: new File([blob], "converted.jpg", { type: "image/jpeg" }),
+              };
+            }),
           );
         })
         .then((convertedFiles) => {
