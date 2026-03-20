@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__chrome-devtools__list_pages",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/)",
+      "mcp__chrome-devtools__take_screenshot",
+      "mcp__chrome-devtools__performance_start_trace",
+      "mcp__chrome-devtools__performance_analyze_insight",
+      "mcp__chrome-devtools__lighthouse_audit",
+      "Bash(pnpm run:*)",
+      "Bash(curl:*)",
+      "Bash(pnpm start:*)",
+      "Bash(pnpm install:*)",
+      "Bash(gh issue:*)",
+      "Bash(grep:*)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(BASE_URL=http://wsh.localhost:1355 pnpm run test)"
+    ]
+  },
+  "enabledPlugins": {
+    "everything-claude-code@everything-claude-code": true
+  }
+}

@@ -4,8 +4,11 @@
   "private": true,
   "license": "MPL-2.0",
   "author": "CyberAgent, Inc.",
+  "sideEffects": [
+    "*.css"
+  ],
   "scripts": {
-    "build": "NODE_ENV=development webpack",
+    "build": "webpack",
     "typecheck": "tsc"
   },
   "dependencies": {
