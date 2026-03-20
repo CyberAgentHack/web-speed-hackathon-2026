@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import useSWR from "swr";
 
 import { swrFetcher } from "@web-speed-hackathon-2026/client/src/api/swr";
@@ -24,6 +25,16 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     void mutate();
   });
 
+  const showModalRef = useCallback(
+    (el: HTMLButtonElement | null) => {
+      if (el) {
+        el.setAttribute("command", "show-modal");
+        el.setAttribute("commandfor", newDmModalId);
+      }
+    },
+    [newDmModalId],
+  );
+
   if (conversations == null) {
     return null;
   }
@@ -34,8 +45,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
         <h1 className="text-2xl font-bold">ダイレクトメッセージ</h1>
         <div className="flex flex-wrap items-center gap-4">
           <Button
-            command="show-modal"
-            commandfor={newDmModalId}
+            ref={showModalRef}
             leftItem={<FontAwesomeIcon iconType="paper-plane" styleType="solid" />}
           >
             新しくDMを始める
