@@ -10,13 +10,11 @@ export async function fetchBinary(url: string): Promise<ArrayBuffer> {
 }
 
 export async function fetchJSON<T>(url: string): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "json",
+  const result = await fetch(url, {
     method: "GET",
-    url,
   });
-  return result;
+  const json = await result.json();
+  return json;
 }
 
 export async function sendFile<T>(url: string, file: File): Promise<T> {
