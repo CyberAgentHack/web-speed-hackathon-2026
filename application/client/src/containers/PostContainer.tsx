@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Helmet } from "react-helmet";
 import { useParams } from "react-router";
 
@@ -18,6 +19,14 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
     `/api/v1/posts/${postId}/comments`,
     fetchJSON,
   );
+
+  useEffect(() => {
+    if (isLoadingPost) {
+      document.title = "読込中 - CaX";
+    } else if (post) {
+      document.title = `${post.user.name} さんのつぶやき - CaX`;
+    }
+  }, [isLoadingPost, post]);
 
   if (isLoadingPost) {
     return (

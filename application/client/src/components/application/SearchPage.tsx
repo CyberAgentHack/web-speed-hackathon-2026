@@ -18,23 +18,26 @@ interface Props {
   results: Models.Post[];
 }
 
-const SearchInput = ({ input, meta }: WrappedFieldProps) => (
-  <div className="flex flex-1 flex-col">
-    <input
-      {...input}
-      className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
-        meta.touched && meta.error
-          ? "border-cax-danger focus:border-cax-danger"
-          : "border-cax-border focus:border-cax-brand-strong"
-      }`}
-      placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
-      type="text"
-    />
-    {meta.touched && meta.error && (
-      <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>
-    )}
-  </div>
-);
+const SearchInput = ({ input, meta }: WrappedFieldProps) => {
+  const showError = (meta.touched || meta.submitFailed) && meta.error;
+  return (
+    <div className="flex flex-1 flex-col">
+      <input
+        {...input}
+        className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
+          showError
+            ? "border-cax-danger focus:border-cax-danger"
+            : "border-cax-border focus:border-cax-brand-strong"
+        }`}
+        placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
+        type="text"
+      />
+      {showError && (
+        <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>
+      )}
+    </div>
+  );
+};
 
 const SearchPageComponent = ({
   query,
