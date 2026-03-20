@@ -68,56 +68,57 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
         </p>
       ) : (
         <ul data-testid="dm-list">
-          {conversations.map((conversation) => {
-            const { messages } = conversation;
-            const peer =
-              conversation.initiator.id !== activeUser.id
-                ? conversation.initiator
-                : conversation.member;
-
-            const lastMessage = messages.at(-1);
-            const hasUnread = messages
-              .filter((m) => m.sender.id === peer.id)
-              .some((m) => !m.isRead);
-
-            return (
-              <li className="grid" key={conversation.id}>
-                <Link className="hover:bg-cax-surface-subtle px-4" to={`/dm/${conversation.id}`}>
-                  <div className="border-cax-border flex gap-4 border-b px-4 pt-2 pb-4">
-                    <img
-                      alt={peer.profileImage.alt}
-                      className="w-12 shrink-0 self-start rounded-full"
-                      src={getProfileImagePath(peer.profileImage.id)}
-                    />
-                    <div className="flex flex-1 flex-col">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-bold">{peer.name}</p>
-                          <p className="text-cax-text-muted text-xs">@{peer.username}</p>
-                        </div>
-                        {lastMessage != null && (
-                          <time
-                            className="text-cax-text-subtle text-xs"
-                            dateTime={lastMessage.createdAt}
-                          >
-                            {formatFromNow(lastMessage.createdAt)}
-                          </time>
-                        )}
-                      </div>
-                      <p className="mt-1 line-clamp-2 text-sm wrap-anywhere">{lastMessage?.body}</p>
-                      {hasUnread ? (
-                        <span className="bg-cax-brand-soft text-cax-brand mt-2 inline-flex w-fit rounded-full px-3 py-0.5 text-xs">
-                          未読
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
-                </Link>
-              </li>
-            );
-          })}
+          {conversations.map((conversation) => <ConversationItem key={conversation.id} conversation={conversation} activeUser={activeUser} />)}
         </ul>
       )}
     </section>
   );
 };
+
+const ConversationItem = ({ conversation, activeUser }: { conversation: Models.DirectMessageConversation, activeUser: Models.User }) => {
+  const { messages } = conversation;
+  const peer =
+    conversation.initiator.id !== activeUser.id
+      ? conversation.initiator
+      : conversation.member;
+
+  const lastMessage = messages.at(-1);
+  const hasUnread = messages
+    .some((m) => m.sender.id === peer.id && !m.isRead)
+
+  return (
+    <li className="grid" key={conversation.id}>
+      <Link className="hover:bg-cax-surface-subtle px-4" to={`/dm/${conversation.id}`}>
+        <div className="border-cax-border flex gap-4 border-b px-4 pt-2 pb-4">
+          <img
+            alt={peer.profileImage.alt}
+            className="w-12 shrink-0 self-start rounded-full"
+            src={getProfileImagePath(peer.profileImage.id)}
+          />
+          <div className="flex flex-1 flex-col">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-bold">{peer.name}</p>
+                <p className="text-cax-text-muted text-xs">@{peer.username}</p>
+              </div>
+              {lastMessage != null && (
+                <time
+                  className="text-cax-text-subtle text-xs"
+                  dateTime={lastMessage.createdAt}
+                >
+                  {formatFromNow(lastMessage.createdAt)}
+                </time>
+              )}
+            </div>
+            <p className="mt-1 line-clamp-2 text-sm wrap-anywhere">{lastMessage?.body}</p>
+            {hasUnread ? (
+              <span className="bg-cax-brand-soft text-cax-brand mt-2 inline-flex w-fit rounded-full px-3 py-0.5 text-xs">
+                未読
+              </span>
+            ) : null}
+          </div>
+        </div>
+      </Link>
+    </li>
+  )
+}
