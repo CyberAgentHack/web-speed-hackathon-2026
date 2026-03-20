@@ -9,6 +9,8 @@ LABEL fly_launch_runtime="Node.js"
 
 ENV PNPM_HOME=/pnpm
 
+RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 RUN --mount=type=cache,target=/root/.npm npm install -g pnpm@${PNPM_VERSION}
 

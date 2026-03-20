@@ -54,6 +54,7 @@
     "@babel/preset-env": "7.28.3",
     "@babel/preset-react": "7.27.1",
     "@babel/preset-typescript": "7.27.1",
+    "@tailwindcss/postcss": "4.2.2",
     "@tsconfig/strictest": "2.0.8",
     "@types/bluebird": "3.5.42",
     "@types/common-tags": "1.8.4",

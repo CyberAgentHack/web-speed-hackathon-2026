@@ -2,15 +2,12 @@ import { promises as fs } from "fs";
 import os from "os";
 import path from "path";
 
-import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
 import { Router } from "express";
 import ffmpeg from "fluent-ffmpeg";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
-
-ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 const EXTENSION = "gif";
 

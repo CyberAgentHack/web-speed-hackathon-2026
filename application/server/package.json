@@ -13,7 +13,6 @@
     "seed:insert": "tsx ./scripts/insertSeeds.ts"
   },
   "dependencies": {
-    "@ffmpeg-installer/ffmpeg": "1.1.0",
     "@tsconfig/strictest": "2.0.8",
     "@web-speed-hackathon-2026/server": "workspace:*",
     "bcrypt": "6.0.0",
