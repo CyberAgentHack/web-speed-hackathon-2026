@@ -1,7 +1,9 @@
+import { randomUUID } from "node:crypto";
+
 import { Router } from "express";
 import httpErrors from "http-errors";
 
-import { Comment, Post } from "@web-speed-hackathon-2026/server/src/models";
+import { Comment, Post, PostsImagesRelation } from "@web-speed-hackathon-2026/server/src/models";
 
 export const postRouter = Router();
 
@@ -41,22 +43,29 @@ postRouter.post("/posts", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const post = await Post.create(
-    {
-      ...req.body,
-      userId: req.session.userId,
-    },
-    {
-      include: [
-        {
-          association: "images",
-          through: { attributes: [] },
-        },
-        { association: "movie" },
-        { association: "sound" },
-      ],
-    },
-  );
+  const images = Array.isArray(req.body?.images) ? req.body.images : [];
 
-  return res.status(200).type("application/json").send(post);
+  const post = await Post.create({
+    id: randomUUID(),
+    movieId: req.body?.movie?.id,
+    soundId: req.body?.sound?.id,
+    text: req.body?.text,
+    userId: req.session.userId,
+  });
+
+  if (images.length > 0) {
+    await PostsImagesRelation.bulkCreate(
+      images.map((image: { id: string }) => ({
+        imageId: image.id,
+        postId: post.id,
+      })),
+    );
+  }
+
+  const createdPost = await Post.findByPk(post.id);
+  if (createdPost === null) {
+    throw new httpErrors.InternalServerError();
+  }
+
+  return res.status(200).type("application/json").send(createdPost);
 });

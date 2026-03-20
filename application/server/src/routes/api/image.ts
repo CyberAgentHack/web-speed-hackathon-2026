@@ -9,6 +9,7 @@ import { fileTypeFromBuffer } from "file-type";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
+import { Image } from "@web-speed-hackathon-2026/server/src/models";
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
 const require = createRequire(import.meta.url);
@@ -31,7 +32,7 @@ function restoreImageDescription(output: Buffer, comment: string): Buffer {
   return Buffer.from(outputWithExif, "binary");
 }
 
-async function convertImageToJpeg(input: Buffer): Promise<Buffer> {
+async function convertImageToJpegWithAlt(input: Buffer): Promise<{ alt: string; converted: Buffer }> {
   await imageMagickInitialized;
 
   return await new Promise((resolve, reject) => {
@@ -39,12 +40,15 @@ async function convertImageToJpeg(input: Buffer): Promise<Buffer> {
       ImageMagick.read(new Uint8Array(input), (img) => {
         try {
           img.format = MagickFormat.Jpg;
-          const comment = img.comment;
+          const alt = img.comment ?? "";
 
           img.write((output) => {
             try {
               const converted = Buffer.from(output as Uint8Array<ArrayBuffer>);
-              resolve(comment == null ? converted : restoreImageDescription(converted, comment));
+              resolve({
+                alt,
+                converted: alt === "" ? converted : restoreImageDescription(converted, alt),
+              });
             } catch (error) {
               reject(error);
             }
@@ -75,12 +79,13 @@ imageRouter.post("/images", async (req, res) => {
     throw new httpErrors.BadRequest("Invalid file type");
   }
 
-  const converted = await convertImageToJpeg(body);
+  const { alt, converted } = await convertImageToJpegWithAlt(body);
   const imageId = uuidv4();
 
   const filePath = path.resolve(UPLOAD_PATH, `./images/${imageId}.${EXTENSION}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
   await fs.writeFile(filePath, converted);
+  await Image.create({ alt, id: imageId });
 
-  return res.status(200).type("application/json").send({ id: imageId });
+  return res.status(200).type("application/json").send({ alt, id: imageId });
 });

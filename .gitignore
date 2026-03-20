@@ -218,5 +218,8 @@ $RECYCLE.BIN/
 
 # Upload files (directories kept via .gitkeep)
 application/upload/**
+
+# Local pnpm store
+.pnpm-store/
 !application/upload/**/
 !application/upload/**/.gitkeep

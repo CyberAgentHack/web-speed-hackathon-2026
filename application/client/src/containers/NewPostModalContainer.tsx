@@ -18,10 +18,15 @@ interface SubmitParams {
   text: string;
 }
 
+interface UploadedImage {
+  alt: string;
+  id: string;
+}
+
 async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promise<Models.Post> {
   const payload = {
     images: images
-      ? await Promise.all(images.map((image) => sendFile("/api/v1/images", image)))
+      ? await Promise.all(images.map((image) => sendFile<UploadedImage>("/api/v1/images", image)))
       : [],
     movie: movie ? await sendFile("/api/v1/movies", movie) : undefined,
     sound: sound ? await sendFile("/api/v1/sounds", sound) : undefined,

@@ -6,6 +6,7 @@ import { Sequelize } from "sequelize";
 
 import { initModels } from "@web-speed-hackathon-2026/server/src/models";
 import { DATABASE_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+import { backfillImageAlts } from "@web-speed-hackathon-2026/server/src/utils/image_alt";
 
 let _sequelize: Sequelize | null = null;
 
@@ -26,4 +27,5 @@ export async function initializeSequelize() {
     storage: TEMP_PATH,
   });
   initModels(_sequelize);
+  await backfillImageAlts();
 }
