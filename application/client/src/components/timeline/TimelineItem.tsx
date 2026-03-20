@@ -28,9 +28,10 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
  */
 interface Props {
   post: Models.Post;
+  prioritizeMedia?: boolean;
 }
 
-const TimelineItemComponent = ({ post }: Props) => {
+const TimelineItemComponent = ({ post, prioritizeMedia = false }: Props) => {
   const navigate = useNavigate();
 
   /**
@@ -58,7 +59,8 @@ const TimelineItemComponent = ({ post }: Props) => {
               alt={post.user.profileImage.alt}
               className="h-full w-full object-cover"
               decoding="async"
-              loading="lazy"
+              fetchPriority={prioritizeMedia ? "high" : "auto"}
+              loading={prioritizeMedia ? "eager" : "lazy"}
               src={getProfileImagePath(post.user.profileImage.id)}
             />
           </Link>
@@ -89,7 +91,7 @@ const TimelineItemComponent = ({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea images={post.images} prioritizeMedia={prioritizeMedia} />
             </div>
           ) : null}
           {post.movie ? (

@@ -24,7 +24,8 @@ export const PostItem = ({ post }: Props) => {
                 alt={post.user.profileImage.alt}
                 className="h-full w-full object-cover"
                 decoding="async"
-                loading="lazy"
+                fetchPriority="high"
+                loading="eager"
                 src={getProfileImagePath(post.user.profileImage.id)}
               />
             </Link>
@@ -54,7 +55,7 @@ export const PostItem = ({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea images={post.images} prioritizeMedia={true} />
             </div>
           ) : null}
           {post.movie ? (

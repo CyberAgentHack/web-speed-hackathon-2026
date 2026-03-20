@@ -10,6 +10,7 @@
   </head>
   <body class="bg-cax-canvas text-cax-text">
     <div id="app"></div>
+    <script id="initial-data-script">window.__INITIAL_DATA__ = {};</script>
     <% for (const jsFile of htmlWebpackPlugin.files.js) { %>
     <script src="<%= jsFile.startsWith('/') ? jsFile : `/${jsFile}` %>"></script>
     <% } %>

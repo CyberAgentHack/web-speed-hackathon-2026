@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { FetchOptions, isAbortError } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 const LIMIT = 30;
+const EMPTY_DATA: [] = [];
 
 interface ReturnValues<T> {
   data: Array<T>;
@@ -11,15 +12,33 @@ interface ReturnValues<T> {
   fetchMore: () => void;
 }
 
+interface UseInfiniteFetchOptions<T> {
+  initialData?: Array<T>;
+}
+
 function withPagination(apiPath: string, limit: number, offset: number) {
   const separator = apiPath.includes("?") ? "&" : "?";
   return `${apiPath}${separator}limit=${limit}&offset=${offset}`;
 }
 
+function createInitialState<T>(apiPath: string, initialData: Array<T>) {
+  return {
+    data: initialData,
+    error: null,
+    isLoading: apiPath !== "" && initialData.length === 0,
+  };
+}
+
+function shouldFetchMore(apiPath: string, initialDataLength: number) {
+  return apiPath !== "" && (initialDataLength === 0 || initialDataLength === LIMIT);
+}
+
 export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string, options?: FetchOptions) => Promise<T[]>,
+  options: UseInfiniteFetchOptions<T> = {},
 ): ReturnValues<T> {
+  const initialData = options.initialData ?? (EMPTY_DATA as T[]);
   const internalRef = useRef<{
     abortController: AbortController | null;
     hasMore: boolean;
@@ -27,16 +46,14 @@ export function useInfiniteFetch<T>(
     offset: number;
   }>({
     abortController: null,
-    hasMore: true,
+    hasMore: shouldFetchMore(apiPath, initialData.length),
     isLoading: false,
-    offset: 0,
+    offset: initialData.length,
   });
 
-  const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
-    data: [],
-    error: null,
-    isLoading: true,
-  });
+  const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>(
+    createInitialState(apiPath, initialData),
+  );
 
   const fetchMore = useCallback(() => {
     const { hasMore, isLoading, offset } = internalRef.current;
@@ -97,26 +114,22 @@ export function useInfiniteFetch<T>(
   useEffect(() => {
     internalRef.current.abortController?.abort();
 
-    setResult(() => ({
-      data: [],
-      error: null,
-      isLoading: apiPath !== "",
-    }));
+    setResult(() => createInitialState(apiPath, initialData));
     internalRef.current = {
       abortController: null,
-      hasMore: apiPath !== "",
+      hasMore: shouldFetchMore(apiPath, initialData.length),
       isLoading: false,
-      offset: 0,
+      offset: initialData.length,
     };
 
-    if (apiPath !== "") {
+    if (apiPath !== "" && initialData.length === 0) {
       fetchMore();
     }
 
     return () => {
       internalRef.current.abortController?.abort();
     };
-  }, [apiPath, fetchMore]);
+  }, [apiPath, fetchMore, initialData]);
 
   return {
     ...result,

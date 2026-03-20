@@ -45,7 +45,7 @@ module.exports = (_env, argv = {}) => {
         {
           exclude: /node_modules/,
           test: /\.(jsx?|tsx?|mjs|cjs)$/,
-          use: [{ loader: "babel-loader" }],
+          use: [{ loader: "babel-loader", options: { envName: nodeEnv } }],
         },
         {
           test: /\.css$/i,
