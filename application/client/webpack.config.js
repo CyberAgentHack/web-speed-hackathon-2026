@@ -60,7 +60,6 @@ const config = {
   },
   output: {
     chunkFilename: isProduction ? "scripts/chunk-[contenthash].js" : "scripts/[name].js",
-    chunkFormat: false,
     filename: isProduction ? "scripts/[name]-[contenthash].js" : "scripts/[name].js",
     path: DIST_PATH,
     publicPath: "auto",
