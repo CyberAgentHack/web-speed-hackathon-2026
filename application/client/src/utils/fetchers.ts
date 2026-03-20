@@ -1,10 +1,12 @@
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {
   const res = await fetch(url);
+  if (!res.ok) throw res;
   return res.arrayBuffer();
 }
 
 export async function fetchJSON<T>(url: string): Promise<T> {
   const res = await fetch(url);
+  if (!res.ok) throw res;
   return res.json() as Promise<T>;
 }
 
@@ -14,6 +16,7 @@ export async function sendFile<T>(url: string, file: File): Promise<T> {
     headers: { "Content-Type": "application/octet-stream" },
     body: file,
   });
+  if (!res.ok) throw res;
   return res.json() as Promise<T>;
 }
 
@@ -23,5 +26,6 @@ export async function sendJSON<T>(url: string, data: object): Promise<T> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
+  if (!res.ok) throw res;
   return res.json() as Promise<T>;
 }
