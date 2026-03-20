@@ -1,4 +1,4 @@
-import { MagickFormat } from "@imagemagick/magick-wasm";
+import type { MagickFormat } from "@imagemagick/magick-wasm";
 import { ChangeEventHandler, FormEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -55,7 +55,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
       Promise.all(
         files.map((file) =>
-          convertImage(file, { extension: MagickFormat.WebP }).then(
+          convertImage(file, { extension: "WebP" as MagickFormat }).then(
             (blob) => new File([blob], "converted.webp", { type: "image/webp" }),
           ),
         ),

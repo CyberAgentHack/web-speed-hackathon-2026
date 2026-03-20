@@ -6,6 +6,53 @@ import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/par
 
 export const searchRouter = Router();
 
+const NEGATIVE_TERMS = [
+  "つらい",
+  "辛い",
+  "しんどい",
+  "悲しい",
+  "苦しい",
+  "最悪",
+  "無理",
+  "疲れた",
+  "落ち込",
+  "不安",
+  "いや",
+  "嫌",
+  "hate",
+  "sad",
+  "bad",
+  "worst",
+];
+
+function analyzeSentiment(text: string): {
+  score: number;
+  label: "positive" | "negative" | "neutral";
+} {
+  const normalized = text.toLowerCase();
+  const negativeHits = NEGATIVE_TERMS.reduce((count, term) => {
+    return normalized.includes(term.toLowerCase()) ? count + 1 : count;
+  }, 0);
+
+  if (negativeHits === 0) {
+    return { score: 0, label: "neutral" };
+  }
+
+  const score = Math.min(negativeHits / 5, 1);
+  return { score, label: "negative" };
+}
+
+searchRouter.get("/search/sentiment", async (req, res) => {
+  const query = req.query["q"];
+
+  if (typeof query !== "string" || query.trim() === "") {
+    return res.status(200).type("application/json").send({ score: 0, label: "neutral" });
+  }
+
+  const result = analyzeSentiment(query);
+  return res.status(200).type("application/json").send(result);
+});
+
 searchRouter.get("/search", async (req, res) => {
   const query = req.query["q"];
 

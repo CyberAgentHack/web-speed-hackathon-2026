@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { Router } from "express";
 import httpErrors from "http-errors";
+import { Op } from "sequelize";
 
 import { QaSuggestion } from "@web-speed-hackathon-2026/server/src/models";
 
@@ -12,8 +13,20 @@ export const crokRouter = Router();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-8");
 
-crokRouter.get("/crok/suggestions", async (_req, res) => {
-  const suggestions = await QaSuggestion.findAll({ logging: false });
+crokRouter.get("/crok/suggestions", async (req, res) => {
+  const query = req.query["q"];
+
+  const where =
+    typeof query === "string" && query.trim() !== ""
+      ? { question: { [Op.like]: `%${query.trim()}%` } }
+      : undefined;
+
+  const suggestions = await QaSuggestion.findAll({
+    logging: false,
+    where,
+    limit: 10,
+    order: [["question", "ASC"]],
+  });
   res.json({ suggestions: suggestions.map((s) => s.question) });
 });
 

@@ -1,10 +1,15 @@
-import { useRef } from "react";
+import { Suspense, lazy, useRef } from "react";
 
 import { ChatInput } from "@web-speed-hackathon-2026/client/src/components/crok/ChatInput";
-import { ChatMessage } from "@web-speed-hackathon-2026/client/src/components/crok/ChatMessage";
 import { WelcomeScreen } from "@web-speed-hackathon-2026/client/src/components/crok/WelcomeScreen";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { useHasContentBelow } from "@web-speed-hackathon-2026/client/src/hooks/use_has_content_below";
+
+const ChatMessage = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/components/crok/ChatMessage").then((module) => ({
+    default: module.ChatMessage,
+  })),
+);
 
 interface Props {
   messages: Models.ChatMessage[];
@@ -27,9 +32,11 @@ export const CrokPage = ({ messages, isStreaming, onSendMessage }: Props) => {
         <div className="mx-auto max-w-2xl px-4 py-8">
           {messages.length === 0 && <WelcomeScreen />}
 
-          {messages.map((message, index) => (
-            <ChatMessage key={index} message={message} />
-          ))}
+          <Suspense fallback={null}>
+            {messages.map((message, index) => (
+              <ChatMessage key={index} message={message} />
+            ))}
+          </Suspense>
           <div ref={messagesEndRef} />
         </div>
       </div>

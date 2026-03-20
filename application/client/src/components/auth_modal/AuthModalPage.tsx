@@ -1,31 +1,54 @@
-import { useSelector } from "react-redux";
-import { Field, formValueSelector, InjectedFormProps, reduxForm } from "redux-form";
+import { useState } from "react";
 
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/auth/validation";
-import { FormInputField } from "@web-speed-hackathon-2026/client/src/components/foundation/FormInputField";
+import { Input } from "@web-speed-hackathon-2026/client/src/components/foundation/Input";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/components/modal/ModalErrorMessage";
 import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/components/modal/ModalSubmitButton";
 
 interface Props {
   onRequestCloseModal: () => void;
+  onSubmit: (values: AuthFormData) => Promise<void>;
 }
 
-const AuthModalPageComponent = ({
-  onRequestCloseModal,
-  handleSubmit,
-  error,
-  invalid,
-  submitting,
-  initialValues,
-  change,
-}: Props & InjectedFormProps<AuthFormData, Props>) => {
-  const currentType: "signin" | "signup" = useSelector((state) =>
-    // @ts-ignore: formValueSelectorの型付けが弱いため、型に嘘をつく
-    formValueSelector("auth")(state, "type"),
-  );
-  const type = currentType ?? initialValues.type;
+export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
+  const [values, setValues] = useState<AuthFormData>({
+    type: "signin",
+    username: "",
+    name: "",
+    password: "",
+  });
+  const [errors, setErrors] = useState<Partial<Record<keyof AuthFormData, string>>>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const type = values.type;
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const nextErrors = validate(values);
+    setErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
+
+    setSubmitError(null);
+    setIsSubmitting(true);
+
+    try {
+      await onSubmit(values);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "認証に失敗しました";
+      setSubmitError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const invalid = Object.keys(errors).length > 0;
 
   return (
     <form className="grid gap-y-6" onSubmit={handleSubmit}>
@@ -36,7 +59,12 @@ const AuthModalPageComponent = ({
       <div className="flex justify-center">
         <button
           className="text-cax-brand underline"
-          onClick={() => change("type", type === "signin" ? "signup" : "signin")}
+          onClick={() =>
+            setValues((prev) => ({
+              ...prev,
+              type: prev.type === "signin" ? "signup" : "signin",
+            }))
+          }
           type="button"
         >
           {type === "signin" ? "初めての方はこちら" : "サインインはこちら"}
@@ -44,36 +72,52 @@ const AuthModalPageComponent = ({
       </div>
 
       <div className="grid gap-y-2">
-        <Field
-          name="username"
-          component={FormInputField}
-          props={{
-            label: "ユーザー名",
-            leftItem: <span className="text-cax-text-subtle leading-none">@</span>,
-            autoComplete: "username",
-          }}
-        />
-
-        {type === "signup" && (
-          <Field
-            name="name"
-            component={FormInputField}
-            props={{
-              label: "名前",
-              autoComplete: "nickname",
+        <div className="flex flex-col gap-y-1">
+          <label className="block text-sm">ユーザー名</label>
+          <Input
+            autoComplete="username"
+            leftItem={<span className="text-cax-text-subtle leading-none">@</span>}
+            value={values.username}
+            onChange={(event) => {
+              setValues((prev) => ({ ...prev, username: event.target.value }));
+              setErrors((prev) => ({ ...prev, username: undefined }));
             }}
           />
+          {errors.username != null && (
+            <span className="text-cax-danger text-xs">{errors.username}</span>
+          )}
+        </div>
+
+        {type === "signup" && (
+          <div className="flex flex-col gap-y-1">
+            <label className="block text-sm">名前</label>
+            <Input
+              autoComplete="nickname"
+              value={values.name}
+              onChange={(event) => {
+                setValues((prev) => ({ ...prev, name: event.target.value }));
+                setErrors((prev) => ({ ...prev, name: undefined }));
+              }}
+            />
+            {errors.name != null && <span className="text-cax-danger text-xs">{errors.name}</span>}
+          </div>
         )}
 
-        <Field
-          name="password"
-          component={FormInputField}
-          props={{
-            label: "パスワード",
-            type: "password",
-            autoComplete: type === "signup" ? "new-password" : "current-password",
-          }}
-        />
+        <div className="flex flex-col gap-y-1">
+          <label className="block text-sm">パスワード</label>
+          <Input
+            autoComplete={type === "signup" ? "new-password" : "current-password"}
+            type="password"
+            value={values.password}
+            onChange={(event) => {
+              setValues((prev) => ({ ...prev, password: event.target.value }));
+              setErrors((prev) => ({ ...prev, password: undefined }));
+            }}
+          />
+          {errors.password != null && (
+            <span className="text-cax-danger text-xs">{errors.password}</span>
+          )}
+        </div>
       </div>
 
       {type === "signup" ? (
@@ -85,19 +129,11 @@ const AuthModalPageComponent = ({
         </p>
       ) : null}
 
-      <ModalSubmitButton disabled={submitting || invalid} loading={submitting}>
+      <ModalSubmitButton disabled={isSubmitting || invalid} loading={isSubmitting}>
         {type === "signin" ? "サインイン" : "登録する"}
       </ModalSubmitButton>
 
-      <ModalErrorMessage>{error}</ModalErrorMessage>
+      <ModalErrorMessage>{submitError}</ModalErrorMessage>
     </form>
   );
 };
-
-export const AuthModalPage = reduxForm<AuthFormData, Props>({
-  form: "auth",
-  validate,
-  initialValues: {
-    type: "signin",
-  },
-})(AuthModalPageComponent);

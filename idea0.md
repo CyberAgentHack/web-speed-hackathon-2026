@@ -1,7 +1,7 @@
-Add appropriate Cache-Control headers to the Express server:
+main.js is now 3.2MB. Remaining targets:
+1. redux-form → check if it can be replaced with react-hook-form (much lighter) or uncontrolled forms
+2. @imagemagick/magick-wasm JS wrapper → lazy-load, only needed for image processing UI
+3. pako → check usage and lazy-load if possible
+4. transitive lodash → use lodash-es or babel-plugin-lodash to tree-shake transitive deps
 
-1. Static assets (js, css, images, fonts, videos): max-age=31536000, immutable
-2. HTML: no-cache (so new deploys are picked up)
-3. API responses: no-store or short max-age depending on the endpoint
-
-Current server is Express with tsx.
+Validate build and typecheck after each change.
