@@ -54,8 +54,8 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
       Promise.all(
         files.map((file) =>
-          convertImage(file, { extension: "Jpg" }).then(
-            (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
+          convertImage(file, { extension: "Webp" }).then(
+            (blob) => new File([blob], "converted.webp", { type: "image/webp" }),
           ),
         ),
       )
