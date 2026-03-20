@@ -4,13 +4,15 @@ import { SoundPlayer } from "@web-speed-hackathon-2026/client/src/components/fou
 
 interface Props {
   sound: Models.Sound;
+  priority?: boolean;
 }
 
-export const SoundArea = ({ sound }: Props) => {
+export const SoundArea = ({ sound, priority = false }: Props) => {
   const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(priority);
 
   useEffect(() => {
+    if (priority) return;
     const el = ref.current;
     if (!el) return;
     const observer = new IntersectionObserver(
@@ -24,7 +26,7 @@ export const SoundArea = ({ sound }: Props) => {
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [priority]);
 
   return (
     <div
