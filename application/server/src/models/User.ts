@@ -32,6 +32,12 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   validPassword(password: string): boolean {
     return bcrypt.compareSync(password, this.getDataValue("password"));
   }
+
+  override toJSON(): object {
+    const values = { ...this.get() } as Record<string, unknown>;
+    delete values["profileImageId"];
+    return values;
+  }
 }
 
 export function initUser(sequelize: Sequelize) {
@@ -51,6 +57,11 @@ export function initUser(sequelize: Sequelize) {
       name: {
         allowNull: false,
         type: DataTypes.STRING,
+      },
+      profileImageId: {
+        allowNull: false,
+        defaultValue: "396fe4ce-aa36-4d96-b54e-6db40bae2eed",
+        type: DataTypes.UUID,
       },
       password: {
         allowNull: false,
@@ -78,7 +89,6 @@ export function initUser(sequelize: Sequelize) {
     {
       sequelize,
       defaultScope: {
-        attributes: { exclude: ["profileImageId"] },
         include: { association: "profileImage" },
       },
     },

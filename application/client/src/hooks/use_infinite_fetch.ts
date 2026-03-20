@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 const LIMIT = 30;
 
@@ -9,21 +9,26 @@ interface ReturnValues<T> {
   fetchMore: () => void;
 }
 
+// limit, offset クエリを付与した URL を fetcher に渡す
 export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
 ): ReturnValues<T> {
-  const internalRef = useRef({ isLoading: false, offset: 0 });
+  const internalRef = useRef({
+    isLoading: false,
+    offset: 0,
+    canFetchMore: true,
+  });
 
-  const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
+  const [result, setResult] = useState<Omit<ReturnValues<T>, 'fetchMore'>>({
     data: [],
     error: null,
     isLoading: true,
   });
 
   const fetchMore = useCallback(() => {
-    const { isLoading, offset } = internalRef.current;
-    if (isLoading) {
+    const { isLoading, offset, canFetchMore } = internalRef.current;
+    if (isLoading || !canFetchMore) {
       return;
     }
 
@@ -33,19 +38,25 @@ export function useInfiniteFetch<T>(
     }));
     internalRef.current = {
       isLoading: true,
+      canFetchMore: true,
       offset,
     };
 
-    void fetcher(apiPath).then(
-      (allData) => {
+    const url = new URL(apiPath, window.location.origin);
+    url.searchParams.set('offset', String(offset));
+    url.searchParams.set('limit', String(LIMIT));
+
+    void fetcher(url.toString()).then(
+      (pageData) => {
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...pageData],
           isLoading: false,
         }));
         internalRef.current = {
           isLoading: false,
-          offset: offset + LIMIT,
+          offset: offset + pageData.length,
+          canFetchMore: pageData.length !== 0,
         };
       },
       (error) => {
@@ -57,6 +68,7 @@ export function useInfiniteFetch<T>(
         internalRef.current = {
           isLoading: false,
           offset,
+          canFetchMore: false,
         };
       },
     );
@@ -67,10 +79,12 @@ export function useInfiniteFetch<T>(
       data: [],
       error: null,
       isLoading: true,
+      canFetchMore: true,
     }));
     internalRef.current = {
       isLoading: false,
       offset: 0,
+      canFetchMore: true,
     };
 
     fetchMore();
