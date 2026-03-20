@@ -77,8 +77,49 @@ async function resizeImageHandler(req: Request, res: Response, next: NextFunctio
   return res.send(buf);
 }
 
+async function movieThumbnailHandler(req: Request, res: Response, next: NextFunction) {
+  if (req.query["thumb"] !== "1") {
+    return next();
+  }
+
+  const reqPath = req.path;
+  if (!reqPath.startsWith("/movies/") || !reqPath.endsWith(".gif")) {
+    return next();
+  }
+
+  const filePath = path.join(UPLOAD_PATH, reqPath);
+  try {
+    await fs.access(filePath);
+  } catch {
+    return next();
+  }
+
+  const cacheKey = `thumb:${filePath}`;
+  let buf = imageCache.get(cacheKey);
+
+  if (!buf) {
+    try {
+      buf = await sharp(filePath, { pages: 1 })
+        .resize({ width: 600, withoutEnlargement: true })
+        .jpeg({ quality: 80, progressive: true })
+        .toBuffer();
+      imageCache.set(cacheKey, buf);
+    } catch {
+      return next();
+    }
+  }
+
+  res.setHeader("Content-Type", "image/jpeg");
+  res.setHeader("Cache-Control", "public, max-age=86400");
+  res.setHeader("Content-Length", buf.length);
+  return res.send(buf);
+}
+
 // SPA 対応のため、ファイルが存在しないときに index.html を返す
 staticRouter.use(history());
+
+// Movie thumbnail middleware (extract first GIF frame as JPEG)
+staticRouter.use(movieThumbnailHandler);
 
 // Image resize middleware (before static file handlers)
 staticRouter.use(resizeImageHandler);
