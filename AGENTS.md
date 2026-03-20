@@ -155,6 +155,7 @@
 - `docs/development.md`
 - `docs/regulation.md`
 - `docs/scoring.md`
+- `docs/scoring-scenarios.md`（採点ツールの URL・操作シナリオ詳細）
 - `docs/test_cases.md`
 - `application/README.md`
 - `scoring-tool/README.md`

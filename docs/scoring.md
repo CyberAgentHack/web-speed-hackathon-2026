@@ -1,5 +1,7 @@
 ## 採点方法
 
+URL・操作手順・待機条件など、**計測シナリオの詳細**は [採点シナリオ詳細](./scoring-scenarios.md) を参照してください。
+
 1. [Lighthouse](https://github.com/GoogleChrome/lighthouse) を用いて、次の2つを検査します
    - ページの表示（900点満点）
    - ページの操作（250点満点）
