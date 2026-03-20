@@ -1,11 +1,9 @@
 import classNames from "classnames";
-import sizeOf from "image-size";
 import { load, ImageIFD } from "piexifjs";
-import { MouseEvent, RefCallback, useCallback, useId, useMemo, useState } from "react";
+import { MouseEvent, RefCallback, useCallback, useId, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
@@ -22,21 +20,8 @@ export const CoveredImage = ({ src }: Props) => {
     ev.stopPropagation();
   }, []);
 
-  const { data, isLoading } = useFetch(src, fetchBinary);
-
-  const imageSize = useMemo(() => {
-    return data != null ? sizeOf(Buffer.from(data)) : { height: 0, width: 0 };
-  }, [data]);
-
-  const alt = useMemo(() => {
-    const exif = data != null ? load(Buffer.from(data).toString("binary")) : null;
-    const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-    return raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
-  }, [data]);
-
-  const blobUrl = useMemo(() => {
-    return data != null ? URL.createObjectURL(new Blob([data])) : null;
-  }, [data]);
+  const [imageSize, setImageSize] = useState({ height: 0, width: 0 });
+  const [alt, setAlt] = useState("");
 
   const [containerSize, setContainerSize] = useState({ height: 0, width: 0 });
   const callbackRef = useCallback<RefCallback<HTMLDivElement>>((el) => {
@@ -46,12 +31,16 @@ export const CoveredImage = ({ src }: Props) => {
     });
   }, []);
 
-  if (isLoading || data === null || blobUrl === null) {
-    return null;
-  }
+  const handleShowAlt = useCallback(async () => {
+    const data = await fetchBinary(src);
+    const exif = load(Buffer.from(data).toString("binary"));
+    const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
+    const altText = raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
+    setAlt(altText);
+  }, [src]);
 
   const containerRatio = containerSize.height / containerSize.width;
-  const imageRatio = imageSize?.height / imageSize?.width;
+  const imageRatio = imageSize.height / imageSize.width;
 
   return (
     <div ref={callbackRef} className="relative h-full w-full overflow-hidden">
@@ -64,7 +53,11 @@ export const CoveredImage = ({ src }: Props) => {
             "w-full h-auto": containerRatio <= imageRatio,
           },
         )}
-        src={blobUrl}
+        src={src}
+        onLoad={(e) => {
+          const img = e.currentTarget;
+          setImageSize({ height: img.naturalHeight, width: img.naturalWidth });
+        }}
       />
 
       <button
@@ -72,6 +65,7 @@ export const CoveredImage = ({ src }: Props) => {
         type="button"
         command="show-modal"
         commandfor={dialogId}
+        onClick={handleShowAlt}
       >
         ALT を表示する
       </button>
