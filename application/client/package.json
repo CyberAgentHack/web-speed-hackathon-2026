@@ -16,7 +16,6 @@
     "@mlc-ai/web-llm": "0.2.80",
     "@web-speed-hackathon-2026/client": "workspace:*",
     "bayesian-bm25": "0.4.0",
-    "bluebird": "3.7.2",
     "buffer": "6.0.3",
     "classnames": "2.5.1",
     "common-tags": "1.8.2",
