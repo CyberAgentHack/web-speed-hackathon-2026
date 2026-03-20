@@ -25,13 +25,14 @@ export const CoveredImage = ({ src }: Props) => {
   const { data, isLoading } = useFetch(src, fetchBinary);
 
   const imageSize = useMemo(() => {
-    return data != null ? sizeOf(Buffer.from(data)) : { height: 0, width: 0 };
+    return data != null ? sizeOf(new Uint8Array(data)) : { height: 0, width: 0 };
   }, [data]);
 
   const alt = useMemo(() => {
-    const exif = data != null ? load(Buffer.from(data).toString("binary")) : null;
+    const binary = data != null ? Array.from(new Uint8Array(data)).map((b) => String.fromCharCode(b)).join("") : null;
+    const exif = binary != null ? load(binary) : null;
     const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-    return raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
+    return raw != null ? new TextDecoder().decode(Uint8Array.from(raw.split("").map((c: string) => c.charCodeAt(0)))) : "";
   }, [data]);
 
   const blobUrl = useMemo(() => {
