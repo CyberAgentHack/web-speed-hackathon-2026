@@ -244,7 +244,7 @@ test.describe("検索ページ", () => {
 
     const initialCount = await page.locator("main article").count();
     expect(initialCount).toBeGreaterThanOrEqual(1);
-    expect(initialCount).toBeLessThanOrEqual(30);
+    expect(initialCount).toBeLessThanOrEqual(10);
 
     // ページ下部までスクロールして追加読み込みをトリガー
     await expect(async () => {
