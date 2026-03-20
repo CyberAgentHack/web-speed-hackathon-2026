@@ -3,7 +3,10 @@ import { Helmet, HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
+import { RouteLoadingPage } from "@web-speed-hackathon-2026/client/src/components/application/RouteLoadingPage";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
+import { CrokContainer } from "@web-speed-hackathon-2026/client/src/containers/CrokContainer";
+import { SearchContainer } from "@web-speed-hackathon-2026/client/src/containers/SearchContainer";
 import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
 import { FetchError, fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
@@ -29,10 +32,6 @@ const PostContainer = lazy(async () => {
   const mod = await import("@web-speed-hackathon-2026/client/src/containers/PostContainer");
   return { default: mod.PostContainer };
 });
-const SearchContainer = lazy(async () => {
-  const mod = await import("@web-speed-hackathon-2026/client/src/containers/SearchContainer");
-  return { default: mod.SearchContainer };
-});
 const TermContainer = lazy(async () => {
   const mod = await import("@web-speed-hackathon-2026/client/src/containers/TermContainer");
   return { default: mod.TermContainer };
@@ -41,11 +40,6 @@ const UserProfileContainer = lazy(async () => {
   const mod = await import("@web-speed-hackathon-2026/client/src/containers/UserProfileContainer");
   return { default: mod.UserProfileContainer };
 });
-const CrokContainer = lazy(async () => {
-  const mod = await import("@web-speed-hackathon-2026/client/src/containers/CrokContainer");
-  return { default: mod.CrokContainer };
-});
-
 export const AppContainer = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -120,7 +114,7 @@ export const AppContainer = () => {
           <Route element={<TimelineContainer />} path="/" />
           <Route
             element={
-              <Suspense fallback={null}>
+              <Suspense fallback={<RouteLoadingPage />}>
                 <DirectMessageListContainer
                   activeUser={activeUser}
                   onOpenAuthModal={handleOpenAuthModal}
@@ -131,7 +125,7 @@ export const AppContainer = () => {
           />
           <Route
             element={
-              <Suspense fallback={null}>
+              <Suspense fallback={<RouteLoadingPage />}>
                 <DirectMessageContainer
                   activeUser={activeUser}
                   onOpenAuthModal={handleOpenAuthModal}
@@ -140,17 +134,10 @@ export const AppContainer = () => {
             }
             path="/dm/:conversationId"
           />
+          <Route element={<SearchContainer />} path="/search" />
           <Route
             element={
-              <Suspense fallback={null}>
-                <SearchContainer />
-              </Suspense>
-            }
-            path="/search"
-          />
-          <Route
-            element={
-              <Suspense fallback={null}>
+              <Suspense fallback={<RouteLoadingPage />}>
                 <UserProfileContainer />
               </Suspense>
             }
@@ -158,7 +145,7 @@ export const AppContainer = () => {
           />
           <Route
             element={
-              <Suspense fallback={null}>
+              <Suspense fallback={<RouteLoadingPage />}>
                 <PostContainer />
               </Suspense>
             }
@@ -166,18 +153,14 @@ export const AppContainer = () => {
           />
           <Route
             element={
-              <Suspense fallback={null}>
+              <Suspense fallback={<RouteLoadingPage />}>
                 <TermContainer />
               </Suspense>
             }
             path="/terms"
           />
           <Route
-            element={
-              <Suspense fallback={null}>
-                <CrokContainer activeUser={activeUser} onOpenAuthModal={handleOpenAuthModal} />
-              </Suspense>
-            }
+            element={<CrokContainer activeUser={activeUser} onOpenAuthModal={handleOpenAuthModal} />}
             path="/crok"
           />
           <Route element={<NotFoundContainer />} path="*" />
