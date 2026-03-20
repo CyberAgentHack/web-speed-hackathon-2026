@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router";
-import { SubmissionError } from "redux-form";
+import { SubmissionError, reset } from "redux-form";
 
 import { NewDirectMessageModalPage } from "@web-speed-hackathon-2026/client/src/components/direct_message/NewDirectMessageModalPage";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
@@ -13,6 +14,7 @@ interface Props {
 
 export const NewDirectMessageModalContainer = ({ id }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
+  const dispatch = useDispatch();
   const [resetKey, setResetKey] = useState(0);
   useEffect(() => {
     if (!ref.current) return;
@@ -20,12 +22,13 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
 
     const handleToggle = () => {
       setResetKey((key) => key + 1);
+      dispatch(reset("newDirectMessage") as any);
     };
     element.addEventListener("toggle", handleToggle);
     return () => {
       element.removeEventListener("toggle", handleToggle);
     };
-  }, [ref]);
+  }, [ref, dispatch]);
 
   const navigate = useNavigate();
 
