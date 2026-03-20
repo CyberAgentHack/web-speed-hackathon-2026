@@ -31,7 +31,6 @@ const config = {
   devtool: isDevelopment ? 'eval-cheap-module-source-map' : false,
   entry: {
     main: [
-      "regenerator-runtime/runtime",
       "jquery-binarytransport",
       path.resolve(SRC_PATH, "./tailwind.css"),
       path.resolve(SRC_PATH, "./index.css"),
