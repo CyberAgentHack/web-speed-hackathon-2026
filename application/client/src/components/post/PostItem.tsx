@@ -1,11 +1,11 @@
 const jaDateFormat = new Intl.DateTimeFormat("ja", { year: "numeric", month: "long", day: "numeric" });
 
-import { memo } from "react";
+import { lazy, memo, Suspense } from "react";
 
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
-import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
-import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
-import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
+const ImageArea = lazy(() => import("@web-speed-hackathon-2026/client/src/components/post/ImageArea").then(m => ({ default: m.ImageArea })));
+const MovieArea = lazy(() => import("@web-speed-hackathon-2026/client/src/components/post/MovieArea").then(m => ({ default: m.MovieArea })));
+const SoundArea = lazy(() => import("@web-speed-hackathon-2026/client/src/components/post/SoundArea").then(m => ({ default: m.SoundArea })));
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
@@ -55,21 +55,23 @@ export const PostItem = memo(({ post }: Props) => {
           <div className="text-cax-text text-xl leading-relaxed">
             <TranslatableText text={post.text} />
           </div>
-          {post.images?.length > 0 ? (
-            <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
-            </div>
-          ) : null}
-          {post.movie ? (
-            <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
-            </div>
-          ) : null}
-          {post.sound ? (
-            <div className="relative mt-2 w-full">
-              <SoundArea sound={post.sound} />
-            </div>
-          ) : null}
+          <Suspense fallback={null}>
+            {post.images?.length > 0 ? (
+              <div className="relative mt-2 w-full">
+                <ImageArea images={post.images} />
+              </div>
+            ) : null}
+            {post.movie ? (
+              <div className="relative mt-2 w-full">
+                <MovieArea movie={post.movie} />
+              </div>
+            ) : null}
+            {post.sound ? (
+              <div className="relative mt-2 w-full">
+                <SoundArea sound={post.sound} />
+              </div>
+            ) : null}
+          </Suspense>
           <p className="mt-2 text-sm sm:mt-4">
             <Link className="text-cax-text-muted hover:underline" to={`/posts/${post.id}`}>
               <time dateTime={new Date(post.createdAt).toISOString()}>
