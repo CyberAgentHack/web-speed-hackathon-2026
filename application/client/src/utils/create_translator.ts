@@ -9,54 +9,27 @@ interface Params {
 }
 
 export async function createTranslator(params: Params): Promise<Translator> {
-  const { default: langs } = await import("langs");
-
-  const sourceLang = langs.where("1", params.sourceLanguage);
-  if (!sourceLang) throw new Error(`Unsupported source language code: ${params.sourceLanguage}`);
-
-  const targetLang = langs.where("1", params.targetLanguage);
-  if (!targetLang) throw new Error(`Unsupported target language code: ${params.targetLanguage}`);
-
-  const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
-  const engine = await CreateMLCEngine("gemma-2-2b-jpn-it-q4f16_1-MLC");
-
   return {
     async translate(text: string): Promise<string> {
-      const [{ stripIndents }, JSONRepairJS] = await Promise.all([
-        import("common-tags"),
-        import("json-repair-js"),
-      ]);
-
-      const reply = await engine.chat.completions.create({
-        messages: [
-          {
-            role: "system",
-            content: stripIndents`
-              You are a professional translator. Translate the following text from ${sourceLang.name} to ${targetLang.name}.
-              Provide as JSON only in the format: { "result": "{{translated text}}" } without any additional explanations.
-            `,
-          },
-          {
-            role: "user",
-            content: text,
-          },
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0,
+      const res = await fetch("/api/v1/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text,
+          source: params.sourceLanguage,
+          target: params.targetLanguage,
+        }),
       });
 
-      const content = reply.choices[0]!.message.content;
-      if (!content) throw new Error("No content in the reply from the translation engine.");
-
-      const parsed = JSONRepairJS.loads(content);
-      if (parsed == null || !("result" in parsed)) {
-        throw new Error("The translation result is missing in the reply.");
+      if (!res.ok) {
+        throw new Error("Translation failed");
       }
 
-      return String((parsed as { result: unknown }).result);
+      const data = (await res.json()) as { result: string };
+      return data.result;
     },
-    [Symbol.dispose]: () => {
-      void engine.unload();
+    [Symbol.dispose]() {
+      // no-op
     },
   };
 }

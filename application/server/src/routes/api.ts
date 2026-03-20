@@ -11,6 +11,7 @@ import { movieRouter } from "@web-speed-hackathon-2026/server/src/routes/api/mov
 import { postRouter } from "@web-speed-hackathon-2026/server/src/routes/api/post";
 import { searchRouter } from "@web-speed-hackathon-2026/server/src/routes/api/search";
 import { soundRouter } from "@web-speed-hackathon-2026/server/src/routes/api/sound";
+import { translateRouter } from "@web-speed-hackathon-2026/server/src/routes/api/translate";
 import { userRouter } from "@web-speed-hackathon-2026/server/src/routes/api/user";
 import type { SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
 
@@ -24,7 +25,8 @@ export const apiRouter = new Hono<SessionEnv>()
   .route("", imageRouter)
   .route("", soundRouter)
   .route("", authRouter)
-  .route("", crokRouter);
+  .route("", crokRouter)
+  .route("", translateRouter);
 
 export type ApiType = typeof apiRouter;
 
