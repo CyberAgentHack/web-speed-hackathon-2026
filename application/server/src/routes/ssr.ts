@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { Readable, Transform } from "node:stream";
+import { Transform } from "node:stream";
 
 import { Hono } from "hono";
 
@@ -30,6 +30,54 @@ function csrFallbackHtml(): string {
   return templateHtml.replace("<!--ssr-outlet-->", "").replace("<!--ssr-head-->", "");
 }
 
+// 未ログインユーザー向け SSR キャッシュ（パス → HTML 文字列）
+const ssrCache = new Map<string, string>();
+
+export function clearSsrCache() {
+  ssrCache.clear();
+}
+
+async function renderToString(url: string, ssrData: any): Promise<string> {
+  const [beforeOutlet, afterOutlet] = templateHtml.split("<!--ssr-outlet-->");
+  const ssrDataScript = `<script>window.__SSR_DATA__=${JSON.stringify(ssrData).replace(/</g, "\\u003c")}</script>`;
+  const afterWithHead = afterOutlet!.replace("<!--ssr-head-->", ssrDataScript);
+
+  return new Promise<string>((resolve, reject) => {
+    let didError = false;
+    const chunks: Buffer[] = [];
+
+    const collectStream = new Transform({
+      transform(chunk, _encoding, callback) {
+        chunks.push(chunk);
+        callback();
+      },
+      flush(callback) {
+        chunks.push(Buffer.from(afterWithHead));
+        callback();
+      },
+    });
+
+    const { pipe } = ssrRender!(url, ssrData, {
+      onShellReady() {
+        if (didError) return;
+        collectStream.unshift(Buffer.from(beforeOutlet!));
+        pipe(collectStream);
+        collectStream.on("finish", () => {
+          resolve(Buffer.concat(chunks).toString("utf-8"));
+        });
+      },
+      onShellError(error: unknown) {
+        didError = true;
+        reject(error);
+      },
+      onError(error: unknown) {
+        didError = true;
+        console.error("SSR render error:", error);
+      },
+    });
+  });
+}
+
 export const ssrRouter = new Hono<SessionEnv>();
 
 ssrRouter.get("*", async (c) => {
@@ -45,6 +93,17 @@ ssrRouter.get("*", async (c) => {
   try {
     const session = c.get("session");
     const userId = session.get()?.userId;
+
+    // 未ログインなら SSR キャッシュを使う
+    if (!userId) {
+      const cached = ssrCache.get(c.req.path);
+      if (cached) {
+        c.header("Content-Type", "text/html; charset=utf-8");
+        c.header("Cache-Control", "no-cache");
+        return c.body(cached);
+      }
+    }
+
     const ssrData = await getServerData(c.req.path, userId);
 
     if (ssrData === null) {
@@ -52,47 +111,16 @@ ssrRouter.get("*", async (c) => {
       return c.html(csrFallbackHtml());
     }
 
-    const [beforeOutlet, afterOutlet] = templateHtml.split("<!--ssr-outlet-->");
-    const ssrDataScript = `<script>window.__SSR_DATA__=${JSON.stringify(ssrData).replace(/</g, "\\u003c")}</script>`;
-    const afterWithHead = afterOutlet!.replace("<!--ssr-head-->", ssrDataScript);
+    const html = await renderToString(c.req.path, ssrData);
 
-    // React の renderToPipeableStream → Node.js Transform → Web ReadableStream
-    const nodeStream = await new Promise<Readable>((resolve) => {
-      let didError = false;
-
-      const appendStream = new Transform({
-        transform(chunk, _encoding, callback) {
-          callback(null, chunk);
-        },
-        flush(callback) {
-          this.push(afterWithHead);
-          callback();
-        },
-      });
-
-      const { pipe } = ssrRender!(c.req.path, ssrData, {
-        onShellReady() {
-          if (didError) return;
-          appendStream.unshift(Buffer.from(beforeOutlet!));
-          pipe(appendStream);
-          resolve(appendStream);
-        },
-        onShellError() {
-          didError = true;
-          resolve(Readable.from(csrFallbackHtml()));
-        },
-        onError(error: unknown) {
-          didError = true;
-          console.error("SSR render error:", error);
-        },
-      });
-    });
-
-    const webStream = Readable.toWeb(nodeStream) as ReadableStream;
+    // 未ログインならキャッシュに保存
+    if (!userId) {
+      ssrCache.set(c.req.path, html);
+    }
 
     c.header("Content-Type", "text/html; charset=utf-8");
     c.header("Cache-Control", "no-cache");
-    return c.body(webStream);
+    return c.body(html);
   } catch (error) {
     console.error("SSR handler error:", error);
     c.header("Cache-Control", "no-cache");

@@ -1,10 +1,10 @@
 import { promises as fs } from "fs";
 import path from "path";
 
-import { fileTypeFromBuffer } from "file-type";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { HTTPException } from "hono/http-exception";
+import sharp from "sharp";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
@@ -26,16 +26,19 @@ export const imageRouter = new Hono<SessionEnv>().post(
       throw new HTTPException(400);
     }
 
-    const type = await fileTypeFromBuffer(buffer);
-    if (type === undefined || type.ext !== EXTENSION) {
-      throw new HTTPException(400, { message: "Invalid file type" });
-    }
-
     const imageId = uuidv4();
+
+    // Convert any image format to JPEG using sharp, preserving EXIF metadata
+    let jpegBuffer: Buffer;
+    try {
+      jpegBuffer = await sharp(buffer).keepExif().jpeg().toBuffer();
+    } catch {
+      throw new HTTPException(400, { message: "Invalid image file" });
+    }
 
     const filePath = path.resolve(UPLOAD_PATH, `./images/${imageId}.${EXTENSION}`);
     await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
-    await fs.writeFile(filePath, buffer);
+    await fs.writeFile(filePath, jpegBuffer);
 
     return c.json({ id: imageId });
   },

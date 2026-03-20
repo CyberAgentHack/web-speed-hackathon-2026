@@ -1,6 +1,7 @@
-import React, { Suspense, useCallback, useEffect, useId, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useId } from "react";
 import { Helmet, HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
+import useSWR, { useSWRConfig } from "swr";
 
 import { apiClient } from "@web-speed-hackathon-2026/client/src/api/client";
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
@@ -70,45 +71,39 @@ export interface SSRData {
   userPosts?: Models.Post[] | undefined;
 }
 
-interface AppContainerProps {
-  ssrData?: SSRData | undefined;
-}
+const activeUserFetcher = async (_key: string): Promise<Models.User | null> => {
+  const res = await fetch("/api/v1/me");
+  if (!res.ok) return null;
+  return res.json() as Promise<Models.User>;
+};
 
-export const AppContainer = ({ ssrData }: AppContainerProps) => {
+export const AppContainer = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const { mutate } = useSWRConfig();
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
-  const hasSSRActiveUser = ssrData != null && "activeUser" in ssrData;
-  const [activeUser, setActiveUser] = useState<Models.User | null>(
-    hasSSRActiveUser ? (ssrData.activeUser ?? null) : null,
+  const { data: activeUser, isLoading: isLoadingActiveUser } = useSWR<
+    Models.User | null,
+    Error,
+    string
+  >("/api/v1/me", activeUserFetcher);
+
+  const setActiveUser = useCallback(
+    (user: Models.User | null) => {
+      void mutate("/api/v1/me", user, false);
+    },
+    [mutate],
   );
-  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(!hasSSRActiveUser);
-  useEffect(() => {
-    if (hasSSRActiveUser) return;
-    void apiClient.me
-      .$get()
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then((user) => {
-        setActiveUser(user);
-      })
-      .catch(() => {
-        // 401 or network error — user is not authenticated
-      })
-      .finally(() => {
-        setIsLoadingActiveUser(false);
-      });
-  }, [hasSSRActiveUser]);
+
   const handleLogout = useCallback(async () => {
     await apiClient.signout.$post();
-    setActiveUser(null);
+    void mutate("/api/v1/me", null, false);
     void navigate("/");
-  }, [navigate]);
+  }, [mutate, navigate]);
 
   const authModalId = useId();
   const newPostModalId = useId();
@@ -123,41 +118,40 @@ export const AppContainer = ({ ssrData }: AppContainerProps) => {
     );
   }
 
+  const resolvedActiveUser = activeUser ?? null;
+
   return (
     <HelmetProvider>
       <AppPage
-        activeUser={activeUser}
+        activeUser={resolvedActiveUser}
         authModalId={authModalId}
         newPostModalId={newPostModalId}
         onLogout={handleLogout}
       >
         <Suspense fallback={null}>
           <Routes>
-            <Route element={<TimelineContainer ssrPosts={ssrData?.posts} />} path="/" />
+            <Route element={<TimelineContainer />} path="/" />
             <Route
               element={
-                <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
+                <DirectMessageListContainer
+                  activeUser={resolvedActiveUser}
+                  authModalId={authModalId}
+                />
               }
               path="/dm"
             />
             <Route
-              element={<DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />}
+              element={
+                <DirectMessageContainer activeUser={resolvedActiveUser} authModalId={authModalId} />
+              }
               path="/dm/:conversationId"
             />
-            <Route element={<SearchContainer ssrPosts={ssrData?.posts} />} path="/search" />
-            <Route
-              element={
-                <UserProfileContainer ssrUser={ssrData?.user} ssrPosts={ssrData?.userPosts} />
-              }
-              path="/users/:username"
-            />
-            <Route
-              element={<PostContainer ssrPost={ssrData?.post} ssrComments={ssrData?.comments} />}
-              path="/posts/:postId"
-            />
+            <Route element={<SearchContainer />} path="/search" />
+            <Route element={<UserProfileContainer />} path="/users/:username" />
+            <Route element={<PostContainer />} path="/posts/:postId" />
             <Route element={<TermContainer />} path="/terms" />
             <Route
-              element={<CrokContainer activeUser={activeUser} authModalId={authModalId} />}
+              element={<CrokContainer activeUser={resolvedActiveUser} authModalId={authModalId} />}
               path="/crok"
             />
             <Route element={<NotFoundContainer />} path="*" />

@@ -1,27 +1,27 @@
 import { Helmet } from "react-helmet";
+import useSWRInfinite from "swr/infinite";
 
-import { apiClient } from "@web-speed-hackathon-2026/client/src/api/client";
+import { createInfiniteKey } from "@web-speed-hackathon-2026/client/src/api/swr";
 import { SearchPage } from "@web-speed-hackathon-2026/client/src/components/application/SearchPage";
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
-import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
 import { useSearchParams } from "@web-speed-hackathon-2026/client/src/hooks/use_search_params";
 
-interface SearchContainerProps {
-  ssrPosts?: Models.Post[] | undefined;
-}
-
-export const SearchContainer = ({ ssrPosts }: SearchContainerProps) => {
+export const SearchContainer = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
 
-  const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>(
-    query ? `/api/v1/search?q=${encodeURIComponent(query)}` : "",
-    () => apiClient.search.$get({ query: { q: query } }).then((res) => res.json()),
-    ssrPosts,
-  );
+  const getKey = query
+    ? createInfiniteKey(`/api/v1/search?q=${encodeURIComponent(query)}`)
+    : () => null;
+
+  const { data, setSize } = useSWRInfinite<Models.Post[]>(getKey, {
+    revalidateFirstPage: false,
+  });
+
+  const posts = data ? data.flat() : [];
 
   return (
-    <InfiniteScroll fetchMore={fetchMore} items={posts}>
+    <InfiniteScroll fetchMore={() => setSize((s) => s + 1)} items={posts}>
       <Helmet>
         <title>検索 - CaX</title>
       </Helmet>

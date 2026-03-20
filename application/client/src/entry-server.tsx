@@ -22,7 +22,7 @@ export function render(url: string, ssrData: SSRData, opts?: RenderToPipeableStr
     <Provider store={store}>
       <SWRConfig value={{ ...swrConfig, fallback }}>
         <StaticRouter location={url}>
-          <AppContainer ssrData={ssrData} />
+          <AppContainer />
         </StaticRouter>
       </SWRConfig>
     </Provider>,

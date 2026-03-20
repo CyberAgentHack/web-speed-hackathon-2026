@@ -1,23 +1,21 @@
 import { Helmet } from "react-helmet";
+import useSWRInfinite from "swr/infinite";
 
-import { apiClient } from "@web-speed-hackathon-2026/client/src/api/client";
+import { createInfiniteKey } from "@web-speed-hackathon-2026/client/src/api/swr";
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
 import { TimelinePage } from "@web-speed-hackathon-2026/client/src/components/timeline/TimelinePage";
-import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
 
-interface TimelineContainerProps {
-  ssrPosts?: Models.Post[] | undefined;
-}
+const getKey = createInfiniteKey("/api/v1/posts");
 
-export const TimelineContainer = ({ ssrPosts }: TimelineContainerProps) => {
-  const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>(
-    "/api/v1/posts",
-    () => apiClient.posts.$get().then((res) => res.json()),
-    ssrPosts,
-  );
+export const TimelineContainer = () => {
+  const { data, setSize } = useSWRInfinite<Models.Post[]>(getKey, {
+    revalidateFirstPage: false,
+  });
+
+  const posts = data ? data.flat() : [];
 
   return (
-    <InfiniteScroll fetchMore={fetchMore} items={posts}>
+    <InfiniteScroll fetchMore={() => setSize((s) => s + 1)} items={posts}>
       <Helmet>
         <title>タイムライン - CaX</title>
       </Helmet>

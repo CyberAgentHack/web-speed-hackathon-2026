@@ -1,34 +1,25 @@
 import { Helmet } from "react-helmet";
 import { useParams } from "react-router";
+import useSWR from "swr";
+import useSWRInfinite from "swr/infinite";
 
-import { apiClient } from "@web-speed-hackathon-2026/client/src/api/client";
+import { createInfiniteKey, swrFetcher } from "@web-speed-hackathon-2026/client/src/api/swr";
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
 import { PostPage } from "@web-speed-hackathon-2026/client/src/components/post/PostPage";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
-import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
 
-interface PostContainerContentProps {
-  postId: string | undefined;
-  ssrPost?: Models.Post | null | undefined;
-  ssrComments?: Models.Comment[] | undefined;
-}
-
-const PostContainerContent = ({ postId, ssrPost, ssrComments }: PostContainerContentProps) => {
-  const { data: post, isLoading: isLoadingPost } = useFetch<Models.Post>(
+const PostContainerContent = ({ postId }: { postId: string }) => {
+  const { data: post, isLoading: isLoadingPost } = useSWR<Models.Post | null, Error, string>(
     `/api/v1/posts/${postId}`,
-    () => apiClient.posts[":postId"].$get({ param: { postId: postId! } }).then((res) => res.json()),
-    ssrPost,
+    swrFetcher,
   );
 
-  const { data: comments, fetchMore } = useInfiniteFetch<Models.Comment>(
-    `/api/v1/posts/${postId}/comments`,
-    () =>
-      apiClient.posts[":postId"].comments
-        .$get({ param: { postId: postId! } })
-        .then((res) => res.json()),
-    ssrComments,
-  );
+  const getKey = createInfiniteKey(`/api/v1/posts/${postId}/comments`);
+  const { data, setSize } = useSWRInfinite<Models.Comment[]>(getKey, {
+    revalidateFirstPage: false,
+  });
+
+  const comments = data ? data.flat() : [];
 
   if (isLoadingPost) {
     return (
@@ -43,28 +34,17 @@ const PostContainerContent = ({ postId, ssrPost, ssrComments }: PostContainerCon
   }
 
   return (
-    <InfiniteScroll fetchMore={fetchMore} items={comments}>
+    <InfiniteScroll fetchMore={() => setSize((s) => s + 1)} items={comments}>
       <Helmet>
-        <title>{post.user.name} さんのつぶやき - CaX</title>
+        <title>{post!.user.name} さんのつぶやき - CaX</title>
       </Helmet>
-      <PostPage comments={comments} post={post} />
+      <PostPage comments={comments} post={post!} />
     </InfiniteScroll>
   );
 };
 
-interface PostContainerProps {
-  ssrPost?: Models.Post | null | undefined;
-  ssrComments?: Models.Comment[] | undefined;
-}
-
-export const PostContainer = ({ ssrPost, ssrComments }: PostContainerProps) => {
+export const PostContainer = () => {
   const { postId } = useParams();
-  return (
-    <PostContainerContent
-      key={postId}
-      postId={postId}
-      ssrPost={ssrPost}
-      ssrComments={ssrComments}
-    />
-  );
+  if (!postId) return null;
+  return <PostContainerContent key={postId} postId={postId} />;
 };

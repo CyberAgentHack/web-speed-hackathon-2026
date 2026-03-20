@@ -7,18 +7,21 @@ import { SWRConfig } from "swr";
 
 import { buildSWRFallback } from "@web-speed-hackathon-2026/client/src/api/ssr-fallback";
 import { swrConfig } from "@web-speed-hackathon-2026/client/src/api/swr";
-import { AppContainer } from "@web-speed-hackathon-2026/client/src/containers/AppContainer";
+import {
+  AppContainer,
+  type SSRData,
+} from "@web-speed-hackathon-2026/client/src/containers/AppContainer";
 import { store } from "@web-speed-hackathon-2026/client/src/store";
 
 const appEl = document.getElementById("app")!;
-const ssrData = (window as any).__SSR_DATA__ as Record<string, unknown> | undefined;
-const fallback = buildSWRFallback(window.location.pathname, ssrData as any);
+const ssrData = (window as any).__SSR_DATA__ as SSRData | undefined;
+const fallback = buildSWRFallback(window.location.pathname, ssrData);
 
 const app = (
   <Provider store={store}>
     <SWRConfig value={{ ...swrConfig, fallback }}>
       <BrowserRouter>
-        <AppContainer ssrData={ssrData} />
+        <AppContainer />
       </BrowserRouter>
     </SWRConfig>
   </Provider>

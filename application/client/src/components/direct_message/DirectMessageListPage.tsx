@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import useSWR from "swr";
 
-import { apiClient } from "@web-speed-hackathon-2026/client/src/api/client";
+import { swrFetcher } from "@web-speed-hackathon-2026/client/src/api/swr";
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
@@ -14,33 +14,14 @@ interface Props {
 }
 
 export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
-  const [conversations, setConversations] =
-    useState<Array<Models.DirectMessageConversation> | null>(null);
-  const [error, setError] = useState<Error | null>(null);
-
-  const loadConversations = useCallback(async () => {
-    if (activeUser == null) {
-      return;
-    }
-
-    try {
-      const res = await apiClient.dm.$get();
-      const conversations =
-        (await res.json()) as unknown as Array<Models.DirectMessageConversation>;
-      setConversations(conversations);
-      setError(null);
-    } catch (error) {
-      setConversations(null);
-      setError(error as Error);
-    }
-  }, [activeUser]);
-
-  useEffect(() => {
-    void loadConversations();
-  }, [loadConversations]);
+  const {
+    data: conversations,
+    error,
+    mutate,
+  } = useSWR<Array<Models.DirectMessageConversation>, Error, string>("/api/v1/dm", swrFetcher);
 
   useWs("/api/v1/dm/unread", () => {
-    void loadConversations();
+    void mutate();
   });
 
   if (conversations == null) {
