@@ -1,26 +1,21 @@
-/// <reference types="webpack-dev-server" />
 const path = require("path");
-
-const CopyWebpackPlugin = require("copy-webpack-plugin");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const webpack = require("webpack");
+const rspack = require("@rspack/core");
 
 const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
 
-/** @type {import('webpack').Configuration} */
+/** @type {import('@rspack/core').Configuration} */
 const config = {
   devServer: {
     historyApiFallback: true,
     host: "0.0.0.0",
-    port: 8080,
+    port: 3000,
     proxy: [
       {
         context: ["/api"],
-        target: "http://localhost:3000",
+        target: "http://localhost:8080",
       },
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
@@ -33,18 +28,28 @@ const config = {
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "production",
   module: {
     rules: [
       {
         exclude: /node_modules/,
         test: /\.(jsx?|tsx?|mjs|cjs)$/,
-        use: [{ loader: "babel-loader" }],
+        use: [
+          {
+            loader: "builtin:swc-loader",
+            options: {
+              jsc: {
+                parser: { syntax: "typescript", tsx: true },
+                transform: { react: { runtime: "automatic" } },
+              },
+              env: { targets: "> 0.5%, not dead" },
+            },
+          },
+        ],
       },
       {
         test: /\.css$/i,
         use: [
-          { loader: MiniCssExtractPlugin.loader },
+          { loader: rspack.CssExtractRspackPlugin.loader },
           { loader: "css-loader", options: { url: false } },
           { loader: "postcss-loader" },
         ],
@@ -63,20 +68,19 @@ const config = {
     clean: true,
   },
   plugins: [
-    new webpack.ProvidePlugin({
+    new rspack.ProvidePlugin({
       AudioContext: ["standardized-audio-context", "AudioContext"],
       Buffer: ["buffer", "Buffer"],
     }),
-    new webpack.EnvironmentPlugin({
+    new rspack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
-      // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
       NODE_ENV: "production",
     }),
-    new MiniCssExtractPlugin({
+    new rspack.CssExtractRspackPlugin({
       filename: "styles/[name].css",
     }),
-    new CopyWebpackPlugin({
+    new rspack.CopyRspackPlugin({
       patterns: [
         {
           from: path.resolve(__dirname, "node_modules/katex/dist/fonts"),
@@ -84,9 +88,10 @@ const config = {
         },
       ],
     }),
-    new HtmlWebpackPlugin({
-      inject: false,
+    new rspack.HtmlRspackPlugin({
+      inject: true,
       template: path.resolve(SRC_PATH, "./index.html"),
+      scriptLoading: "defer",
     }),
   ],
   resolve: {
@@ -123,11 +128,8 @@ const config = {
   },
   optimization: {
     minimize: true,
-    // "async" にすることで dynamic import のみチャンク分割する。
-    // "all" だと initial chunk も分割されるが、HtmlWebpackPlugin が inject: false のため
-    // 分割された initial chunk の <script> タグが HTML に挿入されず、ページが表示されなくなる。
     splitChunks: {
-      chunks: "async",
+      chunks: "all",
     },
   },
   ignoreWarnings: [
