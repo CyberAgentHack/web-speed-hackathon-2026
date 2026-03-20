@@ -1,6 +1,6 @@
 import { Router } from "express";
 import httpErrors from "http-errors";
-import { col, where, Op } from "sequelize";
+import { col, where, Op, QueryTypes } from "sequelize";
 
 import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
 import {
@@ -16,22 +16,69 @@ directMessageRouter.get("/dm", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversations = await DirectMessageConversation.findAll({
+  const conversations = await DirectMessageConversation.unscoped().findAll({
+    include: [
+      { association: "initiator", include: [{ association: "profileImage" }] },
+      { association: "member", include: [{ association: "profileImage" }] },
+    ],
     where: {
-      [Op.and]: [
-        { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
-        where(col("messages.id"), { [Op.not]: null }),
-      ],
+      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
-    order: [[col("messages.createdAt"), "DESC"]],
   });
 
-  const sorted = conversations.map((c) => ({
-    ...c.toJSON(),
-    messages: c.messages?.reverse(),
-  }));
+  if (conversations.length === 0) {
+    return res.status(200).type("application/json").send([]);
+  }
 
-  return res.status(200).type("application/json").send(sorted);
+  const conversationIds = conversations.map((c) => c.id);
+  const sequelize = DirectMessage.sequelize!;
+  const placeholders = conversationIds.map(() => "?").join(",");
+  const latestMessages = await sequelize.query(
+    `SELECT dm.*
+     FROM DirectMessages dm
+     INNER JOIN (
+       SELECT conversationId, MAX(createdAt) as maxCreatedAt
+       FROM DirectMessages
+       WHERE conversationId IN (${placeholders})
+       GROUP BY conversationId
+     ) latest ON dm.conversationId = latest.conversationId AND dm.createdAt = latest.maxCreatedAt`,
+    {
+      replacements: conversationIds,
+      type: QueryTypes.SELECT,
+    },
+  ) as Array<Record<string, unknown>>;
+
+  const senderIds = [...new Set(latestMessages.map((m) => m["senderId"] as string))];
+  const senders = senderIds.length > 0
+    ? await User.unscoped().findAll({
+        where: { id: senderIds },
+        include: [{ association: "profileImage" }],
+      })
+    : [];
+  const senderMap = new Map(senders.map((s) => [s.id, s]));
+
+  const messageByConversation = new Map<string, Record<string, unknown>>();
+  for (const msg of latestMessages) {
+    const sender = senderMap.get(msg["senderId"] as string);
+    messageByConversation.set(msg["conversationId"] as string, {
+      ...msg,
+      sender: sender?.toJSON() ?? null,
+    });
+  }
+
+  const result = conversations
+    .filter((c) => messageByConversation.has(c.id))
+    .map((c) => ({
+      ...c.toJSON(),
+      messages: [messageByConversation.get(c.id)],
+    }))
+    .sort((a, b) => {
+      const aDate = new Date(a.messages[0]?.["createdAt"] as string).getTime();
+      const bDate = new Date(b.messages[0]?.["createdAt"] as string).getTime();
+      return bDate - aDate;
+    });
+
+  return res.status(200).type("application/json").send(result);
 });
 
 directMessageRouter.post("/dm", async (req, res) => {

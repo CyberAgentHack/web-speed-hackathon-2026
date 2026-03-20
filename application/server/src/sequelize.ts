@@ -26,4 +26,10 @@ export async function initializeSequelize() {
     storage: TEMP_PATH,
   });
   initModels(_sequelize);
+
+  // インデックスを作成（既存DBに適用するため raw SQL で実行）
+  await _sequelize.query("CREATE INDEX IF NOT EXISTS idx_dm_conv_created ON DirectMessages (conversationId, createdAt)");
+  await _sequelize.query("CREATE INDEX IF NOT EXISTS idx_dm_sender_read ON DirectMessages (senderId, isRead)");
+  await _sequelize.query("CREATE INDEX IF NOT EXISTS idx_conv_initiator ON DirectMessageConversations (initiatorId)");
+  await _sequelize.query("CREATE INDEX IF NOT EXISTS idx_conv_member ON DirectMessageConversations (memberId)");
 }
