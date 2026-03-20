@@ -127,6 +127,13 @@ const config = {
           priority: 25,
           enforce: true,
         },
+        crok: {
+          test: /[\\/]node_modules[\\/](katex|rehype-katex|remark-math|remark-gfm|react-markdown|react-syntax-highlighter|refractor|highlight\.js|bluebird|unified|vfile|mdast-util-[^/]+|hast-util-[^/]+|micromark[^/]*|zwitch|comma-separated-tokens|space-separated-tokens|hastscript|html-url-attributes|property-information|devlop|bail|is-plain-obj|trough|extend)[\\/]/,
+          name: 'vendor-crok',
+          chunks: 'async',
+          priority: 22,
+          enforce: true,
+        },
         heavy: {
           test: /[\\/]node_modules[\\/](kuromoji|bayesian-bm25)[\\/]/,
           name: 'vendor-heavy',
