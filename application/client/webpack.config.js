@@ -99,6 +99,7 @@ module.exports = (_env, argv = {}) => {
     resolve: {
       extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
       alias: {
+        "@web-speed-hackathon-2026/client": __dirname,
         "bayesian-bm25$": path.resolve(__dirname, "node_modules", "bayesian-bm25/dist/index.js"),
         ["kuromoji$"]: path.resolve(__dirname, "node_modules", "kuromoji/build/kuromoji.js"),
         "@ffmpeg/ffmpeg$": path.resolve(
