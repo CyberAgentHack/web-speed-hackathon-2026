@@ -218,5 +218,8 @@ $RECYCLE.BIN/
 
 # Upload files (directories kept via .gitkeep)
 application/upload/**
+
+# Local SQLite database is regenerated from seeds
+application/server/database.sqlite
 !application/upload/**/
 !application/upload/**/.gitkeep

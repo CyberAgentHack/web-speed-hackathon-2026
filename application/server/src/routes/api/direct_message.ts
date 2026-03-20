@@ -1,6 +1,6 @@
 import { Router } from "express";
 import httpErrors from "http-errors";
-import { col, where, Op } from "sequelize";
+import { col, fn, Op } from "sequelize";
 
 import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
 import {
@@ -11,25 +11,62 @@ import {
 
 export const directMessageRouter = Router();
 
+interface UnreadRow {
+  conversationId: string;
+  unreadCount: number | string;
+}
+
 directMessageRouter.get("/dm", async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversations = await DirectMessageConversation.findAll({
+  const conversations = await DirectMessageConversation.unscoped().findAll({
     where: {
-      [Op.and]: [
-        { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
-        where(col("messages.id"), { [Op.not]: null }),
-      ],
+      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
-    order: [[col("messages.createdAt"), "DESC"]],
+    include: [
+      { association: "initiator", include: [{ association: "profileImage" }] },
+      { association: "member", include: [{ association: "profileImage" }] },
+      {
+        association: "messages",
+        include: [{ association: "sender", include: [{ association: "profileImage" }] }],
+        limit: 1,
+        order: [["createdAt", "DESC"]],
+        required: false,
+        separate: true,
+      },
+    ],
   });
+  const conversationIds = conversations.map((conversation) => conversation.id);
+  const unreadRows: UnreadRow[] =
+    conversationIds.length > 0
+      ? ((await DirectMessage.unscoped().findAll({
+          attributes: ["conversationId", [fn("COUNT", col("id")), "unreadCount"]],
+          group: ["conversationId"],
+          raw: true,
+          where: {
+            conversationId: conversationIds,
+            isRead: false,
+            senderId: { [Op.ne]: req.session.userId },
+          },
+        })) as unknown as UnreadRow[])
+      : [];
+  const unreadByConversationId = new Map(
+    unreadRows.map((row) => [String(row.conversationId), Number(row.unreadCount) > 0]),
+  );
 
-  const sorted = conversations.map((c) => ({
-    ...c.toJSON(),
-    messages: c.messages?.reverse(),
-  }));
+  const sorted = conversations
+    .filter((conversation) => (conversation.messages?.length ?? 0) > 0)
+    .sort((a, b) => {
+      const aCreatedAt = a.messages?.[0]?.createdAt?.toString() ?? "";
+      const bCreatedAt = b.messages?.[0]?.createdAt?.toString() ?? "";
+      return bCreatedAt.localeCompare(aCreatedAt);
+    })
+    .map((conversation) => ({
+      ...conversation.toJSON(),
+      hasUnread: unreadByConversationId.get(conversation.id) ?? false,
+    }));
 
   return res.status(200).type("application/json").send(sorted);
 });

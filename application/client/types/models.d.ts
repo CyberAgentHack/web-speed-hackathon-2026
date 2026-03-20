@@ -58,6 +58,7 @@ declare namespace Models {
   }
 
   interface DirectMessageConversation {
+    hasUnread?: boolean;
     id: string;
     initiator: Models.User;
     member: Models.User;
