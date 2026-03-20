@@ -62,7 +62,7 @@ importers:
         version: 9.5.0
       gifler:
         specifier: github:themadcreator/gifler#v0.3.0
-        version: https://codeload.github.com/themadcreator/gifler/tar.gz/c3259b071c7782f85d4928a5f03d0b378ed003b5
+        version: https://codeload.github.com/themadcreator/gifler/tar.gz/89484cb3db174c584a3138e89664f0167a7760c1
       image-size:
         specifier: 2.0.2
         version: 2.0.2
@@ -99,9 +99,6 @@ importers:
       omggif:
         specifier: 1.0.10
         version: 1.0.10
-      pako:
-        specifier: 2.1.0
-        version: 2.1.0
       piexifjs:
         specifier: 1.0.6
         version: 1.0.6
@@ -190,9 +187,6 @@ importers:
       '@types/omggif':
         specifier: 1.0.5
         version: 1.0.5
-      '@types/pako':
-        specifier: 2.0.4
-        version: 2.0.4
       '@types/piexifjs':
         specifier: 1.0.0
         version: 1.0.0
@@ -1727,9 +1721,6 @@ packages:
   '@types/omggif@1.0.5':
     resolution: {integrity: sha512-gDQJflz1rOgEcUXkMAl80bDGN46f5mp8GbcM5dyvq+zsFV6YRBRtmNxlJJ5mjY77T7BRkRFzdIBVmK90QYhCxA==}
 
-  '@types/pako@2.0.4':
-    resolution: {integrity: sha512-VWDCbrLeVXJM9fihYodcLiIv0ku+AlOa/TQ1SvYOaBuyrSKgEcro95LJyIsJ4vSo6BXIxOKxiJAat04CmST9Fw==}
-
   '@types/piexifjs@1.0.0':
     resolution: {integrity: sha512-PPiGeCkmkZQgYjvqtjD3kp4OkbCox2vEFVuK4DaLVOIazJLAXk+/ujbizkIPH5CN4AnN9Clo5ckzUlaj3+SzCA==}
 
@@ -2667,8 +2658,8 @@ packages:
   get-tsconfig@4.13.0:
     resolution: {integrity: sha512-1VKTZJCwBrvbd+Wn3AOgQP/2Av+TfTCOlE4AcRJE72W1ksZXbAx8PPBR9RzgTeSPzlPMHrbANMH3LbltH73wxQ==}
 
-  gifler@https://codeload.github.com/themadcreator/gifler/tar.gz/c3259b071c7782f85d4928a5f03d0b378ed003b5:
-    resolution: {tarball: https://codeload.github.com/themadcreator/gifler/tar.gz/c3259b071c7782f85d4928a5f03d0b378ed003b5}
+  gifler@https://codeload.github.com/themadcreator/gifler/tar.gz/89484cb3db174c584a3138e89664f0167a7760c1:
+    resolution: {tarball: https://codeload.github.com/themadcreator/gifler/tar.gz/89484cb3db174c584a3138e89664f0167a7760c1}
     version: 0.3.0
 
   github-from-package@0.0.0:
@@ -3557,9 +3548,6 @@ packages:
   p-try@2.2.0:
     resolution: {integrity: sha512-R4nPAVTAU0B9D35/Gk3uJf/7XYbQcyohSKdvAxIRSNghFl4e71hVoGnBNQz9cWaXxO2I10KTC+3jMdvvoKw6dQ==}
     engines: {node: '>=6'}
-
-  pako@2.1.0:
-    resolution: {integrity: sha512-w+eufiZ1WuJYgPXbV/PO3NCMEc3xqylkKHzp8bxp1uW4qaSNQUkwmLLEc3kKsfz8lpV1F8Ht3U1Cm+9Srog2ug==}
 
   param-case@3.0.4:
     resolution: {integrity: sha512-RXlj7zCYokReqWpOPH9oYivUzLYZ5vAPIfEmCTNViosC78F8F0H9y7T7gG2M39ymgutxF5gcFEsyZQSph9Bp3A==}
@@ -6113,8 +6101,6 @@ snapshots:
 
   '@types/omggif@1.0.5': {}
 
-  '@types/pako@2.0.4': {}
-
   '@types/piexifjs@1.0.0': {}
 
   '@types/prismjs@1.26.5': {}
@@ -7161,7 +7147,7 @@ snapshots:
     dependencies:
       resolve-pkg-maps: 1.0.0
 
-  gifler@https://codeload.github.com/themadcreator/gifler/tar.gz/c3259b071c7782f85d4928a5f03d0b378ed003b5:
+  gifler@https://codeload.github.com/themadcreator/gifler/tar.gz/89484cb3db174c584a3138e89664f0167a7760c1:
     dependencies:
       bluebird: 3.7.2
       omggif: 1.0.10
@@ -8340,8 +8326,6 @@ snapshots:
       retry: 0.13.1
 
   p-try@2.2.0: {}
-
-  pako@2.1.0: {}
 
   param-case@3.0.4:
     dependencies:
