@@ -34,33 +34,6 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function splitResponseIntoChunks(text: string, chunkSize: number): string[] {
-  const chunks: string[] = [];
-  let i = 0;
-
-  while (i < text.length) {
-    const end = Math.min(i + chunkSize, text.length);
-    let splitAt = end;
-
-    // Prefer a natural boundary near the end of the chunk to keep UX smooth.
-    for (let j = end; j > i; j -= 1) {
-      const char = text[j - 1];
-      if (
-        char === " " || char === "\n" || char === "." || char === "、" ||
-        char === "。"
-      ) {
-        splitAt = j;
-        break;
-      }
-    }
-
-    chunks.push(text.slice(i, splitAt));
-    i = splitAt;
-  }
-
-  return chunks;
-}
-
 crokRouter.get("/crok", async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
@@ -72,12 +45,14 @@ crokRouter.get("/crok", async (req, res) => {
   res.flushHeaders();
 
   let messageId = 0;
-  const chunks = splitResponseIntoChunks(response, 32);
 
-  for (const chunk of chunks) {
+  // TTFT (Time to First Token)
+  await sleep(3000);
+
+  for (const char of response) {
     if (res.closed) break;
 
-    const data = JSON.stringify({ text: chunk, done: false });
+    const data = JSON.stringify({ text: char, done: false });
     res.write(`event: message\nid: ${messageId++}\ndata: ${data}\n\n`);
 
     await sleep(10);
