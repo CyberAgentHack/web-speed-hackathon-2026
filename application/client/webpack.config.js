@@ -25,7 +25,6 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: 'inline-source-map',
   entry: {
     main: [
       'core-js',
@@ -36,7 +35,7 @@ const config = {
       path.resolve(SRC_PATH, './index.tsx'),
     ],
   },
-  mode: 'none',
+  mode: 'production',
   module: {
     rules: [
       {
