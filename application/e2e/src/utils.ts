@@ -35,14 +35,12 @@ export async function waitForVisibleMedia(page: Page): Promise<void> {
           (img as HTMLImageElement).naturalWidth > 0 && (img as HTMLImageElement).naturalHeight > 0,
       );
 
-      // ビューポート内の動画コンテナに canvas または video が出現しているか
+      // ビューポート内の動画コンテナに video が出現しているか
       const movieAreas = Array.from(document.querySelectorAll("main [data-movie-area]")).filter(
         isInViewport,
       );
       const moviesReady = movieAreas.every((area) => {
-        const canvas = area.querySelector("canvas");
         const video = area.querySelector("video");
-        if (canvas) return canvas.width > 0 && canvas.height > 0;
         if (video) return (video as HTMLVideoElement).readyState >= 1;
         return false;
       });
@@ -61,7 +59,7 @@ export async function waitForVisibleMedia(page: Page): Promise<void> {
 
 /** GIF動画をマスク（フレームが毎回変わるため） */
 export function dynamicMediaMask(page: Page) {
-  return [page.locator("canvas"), page.locator("video"), page.locator("img[src$='.gif']")];
+  return [page.locator("video"), page.locator("img[src$='.gif']")];
 }
 
 export async function waitForImageToLoad(imageLocator: Locator): Promise<void> {

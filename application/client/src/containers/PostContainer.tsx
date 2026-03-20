@@ -14,7 +14,7 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
     fetchJSON,
   );
 
-  const { data: comments, fetchMore } = useInfiniteFetch<Models.Comment>(
+  const { data: comments, fetchMore, hasMore } = useInfiniteFetch<Models.Comment>(
     `/api/v1/posts/${postId}/comments`,
     fetchJSON,
   );
@@ -32,7 +32,7 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
   }
 
   return (
-    <InfiniteScroll fetchMore={fetchMore} items={comments}>
+    <InfiniteScroll fetchMore={fetchMore} hasMore={hasMore} items={comments}>
       <Helmet>
         <title>{post.user.name} さんのつぶやき - CaX</title>
       </Helmet>

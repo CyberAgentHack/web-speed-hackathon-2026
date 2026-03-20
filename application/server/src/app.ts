@@ -11,7 +11,11 @@ app.use(createSessionMiddleware());
 
 // JSON body parsing middleware
 app.use(async (c, next) => {
-  if (c.req.method === "POST" || c.req.method === "PUT" || c.req.method === "PATCH") {
+  const contentType = c.req.header("content-type") || "";
+  if (
+    (c.req.method === "POST" || c.req.method === "PUT" || c.req.method === "PATCH")
+    && contentType.includes("application/json")
+  ) {
     try {
       const body = await c.req.json();
       c.set("body" as never, body as never);
@@ -24,18 +28,35 @@ app.use(async (c, next) => {
 
 // Raw body parsing middleware
 app.use(async (c, next) => {
-  if ((c.req.method === "POST" || c.req.method === "PUT") && c.req.header("content-type") === "application/octet-stream") {
+  const contentType = c.req.header("content-type") || "";
+  if (
+    (c.req.method === "POST" || c.req.method === "PUT")
+    && contentType.includes("application/octet-stream")
+  ) {
     const buf = await c.req.arrayBuffer();
     c.set("rawBody" as never, Buffer.from(buf) as never);
   }
   await next();
 });
 
-// Cache control headers
-app.use(async (c, next) => {
-  c.header("Cache-Control", "max-age=0, no-transform");
-  c.header("Connection", "close");
+app.use("/api/*", async (c, next) => {
   await next();
+  c.header("Cache-Control", "no-store");
+});
+
+app.use("*", async (c, next) => {
+  await next();
+
+  if (c.req.path.startsWith("/api/")) {
+    return;
+  }
+
+  if (c.req.path.endsWith(".html") || c.req.path === "/") {
+    c.header("Cache-Control", "no-cache");
+    return;
+  }
+
+  c.header("Cache-Control", "public, max-age=604800, stale-while-revalidate=86400");
 });
 
 // API router

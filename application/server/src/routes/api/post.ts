@@ -5,9 +5,35 @@ import { Comment, Post } from "@web-speed-hackathon-2026/server/src/models";
 
 export const postRouter = new Hono();
 
+function parseLimit(value: string | undefined): number | undefined {
+  if (value == null) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return undefined;
+  }
+
+  return Math.min(parsed, 100);
+}
+
+function parseOffset(value: string | undefined): number | undefined {
+  if (value == null) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    return undefined;
+  }
+
+  return parsed;
+}
+
 postRouter.get("/posts", async (c: Context) => {
-  const limit = c.req.query("limit") != null ? Number(c.req.query("limit")) : undefined;
-  const offset = c.req.query("offset") != null ? Number(c.req.query("offset")) : undefined;
+  const limit = parseLimit(c.req.query("limit"));
+  const offset = parseOffset(c.req.query("offset"));
 
   const posts = await Post.findAll({
     limit,
@@ -30,8 +56,8 @@ postRouter.get("/posts/:postId", async (c: Context) => {
 
 postRouter.get("/posts/:postId/comments", async (c: Context) => {
   const postId = c.req.param("postId");
-  const limit = c.req.query("limit") != null ? Number(c.req.query("limit")) : undefined;
-  const offset = c.req.query("offset") != null ? Number(c.req.query("offset")) : undefined;
+  const limit = parseLimit(c.req.query("limit"));
+  const offset = parseOffset(c.req.query("offset"));
 
   const posts = await Comment.findAll({
     limit,

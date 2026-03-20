@@ -1,11 +1,16 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import { unstableRolldownAdapter } from 'vite-bundle-analyzer'
+import { analyzer } from 'vite-bundle-analyzer'
+import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   root: './src',
   plugins: [
     react(),
+    unstableRolldownAdapter(analyzer()),
+    tailwindcss()
   ],
   resolve: {
     alias: {

@@ -1,60 +1,33 @@
 import classNames from "classnames";
-import { load, ImageIFD } from "piexifjs";
-import { MouseEvent, useCallback, useEffect, useId, useMemo } from "react";
+import { MouseEvent, useCallback, useId } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
-import {
-  binaryStringToBytes,
-  bytesToBinaryString,
-} from "@web-speed-hackathon-2026/client/src/utils/binary";
-import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
+  alt: string;
   src: string;
 }
 
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
-export const CoveredImage = ({ src }: Props) => {
+export const CoveredImage = ({ alt, src }: Props) => {
   const dialogId = useId();
+
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
     ev.stopPropagation();
   }, []);
-
-  const { data, isLoading } = useFetch(src, fetchBinary);
-
-  const alt = useMemo(() => {
-    const exif = data != null ? load(bytesToBinaryString(new Uint8Array(data))) : null;
-    const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-    return typeof raw === "string" ? new TextDecoder().decode(binaryStringToBytes(raw)) : "";
-  }, [data]);
-
-  const blobUrl = useMemo(() => {
-    return data != null ? URL.createObjectURL(new Blob([data])) : null;
-  }, [data]);
-
-  useEffect(() => {
-    return () => {
-      if (blobUrl != null) {
-        URL.revokeObjectURL(blobUrl);
-      }
-    };
-  }, [blobUrl]);
-
-  if (isLoading || data === null || blobUrl === null) {
-    return null;
-  }
 
   return (
     <div className="relative h-full w-full overflow-hidden">
       <img
         alt={alt}
         className={classNames("h-full w-full object-cover")}
-        src={blobUrl}
+        decoding="async"
+        loading="lazy"
+        src={src}
       />
 
       <button

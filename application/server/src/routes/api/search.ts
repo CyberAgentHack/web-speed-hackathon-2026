@@ -7,6 +7,32 @@ import { Op } from "sequelize";
 
 export const searchRouter = new Hono();
 
+function parseLimit(value: string | undefined): number | undefined {
+  if (value == null) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return undefined;
+  }
+
+  return Math.min(parsed, 100);
+}
+
+function parseOffset(value: string | undefined): number | undefined {
+  if (value == null) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    return undefined;
+  }
+
+  return parsed;
+}
+
 searchRouter.get("/search", async (c: Context) => {
   const query = c.req.query("q");
 
@@ -21,8 +47,8 @@ searchRouter.get("/search", async (c: Context) => {
   }
 
   const searchTerm = keywords ? `%${keywords}%` : null;
-  const limit = c.req.query("limit") != null ? Number(c.req.query("limit")) : undefined;
-  const offset = c.req.query("offset") != null ? Number(c.req.query("offset")) : undefined;
+  const limit = parseLimit(c.req.query("limit"));
+  const offset = parseOffset(c.req.query("offset"));
 
   const dateConditions: Record<symbol, Date>[] = [];
   if (sinceDate) {

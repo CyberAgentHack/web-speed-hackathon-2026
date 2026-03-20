@@ -5,6 +5,32 @@ import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
 
 export const userRouter = new Hono();
 
+function parseLimit(value: string | undefined): number | undefined {
+  if (value == null) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return undefined;
+  }
+
+  return Math.min(parsed, 100);
+}
+
+function parseOffset(value: string | undefined): number | undefined {
+  if (value == null) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    return undefined;
+  }
+
+  return parsed;
+}
+
 userRouter.get("/me", async (c: Context) => {
   const session = c.get("session" as never) as Record<string, unknown>;
   if (session["userId"] === undefined) {
@@ -64,8 +90,8 @@ userRouter.get("/users/:username/posts", async (c: Context) => {
     return c.json({ message: "Not Found" }, 404);
   }
 
-  const limit = c.req.query("limit") != null ? Number(c.req.query("limit")) : undefined;
-  const offset = c.req.query("offset") != null ? Number(c.req.query("offset")) : undefined;
+  const limit = parseLimit(c.req.query("limit"));
+  const offset = parseOffset(c.req.query("offset"));
 
   const posts = await Post.findAll({
     limit,
