@@ -93,6 +93,7 @@ const config = {
     }),
     new HtmlWebpackPlugin({
       inject: false,
+      scriptLoading: "defer",
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
     new BundleAnalyzerPlugin({ analyzerMode: "disabled" }),
