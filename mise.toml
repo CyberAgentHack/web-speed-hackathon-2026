@@ -1,3 +1,67 @@
 [tools]
 node = "24.14.0"
 "npm:pnpm" = "10.32.1"
+
+[env]
+_.file = ".env"
+APP_URL = "http://localhost:3000"
+
+[tasks.build]
+description = "クライアントをビルドする"
+run = "pnpm -C application build"
+
+[tasks.dev]
+description = "ビルド → ローカルサーバー起動 (ポート 3000)"
+depends = ["build"]
+run = "pnpm -C application start"
+
+[tasks.analyze]
+description = "バンドルサイズを可視化 → bundle-report.html"
+run = "pnpm -C application --filter @web-speed-hackathon-2026/client analyze"
+
+[tasks.test]
+description = "VRT テストを実行する"
+run = "pnpm -C application --filter @web-speed-hackathon-2026/e2e test"
+
+[tasks.test-update]
+description = "VRT ベースライン更新 (メモリに注意)"
+run = "pnpm -C application --filter @web-speed-hackathon-2026/e2e test:update"
+
+[tasks.test-remote]
+description = "VRT テストをリモート環境に対して実行する"
+run = "E2E_BASE_URL=$REMOTE_URL pnpm -C application --filter @web-speed-hackathon-2026/e2e test"
+
+[tasks.score]
+description = "ローカルスコア計測 (APP_URL=$APP_URL)"
+run = "pnpm -C scoring-tool start --applicationUrl $APP_URL"
+
+[tasks.score-remote]
+description = "リモートスコア計測 ($REMOTE_URL)"
+run = "pnpm -C scoring-tool start --applicationUrl $REMOTE_URL"
+
+[tasks.typecheck]
+description = "型チェック"
+run = "pnpm -C application typecheck"
+
+[tasks.format]
+description = "フォーマット"
+run = "pnpm -C application format"
+
+[tasks.seed]
+description = "シードデータを生成して DB に投入する"
+run = """
+pnpm -C application --filter @web-speed-hackathon-2026/server seed:generate
+pnpm -C application --filter @web-speed-hackathon-2026/server seed:insert
+"""
+
+[tasks.initialize]
+description = "POST /api/v1/initialize でデータリセット ($APP_URL)"
+run = "curl -sf -X POST $APP_URL/api/v1/initialize && echo 'OK'"
+
+[tasks.initialize-remote]
+description = "リモートのデータリセット ($REMOTE_URL)"
+run = "curl -sf -X POST $REMOTE_URL/api/v1/initialize && echo 'OK'"
+
+[tasks.logs]
+description = "Fly.io のログをストリーミング表示"
+run = "fly logs --app $FLY_APP_NAME --access-token $FLY_ACCESS_TOKEN"
