@@ -1,7 +1,5 @@
 declare module "negaposi-analyzer-ja" {
-  interface Token {
-    surface_form: string;
-  }
+  import type { IpadicFeatures } from "kuromoji";
 
   interface Options {
     unknownWordRank?: number;
@@ -10,7 +8,7 @@ declare module "negaposi-analyzer-ja" {
     posiNegaDict?: object[];
   }
 
-  function analyze(tokens: Token[], options?: Options): number;
+  function analyze(tokens: IpadicFeatures[], options?: Options): number;
 
   export = analyze;
 }

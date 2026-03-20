@@ -1,16 +1,22 @@
+import Bluebird from "bluebird";
+import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
 import analyze from "negaposi-analyzer-ja";
 
-const segmenter = new Intl.Segmenter("ja", { granularity: "word" });
+let tokenizer: Tokenizer<IpadicFeatures> | null = null;
+async function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
+  if (tokenizer) return tokenizer;
+  tokenizer = await Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" })).buildAsync();
+  return tokenizer;
+}
 
 type SentimentResult = {
   score: number;
   label: "positive" | "negative" | "neutral";
 };
 
-export function analyzeSentiment(text: string): SentimentResult {
-  const tokens = Array.from(segmenter.segment(text))
-    .filter((s) => s.isWordLike)
-    .map((s) => ({ surface_form: s.segment }));
+export async function analyzeSentiment(text: string): Promise<SentimentResult> {
+  const tokenizer = await getTokenizer();
+  const tokens = tokenizer.tokenize(text);
 
   const score = analyze(tokens);
 
