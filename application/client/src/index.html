@@ -4,9 +4,107 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CaX</title>
-    <script src="/scripts/main.js"></script>
     <link rel="stylesheet" href="/styles/main.css" />
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.1"></script>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+
+      body {
+        background: #f5f5f4;
+        color: #042f2e;
+        font-family:
+          "Hiragino Sans",
+          "Yu Gothic",
+          sans-serif;
+      }
+
+      .app-shell {
+        min-height: 100vh;
+      }
+
+      .app-shell__nav {
+        box-sizing: border-box;
+        border-bottom: 1px solid #d6d3d1;
+        background: #fff;
+        padding: 20px 24px;
+      }
+
+      .app-shell__brand {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+      }
+
+      .app-shell__main {
+        box-sizing: border-box;
+        margin: 0 auto;
+        max-width: 640px;
+        padding: 32px 16px 96px;
+      }
+
+      .app-shell__eyebrow {
+        margin: 0;
+        color: #0f766e;
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .app-shell__title {
+        margin: 12px 0 0;
+        font-size: clamp(40px, 8vw, 72px);
+        font-weight: 800;
+        line-height: 0.95;
+        letter-spacing: -0.06em;
+      }
+
+      .app-shell__description {
+        margin: 16px 0 0;
+        color: #115e59;
+        font-size: 16px;
+        line-height: 1.7;
+      }
+
+      .app-shell__card {
+        box-sizing: border-box;
+        margin-top: 28px;
+        border: 1px solid #d6d3d1;
+        border-radius: 20px;
+        background: #fff;
+        padding: 20px;
+      }
+
+      .app-shell__line {
+        display: block;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #e7e5e4 0%, #f5f5f4 100%);
+      }
+
+      .app-shell__line + .app-shell__line {
+        margin-top: 10px;
+      }
+
+      .app-shell__line--lg {
+        height: 18px;
+        width: 72%;
+      }
+
+      .app-shell__line--md {
+        height: 14px;
+        width: 100%;
+      }
+
+      .app-shell__line--sm {
+        height: 14px;
+        width: 64%;
+      }
+    </style>
+    <script defer src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.1"></script>
+    <script defer src="/scripts/main.js"></script>
     <style type="text/tailwindcss">
       @layer base {
         button:not(:disabled),
@@ -174,6 +272,25 @@
     </style>
   </head>
   <body class="bg-cax-canvas text-cax-text">
-    <div id="app"></div>
+    <div id="app">
+      <div class="app-shell">
+        <header class="app-shell__nav">
+          <p class="app-shell__brand">CaX</p>
+        </header>
+        <main class="app-shell__main">
+          <p class="app-shell__eyebrow">CaX timeline</p>
+          <h1 class="app-shell__title">読込中</h1>
+          <p class="app-shell__description">
+            タイムラインと投稿データを準備しています。しばらくお待ちください。
+          </p>
+          <section class="app-shell__card" aria-hidden="true">
+            <span class="app-shell__line app-shell__line--lg"></span>
+            <span class="app-shell__line app-shell__line--md"></span>
+            <span class="app-shell__line app-shell__line--md"></span>
+            <span class="app-shell__line app-shell__line--sm"></span>
+          </section>
+        </main>
+      </div>
+    </div>
   </body>
 </html>
