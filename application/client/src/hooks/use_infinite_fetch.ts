@@ -27,6 +27,10 @@ export function useInfiniteFetch<T>(
       return;
     }
 
+    const requestUrl = new URL(apiPath, window.location.origin);
+    requestUrl.searchParams.set("limit", String(LIMIT));
+    requestUrl.searchParams.set("offset", String(offset));
+
     setResult((cur) => ({
       ...cur,
       isLoading: true,
@@ -36,16 +40,16 @@ export function useInfiniteFetch<T>(
       offset,
     };
 
-    void fetcher(apiPath).then(
-      (allData) => {
+    void fetcher(requestUrl.pathname + requestUrl.search).then(
+      (pageData) => {
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...pageData],
           isLoading: false,
         }));
         internalRef.current = {
           isLoading: false,
-          offset: offset + LIMIT,
+          offset: offset + pageData.length,
         };
       },
       (error) => {
