@@ -40,8 +40,15 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     void loadConversations();
   });
 
+  // ✅ ローディング表示を返す
   if (conversations == null) {
-    return null;
+    return (
+      <section>
+        <header className="border-cax-border flex flex-col gap-4 border-b px-4 pt-6 pb-4">
+          <h1 className="text-2xl font-bold">ダイレクトメッセージ</h1>
+        </header>
+      </section>
+    );
   }
 
   return (
