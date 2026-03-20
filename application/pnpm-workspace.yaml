@@ -7,7 +7,7 @@ allowBuilds:
   bcrypt: true
   esbuild: true
   sqlite3: true
-  negaposi-analyzer-ja: true
+  negaposi-analyzer-ja: false
 overrides:
   gifler>bluebird: 3.7.2
   gifler>omggif: 1.0.10
