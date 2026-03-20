@@ -4,11 +4,11 @@ import {
   ChangeEvent,
   useCallback,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
   KeyboardEvent,
   FormEvent,
-  useEffect,
 } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -38,12 +38,14 @@ export const DirectMessagePage = ({
 }: Props) => {
   const formRef = useRef<HTMLFormElement>(null);
   const messageListContainerRef = useRef<HTMLDivElement>(null);
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const textAreaId = useId();
 
   const peer =
     conversation.initiator.id !== activeUser.id ? conversation.initiator : conversation.member;
 
   const [text, setText] = useState("");
+  const messages = conversation.messages;
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
 
@@ -68,22 +70,45 @@ export const DirectMessagePage = ({
   const handleSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      void onSubmit({ body: text.trim() }).then(() => {
+      const body = textAreaRef.current?.value.trim() ?? text.trim();
+      if (body.length === 0) {
+        return;
+      }
+
+      textAreaRef.current?.blur();
+      void onSubmit({ body }).then(() => {
         setText("");
       });
     },
     [onSubmit, text],
   );
 
-  // Synchronize the scroll container with the latest rendered DM messages.
-  useEffect(() => {
-    const element = messageListContainerRef.current;
-    if (element == null) {
-      return;
-    }
+  // Synchronize the browser scroll position with the latest DM using window and panel scroll APIs.
+  useLayoutEffect(() => {
+    const syncScrollToLatest = () => {
+      const containerElement = messageListContainerRef.current;
+      const pageScrollHeight = Math.max(
+        document.body.scrollHeight,
+        document.documentElement.scrollHeight,
+      );
+      window.scrollTo(0, pageScrollHeight);
+      if (containerElement != null) {
+        containerElement.scrollTop = containerElement.scrollHeight;
+      }
+    };
 
-    element.scrollTop = element.scrollHeight;
-  }, [conversation.messages.length]);
+    let secondFrameId = 0;
+    syncScrollToLatest();
+    const firstFrameId = window.requestAnimationFrame(() => {
+      syncScrollToLatest();
+      secondFrameId = window.requestAnimationFrame(syncScrollToLatest);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(firstFrameId);
+      window.cancelAnimationFrame(secondFrameId);
+    };
+  }, [conversation.id, conversation.messages.length]);
 
   if (conversationError != null) {
     return (
@@ -119,14 +144,14 @@ export const DirectMessagePage = ({
         ref={messageListContainerRef}
         className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8"
       >
-        {conversation.messages.length === 0 && (
+        {messages.length === 0 && (
           <p className="text-cax-text-muted text-center text-sm">
             まだメッセージはありません。最初のメッセージを送信してみましょう。
           </p>
         )}
 
         <ul className="grid gap-3" data-testid="dm-message-list">
-          {conversation.messages.map((message) => {
+          {messages.map((message) => {
             const isActiveUserSend = message.sender.id === activeUser.id;
 
             return (
@@ -178,6 +203,7 @@ export const DirectMessagePage = ({
               内容
             </label>
             <textarea
+              ref={textAreaRef}
               id={textAreaId}
               className="border-cax-border placeholder-cax-text-subtle focus:outline-cax-brand w-full resize-none rounded-xl border px-3 py-2 focus:outline-2 focus:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               value={text}
