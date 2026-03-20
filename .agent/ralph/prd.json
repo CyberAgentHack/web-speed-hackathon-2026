@@ -250,8 +250,8 @@
         "Typecheck passes"
       ],
       "priority": 13,
-      "passes": false,
-      "notes": "SoundWaveSVG は AudioContext.decodeAudioData を使って波形を計算している。直接 URL から波形を計算する方法に変更が必要な場合がある。"
+      "passes": true,
+      "notes": "2026-03-20 完了。fetchBinary+BlobURL廃止→直接<audio src={url}>に変更。SoundWaveSVGはsoundUrl propを受け取り内部でfetch+decodeAudioDataで波形計算。E2Eテスト14/14全通過。"
     },
     {
       "id": "US-014",

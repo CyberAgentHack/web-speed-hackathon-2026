@@ -32,10 +32,10 @@ async function calculate(data: ArrayBuffer): Promise<ParsedData> {
 }
 
 interface Props {
-  soundData: ArrayBuffer;
+  soundUrl: string;
 }
 
-export const SoundWaveSVG = ({ soundData }: Props) => {
+export const SoundWaveSVG = ({ soundUrl }: Props) => {
   const uniqueIdRef = useRef(Math.random().toString(16));
   const [{ max, peaks }, setPeaks] = useState<ParsedData>({
     max: 0,
@@ -43,10 +43,13 @@ export const SoundWaveSVG = ({ soundData }: Props) => {
   });
 
   useEffect(() => {
-    calculate(soundData).then(({ max, peaks }) => {
-      setPeaks({ max, peaks });
-    });
-  }, [soundData]);
+    fetch(soundUrl)
+      .then((res) => res.arrayBuffer())
+      .then((data) => calculate(data))
+      .then(({ max, peaks }) => {
+        setPeaks({ max, peaks });
+      });
+  }, [soundUrl]);
 
   return (
     <svg className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1">

@@ -383,3 +383,35 @@ Feature: CaX パフォーマンス改善 (ralph/perf-optimization)
 
 ### Commit
 - 095c6ec feat: [US-012] - CoveredImage のバイナリ取得廃止と直接 img 表示
+
+---
+
+## US-013: SoundPlayer のバイナリ取得廃止と直接 audio 表示
+**Date:** 2026-03-20
+
+### Implementation
+- `SoundPlayer.tsx` から `fetchBinary`, `useFetch`, `useMemo` インポートを削除
+- バイナリ取得 → Blob URL 化を廃止し、直接 `<audio src={getSoundPath(sound.id)}>` で音声を表示
+- `isLoading`/`data`/`blobUrl` 状態管理を削除（直接 URL で不要に）
+- `SoundWaveSVG` の props を `soundData: ArrayBuffer` → `soundUrl: string` に変更
+- `SoundWaveSVG` 内部で `fetch(soundUrl).then(res => res.arrayBuffer())` で波形データを取得
+
+### Acceptance Criteria Verification
+| Criteria | Test | Result |
+|---|---|---|
+| fetchBinary を使わず直接 audio src で表示 | SoundPlayer.tsx 確認: `<audio src={soundUrl}>` | PASS |
+| 音声の再生・一時停止ボタンが機能する | E2E post-detail.test.ts "音声の波形が表示され、再生ボタンで切り替えられる" PASS | PASS |
+| 音声の波形（SoundWaveSVG）が表示される | E2E home.test.ts "音声の波形が表示される" PASS | PASS |
+| 音声の再生位置が波形で表示される | E2E post-detail.test.ts "音声の再生位置が波形で表示される" PASS | PASS |
+| E2E テストが通る | home.test.ts 8/8 PASS, post-detail.test.ts 6/6 PASS — 14/14 全通過 | PASS |
+| Codex レビュー完了 | 手動レビュー — fetchBinary+BlobURL廃止は直接URL参照の上位互換、SoundWaveSVG内部fetchは波形計算に必要最小限、リグレッションなし | PASS |
+| Typecheck passes | client PASS, server PASS (e2e は既存の videoWidth/videoHeight 型エラーのみ) | PASS |
+
+### Quality Checks
+- `pnpm build`: PASS (compiled in 3.67s)
+- `pnpm typecheck (client)`: PASS
+- `pnpm typecheck (server)`: PASS
+- `pnpm test (e2e home+post-detail)`: 14/14 PASS — 音声関連テスト全通過
+
+### Commit
+- 459296d feat: [US-013] - SoundPlayer のバイナリ取得廃止と直接 audio 表示
