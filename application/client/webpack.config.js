@@ -89,6 +89,18 @@ const config = {
           from: path.resolve(__dirname, "node_modules/katex/dist/fonts"),
           to: path.resolve(DIST_PATH, "styles/fonts"),
         },
+        {
+          from: path.resolve(__dirname, "node_modules/@ffmpeg/core/dist/umd/ffmpeg-core.js"),
+          to: path.resolve(DIST_PATH, "static/ffmpeg-core.js"),
+        },
+        {
+          from: path.resolve(__dirname, "node_modules/@ffmpeg/core/dist/umd/ffmpeg-core.wasm"),
+          to: path.resolve(DIST_PATH, "static/ffmpeg-core.wasm"),
+        },
+        {
+          from: path.resolve(__dirname, "node_modules/@imagemagick/magick-wasm/dist/magick.wasm"),
+          to: path.resolve(DIST_PATH, "static/magick.wasm"),
+        },
       ],
     }),
     new HtmlWebpackPlugin({
@@ -108,21 +120,6 @@ const config = {
         __dirname,
         "node_modules",
         "@ffmpeg/ffmpeg/dist/esm/index.js",
-      ),
-      "@ffmpeg/core$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/core/dist/umd/ffmpeg-core.js",
-      ),
-      "@ffmpeg/core/wasm$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/core/dist/umd/ffmpeg-core.wasm",
-      ),
-      "@imagemagick/magick-wasm/magick.wasm$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@imagemagick/magick-wasm/dist/magick.wasm",
       ),
     },
     fallback: {
