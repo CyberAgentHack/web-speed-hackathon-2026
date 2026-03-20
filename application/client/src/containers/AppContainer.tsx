@@ -18,7 +18,7 @@ const TermContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/co
 const TimelineContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/TimelineContainer").then(m => ({ default: m.TimelineContainer })));
 const UserProfileContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/UserProfileContainer").then(m => ({ default: m.UserProfileContainer })));
 
-// NewPostModal の中身だけ遅延読み込み（dialogシェルは即座にレンダリング）
+// NewPostModal の中身だけ遅延読み込み
 const LazyNewPostModalContent = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer").then(m => ({ default: m.NewPostModalContainer })));
 
 export const AppContainer = () => {
@@ -29,16 +29,15 @@ export const AppContainer = () => {
   }, [pathname]);
 
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
-  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
   useEffect(() => {
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {
         setActiveUser(user);
       })
-      .finally(() => {
-        setIsLoadingActiveUser(false);
+      .catch(() => {
+        // 未ログイン
       });
-  }, [setActiveUser, setIsLoadingActiveUser]);
+  }, [setActiveUser]);
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
     setActiveUser(null);
@@ -47,16 +46,6 @@ export const AppContainer = () => {
 
   const authModalId = useId();
   const newPostModalId = useId();
-
-  if (isLoadingActiveUser) {
-    return (
-      <HelmetProvider>
-        <Helmet>
-          <title>読込中 - CaX</title>
-        </Helmet>
-      </HelmetProvider>
-    );
-  }
 
   return (
     <HelmetProvider>
@@ -92,10 +81,8 @@ export const AppContainer = () => {
         </Suspense>
       </AppPage>
 
-      {/* AuthModal は dialog が即座にDOMに必要 */}
       <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
 
-      {/* NewPostModal は dialog シェルを即座にレンダリングし、中身を遅延読み込み */}
       <Suspense fallback={<Modal id={newPostModalId} closedby="any"><div /></Modal>}>
         <LazyNewPostModalContent id={newPostModalId} />
       </Suspense>
