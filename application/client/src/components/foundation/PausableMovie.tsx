@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -13,6 +13,7 @@ interface Props {
  */
 export const PausableMovie = ({ src }: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const [isPlaying, setIsPlaying] = useState(true);
   const handleClick = useCallback(() => {
@@ -24,6 +25,26 @@ export const PausableMovie = ({ src }: Props) => {
       }
       return !isPlaying;
     });
+  }, []);
+
+  // Mirror video to canvas
+  useEffect(() => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
+
+    let animId: number;
+    const draw = () => {
+      if (video.readyState >= 2) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(video, 0, 0);
+      }
+      animId = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => cancelAnimationFrame(animId);
   }, []);
 
   return (
@@ -40,8 +61,12 @@ export const PausableMovie = ({ src }: Props) => {
           loop
           muted
           playsInline
-          className="h-full w-full object-cover"
+          className="absolute h-0 w-0 opacity-0"
           src={src}
+        />
+        <canvas
+          ref={canvasRef}
+          className="h-full w-full object-cover"
         />
         <div
           className={classNames(
