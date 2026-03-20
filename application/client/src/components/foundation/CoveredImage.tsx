@@ -26,10 +26,13 @@ export const CoveredImage = ({ src }: Props) => {
       try {
         const data = await fetchBinary(src);
         const { load, ImageIFD } = await import("piexifjs");
-        const exif = load(Buffer.from(data).toString("binary"));
+        const bytes = new Uint8Array(data as ArrayBuffer);
+        const binary = Array.from(bytes, (b) => String.fromCharCode(b)).join("");
+        const exif = load(binary);
         const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
         if (raw != null) {
-          setAlt(new TextDecoder().decode(Buffer.from(raw, "binary")));
+          const rawBytes = Uint8Array.from(raw as string, (c) => c.charCodeAt(0));
+          setAlt(new TextDecoder().decode(rawBytes));
         }
       } catch {
         // ignore EXIF errors
