@@ -14,7 +14,7 @@ export async function fetchBinary(url: string): Promise<ArrayBuffer> {
 
 export async function fetchJSON<T>(url: string): Promise<T> {
   const result = await $.ajax({
-    async: false,
+    async: true,
     dataType: "json",
     method: "GET",
     url,

@@ -223,5 +223,5 @@ application/upload/**
 
 .qodo
 memo.md
-# measure.sh
+scripts/*
 target_list.txt
