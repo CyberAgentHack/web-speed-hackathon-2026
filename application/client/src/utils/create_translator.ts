@@ -1,7 +1,3 @@
-import { CreateMLCEngine } from "@mlc-ai/web-llm";
-import { stripIndents } from "common-tags";
-import * as JSONRepairJS from "json-repair-js";
-import langs from "langs";
 import invariant from "tiny-invariant";
 
 interface Translator {
@@ -14,7 +10,33 @@ interface Params {
   targetLanguage: string;
 }
 
+let depsCache: {
+  CreateMLCEngine: typeof import("@mlc-ai/web-llm").CreateMLCEngine;
+  stripIndents: typeof import("common-tags").stripIndents;
+  JSONRepairJS: typeof import("json-repair-js");
+  langs: typeof import("langs").default;
+} | null = null;
+
+async function loadDeps() {
+  if (depsCache) return depsCache;
+  const [webLlm, commonTags, jsonRepair, langsModule] = await Promise.all([
+    import("@mlc-ai/web-llm"),
+    import("common-tags"),
+    import("json-repair-js"),
+    import("langs").then((m) => m.default),
+  ]);
+  depsCache = {
+    CreateMLCEngine: webLlm.CreateMLCEngine,
+    stripIndents: commonTags.stripIndents,
+    JSONRepairJS: jsonRepair,
+    langs: langsModule,
+  };
+  return depsCache;
+}
+
 export async function createTranslator(params: Params): Promise<Translator> {
+  const { CreateMLCEngine, stripIndents, JSONRepairJS, langs } = await loadDeps();
+
   const sourceLang = langs.where("1", params.sourceLanguage);
   invariant(sourceLang, `Unsupported source language code: ${params.sourceLanguage}`);
 
