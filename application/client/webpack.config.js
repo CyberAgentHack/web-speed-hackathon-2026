@@ -140,14 +140,37 @@ const config = {
       chunks: "all",
       maxSize: 500000,
       cacheGroups: {
+        ffmpeg: {
+          test: /[\\/]node_modules[\\/]@ffmpeg[\\/]/,
+          name: "vendor-ffmpeg",
+          chunks: "async",
+          enforce: true,
+          priority: 40,
+        },
+        imagemagick: {
+          test: /[\\/]node_modules[\\/]@imagemagick[\\/]magick-wasm[\\/]/,
+          name: "vendor-imagemagick",
+          chunks: "async",
+          enforce: true,
+          priority: 40,
+        },
+        webllm: {
+          test: /[\\/]node_modules[\\/]@mlc-ai[\\/]web-llm[\\/]/,
+          name: "vendor-web-llm",
+          chunks: "async",
+          enforce: true,
+          priority: 40,
+        },
         react: {
           test: /[\\/]node_modules[\\/](react|react-dom|react-router|react-redux|redux|redux-form)[\\/]/,
           name: "vendor-react",
+          chunks: "initial",
           priority: 20,
         },
         vendor: {
           test: /[\\/]node_modules[\\/]/,
           name: "vendor",
+          chunks: "initial",
           priority: 10,
           minSize: 20000,
         },
