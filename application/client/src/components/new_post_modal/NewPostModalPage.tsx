@@ -4,7 +4,6 @@ import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components
 import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/components/modal/ModalErrorMessage";
 import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/components/modal/ModalSubmitButton";
 import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/AttachFileInputButton";
-import { convertSound } from "@web-speed-hackathon-2026/client/src/utils/convert_sound";
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
@@ -32,7 +31,6 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
   });
 
   const [hasFileError, setHasFileError] = useState(false);
-  const [isConverting, setIsConverting] = useState(false);
 
   const handleChangeText = useCallback<ChangeEventHandler<HTMLTextAreaElement>>((ev) => {
     const value = ev.currentTarget.value;
@@ -58,24 +56,19 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     }
   }, []);
 
+  // 音声はサーバーサイドで変換するため、そのままアップロード
   const handleChangeSound = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
     const file = Array.from(ev.currentTarget.files ?? [])[0]!;
     const isValid = file.size <= MAX_UPLOAD_BYTES_LIMIT;
 
     setHasFileError(isValid !== true);
     if (isValid) {
-      setIsConverting(true);
-
-      convertSound(file, { extension: "mp3" }).then((converted) => {
-        setParams((params) => ({
-          ...params,
-          images: [],
-          movie: undefined,
-          sound: new File([converted], "converted.mp3", { type: "audio/mpeg" }),
-        }));
-
-        setIsConverting(false);
-      });
+      setParams((params) => ({
+        ...params,
+        images: [],
+        movie: undefined,
+        sound: file,
+      }));
     }
   }, []);
 
@@ -142,10 +135,10 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       </div>
 
       <ModalSubmitButton
-        disabled={isConverting || isLoading || params.text === ""}
-        loading={isConverting || isLoading}
+        disabled={isLoading || params.text === ""}
+        loading={isLoading}
       >
-        {isConverting || isLoading ? "変換中" : "投稿する"}
+        {isLoading ? "投稿中" : "投稿する"}
       </ModalSubmitButton>
 
       <ModalErrorMessage>

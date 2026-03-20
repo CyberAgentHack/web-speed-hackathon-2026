@@ -84,18 +84,7 @@ const config = {
           from: path.resolve(__dirname, "node_modules/katex/dist/fonts"),
           to: path.resolve(DIST_PATH, "styles/fonts"),
         },
-        {
-          from: path.resolve(__dirname, "node_modules/@ffmpeg/core/dist/umd/ffmpeg-core.js"),
-          to: path.resolve(DIST_PATH, "scripts/ffmpeg-core.js"),
-        },
-        {
-          from: path.resolve(__dirname, "node_modules/@ffmpeg/core/dist/umd/ffmpeg-core.wasm"),
-          to: path.resolve(DIST_PATH, "scripts/ffmpeg-core.wasm"),
-        },
-        {
-          from: path.resolve(__dirname, "node_modules/@imagemagick/magick-wasm/dist/magick.wasm"),
-          to: path.resolve(DIST_PATH, "scripts/magick.wasm"),
-        },
+
       ],
     }),
     new HtmlWebpackPlugin({
@@ -108,11 +97,6 @@ const config = {
     alias: {
       "bayesian-bm25$": path.resolve(__dirname, "node_modules", "bayesian-bm25/dist/index.js"),
       ["kuromoji$"]: path.resolve(__dirname, "node_modules", "kuromoji/build/kuromoji.js"),
-      "@ffmpeg/ffmpeg$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/ffmpeg/dist/esm/index.js",
-      ),
     },
     fallback: {
       fs: false,
@@ -131,12 +115,6 @@ const config = {
     sideEffects: true,
   },
   cache: true,
-  ignoreWarnings: [
-    {
-      module: /@ffmpeg/,
-      message: /Critical dependency: the request of a dependency is an expression/,
-    },
-  ],
 };
 
 module.exports = config;
