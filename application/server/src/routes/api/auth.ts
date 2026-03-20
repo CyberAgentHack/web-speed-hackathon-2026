@@ -1,4 +1,3 @@
-import bcrypt from "bcrypt";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
@@ -43,7 +42,7 @@ export const authRouter = new Hono<SessionEnv>()
           username: body.username,
           name: body.name,
           description: body.description ?? "",
-          password: bcrypt.hashSync(body.password, bcrypt.genSaltSync(8)),
+          password: await Bun.password.hash(body.password, { algorithm: "bcrypt", cost: 8 }),
           createdAt: now,
           updatedAt: now,
         })
@@ -67,7 +66,7 @@ export const authRouter = new Hono<SessionEnv>()
     if (!row) {
       throw new HTTPException(400);
     }
-    if (!bcrypt.compareSync(body.password, row.password)) {
+    if (!(await Bun.password.verify(body.password, row.password))) {
       throw new HTTPException(400);
     }
 

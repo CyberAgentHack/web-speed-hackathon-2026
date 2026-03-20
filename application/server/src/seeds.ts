@@ -4,9 +4,8 @@ import path from "node:path";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 
-import bcrypt from "bcrypt";
-import type Database from "better-sqlite3";
-import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+import type { Database } from "bun:sqlite";
+import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 
 import {
   comments,
@@ -84,7 +83,7 @@ function fillTimestamps<T extends Record<string, unknown>>(
   };
 }
 
-export async function insertSeeds(db: BetterSQLite3Database, sqlite: Database.Database) {
+export async function insertSeeds(db: BunSQLiteDatabase, sqlite: Database) {
   const now = new Date().toISOString();
 
   // Collect all data first (async JSONL reads), then insert in a sync transaction
@@ -107,7 +106,7 @@ export async function insertSeeds(db: BetterSQLite3Database, sqlite: Database.Da
       table: "users",
       rows: batch.map((r) => ({
         ...fillTimestamps(r, now),
-        password: bcrypt.hashSync(r["password"] as string, bcrypt.genSaltSync(8)),
+        password: Bun.password.hashSync(r["password"] as string, { algorithm: "bcrypt", cost: 8 }),
       })),
     });
   });

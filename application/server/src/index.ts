@@ -1,6 +1,4 @@
-import { serve } from "@hono/node-server";
-
-import { app, injectWebSocket, routesReady } from "@web-speed-hackathon-2026/server/src/app";
+import { app, websocket, routesReady } from "@web-speed-hackathon-2026/server/src/app";
 
 import { initializeDb } from "./db";
 
@@ -9,10 +7,13 @@ async function main() {
   await routesReady;
 
   const port = Number(process.env["PORT"] || 3000);
-  const server = serve({ fetch: app.fetch, port, hostname: "0.0.0.0" }, () => {
-    console.log(`Listening on 0.0.0.0:${port}`);
+  Bun.serve({
+    fetch: app.fetch,
+    port,
+    hostname: "0.0.0.0",
+    websocket,
   });
-  injectWebSocket(server);
+  console.log(`Listening on 0.0.0.0:${port}`);
 }
 
 main().catch(console.error);

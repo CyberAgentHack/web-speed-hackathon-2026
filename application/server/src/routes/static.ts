@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { serveStatic } from "@hono/node-server/serve-static";
+import { serveStatic } from "hono/bun";
 import { Hono } from "hono";
 import { createMiddleware } from "hono/factory";
 

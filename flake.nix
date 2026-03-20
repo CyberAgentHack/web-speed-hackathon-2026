@@ -19,6 +19,7 @@
           buildInputs = with pkgs; [
             nodejs_24
             corepack_24
+            bun
 
             # Database
             sqlite
@@ -35,6 +36,9 @@
           ];
 
           shellHook = ''
+            # Native modules (sharp, etc.) need libstdc++ when running under Bun
+            export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib:''${LD_LIBRARY_PATH:-}"
+
             export CHROME_PATH="${pkgs.google-chrome}/bin/google-chrome-stable"
             export CHROMIUM_PATH="${pkgs.google-chrome}/bin/google-chrome-stable"
             export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1

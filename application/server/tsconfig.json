@@ -6,6 +6,7 @@
     "checkJs": true,
     "jsx": "react-jsx",
     "target": "esnext",
+    "types": ["bun"],
     "lib": ["DOM", "ESNext"],
     "module": "esnext",
     "moduleResolution": "bundler",
@@ -14,5 +15,5 @@
       "@web-speed-hackathon-2026/server/*": ["./*"]
     }
   },
-  "include": ["./src", "./types"]
+  "include": ["./src", "./scripts", "./types"]
 }

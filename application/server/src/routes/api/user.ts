@@ -1,4 +1,3 @@
-import bcrypt from "bcrypt";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
@@ -54,7 +53,10 @@ export const userRouter = new Hono<SessionEnv>()
       updatedAt: new Date().toISOString(),
     };
     if (updates["password"]) {
-      updates["password"] = bcrypt.hashSync(String(updates["password"]), bcrypt.genSaltSync(8));
+      updates["password"] = await Bun.password.hash(String(updates["password"]), {
+        algorithm: "bcrypt",
+        cost: 8,
+      });
     }
     db.update(users).set(updates).where(eq(users.id, userId)).run();
 

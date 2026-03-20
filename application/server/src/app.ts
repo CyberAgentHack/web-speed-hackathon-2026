@@ -1,4 +1,4 @@
-import { createNodeWebSocket } from "@hono/node-ws";
+import { upgradeWebSocket, websocket } from "hono/bun";
 import { Hono } from "hono";
 
 import { brotliCompress } from "@web-speed-hackathon-2026/server/src/middleware/compress";
@@ -6,7 +6,7 @@ import { sessionMiddleware, type SessionEnv } from "@web-speed-hackathon-2026/se
 
 export const app = new Hono<SessionEnv>();
 
-export const { upgradeWebSocket, injectWebSocket } = createNodeWebSocket({ app });
+export { upgradeWebSocket, websocket };
 
 app.use(brotliCompress());
 app.use("*", sessionMiddleware);

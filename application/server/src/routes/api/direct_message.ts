@@ -37,7 +37,113 @@ const SendMessageBody = v.object({
   body: v.pipe(v.string(), v.trim(), v.minLength(1)),
 });
 
-export const directMessageRouter = new Hono<SessionEnv>()
+export const directMessageRouter = new Hono<SessionEnv>();
+
+// WebSocket routes MUST be registered before parameterized GET routes
+// In Bun, WebSocket upgrades go through the Hono router, so route order matters.
+// "/dm/:conversationId" would match "/dm/unread" if registered first.
+directMessageRouter.get(
+  "/dm/unread",
+  upgradeWebSocket((c) => {
+    const userId = c.var["session"].get()?.userId;
+    let handler: ((payload: unknown) => void) | null = null;
+
+    return {
+      async onOpen(_evt, ws) {
+        if (userId === undefined) {
+          ws.close();
+          return;
+        }
+
+        handler = (payload: unknown) => {
+          ws.send(JSON.stringify({ type: "dm:unread", payload }));
+        };
+
+        eventhub.on(`dm:unread/${userId}`, handler);
+
+        const unreadCount = countUnreadMessages(userId);
+        eventhub.emit(`dm:unread/${userId}`, { unreadCount });
+      },
+      onClose() {
+        if (userId && handler) {
+          eventhub.off(`dm:unread/${userId}`, handler);
+        }
+      },
+    };
+  }),
+);
+
+directMessageRouter.get(
+  "/dm/:conversationId",
+  upgradeWebSocket((c) => {
+    const userId = c.var["session"].get()?.userId;
+    const conversationId = c.req.param("conversationId")!;
+    let handleMessageUpdated: ((payload: unknown) => void) | null = null;
+    let handleTyping: ((payload: unknown) => void) | null = null;
+    let conversationIdResolved: string | null = null;
+    let peerIdResolved: string | null = null;
+
+    return {
+      async onOpen(_evt, ws) {
+        if (userId === undefined) {
+          ws.close();
+          return;
+        }
+
+        const db = getDb();
+        const conversation = db
+          .select()
+          .from(directMessageConversations)
+          .where(
+            and(
+              eq(directMessageConversations.id, conversationId),
+              or(
+                eq(directMessageConversations.initiatorId, userId),
+                eq(directMessageConversations.memberId, userId),
+              ),
+            ),
+          )
+          .get();
+
+        if (!conversation) {
+          ws.close();
+          return;
+        }
+
+        conversationIdResolved = conversation.id;
+        peerIdResolved =
+          conversation.initiatorId !== userId ? conversation.initiatorId : conversation.memberId;
+
+        handleMessageUpdated = (payload: unknown) => {
+          ws.send(JSON.stringify({ type: "dm:conversation:message", payload }));
+        };
+        eventhub.on(`dm:conversation/${conversationIdResolved}:message`, handleMessageUpdated);
+
+        handleTyping = (payload: unknown) => {
+          ws.send(JSON.stringify({ type: "dm:conversation:typing", payload }));
+        };
+        eventhub.on(
+          `dm:conversation/${conversationIdResolved}:typing/${peerIdResolved}`,
+          handleTyping,
+        );
+      },
+      onClose() {
+        if (conversationIdResolved && handleMessageUpdated) {
+          eventhub.off(`dm:conversation/${conversationIdResolved}:message`, handleMessageUpdated);
+        }
+        if (conversationIdResolved && peerIdResolved && handleTyping) {
+          eventhub.off(
+            `dm:conversation/${conversationIdResolved}:typing/${peerIdResolved}`,
+            handleTyping,
+          );
+        }
+      },
+    };
+  }),
+);
+
+// REST API routes
+directMessageRouter
   .get("/dm", async (c) => {
     const userId = c.var.session.get()?.userId;
     if (userId === undefined) {
@@ -276,88 +382,3 @@ export const directMessageRouter = new Hono<SessionEnv>()
 
     return c.json({});
   });
-
-// WebSocket routes (not included in RPC type chain)
-directMessageRouter.get(
-  "/dm/unread",
-  upgradeWebSocket((c) => {
-    const userId = c.var["session"].get()?.userId;
-
-    return {
-      async onOpen(_evt, ws) {
-        if (userId === undefined) {
-          ws.close();
-          return;
-        }
-
-        const handler = (payload: unknown) => {
-          ws.send(JSON.stringify({ type: "dm:unread", payload }));
-        };
-
-        eventhub.on(`dm:unread/${userId}`, handler);
-        ws.raw?.addEventListener("close", () => {
-          eventhub.off(`dm:unread/${userId}`, handler);
-        });
-
-        const unreadCount = countUnreadMessages(userId);
-        eventhub.emit(`dm:unread/${userId}`, { unreadCount });
-      },
-    };
-  }),
-);
-
-directMessageRouter.get(
-  "/dm/:conversationId",
-  upgradeWebSocket((c) => {
-    const userId = c.var["session"].get()?.userId;
-    const conversationId = c.req.param("conversationId")!;
-
-    return {
-      async onOpen(_evt, ws) {
-        if (userId === undefined) {
-          ws.close();
-          return;
-        }
-
-        const db = getDb();
-        const conversation = db
-          .select()
-          .from(directMessageConversations)
-          .where(
-            and(
-              eq(directMessageConversations.id, conversationId),
-              or(
-                eq(directMessageConversations.initiatorId, userId),
-                eq(directMessageConversations.memberId, userId),
-              ),
-            ),
-          )
-          .get();
-
-        if (!conversation) {
-          ws.close();
-          return;
-        }
-
-        const peerId =
-          conversation.initiatorId !== userId ? conversation.initiatorId : conversation.memberId;
-
-        const handleMessageUpdated = (payload: unknown) => {
-          ws.send(JSON.stringify({ type: "dm:conversation:message", payload }));
-        };
-        eventhub.on(`dm:conversation/${conversation.id}:message`, handleMessageUpdated);
-        ws.raw?.addEventListener("close", () => {
-          eventhub.off(`dm:conversation/${conversation.id}:message`, handleMessageUpdated);
-        });
-
-        const handleTyping = (payload: unknown) => {
-          ws.send(JSON.stringify({ type: "dm:conversation:typing", payload }));
-        };
-        eventhub.on(`dm:conversation/${conversation.id}:typing/${peerId}`, handleTyping);
-        ws.raw?.addEventListener("close", () => {
-          eventhub.off(`dm:conversation/${conversation.id}:typing/${peerId}`, handleTyping);
-        });
-      },
-    };
-  }),
-);

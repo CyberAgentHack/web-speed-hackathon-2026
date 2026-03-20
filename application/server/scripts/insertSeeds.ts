@@ -1,7 +1,7 @@
 import * as fs from "node:fs/promises";
 
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
+import { Database } from "bun:sqlite";
+import { drizzle } from "drizzle-orm/bun-sqlite";
 
 import { DATABASE_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import { insertSeeds } from "@web-speed-hackathon-2026/server/src/seeds";
@@ -9,7 +9,7 @@ import { insertSeeds } from "@web-speed-hackathon-2026/server/src/seeds";
 await fs.rm(DATABASE_PATH, { force: true, recursive: true });
 
 const sqlite = new Database(DATABASE_PATH);
-sqlite.pragma("journal_mode = WAL");
+sqlite.exec("PRAGMA journal_mode = WAL");
 
 // Create tables using the exact schema from Sequelize-generated database
 sqlite.exec(`

@@ -1,4 +1,4 @@
-import { beforeAll } from "vitest";
+import { beforeAll } from "bun:test";
 
 import { initializeDb } from "../db";
 

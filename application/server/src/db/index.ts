@@ -2,8 +2,8 @@ import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
 
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
+import { Database } from "bun:sqlite";
+import { drizzle } from "drizzle-orm/bun-sqlite";
 
 import { DATABASE_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
@@ -13,14 +13,14 @@ import * as schema from "./schema";
 type DrizzleDb = ReturnType<typeof drizzle<typeof schema & typeof relations>>;
 
 let _db: DrizzleDb | null = null;
-let _sqlite: Database.Database | null = null;
+let _sqlite: Database | null = null;
 
 export function getDb(): DrizzleDb {
   if (!_db) throw new Error("DB not initialized");
   return _db;
 }
 
-export function getSqlite(): Database.Database {
+export function getSqlite(): Database {
   if (!_sqlite) throw new Error("SQLite not initialized");
   return _sqlite;
 }
@@ -38,7 +38,7 @@ export async function initializeDb() {
   await fs.copyFile(DATABASE_PATH, TEMP_PATH);
 
   _sqlite = new Database(TEMP_PATH);
-  _sqlite.pragma("journal_mode = WAL");
+  _sqlite.exec("PRAGMA journal_mode = WAL");
 
   _db = drizzle(_sqlite, { schema: { ...schema, ...relations } });
 
