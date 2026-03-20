@@ -11,7 +11,6 @@ const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
-const isProd = process.env.NODE_ENV === "production";
 
 /** @type {import('webpack').Configuration} */
 const config = {
@@ -27,7 +26,7 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: isProd ? false : "eval-cheap-module-source-map",
+  devtool: false,
   entry: {
     main: [
       "jquery-binarytransport",
@@ -36,7 +35,7 @@ const config = {
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: isProd ? "production" : "development",
+  mode: "production",
   module: {
     rules: [
       {
@@ -135,10 +134,10 @@ const config = {
   optimization: {
     minimize: false,
     splitChunks: false,
-    concatenateModules: isProd,
-    usedExports: isProd,
-    providedExports: isProd,
-    sideEffects: isProd,
+    concatenateModules: true,
+    usedExports: true,
+    providedExports: true,
+    sideEffects: true,
     runtimeChunk: false,
   },
   cache: false,
