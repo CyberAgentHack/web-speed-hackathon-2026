@@ -53,12 +53,15 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   }, [activeUser, conversationId]);
 
   const sendRead = useCallback(async () => {
+    if (activeUser == null) return;
     await sendJSON(`/api/v1/dm/${conversationId}/read`, {});
-  }, [conversationId]);
+  }, [activeUser, conversationId]);
 
   useEffect(() => {
     void loadConversation();
-    void sendRead();
+    void sendRead().catch(() => {
+      // 認証前は 401 になるため、UI維持のために握りつぶす
+    });
   }, [loadConversation, sendRead]);
 
   const handleSubmit = useCallback(
@@ -76,7 +79,9 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   );
 
   const handleTyping = useCallback(async () => {
-    void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
+    void sendJSON(`/api/v1/dm/${conversationId}/typing`, {}).catch(() => {
+      // 入力通知失敗は会話本体に影響させない
+    });
   }, [conversationId]);
 
   useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {
@@ -96,7 +101,9 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
         }
         peerTypingTimeoutRef.current = null;
       }
-      void sendRead();
+      void sendRead().catch(() => {
+        // 既読送信失敗は表示継続を優先
+      });
     } else if (event.type === "dm:conversation:typing") {
       setIsPeerTyping(true);
       if (peerTypingTimeoutRef.current !== null) {

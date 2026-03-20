@@ -49,6 +49,9 @@ export const AppContainer = () => {
       .then((user) => {
         setActiveUser(user);
       })
+      .catch(() => {
+        setActiveUser(null);
+      })
       .finally(() => {
         setIsLoadingActiveUser(false);
       });

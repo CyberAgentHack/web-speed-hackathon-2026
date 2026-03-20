@@ -13,10 +13,20 @@ export const staticRouter = Router();
 
 // ハッシュ付きファイルに長期キャッシュを設定
 function setCacheHeaders(req: Request, res: Response, next: NextFunction) {
-  const url = req.url;
-  if (/\/scripts\/chunk-/.test(url) || /\/static\//.test(url) || /\/styles\//.test(url)) {
+  const path = req.path.startsWith("/") ? req.path : `/${req.path}`;
+  const isVersionedAsset =
+    path.startsWith("/scripts/") ||
+    path.startsWith("/styles/") ||
+    path.startsWith("/static/") ||
+    path.startsWith("/images/") ||
+    path.startsWith("/movies/") ||
+    path.startsWith("/sounds/") ||
+    path.startsWith("/profiles/") ||
+    /\.(woff2?|ttf|otf|eot)$/.test(path);
+
+  if (isVersionedAsset) {
     res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-  } else if (/\.html$/.test(url) || url === "/") {
+  } else if (/\.html$/.test(path) || path === "/") {
     res.setHeader("Cache-Control", "no-cache");
   } else {
     res.setHeader("Cache-Control", "public, max-age=86400");
