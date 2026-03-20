@@ -141,7 +141,24 @@ const config = {
   optimization: {
     minimize: true,
     splitChunks: {
-      chunks: "all",
+      chunks: "initial",
+      maxInitialRequests: 10,
+      cacheGroups: {
+        // react-dom を単独チャンクに (最大のライブラリ)
+        reactDom: {
+          test: /[\\/]node_modules[\\/](react-dom|scheduler)[\\/]/,
+          name: "react-dom",
+          priority: 20,
+          chunks: "initial",
+        },
+        // react-router を別チャンクに
+        router: {
+          test: /[\\/]node_modules[\\/]react-router[\\/]/,
+          name: "router",
+          priority: 15,
+          chunks: "initial",
+        },
+      },
     },
     concatenateModules: true,
     usedExports: true,

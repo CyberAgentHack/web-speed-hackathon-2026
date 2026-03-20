@@ -1,5 +1,3 @@
-import { gzip } from "pako";
-
 async function throwIfNotOk(res: Response): Promise<void> {
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -30,6 +28,7 @@ export async function sendFile<T>(url: string, file: File): Promise<T> {
 }
 
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
+  const { gzip } = await import("pako");
   const compressed = gzip(new TextEncoder().encode(JSON.stringify(data)));
   const res = await fetch(url, {
     method: "POST",
