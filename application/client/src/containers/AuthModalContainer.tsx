@@ -9,6 +9,7 @@ import { FetchError, sendJSON } from "@web-speed-hackathon-2026/client/src/utils
 interface Props {
   id: string;
   onUpdateActiveUser: (user: Models.User) => void;
+  openRequestKey?: number;
 }
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -35,7 +36,7 @@ function getErrorCode(err: FetchError, type: "signin" | "signup"): string {
   return ERROR_MESSAGES[responseJSON.code]!;
 }
 
-export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
+export const AuthModalContainer = ({ id, onUpdateActiveUser, openRequestKey = 0 }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
   useEffect(() => {
@@ -51,6 +52,14 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
       element.removeEventListener("toggle", handleToggle);
     };
   }, [ref, setResetKey]);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (element == null || openRequestKey === 0 || element.open) {
+      return;
+    }
+    element.showModal();
+  }, [openRequestKey]);
 
   const handleRequestCloseModal = useCallback(() => {
     ref.current?.close();

@@ -29,9 +29,10 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
  */
 interface Props {
   post: Models.Post;
+  prioritizeMedia?: boolean;
 }
 
-export const TimelineItem = ({ post }: Props) => {
+export const TimelineItem = ({ post, prioritizeMedia = false }: Props) => {
   const navigate = useNavigate();
 
   /**
@@ -86,19 +87,37 @@ export const TimelineItem = ({ post }: Props) => {
             <TranslatableText text={post.text} />
           </div>
           {post.images?.length > 0 ? (
-            <DeferredMount className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
-            </DeferredMount>
+            prioritizeMedia ? (
+              <div className="relative mt-2 w-full">
+                <ImageArea images={post.images} prioritizeFirstImage />
+              </div>
+            ) : (
+              <DeferredMount className="relative mt-2 w-full">
+                <ImageArea images={post.images} />
+              </DeferredMount>
+            )
           ) : null}
           {post.movie ? (
-            <DeferredMount className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
-            </DeferredMount>
+            prioritizeMedia ? (
+              <div className="relative mt-2 w-full">
+                <MovieArea movie={post.movie} prioritizeLoad />
+              </div>
+            ) : (
+              <DeferredMount className="relative mt-2 w-full">
+                <MovieArea movie={post.movie} />
+              </DeferredMount>
+            )
           ) : null}
           {post.sound ? (
-            <DeferredMount className="relative mt-2 w-full">
-              <SoundArea sound={post.sound} />
-            </DeferredMount>
+            prioritizeMedia ? (
+              <div className="relative mt-2 w-full">
+                <SoundArea sound={post.sound} />
+              </div>
+            ) : (
+              <DeferredMount className="relative mt-2 w-full">
+                <SoundArea sound={post.sound} />
+              </DeferredMount>
+            )
           ) : null}
         </div>
       </div>

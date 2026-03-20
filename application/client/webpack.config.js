@@ -35,7 +35,6 @@ const config = {
   devtool: "inline-source-map",
   entry: {
     main: [
-      "jquery-binarytransport",
       _resolve(SRC_PATH, "./index.css"),
       _resolve(SRC_PATH, "./buildinfo.ts"),
       _resolve(SRC_PATH, "./index.tsx"),
@@ -79,10 +78,8 @@ const config = {
   },
   plugins: [
     new ProvidePlugin({
-      $: "jquery",
       AudioContext: ["standardized-audio-context", "AudioContext"],
       Buffer: ["buffer", "Buffer"],
-      "window.jQuery": "jquery",
     }),
     new EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),

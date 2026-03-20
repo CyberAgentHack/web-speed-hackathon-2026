@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from "uuid";
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import {
   convertMovieToWebm,
+  generateMoviePoster,
   MediaConversionError,
 } from "@web-speed-hackathon-2026/server/src/utils/convert_media";
 
@@ -31,7 +32,10 @@ movieRouter.post("/movies", async (req, res) => {
   }
 
   const movieId = uuidv4();
-  const converted = await convertMovieToWebm(req.body).catch((error: unknown) => {
+  const [converted, poster] = await Promise.all([
+    convertMovieToWebm(req.body),
+    generateMoviePoster(req.body),
+  ]).catch((error: unknown) => {
     if (error instanceof MediaConversionError) {
       throw new httpErrors.BadRequest("Invalid file type");
     }
@@ -39,8 +43,12 @@ movieRouter.post("/movies", async (req, res) => {
   });
 
   const filePath = path.resolve(UPLOAD_PATH, `./movies/${movieId}.${EXTENSION}`);
+  const posterPath = path.resolve(UPLOAD_PATH, `./movies/${movieId}.jpg`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "movies"), { recursive: true });
-  await fs.writeFile(filePath, converted);
+  await Promise.all([
+    fs.writeFile(filePath, converted),
+    fs.writeFile(posterPath, poster),
+  ]);
 
   return res.status(200).type("application/json").send({ id: movieId });
 });

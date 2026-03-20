@@ -5,19 +5,30 @@ import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 
 interface Props {
+  deferMount?: boolean;
+  poster?: string;
+  preload?: "auto" | "metadata" | "none";
+  prioritizePoster?: boolean;
   src: string;
 }
 
 /**
  * クリックすると再生・一時停止を切り替えます。
  */
-export const PausableMovie = ({ src }: Props) => {
+export const PausableMovie = ({
+  deferMount = false,
+  poster,
+  preload = "metadata",
+  prioritizePoster = false,
+  src,
+}: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const wrapperRef = useRef<HTMLButtonElement>(null);
   const wasPausedManuallyRef = useRef(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [shouldRenderVideo, setShouldRenderVideo] = useState(!deferMount);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -54,6 +65,27 @@ export const PausableMovie = ({ src }: Props) => {
   }, []);
 
   useEffect(() => {
+    setShouldRenderVideo(!deferMount);
+  }, [deferMount, src]);
+
+  useEffect(() => {
+    if (!deferMount) {
+      return;
+    }
+
+    const timerId = window.setTimeout(() => {
+      setShouldRenderVideo(true);
+    }, 1200);
+
+    return () => {
+      window.clearTimeout(timerId);
+    };
+  }, [deferMount, src]);
+
+  useEffect(() => {
+    if (!shouldRenderVideo) {
+      return;
+    }
     const video = videoRef.current;
     if (video == null) {
       return;
@@ -77,9 +109,14 @@ export const PausableMovie = ({ src }: Props) => {
         setIsPlaying(false);
       },
     );
-  }, [isVisible, prefersReducedMotion, src]);
+  }, [isVisible, prefersReducedMotion, shouldRenderVideo, src]);
 
   const handleClick = useCallback(() => {
+    if (!shouldRenderVideo) {
+      setShouldRenderVideo(true);
+      return;
+    }
+
     const video = videoRef.current;
     if (video == null) {
       return;
@@ -101,7 +138,7 @@ export const PausableMovie = ({ src }: Props) => {
     wasPausedManuallyRef.current = true;
     video.pause();
     setIsPlaying(false);
-  }, []);
+  }, [shouldRenderVideo]);
 
   const handlePlay = useCallback(() => {
     setIsPlaying(true);
@@ -120,18 +157,31 @@ export const PausableMovie = ({ src }: Props) => {
         onClick={handleClick}
         type="button"
       >
-        <video
-          ref={videoRef}
-          className="h-full w-full object-cover"
-          disablePictureInPicture={true}
-          loop={true}
-          muted={true}
-          onPause={handlePause}
-          onPlay={handlePlay}
-          playsInline={true}
-          preload="metadata"
-          src={src}
-        />
+        {shouldRenderVideo ? (
+          <video
+            ref={videoRef}
+            className="h-full w-full object-cover"
+            disablePictureInPicture={true}
+            loop={true}
+            muted={true}
+            onPause={handlePause}
+            onPlay={handlePlay}
+            poster={poster}
+            playsInline={true}
+            preload={preload}
+            src={src}
+          />
+        ) : (
+          <img
+            alt=""
+            aria-hidden="true"
+            className="h-full w-full object-cover"
+            decoding="async"
+            fetchPriority={prioritizePoster ? "high" : "auto"}
+            loading={prioritizePoster ? "eager" : "lazy"}
+            src={poster}
+          />
+        )}
         <div
           className={classNames(
             "absolute left-1/2 top-1/2 flex h-16 w-16 items-center justify-center rounded-full bg-cax-overlay/50 text-3xl text-cax-surface-raised -translate-x-1/2 -translate-y-1/2",

@@ -4,14 +4,14 @@ interface Props {
   headline: string;
   description?: string;
   buttonLabel?: string;
-  authModalId: string;
+  onRequestAuthModal: () => void;
 }
 
 export const DirectMessageGate = ({
   headline,
   description = "サインインするとダイレクトメッセージ機能をご利用いただけます。",
   buttonLabel = "サインイン",
-  authModalId,
+  onRequestAuthModal,
 }: Props) => {
   return (
     <>
@@ -23,9 +23,8 @@ export const DirectMessageGate = ({
         {description !== "" ? <p className="text-cax-text-muted text-sm">{description}</p> : null}
         <button
           className="bg-cax-brand text-cax-surface-raised hover:bg-cax-brand-strong inline-flex items-center justify-center rounded-full px-6 py-2 shadow"
+          onClick={onRequestAuthModal}
           type="button"
-          command="show-modal"
-          commandfor={authModalId}
         >
           {buttonLabel}
         </button>

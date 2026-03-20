@@ -1,8 +1,10 @@
 import history from "connect-history-api-fallback";
+import fs from "node:fs";
 import { Router } from "express";
 import serveStatic from "serve-static";
 import path from "node:path";
 
+import { Post } from "@web-speed-hackathon-2026/server/src/models";
 import {
   CLIENT_DIST_PATH,
   PUBLIC_PATH,
@@ -10,6 +12,7 @@ import {
 } from "@web-speed-hackathon-2026/server/src/paths";
 
 export const staticRouter = Router();
+const clientIndexHtml = fs.readFileSync(path.join(CLIENT_DIST_PATH, "index.html"), "utf-8");
 
 function setStaticCacheControl(
   res: Parameters<NonNullable<serveStatic.ServeStaticOptions["setHeaders"]>>[0],
@@ -52,6 +55,30 @@ function setStaticCacheControl(
 
   res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
 }
+
+async function renderHomeIndexHtml(): Promise<string> {
+  const posts = await Post.findAll({
+    limit: 8,
+  });
+  const firstMovie = posts
+    .map((post) => post.get("movie") as { id: string } | null)
+    .find((movie) => movie != null);
+  if (firstMovie == null) {
+    return clientIndexHtml;
+  }
+
+  const preloadTag = `<link rel="preload" as="image" href="/movies/${firstMovie.id}.jpg" fetchpriority="high" />`;
+  return clientIndexHtml.replace("</head>", `    ${preloadTag}\n  </head>`);
+}
+
+staticRouter.get("/", async (_req, res, next) => {
+  try {
+    res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+    res.type("html").send(await renderHomeIndexHtml());
+  } catch (error) {
+    next(error);
+  }
+});
 
 // SPA 対応のため、ファイルが存在しないときに index.html を返す
 staticRouter.use(history());

@@ -1,11 +1,22 @@
-import { lazy, Suspense, useEffect, useId } from "react";
+import { lazy, Suspense, useCallback, useEffect, useId, useState } from "react";
 import { Helmet, HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
-import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
-import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
+import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
 import { useAuthSession } from "@web-speed-hackathon-2026/client/src/hooks/use_auth_session";
+
+const LazyAuthModalContainer = lazy(async () => {
+  const module = await import("@web-speed-hackathon-2026/client/src/containers/AuthModalContainer");
+  return { default: module.AuthModalContainer };
+});
+
+const LazyNewPostModalContainer = lazy(async () => {
+  const module = await import(
+    "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer"
+  );
+  return { default: module.NewPostModalContainer };
+});
 
 const LazyCrokContainer = lazy(async () => {
   const module = await import("@web-speed-hackathon-2026/client/src/containers/CrokContainer");
@@ -46,11 +57,6 @@ const LazyTermContainer = lazy(async () => {
   return { default: module.TermContainer };
 });
 
-const LazyTimelineContainer = lazy(async () => {
-  const module = await import("@web-speed-hackathon-2026/client/src/containers/TimelineContainer");
-  return { default: module.TimelineContainer };
-});
-
 const LazyUserProfileContainer = lazy(async () => {
   const module = await import(
     "@web-speed-hackathon-2026/client/src/containers/UserProfileContainer"
@@ -81,30 +87,47 @@ export const AppContainer = () => {
 
   const authModalId = useId();
   const newPostModalId = useId();
+  const [shouldLoadAuthModal, setShouldLoadAuthModal] = useState(false);
+  const [shouldLoadNewPostModal, setShouldLoadNewPostModal] = useState(false);
+  const [authOpenRequestKey, setAuthOpenRequestKey] = useState(0);
+  const [newPostOpenRequestKey, setNewPostOpenRequestKey] = useState(0);
+
+  const handleRequestAuthModal = useCallback(() => {
+    setShouldLoadAuthModal(true);
+    setAuthOpenRequestKey((key) => key + 1);
+  }, []);
+
+  const handleRequestNewPostModal = useCallback(() => {
+    setShouldLoadNewPostModal(true);
+    setNewPostOpenRequestKey((key) => key + 1);
+  }, []);
 
   return (
     <HelmetProvider>
       <AppPage
         activeUser={activeUser}
-        authModalId={authModalId}
-        newPostModalId={newPostModalId}
         onLogout={logout}
+        onRequestAuthModal={handleRequestAuthModal}
+        onRequestNewPostModal={handleRequestNewPostModal}
       >
         <Suspense fallback={<RouteFallback />}>
           <Routes>
-            <Route element={<LazyTimelineContainer />} path="/" />
+            <Route element={<TimelineContainer />} path="/" />
             <Route
               element={
                 <LazyDirectMessageListContainer
                   activeUser={activeUser}
-                  authModalId={authModalId}
+                  onRequestAuthModal={handleRequestAuthModal}
                 />
               }
               path="/dm"
             />
             <Route
               element={
-                <LazyDirectMessageContainer activeUser={activeUser} authModalId={authModalId} />
+                <LazyDirectMessageContainer
+                  activeUser={activeUser}
+                  onRequestAuthModal={handleRequestAuthModal}
+                />
               }
               path="/dm/:conversationId"
             />
@@ -113,18 +136,30 @@ export const AppContainer = () => {
             <Route element={<LazyPostContainer />} path="/posts/:postId" />
             <Route element={<LazyTermContainer />} path="/terms" />
             <Route
-              element={<LazyCrokContainer activeUser={activeUser} authModalId={authModalId} />}
+              element={
+                <LazyCrokContainer
+                  activeUser={activeUser}
+                  onRequestAuthModal={handleRequestAuthModal}
+                />
+              }
               path="/crok"
             />
             <Route element={<LazyNotFoundContainer />} path="*" />
           </Routes>
         </Suspense>
       </AppPage>
-
-      {activeUser === null ? (
-        <AuthModalContainer id={authModalId} onUpdateActiveUser={updateActiveUser} />
-      ) : null}
-      {activeUser !== null ? <NewPostModalContainer id={newPostModalId} /> : null}
+      <Suspense fallback={null}>
+        {shouldLoadAuthModal ? (
+          <LazyAuthModalContainer
+            id={authModalId}
+            onUpdateActiveUser={updateActiveUser}
+            openRequestKey={authOpenRequestKey}
+          />
+        ) : null}
+        {shouldLoadNewPostModal ? (
+          <LazyNewPostModalContainer id={newPostModalId} openRequestKey={newPostOpenRequestKey} />
+        ) : null}
+      </Suspense>
     </HelmetProvider>
   );
 };

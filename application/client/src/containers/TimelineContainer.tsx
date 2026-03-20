@@ -15,7 +15,7 @@ export const TimelineContainer = () => {
       <Helmet>
         <title>タイムライン - CaX</title>
       </Helmet>
-      <TimelinePage timeline={posts} />
+      <TimelinePage prioritizeFirstMedia timeline={posts} />
     </InfiniteScroll>
   );
 };

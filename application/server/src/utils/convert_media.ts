@@ -66,6 +66,28 @@ export async function convertMovieToWebm(data: Buffer): Promise<Buffer> {
   });
 }
 
+export async function generateMoviePoster(data: Buffer): Promise<Buffer> {
+  return withTempDir(async (dirPath) => {
+    const inputPath = path.join(dirPath, "input");
+    const outputPath = path.join(dirPath, "poster.jpg");
+
+    await fs.writeFile(inputPath, data);
+
+    await runFfmpeg([
+      "-y",
+      "-i",
+      inputPath,
+      "-frames:v",
+      "1",
+      "-vf",
+      "crop='min(iw,ih)':'min(iw,ih)',scale='min(iw,500)':-2",
+      outputPath,
+    ]);
+
+    return fs.readFile(outputPath);
+  });
+}
+
 export async function convertSoundToMp3(
   data: Buffer,
   metadata: SoundMetadata,
