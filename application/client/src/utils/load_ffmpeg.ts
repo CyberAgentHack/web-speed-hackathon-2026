@@ -1,6 +1,8 @@
-import { FFmpeg } from "@ffmpeg/ffmpeg";
+import type { FFmpeg } from "@ffmpeg/ffmpeg";
 
 export async function loadFFmpeg(): Promise<FFmpeg> {
+  const { FFmpeg } = await import("@ffmpeg/ffmpeg");
+
   const ffmpeg = new FFmpeg();
 
   await ffmpeg.load({
