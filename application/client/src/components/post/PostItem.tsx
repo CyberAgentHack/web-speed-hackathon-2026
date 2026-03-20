@@ -22,6 +22,7 @@ export const PostItem = ({ post }: Props) => {
             >
               <img
                 alt={post.user.profileImage?.alt ?? ""}
+                decoding="async"
                 src={getSafeProfileImagePath(post.user.profileImage)}
               />
             </Link>
@@ -51,7 +52,7 @@ export const PostItem = ({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea eagerFirstImage={true} images={post.images} />
             </div>
           ) : null}
           {post.movie ? (

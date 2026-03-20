@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -17,6 +17,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
   const [conversations, setConversations] =
     useState<Array<Models.DirectMessageConversationListItem> | null>(null);
   const [error, setError] = useState<Error | null>(null);
+  const hasHandledInitialUnreadSync = useRef(false);
 
   const loadConversations = useCallback(async () => {
     if (activeUser == null) {
@@ -39,6 +40,10 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
   }, [loadConversations]);
 
   useWs("/api/v1/dm/unread", () => {
+    if (!hasHandledInitialUnreadSync.current) {
+      hasHandledInitialUnreadSync.current = true;
+      return;
+    }
     void loadConversations();
   });
 
@@ -79,6 +84,8 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                     <img
                       alt={peer.profileImage.alt}
                       className="w-12 shrink-0 self-start rounded-full"
+                      decoding="async"
+                      loading="lazy"
                       src={getProfileImagePath(peer.profileImage.id)}
                     />
                     <div className="flex flex-1 flex-col">

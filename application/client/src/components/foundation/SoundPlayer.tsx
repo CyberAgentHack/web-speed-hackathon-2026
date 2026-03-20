@@ -10,12 +10,17 @@ interface Props {
 }
 
 export const SoundPlayer = ({ sound }: Props) => {
-  // Use direct URL for the audio element — no binary fetch needed before first paint
   const audioSrc = getSoundPath(sound.id);
+  const [isActivated, setIsActivated] = useState(false);
+  const [playRequested, setPlayRequested] = useState(false);
 
-  // Waveform data is fetched lazily after initial render
+  // Waveform data is fetched only after the user starts playback.
   const [waveData, setWaveData] = useState<ArrayBuffer | null>(null);
   useEffect(() => {
+    if (!isActivated) {
+      return;
+    }
+
     let cancelled = false;
     fetch(audioSrc)
       .then((r) => r.arrayBuffer())
@@ -26,7 +31,7 @@ export const SoundPlayer = ({ sound }: Props) => {
     return () => {
       cancelled = true;
     };
-  }, [audioSrc]);
+  }, [audioSrc, isActivated]);
 
   const [currentTimeRatio, setCurrentTimeRatio] = useState(0);
   const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>((ev) => {
@@ -36,21 +41,63 @@ export const SoundPlayer = ({ sound }: Props) => {
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const handleTogglePlaying = useCallback(() => {
-    setIsPlaying((isPlaying) => {
-      if (isPlaying) {
-        audioRef.current?.pause();
-      } else {
-        audioRef.current?.play();
+  useEffect(() => {
+    if (!isActivated || !playRequested) {
+      return;
+    }
+
+    let cancelled = false;
+    const startPlayback = async () => {
+      try {
+        await audioRef.current?.play();
+        if (!cancelled) {
+          setIsPlaying(true);
+        }
+      } catch {
+        if (!cancelled) {
+          setIsPlaying(false);
+        }
+      } finally {
+        if (!cancelled) {
+          setPlayRequested(false);
+        }
       }
-      return !isPlaying;
-    });
+    };
+
+    void startPlayback();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isActivated, playRequested]);
+
+  const handleTogglePlaying = useCallback(() => {
+    if (isPlaying) {
+      audioRef.current?.pause();
+      setIsPlaying(false);
+      return;
+    }
+
+    if (!isActivated) {
+      setIsActivated(true);
+    }
+    setPlayRequested(true);
+  }, [isActivated, isPlaying]);
+
+  const handlePause = useCallback(() => {
+    setIsPlaying(false);
   }, []);
 
   return (
     <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
-      {/* Audio plays immediately via native URL — no blob conversion required */}
-      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} src={audioSrc} />
+      <audio
+        ref={audioRef}
+        loop={true}
+        onPause={handlePause}
+        onTimeUpdate={handleTimeUpdate}
+        preload="none"
+        src={isActivated ? audioSrc : undefined}
+      />
       <div className="p-2">
         <button
           className="bg-cax-accent text-cax-surface-raised flex h-8 w-8 items-center justify-center rounded-full text-sm hover:opacity-75"

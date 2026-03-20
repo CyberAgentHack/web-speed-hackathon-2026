@@ -18,6 +18,8 @@ export const CommentItem = ({ comment }: Props) => {
           >
             <img
               alt={comment.user.profileImage?.alt ?? ""}
+              decoding="async"
+              loading="lazy"
               src={getSafeProfileImagePath(comment.user.profileImage)}
             />
           </Link>
