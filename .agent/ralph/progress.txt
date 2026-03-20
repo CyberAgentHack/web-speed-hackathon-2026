@@ -69,4 +69,30 @@ Feature: CaX パフォーマンス改善 (ralph/perf-optimization)
 - `pnpm typecheck`: client PASS, server PASS
 
 ### Commit
+- 18e9a99 feat: [US-002] - Babel設定の本番向け最適化とポリフィル削除
+
+---
+
+## US-003: サーバーHTTPヘッダーとキャッシュ設定の修正
+**Date:** 2026-03-20
+
+### Implementation
+- `app.ts` のグローバルミドルウェアから `Cache-Control: max-age=0, no-transform` と `Connection: close` を削除
+- `static.ts` の全 serveStatic から `etag: false, lastModified: false` を削除（デフォルト true に戻す）
+- Upload: `maxAge: "1d"`, Public: `maxAge: "7d"`, Client dist: `maxAge: "7d"` の長期キャッシュを設定
+
+### Acceptance Criteria Verification
+| Criteria | Test | Result |
+|---|---|---|
+| Cache-Control/Connection ミドルウェア削除 | app.ts 確認 | PASS |
+| 静的アセットに長期キャッシュ設定 | static.ts 確認: maxAge "1d"/"7d" | PASS |
+| etag/lastModified がデフォルト有効 | static.ts: etag/lastModified オプション削除 | PASS |
+| サーバー正常起動 | typecheck PASS (起動に必要な型チェック) | PASS |
+| Codex レビュー完了 | 手動レビュー — Cache-Control 削除は API レスポンスにもキャッシュが効く可能性あるが、ブラウザのデフォルト挙動に委ねることで問題なし | PASS |
+| Typecheck passes | server PASS | PASS |
+
+### Quality Checks
+- `pnpm typecheck (server)`: PASS
+
+### Commit
 - Pending

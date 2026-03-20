@@ -56,8 +56,8 @@
         "Typecheck passes"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "2026-03-20 完了。Cache-Control: max-age=0 と Connection: close を削除。静的ファイルに長期キャッシュ設定。etag/lastModified をデフォルト有効に。"
     },
     {
       "id": "US-004",
