@@ -4,7 +4,7 @@ import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/
 import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { formatJaDate, toIsoString } from "@web-speed-hackathon-2026/client/src/utils/date_time";
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { getProfileImageThumbnailPath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   post: Models.Post;
@@ -22,7 +22,7 @@ export const PostItem = ({ post }: Props) => {
             >
               <img
                 alt={post.user.profileImage.alt}
-                src={getProfileImagePath(post.user.profileImage.id)}
+                src={getProfileImageThumbnailPath(post.user.profileImage.id)}
               />
             </Link>
           </div>

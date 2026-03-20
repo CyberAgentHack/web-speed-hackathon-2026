@@ -7,6 +7,14 @@ import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/comp
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
+function calculateDisplayWidthForPostImage(imageCount: number): number {
+  const viewportWidth = window.innerWidth;
+  const sidePadding = viewportWidth < 640 ? 24 : 72;
+  const containerWidth = Math.min(760, Math.max(320, viewportWidth - sidePadding));
+  const columns = imageCount <= 1 ? 1 : 2;
+  return Math.ceil(containerWidth / columns);
+}
+
 interface SubmitParams {
   images: File[];
   movie: File | undefined;
@@ -44,6 +52,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
   const handleChangeImages = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
     const files = Array.from(ev.currentTarget.files ?? []).slice(0, 4);
     const isValid = files.every((file) => file.size <= MAX_UPLOAD_BYTES_LIMIT);
+    const targetDisplayWidthPx = calculateDisplayWidthForPostImage(files.length);
 
     setHasFileError(isValid !== true);
     if (isValid) {
@@ -55,7 +64,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
           );
           const convertedFiles = await Promise.all(
             files.map((file) =>
-              convertImage(file).then(
+              convertImage(file, { targetDisplayWidthPx }).then(
                 (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
               ),
             ),
