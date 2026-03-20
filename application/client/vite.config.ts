@@ -51,6 +51,6 @@ export default defineConfig({
 		},
 	},
 	ssr: {
-		noExternal: ["bayesian-bm25", "kuromoji", "react-syntax-highlighter"],
+		noExternal: true,
 	},
 });
