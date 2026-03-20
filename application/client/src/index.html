@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CaX</title>
+    <link rel="preload" href="/api/v1/me" as="fetch" />
+    <link rel="preload" href="/api/v1/posts?offset=0&limit=30" as="fetch" />
   </head>
   <body class="bg-cax-canvas text-cax-text">
     <div id="app"></div>
