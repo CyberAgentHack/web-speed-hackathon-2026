@@ -30,7 +30,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     text: "",
   });
 
-  const [hasFileError, setHasFileError] = useState(false);
+  const [fileErrorMessage, setFileErrorMessage] = useState<string | null>(null);
   const [isConverting, setIsConverting] = useState(false);
 
   const handleChangeText = useCallback<ChangeEventHandler<HTMLTextAreaElement>>((ev) => {
@@ -43,83 +43,104 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
   const handleChangeImages = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
     const files = Array.from(ev.currentTarget.files ?? []).slice(0, 4);
+    if (files.length === 0) {
+      return;
+    }
+
     const isValid = files.every((file) => file.size <= MAX_UPLOAD_BYTES_LIMIT);
 
-    setHasFileError(isValid !== true);
-    if (isValid) {
-      setIsConverting(true);
+    if (!isValid) {
+      setFileErrorMessage("10 MB より小さくしてください");
+      return;
+    }
 
-      import("@web-speed-hackathon-2026/client/src/utils/convert_image")
-        .then(({ convertImage }) =>
-          Promise.all(
-            files.map((file) =>
-              convertImage(file, { extension: "JPG" }).then(
-                (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
-              ),
+    setFileErrorMessage(null);
+    setIsConverting(true);
+
+    import("@web-speed-hackathon-2026/client/src/utils/convert_image")
+      .then(({ convertImage }) =>
+        Promise.all(
+          files.map((file) =>
+            convertImage(file, { extension: "JPG" }).then(
+              (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
             ),
           ),
-        )
-        .then((convertedFiles) => {
-          setParams((params) => ({
-            ...params,
-            images: convertedFiles,
-            movie: undefined,
-            sound: undefined,
-          }));
-
-          setIsConverting(false);
-        })
-        .catch(console.error);
-    }
+        ),
+      )
+      .then((convertedFiles) => {
+        setParams((params) => ({
+          ...params,
+          images: convertedFiles,
+          movie: undefined,
+          sound: undefined,
+        }));
+      })
+      .catch((error) => {
+        console.error(error);
+        setFileErrorMessage("ファイルの変換に失敗しました");
+      })
+      .finally(() => {
+        setIsConverting(false);
+      });
   }, []);
 
   const handleChangeSound = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
-    const file = Array.from(ev.currentTarget.files ?? [])[0]!;
+    const file = Array.from(ev.currentTarget.files ?? [])[0];
+    if (file == null) {
+      return;
+    }
+
     const isValid = file.size <= MAX_UPLOAD_BYTES_LIMIT;
 
-    setHasFileError(isValid !== true);
-    if (isValid) {
-      setIsConverting(true);
-
-      import("@web-speed-hackathon-2026/client/src/utils/convert_sound")
-        .then(({ convertSound }) => convertSound(file, { extension: "mp3" }))
-        .then((converted) => {
-          setParams((params) => ({
-            ...params,
-            images: [],
-            movie: undefined,
-            sound: new File([converted], "converted.mp3", { type: "audio/mpeg" }),
-          }));
-
-          setIsConverting(false);
-        });
+    if (!isValid) {
+      setFileErrorMessage("10 MB より小さくしてください");
+      return;
     }
+
+    setFileErrorMessage(null);
+    setParams((params) => ({
+      ...params,
+      images: [],
+      movie: undefined,
+      sound: file,
+    }));
   }, []);
 
   const handleChangeMovie = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
-    const file = Array.from(ev.currentTarget.files ?? [])[0]!;
+    const file = Array.from(ev.currentTarget.files ?? [])[0];
+    if (file == null) {
+      return;
+    }
+
     const isValid = file.size <= MAX_UPLOAD_BYTES_LIMIT;
 
-    setHasFileError(isValid !== true);
-    if (isValid) {
-      setIsConverting(true);
-
-      import("@web-speed-hackathon-2026/client/src/utils/convert_movie")
-        .then(({ convertMovie }) => convertMovie(file, { extension: "gif", size: undefined }))
-        .then((converted) => {
-          setParams((params) => ({
-            ...params,
-            images: [],
-            movie: new File([converted], "converted.gif", {
-              type: "image/gif",
-            }),
-            sound: undefined,
-          }));
-
-          setIsConverting(false);
-        })
-        .catch(console.error);
+    if (!isValid) {
+      setFileErrorMessage("10 MB より小さくしてください");
+      return;
     }
+
+    setFileErrorMessage(null);
+    setIsConverting(true);
+
+    import("@web-speed-hackathon-2026/client/src/utils/convert_movie")
+      .then(({ convertMovie }) => convertMovie(file, { extension: "gif", size: undefined }))
+      .then((converted) => {
+        setParams((params) => ({
+          ...params,
+          images: [],
+          movie: new File([converted], "converted.gif", {
+            type: "image/gif",
+          }),
+          sound: undefined,
+        }));
+      })
+      .catch((error) => {
+        console.error(error);
+        setFileErrorMessage("ファイルの変換に失敗しました");
+      })
+      .finally(() => {
+        setIsConverting(false);
+      });
   }, []);
 
   const handleSubmit = useCallback<FormEventHandler<HTMLFormElement>>(
@@ -176,7 +197,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       </ModalSubmitButton>
 
       <ModalErrorMessage>
-        {hasFileError ? "10 MB より小さくしてください" : hasError ? "投稿ができませんでした" : null}
+        {fileErrorMessage ?? (hasError ? "投稿ができませんでした" : null)}
       </ModalErrorMessage>
     </form>
   );

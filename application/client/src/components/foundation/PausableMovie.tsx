@@ -19,14 +19,20 @@ export const PausableMovie = ({ src, thumbnailSrc }: Props) => {
 
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
-      <img
-        alt=""
-        className="h-full w-full object-cover"
-        fetchPriority={thumbnailSrc && !playing ? "high" : undefined}
-        onClick={thumbnailSrc && !playing ? handleClick : undefined}
-        src={playing || !thumbnailSrc ? src : thumbnailSrc}
-        style={thumbnailSrc && !playing ? { cursor: "pointer" } : undefined}
-      />
+      <button
+        aria-label="動画プレイヤー"
+        className="block h-full w-full overflow-hidden"
+        onClick={handleClick}
+        type="button"
+      >
+        <img
+          alt=""
+          className="h-full w-full object-cover"
+          fetchPriority={thumbnailSrc && !playing ? "high" : undefined}
+          src={playing || !thumbnailSrc ? src : thumbnailSrc}
+          style={thumbnailSrc && !playing ? { cursor: "pointer" } : undefined}
+        />
+      </button>
     </AspectRatioBox>
   );
 };

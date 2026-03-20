@@ -44,6 +44,11 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
   const [hasOpened, setHasOpened] = useState(false);
   const [resetKey, setResetKey] = useState(0);
+
+  useEffect(() => {
+    void import("@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage");
+  }, []);
+
   useEffect(() => {
     if (!ref.current) return;
     const element = ref.current;
@@ -64,21 +69,25 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
 
   const handleSubmit = useCallback(
     async (values: AuthFormData) => {
-      try {
-        if (values.type === "signup") {
+      if (values.type === "signup") {
+        try {
           const user = await sendJSON<Models.User>("/api/v1/signup", values);
           onUpdateActiveUser(user);
-        } else {
-          const user = await sendJSON<Models.User>("/api/v1/signin", values);
-          onUpdateActiveUser(user);
+          handleRequestCloseModal();
+          return;
+        } catch (err: unknown) {
+          const error = getErrorCode(err as JQuery.jqXHR<unknown>, values.type);
+          throw new Error(error);
         }
+      }
+
+      try {
+        const user = await sendJSON<Models.User>("/api/v1/signin", values);
+        onUpdateActiveUser(user);
         handleRequestCloseModal();
       } catch (err: unknown) {
-        const { SubmissionError } = await import("redux-form");
         const error = getErrorCode(err as JQuery.jqXHR<unknown>, values.type);
-        throw new SubmissionError({
-          _error: error,
-        });
+        throw new Error(error);
       }
     },
     [handleRequestCloseModal, onUpdateActiveUser],

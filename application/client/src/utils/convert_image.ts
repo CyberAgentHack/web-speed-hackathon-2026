@@ -6,14 +6,21 @@ interface Options {
   extension: string;
 }
 
+let imageMagickReadyPromise: Promise<void> | null = null;
+
+export function warmUpImageMagick(): Promise<void> {
+  imageMagickReadyPromise ??= initializeImageMagick(magickWasm);
+  return imageMagickReadyPromise;
+}
+
 export async function convertImage(file: File, options: Options): Promise<Blob> {
-  await initializeImageMagick(magickWasm);
+  await warmUpImageMagick();
 
   const byteArray = new Uint8Array(await file.arrayBuffer());
 
   return new Promise((resolve) => {
     ImageMagick.read(byteArray, (img) => {
-      img.format = options.extension;
+      img.format = options.extension as unknown as MagickFormat;
 
       const comment = img.comment;
 

@@ -1,8 +1,12 @@
-import { BM25 } from "bayesian-bm25";
 import type { Tokenizer, IpadicFeatures } from "kuromoji";
-import _ from "lodash";
 
 const STOP_POS = new Set(["助詞", "助動詞", "記号"]);
+
+export interface SuggestionIndexEntry {
+  searchText: string;
+  text: string;
+  tokens: string[];
+}
 
 /**
  * 形態素解析で内容語トークン（名詞、動詞、形容詞など）を抽出
@@ -13,30 +17,52 @@ export function extractTokens(tokens: IpadicFeatures[]): string[] {
     .map((t) => t.surface_form.toLowerCase());
 }
 
-/**
- * BM25で候補をスコアリングして、クエリと類似度の高い上位10件を返す
- */
-export function filterSuggestionsBM25(
+export function buildSuggestionIndex(
   tokenizer: Tokenizer<IpadicFeatures>,
   candidates: string[],
+): SuggestionIndexEntry[] {
+  return candidates.map((text) => ({
+    text,
+    tokens: extractTokens(tokenizer.tokenize(text)),
+    searchText: text.toLowerCase(),
+  }));
+}
+
+export function filterSuggestions(
+  candidates: SuggestionIndexEntry[],
+  queryText: string,
   queryTokens: string[],
 ): string[] {
-  if (queryTokens.length === 0) return [];
+  if (queryTokens.length === 0) {
+    return [];
+  }
 
-  const bm25 = new BM25({ k1: 1.2, b: 0.75 });
+  const loweredQuery = queryText.trim().toLowerCase();
 
-  const tokenizedCandidates = candidates.map((c) => extractTokens(tokenizer.tokenize(c)));
-  bm25.index(tokenizedCandidates);
+  return candidates
+    .map((candidate) => {
+      let score = candidate.searchText.includes(loweredQuery) ? 100 : 0;
 
-  const results = _.zipWith(candidates, bm25.getScores(queryTokens), (text, score) => {
-    return { text, score };
-  });
+      for (const token of queryTokens) {
+        if (candidate.tokens.includes(token)) {
+          score += 12;
+          continue;
+        }
 
-  // スコアが高い（＝類似度が高い）ものが下に来るように、上位10件を取得する
-  return _(results)
-    .filter((s) => s.score > 0)
-    .sortBy(["score"])
-    .slice(-10)
-    .map((s) => s.text)
-    .value();
+        if (candidate.searchText.includes(token)) {
+          score += 6;
+          continue;
+        }
+
+        if (candidate.tokens.some((candidateToken) => candidateToken.startsWith(token))) {
+          score += 3;
+        }
+      }
+
+      return { score, text: candidate.text };
+    })
+    .filter((candidate) => candidate.score > 0)
+    .sort((a, b) => b.score - a.score || a.text.localeCompare(b.text, "ja-JP"))
+    .slice(0, 10)
+    .map((candidate) => candidate.text);
 }

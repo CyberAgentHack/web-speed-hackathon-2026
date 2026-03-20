@@ -1,3 +1,11 @@
+type PrefetchCache = Record<string, Promise<unknown>>;
+
+function getPrefetchCache(): PrefetchCache {
+  const globalWindow = window as unknown as { __q?: PrefetchCache };
+  globalWindow.__q ??= {};
+  return globalWindow.__q;
+}
+
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -8,6 +16,26 @@ export async function fetchJSON<T>(url: string): Promise<T> {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   return response.json() as Promise<T>;
+}
+
+export function prefetchJSON<T>(url: string): Promise<T | null> {
+  const cache = getPrefetchCache();
+  const cached = cache[url] as Promise<T | null> | undefined;
+  if (cached) {
+    return cached;
+  }
+
+  const promise = fetch(url)
+    .then((response) => {
+      if (!response.ok) {
+        return null;
+      }
+      return response.json() as Promise<T>;
+    })
+    .catch(() => null);
+
+  cache[url] = promise;
+  return promise;
 }
 
 export async function sendFile<T>(url: string, file: File): Promise<T> {

@@ -1,10 +1,11 @@
-import { MouseEvent, useCallback, useId, useRef, useState } from "react";
+import { MouseEvent, useCallback, useEffect, useId, useRef, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
+  alt: string;
   src: string;
   fetchPriority?: "high" | "low" | "auto";
 }
@@ -12,17 +13,20 @@ interface Props {
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
-export const CoveredImage = ({ src, fetchPriority }: Props) => {
+export const CoveredImage = ({ alt: initialAlt, src, fetchPriority }: Props) => {
   const dialogId = useId();
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const [alt, setAlt] = useState("");
+  const [alt, setAlt] = useState(initialAlt);
+
+  useEffect(() => {
+    setAlt(initialAlt);
+  }, [initialAlt]);
 
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
     ev.stopPropagation();
   }, []);
 
   const handleAltButtonClick = useCallback(async () => {
-    // Load EXIF alt text on demand
     if (!alt) {
       try {
         const data = await fetchBinary(src);

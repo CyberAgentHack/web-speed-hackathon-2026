@@ -25,7 +25,11 @@ export const ImageArea = ({ images, priority }: Props) => {
                 "row-span-2": images.length <= 2 || (images.length === 3 && idx === 0),
               })}
             >
-              <CoveredImage src={getImagePath(image.id, 800)} fetchPriority={priority && idx === 0 ? "high" : "auto"} />
+              <CoveredImage
+                alt={image.alt}
+                src={getImagePath(image.id, 800)}
+                fetchPriority={priority && idx === 0 ? "high" : "auto"}
+              />
             </div>
           );
         })}

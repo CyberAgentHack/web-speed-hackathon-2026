@@ -27,27 +27,50 @@ async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promis
 
 interface Props {
   id: string;
+  isOpen: boolean;
+  onRequestClose: () => void;
 }
 
-export const NewPostModalContainer = ({ id }: Props) => {
+export const NewPostModalContainer = ({ id, isOpen, onRequestClose }: Props) => {
   const dialogId = useId();
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
+
   useEffect(() => {
     const element = ref.current;
     if (element == null) {
       return;
     }
 
-    const handleToggle = () => {
-      // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
+    if (isOpen) {
+      if (!element.open) {
+        element.showModal();
+      }
+      return;
+    }
+
+    if (element.open) {
+      element.close();
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (element == null) {
+      return;
+    }
+
+    const handleClose = () => {
+      onRequestClose();
       setResetKey((key) => key + 1);
     };
-    element.addEventListener("toggle", handleToggle);
+    element.addEventListener("close", handleClose);
+    element.addEventListener("cancel", handleClose);
     return () => {
-      element.removeEventListener("toggle", handleToggle);
+      element.removeEventListener("close", handleClose);
+      element.removeEventListener("cancel", handleClose);
     };
-  }, []);
+  }, [onRequestClose]);
 
   const navigate = useNavigate();
 
@@ -63,7 +86,7 @@ export const NewPostModalContainer = ({ id }: Props) => {
       try {
         setIsLoading(true);
         const post = await sendNewPost(params);
-        ref.current?.close();
+        onRequestClose();
         navigate(`/posts/${post.id}`);
       } catch {
         setHasError(true);
@@ -71,7 +94,7 @@ export const NewPostModalContainer = ({ id }: Props) => {
         setIsLoading(false);
       }
     },
-    [navigate],
+    [navigate, onRequestClose],
   );
 
   return (

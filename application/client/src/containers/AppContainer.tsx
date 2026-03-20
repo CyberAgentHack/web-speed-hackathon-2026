@@ -27,8 +27,10 @@ const NotFoundContainer = lazy(() =>
     default: m.NotFoundContainer,
   })),
 );
+const importNewPostModalContainer = () =>
+  import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer");
 const NewPostModalContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer").then((m) => ({
+  importNewPostModalContainer().then((m) => ({
     default: m.NewPostModalContainer,
   })),
 );
@@ -61,6 +63,8 @@ export const AppContainer = () => {
   }, [pathname]);
 
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
+  const [isNewPostModalReady, setIsNewPostModalReady] = useState(false);
+  const [isNewPostModalOpen, setIsNewPostModalOpen] = useState(false);
   useEffect(() => {
     type PrefetchCache = Record<string, Promise<unknown>>;
     const cache = (window as unknown as { __q?: PrefetchCache }).__q;
@@ -80,11 +84,64 @@ export const AppContainer = () => {
         // Not logged in, activeUser stays null
       });
   }, []);
+  useEffect(() => {
+    if (activeUser === null) {
+      setIsNewPostModalReady(false);
+      setIsNewPostModalOpen(false);
+      return;
+    }
+
+    let isCancelled = false;
+    void importNewPostModalContainer().then(() => {
+      if (!isCancelled) {
+        setIsNewPostModalReady(true);
+      }
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeUser]);
+  useEffect(() => {
+    if (activeUser === null || pathname !== "/") {
+      return;
+    }
+
+    void import("@web-speed-hackathon-2026/client/src/utils/convert_image").then(
+      ({ warmUpImageMagick }) => {
+        void warmUpImageMagick();
+      },
+    );
+    void import("@web-speed-hackathon-2026/client/src/utils/convert_movie");
+    void import("@web-speed-hackathon-2026/client/src/utils/convert_sound");
+    void import("@web-speed-hackathon-2026/client/src/utils/load_ffmpeg").then(
+      ({ warmUpFFmpeg }) => {
+        void warmUpFFmpeg();
+      },
+    );
+  }, [activeUser, pathname]);
+
   const handleLogout = useCallback(async () => {
-    await sendJSON("/api/v1/signout", {});
+    const previousUser = activeUser;
+
+    setIsNewPostModalOpen(false);
     setActiveUser(null);
     navigate("/");
-  }, [navigate]);
+
+    try {
+      await sendJSON("/api/v1/signout", {});
+    } catch {
+      if (previousUser != null) {
+        setActiveUser(previousUser);
+      }
+    }
+  }, [activeUser, navigate]);
+  const handleOpenNewPostModal = useCallback(() => {
+    setIsNewPostModalOpen(true);
+  }, []);
+  const handleCloseNewPostModal = useCallback(() => {
+    setIsNewPostModalOpen(false);
+  }, []);
 
   const authModalId = useId();
   const newPostModalId = useId();
@@ -94,7 +151,8 @@ export const AppContainer = () => {
       <AppPage
         activeUser={activeUser}
         authModalId={authModalId}
-        newPostModalId={newPostModalId}
+        canPost={activeUser !== null && isNewPostModalReady}
+        onOpenNewPostModal={handleOpenNewPostModal}
         onLogout={handleLogout}
       >
         <Suspense fallback={null}>
@@ -126,9 +184,13 @@ export const AppContainer = () => {
       </AppPage>
 
       <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
-      {activeUser !== null && (
+      {activeUser !== null && isNewPostModalReady && (
         <Suspense fallback={null}>
-          <NewPostModalContainer id={newPostModalId} />
+          <NewPostModalContainer
+            id={newPostModalId}
+            isOpen={isNewPostModalOpen}
+            onRequestClose={handleCloseNewPostModal}
+          />
         </Suspense>
       )}
     </HelmetProvider>

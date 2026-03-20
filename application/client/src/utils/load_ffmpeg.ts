@@ -1,6 +1,8 @@
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 
-export async function loadFFmpeg(): Promise<FFmpeg> {
+let ffmpegPromise: Promise<FFmpeg> | null = null;
+
+async function createFFmpeg(): Promise<FFmpeg> {
   const ffmpeg = new FFmpeg();
 
   await ffmpeg.load({
@@ -13,4 +15,13 @@ export async function loadFFmpeg(): Promise<FFmpeg> {
   });
 
   return ffmpeg;
+}
+
+export function loadFFmpeg(): Promise<FFmpeg> {
+  ffmpegPromise ??= createFFmpeg();
+  return ffmpegPromise;
+}
+
+export function warmUpFFmpeg(): Promise<FFmpeg> {
+  return loadFFmpeg();
 }

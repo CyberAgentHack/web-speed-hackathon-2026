@@ -9,8 +9,7 @@ import { v4 as uuidv4 } from "uuid";
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import { extractMetadataFromSound } from "@web-speed-hackathon-2026/server/src/utils/extract_metadata_from_sound";
 
-// 変換した音声の拡張子
-const EXTENSION = "mp3";
+const SUPPORTED_EXTENSIONS = new Set(["mp3", "wav"]);
 
 export const soundRouter = Router();
 
@@ -23,7 +22,7 @@ soundRouter.post("/sounds", async (req, res) => {
   }
 
   const type = await fileTypeFromBuffer(req.body);
-  if (type === undefined || type.ext !== EXTENSION) {
+  if (type === undefined || !SUPPORTED_EXTENSIONS.has(type.ext)) {
     throw new httpErrors.BadRequest("Invalid file type");
   }
 
@@ -31,7 +30,7 @@ soundRouter.post("/sounds", async (req, res) => {
 
   const { artist, title } = await extractMetadataFromSound(req.body);
 
-  const filePath = path.resolve(UPLOAD_PATH, `./sounds/${soundId}.${EXTENSION}`);
+  const filePath = path.resolve(UPLOAD_PATH, `./sounds/${soundId}.${type.ext}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds"), { recursive: true });
   await fs.writeFile(filePath, req.body);
 

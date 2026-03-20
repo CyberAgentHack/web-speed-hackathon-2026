@@ -19,6 +19,25 @@ interface DmTypingEvent {
 }
 
 const TYPING_INDICATOR_DURATION_MS = 10 * 1000;
+const TYPING_EVENT_THROTTLE_MS = 1000;
+
+function upsertConversationMessage(
+  current: Models.DirectMessageConversation,
+  nextMessage: Models.DirectMessage,
+): Models.DirectMessageConversation {
+  const nextMessages = current.messages.some((message) => message.id === nextMessage.id)
+    ? current.messages.map((message) => (message.id === nextMessage.id ? nextMessage : message))
+    : [...current.messages, nextMessage];
+
+  nextMessages.sort(
+    (left, right) => new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime(),
+  );
+
+  return {
+    ...current,
+    messages: nextMessages,
+  };
+}
 
 interface Props {
   activeUser: Models.User | null;
@@ -34,6 +53,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastTypingSentAtRef = useRef(0);
 
   const loadConversation = useCallback(async () => {
     if (activeUser == null) {
@@ -65,33 +85,41 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     async (params: DirectMessageFormData) => {
       setIsSubmitting(true);
       try {
-        await sendJSON(`/api/v1/dm/${conversationId}/messages`, {
+        const message = await sendJSON<Models.DirectMessage>(`/api/v1/dm/${conversationId}/messages`, {
           body: params.body,
         });
-        loadConversation();
+        setConversation((current) =>
+          current === null ? current : upsertConversationMessage(current, message),
+        );
       } finally {
         setIsSubmitting(false);
       }
     },
-    [conversationId, loadConversation],
+    [conversationId],
   );
 
   const handleTyping = useCallback(async () => {
+    const now = Date.now();
+    if (now - lastTypingSentAtRef.current < TYPING_EVENT_THROTTLE_MS) {
+      return;
+    }
+    lastTypingSentAtRef.current = now;
     void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
   }, [conversationId]);
 
   useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {
     if (event.type === "dm:conversation:message") {
-      void loadConversation().then(() => {
-        if (event.payload.sender.id !== activeUser?.id) {
-          setIsPeerTyping(false);
-          if (peerTypingTimeoutRef.current !== null) {
-            clearTimeout(peerTypingTimeoutRef.current);
-          }
-          peerTypingTimeoutRef.current = null;
+      setConversation((current) =>
+        current === null ? current : upsertConversationMessage(current, event.payload),
+      );
+      if (event.payload.sender.id !== activeUser?.id) {
+        setIsPeerTyping(false);
+        if (peerTypingTimeoutRef.current !== null) {
+          clearTimeout(peerTypingTimeoutRef.current);
         }
-      });
-      void sendRead();
+        peerTypingTimeoutRef.current = null;
+        void sendRead();
+      }
     } else if (event.type === "dm:conversation:typing") {
       setIsPeerTyping(true);
       if (peerTypingTimeoutRef.current !== null) {
@@ -116,7 +144,28 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     if (conversationError != null) {
       return <NotFoundContainer />;
     }
-    return null;
+    return (
+      <>
+        <Helmet>
+          <title>ダイレクトメッセージ - CaX</title>
+        </Helmet>
+        <section className="bg-cax-surface flex min-h-[calc(100vh-(--spacing(12)))] flex-col lg:min-h-screen">
+          <header className="border-cax-border bg-cax-surface sticky top-0 z-10 flex items-center gap-2 border-b px-4 py-3">
+            <div className="bg-cax-surface-subtle h-12 w-12 rounded-full" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="bg-cax-surface-subtle h-5 w-32 rounded" />
+              <div className="bg-cax-surface-subtle h-3 w-24 rounded" />
+            </div>
+          </header>
+          <div className="bg-cax-surface-subtle flex flex-1 items-center justify-center px-4 py-8">
+            <p className="text-cax-text-muted text-sm">メッセージを読み込んでいます...</p>
+          </div>
+          <div className="border-cax-border bg-cax-surface border-t p-4">
+            <div className="bg-cax-surface-subtle h-11 rounded-xl" />
+          </div>
+        </section>
+      </>
+    );
   }
 
   const peer =

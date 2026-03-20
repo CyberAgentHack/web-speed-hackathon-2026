@@ -1,5 +1,7 @@
 import { type Tokenizer, type IpadicFeatures } from "kuromoji";
 import {
+  startTransition,
+  useDeferredValue,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -11,8 +13,10 @@ import {
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import {
+  buildSuggestionIndex,
   extractTokens,
-  filterSuggestionsBM25,
+  filterSuggestions,
+  type SuggestionIndexEntry,
 } from "@web-speed-hackathon-2026/client/src/utils/bm25_search";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
@@ -79,10 +83,13 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
+  const [rawSuggestions, setRawSuggestions] = useState<string[] | null>(null);
+  const [indexedSuggestions, setIndexedSuggestions] = useState<SuggestionIndexEntry[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const deferredInputValue = useDeferredValue(inputValue);
 
   // サジェストが更新されたら一番下にスクロール
   useLayoutEffect(() => {
@@ -116,39 +123,48 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   useEffect(() => {
     let cancelled = false;
 
-    const updateSuggestions = async () => {
-      if (!tokenizer || !inputValue.trim()) {
-        setSuggestions([]);
-        setQueryTokens([]);
-        setShowSuggestions(false);
-        return;
-      }
-
-      const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-        "/api/v1/crok/suggestions",
-      );
-      if (cancelled) {
-        return;
-      }
-
-      const tokens = extractTokens(tokenizer.tokenize(inputValue));
-      const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
-
-      if (cancelled) {
-        return;
-      }
-
-      setQueryTokens(tokens);
-      setSuggestions(results);
-      setShowSuggestions(results.length > 0);
-    };
-
-    void updateSuggestions();
+    void fetchJSON<{ suggestions: string[] }>("/api/v1/crok/suggestions")
+      .then(({ suggestions }) => {
+        if (!cancelled) {
+          setRawSuggestions(suggestions);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setRawSuggestions([]);
+        }
+      });
 
     return () => {
       cancelled = true;
     };
-  }, [inputValue, tokenizer]);
+  }, []);
+
+  useEffect(() => {
+    if (tokenizer === null || rawSuggestions === null) {
+      return;
+    }
+
+    startTransition(() => {
+      setIndexedSuggestions(buildSuggestionIndex(tokenizer, rawSuggestions));
+    });
+  }, [rawSuggestions, tokenizer]);
+
+  useEffect(() => {
+    if (!tokenizer || !deferredInputValue.trim()) {
+      setSuggestions([]);
+      setQueryTokens([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const tokens = extractTokens(tokenizer.tokenize(deferredInputValue));
+    const results = filterSuggestions(indexedSuggestions, deferredInputValue, tokens);
+
+    setQueryTokens(tokens);
+    setSuggestions(results);
+    setShowSuggestions(results.length > 0);
+  }, [deferredInputValue, indexedSuggestions, tokenizer]);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;

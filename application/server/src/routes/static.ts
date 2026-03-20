@@ -18,6 +18,32 @@ export const staticRouter = Router();
 // In-memory cache: "filePath:width" → resized JPEG buffer
 const imageCache = new Map<string, Buffer>();
 
+async function soundAliasHandler(req: Request, res: Response, next: NextFunction) {
+  if (!req.path.startsWith("/sounds/") || !req.path.endsWith(".mp3")) {
+    return next();
+  }
+
+  const soundId = path.basename(req.path, ".mp3");
+  const candidateFiles = [
+    { contentType: "audio/mpeg", ext: "mp3" },
+    { contentType: "audio/wav", ext: "wav" },
+  ];
+
+  for (const { contentType, ext } of candidateFiles) {
+    const filePath = path.join(UPLOAD_PATH, "sounds", `${soundId}.${ext}`);
+    try {
+      await fs.access(filePath);
+      res.setHeader("Cache-Control", "public, max-age=86400");
+      res.type(contentType);
+      return res.sendFile(filePath);
+    } catch {
+      // try next extension
+    }
+  }
+
+  return next();
+}
+
 async function resizeImageHandler(req: Request, res: Response, next: NextFunction) {
   const widthStr = req.query["width"];
   if (!widthStr || typeof widthStr !== "string") {
@@ -134,6 +160,9 @@ staticRouter.use(movieThumbnailHandler);
 
 // Image resize middleware (before static file handlers)
 staticRouter.use(resizeImageHandler);
+
+// Allow `/sounds/:id.mp3` to resolve uploaded WAV files without changing client URLs.
+staticRouter.use(soundAliasHandler);
 
 staticRouter.use(
   serveStatic(UPLOAD_PATH, {

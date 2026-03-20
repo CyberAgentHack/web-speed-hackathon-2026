@@ -10,6 +10,8 @@ interface Options {
  */
 export async function convertMovie(file: File, options: Options): Promise<Blob> {
   const ffmpeg = await loadFFmpeg();
+  const jobId = crypto.randomUUID();
+  const inputFile = `movie-${jobId}.input`;
 
   const cropOptions = [
     "'min(iw,ih)':'min(iw,ih)'",
@@ -17,27 +19,27 @@ export async function convertMovie(file: File, options: Options): Promise<Blob> 
   ]
     .filter(Boolean)
     .join(",");
-  const exportFile = `export.${options.extension}`;
+  const exportFile = `movie-${jobId}.${options.extension}`;
 
-  await ffmpeg.writeFile("file", new Uint8Array(await file.arrayBuffer()));
+  try {
+    await ffmpeg.writeFile(inputFile, new Uint8Array(await file.arrayBuffer()));
 
-  await ffmpeg.exec([
-    "-i",
-    "file",
-    "-t",
-    "5",
-    "-r",
-    "10",
-    "-vf",
-    `crop=${cropOptions}`,
-    "-an",
-    exportFile,
-  ]);
+    await ffmpeg.exec([
+      "-i",
+      inputFile,
+      "-t",
+      "5",
+      "-r",
+      "10",
+      "-vf",
+      `crop=${cropOptions}`,
+      "-an",
+      exportFile,
+    ]);
 
-  const output = (await ffmpeg.readFile(exportFile)) as Uint8Array<ArrayBuffer>;
-
-  ffmpeg.terminate();
-
-  const blob = new Blob([output]);
-  return blob;
+    const output = (await ffmpeg.readFile(exportFile)) as Uint8Array<ArrayBuffer>;
+    return new Blob([output]);
+  } finally {
+    await Promise.allSettled([ffmpeg.deleteFile(inputFile), ffmpeg.deleteFile(exportFile)]);
+  }
 }
