@@ -4,7 +4,6 @@ import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
-import { CrokContainer } from "@web-speed-hackathon-2026/client/src/containers/CrokContainer";
 import { DirectMessageContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer";
 import { DirectMessageListContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
@@ -21,6 +20,10 @@ const NewPostModalContainer = lazy(async () => {
 const SearchContainer = lazy(async () => {
   const mod = await import("@web-speed-hackathon-2026/client/src/containers/SearchContainer");
   return { default: mod.SearchContainer };
+});
+const CrokContainer = lazy(async () => {
+  const mod = await import("@web-speed-hackathon-2026/client/src/containers/CrokContainer");
+  return { default: mod.CrokContainer };
 });
 
 export const AppContainer = () => {
@@ -102,7 +105,11 @@ export const AppContainer = () => {
           <Route element={<PostContainer />} path="/posts/:postId" />
           <Route element={<TermContainer />} path="/terms" />
           <Route
-            element={<CrokContainer activeUser={activeUser} authModalId={authModalId} />}
+            element={
+              <Suspense fallback={null}>
+                <CrokContainer activeUser={activeUser} authModalId={authModalId} />
+              </Suspense>
+            }
             path="/crok"
           />
           <Route element={<NotFoundContainer />} path="*" />
