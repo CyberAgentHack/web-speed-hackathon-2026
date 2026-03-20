@@ -223,5 +223,4 @@ application/upload/**
 
 
 perf-measurements/**
-CLAUDE.md
-.claude/**
+.claude/settings.local.json
