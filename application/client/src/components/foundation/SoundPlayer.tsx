@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactEventHandler } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
@@ -13,11 +13,23 @@ interface Props {
 }
 
 export const SoundPlayer = ({ sound }: Props) => {
-  const { data, isLoading } = useFetch(getSoundPath(sound.id), fetchBinary);
+  const [shouldLoadSound, setShouldLoadSound] = useState(false);
+  const [shouldAutoplay, setShouldAutoplay] = useState(false);
+  const { data, isLoading } = useFetch(getSoundPath(sound.id), fetchBinary, {
+    enabled: shouldLoadSound,
+  });
 
   const blobUrl = useMemo(() => {
     return data !== null ? URL.createObjectURL(new Blob([data])) : null;
   }, [data]);
+
+  useEffect(() => {
+    return () => {
+      if (blobUrl !== null) {
+        URL.revokeObjectURL(blobUrl);
+      }
+    };
+  }, [blobUrl]);
 
   const [currentTimeRatio, setCurrentTimeRatio] = useState(0);
   const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>((ev) => {
@@ -27,7 +39,28 @@ export const SoundPlayer = ({ sound }: Props) => {
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    if (!shouldAutoplay || blobUrl === null) {
+      return;
+    }
+
+    void audioRef.current?.play();
+    setIsPlaying(true);
+    setShouldAutoplay(false);
+  }, [blobUrl, shouldAutoplay]);
+
   const handleTogglePlaying = useCallback(() => {
+    if (!shouldLoadSound) {
+      setShouldLoadSound(true);
+      setShouldAutoplay(true);
+      return;
+    }
+
+    if (isLoading || data === null || blobUrl === null) {
+      return;
+    }
+
     setIsPlaying((isPlaying) => {
       if (isPlaying) {
         audioRef.current?.pause();
@@ -36,17 +69,15 @@ export const SoundPlayer = ({ sound }: Props) => {
       }
       return !isPlaying;
     });
-  }, []);
-
-  if (isLoading || data === null || blobUrl === null) {
-    return <div className="bg-cax-surface-subtle h-full w-full" />;
-  }
+  }, [blobUrl, data, isLoading, shouldLoadSound]);
 
   return (
     <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
-      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} src={blobUrl}>
-        <track kind="captions" label="captions" srcLang="ja" />
-      </audio>
+      {blobUrl !== null ? (
+        <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} src={blobUrl}>
+          <track kind="captions" label="captions" srcLang="ja" />
+        </audio>
+      ) : null}
       <div className="p-2">
         <button
           className="bg-cax-accent text-cax-surface-raised flex h-8 w-8 items-center justify-center rounded-full text-sm hover:opacity-75"
@@ -66,9 +97,13 @@ export const SoundPlayer = ({ sound }: Props) => {
         <div className="pt-2">
           <AspectRatioBox aspectHeight={1} aspectWidth={10}>
             <div className="relative h-full w-full">
-              <div className="absolute inset-0 h-full w-full">
-                <SoundWaveSVG soundData={data} />
-              </div>
+              {data !== null ? (
+                <div className="absolute inset-0 h-full w-full">
+                  <SoundWaveSVG soundData={data} />
+                </div>
+              ) : (
+                <div className="bg-cax-surface-subtle absolute inset-0 h-full w-full" />
+              )}
               <div
                 className="bg-cax-surface-subtle absolute inset-0 h-full w-full opacity-75"
                 style={{ left: `${currentTimeRatio * 100}%` }}

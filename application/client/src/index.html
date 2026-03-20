@@ -4,10 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CaX</title>
-    <link rel="preload" href="/fonts/ReiNoAreMincho-Regular.otf" as="font" type="font/otf" />
-    <link rel="preload" href="/fonts/ReiNoAreMincho-Heavy.otf" as="font" type="font/otf" />
+    <% for (const href of htmlWebpackPlugin.files.css) { %>
+    <link rel="preload" href="<%= href %>" as="style" />
+    <link rel="stylesheet" href="<%= href %>" media="print" onload="this.media = 'all'" />
+    <noscript><link rel="stylesheet" href="<%= href %>" /></noscript>
+    <% } %>
   </head>
   <body class="bg-cax-canvas text-cax-text">
     <div id="app"></div>
+    <% for (const src of htmlWebpackPlugin.files.js) { %>
+    <script defer src="<%= src %>"></script>
+    <% } %>
   </body>
 </html>
