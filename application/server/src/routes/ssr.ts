@@ -58,7 +58,7 @@ function buildPreloadHints(ssrData: SSRData): string {
   const hints: string[] = [];
   // LCP 画像 preload: タイムラインの最初の投稿の最初の画像
   const firstPosts = ssrData.posts ?? ssrData.userPosts ?? [];
-  for (const post of firstPosts.slice(0, 1)) {
+  for (const post of firstPosts.slice(0, 5)) {
     if (post.images && post.images.length > 0) {
       hints.push(`<link rel="preload" as="image" href="/images/${post.images[0]!.id}.jpg">`);
       break;

@@ -119,8 +119,4 @@ export default defineConfig({
       },
     },
   },
-
-  optimizeDeps: {
-    include: ["negaposi-analyzer-ja"],
-  },
 });
