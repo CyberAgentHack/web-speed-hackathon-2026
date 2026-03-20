@@ -4,6 +4,7 @@ import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { SoundWaveSVG } from "@web-speed-hackathon-2026/client/src/components/foundation/SoundWaveSVG";
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
+import { useIntersectionObserver } from "@web-speed-hackathon-2026/client/src/hooks/use_intersection_observer";
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getSoundPath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
@@ -11,7 +12,7 @@ interface Props {
   sound: Models.Sound;
 }
 
-export const SoundPlayer = ({ sound }: Props) => {
+const SoundPlayerInner = ({ sound }: Props) => {
   const soundPath = getSoundPath(sound.id);
   // 波形表示のためにのみバイナリ取得（再生はブロックしない）
   const { data } = useFetch(soundPath, fetchBinary);
@@ -70,6 +71,17 @@ export const SoundPlayer = ({ sound }: Props) => {
           </div>
         )}
       </div>
+    </div>
+  );
+};
+
+export const SoundPlayer = ({ sound }: Props) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isVisible = useIntersectionObserver(containerRef, { rootMargin: "200px" });
+
+  return (
+    <div ref={containerRef} className="h-full w-full">
+      {isVisible ? <SoundPlayerInner sound={sound} /> : null}
     </div>
   );
 };
