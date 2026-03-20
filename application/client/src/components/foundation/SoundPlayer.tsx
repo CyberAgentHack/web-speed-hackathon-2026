@@ -1,4 +1,4 @@
-import { ReactEventHandler, useCallback, useEffect, useRef, useState } from "react";
+import { ReactEventHandler, useCallback, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -12,7 +12,6 @@ interface Props {
 export const SoundPlayer = ({ sound }: Props) => {
   const soundPath = getSoundPath(sound.id, sound.extension);
 
-  const [soundData, setSoundData] = useState<ArrayBuffer | null>(null);
   const [currentTimeRatio, setCurrentTimeRatio] = useState(0);
   const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>((ev) => {
     const el = ev.currentTarget;
@@ -31,17 +30,6 @@ export const SoundPlayer = ({ sound }: Props) => {
       return !isPlaying;
     });
   }, []);
-
-  // Fetch sound data for waveform in idle time
-  useEffect(() => {
-    const idle = requestIdleCallback(() => {
-      fetch(soundPath)
-        .then((res) => res.arrayBuffer())
-        .then(setSoundData)
-        .catch(() => {});
-    });
-    return () => cancelIdleCallback(idle);
-  }, [soundPath]);
 
   return (
     <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
@@ -66,7 +54,7 @@ export const SoundPlayer = ({ sound }: Props) => {
           <AspectRatioBox aspectHeight={1} aspectWidth={10}>
             <div className="relative h-full w-full">
               <div className="absolute inset-0 h-full w-full">
-                {soundData !== null ? <SoundWaveSVG soundData={soundData} /> : null}
+                <SoundWaveSVG soundId={sound.id} />
               </div>
               <div
                 className="bg-cax-surface-subtle absolute inset-0 h-full w-full opacity-75"

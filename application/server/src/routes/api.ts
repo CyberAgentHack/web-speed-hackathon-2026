@@ -12,6 +12,7 @@ import { postRouter } from "@web-speed-hackathon-2026/server/src/routes/api/post
 import { searchRouter } from "@web-speed-hackathon-2026/server/src/routes/api/search";
 import { soundRouter } from "@web-speed-hackathon-2026/server/src/routes/api/sound";
 import { userRouter } from "@web-speed-hackathon-2026/server/src/routes/api/user";
+import { waveformRouter } from "@web-speed-hackathon-2026/server/src/routes/api/waveform";
 
 export const apiRouter = Router();
 
@@ -23,6 +24,7 @@ apiRouter.use(searchRouter);
 apiRouter.use(movieRouter);
 apiRouter.use(imageRouter);
 apiRouter.use(soundRouter);
+apiRouter.use(waveformRouter);
 apiRouter.use(authRouter);
 apiRouter.use(crokRouter);
 

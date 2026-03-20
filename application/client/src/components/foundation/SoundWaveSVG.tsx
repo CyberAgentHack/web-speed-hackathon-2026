@@ -1,55 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 
+import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+
 interface ParsedData {
   max: number;
   peaks: number[];
 }
 
-function mean(arr: (number | undefined)[]): number {
-  let sum = 0;
-  let count = 0;
-  for (const v of arr) {
-    if (v != null) {
-      sum += v;
-      count++;
-    }
-  }
-  return count > 0 ? sum / count : 0;
-}
-
-async function calculate(data: ArrayBuffer): Promise<ParsedData> {
-  const audioCtx = new window.AudioContext();
-
-  try {
-    // 音声をデコードする
-    const buffer = await audioCtx.decodeAudioData(data.slice(0));
-    // 左の音声データの絶対値を取る
-    const leftData = Array.from(buffer.getChannelData(0), Math.abs);
-    // 右の音声データの絶対値を取る
-    const rightData = Array.from(buffer.getChannelData(1), Math.abs);
-
-    // 左右の音声データの平均を取る
-    const normalized = leftData.map((l, i) => (l + (rightData[i] ?? 0)) / 2);
-    // 100 個の chunk に分ける
-    const chunkSize = Math.ceil(normalized.length / 100);
-    const peaks: number[] = [];
-    for (let i = 0; i < normalized.length; i += chunkSize) {
-      peaks.push(mean(normalized.slice(i, i + chunkSize)));
-    }
-    // chunk の平均の中から最大値を取る
-    const max = Math.max(...peaks, 0);
-
-    return { max, peaks };
-  } finally {
-    await audioCtx.close();
-  }
-}
-
 interface Props {
-  soundData: ArrayBuffer;
+  soundId: string;
 }
 
-export const SoundWaveSVG = ({ soundData }: Props) => {
+export const SoundWaveSVG = ({ soundId }: Props) => {
   const uniqueIdRef = useRef(Math.random().toString(16));
   const [{ max, peaks }, setPeaks] = useState<ParsedData>({
     max: 0,
@@ -57,15 +19,13 @@ export const SoundWaveSVG = ({ soundData }: Props) => {
   });
 
   useEffect(() => {
-    calculate(soundData).then(({ max, peaks }) => {
-      setPeaks({ max, peaks });
-    });
-  }, [soundData]);
+    fetchJSON<ParsedData>(`/api/v1/waveform/${soundId}`).then(setPeaks).catch(() => {});
+  }, [soundId]);
 
   return (
     <svg className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1">
       {peaks.map((peak, idx) => {
-        const ratio = peak / max;
+        const ratio = max > 0 ? peak / max : 0;
         return (
           <rect
             key={`${uniqueIdRef.current}#${idx}`}
