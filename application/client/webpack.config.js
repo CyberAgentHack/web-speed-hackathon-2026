@@ -12,6 +12,8 @@ const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
 
 /** @type {import('webpack').Configuration} */
+const isProduction = process.env.NODE_ENV === "production";
+
 const config = {
   devServer: {
     historyApiFallback: true,
@@ -25,18 +27,15 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: isProduction ? false : "inline-source-map",
   entry: {
     main: [
-      "core-js",
-      "regenerator-runtime/runtime",
-      "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: isProduction ? "production" : "development",
   module: {
     rules: [
       {
@@ -60,24 +59,21 @@ const config = {
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
-    filename: "scripts/[name].js",
+    filename: isProduction ? "scripts/[name]-[contenthash].js" : "scripts/[name].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     clean: true,
   },
   plugins: [
     new webpack.ProvidePlugin({
-      $: "jquery",
       AudioContext: ["standardized-audio-context", "AudioContext"],
       Buffer: ["buffer", "Buffer"],
-      "window.jQuery": "jquery",
     }),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
+      NODE_ENV: isProduction ? "production" : "development",
     }),
     new MiniCssExtractPlugin({
       filename: "styles/[name].css",
@@ -91,8 +87,9 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: true,
       template: path.resolve(SRC_PATH, "./index.html"),
+      scriptLoading: "defer",
     }),
   ],
   resolve: {
@@ -128,14 +125,39 @@ const config = {
     },
   },
   optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
+    minimize: isProduction,
+    splitChunks: isProduction ? {
+      chunks: "all",
+      maxInitialRequests: 25,
+      minSize: 20000,
+      cacheGroups: {
+        react: {
+          test: /[\\/]node_modules[\\/](react|react-dom|react-router|react-redux|redux|scheduler)[\\/]/,
+          name: "vendor-react",
+          chunks: "all",
+          priority: 30,
+        },
+        // 重いライブラリは非同期チャンクとしてのみ分割
+        heavy: {
+          test: /[\\/]node_modules[\\/](@ffmpeg|@imagemagick|@mlc-ai|kuromoji|gifler|omggif)[\\/]/,
+          name: "vendor-heavy",
+          chunks: "async",
+          priority: 25,
+        },
+        vendors: {
+          test: /[\\/]node_modules[\\/]/,
+          name: "vendors",
+          chunks: "initial",
+          priority: 10,
+        },
+      },
+    } : false,
+    concatenateModules: true,
+    usedExports: true,
+    providedExports: true,
+    sideEffects: true,
   },
-  cache: false,
+  cache: true,
   ignoreWarnings: [
     {
       module: /@ffmpeg/,
