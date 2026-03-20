@@ -5,50 +5,72 @@ interface ParsedData {
   peaks: number[];
 }
 
-async function calculate(data: ArrayBuffer): Promise<ParsedData> {
+async function calculate(url: string): Promise<ParsedData> {
+  const res = await fetch(url);
+  const data = await res.arrayBuffer();
   const audioCtx = new AudioContext();
 
-  // 音声をデコードする
-  const buffer = await audioCtx.decodeAudioData(data.slice(0));
-  // 左の音声データの絶対値を取る
-  const leftData = Array.from(buffer.getChannelData(0), Math.abs);
-  // 右の音声データの絶対値を取る
-  const rightData = Array.from(buffer.getChannelData(1), Math.abs);
+  const buffer = await audioCtx.decodeAudioData(data);
+  const leftData = buffer.getChannelData(0);
+  const rightData = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : null;
 
-  // 左右の音声データの平均を取る
-  const normalized = leftData.map((l, i) => (l + (rightData[i] ?? 0)) / 2);
-  // 100 個の chunk に分けて chunk ごとに平均を取る
-  const chunkSize = Math.ceil(normalized.length / 100);
+  const chunkSize = Math.ceil(leftData.length / 100);
   const peaks: number[] = [];
-  for (let i = 0; i < normalized.length; i += chunkSize) {
-    const chunk = normalized.slice(i, i + chunkSize);
-    peaks.push(chunk.reduce((a, b) => a + b, 0) / chunk.length);
+  for (let i = 0; i < leftData.length; i += chunkSize) {
+    const end = Math.min(i + chunkSize, leftData.length);
+    let sum = 0;
+    for (let j = i; j < end; j++) {
+      const l = Math.abs(leftData[j]!);
+      const r = rightData ? Math.abs(rightData[j]!) : 0;
+      sum += (l + r) / (rightData ? 2 : 1);
+    }
+    peaks.push(sum / (end - i));
   }
-  // chunk の平均の中から最大値を取る
   const max = Math.max(...peaks, 0);
 
+  audioCtx.close();
   return { max, peaks };
 }
 
 interface Props {
-  soundData: ArrayBuffer;
+  soundUrl: string;
 }
 
-export const SoundWaveSVG = ({ soundData }: Props) => {
+export const SoundWaveSVG = ({ soundUrl }: Props) => {
   const uniqueIdRef = useRef(Math.random().toString(16));
+  const containerRef = useRef<SVGSVGElement>(null);
   const [{ max, peaks }, setPeaks] = useState<ParsedData>({
     max: 0,
     peaks: [],
   });
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    calculate(soundData).then(({ max, peaks }) => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible) return;
+    calculate(soundUrl).then(({ max, peaks }) => {
       setPeaks({ max, peaks });
     });
-  }, [soundData]);
+  }, [soundUrl, isVisible]);
 
   return (
-    <svg className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1">
+    <svg ref={containerRef} className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1">
       {peaks.map((peak, idx) => {
         const ratio = peak / max;
         return (
