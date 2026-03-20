@@ -10,7 +10,6 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@imagemagick/magick-wasm": "0.0.37",
     "@web-speed-hackathon-2026/client": "workspace:*",
     "bayesian-bm25": "0.4.0",
     "bluebird": "3.7.2",

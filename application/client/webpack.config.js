@@ -98,13 +98,7 @@ const config = {
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
-    alias: {
-      "@imagemagick/magick-wasm/magick.wasm$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@imagemagick/magick-wasm/dist/magick.wasm",
-      ),
-    },
+    alias: {},
     fallback: {
       fs: false,
       path: false,
