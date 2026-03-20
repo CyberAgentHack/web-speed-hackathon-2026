@@ -1,4 +1,5 @@
 import history from "connect-history-api-fallback";
+import type { Response } from "express";
 import { Router } from "express";
 import serveStatic from "serve-static";
 
@@ -10,26 +11,45 @@ import {
 
 export const staticRouter = Router();
 
+const YEAR_IN_SECONDS = 31536000;
+
+function setDistCache(_res: unknown, filePath: string) {
+  const res = _res as Response;
+  if (filePath.endsWith(".html")) {
+    res.setHeader("Cache-Control", "no-cache");
+  } else {
+    res.setHeader("Cache-Control", `public, max-age=${YEAR_IN_SECONDS}, immutable`);
+  }
+}
+
+function setPublicAssetCache(_res: unknown, _filePath: string) {
+  const res = _res as Response;
+  res.setHeader("Cache-Control", `public, max-age=${YEAR_IN_SECONDS}, immutable`);
+}
+
 // SPA 対応のため、ファイルが存在しないときに index.html を返す
 staticRouter.use(history());
 
 staticRouter.use(
   serveStatic(UPLOAD_PATH, {
-    etag: false,
-    lastModified: false,
+    etag: true,
+    lastModified: true,
+    setHeaders: setPublicAssetCache,
   }),
 );
 
 staticRouter.use(
   serveStatic(PUBLIC_PATH, {
-    etag: false,
-    lastModified: false,
+    etag: true,
+    lastModified: true,
+    setHeaders: setPublicAssetCache,
   }),
 );
 
 staticRouter.use(
   serveStatic(CLIENT_DIST_PATH, {
-    etag: false,
-    lastModified: false,
+    etag: true,
+    lastModified: true,
+    setHeaders: setDistCache,
   }),
 );
