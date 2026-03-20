@@ -22,10 +22,10 @@ export const PostItem = ({ post }: Props) => {
               to={`/users/${post.user.username}`}
             >
               <img
-                alt={post.user.profileImage.alt}
+                alt={post.user.profileImage?.alt}
                 height={56}
                 loading="lazy"
-                src={getOptimizedProfileImagePath(post.user.profileImage.id, 128)}
+                src={getOptimizedProfileImagePath(post.user.profileImage?.id, 128)}
                 width={56}
               />
             </Link>
