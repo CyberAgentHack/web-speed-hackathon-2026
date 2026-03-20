@@ -1,13 +1,10 @@
-import { promises as fs } from "fs";
-import path from "path";
-
 import { Router } from "express";
 import { fileTypeFromBuffer } from "file-type";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
-import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import { extractMetadataFromSound } from "@web-speed-hackathon-2026/server/src/utils/extract_metadata_from_sound";
+import { uploadFileToS3 } from "@web-speed-hackathon-2026/server/src/utils/s3";
 
 // 変換した音声の拡張子
 const EXTENSION = "mp3";
@@ -31,9 +28,7 @@ soundRouter.post("/sounds", async (req, res) => {
 
   const { artist, title } = await extractMetadataFromSound(req.body);
 
-  const filePath = path.resolve(UPLOAD_PATH, `./sounds/${soundId}.${EXTENSION}`);
-  await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds"), { recursive: true });
-  await fs.writeFile(filePath, req.body);
+  await uploadFileToS3(`sounds/${soundId}.${EXTENSION}`, req.body, type.mime);
 
   return res.status(200).type("application/json").send({ artist, id: soundId, title });
 });

@@ -1,12 +1,9 @@
-import { promises as fs } from "fs";
-import path from "path";
-
 import { Router } from "express";
 import { fileTypeFromBuffer } from "file-type";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
-import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+import { uploadFileToS3 } from "@web-speed-hackathon-2026/server/src/utils/s3";
 
 // 変換した画像の拡張子
 const EXTENSION = "jpg";
@@ -28,9 +25,7 @@ imageRouter.post("/images", async (req, res) => {
 
   const imageId = uuidv4();
 
-  const filePath = path.resolve(UPLOAD_PATH, `./images/${imageId}.${EXTENSION}`);
-  await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
-  await fs.writeFile(filePath, req.body);
+  await uploadFileToS3(`images/${imageId}.${EXTENSION}`, req.body, type.mime);
 
   return res.status(200).type("application/json").send({ id: imageId });
 });
