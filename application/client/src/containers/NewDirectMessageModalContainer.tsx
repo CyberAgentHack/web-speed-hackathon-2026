@@ -6,6 +6,7 @@ import { NewDirectMessageModalPage } from "@web-speed-hackathon-2026/client/src/
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { NewDirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
 import { ReduxFormProvider } from "@web-speed-hackathon-2026/client/src/store/ReduxFormProvider";
+import { normalizeUsernameInput } from "@web-speed-hackathon-2026/client/src/utils/username";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
@@ -33,7 +34,8 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
   const handleSubmit = useCallback(
     async (values: NewDirectMessageFormData) => {
       try {
-        const user = await fetchJSON<Models.User>(`/api/v1/users/${values.username}`);
+        const username = normalizeUsernameInput(values.username);
+        const user = await fetchJSON<Models.User>(`/api/v1/users/${username}`);
         const conversation = await sendJSON<Models.DirectMessageConversation>(`/api/v1/dm`, {
           peerId: user.id,
         });

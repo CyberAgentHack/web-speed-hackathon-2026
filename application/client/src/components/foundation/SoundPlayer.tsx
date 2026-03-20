@@ -3,7 +3,7 @@ import { lazy, ReactEventHandler, Suspense, useCallback, useRef, useState } from
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { useAfterLcp } from "@web-speed-hackathon-2026/client/src/hooks/use_after_lcp";
-import { getSoundPath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { getSoundPath, getSoundWaveformPath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 const SoundWaveSVG = lazy(async () => {
   const module = await import("@web-speed-hackathon-2026/client/src/components/foundation/SoundWaveSVG");
@@ -16,6 +16,7 @@ interface Props {
 
 export const SoundPlayer = ({ sound }: Props) => {
   const src = getSoundPath(sound.id);
+  const waveformSrc = getSoundWaveformPath(sound.id);
 
   const [currentTimeRatio, setCurrentTimeRatio] = useState(0);
   const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>((ev) => {
@@ -66,7 +67,7 @@ export const SoundPlayer = ({ sound }: Props) => {
                   <Suspense
                     fallback={<div aria-hidden="true" className="bg-cax-border/30 h-full w-full" />}
                   >
-                    <SoundWaveSVG soundSrc={src} />
+                    <SoundWaveSVG waveformSrc={waveformSrc} />
                   </Suspense>
                 ) : (
                   <div aria-hidden="true" className="bg-cax-border/30 h-full w-full" />

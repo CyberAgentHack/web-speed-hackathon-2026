@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import { extractMetadataFromSound } from "@web-speed-hackathon-2026/server/src/utils/extract_metadata_from_sound";
+import { extractSoundWaveform } from "@web-speed-hackathon-2026/server/src/utils/extract_sound_waveform";
 import { convertSoundToM4a } from "@web-speed-hackathon-2026/server/src/utils/media_conversion";
 
 const OUTPUT_EXTENSION = "m4a";
@@ -35,10 +36,13 @@ soundRouter.post("/sounds", async (req, res) => {
   const artist = rawMetadata.artist ?? UNKNOWN_ARTIST;
   const title = rawMetadata.title ?? UNKNOWN_TITLE;
   const converted = await convertSoundToM4a(req.body, type.ext, { artist, title });
+  const waveform = await extractSoundWaveform(converted, OUTPUT_EXTENSION);
 
   const filePath = path.resolve(UPLOAD_PATH, `./sounds/${soundId}.${OUTPUT_EXTENSION}`);
+  const waveformPath = path.resolve(UPLOAD_PATH, `./sounds/${soundId}.json`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds"), { recursive: true });
   await fs.writeFile(filePath, converted);
+  await fs.writeFile(waveformPath, JSON.stringify(waveform));
 
   return res.status(200).type("application/json").send({ artist, id: soundId, title });
 });

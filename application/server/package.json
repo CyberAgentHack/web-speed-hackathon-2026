@@ -8,6 +8,7 @@
   "main": "src/index.js",
   "scripts": {
     "build": "node ./scripts/build.mjs",
+    "sound:waveforms": "tsx ./scripts/generateSoundWaveforms.ts",
     "start": "tsx src/index.ts",
     "start:prod": "node dist/index.js",
     "typecheck": "tsc --noEmit",

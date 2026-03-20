@@ -67,7 +67,7 @@ export function initUser(sequelize: Sequelize) {
         type: DataTypes.STRING,
         unique: true,
         validate: {
-          is: /^[a-z0-9_-]+$/i,
+          is: /^[a-z0-9_]+$/i,
         },
       },
       createdAt: {

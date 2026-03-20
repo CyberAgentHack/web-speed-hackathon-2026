@@ -10,6 +10,10 @@ export function getSoundPath(soundId: string): string {
   return `/sounds/${soundId}.m4a`;
 }
 
+export function getSoundWaveformPath(soundId: string): string {
+  return `/sounds/${soundId}.json`;
+}
+
 export function getProfileImagePath(profileImageId: string): string {
   return `/images/profiles/${profileImageId}.webp`;
 }

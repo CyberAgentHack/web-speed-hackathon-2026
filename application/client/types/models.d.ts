@@ -64,6 +64,17 @@ declare namespace Models {
     messages: Array<Models.DirectMessage>;
   }
 
+  interface DirectMessageConversationSummary {
+    id: string;
+    initiator: Models.User;
+    member: Models.User;
+    lastMessage: {
+      body: string;
+      createdAt: string;
+    };
+    hasUnread: boolean;
+  }
+
   interface ChatMessage {
     role: "user" | "assistant";
     content: string;

@@ -29,4 +29,16 @@ export async function initializeSequelize() {
   await _sequelize.query(
     "CREATE INDEX IF NOT EXISTS idx_comments_post_id_created_at ON Comments (postId, createdAt)",
   );
+  await _sequelize.query(
+    "CREATE INDEX IF NOT EXISTS idx_dm_conversation_id_created_at ON DirectMessages (conversationId, createdAt DESC)",
+  );
+  await _sequelize.query(
+    "CREATE INDEX IF NOT EXISTS idx_dm_conversation_id_sender_id_is_read ON DirectMessages (conversationId, senderId, isRead)",
+  );
+  await _sequelize.query(
+    "CREATE INDEX IF NOT EXISTS idx_dmc_initiator_id ON DirectMessageConversations (initiatorId)",
+  );
+  await _sequelize.query(
+    "CREATE INDEX IF NOT EXISTS idx_dmc_member_id ON DirectMessageConversations (memberId)",
+  );
 }
