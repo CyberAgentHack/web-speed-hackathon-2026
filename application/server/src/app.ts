@@ -17,10 +17,13 @@ async function registerRoutes() {
   const { imageOptimizationRouter } =
     await import("@web-speed-hackathon-2026/server/src/routes/image_optimization");
   const { staticRouter } = await import("@web-speed-hackathon-2026/server/src/routes/static");
+  const { ssrRouter } = await import("@web-speed-hackathon-2026/server/src/routes/ssr");
 
   app.route("/api/v1", apiRouter);
   app.route("", imageOptimizationRouter);
   app.route("", staticRouter);
+  // SSR は静的ファイルにマッチしなかったリクエストを処理（history fallback の代替）
+  app.route("", ssrRouter);
 }
 
 export const routesReady = registerRoutes();

@@ -1,10 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
-import { Transform } from "node:stream";
+import { Readable, Transform } from "node:stream";
 
-import { Request, Response, Router } from "express";
+import { Hono } from "hono";
 
 import { CLIENT_DIST_PATH, SSR_DIST_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+import type { SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
 import { getServerData } from "@web-speed-hackathon-2026/server/src/ssr/getServerData";
 
 // Production で使う index.html テンプレートを起動時に読み込み
@@ -25,72 +26,76 @@ try {
   console.warn("SSR: entry-server.js not found in dist-ssr, SSR will be disabled");
 }
 
-function sendCsrFallback(res: Response) {
-  const html = templateHtml.replace("<!--ssr-outlet-->", "").replace("<!--ssr-head-->", "");
-  res.setHeader("Content-Type", "text/html");
-  res.setHeader("Cache-Control", "no-cache");
-  res.send(html);
+function csrFallbackHtml(): string {
+  return templateHtml.replace("<!--ssr-outlet-->", "").replace("<!--ssr-head-->", "");
 }
 
-export const ssrRouter = Router();
+export const ssrRouter = new Hono<SessionEnv>();
 
-ssrRouter.use(async (req: Request, res: Response, next) => {
-  // API や静的ファイルリクエストはスキップ
-  if (req.path.startsWith("/api") || req.path.match(/\.\w+$/)) {
-    return next();
+ssrRouter.get("*", async (c) => {
+  if (c.req.path.startsWith("/api") || /\.\w+$/.test(c.req.path)) {
+    return c.notFound();
   }
 
-  // SSR が利用不可の場合は fallback
   if (!templateHtml || !ssrRender) {
-    return next();
+    c.header("Cache-Control", "no-cache");
+    return c.html(csrFallbackHtml());
   }
 
   try {
-    const ssrData = await getServerData(req.originalUrl, req.session.userId);
+    const session = c.get("session");
+    const userId = session.get()?.userId;
+    const ssrData = await getServerData(c.req.path, userId);
 
-    // SSR スキップ対象（DM, Crok 等）
     if (ssrData === null) {
-      return sendCsrFallback(res);
+      c.header("Cache-Control", "no-cache");
+      return c.html(csrFallbackHtml());
     }
 
-    // テンプレート分割
     const [beforeOutlet, afterOutlet] = templateHtml.split("<!--ssr-outlet-->");
     const ssrDataScript = `<script>window.__SSR_DATA__=${JSON.stringify(ssrData).replace(/</g, "\\u003c")}</script>`;
     const afterWithHead = afterOutlet!.replace("<!--ssr-head-->", ssrDataScript);
 
-    // SSR HTML の後に残りの HTML を追記する Transform stream
-    const appendStream = new Transform({
-      transform(chunk, _encoding, callback) {
-        callback(null, chunk);
-      },
-      flush(callback) {
-        this.push(afterWithHead);
-        callback();
-      },
+    // React の renderToPipeableStream → Node.js Transform → Web ReadableStream
+    const nodeStream = await new Promise<Readable>((resolve) => {
+      let didError = false;
+
+      const appendStream = new Transform({
+        transform(chunk, _encoding, callback) {
+          callback(null, chunk);
+        },
+        flush(callback) {
+          this.push(afterWithHead);
+          callback();
+        },
+      });
+
+      const { pipe } = ssrRender!(c.req.path, ssrData, {
+        onShellReady() {
+          if (didError) return;
+          appendStream.unshift(Buffer.from(beforeOutlet!));
+          pipe(appendStream);
+          resolve(appendStream);
+        },
+        onShellError() {
+          didError = true;
+          resolve(Readable.from(csrFallbackHtml()));
+        },
+        onError(error: unknown) {
+          didError = true;
+          console.error("SSR render error:", error);
+        },
+      });
     });
 
-    let didError = false;
+    const webStream = Readable.toWeb(nodeStream) as ReadableStream;
 
-    const { pipe } = ssrRender(req.originalUrl, ssrData, {
-      onShellReady() {
-        if (didError) return;
-        res.setHeader("Content-Type", "text/html");
-        res.setHeader("Cache-Control", "no-cache");
-        res.write(beforeOutlet);
-        pipe(appendStream);
-        appendStream.pipe(res);
-      },
-      onShellError() {
-        didError = true;
-        sendCsrFallback(res);
-      },
-      onError(error: unknown) {
-        didError = true;
-        console.error("SSR render error:", error);
-      },
-    });
+    c.header("Content-Type", "text/html; charset=utf-8");
+    c.header("Cache-Control", "no-cache");
+    return c.body(webStream);
   } catch (error) {
     console.error("SSR handler error:", error);
-    sendCsrFallback(res);
+    c.header("Cache-Control", "no-cache");
+    return c.html(csrFallbackHtml());
   }
 });

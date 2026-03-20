@@ -1,4 +1,3 @@
-import { promises as fs } from "fs";
 import path from "path";
 
 import { serveStatic } from "@hono/node-server/serve-static";
@@ -59,26 +58,3 @@ staticRouter.use(
     },
   }),
 );
-
-// SPA fallback: serve index.html for non-file, non-API GET requests accepting HTML
-staticRouter.get("*", async (c) => {
-  if (c.req.path.startsWith("/api/")) {
-    return c.notFound();
-  }
-  if (c.req.path.includes(".")) {
-    return c.notFound();
-  }
-  const accept = c.req.header("accept") ?? "";
-  if (!accept.includes("text/html")) {
-    return c.notFound();
-  }
-
-  const indexPath = path.join(CLIENT_DIST_PATH, "index.html");
-  try {
-    const html = await fs.readFile(indexPath, "utf-8");
-    c.header("Cache-Control", "no-cache");
-    return c.html(html);
-  } catch {
-    return c.notFound();
-  }
-});
