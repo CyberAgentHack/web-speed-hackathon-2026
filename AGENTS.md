@@ -106,3 +106,21 @@ pnpm ワークスペースによるモノレポ（`application/` 配下）。
 
 Dockerfile: マルチステージビルド → Fly.io（NRTリージョン、1CPU/2GB）
 本番: PORT=8080, NODE_ENV=production
+
+## Ralph Workflow
+
+- Ralph runtime files live under `.agent/ralph/`
+- Main state files are `.agent/ralph/prd.json` and `.agent/ralph/progress.txt`
+- Each Ralph iteration should work on exactly one story
+- A story is not done until required quality checks pass
+- The final story in `.agent/ralph/prd.json` must be a Codex review and remediation story
+- The review story is not done until Codex review is complete, every finding is fixed, and required quality checks pass again
+- After finishing a story, update `.agent/ralph/prd.json` and append a verification log to `.agent/ralph/progress.txt`
+- Each progress entry must include the story ID/title, the concrete implementation added or changed, the test case used for each acceptance criterion, and the result for each test case
+- Each progress entry must also include the quality check commands that were run and their outcomes, plus the commit hash/message for that story
+- Do not mark a story done if `progress.txt` does not show how every acceptance criterion was verified
+- Each completed story MUST be committed as a separate commit. Do not batch multiple stories into one commit
+- Commit message format: `feat: [Story ID] - [Story Title]`
+- Reusable learnings should be written back to the nearest relevant `AGENTS.md`
+- UI changes should be browser-verified using `agent-browser skill`
+- Reply with `<promise>COMPLETE</promise>` only when every story has `passes: true`
