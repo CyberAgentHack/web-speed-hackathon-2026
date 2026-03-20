@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 ARG NODE_VERSION=24.14.0
-ARG PNPM_VERSION=10.32.1
+ARG PNPM_VERSION=8.15.4
 
 FROM node:${NODE_VERSION}-slim AS base
 
@@ -10,6 +10,14 @@ LABEL fly_launch_runtime="Node.js"
 ENV PNPM_HOME=/pnpm
 
 WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    git \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN --mount=type=cache,target=/root/.npm npm install -g pnpm@${PNPM_VERSION}
 
 FROM base AS build
