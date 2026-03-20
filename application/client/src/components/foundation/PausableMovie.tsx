@@ -46,6 +46,7 @@ export const PausableMovie = ({ src, width, height }: Props) => {
         onClick={handleClick}
         type="button"
       >
+        <canvas className="absolute h-px w-px" />
         <video
           ref={videoRef}
           src={src}
