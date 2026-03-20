@@ -63,9 +63,6 @@ importers:
       gifler:
         specifier: github:themadcreator/gifler#v0.3.0
         version: https://codeload.github.com/themadcreator/gifler/tar.gz/c3259b071c7782f85d4928a5f03d0b378ed003b5
-      image-size:
-        specifier: 2.0.2
-        version: 2.0.2
       json-repair-js:
         specifier: 1.0.0
         version: 1.0.0
@@ -2632,11 +2629,6 @@ packages:
 
   ieee754@1.2.1:
     resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
-
-  image-size@2.0.2:
-    resolution: {integrity: sha512-IRqXKlaXwgSMAMtpNzZa1ZAe8m+Sa1770Dhk8VkSsP9LS+iHD62Zd8FQKs8fbPiagBE7BzoFX23cxFnwshpV6w==}
-    engines: {node: '>=16.x'}
-    hasBin: true
 
   import-fresh@3.3.1:
     resolution: {integrity: sha512-TR3KfrTZTYLPB6jUjfx6MF9WcWrHL9su5TObK4ZkYgBdWKPOFoSoQIdEuTuR82pmtxH2spWG9h6etwfr1pLBqQ==}
@@ -6851,8 +6843,6 @@ snapshots:
       postcss: 8.5.6
 
   ieee754@1.2.1: {}
-
-  image-size@2.0.2: {}
 
   import-fresh@3.3.1:
     dependencies:

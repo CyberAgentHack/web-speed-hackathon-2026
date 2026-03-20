@@ -27,10 +27,11 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
  * @property {Models.Post} post
  */
 interface Props {
+  lazy?: boolean;
   post: Models.Post;
 }
 
-export const TimelineItem = ({ post }: Props) => {
+export const TimelineItem = ({ lazy, post }: Props) => {
   const navigate = useNavigate();
 
   /**
@@ -86,7 +87,7 @@ export const TimelineItem = ({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea images={post.images} loading={lazy ? "lazy" : undefined} />
             </div>
           ) : null}
           {post.movie ? (
