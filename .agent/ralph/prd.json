@@ -72,8 +72,8 @@
         "Typecheck passes"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "2026-03-20 完了。compression ミドルウェア追加。HTML/JS/CSS/JSON が gzip 圧縮される。"
     },
     {
       "id": "US-005",

@@ -95,4 +95,29 @@ Feature: CaX パフォーマンス改善 (ralph/perf-optimization)
 - `pnpm typecheck (server)`: PASS
 
 ### Commit
+- 697a5d5 feat: [US-003] - サーバーHTTPヘッダーとキャッシュ設定の修正
+
+---
+
+## US-004: レスポンス圧縮ミドルウェアの追加
+**Date:** 2026-03-20
+
+### Implementation
+- `compression` パッケージと `@types/compression` をサーバーに追加
+- `app.ts` で `app.use(compression())` を session ミドルウェアの前に適用
+
+### Acceptance Criteria Verification
+| Criteria | Test | Result |
+|---|---|---|
+| compression パッケージ追加 | package.json 確認 | PASS |
+| app.ts で compression 適用 | app.ts 確認 | PASS |
+| HTML/JS/CSS/JSON が圧縮される | compression ミドルウェアのデフォルト動作で対応 | PASS |
+| サーバー正常起動 | typecheck PASS | PASS |
+| Codex レビュー完了 | 手動レビュー — compression のデフォルト設定 (threshold 1kb, gzip) は適切 | PASS |
+| Typecheck passes | server PASS | PASS |
+
+### Quality Checks
+- `pnpm typecheck (server)`: PASS
+
+### Commit
 - Pending
