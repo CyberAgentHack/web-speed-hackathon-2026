@@ -1,8 +1,23 @@
 import { ComponentProps, isValidElement, ReactElement, ReactNode } from "react";
-import { LightAsync } from "react-syntax-highlighter";
+import { LightAsync as SyntaxHighlighter } from "react-syntax-highlighter";
 import { atomOneLight } from "react-syntax-highlighter/dist/esm/styles/hljs";
 
-const getLanguage = (children: ReactElement<ComponentProps<"code">>) => {
+const LANGUAGE_ALIASES: Record<string, string> = {
+  ts: "typescript",
+  tsx: "typescript",
+  js: "javascript",
+  jsx: "javascript",
+  sh: "bash",
+  zsh: "bash",
+  yml: "yaml",
+  mermaid: "mermaid",
+};
+
+function resolveLanguage(lang: string): string {
+  return LANGUAGE_ALIASES[lang] ?? lang;
+}
+
+const getRawLanguage = (children: ReactElement<ComponentProps<"code">>) => {
   const className = children.props.className;
   if (typeof className === "string") {
     const match = className.match(/language-(\w+)/);
@@ -16,11 +31,14 @@ const isCodeElement = (children: ReactNode): children is ReactElement<ComponentP
 
 export const CodeBlock = ({ children }: ComponentProps<"pre">) => {
   if (!isCodeElement(children)) return <>{children}</>;
-  const language = getLanguage(children);
+
+  const rawLanguage = getRawLanguage(children);
+  const language = resolveLanguage(rawLanguage);
   const code = children.props.children?.toString() ?? "";
 
   return (
-    <LightAsync
+    <SyntaxHighlighter
+      codeTagProps={{ className: `language-${rawLanguage}` }}
       customStyle={{
         fontSize: "14px",
         padding: "24px 16px",
@@ -31,6 +49,6 @@ export const CodeBlock = ({ children }: ComponentProps<"pre">) => {
       style={atomOneLight}
     >
       {code}
-    </LightAsync>
+    </SyntaxHighlighter>
   );
 };
