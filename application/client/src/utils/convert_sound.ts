@@ -18,6 +18,12 @@ export async function convertSound(file: File, options: Options): Promise<Blob> 
   await ffmpeg.exec([
     "-i",
     "file",
+    "-c:a",
+    "libmp3lame",
+    "-b:a",
+    "96k",
+    "-ar",
+    "44100",
     "-metadata",
     `artist=${metadata.artist}`,
     "-metadata",
