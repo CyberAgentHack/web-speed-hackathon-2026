@@ -62,7 +62,6 @@ export const AppContainer = () => {
   }, [pathname]);
 
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
-  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
 
   useEffect(() => {
     void fetchJSON<Models.User>("/api/v1/me")
@@ -71,9 +70,6 @@ export const AppContainer = () => {
       })
       .catch(() => {
         setActiveUser(null);
-      })
-      .finally(() => {
-        setIsLoadingActiveUser(false);
       });
   }, []);
 
@@ -88,17 +84,23 @@ export const AppContainer = () => {
 
   return (
     <HelmetProvider>
-      <Helmet>
-        <title>{isLoadingActiveUser ? "読込中 - CaX" : "CaX"}</title>
-      </Helmet>
-
       <AppPage
         activeUser={activeUser}
         authModalId={authModalId}
         newPostModalId={newPostModalId}
         onLogout={handleLogout}
       >
-        <Suspense fallback={null}>
+        <Helmet>
+          <title>CaX</title>
+        </Helmet>
+
+        <Suspense
+          fallback={
+            <main className="px-4 py-6">
+              <p>読み込み中...</p>
+            </main>
+          }
+        >
           <Routes>
             <Route element={<TimelineContainer />} path="/" />
             <Route

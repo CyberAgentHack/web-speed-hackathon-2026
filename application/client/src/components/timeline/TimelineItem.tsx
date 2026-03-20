@@ -1,5 +1,5 @@
 import moment from "moment";
-import { MouseEventHandler, useCallback } from "react";
+import { memo, MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
@@ -22,20 +22,13 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
   return false;
 };
 
-/**
- * @typedef {object} Props
- * @property {Models.Post} post
- */
 interface Props {
   post: Models.Post;
 }
 
-export const TimelineItem = ({ post }: Props) => {
+export const TimelineItem = memo(({ post }: Props) => {
   const navigate = useNavigate();
 
-  /**
-   * ボタンやリンク以外の箇所をクリックしたとき かつ 文字が選択されてないとき、投稿詳細ページに遷移する
-   */
   const handleClick = useCallback<MouseEventHandler>(
     (ev) => {
       const isSelectedText = document.getSelection()?.isCollapsed === false;
@@ -43,8 +36,12 @@ export const TimelineItem = ({ post }: Props) => {
         navigate(`/posts/${post.id}`);
       }
     },
-    [post, navigate],
+    [post.id, navigate],
   );
+
+  const createdAt = moment(post.createdAt);
+  const createdAtIso = createdAt.toISOString();
+  const createdAtLabel = createdAt.locale("ja").format("LL");
 
   return (
     <article className="hover:bg-cax-surface-subtle px-1 sm:px-4" onClick={handleClick}>
@@ -56,10 +53,12 @@ export const TimelineItem = ({ post }: Props) => {
           >
             <img
               alt={post.user.profileImage.alt}
+              loading="lazy"
               src={getProfileImagePath(post.user.profileImage.id)}
             />
           </Link>
         </div>
+
         <div className="min-w-0 shrink grow">
           <p className="overflow-hidden text-sm text-ellipsis whitespace-nowrap">
             <Link
@@ -76,24 +75,26 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
-              </time>
+              <time dateTime={createdAtIso}>{createdAtLabel}</time>
             </Link>
           </p>
+
           <div className="text-cax-text leading-relaxed">
             <TranslatableText text={post.text} />
           </div>
+
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
               <ImageArea images={post.images} />
             </div>
           ) : null}
+
           {post.movie ? (
             <div className="relative mt-2 w-full">
               <MovieArea movie={post.movie} />
             </div>
           ) : null}
+
           {post.sound ? (
             <div className="relative mt-2 w-full">
               <SoundArea sound={post.sound} />
@@ -103,4 +104,6 @@ export const TimelineItem = ({ post }: Props) => {
       </div>
     </article>
   );
-};
+});
+
+TimelineItem.displayName = "TimelineItem";
