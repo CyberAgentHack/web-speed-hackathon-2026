@@ -6,9 +6,9 @@ export function getMoviePath(movieId: string): string {
   return `/movies/${movieId}.gif`;
 }
 
-export function getSoundPath(soundId: string): string {
-  return `/sounds/${soundId}.mp3`;
-}
+export const getSoundPath = (soundId: string) => {
+  return `/sounds/${soundId}.opus`;
+};
 
 export function getProfileImagePath(profileImageId: string): string {
   return `/images/profiles/${profileImageId}.avif`;
