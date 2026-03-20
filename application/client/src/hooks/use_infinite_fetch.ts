@@ -9,6 +9,11 @@ interface ReturnValues<T> {
   fetchMore: () => void;
 }
 
+function buildPaginatedPath(basePath: string, offset: number) {
+  const separator = basePath.includes("?") ? "&" : "?";
+  return `${basePath}${separator}offset=${offset}&limit=${LIMIT}`;
+}
+
 export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
@@ -22,6 +27,9 @@ export function useInfiniteFetch<T>(
   });
 
   const fetchMore = useCallback(() => {
+    if (!apiPath) {
+      return;
+    }
     const { isLoading, offset } = internalRef.current;
     if (isLoading) {
       return;
@@ -36,16 +44,17 @@ export function useInfiniteFetch<T>(
       offset,
     };
 
-    void fetcher(apiPath).then(
+    const paginatedPath = buildPaginatedPath(apiPath, offset);
+    void fetcher(paginatedPath).then(
       (allData) => {
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...allData],
           isLoading: false,
         }));
         internalRef.current = {
           isLoading: false,
-          offset: offset + LIMIT,
+          offset: offset + allData.length,
         };
       },
       (error) => {
@@ -66,14 +75,16 @@ export function useInfiniteFetch<T>(
     setResult(() => ({
       data: [],
       error: null,
-      isLoading: true,
+      isLoading: apiPath !== "",
     }));
     internalRef.current = {
       isLoading: false,
       offset: 0,
     };
 
-    fetchMore();
+    if (apiPath) {
+      fetchMore();
+    }
   }, [fetchMore]);
 
   return {
