@@ -3,4 +3,8 @@ declare namespace JQuery {
     dataType?: "json" | "binary";
     responseType?: XMLHttpRequestResponseType;
   }
+
+  interface jqXHR<T = unknown> {
+    responseJSON?: T;
+  }
 }
