@@ -17,7 +17,7 @@ interface Props {
  * クリックすると再生・一時停止を切り替えます。
  */
 export const PausableMovie = ({ src }: Props) => {
-  const { ref: inViewRef, isInView } = useInView<HTMLDivElement>();
+  const { ref: inViewRef, isInView } = useInView<HTMLDivElement>("0px");
   const { data, isLoading } = useFetch(src, fetchBinary, isInView);
 
   const animatorRef = useRef<Animator>(null);

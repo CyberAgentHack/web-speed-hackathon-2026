@@ -2,6 +2,7 @@ import moment from "moment";
 import { MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
+import { LazyImage } from "@web-speed-hackathon-2026/client/src/components/foundation/LazyImage";
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
 import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
 import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
@@ -54,7 +55,7 @@ export const TimelineItem = ({ post }: Props) => {
             className="border-cax-border bg-cax-surface-subtle block h-12 w-12 overflow-hidden rounded-full border hover:opacity-75 sm:h-16 sm:w-16"
             to={`/users/${post.user.username}`}
           >
-            <img
+            <LazyImage
               alt={post.user.profileImage.alt}
               src={getProfileImagePath(post.user.profileImage.id)}
             />

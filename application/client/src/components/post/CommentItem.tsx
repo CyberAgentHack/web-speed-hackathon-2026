@@ -1,5 +1,6 @@
 import moment from "moment";
 
+import { LazyImage } from "@web-speed-hackathon-2026/client/src/components/foundation/LazyImage";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
@@ -17,7 +18,7 @@ export const CommentItem = ({ comment }: Props) => {
             className="border-cax-border bg-cax-surface-subtle block h-8 w-8 overflow-hidden rounded-full border hover:opacity-75 sm:h-12 sm:w-12"
             to={`/users/${comment.user.username}`}
           >
-            <img
+            <LazyImage
               alt={comment.user.profileImage.alt}
               src={getProfileImagePath(comment.user.profileImage.id)}
             />

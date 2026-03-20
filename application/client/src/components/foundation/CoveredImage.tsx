@@ -4,6 +4,7 @@ import { MouseEvent, useCallback, useId, useMemo } from "react";
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
+import { useInView } from "@web-speed-hackathon-2026/client/src/hooks/use_in_view";
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
@@ -20,7 +21,8 @@ export const CoveredImage = ({ src }: Props) => {
     ev.stopPropagation();
   }, []);
 
-  const { data } = useFetch(src, fetchBinary);
+  const { ref, isInView } = useInView<HTMLDivElement>("0px");
+  const { data } = useFetch(src, fetchBinary, isInView);
 
   const alt = useMemo(() => {
     if (data == null) {
@@ -38,12 +40,12 @@ export const CoveredImage = ({ src }: Props) => {
   const hasAlt = alt.trim().length > 0;
 
   return (
-    <div className="bg-cax-surface-subtle relative h-full w-full overflow-hidden">
+    <div ref={ref} className="bg-cax-surface-subtle relative h-full w-full overflow-hidden">
       <img
         alt={alt}
         className="absolute inset-0 h-full w-full object-cover"
         loading="lazy"
-        src={src}
+        src={isInView ? src : undefined}
       />
 
       {hasAlt ? (

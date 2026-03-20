@@ -11,6 +11,10 @@ export function useInView<T extends Element>(rootMargin = "200px"): UseInViewRes
 
   const ref = useCallback<RefCallback<T>>(
     (node) => {
+      if (typeof IntersectionObserver === "undefined") {
+        setIsInView(true);
+        return;
+      }
       if (observerRef.current) {
         observerRef.current.disconnect();
         observerRef.current = null;
