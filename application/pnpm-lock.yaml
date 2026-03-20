@@ -48,9 +48,6 @@ importers:
       core-js:
         specifier: 3.45.1
         version: 3.45.1
-      encoding-japanese:
-        specifier: 2.2.0
-        version: 2.2.0
       fast-average-color:
         specifier: 9.5.0
         version: 9.5.0
@@ -72,6 +69,9 @@ importers:
       kuromoji:
         specifier: 0.1.2
         version: 0.1.2
+      music-metadata:
+        specifier: 11.10.3
+        version: 11.10.3
       negaposi-analyzer-ja:
         specifier: 1.0.1
         version: 1.0.1
@@ -145,9 +145,6 @@ importers:
       '@types/bluebird':
         specifier: 3.5.42
         version: 3.5.42
-      '@types/encoding-japanese':
-        specifier: 2.2.1
-        version: 2.2.1
       '@types/jquery':
         specifier: 3.5.33
         version: 3.5.33
@@ -1725,9 +1722,6 @@ packages:
   '@types/doublearray@0.0.32':
     resolution: {integrity: sha512-HloTru3I3a55runIVqZX1YBQi2L5A4peNQPh33yshzB4ttt1qHCnHPkuhy9Djy/cTx7i5xJvxItKRPCmvnfpGw==}
 
-  '@types/encoding-japanese@2.2.1':
-    resolution: {integrity: sha512-6jjepuTusvySxMLP7W6usamlbgf0F4sIDvm7EzYePjLHY7zWUv4yz2PLUnu0vuNVtXOTLu2cRdFcDg40J5Owsw==}
-
   '@types/eslint-scope@3.7.7':
     resolution: {integrity: sha512-MzMFlSLBqNF2gcHWO0G1vP/YQyfvrxZ0bF+u7mzUdZ1/xK4A4sru+nraZz5i3iEIk1l1uyicaDVTB4QbbEkAYg==}
 
@@ -2495,10 +2489,6 @@ packages:
   encodeurl@2.0.0:
     resolution: {integrity: sha512-Q0n9HRi4m6JuGIV1eFlmvJB7ZEVxu93IrMyiMsGC0lrMJMWzRgx6WGquyfQgZVb31vhGgXnfmPNNXmxnOkRBrg==}
     engines: {node: '>= 0.8'}
-
-  encoding-japanese@2.2.0:
-    resolution: {integrity: sha512-EuJWwlHPZ1LbADuKTClvHtwbaFn4rOD+dRAbWysqEOXRc2Uui0hJInNJrsdH0c+OhJA4nrCBdSkW4DD5YxAo6A==}
-    engines: {node: '>=8.10.0'}
 
   encoding@0.1.13:
     resolution: {integrity: sha512-ETBauow1T35Y/WZMkio9jiM0Z5xjHHmJ4XmjZOq1l/dXz3lr2sRn87nJy20RupqSh1F2m3HHPSp8ShIPQJrJ3A==}
@@ -6297,8 +6287,6 @@ snapshots:
 
   '@types/doublearray@0.0.32': {}
 
-  '@types/encoding-japanese@2.2.1': {}
-
   '@types/eslint-scope@3.7.7':
     dependencies:
       '@types/eslint': 9.6.1
@@ -7140,8 +7128,6 @@ snapshots:
   encodeurl@1.0.2: {}
 
   encodeurl@2.0.0: {}
-
-  encoding-japanese@2.2.0: {}
 
   encoding@0.1.13:
     dependencies:
