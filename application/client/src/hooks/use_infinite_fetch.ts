@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const LIMIT = 30;
+const LIMIT = 5;
 
 interface ReturnValues<T> {
   data: Array<T>;
@@ -36,7 +36,11 @@ export function useInfiniteFetch<T>(
       offset,
     };
 
-    void fetcher(apiPath).then(
+    const params = new URLSearchParams([
+      ["limit", `${LIMIT}`],
+      ["offset", `${offset}`],
+    ]);
+    void fetcher(`${apiPath}?${params}`).then(
       (allData) => {
         setResult((cur) => ({
           ...cur,
