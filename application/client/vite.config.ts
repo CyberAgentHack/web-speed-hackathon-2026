@@ -103,9 +103,6 @@ export default defineConfig({
         "process.env.COMMIT_HASH": JSON.stringify(
             process.env.SOURCE_VERSION || "",
         ),
-        "process.env.NODE_ENV": JSON.stringify(
-            process.env.NODE_ENV || "development",
-        ),
     },
     server: {
         host: "0.0.0.0",

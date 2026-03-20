@@ -1,5 +1,4 @@
 import "./setup";
-import "core-js";
 import "regenerator-runtime/runtime";
 import "jquery-binarytransport";
 import "./index.css";
