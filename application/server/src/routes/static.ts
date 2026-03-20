@@ -27,9 +27,12 @@ staticRouter.use(
   }),
 );
 
+// JS/CSS/画像に長期キャッシュを設定
 staticRouter.use(
   serveStatic(CLIENT_DIST_PATH, {
-    etag: false,
-    lastModified: false,
+    etag: true,
+    lastModified: true,
+    maxAge: "1y", // contentHash付きファイルは1年キャッシュ
+    immutable: true,
   }),
 );
