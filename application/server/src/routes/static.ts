@@ -17,6 +17,9 @@ function setStaticCacheControl(
 ) {
   const ext = path.extname(filePath).toLowerCase();
   const basename = path.basename(filePath);
+  const relativePublicPath = filePath.startsWith(PUBLIC_PATH)
+    ? path.relative(PUBLIC_PATH, filePath)
+    : null;
 
   if (basename === "index.html") {
     res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
@@ -36,6 +39,11 @@ function setStaticCacheControl(
   }
 
   if (filePath.startsWith(PUBLIC_PATH) || filePath.startsWith(CLIENT_DIST_PATH)) {
+    if (relativePublicPath?.startsWith("dicts/")) {
+      res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      return;
+    }
+
     if ([".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".webm", ".woff", ".woff2", ".ttf"].includes(ext)) {
       res.setHeader("Cache-Control", "public, max-age=86400, stale-while-revalidate=604800");
       return;
