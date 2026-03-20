@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
+import { lazy, Suspense } from "react";
+
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
-import { NewPostModalPage } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage";
+
+const NewPostModalPage = lazy(() => import("@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage").then((m) => ({ default: m.NewPostModalPage })));
 import { sendFile, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface SubmitParams {
@@ -76,14 +79,16 @@ export const NewPostModalContainer = ({ id }: Props) => {
 
   return (
     <Modal aria-labelledby={dialogId} id={id} ref={ref} closedby="any">
-      <NewPostModalPage
-        key={resetKey}
-        id={dialogId}
-        hasError={hasError}
-        isLoading={isLoading}
-        onResetError={handleResetError}
-        onSubmit={handleSubmit}
-      />
+      <Suspense fallback={null}>
+        <NewPostModalPage
+          key={resetKey}
+          id={dialogId}
+          hasError={hasError}
+          isLoading={isLoading}
+          onResetError={handleResetError}
+          onSubmit={handleSubmit}
+        />
+      </Suspense>
     </Modal>
   );
 };
