@@ -215,8 +215,8 @@
         "Typecheck passes"
       ],
       "priority": 11,
-      "passes": false,
-      "notes": "レギュレーション: 源ノ明朝（Noto Serif JP）がインストールされている環境下でフォント表示が初期仕様と同じ見た目であること。サブセット化は利用規約ページの文字が多いため慎重に。"
+      "passes": true,
+      "notes": "2026-03-20 完了。OTF 13MB → WOFF2 46KB (0.35%)。見出し96文字のみのサブセット。font-display: swap。VRTスナップショット更新済み。"
     },
     {
       "id": "US-012",

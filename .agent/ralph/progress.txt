@@ -314,3 +314,37 @@ Feature: CaX パフォーマンス改善 (ralph/perf-optimization)
 
 ### Commit
 - b5644e6 feat: [US-010] - GIF → MP4/WebM 変換と video タグ化
+
+---
+
+## US-011: フォントの WOFF2 変換と font-display: swap
+**Date:** 2026-03-20
+
+### Implementation
+- `public/fonts/ReiNoAreMincho-Regular.otf` (6.3MB) と `ReiNoAreMincho-Heavy.otf` (6.3MB) を WOFF2 にサブセット変換
+- サブセット: 利用規約ページの h1/h2 見出しで使用される96文字のみを含む
+- 元の OTF ファイルを削除
+- `index.css` の `@font-face` で `font-display: block` → `font-display: swap` に変更
+- `@font-face` の `src` を `.otf format("opentype")` → `.woff2 format("woff2")` に変更
+- VRT スナップショット更新（フォント形式変更による微小なレンダリング差異に対応）
+
+### Acceptance Criteria Verification
+| Criteria | Test | Result |
+|---|---|---|
+| OTF が WOFF2 に変換されている | `ls public/fonts/*.woff2` → 2ファイル, `ls public/fonts/*.otf` → 0 | PASS |
+| 変換後サイズが元の 50% 以下 | 13MB → 46KB (0.35%) — サブセット化で大幅削減 | PASS |
+| font-display: block → swap | index.css 確認: `font-display: swap` | PASS |
+| @font-face src が WOFF2 参照 | index.css 確認: `.woff2 format("woff2")` | PASS |
+| 利用規約ページのフォント表示が正しい | E2E terms.test.ts 3/3 PASS（VRT, タイトル, フォント適用確認） | PASS |
+| E2E テストが通る | terms 3/3 PASS, home/auth/responsive/post-detail/search 37/39 PASS (2 failed は既存問題) | PASS |
+| Typecheck passes | client PASS, server PASS (e2e は既存の videoWidth/videoHeight 型エラーのみ) | PASS |
+
+### Quality Checks
+- `pnpm build`: PASS (compiled in 3.25s)
+- `pnpm typecheck (client)`: PASS
+- `pnpm typecheck (server)`: PASS
+- `pnpm test (e2e terms)`: 3 passed
+- フォント配信確認: `curl http://localhost:3000/fonts/ReiNoAreMincho-Heavy.woff2` → 200
+
+### Commit
+- 7bd23c5 feat: [US-011] - フォントの WOFF2 変換と font-display: swap
