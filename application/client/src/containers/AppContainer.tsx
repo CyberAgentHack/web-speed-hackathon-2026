@@ -92,8 +92,10 @@ export const AppContainer = () => {
   const authModalId = useId();
   const newPostModalId = useId();
 
+  // activeUser が既に取得できていればローディング完了とみなす
+  const isReady = !isLoadingActiveUser || activeUser !== null;
 
-  if (isLoadingActiveUser) {
+  if (!isReady) {
     return null;
   }
 

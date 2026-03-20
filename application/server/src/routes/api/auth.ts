@@ -25,10 +25,12 @@ authRouter.post("/signup", async (req, res) => {
 });
 
 authRouter.post("/signin", async (req, res) => {
+  // パスワード検証用：明示的にincludeを指定しない（defaultScopeをスキップ）
   const user = await User.findOne({
     where: {
       username: req.body.username,
     },
+    include: { association: "profileImage" },
   });
 
   if (user === null) {
