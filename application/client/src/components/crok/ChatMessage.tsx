@@ -1,18 +1,23 @@
-import { memo } from "react";
+import { memo, Suspense } from "react";
 
-import "katex/dist/katex.min.css";
-import Markdown from "react-markdown";
-import rehypeKatex from "rehype-katex";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-
-import { CodeBlock } from "@web-speed-hackathon-2026/client/src/components/crok/CodeBlock";
 import { TypingIndicator } from "@web-speed-hackathon-2026/client/src/components/crok/TypingIndicator";
 import { CrokLogo } from "@web-speed-hackathon-2026/client/src/components/foundation/CrokLogo";
+import { lazyNamed } from "@web-speed-hackathon-2026/client/src/utils/lazy";
 
 interface Props {
   message: Models.ChatMessage;
   streaming?: boolean;
+}
+
+const loadChatMarkdown = () =>
+  import(
+    /* webpackChunkName: "feature-crok-markdown" */ "@web-speed-hackathon-2026/client/src/components/crok/ChatMarkdown"
+  );
+
+const ChatMarkdownLazy = lazyNamed(loadChatMarkdown, "ChatMarkdown");
+
+export function preloadChatMarkdown() {
+  void loadChatMarkdown();
 }
 
 const UserMessage = ({ content }: { content: string }) => {
@@ -35,14 +40,9 @@ const AssistantMessage = ({ content, streaming = false }: { content: string; str
         <div className="text-cax-text mb-1 text-sm font-medium">Crok</div>
         <div className="markdown text-cax-text max-w-none">
           {content && !streaming ? (
-            <Markdown
-              components={{ pre: CodeBlock }}
-              key={content}
-              rehypePlugins={[rehypeKatex]}
-              remarkPlugins={[remarkMath, remarkGfm]}
-            >
-              {content}
-            </Markdown>
+            <Suspense fallback={<p className="whitespace-pre-wrap">{content}</p>}>
+              <ChatMarkdownLazy content={content} />
+            </Suspense>
           ) : content ? (
             <>
               <div aria-label="応答中" className="sr-only" role="status">

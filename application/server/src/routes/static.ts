@@ -19,7 +19,76 @@ import { AppBootstrapData } from "@web-speed-hackathon-2026/client/src/bootstrap
 export const staticRouter = Router();
 
 const IMMUTABLE_ASSET_CACHE_CONTROL = "public, max-age=31536000, immutable";
-const HOME_INITIAL_POST_LIMIT = 8;
+const HOME_INITIAL_POST_LIMIT = 6;
+
+function escapeHtmlAttribute(value: string) {
+  return value.replaceAll("&", "&amp;").replaceAll('"', "&quot;");
+}
+
+function createPreloadLink({
+  as,
+  href,
+  type,
+}: {
+  as: "fetch" | "font" | "image" | "video";
+  href: string;
+  type?: string;
+}) {
+  const attributes = [
+    'rel="preload"',
+    `as="${as}"`,
+    `href="${escapeHtmlAttribute(href)}"`,
+  ];
+  if (type != null) {
+    attributes.push(`type="${escapeHtmlAttribute(type)}"`);
+  }
+  if (as === "font") {
+    attributes.push('crossorigin="anonymous"');
+  }
+  return `<link ${attributes.join(" ")}>`;
+}
+
+function buildHomePreloadTags(posts: Models.Post[]) {
+  const firstPost = posts[0];
+  if (firstPost == null) {
+    return "";
+  }
+
+  const preloadLinks = new Set<string>();
+  preloadLinks.add(
+    createPreloadLink({
+      as: "image",
+      href: `/images/profiles/${firstPost.user.profileImage.id}`,
+    }),
+  );
+
+  if (firstPost.images?.length > 0) {
+    preloadLinks.add(
+      createPreloadLink({
+        as: "image",
+        href: `/images/${firstPost.images[0]!.id}`,
+      }),
+    );
+  } else if (firstPost.movie != null) {
+    preloadLinks.add(
+      createPreloadLink({
+        as: "video",
+        href: `/movies/${firstPost.movie.id}.mp4`,
+        type: "video/mp4",
+      }),
+    );
+  } else if (firstPost.sound != null) {
+    preloadLinks.add(
+      createPreloadLink({
+        as: "fetch",
+        href: `/waveforms/${firstPost.sound.id}.json`,
+        type: "application/json",
+      }),
+    );
+  }
+
+  return Array.from(preloadLinks).join("");
+}
 
 async function resolveFirstExistingPath(paths: string[]) {
   for (const filePath of paths) {
@@ -142,6 +211,7 @@ staticRouter.get("/", async (_req, res, next) => {
     ) as NonNullable<AppBootstrapData["initialTimelinePosts"]>;
     const html = await renderIndexDocument({
       bootstrap: { initialTimelinePosts },
+      headTags: buildHomePreloadTags(initialTimelinePosts),
       title: "タイムライン - CaX",
     });
 
@@ -155,6 +225,11 @@ staticRouter.get("/", async (_req, res, next) => {
 staticRouter.get("/terms", async (_req, res, next) => {
   try {
     const html = await renderIndexDocument({
+      headTags: createPreloadLink({
+        as: "font",
+        href: "/fonts/ReiNoAreMincho-Heading-Bold.woff2",
+        type: "font/woff2",
+      }),
       title: "利用規約 - CaX",
     });
 

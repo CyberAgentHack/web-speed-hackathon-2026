@@ -35,9 +35,11 @@ async function loadIndexTemplate() {
 
 export async function renderIndexDocument({
   bootstrap,
+  headTags = "",
   title,
 }: {
   bootstrap?: AppBootstrapData;
+  headTags?: string;
   title: string;
 }) {
   const template = await loadIndexTemplate();
@@ -48,5 +50,6 @@ export async function renderIndexDocument({
 
   return template
     .replace("<title>CaX</title>", `<title>${escapeHtml(title)}</title>`)
+    .replace("</head>", `${headTags}</head>`)
     .replace("</body>", `${bootstrapScript}</body>`);
 }

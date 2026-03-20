@@ -1,8 +1,8 @@
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
 import {
   useDeferredValue,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type ChangeEvent,
@@ -11,10 +11,6 @@ import {
 } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import {
-  extractTokens,
-  filterSuggestionsBM25,
-} from "@web-speed-hackathon-2026/client/src/utils/bm25_search";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
@@ -23,18 +19,6 @@ interface Props {
 }
 const MIN_SUGGEST_QUERY_LENGTH = 2;
 const SUGGESTION_DEBOUNCE_MS = 180;
-
-function buildTokenizer() {
-  return new Promise<Tokenizer<IpadicFeatures>>((resolve, reject) => {
-    kuromoji.builder({ dicPath: "/dicts" }).build((error, tokenizer) => {
-      if (error != null || tokenizer == null) {
-        reject(error ?? new Error("Tokenizer build failed"));
-        return;
-      }
-      resolve(tokenizer);
-    });
-  });
-}
 
 // トークン単位でハイライト
 function highlightMatchByTokens(text: string, queryTokens: string[]): React.ReactNode {
@@ -93,13 +77,16 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
-  const [candidates, setCandidates] = useState<string[] | null>(null);
+  const suggestionCacheRef = useRef(new Map<string, { queryTokens: string[]; suggestions: string[] }>());
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const deferredInputValue = useDeferredValue(inputValue);
+  const normalizedDeferredInputValue = useMemo(
+    () => deferredInputValue.trim(),
+    [deferredInputValue],
+  );
 
   // サジェストが更新されたら一番下にスクロール
   useLayoutEffect(() => {
@@ -110,10 +97,9 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
 
   useEffect(() => {
     let cancelled = false;
-    const normalizedInput = deferredInputValue.trim();
 
     const updateSuggestions = async () => {
-      if (isStreaming || normalizedInput.length < MIN_SUGGEST_QUERY_LENGTH) {
+      if (isStreaming || normalizedDeferredInputValue.length < MIN_SUGGEST_QUERY_LENGTH) {
         setSuggestions([]);
         setQueryTokens([]);
         setShowSuggestions(false);
@@ -130,32 +116,28 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
         return;
       }
 
-      const [nextTokenizer, nextCandidates] = await Promise.all([
-        tokenizer ?? buildTokenizer(),
-        candidates != null
-          ? Promise.resolve(candidates)
-          : fetchJSON<{ suggestions: string[] }>("/api/v1/crok/suggestions").then(
-              (response) => response.suggestions,
-            ),
-      ]);
+      const cached = suggestionCacheRef.current.get(normalizedDeferredInputValue);
+      if (cached != null) {
+        setQueryTokens(cached.queryTokens);
+        setSuggestions(cached.suggestions);
+        setShowSuggestions(cached.suggestions.length > 0);
+        return;
+      }
+
+      const url = new URL("/api/v1/crok/suggestions", window.location.origin);
+      url.searchParams.set("q", normalizedDeferredInputValue);
+      const result = await fetchJSON<{ queryTokens: string[]; suggestions: string[] }>(
+        `${url.pathname}${url.search}`,
+      );
 
       if (cancelled) {
         return;
       }
 
-      if (tokenizer == null) {
-        setTokenizer(nextTokenizer);
-      }
-      if (candidates == null) {
-        setCandidates(nextCandidates);
-      }
-
-      const tokens = extractTokens(nextTokenizer.tokenize(normalizedInput));
-      const results = filterSuggestionsBM25(nextTokenizer, nextCandidates, tokens);
-
-      setQueryTokens(tokens);
-      setSuggestions(results);
-      setShowSuggestions(results.length > 0);
+      suggestionCacheRef.current.set(normalizedDeferredInputValue, result);
+      setQueryTokens(result.queryTokens);
+      setSuggestions(result.suggestions);
+      setShowSuggestions(result.suggestions.length > 0);
     };
 
     void updateSuggestions();
@@ -163,7 +145,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     return () => {
       cancelled = true;
     };
-  }, [candidates, deferredInputValue, isStreaming, tokenizer]);
+  }, [isStreaming, normalizedDeferredInputValue]);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;

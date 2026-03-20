@@ -8,7 +8,7 @@ import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 let hasConsumedClientBootstrapTimeline = false;
-const INITIAL_TIMELINE_POST_LIMIT = 8;
+const INITIAL_TIMELINE_POST_LIMIT = 6;
 
 function consumeInitialPosts(initialPosts: Models.Post[] | undefined) {
   if (initialPosts == null) {

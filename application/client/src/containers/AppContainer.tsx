@@ -15,25 +15,28 @@ import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containe
 import { fetchJSON, HTTPError, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { lazyNamed } from "@web-speed-hackathon-2026/client/src/utils/lazy";
 
+const loadUserProfileContainer = () =>
+  import(
+    /* webpackChunkName: "route-user-profile" */ "@web-speed-hackathon-2026/client/src/containers/UserProfileContainer"
+  );
 const UserProfileContainerLazy = lazyNamed(
-  () =>
-    import(
-      /* webpackChunkName: "route-user-profile" */ "@web-speed-hackathon-2026/client/src/containers/UserProfileContainer"
-    ),
+  loadUserProfileContainer,
   "UserProfileContainer",
 );
+const loadCrokContainer = () =>
+  import(
+    /* webpackChunkName: "route-crok" */ "@web-speed-hackathon-2026/client/src/containers/CrokContainer"
+  );
 const CrokContainerLazy = lazyNamed(
-  () =>
-    import(
-      /* webpackChunkName: "route-crok" */ "@web-speed-hackathon-2026/client/src/containers/CrokContainer"
-    ),
+  loadCrokContainer,
   "CrokContainer",
 );
+const loadNotFoundContainer = () =>
+  import(
+    /* webpackChunkName: "route-not-found" */ "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer"
+  );
 const NotFoundContainerLazy = lazyNamed(
-  () =>
-    import(
-      /* webpackChunkName: "route-not-found" */ "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer"
-    ),
+  loadNotFoundContainer,
   "NotFoundContainer",
 );
 
@@ -109,6 +112,11 @@ export const AppContainer = ({ bootstrap = null }: Props) => {
       isDisposed = true;
     };
   }, [shouldResolveActiveUserImmediately]);
+  useEffect(() => {
+    if (activeUser != null) {
+      void loadCrokContainer();
+    }
+  }, [activeUser]);
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
     setActiveUser(null);

@@ -36,6 +36,12 @@ interface Props {
 
 export const TimelineItem = ({ post, prioritizeMedia = false }: Props) => {
   const navigate = useNavigate();
+  const visibilityStyle = prioritizeMedia
+    ? undefined
+    : {
+        containIntrinsicSize: "auto 24rem",
+        contentVisibility: "auto" as const,
+      };
 
   /**
    * ボタンやリンク以外の箇所をクリックしたとき かつ 文字が選択されてないとき、投稿詳細ページに遷移する
@@ -54,10 +60,7 @@ export const TimelineItem = ({ post, prioritizeMedia = false }: Props) => {
     <article
       className="hover:bg-cax-surface-subtle px-1 sm:px-4"
       onClick={handleClick}
-      style={{
-        containIntrinsicSize: "auto 24rem",
-        contentVisibility: "auto",
-      }}
+      style={visibilityStyle}
     >
       <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
         <div className="shrink-0 grow-0 pr-2 sm:pr-4">
