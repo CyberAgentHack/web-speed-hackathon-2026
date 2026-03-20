@@ -1,29 +1,13 @@
 import path from "node:path";
-import fs from "node:fs";
 
 import react from "@vitejs/plugin-react";
-import { defineConfig, type Plugin } from "vite";
-
-// webpack の asset/bytes (resourceQuery: /binary/) 相当のViteプラグイン
-function binaryPlugin(): Plugin {
-  return {
-    name: "binary-loader",
-    async load(id) {
-      if (!id.includes("?binary")) return null;
-      const filePath = id.replace(/\?binary$/, "");
-      const buf = fs.readFileSync(filePath);
-      const base64 = buf.toString("base64");
-      return `const data = Uint8Array.from(atob("${base64}"), c => c.charCodeAt(0)); export default data;`;
-    },
-  };
-}
+import { defineConfig } from "vite";
 
 export default defineConfig({
   root: ".",
   publicDir: false,
   plugins: [
     react(),
-    binaryPlugin(),
   ],
   resolve: {
     alias: [
@@ -63,7 +47,7 @@ export default defineConfig({
         },
       },
     },
-    cssCodeSplit: false,
+    cssCodeSplit: true,
     target: "esnext",
     minify: "esbuild",
   },
