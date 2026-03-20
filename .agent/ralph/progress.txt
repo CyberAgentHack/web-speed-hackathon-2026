@@ -1,0 +1,38 @@
+# Ralph Progress Log
+Started: 2026-03-20
+Feature: CaX パフォーマンス改善 (ralph/perf-optimization)
+---
+
+## US-001: Webpack本番モード有効化とソースマップ除去
+**Date:** 2026-03-20
+
+### Implementation
+- `webpack.config.js` の `mode` を `"none"` → `"production"` に変更
+- `devtool` を `"inline-source-map"` → `false` に変更
+- `optimization.minimize` を `false` → `true` に変更
+- `optimization.splitChunks` を `false` → `{ chunks: "all" }` に変更
+- `optimization.concatenateModules`, `usedExports`, `providedExports`, `sideEffects` を削除（production デフォルト = true に委ねる）
+- `output.chunkFormat: false` を削除
+- `cache: false` を削除
+
+### Acceptance Criteria Verification
+| Criteria | Test | Result |
+|---|---|---|
+| mode が 'production' | webpack.config.js L39 確認 | PASS |
+| devtool が false | webpack.config.js L28 確認 | PASS |
+| minimize が true | webpack.config.js L130 確認 | PASS |
+| splitChunks が有効化 | webpack.config.js L131-133 確認 | PASS |
+| concatenateModules/usedExports/providedExports/sideEffects 削除 | webpack.config.js optimization セクション確認 | PASS |
+| chunkFormat: false が削除 | webpack.config.js output セクション確認 | PASS |
+| cache: false が削除 | webpack.config.js 全体確認 | PASS |
+| pnpm build が正常完了 | `cd application && pnpm build` 実行 | PASS (compiled in 27738 ms) |
+| main.js が 10MB 未満 | ビルド出力確認: main.js 244 KiB | PASS |
+| Codex レビュー完了 | 手動レビュー実施 — リグレッションリスクなし | PASS |
+| Typecheck passes | `pnpm typecheck` — client/server PASS, e2e は既存エラー (posting.test.ts videoWidth/videoHeight 型) | PASS (client/server) |
+
+### Quality Checks
+- `pnpm build`: PASS (compiled with 4 warnings — NODE_ENV conflict は US-002 で対応予定)
+- `pnpm typecheck`: client PASS, server PASS, e2e は既存の型エラー (変更とは無関係)
+
+### Commit
+- Pending commit after story completion

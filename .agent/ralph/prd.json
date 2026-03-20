@@ -1,0 +1,310 @@
+{
+  "project": "CaX パフォーマンス改善",
+  "branchName": "ralph/perf-optimization",
+  "description": "架空SNS「CaX」のLighthouse計測スコアを最大化するパフォーマンス改善。表示900点+操作250点の合計1150点中、まず表示300点超えを目指し段階的に改善する。",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Webpack本番モード有効化とソースマップ除去",
+      "description": "開発者として、Webpackのビルド設定を本番向けに最適化し、バンドルサイズを大幅に削減したい。現在108MBのmain.jsを実用的なサイズにする。",
+      "acceptanceCriteria": [
+        "webpack.config.js の mode が 'production' に変更されている",
+        "devtool が 'inline-source-map' から false に変更されている",
+        "optimization.minimize が true に変更されている",
+        "optimization.splitChunks が有効化されている（false → 削除 or { chunks: 'all' }）",
+        "optimization.concatenateModules, usedExports, providedExports, sideEffects がすべて削除または true に変更されている",
+        "output.chunkFormat: false が削除されている",
+        "cache: false が削除されている",
+        "pnpm build が正常に完了する",
+        "ビルド後の main.js が 10MB 未満である",
+        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "2026-03-20 完了。main.js 244KiB, vendor chunk 73MB (web-llm/ffmpeg等の大型依存が含まれる)。NODE_ENV conflict warning は US-002 で対応。"
+    },
+    {
+      "id": "US-002",
+      "title": "Babel設定の本番向け最適化とポリフィル削除",
+      "description": "開発者として、IE11向けポリフィルを削除しモダンブラウザ向けにBabelを設定することで、不要なコード生成を削減したい。",
+      "acceptanceCriteria": [
+        "babel.config.js の targets が 'ie 11' からモダンブラウザ向け（例: '> 0.5%, not dead'）に変更されている",
+        "babel.config.js の modules が 'commonjs' から false に変更されている",
+        "babel.config.js の preset-react の development が false に変更されている",
+        "webpack.config.js のエントリから 'core-js' と 'regenerator-runtime/runtime' が削除されている",
+        "package.json の build script が NODE_ENV=production になっている",
+        "webpack.config.js の EnvironmentPlugin で NODE_ENV のデフォルトが 'production' になっている",
+        "pnpm build が正常に完了する",
+        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "サーバーHTTPヘッダーとキャッシュ設定の修正",
+      "description": "開発者として、Cache-Control・Connection ヘッダーと静的ファイルのETag/LastModifiedを適切に設定し、ブラウザキャッシュを有効化したい。",
+      "acceptanceCriteria": [
+        "app.ts のグローバルミドルウェアから Cache-Control: max-age=0 と Connection: close が削除されている",
+        "静的アセット（dist/, public/）に長期キャッシュ（例: max-age=86400 以上）が設定されている",
+        "static.ts の serveStatic で etag: true, lastModified: true に変更されている（または etag/lastModified オプションを削除してデフォルトに戻している）",
+        "サーバーが正常に起動する（cd application && pnpm start）",
+        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "レスポンス圧縮ミドルウェアの追加",
+      "description": "開発者として、サーバーレスポンスにgzip/brotli圧縮を追加し、転送サイズを70-80%削減したい。",
+      "acceptanceCriteria": [
+        "compression パッケージがサーバーの依存に追加されている",
+        "app.ts で compression ミドルウェアが適用されている",
+        "HTML/JS/CSS/JSON のレスポンスが圧縮されている（Content-Encoding ヘッダーで確認可能）",
+        "サーバーが正常に起動する",
+        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "HTML最適化とレンダリング開始タイミング改善",
+      "description": "開発者として、scriptタグにdefer属性を追加し、Reactのレンダリング開始をloadイベント待ちから即座実行に変更することで、FCP/LCPを改善したい。",
+      "acceptanceCriteria": [
+        "index.html の script タグに defer 属性が追加されている",
+        "index.tsx の window.addEventListener('load', ...) が削除され、即座に createRoot().render() が実行される",
+        "ホームページ（/）にブラウザでアクセスしてタイムラインが表示される",
+        "E2Eテスト（cd application/e2e && pnpm test）が通る",
+        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "jQuery → fetch API 置換",
+      "description": "開発者として、jQuery AJAXラッパー（同期XHR）をネイティブfetch APIに置き換えることで、~90KBの依存を削除しメインスレッドブロックを解消したい。",
+      "acceptanceCriteria": [
+        "fetchers.ts が fetch API を使用するように書き換えられている",
+        "async: false（同期XHR）が完全に排除されている",
+        "fetchBinary が fetch + arrayBuffer() を使用している",
+        "fetchJSON が fetch + json() を使用している",
+        "sendJSON が fetch + gzip 圧縮（pako）を使用している",
+        "sendFile が fetch を使用している",
+        "webpack.config.js の ProvidePlugin から $ と window.jQuery が削除されている",
+        "webpack.config.js のエントリから jquery-binarytransport が削除されている",
+        "package.json から jquery と jquery-binarytransport が削除されている",
+        "ホームページにアクセスしてタイムラインが正常に表示される",
+        "E2Eテスト（cd application/e2e && pnpm test）が通る",
+        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": "pako の gzip は sendJSON で Content-Encoding: gzip を送る仕様のため残す。fetchers.ts を利用する全コンポーネントの動作確認が必要。"
+    },
+    {
+      "id": "US-007",
+      "title": "lodash → ネイティブ Array メソッド置換",
+      "description": "開発者として、lodash の全体インポートをネイティブ Array メソッドに置き換え、~70KBの依存を削除したい。",
+      "acceptanceCriteria": [
+        "bm25_search.ts から lodash インポートが削除され、ネイティブメソッドで実装されている",
+        "SoundWaveSVG.tsx から lodash インポートが削除され、ネイティブメソッドで実装されている",
+        "package.json から lodash と @types/lodash が削除されている",
+        "音声波形が正しく表示される（SoundWaveSVG の動作確認）",
+        "E2Eテスト（cd application/e2e && pnpm test）が通る",
+        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "Typecheck passes"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "InfiniteScroll の 2^18 ループ修正",
+      "description": "開発者として、InfiniteScrollのスクロール判定で262,144回ループする処理をIntersectionObserverに置き換え、TBTを大幅に改善したい。",
+      "acceptanceCriteria": [
+        "InfiniteScroll.tsx の Array.from(Array(2 ** 18), ...) が削除されている",
+        "IntersectionObserver を使用した底部検出に書き換えられている",
+        "wheel/touchmove/resize/scroll の手動イベントリスナーが削除されている",
+        "タイムラインで下にスクロールすると追加投稿が読み込まれる",
+        "E2Eテスト（cd application/e2e && pnpm test）が通る",
+        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "Typecheck passes"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "画像の WebP 変換とリサイズ",
+      "description": "開発者として、public/images/ の JPEG 画像を WebP に変換・リサイズし、89MB→数MBに削減したい。",
+      "acceptanceCriteria": [
+        "public/images/ 内の JPEG ファイルが WebP に変換されている",
+        "画像が適切なサイズにリサイズされている（最大幅 1200px 程度）",
+        "変換後の画像合計サイズが元の 20% 以下である",
+        "サーバー側で画像パスの拡張子を適切に返すようになっている（または同名で置き換え）",
+        "ホームページの画像が正しく表示される",
+        "E2Eテスト（cd application/e2e && pnpm test）が通る",
+        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "Typecheck passes"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": "レギュレーション: 画像が著しく劣化していないこと。品質80程度のWebPで十分。プロフィール画像（profiles/）も対象。シードの各種IDは変更禁止なので、ファイル名は維持して拡張子のみ変更するか、同名で上書きする。"
+    },
+    {
+      "id": "US-010",
+      "title": "GIF → MP4/WebM 変換と video タグ化",
+      "description": "開発者として、movies/ の GIF ファイルを MP4/WebM に変換し、PausableMovie を video タグ表示に変更することで、179MBのアセットと gifler/omggif の依存を削減したい。",
+      "acceptanceCriteria": [
+        "public/movies/ 内の GIF ファイルが MP4 または WebM に変換されている",
+        "変換後の動画合計サイズが元の 20% 以下である",
+        "PausableMovie.tsx が <video> タグを使用して動画を直接表示するように書き換えられている",
+        "gifler と omggif の依存が package.json から削除されている",
+        "動画が自動で再生される",
+        "動画をクリックすると再生・一時停止が切り替わる",
+        "prefers-reduced-motion: reduce の場合は自動再生しない",
+        "E2Eテスト（cd application/e2e && pnpm test）が通る",
+        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "Typecheck passes"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": "レギュレーション: 再生される動画が著しく劣化していないこと。test_cases.md の動画テスト項目を通過すること。"
+    },
+    {
+      "id": "US-011",
+      "title": "フォントの WOFF2 変換と font-display: swap",
+      "description": "開発者として、13MBのOTFフォントをWOFF2に変換し、font-displayをswapにすることで、フォント読み込みによるFCP/LCPへの影響を軽減したい。",
+      "acceptanceCriteria": [
+        "public/fonts/ の OTF ファイルが WOFF2 に変換されている",
+        "変換後のフォント合計サイズが元の 50% 以下である",
+        "index.css の @font-face で font-display: block が font-display: swap に変更されている",
+        "index.css の @font-face の src が WOFF2 ファイルを参照している",
+        "利用規約ページ（/terms）のフォント表示が正しい",
+        "E2Eテスト（cd application/e2e && pnpm test）が通る",
+        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "Typecheck passes"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": "レギュレーション: 源ノ明朝（Noto Serif JP）がインストールされている環境下でフォント表示が初期仕様と同じ見た目であること。サブセット化は利用規約ページの文字が多いため慎重に。"
+    },
+    {
+      "id": "US-012",
+      "title": "CoveredImage のバイナリ取得廃止と直接 img 表示",
+      "description": "開発者として、CoveredImageがjQueryで同期バイナリ取得→Blob URL化している処理を、直接 <img src> での表示に変更し、TBTとLCPを改善したい。",
+      "acceptanceCriteria": [
+        "CoveredImage.tsx が fetchBinary を使わず、直接 <img src={src}> で表示している",
+        "alt テキストがサーバー API（画像モデル）から取得されるか、props 経由で渡されている",
+        "image-size パッケージのクライアント側インポートが不要になっている",
+        "写真が枠を覆う形で拡縮している（object-fit: cover 相当）",
+        "「ALT を表示する」ボタンが機能する",
+        "E2Eテスト（cd application/e2e && pnpm test）が通る",
+        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "Typecheck passes"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": "ImageArea.tsx から CoveredImage へ渡す props の変更が必要な場合がある。Post モデルの images に alt 情報が含まれているか要確認。"
+    },
+    {
+      "id": "US-013",
+      "title": "SoundPlayer のバイナリ取得廃止と直接 audio 表示",
+      "description": "開発者として、SoundPlayerが音声をバイナリ取得→Blob URL化している処理を、直接 <audio src> に変更したい。",
+      "acceptanceCriteria": [
+        "SoundPlayer.tsx が fetchBinary を使わず、直接 <audio src={url}> で音声を表示している",
+        "音声の再生・一時停止ボタンが機能する",
+        "音声の波形（SoundWaveSVG）が表示される",
+        "音声の再生位置が波形で表示される",
+        "E2Eテスト（cd application/e2e && pnpm test）が通る",
+        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "Typecheck passes"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": "SoundWaveSVG は AudioContext.decodeAudioData を使って波形を計算している。直接 URL から波形を計算する方法に変更が必要な場合がある。"
+    },
+    {
+      "id": "US-014",
+      "title": "Tailwind CSS CDN → ビルド時生成",
+      "description": "開発者として、Tailwind CSSのCDN版をビルド時生成に切り替え、ランタイムCSS生成によるFCP/LCPへの影響を排除したい。",
+      "acceptanceCriteria": [
+        "index.html から Tailwind CDN の script タグが削除されている",
+        "Tailwind CSS v4 がビルド時に CSS を生成するよう設定されている",
+        "index.html 内の <style type='text/tailwindcss'> が通常の CSS として出力される",
+        "全ページのスタイルが正しく適用されている",
+        "E2Eテスト（cd application/e2e && pnpm test）が通る",
+        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "Typecheck passes"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": "Tailwind v4 は PostCSS プラグインまたは @tailwindcss/cli で使える。index.html 内の @theme, @utility, @layer 定義を CSS ファイルに移動する必要がある。"
+    },
+    {
+      "id": "US-015",
+      "title": "ルート単位のコード分割（React.lazy + Suspense）",
+      "description": "開発者として、AppContainer の全ルートを React.lazy で遅延ロードし、初期バンドルサイズを削減したい。",
+      "acceptanceCriteria": [
+        "AppContainer.tsx の各ルートコンテナが React.lazy + dynamic import で読み込まれている",
+        "Suspense の fallback が設定されている",
+        "各ページに直接アクセスして正しく表示される（/, /search, /posts/:id, /users/:username, /terms, /crok, /dm）",
+        "E2Eテスト（cd application/e2e && pnpm test）が通る",
+        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "Typecheck passes"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-016",
+      "title": "useInfiniteFetch のサーバーサイドページネーション",
+      "description": "開発者として、useInfiniteFetchが全データを毎回取得してクライアントでsliceしている処理を、APIにoffset/limitパラメータを渡すサーバーサイドページネーションに変更したい。",
+      "acceptanceCriteria": [
+        "useInfiniteFetch がAPIリクエストに offset と limit パラメータを付与している",
+        "サーバー側の POST /api/v1/posts が offset/limit に対応している",
+        "毎回全データを取得するのではなく、必要なページ分だけ取得している",
+        "タイムラインの無限スクロールが正しく動作する",
+        "E2Eテスト（cd application/e2e && pnpm test）が通る",
+        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "Typecheck passes"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": "サーバー側 GET /api/v1/posts は既に limit/offset パラメータに対応しているが、クライアント側が使っていない。"
+    },
+    {
+      "id": "US-017",
+      "title": "画像 lazy loading 追加",
+      "description": "開発者として、全 img タグに loading='lazy' を追加し、ビューポート外の画像読み込みを遅延させたい。",
+      "acceptanceCriteria": [
+        "TimelineItem, PostItem, CommentItem のプロフィール画像に loading='lazy' が追加されている",
+        "CoveredImage の img タグに loading='lazy' が追加されている",
+        "DirectMessageListPage のプロフィール画像に loading='lazy' が追加されている",
+        "ホームページの画像が正しく表示される",
+        "E2Eテスト（cd application/e2e && pnpm test）が通る",
+        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "Typecheck passes"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
