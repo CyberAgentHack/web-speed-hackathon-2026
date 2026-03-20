@@ -30,7 +30,7 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: isDev ? "eval-source-map" : "source-map",
+  devtool: isDev ? "eval-source-map" : false,
   entry: {
     main: [
       path.resolve(SRC_PATH, "./index.css"),
@@ -92,10 +92,17 @@ const config = {
       inject: false,
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
-    ...(process.env.ANALYZE ? [new BundleAnalyzerPlugin({
-      analyzerMode: process.env.ANALYZE,
-      reportFilename: path.resolve(__dirname, `../temp/bundle-stats-${new Date().toISOString().replace(/[:.]/g, "-")}.json`),
-    })] : []),
+    ...(process.env.ANALYZE
+      ? [
+          new BundleAnalyzerPlugin({
+            analyzerMode: process.env.ANALYZE,
+            reportFilename: path.resolve(
+              __dirname,
+              `../temp/bundle-stats-${new Date().toISOString().replace(/[:.]/g, "-")}.json`,
+            ),
+          }),
+        ]
+      : []),
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],

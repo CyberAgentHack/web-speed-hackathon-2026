@@ -1,4 +1,3 @@
-import { formatFromNow } from "@web-speed-hackathon-2026/client/src/utils/format_date";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -6,6 +5,7 @@ import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { formatFromNow } from "@web-speed-hackathon-2026/client/src/utils/format_date";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {

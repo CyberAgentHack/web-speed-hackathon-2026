@@ -1,8 +1,11 @@
 import { FastAverageColor } from "fast-average-color";
-import { formatDateLong, toISOString } from "@web-speed-hackathon-2026/client/src/utils/format_date";
 import { ReactEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
+import {
+  formatDateLong,
+  toISOString,
+} from "@web-speed-hackathon-2026/client/src/utils/format_date";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
@@ -43,9 +46,7 @@ export const UserProfileHeader = ({ user }: Props) => {
             <FontAwesomeIcon iconType="calendar-alt" styleType="regular" />
           </span>
           <span>
-            <time dateTime={toISOString(user.createdAt)}>
-              {formatDateLong(user.createdAt)}
-            </time>
+            <time dateTime={toISOString(user.createdAt)}>{formatDateLong(user.createdAt)}</time>
             からサービスを利用しています
           </span>
         </p>

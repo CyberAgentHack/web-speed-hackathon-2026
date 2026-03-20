@@ -6,8 +6,7 @@
     <title>CaX</title>
     <% for (const css of htmlWebpackPlugin.files.css) { %>
     <link rel="stylesheet" href="<%= css %>" />
-    <% } %>
-    <% for (const js of htmlWebpackPlugin.files.js) { %>
+    <% } %> <% for (const js of htmlWebpackPlugin.files.js) { %>
     <script src="<%= js %>" defer></script>
     <% } %>
   </head>
