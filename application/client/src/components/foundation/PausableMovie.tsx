@@ -62,7 +62,11 @@ export const PausableMovie = ({ src }: Props) => {
   }, []);
 
   if (isLoading || data === null) {
-    return null;
+    return (
+      <AspectRatioBox aspectHeight={1} aspectWidth={1}>
+        <div className="bg-cax-surface-subtle border-cax-border animate-pulse h-full w-full rounded-lg border" />
+      </AspectRatioBox>
+    );
   }
 
   return (

@@ -38,7 +38,15 @@ export const SoundPlayer = ({ sound }: Props) => {
   }, []);
 
   if (isLoading || data === null || blobUrl === null) {
-    return null;
+    return (
+      <div className="bg-cax-surface-subtle border-cax-border animate-pulse flex h-full w-full items-center justify-start gap-3 rounded-lg border px-3 py-2">
+        <div className="bg-cax-surface h-8 w-8 rounded-full" />
+        <div className="flex min-w-0 flex-col gap-2">
+          <div className="bg-cax-surface h-3 w-32 rounded" />
+          <div className="bg-cax-surface h-3 w-24 rounded" />
+        </div>
+      </div>
+    );
   }
 
   return (

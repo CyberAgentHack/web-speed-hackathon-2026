@@ -3,12 +3,14 @@ import { RefCallback, useCallback, useState } from "react";
 
 interface Props {
   src: string;
+  loading?: "lazy" | "eager";
+  fetchPriority?: "high" | "low" | "auto";
 }
 
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
-export const CoveredImage = ({ src }: Props) => {
+export const CoveredImage = ({ src, loading = "lazy", fetchPriority = "auto" }: Props) => {
   const [containerSize, setContainerSize] = useState({ height: 0, width: 0 });
   const callbackRef = useCallback<RefCallback<HTMLDivElement>>((el) => {
     setContainerSize({
@@ -30,8 +32,9 @@ export const CoveredImage = ({ src }: Props) => {
             "w-full h-auto": containerRatio <= 1,
           },
         )}
-        loading="lazy"
+        loading={loading}
         decoding="async"
+        fetchPriority={fetchPriority}
         src={src}
       />
     </div>
