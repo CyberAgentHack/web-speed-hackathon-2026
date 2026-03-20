@@ -18,6 +18,8 @@
     "@web-speed-hackathon-2026/server": "workspace:*",
     "bcrypt": "6.0.0",
     "body-parser": "2.2.0",
+    "exif-reader": "2.0.1",
+    "ffmpeg-static": "5.2.0",
     "compression": "1.8.1",
     "connect-history-api-fallback": "2.0.0",
     "express": "5.1.0",
