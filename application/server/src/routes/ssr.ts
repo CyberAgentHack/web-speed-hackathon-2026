@@ -52,10 +52,10 @@ let ssrRender: RenderFn | null = null;
 try {
   const ssrPath = path.resolve(SSR_DIST_PATH, "entry-server.js");
   console.log("SSR: loading from", ssrPath);
-  // Cache busting: Bun の ESM キャッシュは動的 import のパスが同一だと
-  // ファイル変更を検知しない（bun --watch のソフトリスタートで残る）。
-  // タイムスタンプ付きクエリで強制再読み込みする。
-  const ssrModule = await import(`${ssrPath}?v=${Date.now()}`);
+  // NOTE: cache bust (?v=...) は使わない。Bun はクエリ付き import を別モジュール
+  // インスタンスとして扱うため、React.lazy() の chunk が参照する entry-server.js と
+  // module 変数を共有できなくなる（SSR データが渡らない）。
+  const ssrModule = await import(ssrPath);
   ssrRender = ssrModule.render;
   console.log("SSR: renderer loaded, type:", typeof ssrRender);
 } catch (e: unknown) {

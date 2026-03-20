@@ -2,6 +2,7 @@ import path from "node:path";
 import { createRequire } from "node:module";
 
 import type { Tokenizer, IpadicFeatures } from "kuromoji";
+import analyze from "negaposi-analyzer-ja";
 import { Hono } from "hono";
 
 import type { SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
@@ -25,6 +26,9 @@ async function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
   });
 }
 
+// サーバー起動時に kuromoji トークナイザーをプリロード
+getTokenizer().catch((err) => console.error("kuromoji preload failed:", err));
+
 export const sentimentRouter = new Hono<SessionEnv>().get("/sentiment", async (c) => {
   const text = c.req.query("text");
 
@@ -34,8 +38,6 @@ export const sentimentRouter = new Hono<SessionEnv>().get("/sentiment", async (c
 
   const tokenizer = await getTokenizer();
   const tokens = tokenizer.tokenize(text);
-
-  const { default: analyze } = await import("negaposi-analyzer-ja");
   const score = analyze(tokens);
 
   let label: "positive" | "negative" | "neutral";
