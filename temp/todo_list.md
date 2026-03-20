@@ -8,7 +8,7 @@
 - [x] 015-window.loadイベント待ちを即時レンダリングに変更する
 - [ ] 004-jQueryをfetch APIに置き換える
 - [x] 024-foundation/LinkをReact RouterのLinkに変更してSPAナビゲーションにする
-- [ ] 025-AspectRatioBoxのsetTimeout(500ms)をCSS aspect-ratioに置き換える
+- [x] 025-AspectRatioBoxのsetTimeout(500ms)をCSS aspect-ratioに置き換える
 - [ ] 026-DBの外部キーカラムにインデックスを追加する
 
 ## 優先度: 高（TBT/LCP に直結）
