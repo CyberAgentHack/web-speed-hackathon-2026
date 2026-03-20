@@ -250,28 +250,46 @@ async function resolveImageFilePath(
 
 async function ensureWebpImageAsset(
   filePathWithoutExtension: string,
+  options?: {
+    fit?: keyof sharp.FitEnum;
+    height?: number;
+    quality?: number;
+    width?: number;
+  },
 ): Promise<void> {
+  const {
+    width = 800,
+    height,
+    fit = "cover",
+    quality = 85,
+  } = options ?? {};
   const webpPath = `${filePathWithoutExtension}.webp`;
-  try {
-    await fs.access(webpPath);
-    return;
-  } catch {
-    const jpgPath = `${filePathWithoutExtension}.jpg`;
-    const converted = await sharp(jpgPath)
-      .resize({ width: 800, fit: "cover" })
-      .webp({ quality: 85 })
-      .toBuffer();
-    await fs.writeFile(webpPath, converted);
-  }
+
+  const jpgPath = `${filePathWithoutExtension}.jpg`;
+
+  const converted = await sharp(jpgPath)
+    .resize({ width, height, fit })
+    .webp({ quality })
+    .toBuffer();
+  await fs.writeFile(webpPath, converted);
 }
 
 async function ensureWebpImageAssets(): Promise<void> {
   await Promise.all([
     ...EXISTING_IMAGE_IDS.map((id) =>
-      ensureWebpImageAsset(path.resolve(publicDir, `./images/${id}`))
+      ensureWebpImageAsset(path.resolve(publicDir, `./images/${id}`), {
+        fit: "cover",
+        quality: 85,
+        width: 800,
+      })
     ),
     ...EXISTING_PROFILE_IMAGE_IDS.map((id) =>
-      ensureWebpImageAsset(path.resolve(publicDir, `./images/profiles/${id}`))
+      ensureWebpImageAsset(path.resolve(publicDir, `./images/profiles/${id}`), {
+        fit: "cover",
+        height: 128,
+        quality: 70,
+        width: 128,
+      })
     ),
   ]);
 }
