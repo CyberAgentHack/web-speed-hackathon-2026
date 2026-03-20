@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import moment from "moment";
+import dayjs from "@web-speed-hackathon-2026/client/src/utils/dayjs";
 import {
   ChangeEvent,
   useCallback,
@@ -133,7 +133,7 @@ export const DirectMessagePage = ({
                 </p>
                 <div className="flex gap-1 text-xs">
                   <time dateTime={message.createdAt}>
-                    {moment(message.createdAt).locale("ja").format("HH:mm")}
+                    {dayjs(message.createdAt).format("HH:mm")}
                   </time>
                   {isActiveUserSend && message.isRead && (
                     <span className="text-cax-text-muted">既読</span>
