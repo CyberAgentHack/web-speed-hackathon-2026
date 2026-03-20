@@ -6,6 +6,11 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 
 import { QaSuggestion } from "@web-speed-hackathon-2026/server/src/models";
+import {
+  extractTokens,
+  filterSuggestionsBM25,
+  getTokenizer,
+} from "@web-speed-hackathon-2026/server/src/utils/nlp";
 
 export const crokRouter = Router();
 
@@ -20,8 +25,19 @@ export async function initializeCrokCache(): Promise<void> {
   cachedSuggestions = suggestions.map((s) => s.question);
 }
 
-crokRouter.get("/crok/suggestions", (_req, res) => {
-  res.json({ suggestions: cachedSuggestions });
+crokRouter.get("/crok/suggestions", async (req, res) => {
+  const query = typeof req.query["query"] === "string" ? req.query["query"].trim() : "";
+
+  if (!query) {
+    res.json({ suggestions: cachedSuggestions });
+    return;
+  }
+
+  const tokenizer = await getTokenizer();
+  const queryTokens = extractTokens(tokenizer.tokenize(query));
+  const filtered = filterSuggestionsBM25(tokenizer, cachedSuggestions, queryTokens);
+
+  res.json({ suggestions: filtered, queryTokens });
 });
 
 crokRouter.get("/crok", async (req, res) => {
