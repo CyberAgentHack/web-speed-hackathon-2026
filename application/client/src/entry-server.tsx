@@ -1,4 +1,4 @@
-import { renderToPipeableStream, type RenderToPipeableStreamOptions } from "react-dom/server";
+import { renderToReadableStream } from "react-dom/server";
 import { Provider } from "react-redux";
 import { StaticRouter } from "react-router";
 import { combineReducers, legacy_createStore as createStore } from "redux";
@@ -14,11 +14,11 @@ import {
 
 export type { SSRData };
 
-export function render(url: string, ssrData: SSRData, opts?: RenderToPipeableStreamOptions) {
+export function render(url: string, ssrData: SSRData): Promise<ReadableStream> {
   const store = createStore(combineReducers({ form: formReducer }));
   const fallback = buildSWRFallback(url, ssrData);
 
-  return renderToPipeableStream(
+  return renderToReadableStream(
     <Provider store={store}>
       <SWRConfig value={{ ...swrConfig, fallback }}>
         <StaticRouter location={url}>
@@ -26,6 +26,5 @@ export function render(url: string, ssrData: SSRData, opts?: RenderToPipeableStr
         </StaticRouter>
       </SWRConfig>
     </Provider>,
-    opts,
   );
 }

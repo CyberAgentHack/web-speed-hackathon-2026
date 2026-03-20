@@ -116,6 +116,24 @@ export default defineConfig({
         chunkFileNames: "scripts/chunk-[hash].js",
         entryFileNames: "scripts/[name].[hash].js",
         assetFileNames: "assets/[name].[hash].[ext]",
+        manualChunks(id: string) {
+          // Split React core into a separate vendor chunk for better caching
+          if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/")) {
+            return "vendor-react";
+          }
+          // Split routing + data fetching into separate chunk
+          if (id.includes("node_modules/react-router") || id.includes("node_modules/swr/")) {
+            return "vendor-router";
+          }
+          // Split redux ecosystem (only needed for forms)
+          if (
+            id.includes("node_modules/redux") ||
+            id.includes("node_modules/react-redux") ||
+            id.includes("node_modules/redux-form")
+          ) {
+            return "vendor-redux";
+          }
+        },
       },
     },
   },

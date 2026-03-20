@@ -1,9 +1,10 @@
-import React, { Suspense, useCallback, useEffect, useId } from "react";
+import React, { Suspense, useCallback, useEffect, useId, useRef } from "react";
 import { Helmet, HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 import useSWR, { useSWRConfig } from "swr";
 
 import { apiClient } from "@web-speed-hackathon-2026/client/src/api/client";
+import { getSSRData } from "@web-speed-hackathon-2026/client/src/api/ssr-data";
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 
 const AuthModalContainer = React.lazy(() =>
@@ -69,6 +70,7 @@ export interface SSRData {
   comments?: Models.Comment[] | undefined;
   user?: Models.User | null | undefined;
   userPosts?: Models.Post[] | undefined;
+  sentiment?: { score: number; label: string } | null | undefined;
 }
 
 const activeUserFetcher = async (_key: string): Promise<Models.User | null> => {
@@ -81,6 +83,8 @@ export const AppContainer = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { mutate } = useSWRConfig();
+  const ssrRef = useRef(getSSRData());
+  const ssrActiveUser = ssrRef.current?.activeUser;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -90,7 +94,13 @@ export const AppContainer = () => {
     Models.User | null,
     Error,
     string
-  >("/api/v1/me", activeUserFetcher);
+  >(
+    "/api/v1/me",
+    activeUserFetcher,
+    ssrActiveUser !== undefined
+      ? { fallbackData: ssrActiveUser ?? null, revalidateOnMount: false }
+      : undefined,
+  );
 
   const setActiveUser = useCallback(
     (user: Models.User | null) => {
@@ -121,7 +131,7 @@ export const AppContainer = () => {
   const resolvedActiveUser = activeUser ?? null;
 
   return (
-    <HelmetProvider>
+    <>
       <AppPage
         activeUser={resolvedActiveUser}
         authModalId={authModalId}
@@ -165,6 +175,6 @@ export const AppContainer = () => {
       <Suspense fallback={null}>
         <NewPostModalContainer id={newPostModalId} />
       </Suspense>
-    </HelmetProvider>
+    </>
   );
 };

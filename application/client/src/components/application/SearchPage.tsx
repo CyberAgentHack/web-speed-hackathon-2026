@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { Field, InjectedFormProps, reduxForm, WrappedFieldProps } from "redux-form";
 
+import { getSSRData } from "@web-speed-hackathon-2026/client/src/api/ssr-data";
 import { Timeline } from "@web-speed-hackathon-2026/client/src/components/timeline/Timeline";
 import {
   parseSearchQuery,
@@ -41,11 +42,20 @@ const SearchPageComponent = ({
   handleSubmit,
 }: Props & InjectedFormProps<SearchFormData, Props>) => {
   const navigate = useNavigate();
-  const [isNegative, setIsNegative] = useState(false);
-
   const parsed = parseSearchQuery(query);
 
+  // SSR で事前取得された sentiment があれば初期値として使う
+  const ssrSentimentRef = useRef(getSSRData()?.sentiment);
+  const [isNegative, setIsNegative] = useState(() => {
+    const ssrSentiment = ssrSentimentRef.current;
+    if (ssrSentiment) return ssrSentiment.label === "negative";
+    return false;
+  });
+
   useEffect(() => {
+    // SSR sentiment がある場合はフェッチ不要
+    if (ssrSentimentRef.current) return;
+
     if (!parsed.keywords) {
       setIsNegative(false);
       return;

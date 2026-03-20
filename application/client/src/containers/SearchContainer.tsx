@@ -1,6 +1,8 @@
+import { useRef } from "react";
 import { Helmet } from "react-helmet";
 import useSWRInfinite from "swr/infinite";
 
+import { getSSRData } from "@web-speed-hackathon-2026/client/src/api/ssr-data";
 import { createInfiniteKey } from "@web-speed-hackathon-2026/client/src/api/swr";
 import { SearchPage } from "@web-speed-hackathon-2026/client/src/components/application/SearchPage";
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
@@ -9,6 +11,8 @@ import { useSearchParams } from "@web-speed-hackathon-2026/client/src/hooks/use_
 export const SearchContainer = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
+  const ssrRef = useRef(getSSRData());
+  const ssrPosts = ssrRef.current?.posts;
 
   const getKey = query
     ? createInfiniteKey(`/api/v1/search?q=${encodeURIComponent(query)}`)
@@ -17,6 +21,7 @@ export const SearchContainer = () => {
   const PAGE_SIZE = 30;
   const { data, setSize, isValidating } = useSWRInfinite<Models.Post[]>(getKey, {
     revalidateFirstPage: false,
+    ...(ssrPosts ? { fallbackData: [ssrPosts], revalidateOnMount: false } : {}),
   });
 
   const posts = data ? data.flat() : [];

@@ -24,7 +24,7 @@ export async function findPostsDetail(opts: { where?: SQL; limit?: number; offse
   const db = getDb();
   return await db.query.posts.findMany({
     ...opts,
-    orderBy: [desc(posts.id)],
+    orderBy: [desc(posts.createdAt)],
     with: postDetailWith,
   });
 }

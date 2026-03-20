@@ -5,21 +5,17 @@ import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router";
 import { SWRConfig } from "swr";
 
-import { buildSWRFallback } from "@web-speed-hackathon-2026/client/src/api/ssr-fallback";
+import { clearSSRData, getSSRData } from "@web-speed-hackathon-2026/client/src/api/ssr-data";
 import { swrConfig } from "@web-speed-hackathon-2026/client/src/api/swr";
-import {
-  AppContainer,
-  type SSRData,
-} from "@web-speed-hackathon-2026/client/src/containers/AppContainer";
+import { AppContainer } from "@web-speed-hackathon-2026/client/src/containers/AppContainer";
 import { store } from "@web-speed-hackathon-2026/client/src/store";
 
 const appEl = document.getElementById("app")!;
-const ssrData = (window as any).__SSR_DATA__ as SSRData | undefined;
-const fallback = buildSWRFallback(window.location.pathname + window.location.search, ssrData);
+const ssrData = getSSRData();
 
 const app = (
   <Provider store={store}>
-    <SWRConfig value={{ ...swrConfig, fallback }}>
+    <SWRConfig value={swrConfig}>
       <BrowserRouter>
         <AppContainer />
       </BrowserRouter>
@@ -28,7 +24,12 @@ const app = (
 );
 
 if (appEl.childElementCount > 0 && ssrData) {
-  hydrateRoot(appEl, app);
+  hydrateRoot(appEl, app, {
+    onRecoverableError: () => {},
+  });
+  // SSR データをクリア（クライアントナビゲーション時に stale データを使わないため）
+  // hydration 完了後にクリアする（全コンポーネントが初回レンダーで読み取れるように）
+  setTimeout(clearSSRData, 0);
 } else {
   createRoot(appEl).render(app);
 }
