@@ -6,12 +6,15 @@ import { DirectMessageListPage } from "@web-speed-hackathon-2026/client/src/comp
 import { NewDirectMessageModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewDirectMessageModalContainer";
 
 interface Props {
-  activeUser: Models.User | null;
+  activeUser: Models.User | null | "loading";
   authModalId: string;
 }
 
 export const DirectMessageListContainer = ({ activeUser, authModalId }: Props) => {
   const newDmModalId = useId();
+  if (activeUser === "loading") {
+    return null;
+  }
 
   if (activeUser === null) {
     return (

@@ -6,12 +6,15 @@ import { CrokPage } from "@web-speed-hackathon-2026/client/src/components/crok/C
 import { useSSE } from "@web-speed-hackathon-2026/client/src/hooks/use_sse";
 
 type Props = {
-  activeUser: Models.User | null;
+  activeUser: Models.User | null | "loading";
   authModalId: string;
 };
 
 export const CrokContainer = ({ activeUser, authModalId }: Props) => {
   const [messages, setMessages] = useState<Models.ChatMessage[]>([]);
+  if (activeUser === "loading") {
+    return null;
+  }
 
   const sseOptions = useMemo(
     () => ({

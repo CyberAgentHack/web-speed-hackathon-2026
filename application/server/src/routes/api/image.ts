@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 
+// @ts-expect-error 型定義がない
 import exif from "exif-parser";
 import { Router } from "express";
 import { fileTypeFromBuffer } from "file-type";

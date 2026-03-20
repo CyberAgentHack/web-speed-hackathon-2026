@@ -21,7 +21,7 @@ interface DmTypingEvent {
 const TYPING_INDICATOR_DURATION_MS = 10 * 1000;
 
 interface Props {
-  activeUser: Models.User | null;
+  activeUser: Models.User | null | "loading";
   authModalId: string;
 }
 
@@ -36,7 +36,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadConversation = useCallback(async () => {
-    if (activeUser == null) {
+    if (activeUser == null || activeUser === "loading") {
       return;
     }
 
@@ -81,6 +81,10 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   }, [conversationId]);
 
   useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {
+    if (activeUser === "loading") {
+      return;
+    }
+
     if (event.type === "dm:conversation:message") {
       void loadConversation().then(() => {
         if (event.payload.sender.id !== activeUser?.id) {
@@ -102,6 +106,10 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
       }, TYPING_INDICATOR_DURATION_MS);
     }
   });
+
+  if (activeUser === "loading") {
+    return null;
+  }
 
   if (activeUser === null) {
     return (

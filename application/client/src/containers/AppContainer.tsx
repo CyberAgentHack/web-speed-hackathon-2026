@@ -60,8 +60,7 @@ export const AppContainer = () => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
-  const [activeUser, setActiveUser] = useState<Models.User | null>(null);
-  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
+  const [activeUser, setActiveUser] = useState<Models.User | null | "loading">("loading");
   useEffect(() => {
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {
@@ -69,11 +68,8 @@ export const AppContainer = () => {
       })
       .catch(() => {
         setActiveUser(null);
-      })
-      .finally(() => {
-        setIsLoadingActiveUser(false);
       });
-  }, [setActiveUser, setIsLoadingActiveUser]);
+  }, [setActiveUser]);
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
     setActiveUser(null);
@@ -87,16 +83,6 @@ export const AppContainer = () => {
       <title>読込中 - CaX</title>
     </Helmet>
   );
-
-  if (isLoadingActiveUser) {
-    return (
-      <HelmetProvider>
-        <Helmet>
-          <title>読込中 - CaX</title>
-        </Helmet>
-      </HelmetProvider>
-    );
-  }
 
   return (
     <HelmetProvider>
