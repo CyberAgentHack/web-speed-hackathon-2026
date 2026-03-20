@@ -3,8 +3,8 @@ const jaDateFormat = new Intl.DateTimeFormat("ja", { year: "numeric", month: "lo
 import { lazy, memo, Suspense } from "react";
 
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
-const ImageArea = lazy(() => import("@web-speed-hackathon-2026/client/src/components/post/ImageArea").then(m => ({ default: m.ImageArea })));
-const MovieArea = lazy(() => import("@web-speed-hackathon-2026/client/src/components/post/MovieArea").then(m => ({ default: m.MovieArea })));
+import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
+import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
 const SoundArea = lazy(() => import("@web-speed-hackathon-2026/client/src/components/post/SoundArea").then(m => ({ default: m.SoundArea })));
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
@@ -26,7 +26,6 @@ export const PostItem = memo(({ post }: Props) => {
               <img
                 alt={post.user.profileImage.alt}
                 height={64}
-                loading="lazy"
                 src={getProfileImagePath(post.user.profileImage.id)}
                 width={64}
               />
@@ -55,17 +54,17 @@ export const PostItem = memo(({ post }: Props) => {
           <div className="text-cax-text text-xl leading-relaxed">
             <TranslatableText text={post.text} />
           </div>
-          <Suspense fallback={null}>
-            {post.images?.length > 0 ? (
+          {post.images?.length > 0 ? (
               <div className="relative mt-2 w-full">
                 <ImageArea images={post.images} />
               </div>
             ) : null}
-            {post.movie ? (
+          {post.movie ? (
               <div className="relative mt-2 w-full">
                 <MovieArea movie={post.movie} />
               </div>
             ) : null}
+          <Suspense fallback={null}>
             {post.sound ? (
               <div className="relative mt-2 w-full">
                 <SoundArea sound={post.sound} />
