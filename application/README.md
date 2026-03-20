@@ -61,5 +61,5 @@ Playwright で Visual Regression Test (VRT) を提供しています。
        ```
    - リモート環境に対してテストを実行する場合
      - ```bash
-       E2E_BASE_URL=https://web-speed-hackathon-2026.example.com pnpm run test
+       E2E_BASE_URL=https://pr-269-web-speed-hackathon-2026.fly.dev pnpm run test
        ```
