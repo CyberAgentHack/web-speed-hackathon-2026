@@ -44,7 +44,6 @@ export const CoveredImage = ({ src }: Props) => {
         alt={alt}
         src={src}
         className="absolute inset-0 h-full w-full object-cover"
-        loading="lazy"
       />
 
       <button

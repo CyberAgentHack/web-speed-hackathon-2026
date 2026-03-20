@@ -14,7 +14,6 @@ export const PausableMovie = ({ src }: Props) => {
         alt=""
         className="h-full w-full object-cover"
         src={src}
-        loading="lazy"
       />
     </AspectRatioBox>
   );
