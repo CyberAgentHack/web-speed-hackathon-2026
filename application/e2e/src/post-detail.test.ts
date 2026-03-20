@@ -117,9 +117,7 @@ test.describe("投稿詳細 - 写真", () => {
     });
     expect(objectFit).toBe("cover");
 
-    await coveredImage.evaluate((el: HTMLImageElement) =>
-      el.complete ? Promise.resolve() : el.decode(),
-    );
+    await coveredImage.evaluate((el: HTMLImageElement) => el.decode());
 
     const naturalWidth = await coveredImage.evaluate((el: HTMLImageElement) => el.naturalWidth);
     expect(naturalWidth).toBeGreaterThan(100);

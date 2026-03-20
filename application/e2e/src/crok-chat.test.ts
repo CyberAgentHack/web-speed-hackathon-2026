@@ -7,7 +7,7 @@ test.describe("Crok AIチャット", () => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await login(page);
     await page.getByRole("link", { name: "Crok" }).click();
-    await page.waitForURL("**/crok", { timeout: 3_000 });
+    await page.waitForURL("**/crok", { timeout: 3_000, waitUntil: "commit" });
   });
 
   test("サジェスト候補が表示される", async ({ page }) => {
