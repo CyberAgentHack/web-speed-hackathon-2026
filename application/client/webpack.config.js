@@ -27,8 +27,6 @@ const config = {
   },
   entry: {
     main: [
-      'core-js',
-      'regenerator-runtime/runtime',
       path.resolve(SRC_PATH, './index.css'),
       path.resolve(SRC_PATH, './buildinfo.ts'),
       path.resolve(SRC_PATH, './index.tsx'),
@@ -94,16 +92,6 @@ const config = {
   resolve: {
     extensions: ['.tsx', '.ts', '.mjs', '.cjs', '.jsx', '.js'],
     alias: {
-      'bayesian-bm25$': path.resolve(
-        __dirname,
-        'node_modules',
-        'bayesian-bm25/dist/index.js',
-      ),
-      ['kuromoji$']: path.resolve(
-        __dirname,
-        'node_modules',
-        'kuromoji/build/kuromoji.js',
-      ),
       '@ffmpeg/ffmpeg$': path.resolve(
         __dirname,
         'node_modules',
@@ -118,11 +106,6 @@ const config = {
         __dirname,
         'node_modules',
         '@ffmpeg/core/dist/umd/ffmpeg-core.wasm',
-      ),
-      '@imagemagick/magick-wasm/magick.wasm$': path.resolve(
-        __dirname,
-        'node_modules',
-        '@imagemagick/magick-wasm/dist/magick.wasm',
       ),
     },
     fallback: {

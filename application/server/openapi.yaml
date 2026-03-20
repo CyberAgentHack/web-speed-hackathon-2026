@@ -48,13 +48,13 @@ paths:
                 name:
                   type: string
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
-        "400":
+                $ref: '#/components/schemas/User'
+        '400':
           description: Bad Request
           content:
             application/json:
@@ -86,13 +86,13 @@ paths:
                 password:
                   type: string
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
-        "400":
+                $ref: '#/components/schemas/User'
+        '400':
           description: Bad Request
   /signout:
     post:
@@ -100,7 +100,7 @@ paths:
         - Auth
       summary: サインアウト
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
@@ -115,16 +115,16 @@ paths:
       security:
         - session: []
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "404":
-          $ref: "#/components/responses/NotFound"
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
     put:
       tags:
         - Users
@@ -144,16 +144,16 @@ paths:
                 description:
                   type: string
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "404":
-          $ref: "#/components/responses/NotFound"
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /users/{username}:
     get:
       tags:
@@ -167,14 +167,14 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
-        "404":
-          $ref: "#/components/responses/NotFound"
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /users/{username}/posts:
     get:
       tags:
@@ -187,19 +187,19 @@ paths:
           required: true
           schema:
             type: string
-        - $ref: "#/components/parameters/limit"
-        - $ref: "#/components/parameters/offset"
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Post"
-        "404":
-          $ref: "#/components/responses/NotFound"
+                  $ref: '#/components/schemas/Post'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /posts:
     get:
       tags:
@@ -207,17 +207,17 @@ paths:
       summary: 投稿一覧取得
       operationId: getPosts
       parameters:
-        - $ref: "#/components/parameters/limit"
-        - $ref: "#/components/parameters/offset"
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Post"
+                  $ref: '#/components/schemas/Post'
     post:
       tags:
         - Posts
@@ -256,14 +256,14 @@ paths:
                         type: string
                         format: uuid
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Post"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+                $ref: '#/components/schemas/Post'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /posts/{postId}:
     get:
       tags:
@@ -277,14 +277,14 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Post"
-        "404":
-          $ref: "#/components/responses/NotFound"
+                $ref: '#/components/schemas/Post'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /posts/{postId}/comments:
     get:
       tags:
@@ -297,24 +297,24 @@ paths:
           required: true
           schema:
             type: string
-        - $ref: "#/components/parameters/limit"
-        - $ref: "#/components/parameters/offset"
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Comment"
+                  $ref: '#/components/schemas/Comment'
   /images:
     post:
       tags:
         - Assets
       summary: 画像アップロード
       operationId: uploadImage
-      description: バイナリデータを直接送信（上限 10 MB、JPG のみ）
+      description: バイナリデータを直接送信（上限 10 MB、画像を WebP に変換して保存）
       security:
         - session: []
       requestBody:
@@ -325,22 +325,31 @@ paths:
               type: string
               format: binary
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 type: object
                 required:
+                  - alt
+                  - height
                   - id
+                  - width
                 properties:
+                  alt:
+                    type: string
+                  height:
+                    type: integer
                   id:
                     type: string
                     format: uuid
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+                  width:
+                    type: integer
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   /movies:
     post:
@@ -359,7 +368,7 @@ paths:
               type: string
               format: binary
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
@@ -371,10 +380,10 @@ paths:
                   id:
                     type: string
                     format: uuid
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   /sounds:
     post:
@@ -393,7 +402,7 @@ paths:
               type: string
               format: binary
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
@@ -411,10 +420,10 @@ paths:
                     type: string
                   title:
                     type: string
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /dm:
     get:
       tags:
@@ -425,16 +434,16 @@ paths:
       security:
         - session: []
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/DirectMessageConversation"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+                  $ref: '#/components/schemas/DirectMessageConversation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
       tags:
         - DirectMessages
@@ -455,16 +464,16 @@ paths:
                   type: string
                   format: uuid
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DirectMessageConversation"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "404":
-          $ref: "#/components/responses/NotFound"
+                $ref: '#/components/schemas/DirectMessageConversation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /dm/read:
     head:
       tags:
@@ -474,7 +483,7 @@ paths:
       security:
         - session: []
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
@@ -484,15 +493,15 @@ paths:
                 properties:
                   type:
                     type: string
-                    enum: ["dm:unread"]
+                    enum: ['dm:unread']
                   payload:
                     type: object
                     required: [unreadCount]
                     properties:
                       unreadCount:
                         type: integer
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /dm/{conversationId}:
     get:
       tags:
@@ -508,16 +517,16 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DirectMessageConversation"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "404":
-          $ref: "#/components/responses/NotFound"
+                $ref: '#/components/schemas/DirectMessageConversation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
     head:
       tags:
         - DirectMessages
@@ -526,7 +535,7 @@ paths:
       security:
         - session: []
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
@@ -537,19 +546,19 @@ paths:
                     properties:
                       type:
                         type: string
-                        enum: ["dm:conversation:message"]
+                        enum: ['dm:conversation:message']
                       payload:
-                        $ref: "#/components/schemas/DirectMessage"
+                        $ref: '#/components/schemas/DirectMessage'
                   - type: object
                     required: [type, payload]
                     properties:
                       type:
                         type: string
-                        enum: ["dm:conversation:typing"]
+                        enum: ['dm:conversation:typing']
                       payload:
                         type: object
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /dm/{conversationId}/messages:
     post:
       tags:
@@ -576,18 +585,18 @@ paths:
                   type: string
                   minLength: 1
       responses:
-        "201":
+        '201':
           description: Created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DirectMessage"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "404":
-          $ref: "#/components/responses/NotFound"
+                $ref: '#/components/schemas/DirectMessage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /dm/{conversationId}/read:
     post:
       tags:
@@ -603,16 +612,16 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 type: object
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "404":
-          $ref: "#/components/responses/NotFound"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /dm/{conversationId}/typing:
     post:
       tags:
@@ -628,16 +637,16 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 type: object
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "404":
-          $ref: "#/components/responses/NotFound"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /search:
     get:
       tags:
@@ -654,33 +663,45 @@ paths:
           schema:
             type: string
           description: 検索クエリ
-        - $ref: "#/components/parameters/limit"
-        - $ref: "#/components/parameters/offset"
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Post"
+                  $ref: '#/components/schemas/Post'
   /crok/suggestions:
     get:
       tags:
         - Crok
       summary: チャット候補取得
       operationId: getCrokSuggestions
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+          description: 候補を絞り込む検索クエリ
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 type: object
                 required:
+                  - queryTokens
                   - suggestions
                 properties:
+                  queryTokens:
+                    type: array
+                    items:
+                      type: string
                   suggestions:
                     type: array
                     items:
@@ -702,7 +723,7 @@ paths:
             type: string
           description: ユーザーの質問
       responses:
-        "200":
+        '200':
           description: OK
           content:
             text/event-stream:
@@ -715,8 +736,8 @@ paths:
                     type: string
                   done:
                     type: boolean
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /initialize:
     post:
       tags:
@@ -724,7 +745,7 @@ paths:
       summary: データベース初期化
       operationId: initialize
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
@@ -812,17 +833,21 @@ components:
           type: string
           format: date-time
         profileImage:
-          $ref: "#/components/schemas/ProfileImage"
+          $ref: '#/components/schemas/ProfileImage'
 
     Image:
       type: object
-      required: [id, alt]
+      required: [id, alt, width, height]
       properties:
         id:
           type: string
           format: uuid
         alt:
           type: string
+        width:
+          type: integer
+        height:
+          type: integer
 
     Movie:
       type: object
@@ -856,17 +881,17 @@ components:
           type: string
           format: date-time
         user:
-          $ref: "#/components/schemas/User"
+          $ref: '#/components/schemas/User'
         movie:
-          $ref: "#/components/schemas/Movie"
+          $ref: '#/components/schemas/Movie'
           nullable: true
         sound:
-          $ref: "#/components/schemas/Sound"
+          $ref: '#/components/schemas/Sound'
           nullable: true
         images:
           type: array
           items:
-            $ref: "#/components/schemas/Image"
+            $ref: '#/components/schemas/Image'
 
     Comment:
       type: object
@@ -880,7 +905,7 @@ components:
           type: string
           format: date-time
         user:
-          $ref: "#/components/schemas/User"
+          $ref: '#/components/schemas/User'
 
     DirectMessageConversation:
       type: object
@@ -889,17 +914,18 @@ components:
         id:
           type: string
         initiator:
-          $ref: "#/components/schemas/User"
+          $ref: '#/components/schemas/User'
         member:
-          $ref: "#/components/schemas/User"
+          $ref: '#/components/schemas/User'
         messages:
           type: array
           items:
-            $ref: "#/components/schemas/DirectMessage"
+            $ref: '#/components/schemas/DirectMessage'
 
     DirectMessage:
       type: object
-      required: [id, body, senderId, conversationId, isRead, createdAt, updatedAt]
+      required:
+        [id, body, senderId, conversationId, isRead, createdAt, updatedAt]
       properties:
         id:
           type: string
@@ -919,4 +945,4 @@ components:
           type: string
           format: date-time
         sender:
-          $ref: "#/components/schemas/User"
+          $ref: '#/components/schemas/User'

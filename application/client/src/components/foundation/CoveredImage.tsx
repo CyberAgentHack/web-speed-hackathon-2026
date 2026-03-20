@@ -1,36 +1,25 @@
 import classNames from "classnames";
-import sizeOf from "image-size";
-import { MouseEvent, RefCallback, useCallback, useId, useMemo, useState } from "react";
+import { MouseEvent, RefCallback, useCallback, useId, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
-import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
   alt: string;
+  height: number;
   src: string;
+  width: number;
 }
 
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
-export const CoveredImage = ({ src, alt }: Props) => {
+export const CoveredImage = ({ src, alt, height, width }: Props) => {
   const dialogId = useId();
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
     ev.stopPropagation();
   }, []);
-
-  const { data, isLoading } = useFetch(src, fetchBinary);
-
-  const imageSize = useMemo(() => {
-    return data != null ? sizeOf(new Uint8Array(data)) : { height: 0, width: 0 };
-  }, [data]);
-
-  const blobUrl = useMemo(() => {
-    return data != null ? URL.createObjectURL(new Blob([data])) : null;
-  }, [data]);
 
   const [containerSize, setContainerSize] = useState({ height: 0, width: 0 });
   const callbackRef = useCallback<RefCallback<HTMLDivElement>>((el) => {
@@ -40,12 +29,12 @@ export const CoveredImage = ({ src, alt }: Props) => {
     });
   }, []);
 
-  if (isLoading || data === null || blobUrl === null) {
+  if (height <= 0 || width <= 0) {
     return null;
   }
 
   const containerRatio = containerSize.height / containerSize.width;
-  const imageRatio = imageSize?.height / imageSize?.width;
+  const imageRatio = height / width;
 
   return (
     <div ref={callbackRef} className="relative h-full w-full overflow-hidden">
@@ -58,7 +47,7 @@ export const CoveredImage = ({ src, alt }: Props) => {
             "w-full h-auto": containerRatio <= imageRatio,
           },
         )}
-        src={blobUrl}
+        src={src}
       />
 
       <button

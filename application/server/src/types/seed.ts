@@ -13,32 +13,43 @@ import type { Sound } from "@web-speed-hackathon-2026/server/src/models/Sound";
 import type { User } from "@web-speed-hackathon-2026/server/src/models/User";
 
 type DateToString<T> = {
-  [K in keyof T]: T[K] extends Date
-    ? string
-    : T[K] extends Date | null
-      ? string | null
-      : T[K] extends Date | undefined
-        ? string | undefined
-        : T[K];
+  [K in keyof T]: T[K] extends Date ? string
+    : T[K] extends Date | null ? string | null
+    : T[K] extends Date | undefined ? string | undefined
+    : T[K];
 };
 
-export type ProfileImageSeed = Pick<InferAttributes<ProfileImage>, "id" | "alt">;
+export type ProfileImageSeed = Pick<
+  InferAttributes<ProfileImage>,
+  "id" | "alt"
+>;
 
 export type UserSeed = DateToString<
   Pick<
     InferAttributes<User>,
-    "id" | "username" | "name" | "description" | "password" | "profileImageId" | "createdAt"
+    | "id"
+    | "username"
+    | "name"
+    | "description"
+    | "password"
+    | "profileImageId"
+    | "createdAt"
   >
 >;
 
-export type ImageSeed = DateToString<Pick<InferAttributes<Image>, "id" | "alt" | "createdAt">>;
+export type ImageSeed = DateToString<
+  Pick<InferAttributes<Image>, "id" | "alt" | "width" | "height" | "createdAt">
+>;
 
 export type MovieSeed = Pick<InferAttributes<Movie>, "id">;
 
 export type SoundSeed = Pick<InferAttributes<Sound>, "id" | "title" | "artist">;
 
 export type PostSeed = DateToString<
-  Pick<InferAttributes<Post>, "id" | "userId" | "movieId" | "soundId" | "text" | "createdAt">
+  Pick<
+    InferAttributes<Post>,
+    "id" | "userId" | "movieId" | "soundId" | "text" | "createdAt"
+  >
 >;
 
 export type PostsImagesRelationSeed = Pick<
@@ -47,7 +58,10 @@ export type PostsImagesRelationSeed = Pick<
 >;
 
 export type CommentSeed = DateToString<
-  Pick<InferAttributes<Comment>, "id" | "userId" | "postId" | "text" | "createdAt">
+  Pick<
+    InferAttributes<Comment>,
+    "id" | "userId" | "postId" | "text" | "createdAt"
+  >
 >;
 
 export type DirectMessageConversationSeed = Pick<
@@ -58,8 +72,17 @@ export type DirectMessageConversationSeed = Pick<
 export type DirectMessageSeed = DateToString<
   Pick<
     InferAttributes<DirectMessage>,
-    "id" | "conversationId" | "senderId" | "body" | "isRead" | "createdAt" | "updatedAt"
+    | "id"
+    | "conversationId"
+    | "senderId"
+    | "body"
+    | "isRead"
+    | "createdAt"
+    | "updatedAt"
   >
 >;
 
-export type QaSuggestionSeed = Pick<InferAttributes<QaSuggestion>, "id" | "question">;
+export type QaSuggestionSeed = Pick<
+  InferAttributes<QaSuggestion>,
+  "id" | "question"
+>;

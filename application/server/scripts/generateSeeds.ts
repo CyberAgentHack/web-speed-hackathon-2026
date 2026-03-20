@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import exifr from "exifr";
 import { faker } from "@faker-js/faker/locale/ja";
+import sharp from "sharp";
 
 // Set seed for reproducible results
 faker.seed(123);
@@ -28,7 +29,7 @@ const publicDir = path.resolve(__dirname, "../../public");
 // ========== Existing Asset IDs from public directory ==========
 // These IDs correspond to actual files in the public directory
 
-// public/images/*.jpg (30 files)
+// public/images/*.webp (30 files)
 const EXISTING_IMAGE_IDS = [
   "029b4b75-bbcc-4aa5-8bd7-e4bb12a33cd3",
   "078c4d42-12e3-4c1d-823c-9ba552f6b066",
@@ -160,7 +161,7 @@ const EXISTING_SOUNDS = [
   },
 ];
 
-// public/images/profiles/*.jpg (30 files)
+// public/images/profiles/*.webp (30 files)
 const EXISTING_PROFILE_IMAGE_IDS = [
   "09d52cbb-28a2-4413-b220-1f8c9e80a440",
   "0aba06a6-1b56-4ebd-8218-951aaba173af",
@@ -228,7 +229,69 @@ function pickRandomN<T>(arr: T[], n: number): T[] {
   return faker.helpers.arrayElements(arr, n);
 }
 
-async function extractImageAlt(filePath: string): Promise<string> {
+async function resolveImageFilePath(
+  filePathWithoutExtension: string,
+): Promise<string | null> {
+  const webpPath = `${filePathWithoutExtension}.webp`;
+  try {
+    await fs.access(webpPath);
+    return webpPath;
+  } catch {
+    const jpgPath = `${filePathWithoutExtension}.jpg`;
+    try {
+      await fs.access(jpgPath);
+      return jpgPath;
+    } catch {
+      return null;
+    }
+  }
+}
+
+async function ensureWebpImageAsset(
+  filePathWithoutExtension: string,
+): Promise<void> {
+  const webpPath = `${filePathWithoutExtension}.webp`;
+  try {
+    await fs.access(webpPath);
+    return;
+  } catch {
+    const jpgPath = `${filePathWithoutExtension}.jpg`;
+    const converted = await sharp(jpgPath)
+      .resize({ width: 800, fit: "cover" })
+      .webp({ quality: 85 })
+      .toBuffer();
+    await fs.writeFile(webpPath, converted);
+  }
+}
+
+async function ensureWebpImageAssets(): Promise<void> {
+  await Promise.all([
+    ...EXISTING_IMAGE_IDS.map((id) =>
+      ensureWebpImageAsset(path.resolve(publicDir, `./images/${id}`))
+    ),
+    ...EXISTING_PROFILE_IMAGE_IDS.map((id) =>
+      ensureWebpImageAsset(path.resolve(publicDir, `./images/profiles/${id}`))
+    ),
+  ]);
+}
+
+async function extractImageAlt(
+  filePathWithoutExtension: string,
+): Promise<string> {
+  const jpgPath = `${filePathWithoutExtension}.jpg`;
+  let filePath: string | null = null;
+
+  try {
+    await fs.access(jpgPath);
+    filePath = jpgPath;
+  } catch {
+    filePath = await resolveImageFilePath(filePathWithoutExtension);
+  }
+
+  if (filePath == null) {
+    return "";
+  }
+
   try {
     const imageBuffer = await fs.readFile(filePath);
     const metadata = await exifr.parse(imageBuffer, true);
@@ -239,13 +302,32 @@ async function extractImageAlt(filePath: string): Promise<string> {
   }
 }
 
+async function extractImageSize(
+  filePathWithoutExtension: string,
+): Promise<{ width: number; height: number }> {
+  const filePath = await resolveImageFilePath(filePathWithoutExtension);
+  if (filePath == null) {
+    return { height: 0, width: 0 };
+  }
+
+  try {
+    const metadata = await sharp(filePath).metadata();
+    return {
+      height: metadata.height ?? 0,
+      width: metadata.width ?? 0,
+    };
+  } catch {
+    return { height: 0, width: 0 };
+  }
+}
+
 async function generateProfileImages(): Promise<ProfileImageSeed[]> {
   // Use existing profile image IDs from public/images/profiles/
   return Promise.all(
     EXISTING_PROFILE_IMAGE_IDS.map(async (id) => ({
       id,
       alt: await extractImageAlt(
-        path.resolve(publicDir, `./images/profiles/${id}.jpg`),
+        path.resolve(publicDir, `./images/profiles/${id}`),
       ),
     })),
   );
@@ -289,11 +371,18 @@ async function generateImages(): Promise<ImageSeed[]> {
   // Use existing image IDs from public/images/
   const baseTime = now - ONE_WEEK_MS;
   return Promise.all(
-    EXISTING_IMAGE_IDS.map(async (id, i) => ({
-      id,
-      alt: await extractImageAlt(path.resolve(publicDir, `./images/${id}.jpg`)),
-      createdAt: new Date(baseTime + i * 60 * 1000).toISOString(),
-    })),
+    EXISTING_IMAGE_IDS.map(async (id, i) => {
+      const size = await extractImageSize(
+        path.resolve(publicDir, `./images/${id}`),
+      );
+      return {
+        id,
+        alt: await extractImageAlt(path.resolve(publicDir, `./images/${id}`)),
+        createdAt: new Date(baseTime + i * 60 * 1000).toISOString(),
+        height: size.height,
+        width: size.width,
+      };
+    }),
   );
 }
 
@@ -764,13 +853,11 @@ function generateDirectMessages(
       let isRead = false;
       // 受信者判定: 自分以外が送ったメッセージを相手が読んだか
       if (msg.senderId === userB.id && lastReadAtForA != null) {
-        isRead =
-          new Date(msg.createdAt).getTime() <=
-            new Date(lastReadAtForA).getTime();
+        isRead = new Date(msg.createdAt).getTime() <=
+          new Date(lastReadAtForA).getTime();
       } else if (msg.senderId === userA.id && lastReadAtForB != null) {
-        isRead =
-          new Date(msg.createdAt).getTime() <=
-            new Date(lastReadAtForB).getTime();
+        isRead = new Date(msg.createdAt).getTime() <=
+          new Date(lastReadAtForB).getTime();
       }
       return { ...msg, isRead };
     });
@@ -803,6 +890,9 @@ async function writeJsonlFile<T>(filename: string, data: T[]): Promise<void> {
 
 async function main() {
   console.log("Generating seed data...");
+
+  console.log("0. Converting seed image assets to WebP if needed...");
+  await ensureWebpImageAssets();
 
   console.log("1. Generating ProfileImages (using existing assets)...");
   const profileImages = await generateProfileImages();
