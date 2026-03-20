@@ -4,8 +4,8 @@ import { Helmet, HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
-const AuthModalContainer = React.lazy(() => import("./AuthModalContainer"));
-const NewPostModalContainer = React.lazy(() => import("./NewPostModalContainer"));
+import AuthModalContainer from "./AuthModalContainer";
+import NewPostModalContainer from "./NewPostModalContainer";
 import { fetchJSON, sendJSON } from "../utils/fetchers";
 // import TimelineContainer from "./TimelineContainer";
 
@@ -15,25 +15,17 @@ const CrokContainer = React.lazy(() =>
 const DirectMessageContainer = React.lazy(() =>
   import(/* webpackChunkName: "DM" */ "./DirectMessageContainer"),
 );
-const DirectMessageListContainer = React.lazy(() =>
-  import(/* webpackChunkName: "DMList" */ "./DirectMessageListContainer"),
-);
+import DirectMessageListContainer from "./DirectMessageListContainer";
 const NotFoundContainer = React.lazy(() =>
   import(/* webpackChunkName: "NotFound" */ "./NotFoundContainer"),
 );
-const PostContainer = React.lazy(() =>
-  import(/* webpackChunkName: "Post" */ "./PostContainer"),
-);
-const SearchContainer = React.lazy(() =>
-  import(/* webpackChunkName: "Search" */ "./SearchContainer"),
-);
+import PostContainer from "./PostContainer";
+import SearchContainer from "./SearchContainer";
 const TermContainer = React.lazy(() =>
   import(/* webpackChunkName: "Term" */ "./TermContainer"),
 );
 // Static import for LCP optimization
-const TimelineContainer = React.lazy(() =>
-  import(/* webpackChunkName: "Timeline" */ "./TimelineContainer"),
-);
+import TimelineContainer from "./TimelineContainer";
 const UserProfileContainer = React.lazy(() =>
   import(/* webpackChunkName: "UserProfile" */ "./UserProfileContainer"),
 );
@@ -120,10 +112,8 @@ const AppContainer = () => {
         </Suspense>
       </AppPage>
 
-      <Suspense fallback={null}>
-        <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
-        <NewPostModalContainer id={newPostModalId} />
-      </Suspense>
+      <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
+      <NewPostModalContainer id={newPostModalId} />
     </HelmetProvider>
   );
 };
