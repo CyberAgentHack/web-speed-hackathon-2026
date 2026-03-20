@@ -1,9 +1,9 @@
 import { initializeImageMagick, ImageMagick, MagickFormat } from "@imagemagick/magick-wasm";
-import magickWasm from "@imagemagick/magick-wasm/magick.wasm?binary";
+import magickWasmURL from "@imagemagick/magick-wasm/magick.wasm?url";
 import { dump, insert, ImageIFD } from "piexifjs";
 
 export async function convertImage(file: File): Promise<Blob> {
-  await initializeImageMagick(magickWasm);
+  await initializeImageMagick(new URL(magickWasmURL, window.location.origin));
 
   const byteArray = new Uint8Array(await file.arrayBuffer());
 

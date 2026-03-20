@@ -51,6 +51,10 @@ const config = {
         ],
       },
       {
+        resourceQuery: /url/,
+        type: "asset/resource",
+      },
+      {
         resourceQuery: /binary/,
         type: "asset/bytes",
       },
