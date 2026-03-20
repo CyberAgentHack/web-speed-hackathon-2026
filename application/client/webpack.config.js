@@ -60,7 +60,7 @@ const config = {
     chunkFormat: "array-push",
     filename: "scripts/[name].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     clean: true,
   },
   plugins: [
@@ -86,7 +86,7 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: "body",
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
   ],
@@ -123,7 +123,9 @@ const config = {
     },
   },
   optimization: {
-    splitChunks: false, // FIXME: chunk分割時に削除する
+    splitChunks: {
+      chunks: "all",
+    },
   },
   ignoreWarnings: [
     {
