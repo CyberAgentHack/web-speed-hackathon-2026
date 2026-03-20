@@ -30,3 +30,12 @@ pass_filenames = false
 always_run = true
 stages = ["pre-commit"]
 
+[[repos.hooks]]
+id = "api-test"
+name = "api-test"
+language = "system"
+entry = "bash -c 'cd application && PORT=13000 pnpm --filter @web-speed-hackathon-2026/server start &>/tmp/prek-api-test-server.log & SERVER_PID=$!; sleep 4; E2E_BASE_URL=http://localhost:13000 pnpm --filter @web-speed-hackathon-2026/e2e exec playwright test --project=\"API Contract\" --project=\"API Initialize\"; EXIT=$?; kill $SERVER_PID 2>/dev/null; wait $SERVER_PID 2>/dev/null; exit $EXIT'"
+pass_filenames = false
+always_run = true
+stages = ["pre-commit"]
+
