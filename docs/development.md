@@ -48,7 +48,31 @@
 - 音声波形計算の lodash 依存を除去
 - バンドル設定を見直し、初期JSサイズを大幅に削減
 
+**計測結果（2026-03-20 11:30頃）:**
+- FCP: 12.04s (target: <1.8s)
+- SI: 19.44s (target: <3.9s)
+- LCP: 947.27s (target: <2.5s)
+- TBT: 11628ms (target: <200ms)
+- CLS: 0.672 (target: <0.1)
+- Scoring: 23.75/100 (CLS only)
+
+### 2026-03-20 2回目改善（新規投稿モーダル遅延ロード化）
+
+- NewPostModalPage のメディア変換依存（ImageMagick, convert_image/convert_movie/convert_sound）を動的import化
+- ファイル選択時のみメディア変換ライブラリをロード（初期バンドル削減）
+- AppContainer の NewPostModalContainer 遅延ロードとの組み合わせで、モーダル開時のみ重い依存が読み込まれるように設計
+
+**計測結果（遅延ロード後）:**
+- FCP: 12.04s (不変)
+- SI: 19.44s (変化なし)
+- LCP: 947.27s (変化なし)
+- TBT: 11628ms (20841ms から大幅改善)
+- CLS: 0.672 (0.523 から若干悪化)
+- Scoring: 23.75/100 (CLS 23.75)
+
 ### 次の計測方針
 
-- ホーム画面を起点に、LCP/TBT/INP の残ボトルネックを数値で確認
+- ホーム画面を起点に、FCP/LCP の残ボトルネック（main.js スクリプト評価 42s が主要）を詳細分析
+- jquery/bluebird/redux-form など main.js に含まれる大型ライブラリの削減または分割
+- 操作シナリオの修正して INP 測定を再度試行
 - 改善ごとに scoring-tool で差分を記録し、回帰を防止
