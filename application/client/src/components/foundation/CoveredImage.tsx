@@ -46,35 +46,37 @@ export const CoveredImage = ({ src }: Props) => {
     });
   }, []);
 
-  if (isLoading) {
-    return <div className="bg-cax-surface-subtle h-full w-full animate-pulse" />;
-  }
-  if (data === null || blobUrl === null) {
-    return <div className="bg-cax-surface-subtle h-full w-full" />;
-  }
+  const hasImage = !isLoading && data !== null && blobUrl !== null;
 
   const containerRatio = containerSize.height / containerSize.width;
   const imageRatio = imageSize?.height / imageSize?.width;
 
   return (
-    <div ref={callbackRef} className="relative h-full w-full overflow-hidden">
+    <div
+      ref={callbackRef}
+      className={classNames("relative h-full w-full overflow-hidden bg-cax-surface-subtle", {
+        "animate-pulse": !hasImage,
+      })}
+    >
       <img
         alt={alt}
         className={classNames(
           "absolute left-1/2 top-1/2 max-w-none -translate-x-1/2 -translate-y-1/2",
           {
-            "w-auto h-full": containerRatio > imageRatio,
-            "w-full h-auto": containerRatio <= imageRatio,
+            "h-full w-auto": hasImage && containerRatio > imageRatio,
+            "h-auto w-full": hasImage && containerRatio <= imageRatio,
+            "h-full w-full": !hasImage,
           },
         )}
-        src={blobUrl}
+        src={hasImage ? blobUrl : undefined}
       />
 
       <button
-        className="border-cax-border bg-cax-surface-raised/90 text-cax-text-muted hover:bg-cax-surface absolute right-1 bottom-1 rounded-full border px-2 py-1 text-center text-xs"
+        className="border-cax-border bg-cax-surface-raised/90 text-cax-text-muted hover:bg-cax-surface absolute right-1 bottom-1 rounded-full border px-2 py-1 text-center text-xs disabled:cursor-not-allowed disabled:opacity-60"
         type="button"
         command="show-modal"
         commandfor={dialogId}
+        disabled={!hasImage}
       >
         ALT を表示する
       </button>

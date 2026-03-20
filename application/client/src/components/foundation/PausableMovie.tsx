@@ -51,6 +51,10 @@ export const PausableMovie = ({ src }: Props) => {
 
   const [isPlaying, setIsPlaying] = useState(true);
   const handleClick = useCallback(() => {
+    if (isLoading || data === null) {
+      return;
+    }
+
     setIsPlaying((isPlaying) => {
       if (isPlaying) {
         animatorRef.current?.stop();
@@ -61,27 +65,15 @@ export const PausableMovie = ({ src }: Props) => {
     });
   }, []);
 
-  if (isLoading) {
-    return (
-      <AspectRatioBox aspectHeight={1} aspectWidth={1}>
-        <div className="bg-cax-surface-subtle h-full w-full animate-pulse" />
-      </AspectRatioBox>
-    );
-  }
-
-  if (data === null) {
-    return (
-      <AspectRatioBox aspectHeight={1} aspectWidth={1}>
-        <div className="bg-cax-surface-subtle h-full w-full" />
-      </AspectRatioBox>
-    );
-  }
+  const hasMovie = !isLoading && data !== null;
 
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
       <button
         aria-label="動画プレイヤー"
-        className="group relative block h-full w-full"
+        className={classNames("group relative block h-full w-full bg-cax-surface-subtle", {
+          "animate-pulse": !hasMovie,
+        })}
         onClick={handleClick}
         type="button"
       >
@@ -90,7 +82,7 @@ export const PausableMovie = ({ src }: Props) => {
           className={classNames(
             "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
             {
-              "opacity-0 group-hover:opacity-100": isPlaying,
+              "opacity-0 group-hover:opacity-100": isPlaying && hasMovie,
             },
           )}
         >
