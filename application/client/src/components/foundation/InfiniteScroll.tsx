@@ -14,9 +14,6 @@ export const InfiniteScroll = ({ children, fetchMore, hasMore, items }: Props) =
   return (
     <InfiniteScrollBase
       dataLength={length}
-      endMessage={
-        <p className="text-cax-text-muted py-4 text-center text-sm">すべて表示しました</p>
-      }
       hasChildren={length > 0}
       hasMore={hasMore}
       loader={

@@ -26,4 +26,9 @@ export async function initializeSequelize() {
     storage: TEMP_PATH,
   });
   initModels(_sequelize);
+
+  await _sequelize.query("PRAGMA journal_mode = WAL;");
+  await _sequelize.query("PRAGMA synchronous = NORMAL;");
+  await _sequelize.query("PRAGMA temp_store = MEMORY;");
+  await _sequelize.query("PRAGMA cache_size = -32000;");
 }
