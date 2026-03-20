@@ -20,6 +20,9 @@
 >
 > ```bash
 > fly logs --app pr-<PR 番号>-web-speed-hackathon-2026 --access-token <アクセストークン>
+
+Read-only token は [./token.txt](./token.txt) を参照してください
+
 > ```
 
 > [!CAUTION]
