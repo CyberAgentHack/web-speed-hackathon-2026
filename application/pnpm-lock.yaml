@@ -271,6 +271,9 @@ importers:
 
   server:
     dependencies:
+      '@mlc-ai/web-llm':
+        specifier: 0.2.80
+        version: 0.2.80
       '@tsconfig/strictest':
         specifier: 2.0.8
         version: 2.0.8

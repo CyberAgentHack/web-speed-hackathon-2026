@@ -13,6 +13,7 @@
     "seed:insert": "tsx ./scripts/insertSeeds.ts"
   },
   "dependencies": {
+    "@mlc-ai/web-llm": "0.2.80",
     "@tsconfig/strictest": "2.0.8",
     "@web-speed-hackathon-2026/server": "workspace:*",
     "bcrypt": "6.0.0",
