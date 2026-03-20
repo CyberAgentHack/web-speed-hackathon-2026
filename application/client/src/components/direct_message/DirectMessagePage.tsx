@@ -1,15 +1,16 @@
 import classNames from "classnames";
 import {
   ChangeEvent,
+  FormEvent,
+  KeyboardEvent,
   useCallback,
+  useEffect,
   useId,
   useRef,
   useState,
-  KeyboardEvent,
-  FormEvent,
-  useEffect,
 } from "react";
 
+import { AvatarImage } from "@web-speed-hackathon-2026/client/src/components/foundation/AvatarImage";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
 import { formatJapaneseTime } from "@web-speed-hackathon-2026/client/src/utils/date";
@@ -35,6 +36,7 @@ export const DirectMessagePage = ({
   onSubmit,
 }: Props) => {
   const formRef = useRef<HTMLFormElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const textAreaId = useId();
 
   const peer =
@@ -43,7 +45,6 @@ export const DirectMessagePage = ({
   const [text, setText] = useState("");
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
-  const scrollHeightRef = useRef(0);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -74,16 +75,13 @@ export const DirectMessagePage = ({
   );
 
   useEffect(() => {
-    const id = setInterval(() => {
-      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
-      if (height !== scrollHeightRef.current) {
-        scrollHeightRef.current = height;
-        window.scrollTo(0, height);
-      }
-    }, 1);
+    const container = messagesContainerRef.current;
+    if (container == null) {
+      return;
+    }
 
-    return () => clearInterval(id);
-  }, []);
+    container.scrollTop = container.scrollHeight;
+  }, [conversation.messages]);
 
   if (conversationError != null) {
     return (
@@ -96,9 +94,11 @@ export const DirectMessagePage = ({
   return (
     <section className="bg-cax-surface flex min-h-[calc(100vh-(--spacing(12)))] flex-col lg:min-h-screen">
       <header className="border-cax-border bg-cax-surface sticky top-0 z-10 flex items-center gap-2 border-b px-4 py-3">
-        <img
+        <AvatarImage
           alt={peer.profileImage.alt}
           className="h-12 w-12 rounded-full object-cover"
+          loading="eager"
+          size={48}
           src={getProfileImagePath(peer.profileImage.id)}
         />
         <div className="min-w-0">
@@ -111,7 +111,10 @@ export const DirectMessagePage = ({
         </div>
       </header>
 
-      <div className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8">
+      <div
+        ref={messagesContainerRef}
+        className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8"
+      >
         {conversation.messages.length === 0 && (
           <p className="text-cax-text-muted text-center text-sm">
             まだメッセージはありません。最初のメッセージを送信してみましょう。
