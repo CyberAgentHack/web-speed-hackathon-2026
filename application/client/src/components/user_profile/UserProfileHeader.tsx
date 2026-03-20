@@ -11,6 +11,10 @@ interface Props {
 
 export const UserProfileHeader = ({ user }: Props) => {
   const [averageColor, setAverageColor] = useState<string | null>(null);
+  const isColorReady = averageColor !== null;
+  const headerBackgroundStyle = averageColor
+    ? { backgroundColor: averageColor }
+    : { visibility: "hidden" as const };
 
   // 画像の平均色を取得します
   /** @type {React.ReactEventHandler<HTMLImageElement>} */
@@ -25,7 +29,8 @@ export const UserProfileHeader = ({ user }: Props) => {
     <header className="relative">
       <div
         className="h-32 bg-cax-surface-subtle"
-        style={averageColor ? { backgroundColor: averageColor } : undefined}
+        data-color-ready={isColorReady ? "true" : "false"}
+        style={headerBackgroundStyle}
       ></div>
       <div className="border-cax-border bg-cax-surface-subtle absolute left-2/4 m-0 h-28 w-28 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border sm:h-32 sm:w-32">
         <img
