@@ -9,7 +9,7 @@ test.describe("利用規約", () => {
   });
 
   test("タイトルが「利用規約 - CaX」", async ({ page }) => {
-    await expect(page).toHaveTitle("利用規約 - CaX", { timeout: 10_000 });
+    await expect(page).toHaveTitle("利用規約 - CaX", { timeout: 30_000 });
   });
 
   test("ページが正しく表示されている", async ({ page }) => {

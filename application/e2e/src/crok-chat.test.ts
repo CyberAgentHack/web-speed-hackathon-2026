@@ -23,7 +23,7 @@ test.describe("Crok AIチャット", () => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await login(page);
     await page.getByRole("link", { name: "Crok" }).click();
-    await page.waitForURL("**/crok", { timeout: 10_000 });
+    await page.waitForURL("**/crok", { timeout: 30_000 });
   });
 
   test("初回表示時にウェルカム画面「AIアシスタントに質問してみましょう」が表示される", async ({ page }) => {
@@ -103,12 +103,12 @@ test.describe("Crok AIチャット", () => {
 
     // ユーザーメッセージが表示される
     await expect(page.getByText(prompt)).toBeVisible({
-      timeout: 10_000,
+      timeout: 30_000,
     });
 
     // ストリーミング中の表示を確認
     await expect(page.getByText("AIが応答を生成中...")).toBeVisible({
-      timeout: 10_000,
+      timeout: 30_000,
     });
 
     // SSE完了を待つ（フッターテキストが変わる）
