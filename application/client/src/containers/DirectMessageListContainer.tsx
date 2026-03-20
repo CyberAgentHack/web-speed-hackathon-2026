@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useCallback, useId, useRef } from "react";
 import { Helmet } from "react-helmet";
 
 import { DirectMessageGate } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageGate";
@@ -12,6 +12,11 @@ interface Props {
 
 export const DirectMessageListContainer = ({ activeUser, authModalId }: Props) => {
   const newDmModalId = useId();
+  const modalRef = useRef<HTMLDialogElement>(null);
+
+  const handleOpenModal = useCallback(() => {
+    modalRef.current?.showModal();
+  }, []);
 
   if (activeUser === null) {
     return (
@@ -27,8 +32,8 @@ export const DirectMessageListContainer = ({ activeUser, authModalId }: Props) =
       <Helmet>
         <title>ダイレクトメッセージ - CaX</title>
       </Helmet>
-      <DirectMessageListPage activeUser={activeUser} newDmModalId={newDmModalId} />
-      <NewDirectMessageModalContainer id={newDmModalId} />
+      <DirectMessageListPage activeUser={activeUser} newDmModalId={newDmModalId} onOpenNewDm={handleOpenModal} />
+      <NewDirectMessageModalContainer id={newDmModalId} ref={modalRef} />
     </>
   );
 };

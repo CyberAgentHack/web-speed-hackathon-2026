@@ -9,6 +9,7 @@ import { validate } from "@web-speed-hackathon-2026/client/src/direct_message/va
 
 interface Props {
   id: string;
+  onClose?: () => void;
 }
 
 const NewDirectMessageModalPageComponent = ({
@@ -17,6 +18,7 @@ const NewDirectMessageModalPageComponent = ({
   error,
   submitting,
   handleSubmit,
+  onClose,
 }: Props & InjectedFormProps<NewDirectMessageFormData, Props>) => {
   return (
     <div className="grid gap-y-6">
@@ -37,7 +39,7 @@ const NewDirectMessageModalPageComponent = ({
           <ModalSubmitButton disabled={submitting || invalid} loading={submitting}>
             DMを開始
           </ModalSubmitButton>
-          <Button variant="secondary" command="close" commandfor={id}>
+          <Button variant="secondary" onClick={onClose}>
             キャンセル
           </Button>
         </div>
