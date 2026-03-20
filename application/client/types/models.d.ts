@@ -64,6 +64,26 @@ declare namespace Models {
     messages: Array<Models.DirectMessage>;
   }
 
+  interface DirectMessageConversationListItem {
+    id: string;
+    peer: Models.DirectMessageConversationPeer;
+    lastMessage: Models.DirectMessageConversationListLastMessage;
+    hasUnread: boolean;
+  }
+
+  interface DirectMessageConversationPeer {
+    id: string;
+    name: string;
+    username: string;
+    profileImage: Models.ProfileImage;
+  }
+
+  interface DirectMessageConversationListLastMessage {
+    id: string;
+    body: string;
+    createdAt: string;
+  }
+
   interface ChatMessage {
     role: "user" | "assistant";
     content: string;

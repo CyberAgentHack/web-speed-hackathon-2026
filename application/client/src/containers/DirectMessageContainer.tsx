@@ -116,7 +116,18 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     if (conversationError != null) {
       return <NotFoundContainer />;
     }
-    return null;
+    return (
+      <section className="bg-cax-surface flex min-h-[calc(100vh-(--spacing(12)))] flex-col lg:min-h-screen">
+        <header className="border-cax-border bg-cax-surface sticky top-0 z-10 flex animate-pulse items-center gap-2 border-b px-4 py-3">
+          <div className="bg-cax-border h-12 w-12 shrink-0 rounded-full" />
+          <div className="flex-1 space-y-2">
+            <div className="bg-cax-border h-4 w-1/3 rounded" />
+            <div className="bg-cax-border h-3 w-1/4 rounded" />
+          </div>
+        </header>
+        <div className="flex-1" />
+      </section>
+    );
   }
 
   const peer =

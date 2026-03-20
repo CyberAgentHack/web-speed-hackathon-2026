@@ -14,9 +14,13 @@ interface Props {
 
 /**
  * クリックすると再生・一時停止を切り替えます。
+ * 初回描画は native img タグで即時表示し、binary fetch 完了後に canvas player へ切り替えます。
  */
 export const PausableMovie = ({ src }: Props) => {
-  const { data, isLoading } = useFetch(src, fetchBinary);
+  // binary fetch は canvas player のためだけ — 初回描画をブロックしない
+  const { data } = useFetch(src, fetchBinary);
+
+  const [isCanvasReady, setIsCanvasReady] = useState(false);
 
   const animatorRef = useRef<Animator>(null);
   const canvasCallbackRef = useCallback<RefCallback<HTMLCanvasElement>>(
@@ -34,6 +38,8 @@ export const PausableMovie = ({ src }: Props) => {
 
       animator.animateInCanvas(el);
       animator.onFrame(frames[0]!);
+
+      setIsCanvasReady(true);
 
       // 視覚効果 off のとき GIF を自動再生しない
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -61,10 +67,6 @@ export const PausableMovie = ({ src }: Props) => {
     });
   }, []);
 
-  if (isLoading || data === null) {
-    return null;
-  }
-
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
       <button
@@ -73,17 +75,29 @@ export const PausableMovie = ({ src }: Props) => {
         onClick={handleClick}
         type="button"
       >
-        <canvas ref={canvasCallbackRef} className="w-full" />
-        <div
-          className={classNames(
-            "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
-            {
-              "opacity-0 group-hover:opacity-100": isPlaying,
-            },
-          )}
-        >
-          <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
-        </div>
+        {/* Native img: visible immediately, browser animates GIF automatically */}
+        {!isCanvasReady && <img src={src} className="w-full" alt="" />}
+
+        {/* Canvas player: mounted after binary fetch; replaces native img */}
+        {data !== null && (
+          <canvas
+            ref={canvasCallbackRef}
+            className={classNames("w-full", { hidden: !isCanvasReady })}
+          />
+        )}
+
+        {isCanvasReady && (
+          <div
+            className={classNames(
+              "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
+              {
+                "opacity-0 group-hover:opacity-100": isPlaying,
+              },
+            )}
+          >
+            <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
+          </div>
+        )}
       </button>
     </AspectRatioBox>
   );

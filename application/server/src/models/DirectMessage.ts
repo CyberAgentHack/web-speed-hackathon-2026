@@ -60,20 +60,21 @@ export function initDirectMessage(sequelize: Sequelize) {
     },
     {
       sequelize,
-      defaultScope: {
-        include: [
-          {
-            association: "sender",
-            include: [{ association: "profileImage" }],
-          },
-        ],
-        order: [["createdAt", "ASC"]],
+      scopes: {
+        withSender: {
+          include: [
+            {
+              association: "sender",
+              include: [{ association: "profileImage" }],
+            },
+          ],
+        },
       },
     },
   );
 
   DirectMessage.addHook("afterSave", "onDmSaved", async (message) => {
-    const directMessage = await DirectMessage.findByPk(message.get().id);
+    const directMessage = await DirectMessage.scope("withSender").findByPk(message.get().id);
     const conversation = await DirectMessageConversation.findByPk(directMessage?.conversationId);
 
     if (directMessage == null || conversation == null) {

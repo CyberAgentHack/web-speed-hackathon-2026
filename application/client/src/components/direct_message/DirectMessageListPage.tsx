@@ -15,7 +15,7 @@ interface Props {
 
 export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
   const [conversations, setConversations] =
-    useState<Array<Models.DirectMessageConversation> | null>(null);
+    useState<Array<Models.DirectMessageConversationListItem> | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
   const loadConversations = useCallback(async () => {
@@ -24,7 +24,8 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     }
 
     try {
-      const conversations = await fetchJSON<Array<Models.DirectMessageConversation>>("/api/v1/dm");
+      const conversations =
+        await fetchJSON<Array<Models.DirectMessageConversationListItem>>("/api/v1/dm");
       setConversations(conversations);
       setError(null);
     } catch (error) {
@@ -69,16 +70,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
       ) : (
         <ul data-testid="dm-list">
           {conversations.map((conversation) => {
-            const { messages } = conversation;
-            const peer =
-              conversation.initiator.id !== activeUser.id
-                ? conversation.initiator
-                : conversation.member;
-
-            const lastMessage = messages.at(-1);
-            const hasUnread = messages
-              .filter((m) => m.sender.id === peer.id)
-              .some((m) => !m.isRead);
+            const { peer, lastMessage, hasUnread } = conversation;
 
             return (
               <li className="grid" key={conversation.id}>

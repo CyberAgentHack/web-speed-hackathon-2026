@@ -30,7 +30,7 @@ export const CrokPage = ({ messages, isStreaming, onSendMessage }: Props) => {
           {messages.map((message, index) => (
             <ChatMessage key={index} message={message} />
           ))}
-          <div ref={messagesEndRef} />
+          <div ref={messagesEndRef} className="h-px w-full" />
         </div>
       </div>
 

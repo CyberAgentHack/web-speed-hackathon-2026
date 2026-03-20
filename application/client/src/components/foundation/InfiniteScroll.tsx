@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 
 interface Props {
   children: ReactNode;
@@ -6,44 +6,76 @@ interface Props {
   fetchMore: () => void;
 }
 
-export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
-  const latestItem = items[items.length - 1];
+/** ビューポート下端より手前で次ページ取得を始める余白（従来の「最下部付近」に近い体感） */
+const ROOT_MARGIN_PX = 320;
 
-  const prevReachedRef = useRef(false);
+/**
+ * ドキュメント末尾のセンチネルがビューポートに近づいたら次ページを取得する。
+ * scroll/wheel などへの同期リスナは張らない（IntersectionObserver のみ）。
+ */
+export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const prevLengthRef = useRef(items.length);
+  const canLoadMore = items.length > 0;
 
   useEffect(() => {
-    const handler = () => {
-      // 念の為 2の18乗 回、最下部かどうかを確認する
-      const hasReached = Array.from(Array(2 ** 18), () => {
-        return window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
-      }).every(Boolean);
+    if (!canLoadMore) {
+      return;
+    }
 
-      // 画面最下部にスクロールしたタイミングで、登録したハンドラを呼び出す
-      if (hasReached && !prevReachedRef.current) {
-        // アイテムがないときは追加で読み込まない
-        if (latestItem !== undefined) {
+    const node = sentinelRef.current;
+    if (node === null) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
           fetchMore();
         }
+      },
+      {
+        root: null,
+        rootMargin: `${ROOT_MARGIN_PX}px 0px`,
+        threshold: 0,
+      },
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [canLoadMore, fetchMore]);
+
+  // 連続で末尾にいるとき、追加レンダー後に IO が再発火しない環境でも次ページに進める
+  useEffect(() => {
+    const prev = prevLengthRef.current;
+    prevLengthRef.current = items.length;
+
+    if (!canLoadMore || items.length <= prev) {
+      return;
+    }
+
+    const id = requestAnimationFrame(() => {
+      const node = sentinelRef.current;
+      if (node === null) {
+        return;
       }
+      const rect = node.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      if (rect.top <= vh + ROOT_MARGIN_PX) {
+        fetchMore();
+      }
+    });
+    return () => cancelAnimationFrame(id);
+  }, [items.length, canLoadMore, fetchMore]);
 
-      prevReachedRef.current = hasReached;
-    };
-
-    // 最初は実行されないので手動で呼び出す
-    prevReachedRef.current = false;
-    handler();
-
-    document.addEventListener("wheel", handler, { passive: false });
-    document.addEventListener("touchmove", handler, { passive: false });
-    document.addEventListener("resize", handler, { passive: false });
-    document.addEventListener("scroll", handler, { passive: false });
-    return () => {
-      document.removeEventListener("wheel", handler);
-      document.removeEventListener("touchmove", handler);
-      document.removeEventListener("resize", handler);
-      document.removeEventListener("scroll", handler);
-    };
-  }, [latestItem, fetchMore]);
-
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <div
+        ref={sentinelRef}
+        aria-hidden
+        className="pointer-events-none h-px w-full shrink-0 overflow-hidden"
+      />
+    </>
+  );
 };

@@ -432,7 +432,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/DirectMessageConversation"
+                  $ref: "#/components/schemas/DirectMessageConversationListItem"
         "401":
           $ref: "#/components/responses/Unauthorized"
     post:
@@ -896,6 +896,47 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/DirectMessage"
+
+    DirectMessageConversationListItem:
+      type: object
+      required: [id, peer, lastMessage, hasUnread]
+      properties:
+        id:
+          type: string
+          format: uuid
+        peer:
+          $ref: "#/components/schemas/DirectMessageConversationPeer"
+        lastMessage:
+          $ref: "#/components/schemas/DirectMessageConversationListLastMessage"
+        hasUnread:
+          type: boolean
+
+    DirectMessageConversationPeer:
+      type: object
+      required: [id, name, username, profileImage]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        username:
+          type: string
+        profileImage:
+          $ref: "#/components/schemas/ProfileImage"
+
+    DirectMessageConversationListLastMessage:
+      type: object
+      required: [id, body, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        body:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
 
     DirectMessage:
       type: object

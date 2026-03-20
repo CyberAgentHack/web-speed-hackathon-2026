@@ -82,6 +82,19 @@ export const AppContainer = () => {
         <Helmet>
           <title>読込中 - CaX</title>
         </Helmet>
+        <AppPage
+          activeUser={null}
+          authModalId={authModalId}
+          newPostModalId={newPostModalId}
+          onLogout={handleLogout}
+        >
+          <div className="animate-pulse space-y-3 p-4">
+            <div className="bg-cax-border h-4 w-3/4 rounded" />
+            <div className="bg-cax-border h-4 w-1/2 rounded" />
+            <div className="bg-cax-border h-4 w-5/6 rounded" />
+            <div className="bg-cax-border h-4 w-2/3 rounded" />
+          </div>
+        </AppPage>
       </HelmetProvider>
     );
   }
@@ -94,7 +107,15 @@ export const AppContainer = () => {
         newPostModalId={newPostModalId}
         onLogout={handleLogout}
       >
-        <Suspense fallback={null}>
+        <Suspense
+          fallback={
+            <div className="animate-pulse space-y-3 p-4">
+              <div className="bg-cax-border h-4 w-3/4 rounded" />
+              <div className="bg-cax-border h-4 w-1/2 rounded" />
+              <div className="bg-cax-border h-4 w-5/6 rounded" />
+            </div>
+          }
+        >
           <Routes>
             <Route element={<TimelineContainer />} path="/" />
             <Route

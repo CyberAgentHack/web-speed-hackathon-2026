@@ -2,6 +2,7 @@ import classNames from "classnames";
 import {
   ChangeEvent,
   useCallback,
+  useLayoutEffect,
   useId,
   useRef,
   useState,
@@ -35,6 +36,10 @@ export const DirectMessagePage = ({
   onSubmit,
 }: Props) => {
   const formRef = useRef<HTMLFormElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const stickyBarRef = useRef<HTMLDivElement>(null);
+  const shouldAutoScrollRef = useRef(true);
+  const lastMessageIdRef = useRef<string | null>(null);
   const textAreaId = useId();
 
   const peer =
@@ -43,7 +48,11 @@ export const DirectMessagePage = ({
   const [text, setText] = useState("");
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
-  const scrollHeightRef = useRef(0);
+  const lastMessage = conversation.messages[conversation.messages.length - 1] ?? null;
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "auto") => {
+    messagesEndRef.current?.scrollIntoView({ behavior, block: "end" });
+  }, []);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -73,17 +82,72 @@ export const DirectMessagePage = ({
     [onSubmit, text],
   );
 
-  useEffect(() => {
-    const id = setInterval(() => {
-      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
-      if (height !== scrollHeightRef.current) {
-        scrollHeightRef.current = height;
-        window.scrollTo(0, height);
-      }
-    }, 1);
+  useLayoutEffect(() => {
+    lastMessageIdRef.current = null;
+    shouldAutoScrollRef.current = true;
+  }, [conversation.id]);
 
-    return () => clearInterval(id);
-  }, []);
+  useEffect(() => {
+    const endEl = messagesEndRef.current;
+    const stickyBarEl = stickyBarRef.current;
+
+    if (!endEl || !stickyBarEl) {
+      return;
+    }
+
+    let observer: IntersectionObserver | null = null;
+
+    const observe = () => {
+      observer?.disconnect();
+      observer = new IntersectionObserver(
+        (entries) => {
+          shouldAutoScrollRef.current = entries[0]?.isIntersecting ?? false;
+        },
+        {
+          threshold: 1,
+          rootMargin: `0px 0px -${stickyBarEl.getBoundingClientRect().height}px 0px`,
+        },
+      );
+      observer.observe(endEl);
+    };
+
+    observe();
+
+    const resizeObserver = new ResizeObserver(() => {
+      observe();
+      if (shouldAutoScrollRef.current) {
+        scrollToBottom();
+      }
+    });
+    resizeObserver.observe(stickyBarEl);
+
+    return () => {
+      observer?.disconnect();
+      resizeObserver.disconnect();
+    };
+  }, [scrollToBottom]);
+
+  useLayoutEffect(() => {
+    if (shouldAutoScrollRef.current) {
+      scrollToBottom();
+    }
+  }, [isPeerTyping, scrollToBottom, textAreaRows]);
+
+  useLayoutEffect(() => {
+    const nextLastMessageId = lastMessage?.id ?? null;
+    const previousLastMessageId = lastMessageIdRef.current;
+
+    if (previousLastMessageId === null) {
+      scrollToBottom();
+    } else if (nextLastMessageId !== previousLastMessageId) {
+      const sentByActiveUser = lastMessage?.sender.id === activeUser.id;
+      if (sentByActiveUser || shouldAutoScrollRef.current) {
+        scrollToBottom(sentByActiveUser ? "smooth" : "auto");
+      }
+    }
+
+    lastMessageIdRef.current = nextLastMessageId;
+  }, [activeUser.id, lastMessage, scrollToBottom]);
 
   if (conversationError != null) {
     return (
@@ -124,6 +188,7 @@ export const DirectMessagePage = ({
 
             return (
               <li
+                key={message.id}
                 className={classNames(
                   "flex flex-col w-full",
                   isActiveUserSend ? "items-end" : "items-start",
@@ -149,9 +214,10 @@ export const DirectMessagePage = ({
             );
           })}
         </ul>
+        <div ref={messagesEndRef} className="h-px w-full" />
       </div>
 
-      <div className="sticky bottom-12 z-10 lg:bottom-0">
+      <div ref={stickyBarRef} className="sticky bottom-12 z-10 lg:bottom-0">
         {isPeerTyping && (
           <p className="bg-cax-surface-raised/75 text-cax-brand absolute inset-x-0 top-0 -translate-y-full px-4 py-1 text-xs">
             <span className="font-bold">{peer.name}</span>さんが入力中…

@@ -21,9 +21,23 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
 
   if (isLoadingPost) {
     return (
-      <Helmet>
-        <title>読込中 - CaX</title>
-      </Helmet>
+      <>
+        <Helmet>
+          <title>読込中 - CaX</title>
+        </Helmet>
+        <div className="animate-pulse space-y-4 p-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-cax-border h-10 w-10 shrink-0 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <div className="bg-cax-border h-3 w-1/4 rounded" />
+              <div className="bg-cax-border h-3 w-1/6 rounded" />
+            </div>
+          </div>
+          <div className="bg-cax-border h-4 w-full rounded" />
+          <div className="bg-cax-border h-4 w-5/6 rounded" />
+          <div className="bg-cax-border h-4 w-4/6 rounded" />
+        </div>
+      </>
     );
   }
 
