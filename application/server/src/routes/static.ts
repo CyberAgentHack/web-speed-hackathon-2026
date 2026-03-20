@@ -1,3 +1,5 @@
+import * as path from "node:path";
+
 import history from "connect-history-api-fallback";
 import { Router } from "express";
 import serveStatic from "serve-static";
@@ -31,5 +33,10 @@ staticRouter.use(
   serveStatic(CLIENT_DIST_PATH, {
     etag: true,
     lastModified: true,
+    setHeaders: (res, filePath) => {
+      if (/\.[a-f0-9]{8,}\./.test(path.basename(filePath))) {
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      }
+    },
   }),
 );
