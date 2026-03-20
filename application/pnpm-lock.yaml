@@ -48,9 +48,6 @@ importers:
       common-tags:
         specifier: 1.8.2
         version: 1.8.2
-      core-js:
-        specifier: 3.45.1
-        version: 3.45.1
       encoding-japanese:
         specifier: 2.2.0
         version: 2.2.0
@@ -126,9 +123,6 @@ importers:
       redux-form:
         specifier: 8.3.10
         version: 8.3.10(react-redux@9.2.0(@types/react@19.2.2)(react@19.2.0)(redux@5.0.1))(react@19.2.0)(redux@5.0.1)
-      regenerator-runtime:
-        specifier: 0.14.1
-        version: 0.14.1
       rehype-katex:
         specifier: 7.0.1
         version: 7.0.1
@@ -2409,9 +2403,6 @@ packages:
   core-js-compat@3.45.1:
     resolution: {integrity: sha512-tqTt5T4PzsMIZ430XGviK4vzYSoeNJ6CXODi6c/voxOT6IZqBht5/EKaSNnYiEjjRYxjVz7DQIsOsY0XNi8PIA==}
 
-  core-js@3.45.1:
-    resolution: {integrity: sha512-L4NPsJlCfZsPeXukyzHFlg/i7IIVwHSItR0wg0FLNqYClJ4MQYTYLbC7EkjKYRLZF2iof2MUgN0EGy7MdQFChg==}
-
   core-util-is@1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
 
@@ -4232,9 +4223,6 @@ packages:
 
   regenerate@1.4.2:
     resolution: {integrity: sha512-zrceR/XhGYU/d/opr2EKO7aRHUeiBI8qjtfHqADTwZd6Szfy16la6kqD0MIUs5z5hx6AaKa+PixpPrR289+I0A==}
-
-  regenerator-runtime@0.14.1:
-    resolution: {integrity: sha512-dYnhHh0nJoMfnkZs6GmmhFknAGRrLznOu5nc9ML+EJxGvrx6H7teuevqVqCuPcPK//3eDrrjQhehXVx9cnkGdw==}
 
   regexpu-core@6.4.0:
     resolution: {integrity: sha512-0ghuzq67LI9bLXpOX/ISfve/Mq33a4aFRzoQYhnnok1JOFpmE/A2TBGkNVenOGEeSBCjIiWcc6MVOG5HEQv0sA==}
@@ -7020,8 +7008,6 @@ snapshots:
     dependencies:
       browserslist: 4.26.3
 
-  core-js@3.45.1: {}
-
   core-util-is@1.0.3: {}
 
   cosmiconfig@9.0.0(typescript@5.9.3):
@@ -9285,8 +9271,6 @@ snapshots:
       regenerate: 1.4.2
 
   regenerate@1.4.2: {}
-
-  regenerator-runtime@0.14.1: {}
 
   regexpu-core@6.4.0:
     dependencies:
