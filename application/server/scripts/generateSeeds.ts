@@ -1,8 +1,9 @@
-import { createWriteStream } from "node:fs";
+import { createWriteStream, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { faker } from "@faker-js/faker/locale/ja";
+import sizeOf from "image-size";
 
 // Set seed for reproducible results
 faker.seed(123);
@@ -220,11 +221,32 @@ function generateUsers(count: number, profileImages: ProfileImageSeed[]): UserSe
 function generateImages(): ImageSeed[] {
   // Use existing image IDs from public/images/
   const baseTime = now - ONE_WEEK_MS;
-  return EXISTING_IMAGE_IDS.map((id, i) => ({
-    id,
-    alt: "",
-    createdAt: new Date(baseTime + i * 60 * 1000).toISOString(),
-  }));
+  const publicPath = path.resolve(__dirname, "../../public/images");
+
+  return EXISTING_IMAGE_IDS.map((id, i) => {
+    // Try to get dimensions from the actual image file
+    let width = 0;
+    let height = 0;
+    try {
+      const imagePath = path.resolve(publicPath, `${id}.webp`);
+      const imageBuffer = readFileSync(imagePath);
+      const dimensions = sizeOf(imageBuffer);
+      width = dimensions?.width ?? 0;
+      height = dimensions?.height ?? 0;
+    } catch {
+      // Use default dimensions if file not found
+      width = 0;
+      height = 0;
+    }
+
+    return {
+      id,
+      alt: "",
+      width,
+      height,
+      createdAt: new Date(baseTime + i * 60 * 1000).toISOString(),
+    };
+  });
 }
 
 function generateMovies(): MovieSeed[] {

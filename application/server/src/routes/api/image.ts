@@ -4,8 +4,10 @@ import path from "path";
 import { Router } from "express";
 import { fileTypeFromBuffer } from "file-type";
 import httpErrors from "http-errors";
+import sizeOf from "image-size";
 import { v4 as uuidv4 } from "uuid";
 
+import { Image } from "@web-speed-hackathon-2026/server/src/models/Image";
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
 // 変換した画像の拡張子
@@ -28,9 +30,17 @@ imageRouter.post("/images", async (req, res) => {
 
   const imageId = uuidv4();
 
+  // Get image dimensions
+  const dimensions = sizeOf(req.body);
+  const width = dimensions?.width ?? 0;
+  const height = dimensions?.height ?? 0;
+
   const filePath = path.resolve(UPLOAD_PATH, `./images/${imageId}.${EXTENSION}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
   await fs.writeFile(filePath, req.body);
+
+  // Save image record with dimensions
+  await Image.create({ id: imageId, alt: "", width, height });
 
   return res.status(200).type("application/json").send({ id: imageId });
 });
