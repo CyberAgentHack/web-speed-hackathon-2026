@@ -39,7 +39,7 @@ const config = {
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
+      NODE_ENV: "production",
     }),
   ],
   resolve: {
