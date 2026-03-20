@@ -3,11 +3,26 @@ packages:
   - server/
   - e2e/
 allowBuilds:
-  core-js: true
+  "3": true
+  " ": true
+  b: true
   bcrypt: true
+  c: true
+  core-js: true
+  d: true
+  e: true
   esbuild: true
-  sqlite3: true
+  i: true
+  l: true
   negaposi-analyzer-ja: true
+  p: true
+  q: true
+  r: true
+  s: true
+  sqlite3: true
+  t: true
+  u: true
+  y: true
 overrides:
   gifler>bluebird: 3.7.2
   gifler>omggif: 1.0.10

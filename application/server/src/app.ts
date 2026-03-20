@@ -1,25 +1,26 @@
-import bodyParser from "body-parser";
-import compression from "compression";
-import Express from "express";
+import { createNodeWebSocket } from "@hono/node-ws";
+import { Hono } from "hono";
+import { compress } from "hono/compress";
 
-import { apiRouter } from "@web-speed-hackathon-2026/server/src/routes/api";
-import { imageOptimizationRouter } from "@web-speed-hackathon-2026/server/src/routes/image_optimization";
-import { ssrRouter } from "@web-speed-hackathon-2026/server/src/routes/ssr";
-import { staticRouter } from "@web-speed-hackathon-2026/server/src/routes/static";
-import { sessionMiddleware } from "@web-speed-hackathon-2026/server/src/session";
+import { sessionMiddleware, type SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
 
-export const app = Express();
+export const app = new Hono<SessionEnv>();
 
-app.set("trust proxy", true);
+export const { upgradeWebSocket, injectWebSocket } = createNodeWebSocket({ app });
 
-app.use(compression());
+app.use(compress());
+app.use("*", sessionMiddleware);
 
-app.use(sessionMiddleware);
-app.use(bodyParser.json());
-app.use(bodyParser.raw({ limit: "10mb" }));
+// Routes are registered after app is created to avoid circular imports
+async function registerRoutes() {
+  const { apiRouter } = await import("@web-speed-hackathon-2026/server/src/routes/api");
+  const { imageOptimizationRouter } =
+    await import("@web-speed-hackathon-2026/server/src/routes/image_optimization");
+  const { staticRouter } = await import("@web-speed-hackathon-2026/server/src/routes/static");
 
-app.use("/api/v1", apiRouter);
-app.use(imageOptimizationRouter);
-app.use(staticRouter);
-// SSR は静的ファイルにマッチしなかったリクエストを処理（history fallback の代替）
-app.use(ssrRouter);
+  app.route("/api/v1", apiRouter);
+  app.route("", imageOptimizationRouter);
+  app.route("", staticRouter);
+}
+
+export const routesReady = registerRoutes();
