@@ -11,12 +11,9 @@ export const app = Express();
 app.set("trust proxy", true);
 
 app.use(compression());
-app.use(sessionMiddleware);
-app.use(bodyParser.json());
-app.use(bodyParser.raw({ limit: "10mb" }));
 
 app.use((req, res, next) => {
-  if (req.path.match(/\.[a-f0-9]{8}\.(js|css)$/) || req.path.match(/\.(woff2|woff|ttf|otf)$/)) {
+  if (req.path.match(/\.[a-f0-9]{8}\.(js|css)$/) || req.path.match(/\.(woff2|woff|ttf|otf|webp|svg|gif|mp3)$/)) {
     res.header({ "Cache-Control": "public, max-age=31536000, immutable" });
   } else {
     res.header({ "Cache-Control": "no-cache" });
@@ -24,5 +21,5 @@ app.use((req, res, next) => {
   return next();
 });
 
-app.use("/api/v1", apiRouter);
+app.use("/api/v1", sessionMiddleware, bodyParser.json(), bodyParser.raw({ limit: "10mb" }), apiRouter);
 app.use(staticRouter);
