@@ -130,6 +130,7 @@ const config = {
     minimizer: [
       new TerserPlugin({
         parallel: false,
+        exclude: /[\\/]node_modules[\\/](@ffmpeg|@imagemagick)[\\/]/,
         terserOptions: {
           compress: { passes: 1 },
         },
