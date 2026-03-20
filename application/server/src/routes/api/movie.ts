@@ -6,6 +6,7 @@ import { promisify } from "util";
 
 import { Router } from "express";
 import httpErrors from "http-errors";
+import sharp from "sharp";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
@@ -52,6 +53,22 @@ movieRouter.post("/movies", async (req, res) => {
     const moviesDir = path.resolve(UPLOAD_PATH, "movies");
     await fs.mkdir(moviesDir, { recursive: true });
     await fs.writeFile(path.resolve(moviesDir, `${movieId}.${EXTENSION}`), outputBuffer);
+
+    // Generate poster image from first frame
+    const posterJpgPath = path.join(tmpDir, "poster.jpg");
+    await execFileAsync("ffmpeg", [
+      "-i", outputPath,
+      "-vframes", "1",
+      "-vf", "crop=min(iw\\,ih):min(iw\\,ih)",
+      "-q:v", "2",
+      "-update", "1",
+      "-y",
+      posterJpgPath,
+    ]);
+    await sharp(posterJpgPath)
+      .resize(640, 640, { fit: "cover" })
+      .webp({ quality: 60 })
+      .toFile(path.resolve(moviesDir, `${movieId}_poster.webp`));
   } finally {
     await fs.rm(tmpDir, { recursive: true, force: true });
   }

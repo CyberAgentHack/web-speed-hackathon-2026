@@ -10,6 +10,10 @@ export function getMoviePath(movieId: string): string {
   return `/movies/${movieId}.mp4`;
 }
 
+export function getMoviePosterPath(movieId: string): string {
+  return `/movies/${movieId}_poster.webp`;
+}
+
 export function getSoundPath(soundId: string): string {
   return `/sounds/${soundId}.mp3`;
 }
