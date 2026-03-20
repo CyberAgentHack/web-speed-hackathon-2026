@@ -1,4 +1,4 @@
-import { Suspense, lazy, useCallback, useEffect, useId, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useId, useRef, useState } from "react";
 import { HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
@@ -29,44 +29,73 @@ export const AppContainer = () => {
 
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
   const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
+  const activeUserRequestIdRef = useRef(0);
+
+  const applyActiveUser = useCallback((user: Models.User | null) => {
+    activeUserRequestIdRef.current += 1;
+    setActiveUser(user);
+    setIsLoadingActiveUser(false);
+  }, []);
+
   useEffect(() => {
     const shouldPrioritizeAuth = pathname.startsWith("/dm") || pathname === "/crok";
+    let cancelled = false;
+
+    const requestId = activeUserRequestIdRef.current + 1;
+    activeUserRequestIdRef.current = requestId;
 
     const loadActiveUser = () => {
       void fetchJSON<Models.User>("/api/v1/me")
         .then((user) => {
+          if (cancelled || activeUserRequestIdRef.current !== requestId) {
+            return;
+          }
           setActiveUser(user);
         })
         .catch(() => {
+          if (cancelled || activeUserRequestIdRef.current !== requestId) {
+            return;
+          }
           setActiveUser(null);
         })
         .finally(() => {
+          if (cancelled || activeUserRequestIdRef.current !== requestId) {
+            return;
+          }
           setIsLoadingActiveUser(false);
         });
     };
 
     if (shouldPrioritizeAuth) {
+      setIsLoadingActiveUser(true);
       loadActiveUser();
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
 
+    let idleCallbackId: number | null = null;
     const timeoutId = window.setTimeout(() => {
       if ("requestIdleCallback" in window) {
-        window.requestIdleCallback(loadActiveUser, { timeout: 3000 });
+        idleCallbackId = window.requestIdleCallback(loadActiveUser, { timeout: 3000 });
       } else {
         loadActiveUser();
       }
     }, 1000);
 
     return () => {
+      cancelled = true;
       window.clearTimeout(timeoutId);
+      if (idleCallbackId !== null && "cancelIdleCallback" in window) {
+        window.cancelIdleCallback(idleCallbackId);
+      }
     };
-  }, [pathname, setActiveUser, setIsLoadingActiveUser]);
+  }, [pathname]);
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
-    setActiveUser(null);
+    applyActiveUser(null);
     navigate("/");
-  }, [navigate]);
+  }, [applyActiveUser, navigate]);
 
   const authModalId = useId();
   const newPostModalId = useId();
@@ -115,7 +144,7 @@ export const AppContainer = () => {
         </Routes>
       </AppPage>
 
-      <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
+      <AuthModalContainer id={authModalId} onUpdateActiveUser={applyActiveUser} />
       <NewPostModalContainer id={newPostModalId} />
     </HelmetProvider>
   );
