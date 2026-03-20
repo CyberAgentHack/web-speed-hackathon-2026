@@ -5,16 +5,19 @@ on:
 
 env:
     FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+    FLY_ACCESS_TOKEN: ${{ secrets.FLY_API_TOKEN }}
     FLY_REGION: nrt
     FLY_ORG: wsh-2026
 
 jobs:
     review_app:
+        timeout-minutes: 30
         runs-on: ubuntu-latest
         outputs:
             url: ${{ steps.deploy.outputs.url }}
         concurrency:
             group: pr-${{ github.event.number }}
+            cancel-in-progress: true
 
         environment:
             name: deployment
@@ -22,9 +25,15 @@ jobs:
 
         steps:
             - name: Get code
-              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
               with:
                   ref: ${{ github.event.pull_request.head.sha }}
+            - name: Setup flyctl
+              uses: superfly/flyctl-actions/setup-flyctl@fc53c09e1bc3be6f54706524e3b82c4f462f77be # v1
+            - name: Setup fly.io docker registry
+              run: flyctl auth docker
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
             - name: Generate valid app name
               id: generate-app-name
@@ -34,8 +43,21 @@ jobs:
                   echo "app_name=${APP_NAME}" >> $GITHUB_OUTPUT
                   echo "Generated app name: ${APP_NAME}"
 
+            - name: Create fly.io app
+              run: |
+                  if ! flyctl status --app ${{ steps.generate-app-name.outputs.app_name }}; then
+                    flyctl apps create ${{ steps.generate-app-name.outputs.app_name }} --org ${{ env.FLY_ORG }}
+                  fi
+
+            - name: Build and push
+              uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
+              with:
+                  push: true
+                  tags: registry.fly.io/${{ steps.generate-app-name.outputs.app_name }}:latest
+
             - name: Deploy PR app to Fly.io
               id: deploy
-              uses: superfly/fly-pr-review-apps@5d9f067254bebd0aaa77d908d6337b63f4d4f019
+              uses: superfly/fly-pr-review-apps@6f79ec3a7d017082ed11e7c464dae298ca75b21b # 1.2.1
               with:
                   name: ${{ steps.generate-app-name.outputs.app_name }}
+                  image: registry.fly.io/${{ steps.generate-app-name.outputs.app_name }}:latest
