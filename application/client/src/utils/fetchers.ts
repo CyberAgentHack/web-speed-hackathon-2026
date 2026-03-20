@@ -29,16 +29,12 @@ export async function sendFile<T>(url: string, file: File): Promise<T> {
 }
 
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
-  const jsonString = JSON.stringify(data);
-  const stream = new Blob([jsonString]).stream().pipeThrough(new CompressionStream("gzip"));
-
   const res = await fetch(url, {
     method: "POST",
     headers: {
-      "Content-Encoding": "gzip",
       "Content-Type": "application/json",
     },
-    body: stream,
+    body: JSON.stringify(data),
   });
   if (!res.ok) {
     throw await res.json();
