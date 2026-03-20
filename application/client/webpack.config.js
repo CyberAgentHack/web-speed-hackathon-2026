@@ -76,7 +76,8 @@ const config = {
       NODE_ENV: process.env.NODE_ENV || "development",
     }),
     new MiniCssExtractPlugin({
-      filename: "styles/[name].css",
+      filename: "styles/[name].[contenthash].css",
+      chunkFilename: "styles/[name].[contenthash].css",
     }),
     new CopyWebpackPlugin({
       patterns: [
