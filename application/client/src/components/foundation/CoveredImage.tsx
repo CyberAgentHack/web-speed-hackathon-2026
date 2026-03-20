@@ -23,6 +23,8 @@ export const CoveredImage = ({ alt, src }: Props) => {
       <img
         alt={alt}
         className="h-full w-full object-cover"
+        decoding="async"
+        fetchPriority="high"
         src={src}
       />
 
