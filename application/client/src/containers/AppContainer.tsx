@@ -45,9 +45,15 @@ export const AppContainer = ({ ssrData }: AppContainerProps) => {
     if (hasSSRActiveUser) return;
     void apiClient.me
       .$get()
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then((user) => {
         setActiveUser(user);
+      })
+      .catch(() => {
+        // 401 or network error — user is not authenticated
       })
       .finally(() => {
         setIsLoadingActiveUser(false);
