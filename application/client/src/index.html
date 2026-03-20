@@ -10,7 +10,20 @@
     <script>
       window.__PREFETCH__ = {
         "/api/v1/me": fetch("/api/v1/me").then(function(r){return r.ok?r.json():Promise.reject()}).catch(function(){return null}),
-        "/api/v1/posts?offset=0&limit=30": fetch("/api/v1/posts?offset=0&limit=30").then(function(r){return r.json()})
+        "/api/v1/posts?offset=0&limit=30": fetch("/api/v1/posts?offset=0&limit=30").then(function(r){return r.json()}).then(function(posts){
+          // Preload first post's images and profile images for LCP
+          if(posts&&posts.length>0){
+            posts.slice(0,3).forEach(function(p){
+              if(p.images&&p.images[0]){
+                var img=new Image();img.fetchPriority="high";img.src="/images/"+p.images[0].id+".jpg?w=640";
+              }
+              if(p.user&&p.user.profileImage){
+                var pi=new Image();pi.src="/images/profiles/"+p.user.profileImage.id+".jpg";
+              }
+            });
+          }
+          return posts;
+        })
       };
     </script>
   </head>

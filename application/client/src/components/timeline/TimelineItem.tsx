@@ -93,7 +93,7 @@ export const TimelineItem = memo(({ post, index = 99 }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea images={post.images} priority={isAboveFold} />
             </div>
           ) : null}
           {post.movie ? (
