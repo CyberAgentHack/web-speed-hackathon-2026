@@ -48,9 +48,23 @@ async function buildPreloadData(req: Parameters<Parameters<typeof Router>[0]>[0]
   const urlPath = req.path;
   try {
     if (urlPath === "/" || urlPath === "") {
-      // ホーム: タイムライン最初の 30 件
-      const posts = await Post.findAll({ limit: 30 });
-      data["/api/v1/posts"] = posts.map((p) => p.toJSON());
+      // ホーム: タイムライン最初の件数を絞り、初期レンダリングに不要な重い関連を削って軽量化
+      // （TBT の Long Task が main.js 側に寄っているため、preload JSON のパース/描画負荷を下げる）
+      const posts = await Post.findAll({ limit: 12 });
+      data["/api/v1/posts"] = posts.map((p) => {
+        const json = p.toJSON() as Record<string, unknown> & {
+          images?: unknown;
+          movie?: unknown;
+          sound?: unknown;
+        };
+
+        // TimelineItem は images/movie/sound が無い場合描画しないため、TBT軽量化のため落とす
+        delete json.images;
+        delete json.movie;
+        delete json.sound;
+
+        return json;
+      });
     } else if (urlPath === "/search") {
       // 検索: 初期クエリに対する最初の 30 件
       const q = typeof req.query?.["q"] === "string" ? req.query["q"] : "";

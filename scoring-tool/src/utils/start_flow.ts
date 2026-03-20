@@ -18,6 +18,9 @@ export async function startFlow(page: puppeteer.Page) {
           "largest-contentful-paint",
           "largest-contentful-paint-element",
           "total-blocking-time",
+          // TBT が 0 点に張り付くときの内訳確認用
+          "long-tasks",
+          "mainthread-work-breakdown",
           "cumulative-layout-shift",
           "interaction-to-next-paint",
         ],
