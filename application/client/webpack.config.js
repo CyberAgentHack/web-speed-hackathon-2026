@@ -63,10 +63,7 @@ const config = {
     clean: true,
   },
   plugins: [
-    new webpack.ProvidePlugin({
-      AudioContext: ["standardized-audio-context", "AudioContext"],
-      Buffer: ["buffer", "Buffer"],
-    }),
+    new webpack.ProvidePlugin({}),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
@@ -109,7 +106,7 @@ const config = {
     concatenateModules: true,
     usedExports: true,
     providedExports: true,
-    sideEffects: true,
+    sideEffects: false,
   },
   cache: true,
 };
