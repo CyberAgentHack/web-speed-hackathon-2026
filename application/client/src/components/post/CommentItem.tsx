@@ -1,7 +1,9 @@
-import { formatDateLong, toISOString } from "@web-speed-hackathon-2026/client/src/utils/format_date";
-
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
+import {
+  formatDateLong,
+  toISOString,
+} from "@web-speed-hackathon-2026/client/src/utils/format_date";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {

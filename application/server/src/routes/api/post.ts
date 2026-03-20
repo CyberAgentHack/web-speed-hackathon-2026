@@ -50,10 +50,7 @@ postRouter.post("/posts", async (req, res) => {
       userId: req.session.userId,
     },
     {
-      include: [
-        { association: "movie" },
-        { association: "sound" },
-      ],
+      include: [{ association: "movie" }, { association: "sound" }],
     },
   );
 

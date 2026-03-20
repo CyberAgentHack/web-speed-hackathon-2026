@@ -25,9 +25,9 @@
 - [x] 017-HTTP圧縮(compression)を追加する
 - [x] 018-静的アセットのキャッシュヘッダーを有効化する
 - [x] 019-Connection closeヘッダーを除去する
-- [ ] 027-1msポーリングをイベントリスナーに置き換える(setInterval/postTask)
+- [x] 027-1msポーリングをイベントリスナーに置き換える(setInterval/postTask)
 - [ ] 028-font-displayをblockからswapに変更する
-- [ ] 029-PausableMovie/SoundPlayerにIntersectionObserverで遅延fetchする
+- [x] 029-PausableMovie/SoundPlayerにIntersectionObserverで遅延fetchする
 - [x] 030-DM APIで全メッセージ返却をやめて最新1件+ページネーションにする
 
 ## 優先度: 中（LCP/SI/バンドルサイズ改善）
@@ -37,14 +37,15 @@
 - [x] 005-FFmpeg WASMを遅延読み込みにする
 - [x] 008-動画・音声ファイルを最適化する
 - [x] 020-momentをIntl.DateTimeFormatに置き換える
-- [ ] 021-重いライブラリを動的importにする(web-llm,katex,kuromoji等)
+- [x] 021-重いライブラリを動的importにする(web-llm,katex,kuromoji等)
 - [x] 022-SequelizeのdefaultScopeを最適化する
-- [ ] 023-devtoolのsource-mapを本番で無効化する
-- [ ] 031-imgタグにloading="lazy"を追加する
+- [x] 023-devtoolのsource-mapを本番で無効化する
+- [x] 031-imgタグにloading="lazy"を追加する
 - [x] 032-Font Awesome SVGスプライトを使用アイコンのみに絞る
-- [ ] 033-lodashをnamed import(lodash-es)に変更してtree shakingを有効化する
+- [x] 033-lodashをnamed import(lodash-es)に変更してtree shakingを有効化する
 - [ ] 034-create()後の冗長なfindByPk/reloadを除去する
 - [ ] 038-SSGでタイムラインと利用規約ページをビルド時プリレンダリングする
+- [x] 039-AppContainerの/api/v1/me待ちによるレンダリングブロックを解消する
 
 ## 優先度: 低（CLS/追加改善）
 

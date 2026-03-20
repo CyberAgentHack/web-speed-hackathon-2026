@@ -50,11 +50,9 @@ function parseFfmetadata(raw: Buffer): SoundMetadata {
 async function extractMetadataViaFfmpeg(inputPath: string, tmpDir: string): Promise<SoundMetadata> {
   const metaPath = path.join(tmpDir, "meta.txt");
   try {
-    await execFileAsync(
-      "ffmpeg",
-      ["-y", "-i", inputPath, "-f", "ffmetadata", metaPath],
-      { maxBuffer: 10 * 1024 * 1024 },
-    );
+    await execFileAsync("ffmpeg", ["-y", "-i", inputPath, "-f", "ffmetadata", metaPath], {
+      maxBuffer: 10 * 1024 * 1024,
+    });
     const raw = await fs.readFile(metaPath);
     return parseFfmetadata(raw);
   } catch {
@@ -85,11 +83,16 @@ soundRouter.post("/sounds", async (req, res) => {
     await execFileAsync(
       "ffmpeg",
       [
-        "-y", "-i", inputPath,
+        "-y",
+        "-i",
+        inputPath,
         "-vn",
-        "-map_metadata", "-1",
-        "-metadata", `artist=${artist}`,
-        "-metadata", `title=${title}`,
+        "-map_metadata",
+        "-1",
+        "-metadata",
+        `artist=${artist}`,
+        "-metadata",
+        `title=${title}`,
         outputPath,
       ],
       { maxBuffer: 10 * 1024 * 1024 },
