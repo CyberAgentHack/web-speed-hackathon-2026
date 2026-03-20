@@ -70,8 +70,4 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ["@ffmpeg/core", "@ffmpeg/core/wasm", "@imagemagick/magick-wasm"],
   },
-  ssr: {
-    // SSRバンドルは dist/server/ に出力されるので、全依存をバンドルに含める
-    noExternal: true,
-  },
 });

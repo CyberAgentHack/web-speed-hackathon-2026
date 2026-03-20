@@ -5,7 +5,7 @@
   "license": "MPL-2.0",
   "author": "CyberAgent, Inc.",
   "scripts": {
-    "build": "vite build && vite build --ssr src/entry-server.tsx --outDir ../dist/server",
+    "build": "vite build",
     "dev": "vite",
     "typecheck": "tsc"
   },

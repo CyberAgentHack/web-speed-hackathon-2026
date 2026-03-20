@@ -11,8 +11,7 @@
     "moduleResolution": "bundler",
     "exactOptionalPropertyTypes": false,
     "paths": {
-      "@web-speed-hackathon-2026/server/*": ["./*"],
-      "@web-speed-hackathon-2026/client/*": ["../client/*"]
+      "@web-speed-hackathon-2026/server/*": ["./*"]
     }
   },
   "include": ["./src", "./types"]

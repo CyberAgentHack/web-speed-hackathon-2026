@@ -10,7 +10,7 @@ export const TimelineContainer = () => {
   const preloadUsed = useRef(false);
 
   const fetcher = useCallback(async (url: string) => {
-    const preloaded = (globalThis as any).__PRELOAD_POSTS as Promise<Response> | undefined;
+    const preloaded = (window as any).__PRELOAD_POSTS as Promise<Response> | undefined;
     if (!preloadUsed.current && preloaded) {
       preloadUsed.current = true;
       const res = await preloaded;

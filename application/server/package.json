@@ -15,12 +15,7 @@
   "dependencies": {
     "@tsconfig/strictest": "2.0.8",
     "@types/compression": "1.8.1",
-    "@web-speed-hackathon-2026/client": "workspace:*",
     "@web-speed-hackathon-2026/server": "workspace:*",
-    "classnames": "2.5.1",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "react-router": "7.9.4",
     "bcrypt": "6.0.0",
     "body-parser": "2.2.0",
     "compression": "1.8.1",
@@ -40,8 +35,6 @@
   "devDependencies": {
     "@faker-js/faker": "10.2.0",
     "@types/bcrypt": "6.0.0",
-    "@types/react": "19.2.2",
-    "@types/react-dom": "19.2.1",
     "@types/body-parser": "1.19.6",
     "@types/connect-history-api-fallback": "1.5.4",
     "@types/express": "5.0.3",

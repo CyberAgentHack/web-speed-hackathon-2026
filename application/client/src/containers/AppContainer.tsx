@@ -25,14 +25,10 @@ export const AppContainer = () => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
-  // SSRデータがあれば同期的に初期化（globalThisはサーバー/ブラウザ両方で動作）
-  const ssrUser = (globalThis as any).__SSR_USER__ as Models.User | null | undefined;
-  const hasSSRUser = ssrUser !== undefined;
-  const [activeUser, setActiveUser] = useState<Models.User | null>(hasSSRUser ? ssrUser : null);
-  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(!hasSSRUser);
+  const [activeUser, setActiveUser] = useState<Models.User | null>(null);
+  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
   useEffect(() => {
-    if (hasSSRUser) return;
-    const preloaded = (globalThis as any).__PRELOAD_ME as Promise<Response> | undefined;
+    const preloaded = (window as any).__PRELOAD_ME as Promise<Response> | undefined;
     const promise = preloaded
       ? preloaded.then((res) => { if (!res.ok) throw new Error(); return res.json() as Promise<Models.User>; })
       : fetchJSON<Models.User>("/api/v1/me");
@@ -44,7 +40,7 @@ export const AppContainer = () => {
       .finally(() => {
         setIsLoadingActiveUser(false);
       });
-  }, [setActiveUser, setIsLoadingActiveUser, hasSSRUser]);
+  }, [setActiveUser, setIsLoadingActiveUser]);
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
     setActiveUser(null);
