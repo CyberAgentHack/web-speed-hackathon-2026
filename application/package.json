@@ -14,6 +14,7 @@
     "format:oxfmt": "oxfmt"
   },
   "devDependencies": {
+    "@rsdoctor/rspack-plugin": "1.5.5",
     "oxfmt": "0.36.0",
     "oxlint": "1.43.0"
   },

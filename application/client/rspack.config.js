@@ -1,5 +1,6 @@
 const path = require("path");
 const rspack = require("@rspack/core");
+const { RsdoctorRspackPlugin } = require("@rsdoctor/rspack-plugin");
 
 const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
@@ -93,7 +94,8 @@ const config = {
       template: path.resolve(SRC_PATH, "./index.html"),
       scriptLoading: "defer",
     }),
-  ],
+    process.env.RSDOCTOR && new RsdoctorRspackPlugin(),
+  ].filter(Boolean),
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
     alias: {
