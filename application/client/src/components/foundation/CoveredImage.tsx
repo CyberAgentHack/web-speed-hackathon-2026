@@ -1,10 +1,9 @@
 import classNames from "classnames";
 import { load, ImageIFD } from "piexifjs";
-import { MouseEvent, RefCallback, useCallback, useEffect, useId, useMemo, useState } from "react";
+import { MouseEvent, RefCallback, useCallback, useEffect, useId, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
@@ -24,42 +23,32 @@ function isJpeg(data: ArrayBuffer): boolean {
  */
 export const CoveredImage = ({ src, width, height, fetchPriority = "auto" }: Props) => {
   const dialogId = useId();
+  const [alt, setAlt] = useState("");
+  const [containerSize, setContainerSize] = useState({ height: 0, width: 0 });
+
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
     ev.stopPropagation();
   }, []);
 
-  const { data, isLoading } = useFetch(src, fetchBinary);
-
-  const imageSize = useMemo(() => {
-    return { height, width };
-  }, [height, width]);
-
-  const alt = useMemo(() => {
-    if (data == null || isJpeg(data) === false) {
-      return "";
-    }
-
-    try {
-      const exif = load(Buffer.from(data).toString("binary"));
-      const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-      return raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
-    } catch {
-      return "";
-    }
-  }, [data]);
-
-  const blobUrl = useMemo(() => {
-    return data != null ? URL.createObjectURL(new Blob([data])) : null;
-  }, [data]);
-
-  // Clean up blob URL to prevent memory leak
+  // EXIF 解析を非同期でバックグラウンド実施
   useEffect(() => {
-    if (!blobUrl) return;
-    return () => URL.revokeObjectURL(blobUrl);
-  }, [blobUrl]);
+    (async () => {
+      try {
+        const data = await fetchBinary(src);
+        if (isJpeg(data)) {
+          const exif = load(Buffer.from(data).toString("binary"));
+          const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
+          if (raw != null) {
+            setAlt(new TextDecoder().decode(Buffer.from(raw, "binary")));
+          }
+        }
+      } catch {
+        // Ignore EXIF parsing errors
+      }
+    })();
+  }, [src]);
 
-  const [containerSize, setContainerSize] = useState({ height: 0, width: 0 });
   const callbackRef = useCallback<RefCallback<HTMLDivElement>>((el) => {
     setContainerSize({
       height: el?.clientHeight ?? 0,
@@ -67,12 +56,8 @@ export const CoveredImage = ({ src, width, height, fetchPriority = "auto" }: Pro
     });
   }, []);
 
-  if (isLoading || data === null || blobUrl === null) {
-    return null;
-  }
-
   const containerRatio = containerSize.height / containerSize.width;
-  const imageRatio = imageSize?.height / imageSize?.width;
+  const imageRatio = height / width;
 
   return (
     <div ref={callbackRef} className="relative h-full w-full overflow-hidden">
@@ -88,7 +73,7 @@ export const CoveredImage = ({ src, width, height, fetchPriority = "auto" }: Pro
             "w-full h-auto": containerRatio <= imageRatio,
           },
         )}
-        src={blobUrl}
+        src={src}
       />
 
       <button
