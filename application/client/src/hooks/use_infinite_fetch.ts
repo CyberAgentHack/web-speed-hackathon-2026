@@ -14,18 +14,26 @@ export function useInfiniteFetch<T>(
   fetcher: (apiPath: string) => Promise<T[]>,
 ): ReturnValues<T> {
   const internalRef = useRef({ isLoading: false, offset: 0 });
+  const requestIdRef = useRef(0);
 
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
     data: [],
     error: null,
-    isLoading: true,
+    isLoading: apiPath !== "",
   });
 
   const fetchMore = useCallback(() => {
+    if (apiPath === "") {
+      return;
+    }
+
     const { isLoading, offset } = internalRef.current;
     if (isLoading) {
       return;
     }
+
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
 
     setResult((cur) => ({
       ...cur,
@@ -38,6 +46,10 @@ export function useInfiniteFetch<T>(
 
     void fetcher(apiPath).then(
       (allData) => {
+        if (requestId !== requestIdRef.current) {
+          return;
+        }
+
         setResult((cur) => ({
           ...cur,
           data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
@@ -49,6 +61,10 @@ export function useInfiniteFetch<T>(
         };
       },
       (error) => {
+        if (requestId !== requestIdRef.current) {
+          return;
+        }
+
         setResult((cur) => ({
           ...cur,
           error,
@@ -63,6 +79,21 @@ export function useInfiniteFetch<T>(
   }, [apiPath, fetcher]);
 
   useEffect(() => {
+    requestIdRef.current += 1;
+
+    if (apiPath === "") {
+      setResult(() => ({
+        data: [],
+        error: null,
+        isLoading: false,
+      }));
+      internalRef.current = {
+        isLoading: false,
+        offset: 0,
+      };
+      return;
+    }
+
     setResult(() => ({
       data: [],
       error: null,
@@ -74,7 +105,7 @@ export function useInfiniteFetch<T>(
     };
 
     fetchMore();
-  }, [fetchMore]);
+  }, [apiPath, fetchMore]);
 
   return {
     ...result,

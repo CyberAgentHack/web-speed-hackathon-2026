@@ -11,8 +11,8 @@ interface Options {
 export async function convertMovie(file: File, options: Options): Promise<Blob> {
   const ffmpeg = await loadFFmpeg();
 
-  const cropOptions = [
-    "'min(iw,ih)':'min(iw,ih)'",
+  const filterOptions = [
+    "crop=min(iw\\,ih):min(iw\\,ih)",
     options.size ? `scale=${options.size}:${options.size}` : undefined,
   ]
     .filter(Boolean)
@@ -29,7 +29,7 @@ export async function convertMovie(file: File, options: Options): Promise<Blob> 
     "-r",
     "10",
     "-vf",
-    `crop=${cropOptions}`,
+    filterOptions,
     "-an",
     ...(options.extension === "mp4"
       ? [
