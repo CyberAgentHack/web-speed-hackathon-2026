@@ -72,15 +72,7 @@ export const AppContainer = () => {
         .catch(() => {});
     };
 
-    if (pathname !== "/") {
-      fetchActiveUser();
-      return;
-    }
-
-    const timeoutId = window.setTimeout(fetchActiveUser, 250);
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
+    fetchActiveUser();
   }, [pathname]);
   const handleLogout = useCallback(async () => {
     const { sendJSON } = await import("@web-speed-hackathon-2026/client/src/utils/send_json_gzip");

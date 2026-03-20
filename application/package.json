@@ -37,7 +37,6 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "core-js",
       "bcrypt",
       "esbuild",
       "sqlite3",

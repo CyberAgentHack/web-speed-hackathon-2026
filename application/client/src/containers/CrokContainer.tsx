@@ -12,6 +12,7 @@ type Props = {
 
 export const CrokContainer = ({ activeUser, authModalId }: Props) => {
   const [messages, setMessages] = useState<Models.ChatMessage[]>([]);
+  const [nextMessageId, setNextMessageId] = useState(0);
 
   const sseOptions = useMemo(
     () => ({
@@ -53,23 +54,28 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
     (userInput: string) => {
       if (!userInput.trim() || isStreaming) return;
 
+      const userLocalId = `user:${nextMessageId}`;
+      const assistantLocalId = `assistant:${nextMessageId + 1}`;
       const userMessage: Models.ChatMessage = {
+        localId: userLocalId,
         role: "user",
         content: userInput,
       };
       const assistantMessage: Models.ChatMessage = {
+        localId: assistantLocalId,
         role: "assistant",
         content: "",
       };
 
       setMessages((prev) => [...prev, userMessage, assistantMessage]);
+      setNextMessageId((current) => current + 2);
 
       void import("@web-speed-hackathon-2026/client/src/components/crok/CrokMarkdownMessage");
 
       const encodedPrompt = encodeURIComponent(userInput);
       start(`/api/v1/crok?prompt=${encodedPrompt}`);
     },
-    [isStreaming, start],
+    [isStreaming, nextMessageId, start],
   );
 
   useDocumentTitle("Crok - CaX");

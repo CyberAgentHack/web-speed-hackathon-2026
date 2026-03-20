@@ -19,6 +19,7 @@ interface DmTypingEvent {
 }
 
 const TYPING_INDICATOR_DURATION_MS = 10 * 1000;
+const OPTIMISTIC_DM_ID_PREFIX = "optimistic:";
 
 function upsertConversationMessage(
   conversation: Models.DirectMessageConversation,
@@ -44,6 +45,58 @@ function upsertConversationMessage(
   };
 }
 
+function replaceConversationMessage(
+  conversation: Models.DirectMessageConversation,
+  currentId: string,
+  nextMessage: Models.DirectMessage,
+): Models.DirectMessageConversation {
+  const index = conversation.messages.findIndex((item) => item.id === currentId);
+  if (index === -1) {
+    return upsertConversationMessage(conversation, nextMessage);
+  }
+
+  const messages = [...conversation.messages];
+  messages[index] = nextMessage;
+
+  return {
+    ...conversation,
+    messages,
+  };
+}
+
+function removeConversationMessage(
+  conversation: Models.DirectMessageConversation,
+  messageId: string,
+): Models.DirectMessageConversation {
+  return {
+    ...conversation,
+    messages: conversation.messages.filter((message) => message.id !== messageId),
+  };
+}
+
+function reconcileOwnMessage(
+  conversation: Models.DirectMessageConversation,
+  activeUserId: string | undefined,
+  message: Models.DirectMessage,
+): Models.DirectMessageConversation {
+  if (message.sender.id !== activeUserId) {
+    return upsertConversationMessage(conversation, message);
+  }
+
+  const optimisticMessage = conversation.messages.find(
+    (item) =>
+      item.id.startsWith(OPTIMISTIC_DM_ID_PREFIX) &&
+      item.sender.id === message.sender.id &&
+      item.body === message.body,
+  );
+
+  if (optimisticMessage == null) {
+    return upsertConversationMessage(conversation, message);
+  }
+
+  return replaceConversationMessage(conversation, optimisticMessage.id, message);
+}
+
 interface Props {
   activeUser: Models.User | null;
   authModalId: string;
@@ -54,7 +107,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(null);
   const [conversationError, setConversationError] = useState<Error | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingSendCount, setPendingSendCount] = useState(0);
 
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -87,22 +140,54 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   const handleSubmit = useCallback(
     async (params: DirectMessageFormData) => {
-      setIsSubmitting(true);
+      if (activeUser == null || conversation == null) {
+        return;
+      }
+
+      const optimisticId = `${OPTIMISTIC_DM_ID_PREFIX}${crypto.randomUUID()}`;
+      const optimisticMessage: Models.DirectMessage = {
+        id: optimisticId,
+        sender: activeUser,
+        body: params.body,
+        isRead: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      setConversation((currentConversation) => {
+        if (currentConversation == null) {
+          return currentConversation;
+        }
+        return upsertConversationMessage(currentConversation, optimisticMessage);
+      });
+      setPendingSendCount((count) => count + 1);
+
       try {
-        const message = await sendJSON<Models.DirectMessage>(`/api/v1/dm/${conversationId}/messages`, {
-          body: params.body,
-        });
+        const message = await sendJSON<Models.DirectMessage>(
+          `/api/v1/dm/${conversationId}/messages`,
+          {
+            body: params.body,
+          },
+        );
         setConversation((currentConversation) => {
           if (currentConversation == null) {
             return currentConversation;
           }
-          return upsertConversationMessage(currentConversation, message);
+          return replaceConversationMessage(currentConversation, optimisticId, message);
         });
+      } catch (error) {
+        setConversation((currentConversation) => {
+          if (currentConversation == null) {
+            return currentConversation;
+          }
+          return removeConversationMessage(currentConversation, optimisticId);
+        });
+        throw error;
       } finally {
-        setIsSubmitting(false);
+        setPendingSendCount((count) => Math.max(0, count - 1));
       }
     },
-    [conversationId],
+    [activeUser, conversation, conversationId],
   );
 
   const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -120,11 +205,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
         if (currentConversation == null) {
           return currentConversation;
         }
-        const hasMessage = currentConversation.messages.some((message) => message.id === event.payload.id);
-        if (event.payload.sender.id === activeUser?.id && !hasMessage && isSubmitting) {
-          return currentConversation;
-        }
-        return upsertConversationMessage(currentConversation, event.payload);
+        return reconcileOwnMessage(currentConversation, activeUser?.id, event.payload);
       });
 
       if (event.payload.sender.id !== activeUser?.id) {
@@ -181,7 +262,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
       activeUser={activeUser}
       onTyping={handleTyping}
       isPeerTyping={isPeerTyping}
-      isSubmitting={isSubmitting}
+      isSubmitting={pendingSendCount > 0}
       onSubmit={handleSubmit}
     />
   );

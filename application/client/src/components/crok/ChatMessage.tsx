@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, memo, Suspense } from "react";
 
 import { TypingIndicator } from "@web-speed-hackathon-2026/client/src/components/crok/TypingIndicator";
 import { CrokLogo } from "@web-speed-hackathon-2026/client/src/components/foundation/CrokLogo";
@@ -16,7 +16,7 @@ interface Props {
   renderMarkdown?: boolean;
 }
 
-const UserMessage = ({ content }: { content: string }) => {
+const UserMessage = memo(({ content }: { content: string }) => {
   return (
     <div className="mb-6 flex justify-end">
       <div className="bg-cax-surface-subtle text-cax-text max-w-[80%] rounded-3xl px-4 py-2">
@@ -24,9 +24,10 @@ const UserMessage = ({ content }: { content: string }) => {
       </div>
     </div>
   );
-};
+});
 
-const AssistantMessage = ({ content, renderMarkdown = true }: { content: string; renderMarkdown?: boolean }) => {
+const AssistantMessage = memo(
+  ({ content, renderMarkdown = true }: { content: string; renderMarkdown?: boolean }) => {
   return (
     <div className="mb-6 flex gap-4">
       <div className="h-8 w-8 shrink-0">
@@ -50,11 +51,12 @@ const AssistantMessage = ({ content, renderMarkdown = true }: { content: string;
       </div>
     </div>
   );
-};
+  },
+);
 
-export const ChatMessage = ({ message, renderMarkdown = true }: Props) => {
+export const ChatMessage = memo(({ message, renderMarkdown = true }: Props) => {
   if (message.role === "user") {
     return <UserMessage content={message.content} />;
   }
   return <AssistantMessage content={message.content} renderMarkdown={renderMarkdown} />;
-};
+});

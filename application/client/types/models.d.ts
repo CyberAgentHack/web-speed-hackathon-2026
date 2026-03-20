@@ -65,6 +65,7 @@ declare namespace Models {
   }
 
   interface ChatMessage {
+    localId?: string;
     role: "user" | "assistant";
     content: string;
   }

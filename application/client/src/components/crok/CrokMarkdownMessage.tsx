@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, memo, Suspense, useEffect, useState } from "react";
 
 import Markdown from "react-markdown";
 
@@ -20,9 +20,9 @@ function hasRichMarkdown(content: string) {
   return /```|`[^`\n]+`|\$[^$\n]+\$|\$\$[\s\S]+?\$\$|\|.+\|/.test(content);
 }
 
-const BasicMarkdownMessage = ({ content }: Props) => <Markdown>{content}</Markdown>;
+const BasicMarkdownMessage = memo(({ content }: Props) => <Markdown>{content}</Markdown>);
 
-export const CrokMarkdownMessage = ({ content }: Props) => {
+export const CrokMarkdownMessage = memo(({ content }: Props) => {
   const [shouldRenderRich, setShouldRenderRich] = useState(false);
   const needsRichMarkdown = hasRichMarkdown(content);
 
@@ -51,4 +51,4 @@ export const CrokMarkdownMessage = ({ content }: Props) => {
       <CrokRichMarkdownMessage content={content} />
     </Suspense>
   );
-};
+});
