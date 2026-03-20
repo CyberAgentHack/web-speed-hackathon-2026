@@ -7,6 +7,7 @@ allowBuilds:
   bcrypt: true
   core-js: true
   esbuild: true
+  ffmpeg-static: false
   negaposi-analyzer-ja: true
   sharp: false
   sqlite3: true

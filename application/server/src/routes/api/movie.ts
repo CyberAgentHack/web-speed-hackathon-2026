@@ -4,10 +4,13 @@ import path from "path";
 
 import { Router } from "express";
 import ffmpeg from "fluent-ffmpeg";
+import ffmpegPath from "ffmpeg-static";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+
+ffmpeg.setFfmpegPath(ffmpegPath!);
 
 const EXTENSION = "gif";
 
