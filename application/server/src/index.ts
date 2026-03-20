@@ -1,5 +1,5 @@
 import { serve } from "@hono/node-server";
-import { app } from "@web-speed-hackathon-2026/server/src/app.tsx";
+import { app } from "@web-speed-hackathon-2026/server/src/app.ts";
 
 import { initializeSequelize } from "./sequelize";
 
