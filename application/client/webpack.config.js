@@ -28,7 +28,7 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: false,
   entry: {
     main: [
       "jquery-binarytransport",
@@ -149,7 +149,6 @@ const config = {
   cache: {
     type: "filesystem",
   },
-  devtool: false,
   ignoreWarnings: [
     {
       module: /@ffmpeg/,
