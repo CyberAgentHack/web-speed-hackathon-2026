@@ -50,9 +50,13 @@ export const AppContainer = () => {
 
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
   useEffect(() => {
-    void fetchJSON<Models.User>("/api/v1/me").then((user) => {
-      setActiveUser(user);
-    });
+    void fetchJSON<Models.User>("/api/v1/me")
+      .then((user) => {
+        setActiveUser(user);
+      })
+      .catch(() => {
+        // Not logged in, activeUser stays null
+      });
   }, []);
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
