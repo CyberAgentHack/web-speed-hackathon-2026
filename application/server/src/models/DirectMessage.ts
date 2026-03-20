@@ -60,6 +60,16 @@ export function initDirectMessage(sequelize: Sequelize) {
     },
     {
       sequelize,
+      indexes: [
+        {
+          fields: ["conversationId", "createdAt"],
+          name: "idx_direct_messages_conversation_created_at",
+        },
+        {
+          fields: ["conversationId", "senderId", "isRead"],
+          name: "idx_direct_messages_conversation_sender_is_read",
+        },
+      ],
       defaultScope: {
         include: [
           {
@@ -74,16 +84,17 @@ export function initDirectMessage(sequelize: Sequelize) {
 
   DirectMessage.addHook("afterSave", "onDmSaved", async (message) => {
     const directMessage = await DirectMessage.findByPk(message.get().id);
-    const conversation = await DirectMessageConversation.findByPk(directMessage?.conversationId);
+    const conversation = await DirectMessageConversation.findByPk(
+      directMessage?.conversationId,
+    );
 
     if (directMessage == null || conversation == null) {
       return;
     }
 
-    const receiverId =
-      conversation.initiatorId === directMessage.senderId
-        ? conversation.memberId
-        : conversation.initiatorId;
+    const receiverId = conversation.initiatorId === directMessage.senderId
+      ? conversation.memberId
+      : conversation.initiatorId;
 
     const unreadCount = await DirectMessage.count({
       distinct: true,
