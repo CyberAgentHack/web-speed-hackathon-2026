@@ -53,6 +53,11 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
           <Button
             command="show-modal"
             commandfor={newDmModalId}
+            onClick={(e: React.MouseEvent) => {
+              if (e.defaultPrevented) return;
+              const el = document.getElementById(newDmModalId) as HTMLDialogElement | null;
+              if (el && !el.open) el.showModal();
+            }}
             leftItem={<FontAwesomeIcon iconType="paper-plane" styleType="solid" />}
           >
             新しくDMを始める

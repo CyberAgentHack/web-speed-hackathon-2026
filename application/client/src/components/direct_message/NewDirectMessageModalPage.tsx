@@ -37,7 +37,16 @@ const NewDirectMessageModalPageComponent = ({
           <ModalSubmitButton disabled={submitting || invalid} loading={submitting}>
             DMを開始
           </ModalSubmitButton>
-          <Button variant="secondary" command="close" commandfor={id}>
+          <Button
+            variant="secondary"
+            command="close"
+            commandfor={id}
+            onClick={(e: React.MouseEvent) => {
+              if (e.defaultPrevented) return;
+              const el = document.getElementById(id) as HTMLDialogElement | null;
+              if (el?.open) el.close();
+            }}
+          >
             キャンセル
           </Button>
         </div>

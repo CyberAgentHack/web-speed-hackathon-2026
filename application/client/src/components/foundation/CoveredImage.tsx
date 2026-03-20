@@ -36,6 +36,11 @@ export const CoveredImage = ({ alt, fetchPriority, loading, src }: Props) => {
         type="button"
         command="show-modal"
         commandfor={dialogId}
+        onClick={(e: React.MouseEvent) => {
+          if (e.defaultPrevented) return;
+          const el = document.getElementById(dialogId) as HTMLDialogElement | null;
+          if (el && !el.open) el.showModal();
+        }}
       >
         ALT を表示する
       </button>
@@ -46,7 +51,16 @@ export const CoveredImage = ({ alt, fetchPriority, loading, src }: Props) => {
 
           <p className="text-sm">{alt}</p>
 
-          <Button variant="secondary" command="close" commandfor={dialogId}>
+          <Button
+            variant="secondary"
+            command="close"
+            commandfor={dialogId}
+            onClick={(e: React.MouseEvent) => {
+              if (e.defaultPrevented) return;
+              const el = document.getElementById(dialogId) as HTMLDialogElement | null;
+              if (el?.open) el.close();
+            }}
+          >
             閉じる
           </Button>
         </div>

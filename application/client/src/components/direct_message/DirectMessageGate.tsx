@@ -26,6 +26,11 @@ export const DirectMessageGate = ({
           type="button"
           command="show-modal"
           commandfor={authModalId}
+          onClick={(e: React.MouseEvent) => {
+            if (e.defaultPrevented) return;
+            const el = document.getElementById(authModalId) as HTMLDialogElement | null;
+            if (el && !el.open) el.showModal();
+          }}
         >
           {buttonLabel}
         </button>
