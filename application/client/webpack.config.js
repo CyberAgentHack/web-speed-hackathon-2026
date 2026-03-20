@@ -87,7 +87,7 @@ const config = {
     chunkFilename: "scripts/chunk-[contenthash].js",
     filename: "scripts/[name].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: '/',
     clean: true,
   },
   plugins: [
@@ -164,20 +164,24 @@ const config = {
     ],
     splitChunks: {
       chunks: 'all',
+      maxInitialRequests: 20, // 同時に読み込めるファイル数の上限を増やす
       cacheGroups: {
-        // ★ ここを追加！ AIライブラリだけを「vendor-ai」という別ファイルに強制隔離します
-        aiLib: {
+        // AIライブラリの隔離
+        ai: {
           test: /[\\/]node_modules[\\/](@mlc-ai|web-llm)[\\/]/,
           name: 'vendor-ai',
-          priority: 20, // 優先度を高くして、他のchunkに吸い込まれるのを防ぐ
+          priority: 20,
           enforce: true,
         },
-        // その他、Reactなどの共通ライブラリをまとめる
-        defaultVendors: {
-          test: /[\\/]node_modules[\\/]/,
-          name: 'vendors',
-          priority: -10,
-          reuseExistingChunk: true,
+        // 重いライブラリをそれぞれ独立したファイルにする
+        heavyLibs: {
+          test: /[\\/]node_modules[\\/](highlight\.js|kuromoji|ffmpeg\.wasm|@ffmpeg)[\\/]/,
+          name(module) {
+            const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1];
+            return `vendor-${packageName.replace('@', '')}`;
+          },
+          priority: 30,
+          enforce: true,
         },
       },
     },

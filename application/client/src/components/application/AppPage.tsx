@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-
+// lazyはやめて、普通にインポートに戻します
 import { Navigation } from "@web-speed-hackathon-2026/client/src/components/application/Navigation";
 
 interface Props {
@@ -15,6 +15,7 @@ export const AppPage = ({ activeUser, children, authModalId, newPostModalId, onL
     <div className="relative z-0 flex justify-center font-sans">
       <div className="bg-cax-surface text-cax-text flex min-h-screen max-w-full">
         <aside className="relative z-10">
+          {/* Suspenseを外して直接描画 */}
           <Navigation
             activeUser={activeUser}
             authModalId={authModalId}

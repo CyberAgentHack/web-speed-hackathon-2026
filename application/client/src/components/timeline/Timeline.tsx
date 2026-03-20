@@ -7,9 +7,10 @@ interface Props {
 export const Timeline = ({ timeline }: Props) => {
   return (
     <section>
-      {timeline.map((post) => {
-        return <TimelineItem key={post.id} post={post} />;
-      })}
+      {/* slice(0, 10) を削除。InfiniteScroll から渡される全件を表示します */}
+      {timeline.map((post) => (
+        <TimelineItem key={post.id} post={post} />
+      ))}
     </section>
   );
 };
