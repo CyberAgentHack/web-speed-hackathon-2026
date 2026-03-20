@@ -30,7 +30,7 @@ https://github.com/CyberAgentHack/web-speed-hackathon-2026/issues/new?template=a
 
 レギュレーションに違反した場合には、順位対象外となります。
 レギュレーションは [./docs/regulation.md](./docs/regulation.md) を参照してください。
-
+fix
 ## 開発方法
 
 開発方法は [./docs/development.md](./docs/development.md) を参照してください。
