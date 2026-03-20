@@ -1,6 +1,3 @@
-import { gzip } from "pako";
-
-// jQuery $.ajax 互換: HTTPエラー時に reject する（$.ajax は 4xx/5xx で reject していた）
 async function ensureOk(response: Response): Promise<Response> {
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
@@ -32,17 +29,12 @@ export async function sendFile<T>(url: string, file: File): Promise<T> {
 }
 
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
-  const jsonString = JSON.stringify(data);
-  const uint8Array = new TextEncoder().encode(jsonString);
-  const compressed = gzip(uint8Array);
-
   const response = await fetch(url, {
     method: "POST",
     headers: {
-      "Content-Encoding": "gzip",
       "Content-Type": "application/json",
     },
-    body: compressed,
+    body: JSON.stringify(data),
   }).then(ensureOk);
   return response.json() as Promise<T>;
 }
