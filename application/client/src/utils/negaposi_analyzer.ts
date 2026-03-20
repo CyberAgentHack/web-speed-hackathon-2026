@@ -1,12 +1,21 @@
 import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
 
+let tokenizerPromise: Promise<Tokenizer<IpadicFeatures>> | null = null;
+
 function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
-  return new Promise((resolve, reject) => {
-    kuromoji.builder({ dicPath: "/dicts" }).build((err, tokenizer) => {
-      if (err) reject(err);
-      else resolve(tokenizer);
+  if (!tokenizerPromise) {
+    tokenizerPromise = new Promise((resolve, reject) => {
+      kuromoji.builder({ dicPath: "/dicts" }).build((err, tokenizer) => {
+        if (err) {
+          tokenizerPromise = null;
+          reject(err);
+        } else {
+          resolve(tokenizer);
+        }
+      });
     });
-  });
+  }
+  return tokenizerPromise;
 }
 
 type SentimentResult = {
