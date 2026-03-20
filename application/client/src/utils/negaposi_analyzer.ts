@@ -1,8 +1,12 @@
-import Bluebird from "bluebird";
 import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
-async function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
-  const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-  return await builder.buildAsync();
+
+function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
+  return new Promise((resolve, reject) => {
+    kuromoji.builder({ dicPath: "/dicts" }).build((err, tokenizer) => {
+      if (err) reject(err);
+      else resolve(tokenizer);
+    });
+  });
 }
 
 type SentimentResult = {
