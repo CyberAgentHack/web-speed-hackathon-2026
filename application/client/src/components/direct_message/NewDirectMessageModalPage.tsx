@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Input } from "@web-speed-hackathon-2026/client/src/components/foundation/Input";
@@ -13,6 +13,7 @@ interface Props {
 }
 
 export const NewDirectMessageModalPage = ({ id, onSubmit }: Props) => {
+  const usernameInputId = useId();
   const [username, setUsername] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [fieldError, setFieldError] = useState<string | undefined>(undefined);
@@ -48,8 +49,11 @@ export const NewDirectMessageModalPage = ({ id, onSubmit }: Props) => {
 
       <form className="flex flex-col gap-y-6" onSubmit={handleSubmit}>
         <div className="flex flex-col gap-y-1">
-          <label className="block text-sm">ユーザー名</label>
+          <label className="block text-sm" htmlFor={usernameInputId}>
+            ユーザー名
+          </label>
           <Input
+            id={usernameInputId}
             leftItem={<span className="text-cax-text-subtle leading-none">@</span>}
             placeholder="username"
             value={username}
