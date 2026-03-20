@@ -16,14 +16,13 @@ const ERROR_MESSAGES: Record<string, string> = {
   USERNAME_TAKEN: "ユーザー名が使われています",
 };
 
-function getErrorCode(err: JQuery.jqXHR<unknown>, type: "signin" | "signup"): string {
-  const responseJSON = err.responseJSON;
+function getErrorCode(err: unknown, type: "signin" | "signup"): string {
   if (
-    typeof responseJSON !== "object" ||
-    responseJSON === null ||
-    !("code" in responseJSON) ||
-    typeof responseJSON.code !== "string" ||
-    !Object.keys(ERROR_MESSAGES).includes(responseJSON.code)
+    typeof err !== "object" ||
+    err === null ||
+    !("code" in err) ||
+    typeof (err as { code: unknown })["code"] !== "string" ||
+    !Object.keys(ERROR_MESSAGES).includes((err as { code: string })["code"])
   ) {
     if (type === "signup") {
       return "登録に失敗しました";
@@ -32,7 +31,7 @@ function getErrorCode(err: JQuery.jqXHR<unknown>, type: "signin" | "signup"): st
     }
   }
 
-  return ERROR_MESSAGES[responseJSON.code]!;
+  return ERROR_MESSAGES[(err as { code: string })["code"]]!;
 }
 
 export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
@@ -68,7 +67,7 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
         }
         handleRequestCloseModal();
       } catch (err: unknown) {
-        const error = getErrorCode(err as JQuery.jqXHR<unknown>, values.type);
+        const error = getErrorCode(err, values.type);
         throw new SubmissionError({
           _error: error,
         });

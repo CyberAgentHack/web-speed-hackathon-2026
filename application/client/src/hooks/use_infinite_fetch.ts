@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const LIMIT = 30;
+const LIMIT = 15;
 
 interface ReturnValues<T> {
   data: Array<T>;
@@ -36,11 +36,15 @@ export function useInfiniteFetch<T>(
       offset,
     };
 
-    void fetcher(apiPath).then(
-      (allData) => {
+    const url = new URL(apiPath, window.location.origin);
+    url.searchParams.set("limit", String(LIMIT));
+    url.searchParams.set("offset", String(offset));
+
+    void fetcher(url.toString()).then(
+      (pageData) => {
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...pageData],
           isLoading: false,
         }));
         internalRef.current = {
