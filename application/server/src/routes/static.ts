@@ -1,6 +1,11 @@
+import { promises as fs } from "fs";
+import path from "path";
+
 import history from "connect-history-api-fallback";
+import type { Request, Response, NextFunction } from "express";
 import { Router } from "express";
 import serveStatic from "serve-static";
+import sharp from "sharp";
 
 import {
   CLIENT_DIST_PATH,
@@ -10,8 +15,73 @@ import {
 
 export const staticRouter = Router();
 
+// In-memory cache: "filePath:width" → resized JPEG buffer
+const imageCache = new Map<string, Buffer>();
+
+async function resizeImageHandler(req: Request, res: Response, next: NextFunction) {
+  const widthStr = req.query["width"];
+  if (!widthStr || typeof widthStr !== "string") {
+    return next();
+  }
+
+  const width = parseInt(widthStr, 10);
+  if (isNaN(width) || width <= 0 || width > 4000) {
+    return next();
+  }
+
+  // Only handle .jpg paths
+  const reqPath = req.path;
+  if (!reqPath.endsWith(".jpg")) {
+    return next();
+  }
+
+  // Try PUBLIC_PATH first, then UPLOAD_PATH
+  const candidatePaths = [
+    path.join(PUBLIC_PATH, reqPath),
+    path.join(UPLOAD_PATH, reqPath),
+  ];
+
+  let filePath: string | null = null;
+  for (const p of candidatePaths) {
+    try {
+      await fs.access(p);
+      filePath = p;
+      break;
+    } catch {
+      // not found, try next
+    }
+  }
+
+  if (!filePath) {
+    return next();
+  }
+
+  const cacheKey = `${filePath}:${width}`;
+  let buf = imageCache.get(cacheKey);
+
+  if (!buf) {
+    try {
+      buf = await sharp(filePath)
+        .resize({ width, withoutEnlargement: true })
+        .jpeg({ quality: 80, progressive: true })
+        .toBuffer();
+      imageCache.set(cacheKey, buf);
+    } catch {
+      return next();
+    }
+  }
+
+  res.setHeader("Content-Type", "image/jpeg");
+  res.setHeader("Cache-Control", "public, max-age=86400");
+  res.setHeader("Content-Length", buf.length);
+  return res.send(buf);
+}
+
 // SPA 対応のため、ファイルが存在しないときに index.html を返す
 staticRouter.use(history());
+
+// Image resize middleware (before static file handlers)
+staticRouter.use(resizeImageHandler);
 
 staticRouter.use(
   serveStatic(UPLOAD_PATH, {
