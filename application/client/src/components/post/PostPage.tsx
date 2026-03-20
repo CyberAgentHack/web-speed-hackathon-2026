@@ -2,15 +2,15 @@ import { CommentList } from "@web-speed-hackathon-2026/client/src/components/pos
 import { PostItem } from "@web-speed-hackathon-2026/client/src/components/post/PostItem";
 
 interface Props {
-  comments: Models.Comment[];
-  post: Models.Post;
+    comments: Models.Comment[];
+    post: Models.Post;
 }
 
 export const PostPage = ({ comments, post }: Props) => {
-  return (
-    <>
-      <PostItem post={post} />
-      <CommentList comments={comments} />
-    </>
-  );
+    return (
+        <>
+            <PostItem post={post} prioritizeLcpImage={true} />
+            <CommentList comments={comments} />
+        </>
+    );
 };

@@ -6,13 +6,20 @@ import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
     alt?: string;
+    fetchPriority?: "auto" | "high" | "low";
+    loading?: "eager" | "lazy";
     src: string;
 }
 
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
-export const CoveredImage = ({ alt: initialAlt, src }: Props) => {
+export const CoveredImage = ({
+    alt: initialAlt,
+    fetchPriority = "auto",
+    loading = "lazy",
+    src,
+}: Props) => {
     const dialogId = useId();
     const [extractedAlt, setExtractedAlt] = useState<string | null>(null);
     const [isExtracting, setIsExtracting] = useState(false);
@@ -57,7 +64,8 @@ export const CoveredImage = ({ alt: initialAlt, src }: Props) => {
                 alt={displayAlt}
                 className="h-full w-full object-cover"
                 src={src}
-                loading="lazy"
+                fetchPriority={fetchPriority}
+                loading={loading}
             />
 
             <button
