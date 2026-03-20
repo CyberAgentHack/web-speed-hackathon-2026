@@ -1,4 +1,4 @@
-import { ChangeEventHandler, FormEventHandler, useCallback, useState } from "react";
+import { ChangeEventHandler, FormEventHandler, useCallback, useEffect, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/components/modal/ModalErrorMessage";
@@ -6,6 +6,26 @@ import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/componen
 import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/AttachFileInputButton";
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
+
+let imageConverterPromise:
+  | Promise<
+      [
+        typeof import("@web-speed-hackathon-2026/client/src/utils/convert_image"),
+        typeof import("@imagemagick/magick-wasm"),
+      ]
+    >
+  | null = null;
+
+function loadImageConverter() {
+  if (imageConverterPromise == null) {
+    imageConverterPromise = Promise.all([
+      import("@web-speed-hackathon-2026/client/src/utils/convert_image"),
+      import("@imagemagick/magick-wasm"),
+    ]);
+  }
+
+  return imageConverterPromise;
+}
 
 interface SubmitParams {
   images: File[];
@@ -17,12 +37,20 @@ interface SubmitParams {
 interface Props {
   id: string;
   hasError: boolean;
+  isOpen: boolean;
   isLoading: boolean;
   onResetError: () => void;
   onSubmit: (params: SubmitParams) => void;
 }
 
-export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubmit }: Props) => {
+export const NewPostModalPage = ({
+  id,
+  hasError,
+  isOpen,
+  isLoading,
+  onResetError,
+  onSubmit,
+}: Props) => {
   const [params, setParams] = useState<SubmitParams>({
     images: [],
     movie: undefined,
@@ -32,6 +60,20 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
   const [hasFileError, setHasFileError] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      void loadImageConverter();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [isOpen]);
 
   const handleChangeText = useCallback<ChangeEventHandler<HTMLTextAreaElement>>((ev) => {
     const value = ev.currentTarget.value;
@@ -49,10 +91,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     if (isValid) {
       setIsConverting(true);
 
-      void Promise.all([
-        import("@web-speed-hackathon-2026/client/src/utils/convert_image"),
-        import("@imagemagick/magick-wasm"),
-      ])
+      void loadImageConverter()
         .then(async ([{ convertImage }, { MagickFormat }]) => {
           const convertedFiles = await Promise.all(
             files.map((file) =>

@@ -3,6 +3,11 @@ import type { Tokenizer, IpadicFeatures } from "kuromoji";
 
 const STOP_POS = new Set(["助詞", "助動詞", "記号"]);
 
+export interface SuggestionSearchIndex {
+  bm25: BM25;
+  candidates: string[];
+}
+
 /**
  * 形態素解析で内容語トークン（名詞、動詞、形容詞など）を抽出
  */
@@ -20,15 +25,27 @@ export function filterSuggestionsBM25(
   candidates: string[],
   queryTokens: string[],
 ): string[] {
-  if (queryTokens.length === 0) return [];
+  const index = createSuggestionSearchIndex(tokenizer, candidates);
+  return searchSuggestionIndex(index, queryTokens);
+}
 
+export function createSuggestionSearchIndex(
+  tokenizer: Tokenizer<IpadicFeatures>,
+  candidates: string[],
+): SuggestionSearchIndex {
   const bm25 = new BM25({ k1: 1.2, b: 0.75 });
-
   const tokenizedCandidates = candidates.map((c) => extractTokens(tokenizer.tokenize(c)));
   bm25.index(tokenizedCandidates);
+  return { bm25, candidates };
+}
 
-  const scores = bm25.getScores(queryTokens);
-  const results = candidates.map((text, i) => ({ text, score: scores[i] ?? 0 }));
+export function searchSuggestionIndex(
+  index: SuggestionSearchIndex,
+  queryTokens: string[],
+): string[] {
+  if (queryTokens.length === 0) return [];
+  const scores = index.bm25.getScores(queryTokens);
+  const results = index.candidates.map((text, i) => ({ text, score: scores[i] ?? 0 }));
 
   // スコアが高い（＝類似度が高い）ものが下に来るように、上位10件を取得する
   return results

@@ -1,4 +1,3 @@
-import Bluebird from "bluebird";
 import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
 import {
   useEffect,
@@ -12,8 +11,10 @@ import {
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import {
+  createSuggestionSearchIndex,
   extractTokens,
-  filterSuggestionsBM25,
+  searchSuggestionIndex,
+  type SuggestionSearchIndex,
 } from "@web-speed-hackathon-2026/client/src/utils/bm25_search";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
@@ -76,11 +77,25 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
   return <>{parts}</>;
 }
 
+function buildTokenizer(dicPath: string): Promise<Tokenizer<IpadicFeatures>> {
+  return new Promise((resolve, reject) => {
+    kuromoji.builder({ dicPath }).build((err, nextTokenizer) => {
+      if (err != null || nextTokenizer == null) {
+        reject(err ?? new Error("failed to build tokenizer"));
+        return;
+      }
+      resolve(nextTokenizer);
+    });
+  });
+}
+
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
+  const [searchIndex, setSearchIndex] = useState<SuggestionSearchIndex | null>(null);
   const [inputValue, setInputValue] = useState("");
+  const [allSuggestions, setAllSuggestions] = useState<string[]>([]);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -97,13 +112,18 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     let mounted = true;
 
     const init = async () => {
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
-      if (mounted) {
-        setTokenizer(nextTokenizer);
+      try {
+        const nextTokenizer = await buildTokenizer("/dicts");
+        if (mounted) {
+          setTokenizer(nextTokenizer);
+        }
+      } catch {
+        if (mounted) {
+          setTokenizer(null);
+        }
       }
     };
-    init();
+    void init();
 
     return () => {
       mounted = false;
@@ -112,40 +132,68 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
 
   useEffect(() => {
     let cancelled = false;
+    void fetchJSON<{ suggestions: string[] }>("/api/v1/crok/suggestions")
+      .then(({ suggestions: candidates }) => {
+        if (!cancelled) {
+          setAllSuggestions(candidates);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setAllSuggestions([]);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-    const updateSuggestions = async () => {
-      if (!tokenizer || !inputValue.trim()) {
-        setSuggestions([]);
-        setQueryTokens([]);
-        setShowSuggestions(false);
-        return;
-      }
-
-      const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-        "/api/v1/crok/suggestions",
-      );
+  useEffect(() => {
+    if (tokenizer == null || allSuggestions.length === 0) {
+      return;
+    }
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
       if (cancelled) {
         return;
       }
+      const nextIndex = createSuggestionSearchIndex(tokenizer, allSuggestions);
+      if (!cancelled) {
+        setSearchIndex(nextIndex);
+      }
+    }, 0);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [allSuggestions, tokenizer]);
 
+  useEffect(() => {
+    if (!inputValue.trim()) {
+      setSuggestions([]);
+      setQueryTokens([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    if (tokenizer == null || searchIndex == null) {
+      setShowSuggestions(false);
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
       const tokens = extractTokens(tokenizer.tokenize(inputValue));
-      const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
-
-      if (cancelled) {
-        return;
-      }
+      const results = searchSuggestionIndex(searchIndex, tokens);
 
       setQueryTokens(tokens);
       setSuggestions(results);
       setShowSuggestions(results.length > 0);
-    };
-
-    void updateSuggestions();
+    }, 120);
 
     return () => {
-      cancelled = true;
+      window.clearTimeout(timer);
     };
-  }, [inputValue, tokenizer]);
+  }, [inputValue, searchIndex, tokenizer]);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
@@ -172,6 +220,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     setSuggestions([]);
     setQueryTokens([]);
     setShowSuggestions(false);
+    window.requestAnimationFrame(adjustTextareaHeight);
   };
 
   const handleSubmit = (e: FormEvent) => {

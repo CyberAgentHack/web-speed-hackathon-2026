@@ -68,6 +68,7 @@ export const NewPostModalContainer = ({ id }: Props) => {
   const dialogId = useId();
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
+  const [isOpen, setIsOpen] = useState(false);
   useEffect(() => {
     const element = ref.current;
     if (element == null) {
@@ -75,6 +76,7 @@ export const NewPostModalContainer = ({ id }: Props) => {
     }
 
     const handleToggle = () => {
+      setIsOpen(element.open);
       if (!element.open) {
         // モーダルを閉じたときのみフォームの状態をリセットする
         setResetKey((key) => key + 1);
@@ -117,6 +119,7 @@ export const NewPostModalContainer = ({ id }: Props) => {
         key={resetKey}
         id={dialogId}
         hasError={hasError}
+        isOpen={isOpen}
         isLoading={isLoading}
         onResetError={handleResetError}
         onSubmit={handleSubmit}
