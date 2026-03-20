@@ -29,19 +29,9 @@ export async function sendFile<T>(url: string, file: File): Promise<T> {
 }
 
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
-  const jsonString = JSON.stringify(data);
-  const uint8Array = new TextEncoder().encode(jsonString);
-
-  const cs = new CompressionStream("gzip");
-  const writer = cs.writable.getWriter();
-  writer.write(uint8Array);
-  writer.close();
-  const compressed = await new Response(cs.readable).arrayBuffer();
-
   const response = await fetch(url, {
-    body: compressed,
+    body: JSON.stringify(data),
     headers: {
-      "Content-Encoding": "gzip",
       "Content-Type": "application/json",
     },
     method: "POST",
