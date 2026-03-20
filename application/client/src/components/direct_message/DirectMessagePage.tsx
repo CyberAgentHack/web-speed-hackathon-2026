@@ -1,5 +1,7 @@
 import classNames from "classnames";
-import moment from "moment";
+
+const fmtTime = (dateStr: string) =>
+  new Date(dateStr).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
 import {
   ChangeEvent,
   useCallback,
@@ -141,7 +143,7 @@ export const DirectMessagePage = ({
                 </p>
                 <div className="flex gap-1 text-xs">
                   <time dateTime={message.createdAt}>
-                    {moment(message.createdAt).locale("ja").format("HH:mm")}
+                    {fmtTime(message.createdAt)}
                   </time>
                   {isActiveUserSend && message.isRead && (
                     <span className="text-cax-text-muted">既読</span>

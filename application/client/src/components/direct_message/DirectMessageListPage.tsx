@@ -1,5 +1,24 @@
-import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
+
+const fromNowJa = (dateStr: string): string => {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const sec = diff / 1000;
+  if (sec < 45) return "数秒前";
+  if (sec < 90) return "1分前";
+  const min = sec / 60;
+  if (min < 45) return `${Math.round(min)}分前`;
+  if (min < 90) return "1時間前";
+  const hr = min / 60;
+  if (hr < 22) return `${Math.round(hr)}時間前`;
+  if (hr < 36) return "1日前";
+  const day = hr / 24;
+  if (day < 25) return `${Math.round(day)}日前`;
+  if (day < 45) return "1ヶ月前";
+  const mo = day / 30;
+  if (mo < 11) return `${Math.round(mo)}ヶ月前`;
+  if (mo < 18) return "1年前";
+  return `${Math.round(mo / 12)}年前`;
+};
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -100,7 +119,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {fromNowJa(lastMessage.createdAt)}
                           </time>
                         )}
                       </div>
