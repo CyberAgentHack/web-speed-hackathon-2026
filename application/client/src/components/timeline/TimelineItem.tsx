@@ -1,4 +1,4 @@
-import { MouseEventHandler, useCallback } from "react";
+import { MouseEventHandler, memo, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
@@ -29,7 +29,7 @@ interface Props {
   post: Models.Post;
 }
 
-export const TimelineItem = ({ post }: Props) => {
+export const TimelineItem = memo(({ post }: Props) => {
   const navigate = useNavigate();
 
   /**
@@ -42,7 +42,7 @@ export const TimelineItem = ({ post }: Props) => {
         navigate(`/posts/${post.id}`);
       }
     },
-    [post, navigate],
+    [post.id, navigate],
   );
 
   return (
@@ -104,4 +104,4 @@ export const TimelineItem = ({ post }: Props) => {
       </div>
     </article>
   );
-};
+});
