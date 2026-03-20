@@ -43,11 +43,12 @@ const SearchPageComponent = ({
 }: Props & InjectedFormProps<SearchFormData, Props>) => {
   const navigate = useNavigate();
   const [isNegative, setIsNegative] = useState(false);
+  const [enableSentiment, setEnableSentiment] = useState(false);
 
   const parsed = parseSearchQuery(query);
 
   useEffect(() => {
-    if (!parsed.keywords) {
+    if (!enableSentiment || !parsed.keywords) {
       setIsNegative(false);
       return;
     }
@@ -68,7 +69,7 @@ const SearchPageComponent = ({
     return () => {
       isMounted = false;
     };
-  }, [parsed.keywords]);
+  }, [enableSentiment, parsed.keywords]);
 
   const searchConditionText = useMemo(() => {
     const parts: string[] = [];
@@ -106,10 +107,19 @@ const SearchPageComponent = ({
       </div>
 
       {query && (
-        <div className="px-4">
+        <div className="px-4 flex items-center gap-4">
           <h2 className="text-lg font-bold">
             {searchConditionText} の検索結果 ({results.length} 件)
           </h2>
+          {parsed.keywords ? (
+            <button
+              className="text-cax-accent text-sm underline"
+              type="button"
+              onClick={() => setEnableSentiment((v) => !v)}
+            >
+              感情分析を{enableSentiment ? "停止" : "実行"}
+            </button>
+          ) : null}
         </div>
       )}
 
