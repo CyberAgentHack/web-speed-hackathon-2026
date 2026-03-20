@@ -1,4 +1,3 @@
-import { MagickFormat } from "@imagemagick/magick-wasm";
 import { ChangeEventHandler, FormEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -53,10 +52,13 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     if (isValid) {
       setIsConverting(true);
 
-      Promise.all(
-        files.map((file) =>
-          convertImage(file, { extension: MagickFormat.Jpg }).then(
-            (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
+      // MagickFormat を dynamic import で取得（ImageMagick WASM を初期バンドルから除外するため）
+      import("@imagemagick/magick-wasm").then(({ MagickFormat }) =>
+        Promise.all(
+          files.map((file) =>
+            convertImage(file, { extension: MagickFormat.Jpg }).then(
+              (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
+            ),
           ),
         ),
       )

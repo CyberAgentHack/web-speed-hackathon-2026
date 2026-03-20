@@ -123,8 +123,11 @@ const config = {
   },
   optimization: {
     minimize: true,
+    // "async" にすることで dynamic import のみチャンク分割する。
+    // "all" だと initial chunk も分割されるが、HtmlWebpackPlugin が inject: false のため
+    // 分割された initial chunk の <script> タグが HTML に挿入されず、ページが表示されなくなる。
     splitChunks: {
-      chunks: "all",
+      chunks: "async",
     },
   },
   ignoreWarnings: [

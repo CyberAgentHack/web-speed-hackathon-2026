@@ -1,7 +1,3 @@
-import { CreateMLCEngine } from "@mlc-ai/web-llm";
-import { stripIndents } from "common-tags";
-import * as JSONRepairJS from "json-repair-js";
-import langs from "langs";
 import invariant from "tiny-invariant";
 
 interface Translator {
@@ -14,11 +10,19 @@ interface Params {
   targetLanguage: string;
 }
 
+// dynamic import で web-llm (~18MB) を初期バンドルから除外し、翻訳実行時にのみロードする
 export async function createTranslator(params: Params): Promise<Translator> {
-  const sourceLang = langs.where("1", params.sourceLanguage);
+  const [{ CreateMLCEngine }, { stripIndents }, JSONRepairJS, langs] = await Promise.all([
+    import("@mlc-ai/web-llm"),
+    import("common-tags"),
+    import("json-repair-js"),
+    import("langs"),
+  ]);
+
+  const sourceLang = langs.default.where("1", params.sourceLanguage);
   invariant(sourceLang, `Unsupported source language code: ${params.sourceLanguage}`);
 
-  const targetLang = langs.where("1", params.targetLanguage);
+  const targetLang = langs.default.where("1", params.targetLanguage);
   invariant(targetLang, `Unsupported target language code: ${params.targetLanguage}`);
 
   const engine = await CreateMLCEngine("gemma-2-2b-jpn-it-q4f16_1-MLC");

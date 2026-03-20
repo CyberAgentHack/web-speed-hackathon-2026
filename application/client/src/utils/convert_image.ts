@@ -1,12 +1,16 @@
-import { initializeImageMagick, ImageMagick, MagickFormat } from "@imagemagick/magick-wasm";
-import magickWasm from "@imagemagick/magick-wasm/magick.wasm?binary";
-import { dump, insert, ImageIFD } from "piexifjs";
+import type { MagickFormat } from "@imagemagick/magick-wasm";
 
 interface Options {
   extension: MagickFormat;
 }
 
+// dynamic import で ImageMagick WASM (~5MB) を初期バンドルから除外し、画像変換時にのみロードする
 export async function convertImage(file: File, options: Options): Promise<Blob> {
+  const [{ initializeImageMagick, ImageMagick }, { default: magickWasm }, { dump, insert, ImageIFD }] = await Promise.all([
+    import("@imagemagick/magick-wasm"),
+    import("@imagemagick/magick-wasm/magick.wasm?binary"),
+    import("piexifjs"),
+  ]);
   await initializeImageMagick(magickWasm);
 
   const byteArray = new Uint8Array(await file.arrayBuffer());
