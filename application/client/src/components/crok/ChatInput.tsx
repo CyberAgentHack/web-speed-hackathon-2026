@@ -44,6 +44,7 @@ interface SuggestionDeps {
 }
 
 let suggestionDepsPromise: Promise<SuggestionDeps> | null = null;
+let suggestionCandidatesPromise: Promise<string[]> | null = null;
 
 const loadSuggestionDeps = () => {
   suggestionDepsPromise ??= (async () => {
@@ -75,6 +76,17 @@ const loadSuggestionDeps = () => {
   })();
 
   return suggestionDepsPromise;
+};
+
+const loadSuggestionCandidates = () => {
+  suggestionCandidatesPromise ??= fetchJSON<{ suggestions: string[] }>("/api/v1/crok/suggestions")
+    .then((response) => response.suggestions)
+    .catch((error) => {
+      suggestionCandidatesPromise = null;
+      throw error;
+    });
+
+  return suggestionCandidatesPromise;
 };
 
 // トークン単位でハイライト
@@ -157,25 +169,30 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
         return;
       }
 
-      setShowSuggestions(false);
-      const [{ suggestions: candidates }, deps] = await Promise.all([
-        fetchJSON<{ suggestions: string[] }>("/api/v1/crok/suggestions"),
-        loadSuggestionDeps(),
-      ]);
-      if (cancelled) {
-        return;
+      try {
+        setShowSuggestions(false);
+        const [candidates, deps] = await Promise.all([loadSuggestionCandidates(), loadSuggestionDeps()]);
+        if (cancelled) {
+          return;
+        }
+
+        const tokens = deps.extractTokens(deps.tokenizer.tokenize(inputValue));
+        const results = deps.filterSuggestionsBM25(deps.tokenizer, candidates, tokens);
+
+        if (cancelled) {
+          return;
+        }
+
+        setQueryTokens(tokens);
+        setSuggestions(results);
+        setShowSuggestions(results.length > 0);
+      } catch {
+        if (!cancelled) {
+          setSuggestions([]);
+          setQueryTokens([]);
+          setShowSuggestions(false);
+        }
       }
-
-      const tokens = deps.extractTokens(deps.tokenizer.tokenize(inputValue));
-      const results = deps.filterSuggestionsBM25(deps.tokenizer, candidates, tokens);
-
-      if (cancelled) {
-        return;
-      }
-
-      setQueryTokens(tokens);
-      setSuggestions(results);
-      setShowSuggestions(results.length > 0);
     };
 
     void updateSuggestions();
