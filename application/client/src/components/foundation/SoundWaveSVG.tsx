@@ -34,18 +34,22 @@ async function calculate(url: string): Promise<ParsedData> {
 
 interface Props {
   soundUrl: string;
+  waveform?: { peaks: number[]; max: number };
 }
 
-export const SoundWaveSVG = ({ soundUrl }: Props) => {
+export const SoundWaveSVG = ({ soundUrl, waveform }: Props) => {
   const uniqueIdRef = useRef(Math.random().toString(16));
   const containerRef = useRef<SVGSVGElement>(null);
-  const [{ max, peaks }, setPeaks] = useState<ParsedData>({
-    max: 0,
-    peaks: [],
-  });
+  const [{ max, peaks }, setPeaks] = useState<ParsedData>(
+    waveform ?? { max: 0, peaks: [] },
+  );
   const [isVisible, setIsVisible] = useState(false);
 
+  // サーバーから波形データが提供されていない場合のみクライアントサイドで計算
+  const needsClientCalculation = !waveform;
+
   useEffect(() => {
+    if (!needsClientCalculation) return;
     const el = containerRef.current;
     if (!el) return;
 
@@ -60,14 +64,14 @@ export const SoundWaveSVG = ({ soundUrl }: Props) => {
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [needsClientCalculation]);
 
   useEffect(() => {
-    if (!isVisible) return;
+    if (!needsClientCalculation || !isVisible) return;
     calculate(soundUrl).then(({ max, peaks }) => {
       setPeaks({ max, peaks });
     });
-  }, [soundUrl, isVisible]);
+  }, [soundUrl, isVisible, needsClientCalculation]);
 
   return (
     <svg ref={containerRef} className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1">
