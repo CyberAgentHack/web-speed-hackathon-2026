@@ -72,6 +72,29 @@ export function initDirectMessage(sequelize: Sequelize) {
     },
   );
 
+  async function countUnreadMessagesForUser(userId: string) {
+    const conversations = await DirectMessageConversation.unscoped().findAll({
+      attributes: ["id"],
+      raw: true,
+      where: {
+        [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
+      },
+    });
+    const conversationIds = conversations.map((conversation) => conversation.id);
+
+    if (conversationIds.length === 0) {
+      return 0;
+    }
+
+    return DirectMessage.unscoped().count({
+      where: {
+        conversationId: conversationIds,
+        isRead: false,
+        senderId: { [Op.ne]: userId },
+      },
+    });
+  }
+
   DirectMessage.addHook("afterSave", "onDmSaved", async (message) => {
     const directMessage = await DirectMessage.findByPk(message.get().id);
     const conversation = await DirectMessageConversation.findByPk(directMessage?.conversationId);
@@ -85,22 +108,7 @@ export function initDirectMessage(sequelize: Sequelize) {
         ? conversation.memberId
         : conversation.initiatorId;
 
-    const unreadCount = await DirectMessage.count({
-      distinct: true,
-      where: {
-        senderId: { [Op.ne]: receiverId },
-        isRead: false,
-      },
-      include: [
-        {
-          association: "conversation",
-          where: {
-            [Op.or]: [{ initiatorId: receiverId }, { memberId: receiverId }],
-          },
-          required: true,
-        },
-      ],
-    });
+    const unreadCount = await countUnreadMessagesForUser(receiverId);
 
     eventhub.emit(`dm:conversation/${conversation.id}:message`, directMessage);
     eventhub.emit(`dm:unread/${receiverId}`, { unreadCount });

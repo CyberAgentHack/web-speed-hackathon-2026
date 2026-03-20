@@ -1,11 +1,11 @@
-import { lazy, Suspense, useCallback, useEffect, useId, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useId } from "react";
 import { Helmet, HelmetProvider } from "react-helmet";
-import { Route, Routes, useLocation, useNavigate } from "react-router";
+import { Route, Routes, useLocation } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
 import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
-import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { useAuthSession } from "@web-speed-hackathon-2026/client/src/hooks/use_auth_session";
 
 const LazyCrokContainer = lazy(async () => {
   const module = await import("@web-speed-hackathon-2026/client/src/containers/CrokContainer");
@@ -73,44 +73,11 @@ const RouteFallback = () => {
 
 export const AppContainer = () => {
   const { pathname } = useLocation();
-  const navigate = useNavigate();
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
-  const [activeUser, setActiveUser] = useState<Models.User | null>(null);
-  const authStateVersionRef = useRef(0);
-
-  const updateActiveUser = useCallback((user: Models.User | null) => {
-    authStateVersionRef.current += 1;
-    setActiveUser(user);
-  }, []);
-
-  const refreshActiveUser = useCallback(() => {
-    const requestVersion = authStateVersionRef.current;
-
-    return fetchJSON<Models.User>("/api/v1/me")
-      .then((user) => {
-        if (requestVersion === authStateVersionRef.current) {
-          setActiveUser(user);
-        }
-      })
-      .catch(() => {
-        if (requestVersion === authStateVersionRef.current) {
-          setActiveUser(null);
-        }
-      });
-  }, []);
-
-  useEffect(() => {
-    void refreshActiveUser();
-  }, [refreshActiveUser]);
-
-  const handleLogout = useCallback(async () => {
-    await sendJSON("/api/v1/signout", {});
-    updateActiveUser(null);
-    navigate("/");
-  }, [navigate, updateActiveUser]);
+  const { activeUser, logout, updateActiveUser } = useAuthSession();
 
   const authModalId = useId();
   const newPostModalId = useId();
@@ -121,7 +88,7 @@ export const AppContainer = () => {
         activeUser={activeUser}
         authModalId={authModalId}
         newPostModalId={newPostModalId}
-        onLogout={handleLogout}
+        onLogout={logout}
       >
         <Suspense fallback={<RouteFallback />}>
           <Routes>

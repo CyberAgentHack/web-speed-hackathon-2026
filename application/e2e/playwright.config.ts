@@ -22,9 +22,9 @@ export default defineConfig({
   workers: WORKERS,
   projects: [
     {
-      name: "Desktop Chrome",
+      name: "Desktop Firefox",
       testMatch: "**/src/**/*.test.ts",
-      use: { ...devices["Desktop Chrome"], channel: "chrome" },
+      use: { ...devices["Desktop Firefox"], channel: "" },
     },
   ],
   reporter: "list",

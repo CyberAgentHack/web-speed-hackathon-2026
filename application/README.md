@@ -26,6 +26,15 @@ CaX のアプリケーションコードです。
      pnpm run start
      ```
 3. アプリケーションには `http://localhost:3000/` でアクセスします
+4. `public/images` 配下のラスター画像を WebP に最適化します
+   - ドライラン:
+     ```bash
+     pnpm run images:optimize -- --dry-run
+     ```
+   - 実行:
+     ```bash
+     pnpm run images:optimize
+     ```
 
 ## ディレクトリ構成
 

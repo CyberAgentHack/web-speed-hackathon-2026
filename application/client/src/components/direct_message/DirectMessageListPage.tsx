@@ -1,5 +1,5 @@
 import moment from "moment";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -17,6 +17,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
   const [conversations, setConversations] =
     useState<Array<Models.DirectMessageConversation> | null>(null);
   const [error, setError] = useState<Error | null>(null);
+  const hasLoadedRef = useRef(false);
 
   const loadConversations = useCallback(async () => {
     if (activeUser == null) {
@@ -30,6 +31,8 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     } catch (error) {
       setConversations(null);
       setError(error as Error);
+    } finally {
+      hasLoadedRef.current = true;
     }
   }, [activeUser]);
 
@@ -38,6 +41,9 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
   }, [loadConversations]);
 
   useWs("/api/v1/dm/unread", () => {
+    if (!hasLoadedRef.current) {
+      return;
+    }
     void loadConversations();
   });
 
@@ -69,16 +75,13 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
       ) : (
         <ul data-testid="dm-list">
           {conversations.map((conversation) => {
-            const { messages } = conversation;
             const peer =
               conversation.initiator.id !== activeUser.id
                 ? conversation.initiator
                 : conversation.member;
 
-            const lastMessage = messages.at(-1);
-            const hasUnread = messages
-              .filter((m) => m.sender.id === peer.id)
-              .some((m) => !m.isRead);
+            const lastMessage = conversation.lastMessage;
+            const hasUnread = conversation.hasUnread ?? false;
 
             return (
               <li className="grid" key={conversation.id}>

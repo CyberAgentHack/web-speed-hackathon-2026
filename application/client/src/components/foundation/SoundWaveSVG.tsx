@@ -29,7 +29,7 @@ async function calculate(data: ArrayBuffer): Promise<ParsedData> {
 }
 
 interface Props {
-  soundData: ArrayBuffer;
+  soundData: ArrayBuffer | null;
 }
 
 export const SoundWaveSVG = ({ soundData }: Props) => {
@@ -40,6 +40,11 @@ export const SoundWaveSVG = ({ soundData }: Props) => {
   });
 
   useEffect(() => {
+    if (soundData === null) {
+      setPeaks({ max: 0, peaks: [] });
+      return;
+    }
+
     calculate(soundData).then(({ max, peaks }) => {
       setPeaks({ max, peaks });
     });

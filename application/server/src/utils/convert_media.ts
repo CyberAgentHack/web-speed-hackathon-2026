@@ -31,10 +31,10 @@ async function runFfmpeg(args: string[]): Promise<void> {
   }
 }
 
-export async function convertMovieToGif(data: Buffer): Promise<Buffer> {
+export async function convertMovieToWebm(data: Buffer): Promise<Buffer> {
   return withTempDir(async (dirPath) => {
     const inputPath = path.join(dirPath, "input");
-    const outputPath = path.join(dirPath, "output.gif");
+    const outputPath = path.join(dirPath, "output.webm");
 
     await fs.writeFile(inputPath, data);
 
@@ -45,8 +45,20 @@ export async function convertMovieToGif(data: Buffer): Promise<Buffer> {
       "-t",
       "5",
       "-vf",
-      "fps=10,crop='min(iw,ih)':'min(iw,ih)'",
+      "fps=10,crop='min(iw,ih)':'min(iw,ih)',scale='min(iw,500)':-2",
       "-an",
+      "-c:v",
+      "libvpx-vp9",
+      "-b:v",
+      "0",
+      "-crf",
+      "48",
+      "-deadline",
+      "good",
+      "-cpu-used",
+      "4",
+      "-pix_fmt",
+      "yuv420p",
       outputPath,
     ]);
 
