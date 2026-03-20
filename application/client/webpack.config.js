@@ -11,10 +11,41 @@ const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
 
+const commonEntryPrefix = [
+  "core-js",
+  "regenerator-runtime/runtime",
+  "jquery-binarytransport",
+  path.resolve(SRC_PATH, "./index.css"),
+  path.resolve(SRC_PATH, "./buildinfo.ts"),
+];
+
+const pageEntries = [
+  { name: "timeline", file: "./entries/timeline.tsx", html: "index.html" },
+  { name: "post-detail", file: "./entries/post-detail.tsx", html: "post-detail.html" },
+  { name: "user-profile", file: "./entries/user-profile.tsx", html: "user-profile.html" },
+  { name: "search", file: "./entries/search.tsx", html: "search.html" },
+  { name: "dm-list", file: "./entries/dm-list.tsx", html: "dm-list.html" },
+  { name: "dm", file: "./entries/dm.tsx", html: "dm.html" },
+  { name: "crok", file: "./entries/crok.tsx", html: "crok.html" },
+  { name: "terms", file: "./entries/terms.tsx", html: "terms.html" },
+  { name: "not-found", file: "./entries/not-found.tsx", html: "not-found.html" },
+];
+
 /** @type {import('webpack').Configuration} */
 const config = {
   devServer: {
-    historyApiFallback: true,
+    historyApiFallback: {
+      rewrites: [
+        { from: /^\/posts\//, to: "/post-detail.html" },
+        { from: /^\/users\//, to: "/user-profile.html" },
+        { from: /^\/search$/, to: "/search.html" },
+        { from: /^\/dm\//, to: "/dm.html" },
+        { from: /^\/dm$/, to: "/dm-list.html" },
+        { from: /^\/crok$/, to: "/crok.html" },
+        { from: /^\/terms$/, to: "/terms.html" },
+        { from: /.*/, to: "/not-found.html" },
+      ],
+    },
     host: "0.0.0.0",
     port: 8080,
     proxy: [
@@ -26,16 +57,12 @@ const config = {
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
   devtool: "inline-source-map",
-  entry: {
-    main: [
-      "core-js",
-      "regenerator-runtime/runtime",
-      "jquery-binarytransport",
-      path.resolve(SRC_PATH, "./index.css"),
-      path.resolve(SRC_PATH, "./buildinfo.ts"),
-      path.resolve(SRC_PATH, "./index.tsx"),
-    ],
-  },
+  entry: Object.fromEntries(
+    pageEntries.map(({ name, file }) => [
+      name,
+      [...commonEntryPrefix, path.resolve(SRC_PATH, file)],
+    ]),
+  ),
   mode: "none",
   module: {
     rules: [
@@ -60,7 +87,6 @@ const config = {
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
     filename: "scripts/[name].js",
     path: DIST_PATH,
     publicPath: "auto",
@@ -90,10 +116,15 @@ const config = {
         },
       ],
     }),
-    new HtmlWebpackPlugin({
-      inject: false,
-      template: path.resolve(SRC_PATH, "./index.html"),
-    }),
+    ...pageEntries.map(
+      ({ name, html }) =>
+        new HtmlWebpackPlugin({
+          chunks: [name],
+          filename: html,
+          inject: true,
+          template: path.resolve(SRC_PATH, "./index.html"),
+        }),
+    ),
     {
       apply(compiler) {
         compiler.hooks.watchRun.tap("RebuildLogger", () => {
@@ -141,13 +172,15 @@ const config = {
   },
   optimization: {
     minimize: false,
-    splitChunks: false,
+    splitChunks: {
+      chunks: "all",
+    },
     concatenateModules: false,
     usedExports: false,
     providedExports: false,
     sideEffects: false,
   },
-  cache: false,
+  cache: { type: "filesystem" },
   ignoreWarnings: [
     {
       module: /@ffmpeg/,
