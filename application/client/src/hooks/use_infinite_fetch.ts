@@ -13,7 +13,7 @@ export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
 ): ReturnValues<T> {
-  const internalRef = useRef({ isLoading: false, offset: 0 });
+  const internalRef = useRef({ hasMore: true, isLoading: false, offset: 0 });
 
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
     data: [],
@@ -22,8 +22,8 @@ export function useInfiniteFetch<T>(
   });
 
   const fetchMore = useCallback(() => {
-    const { isLoading, offset } = internalRef.current;
-    if (isLoading) {
+    const { hasMore, isLoading, offset } = internalRef.current;
+    if (apiPath === "" || isLoading || !hasMore) {
       return;
     }
 
@@ -32,20 +32,26 @@ export function useInfiniteFetch<T>(
       isLoading: true,
     }));
     internalRef.current = {
+      hasMore,
       isLoading: true,
       offset,
     };
 
-    void fetcher(apiPath).then(
-      (allData) => {
+    const requestUrl = new URL(apiPath, window.location.origin);
+    requestUrl.searchParams.set("limit", String(LIMIT));
+    requestUrl.searchParams.set("offset", String(offset));
+
+    void fetcher(`${requestUrl.pathname}${requestUrl.search}`).then(
+      (pageData) => {
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...pageData],
           isLoading: false,
         }));
         internalRef.current = {
+          hasMore: pageData.length === LIMIT,
           isLoading: false,
-          offset: offset + LIMIT,
+          offset: offset + pageData.length,
         };
       },
       (error) => {
@@ -55,6 +61,7 @@ export function useInfiniteFetch<T>(
           isLoading: false,
         }));
         internalRef.current = {
+          hasMore,
           isLoading: false,
           offset,
         };
@@ -62,13 +69,29 @@ export function useInfiniteFetch<T>(
     );
   }, [apiPath, fetcher]);
 
+  // Synchronize the visible list with the paginated API for the current endpoint.
   useEffect(() => {
+    if (apiPath === "") {
+      setResult(() => ({
+        data: [],
+        error: null,
+        isLoading: false,
+      }));
+      internalRef.current = {
+        hasMore: false,
+        isLoading: false,
+        offset: 0,
+      };
+      return;
+    }
+
     setResult(() => ({
       data: [],
       error: null,
       isLoading: true,
     }));
     internalRef.current = {
+      hasMore: true,
       isLoading: false,
       offset: 0,
     };
