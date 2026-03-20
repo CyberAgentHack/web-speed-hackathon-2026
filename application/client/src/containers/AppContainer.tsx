@@ -30,17 +30,38 @@ export const AppContainer = () => {
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
   const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
   useEffect(() => {
-    void fetchJSON<Models.User>("/api/v1/me")
-      .then((user) => {
-        setActiveUser(user);
-      })
-      .catch(() => {
-        setActiveUser(null);
-      })
-      .finally(() => {
-        setIsLoadingActiveUser(false);
-      });
-  }, [setActiveUser, setIsLoadingActiveUser]);
+    const shouldPrioritizeAuth = pathname.startsWith("/dm") || pathname === "/crok";
+
+    const loadActiveUser = () => {
+      void fetchJSON<Models.User>("/api/v1/me")
+        .then((user) => {
+          setActiveUser(user);
+        })
+        .catch(() => {
+          setActiveUser(null);
+        })
+        .finally(() => {
+          setIsLoadingActiveUser(false);
+        });
+    };
+
+    if (shouldPrioritizeAuth) {
+      loadActiveUser();
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      if ("requestIdleCallback" in window) {
+        window.requestIdleCallback(loadActiveUser, { timeout: 3000 });
+      } else {
+        loadActiveUser();
+      }
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [pathname, setActiveUser, setIsLoadingActiveUser]);
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
     setActiveUser(null);

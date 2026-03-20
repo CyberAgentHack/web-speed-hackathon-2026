@@ -1,10 +1,8 @@
-import { ReactEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ReactEventHandler, useCallback, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { SoundWaveSVG } from "@web-speed-hackathon-2026/client/src/components/foundation/SoundWaveSVG";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
-import { useVisibility } from "@web-speed-hackathon-2026/client/src/hooks/use_visibility";
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getSoundPath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
@@ -13,19 +11,7 @@ interface Props {
 }
 
 export const SoundPlayer = ({ sound }: Props) => {
-  const { isVisible, ref } = useVisibility();
-  const [shouldLoad, setShouldLoad] = useState(false);
-  useEffect(() => {
-    if (isVisible) {
-      setShouldLoad(true);
-    }
-  }, [isVisible]);
-
-  const { data, isLoading } = useFetch(shouldLoad ? getSoundPath(sound.id) : "", fetchBinary);
-
-  const blobUrl = useMemo(() => {
-    return data !== null ? URL.createObjectURL(new Blob([data])) : null;
-  }, [data]);
+  const [waveformData, setWaveformData] = useState<ArrayBuffer | null>(null);
 
   const [currentTimeRatio, setCurrentTimeRatio] = useState(0);
   const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>((ev) => {
@@ -34,40 +20,34 @@ export const SoundPlayer = ({ sound }: Props) => {
   }, []);
 
   const audioRef = useRef<HTMLAudioElement>(null);
-  const pendingPlayRef = useRef(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const handleTogglePlaying = useCallback(() => {
-    if (blobUrl === null) {
-      pendingPlayRef.current = true;
-      setShouldLoad(true);
-      return;
-    }
-
     setIsPlaying((isPlaying) => {
       if (isPlaying) {
         audioRef.current?.pause();
       } else {
-        audioRef.current?.play();
+        void audioRef.current?.play();
+        if (waveformData === null) {
+          void fetchBinary(getSoundPath(sound.id))
+            .then((data) => {
+              setWaveformData(data);
+            })
+            .catch(() => {});
+        }
       }
       return !isPlaying;
     });
-  }, [blobUrl]);
-
-  useEffect(() => {
-    if (!pendingPlayRef.current || blobUrl === null) {
-      return;
-    }
-
-    pendingPlayRef.current = false;
-    void audioRef.current?.play();
-    setIsPlaying(true);
-  }, [blobUrl]);
+  }, [sound.id, waveformData]);
 
   return (
-    <div ref={ref as React.Ref<HTMLDivElement>} className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
-      {blobUrl !== null ? (
-        <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} src={blobUrl} />
-      ) : null}
+    <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
+      <audio
+        ref={audioRef}
+        loop={true}
+        onTimeUpdate={handleTimeUpdate}
+        preload="none"
+        src={getSoundPath(sound.id)}
+      />
       <div className="p-2">
         <button
           className="bg-cax-accent text-cax-surface-raised flex h-8 w-8 items-center justify-center rounded-full text-sm hover:opacity-75"
@@ -88,8 +68,8 @@ export const SoundPlayer = ({ sound }: Props) => {
           <AspectRatioBox aspectHeight={1} aspectWidth={10}>
             <div className="relative h-full w-full">
               <div className="absolute inset-0 h-full w-full">
-                {data !== null && !isLoading ? (
-                  <SoundWaveSVG soundData={data} />
+                {waveformData !== null ? (
+                  <SoundWaveSVG soundData={waveformData} />
                 ) : (
                   <div className="bg-cax-border/30 h-full w-full rounded-sm" />
                 )}
