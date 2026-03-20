@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { type MouseEvent, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -26,8 +26,7 @@ export const PausableMovie = ({ src }: Props) => {
     }
   }, []);
 
-  const handleClick = useCallback((ev: MouseEvent) => {
-    ev.stopPropagation();
+  const handleClick = useCallback(() => {
     const video = videoRef.current;
     if (video == null) return;
 
