@@ -1,4 +1,4 @@
 declare module "*?binary" {
-  const value: Uint8Array<ArrayBuffer>;
+  const value: string;
   export default value;
 }

@@ -7,7 +7,7 @@ interface Options {
 }
 
 export async function convertImage(file: File, options: Options): Promise<Blob> {
-  await initializeImageMagick(magickWasm);
+  await initializeImageMagick(new URL(magickWasm, location.href));
 
   const byteArray = new Uint8Array(await file.arrayBuffer());
 
