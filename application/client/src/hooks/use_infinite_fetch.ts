@@ -62,6 +62,9 @@ export function useInfiniteFetch<T>(
     );
   }, [apiPath, fetcher]);
 
+  const fetchMoreRef = useRef(fetchMore);
+  fetchMoreRef.current = fetchMore;
+
   useEffect(() => {
     setResult(() => ({
       data: [],
@@ -73,8 +76,8 @@ export function useInfiniteFetch<T>(
       offset: 0,
     };
 
-    fetchMore();
-  }, [fetchMore]);
+    fetchMoreRef.current();
+  }, [apiPath]);
 
   return {
     ...result,

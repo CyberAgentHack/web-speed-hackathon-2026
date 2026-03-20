@@ -7,43 +7,36 @@ interface Props {
 }
 
 export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
-  const latestItem = items[items.length - 1];
+  const fetchMoreRef = useRef(fetchMore);
+  fetchMoreRef.current = fetchMore;
+
+  const latestItemRef = useRef(items[items.length - 1]);
+  latestItemRef.current = items[items.length - 1];
 
   const prevReachedRef = useRef(false);
 
   useEffect(() => {
     const handler = () => {
-      // 念の為 2の18乗 回、最下部かどうかを確認する
-      const hasReached = Array.from(Array(2 ** 18), () => {
-        return window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
-      }).every(Boolean);
+      const hasReached = window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
 
-      // 画面最下部にスクロールしたタイミングで、登録したハンドラを呼び出す
       if (hasReached && !prevReachedRef.current) {
-        // アイテムがないときは追加で読み込まない
-        if (latestItem !== undefined) {
-          fetchMore();
+        if (latestItemRef.current !== undefined) {
+          fetchMoreRef.current();
         }
       }
 
       prevReachedRef.current = hasReached;
     };
 
-    // 最初は実行されないので手動で呼び出す
-    prevReachedRef.current = false;
     handler();
 
-    document.addEventListener("wheel", handler, { passive: false });
-    document.addEventListener("touchmove", handler, { passive: false });
-    document.addEventListener("resize", handler, { passive: false });
-    document.addEventListener("scroll", handler, { passive: false });
+    document.addEventListener("scroll", handler, { passive: true });
+    document.addEventListener("resize", handler, { passive: true });
     return () => {
-      document.removeEventListener("wheel", handler);
-      document.removeEventListener("touchmove", handler);
-      document.removeEventListener("resize", handler);
       document.removeEventListener("scroll", handler);
+      document.removeEventListener("resize", handler);
     };
-  }, [latestItem, fetchMore]);
+  }, []);
 
   return <>{children}</>;
 };
