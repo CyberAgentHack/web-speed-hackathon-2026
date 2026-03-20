@@ -7,8 +7,8 @@ repo = "local"
 id = "oxlint"
 name = "oxlint"
 language = "system"
-entry = "pnpm --filter @web-speed-hackathon-2026/application run format:oxlint"
-pass_filenames = false
+entry = "oxlint --fix --type-aware --type-check"
+pass_filenames = true
 stages = ["pre-commit"]
 types_or = ["ts", "tsx", "javascript", "jsx"]
 
@@ -16,8 +16,8 @@ types_or = ["ts", "tsx", "javascript", "jsx"]
 id = "oxfmt"
 name = "oxfmt"
 language = "system"
-entry = "pnpm --filter @web-speed-hackathon-2026/application run format:oxfmt"
-pass_filenames = false
+entry = "oxfmt --write"
+pass_filenames = true
 stages = ["pre-commit"]
 types_or = ["ts", "tsx", "javascript", "jsx"]
 
@@ -28,7 +28,7 @@ language = "system"
 entry = "pnpm --filter @web-speed-hackathon-2026/application run typecheck"
 pass_filenames = false
 always_run = true
-stages = ["pre-commit"]
+stages = ["pre-push"]
 
 [[repos.hooks]]
 id = "test-unit"
