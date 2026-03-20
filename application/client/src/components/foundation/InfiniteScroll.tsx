@@ -26,11 +26,14 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
     };
 
     prevReachedRef.current = false;
-    handler();
+    const rafId = requestAnimationFrame(() => {
+      handler();
+    });
 
     window.addEventListener("scroll", handler, { passive: true });
     window.addEventListener("resize", handler, { passive: true });
     return () => {
+      cancelAnimationFrame(rafId);
       window.removeEventListener("scroll", handler);
       window.removeEventListener("resize", handler);
     };
