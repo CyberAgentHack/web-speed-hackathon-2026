@@ -1,7 +1,7 @@
 import classNames from "classnames";
 import sizeOf from "image-size";
 import { load, ImageIFD } from "piexifjs";
-import { MouseEvent, RefCallback, useCallback, useId, useMemo, useState } from "react";
+import { MouseEvent, RefCallback, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
@@ -17,12 +17,32 @@ interface Props {
  */
 export const CoveredImage = ({ src }: Props) => {
   const dialogId = useId();
+
+  // ビューポートに入るまでフェッチを遅延する
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
     ev.stopPropagation();
   }, []);
 
-  const { data, isLoading } = useFetch(src, fetchBinary);
+  const { data } = useFetch(isVisible ? src : null, fetchBinary);
 
   const imageSize = useMemo(() => {
     return data != null ? sizeOf(Buffer.from(data)) : { height: 0, width: 0 };
@@ -46,47 +66,55 @@ export const CoveredImage = ({ src }: Props) => {
     });
   }, []);
 
-  if (isLoading || data === null || blobUrl === null) {
-    return null;
-  }
+  const mergedRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      wrapperRef.current = el;
+      callbackRef(el);
+    },
+    [callbackRef],
+  );
 
   const containerRatio = containerSize.height / containerSize.width;
-  const imageRatio = imageSize?.height / imageSize?.width;
+  const imageRatio = (imageSize?.height ?? 0) / (imageSize?.width ?? 1);
 
   return (
-    <div ref={callbackRef} className="relative h-full w-full overflow-hidden">
-      <img
-        alt={alt}
-        className={classNames(
-          "absolute left-1/2 top-1/2 max-w-none -translate-x-1/2 -translate-y-1/2",
-          {
-            "w-auto h-full": containerRatio > imageRatio,
-            "w-full h-auto": containerRatio <= imageRatio,
-          },
-        )}
-        src={blobUrl}
-      />
+    <div ref={mergedRef} className="relative h-full w-full overflow-hidden">
+      {blobUrl != null && (
+        <>
+          <img
+            alt={alt}
+            className={classNames(
+              "absolute left-1/2 top-1/2 max-w-none -translate-x-1/2 -translate-y-1/2",
+              {
+                "w-auto h-full": containerRatio > imageRatio,
+                "w-full h-auto": containerRatio <= imageRatio,
+              },
+            )}
+            src={blobUrl}
+          />
 
-      <button
-        className="border-cax-border bg-cax-surface-raised/90 text-cax-text-muted hover:bg-cax-surface absolute right-1 bottom-1 rounded-full border px-2 py-1 text-center text-xs"
-        type="button"
-        command="show-modal"
-        commandfor={dialogId}
-      >
-        ALT を表示する
-      </button>
+          <button
+            className="border-cax-border bg-cax-surface-raised/90 text-cax-text-muted hover:bg-cax-surface absolute right-1 bottom-1 rounded-full border px-2 py-1 text-center text-xs"
+            type="button"
+            command="show-modal"
+            commandfor={dialogId}
+          >
+            ALT を表示する
+          </button>
 
-      <Modal id={dialogId} closedby="any" onClick={handleDialogClick}>
-        <div className="grid gap-y-6">
-          <h1 className="text-center text-2xl font-bold">画像の説明</h1>
+          <Modal id={dialogId} closedby="any" onClick={handleDialogClick}>
+            <div className="grid gap-y-6">
+              <h1 className="text-center text-2xl font-bold">画像の説明</h1>
 
-          <p className="text-sm">{alt}</p>
+              <p className="text-sm">{alt}</p>
 
-          <Button variant="secondary" command="close" commandfor={dialogId}>
-            閉じる
-          </Button>
-        </div>
-      </Modal>
+              <Button variant="secondary" command="close" commandfor={dialogId}>
+                閉じる
+              </Button>
+            </div>
+          </Modal>
+        </>
+      )}
     </div>
   );
 };

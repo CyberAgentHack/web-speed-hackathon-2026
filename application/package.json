@@ -6,6 +6,7 @@
   "type": "module",
   "workspaces": ["client", "server", "e2e"],
   "scripts": {
+    "analyze": "bun run --filter @web-speed-hackathon-2026/client analyze",
     "build": "bun run --filter @web-speed-hackathon-2026/client build",
     "start": "bun run --filter @web-speed-hackathon-2026/server start",
     "typecheck": "bun run --workspaces typecheck",
