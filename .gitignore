@@ -220,3 +220,13 @@ $RECYCLE.BIN/
 application/upload/**
 !application/upload/**/
 !application/upload/**/.gitkeep
+
+# vscode settings
+ .vscode/
+
+# Local development files
+CLAUDE.md
+docs/architecture-before-tuning.md
+performance/
+plans/
+results/
