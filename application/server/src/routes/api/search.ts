@@ -2,9 +2,32 @@ import { Router } from "express";
 import { Op } from "sequelize";
 
 import { Post } from "@web-speed-hackathon-2026/server/src/models";
+import { analyzeSentiment } from "@web-speed-hackathon-2026/server/src/utils/analyze_sentiment.js";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 
 export const searchRouter = Router();
+
+const NEUTRAL_SENTIMENT = {
+  label: "neutral",
+  score: 0,
+} as const;
+
+searchRouter.get("/search/sentiment", async (req, res) => {
+  const query = req.query["q"];
+
+  if (typeof query !== "string" || query.trim() === "") {
+    return res.status(200).type("application/json").send(NEUTRAL_SENTIMENT);
+  }
+
+  const { keywords } = parseSearchQuery(query);
+
+  if (keywords === "") {
+    return res.status(200).type("application/json").send(NEUTRAL_SENTIMENT);
+  }
+
+  const sentiment = await analyzeSentiment(keywords);
+  return res.status(200).type("application/json").send(sentiment);
+});
 
 searchRouter.get("/search", async (req, res) => {
   const query = req.query["q"];
