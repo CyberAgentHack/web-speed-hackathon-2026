@@ -1,54 +1,30 @@
-import { lazy, Suspense, type ReactNode, useCallback, useEffect, useId, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useId, useState } from "react";
 import { Helmet, HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
+import { DirectMessageContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer";
+import { DirectMessageListContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer";
+import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
+import { PostContainer } from "@web-speed-hackathon-2026/client/src/containers/PostContainer";
+import { TermContainer } from "@web-speed-hackathon-2026/client/src/containers/TermContainer";
 import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
+import { UserProfileContainer } from "@web-speed-hackathon-2026/client/src/containers/UserProfileContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
-const DirectMessageListContainer = lazy(async () => {
-  const mod = await import(
-    "@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer"
-  );
-  return { default: mod.DirectMessageListContainer };
-});
-const DirectMessageContainer = lazy(async () => {
-  const mod = await import("@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer");
-  return { default: mod.DirectMessageContainer };
-});
 const NewPostModalContainer = lazy(async () => {
   const mod = await import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer");
   return { default: mod.NewPostModalContainer };
-});
-const NotFoundContainer = lazy(async () => {
-  const mod = await import("@web-speed-hackathon-2026/client/src/containers/NotFoundContainer");
-  return { default: mod.NotFoundContainer };
-});
-const PostContainer = lazy(async () => {
-  const mod = await import("@web-speed-hackathon-2026/client/src/containers/PostContainer");
-  return { default: mod.PostContainer };
 });
 const SearchContainer = lazy(async () => {
   const mod = await import("@web-speed-hackathon-2026/client/src/containers/SearchContainer");
   return { default: mod.SearchContainer };
 });
-const TermContainer = lazy(async () => {
-  const mod = await import("@web-speed-hackathon-2026/client/src/containers/TermContainer");
-  return { default: mod.TermContainer };
-});
 const CrokContainer = lazy(async () => {
   const mod = await import("@web-speed-hackathon-2026/client/src/containers/CrokContainer");
   return { default: mod.CrokContainer };
 });
-const UserProfileContainer = lazy(async () => {
-  const mod = await import("@web-speed-hackathon-2026/client/src/containers/UserProfileContainer");
-  return { default: mod.UserProfileContainer };
-});
-
-const Suspended = ({ children }: { children: ReactNode }) => {
-  return <Suspense fallback={null}>{children}</Suspense>;
-};
 
 export const AppContainer = () => {
   const { pathname } = useLocation();
@@ -109,76 +85,42 @@ export const AppContainer = () => {
           <Route element={<TimelineContainer />} path="/" />
           <Route
             element={
-              <Suspended>
-                <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
-              </Suspended>
+              <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
             }
             path="/dm"
           />
           <Route
-            element={
-              <Suspended>
-                <DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />
-              </Suspended>
-            }
+            element={<DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />}
             path="/dm/:conversationId"
           />
           <Route
             element={
-              <Suspended>
+              <Suspense fallback={null}>
                 <SearchContainer />
-              </Suspended>
+              </Suspense>
             }
             path="/search"
           />
+          <Route element={<UserProfileContainer />} path="/users/:username" />
+          <Route element={<PostContainer />} path="/posts/:postId" />
+          <Route element={<TermContainer />} path="/terms" />
           <Route
             element={
-              <Suspended>
-                <UserProfileContainer />
-              </Suspended>
-            }
-            path="/users/:username"
-          />
-          <Route
-            element={
-              <Suspended>
-                <PostContainer />
-              </Suspended>
-            }
-            path="/posts/:postId"
-          />
-          <Route
-            element={
-              <Suspended>
-                <TermContainer />
-              </Suspended>
-            }
-            path="/terms"
-          />
-          <Route
-            element={
-              <Suspended>
+              <Suspense fallback={null}>
                 <CrokContainer activeUser={activeUser} authModalId={authModalId} />
-              </Suspended>
+              </Suspense>
             }
             path="/crok"
           />
-          <Route
-            element={
-              <Suspended>
-                <NotFoundContainer />
-              </Suspended>
-            }
-            path="*"
-          />
+          <Route element={<NotFoundContainer />} path="*" />
         </Routes>
       </AppPage>
 
       <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
       {shouldRenderNewPostModal ? (
-        <Suspended>
+        <Suspense fallback={null}>
           <NewPostModalContainer id={newPostModalId} openOnMount={true} />
-        </Suspended>
+        </Suspense>
       ) : null}
     </HelmetProvider>
   );
