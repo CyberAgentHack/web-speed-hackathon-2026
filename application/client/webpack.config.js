@@ -28,6 +28,7 @@ const config = {
   devtool: false,
   entry: {
     main: [
+      "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
@@ -57,9 +58,10 @@ const config = {
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
+    chunkFormat: false,
     filename: "scripts/[name]-[contenthash].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     clean: true,
   },
   plugins: [
@@ -125,9 +127,7 @@ const config = {
   },
   optimization: {
     minimize: true,
-    splitChunks: {
-      chunks: "all",
-    },
+    splitChunks: false,
     concatenateModules: true,
     usedExports: true,
     providedExports: true,
