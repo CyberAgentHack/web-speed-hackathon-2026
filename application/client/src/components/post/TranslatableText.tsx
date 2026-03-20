@@ -17,11 +17,18 @@ export const TranslatableText = ({ text }: Props) => {
       case "idle": {
         (async () => {
           updateState({ type: "loading" });
+          let translator:
+            | Awaited<
+                ReturnType<
+                  typeof import("@web-speed-hackathon-2026/client/src/utils/create_translator")["createTranslator"]
+                >
+              >
+            | null = null;
           try {
             const { createTranslator } = await import(
               "@web-speed-hackathon-2026/client/src/utils/create_translator"
             );
-            using translator = await createTranslator({
+            translator = await createTranslator({
               sourceLanguage: "ja",
               targetLanguage: "en",
             });
@@ -38,6 +45,8 @@ export const TranslatableText = ({ text }: Props) => {
               text: "翻訳に失敗しました",
               original: state.text,
             });
+          } finally {
+            translator?.dispose();
           }
         })();
         break;

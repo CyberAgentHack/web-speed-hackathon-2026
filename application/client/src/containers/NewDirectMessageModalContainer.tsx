@@ -32,10 +32,14 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
   const handleSubmit = useCallback(
     async (values: NewDirectMessageFormData) => {
       try {
-        const user = await fetchJSON<Models.User>(`/api/v1/users/${values.username}`);
-        const conversation = await sendJSON<Models.DirectMessageConversation>(`/api/v1/dm`, {
-          peerId: user.id,
-        });
+        const username = values.username.trim().replace(/^@/, "");
+        const user = await fetchJSON<Models.User>(`/api/v1/users/${username}`);
+        const conversation = await sendJSON<Pick<Models.DirectMessageConversation, "id">>(
+          `/api/v1/dm`,
+          {
+            peerId: user.id,
+          },
+        );
         navigate(`/dm/${conversation.id}`);
       } catch {
         throw new SubmissionError({

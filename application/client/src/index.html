@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CaX</title>
     <% for (const cssFile of htmlWebpackPlugin.files.css) { %>
-    <link rel="stylesheet" href="<%= cssFile %>" />
+    <link rel="stylesheet" href="<%= cssFile.startsWith('/') ? cssFile : `/${cssFile}` %>" />
     <% } %>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.1"></script>
     <style type="text/tailwindcss">
@@ -177,7 +177,7 @@
   <body class="bg-cax-canvas text-cax-text">
     <div id="app"></div>
     <% for (const jsFile of htmlWebpackPlugin.files.js) { %>
-    <script src="<%= jsFile %>"></script>
+    <script src="<%= jsFile.startsWith('/') ? jsFile : `/${jsFile}` %>"></script>
     <% } %>
   </body>
 </html>

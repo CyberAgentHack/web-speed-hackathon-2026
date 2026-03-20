@@ -9,6 +9,7 @@ import { validate } from "@web-speed-hackathon-2026/client/src/direct_message/va
 
 interface Props {
   id: string;
+  onSubmit: (values: NewDirectMessageFormData) => Promise<void>;
 }
 
 const NewDirectMessageModalPageComponent = ({
@@ -17,12 +18,13 @@ const NewDirectMessageModalPageComponent = ({
   error,
   submitting,
   handleSubmit,
+  onSubmit,
 }: Props & InjectedFormProps<NewDirectMessageFormData, Props>) => {
   return (
     <div className="grid gap-y-6">
       <h2 className="text-center text-2xl font-bold">新しくDMを始める</h2>
 
-      <form className="flex flex-col gap-y-6" onSubmit={handleSubmit}>
+      <form className="flex flex-col gap-y-6" onSubmit={handleSubmit(onSubmit)}>
         <Field
           name="username"
           component={FormInputField}
