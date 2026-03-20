@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { isValidUsername, normalizeUsernameInput } from "./username.ts";
+import { isValidUsername, normalizeUsernameInput } from "./username";
 
 test("normalizeUsernameInput trims surrounding spaces and a leading at-sign", () => {
   assert.equal(normalizeUsernameInput("  @test_user  "), "test_user");

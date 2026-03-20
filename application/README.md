@@ -36,6 +36,17 @@ pnpm workspaces を採用しています。
 
 API ドキュメントを Open API YAML [./server/openapi.yaml](./server/openapi.yaml) で提供しています。
 
+## 翻訳機能の設定
+
+翻訳 API はサーバー側で動作します。現在サポートしている環境変数は次の通りです。
+
+- `TRANSLATION_PROVIDER=fake`
+- `TRANSLATION_RATE_LIMIT_PER_MINUTE` 省略時は `20`
+- `TRANSLATION_CACHE_MAX_ENTRIES` 省略時は `500`
+- `TRANSLATION_CACHE_TTL_MS` 省略時は `86400000`
+
+ローカルやテストでは `TRANSLATION_PROVIDER=fake` を使うと外部 API なしで翻訳機能を確認できます。
+
 ## Visual Regression Test
 
 Playwright で Visual Regression Test (VRT) を提供しています。

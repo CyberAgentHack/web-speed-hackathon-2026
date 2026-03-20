@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { hasPasswordSymbol } from "./password.ts";
+import { hasPasswordSymbol } from "./password";
 
 test("hasPasswordSymbol requires punctuation or symbol characters", () => {
   assert.equal(hasPasswordSymbol("testpass123"), false);

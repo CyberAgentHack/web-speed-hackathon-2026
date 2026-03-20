@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { isValidDate, parseSearchQuery, sanitizeSearchText } from "./services.ts";
+import { isValidDate, parseSearchQuery, sanitizeSearchText } from "./services";
 
 test("parseSearchQuery keeps keywords around since/until filters", () => {
   assert.deepEqual(parseSearchQuery("foo since:2025-01-01 bar until:2025-01-31 baz"), {

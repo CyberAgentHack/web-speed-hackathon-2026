@@ -7,10 +7,11 @@ import { useSSE } from "@web-speed-hackathon-2026/client/src/hooks/use_sse";
 
 type Props = {
   activeUser: Models.User | null;
+  isLoadingActiveUser: boolean;
   onOpenAuthModal: () => void;
 };
 
-export const CrokContainer = ({ activeUser, onOpenAuthModal }: Props) => {
+export const CrokContainer = ({ activeUser, isLoadingActiveUser, onOpenAuthModal }: Props) => {
   const [messages, setMessages] = useState<Models.ChatMessage[]>([]);
 
   const sseOptions = useMemo(
@@ -69,6 +70,19 @@ export const CrokContainer = ({ activeUser, onOpenAuthModal }: Props) => {
     },
     [isStreaming, start],
   );
+
+  if (isLoadingActiveUser) {
+    return (
+      <>
+        <Helmet>
+          <title>Crok - CaX</title>
+        </Helmet>
+        <section className="space-y-4 px-6 py-12 text-center">
+          <p className="text-cax-text-muted text-sm">読み込み中...</p>
+        </section>
+      </>
+    );
+  }
 
   if (!activeUser) {
     return <CrokGate headline="Crokを利用するにはサインインしてください" onOpenAuthModal={onOpenAuthModal} />;

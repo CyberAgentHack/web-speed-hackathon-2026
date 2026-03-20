@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components
 
 interface Props {
   activeUser: Models.User | null;
+  isLoadingActiveUser: boolean;
   onOpenAuthModal: () => void;
   onOpenNewPostModal: () => void;
   onLogout: () => void;
@@ -13,6 +14,7 @@ interface Props {
 
 export const Navigation = ({
   activeUser,
+  isLoadingActiveUser,
   onOpenAuthModal,
   onOpenNewPostModal,
   onLogout,
@@ -31,7 +33,7 @@ export const Navigation = ({
             icon={<FontAwesomeIcon iconType="search" styleType="solid" />}
             text="検索"
           />
-          {activeUser !== null ? (
+          {!isLoadingActiveUser && activeUser !== null ? (
             <NavigationItem
               badge={<DirectMessageNotificationBadge />}
               href="/dm"
@@ -39,28 +41,28 @@ export const Navigation = ({
               text="DM"
             />
           ) : null}
-          {activeUser !== null ? (
+          {!isLoadingActiveUser && activeUser !== null ? (
             <NavigationItem
               icon={<FontAwesomeIcon iconType="edit" styleType="solid" />}
               onClick={onOpenNewPostModal}
               text="投稿する"
             />
           ) : null}
-          {activeUser !== null ? (
+          {!isLoadingActiveUser && activeUser !== null ? (
             <NavigationItem
               href={`/users/${activeUser.username}`}
               icon={<FontAwesomeIcon iconType="user" styleType="solid" />}
               text="マイページ"
             />
           ) : null}
-          {activeUser === null ? (
+          {!isLoadingActiveUser && activeUser === null ? (
             <NavigationItem
               icon={<FontAwesomeIcon iconType="sign-in-alt" styleType="solid" />}
               text="サインイン"
               onClick={onOpenAuthModal}
             />
           ) : null}
-          {activeUser !== null ? (
+          {!isLoadingActiveUser && activeUser !== null ? (
             <NavigationItem
               href="/crok"
               icon={<CrokLogo className="h-[30px] w-[30px]" />}
@@ -74,7 +76,9 @@ export const Navigation = ({
           />
         </ul>
 
-        {activeUser !== null ? <AccountMenu user={activeUser} onLogout={onLogout} /> : null}
+        {!isLoadingActiveUser && activeUser !== null ? (
+          <AccountMenu user={activeUser} onLogout={onLogout} />
+        ) : null}
       </div>
     </nav>
   );

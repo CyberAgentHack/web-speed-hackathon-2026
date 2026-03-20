@@ -21,6 +21,8 @@ tags:
     description: 検索
   - name: Crok
     description: AI チャット
+  - name: Translations
+    description: 翻訳
   - name: Initialize
     description: 初期化
 
@@ -717,6 +719,50 @@ paths:
                     type: boolean
         "401":
           $ref: "#/components/responses/Unauthorized"
+  /translations:
+    post:
+      tags:
+        - Translations
+      summary: テキスト翻訳
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+                - sourceLanguage
+                - targetLanguage
+              properties:
+                text:
+                  type: string
+                sourceLanguage:
+                  type: string
+                  example: ja
+                targetLanguage:
+                  type: string
+                  example: en
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - result
+                properties:
+                  result:
+                    type: string
+        "400":
+          description: Bad Request
+        "429":
+          description: Too Many Requests
+        "502":
+          description: Bad Gateway
+        "503":
+          description: Service Unavailable
   /initialize:
     post:
       tags:

@@ -1,9 +1,9 @@
 import { Suspense, lazy, useCallback, useEffect, useId, useState } from "react";
-import { Helmet, HelmetProvider } from "react-helmet";
+import { HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
-import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { fetchJSON, HttpError, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 const currentPathname = window.location.pathname;
 
@@ -115,14 +115,34 @@ export const AppContainer = () => {
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
   const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
   useEffect(() => {
+    let cancelled = false;
+
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {
-        setActiveUser(user);
+        if (!cancelled) {
+          setActiveUser(user);
+        }
+      })
+      .catch((error: unknown) => {
+        if (cancelled) {
+          return;
+        }
+
+        if (!(error instanceof HttpError && error.status === 401)) {
+          console.error(error);
+        }
+        setActiveUser(null);
       })
       .finally(() => {
-        setIsLoadingActiveUser(false);
+        if (!cancelled) {
+          setIsLoadingActiveUser(false);
+        }
       });
-  }, [setActiveUser, setIsLoadingActiveUser]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
     setActiveUser(null);
@@ -149,20 +169,11 @@ export const AppContainer = () => {
     setNewPostModalOpenRequestId((requestId) => requestId + 1);
   }, []);
 
-  if (isLoadingActiveUser) {
-    return (
-      <HelmetProvider>
-        <Helmet>
-          <title>読込中 - CaX</title>
-        </Helmet>
-      </HelmetProvider>
-    );
-  }
-
   return (
     <HelmetProvider>
       <AppPage
         activeUser={activeUser}
+        isLoadingActiveUser={isLoadingActiveUser}
         onOpenAuthModal={handleOpenAuthModal}
         onOpenNewPostModal={handleOpenNewPostModal}
         onLogout={handleLogout}
@@ -174,6 +185,7 @@ export const AppContainer = () => {
               element={
                 <DirectMessageListContainer
                   activeUser={activeUser}
+                  isLoadingActiveUser={isLoadingActiveUser}
                   onOpenAuthModal={handleOpenAuthModal}
                 />
               }
@@ -183,6 +195,7 @@ export const AppContainer = () => {
               element={
                 <DirectMessageContainer
                   activeUser={activeUser}
+                  isLoadingActiveUser={isLoadingActiveUser}
                   onOpenAuthModal={handleOpenAuthModal}
                 />
               }
@@ -193,7 +206,13 @@ export const AppContainer = () => {
             <Route element={<PostContainer />} path="/posts/:postId" />
             <Route element={<TermContainer />} path="/terms" />
             <Route
-              element={<CrokContainer activeUser={activeUser} onOpenAuthModal={handleOpenAuthModal} />}
+              element={
+                <CrokContainer
+                  activeUser={activeUser}
+                  isLoadingActiveUser={isLoadingActiveUser}
+                  onOpenAuthModal={handleOpenAuthModal}
+                />
+              }
               path="/crok"
             />
             <Route element={<NotFoundContainer />} path="*" />

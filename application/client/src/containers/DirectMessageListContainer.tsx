@@ -7,11 +7,27 @@ import { NewDirectMessageModalContainer } from "@web-speed-hackathon-2026/client
 
 interface Props {
   activeUser: Models.User | null;
+  isLoadingActiveUser: boolean;
   onOpenAuthModal: () => void;
 }
 
-export const DirectMessageListContainer = ({ activeUser, onOpenAuthModal }: Props) => {
+export const DirectMessageListContainer = ({
+  activeUser,
+  isLoadingActiveUser,
+  onOpenAuthModal,
+}: Props) => {
   const newDmModalId = useId();
+
+  if (isLoadingActiveUser) {
+    return (
+      <section className="space-y-4 px-6 py-12 text-center">
+        <Helmet>
+          <title>ダイレクトメッセージ - CaX</title>
+        </Helmet>
+        <p className="text-cax-text-muted text-sm">読み込み中...</p>
+      </section>
+    );
+  }
 
   if (activeUser === null) {
     return (

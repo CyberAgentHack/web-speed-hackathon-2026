@@ -19,13 +19,19 @@ interface DmTypingEvent {
 }
 
 const TYPING_INDICATOR_DURATION_MS = 10 * 1000;
+const TYPING_EVENT_INTERVAL_MS = 1_000;
 
 interface Props {
   activeUser: Models.User | null;
+  isLoadingActiveUser: boolean;
   onOpenAuthModal: () => void;
 }
 
-export const DirectMessageContainer = ({ activeUser, onOpenAuthModal }: Props) => {
+export const DirectMessageContainer = ({
+  activeUser,
+  isLoadingActiveUser,
+  onOpenAuthModal,
+}: Props) => {
   const { conversationId = "" } = useParams<{ conversationId: string }>();
 
   const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(null);
@@ -34,6 +40,10 @@ export const DirectMessageContainer = ({ activeUser, onOpenAuthModal }: Props) =
 
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastTypingSentAtRef = useRef({
+    conversationId,
+    sentAt: 0,
+  });
 
   const loadConversation = useCallback(async () => {
     if (activeUser == null) {
@@ -53,13 +63,19 @@ export const DirectMessageContainer = ({ activeUser, onOpenAuthModal }: Props) =
   }, [activeUser, conversationId]);
 
   const sendRead = useCallback(async () => {
+    if (activeUser == null) {
+      return;
+    }
     await sendJSON(`/api/v1/dm/${conversationId}/read`, {});
-  }, [conversationId]);
+  }, [activeUser, conversationId]);
 
   useEffect(() => {
+    if (isLoadingActiveUser || activeUser == null) {
+      return;
+    }
     void loadConversation();
     void sendRead();
-  }, [loadConversation, sendRead]);
+  }, [activeUser, isLoadingActiveUser, loadConversation, sendRead]);
 
   const handleSubmit = useCallback(
     async (params: DirectMessageFormData) => {
@@ -76,11 +92,27 @@ export const DirectMessageContainer = ({ activeUser, onOpenAuthModal }: Props) =
     [conversationId, loadConversation],
   );
 
-  const handleTyping = useCallback(async () => {
+  const handleTyping = useCallback(() => {
+    const now = Date.now();
+    if (lastTypingSentAtRef.current.conversationId !== conversationId) {
+      lastTypingSentAtRef.current = {
+        conversationId,
+        sentAt: 0,
+      };
+    }
+
+    if (now - lastTypingSentAtRef.current.sentAt < TYPING_EVENT_INTERVAL_MS) {
+      return;
+    }
+
+    lastTypingSentAtRef.current = {
+      conversationId,
+      sentAt: now,
+    };
     void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
   }, [conversationId]);
 
-  useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {
+  useWs(activeUser != null && !isLoadingActiveUser ? `/api/v1/dm/${conversationId}` : "", (event: DmUpdateEvent | DmTypingEvent) => {
     if (event.type === "dm:conversation:message") {
       void loadConversation().then(() => {
         if (event.payload.sender.id !== activeUser?.id) {
@@ -102,6 +134,17 @@ export const DirectMessageContainer = ({ activeUser, onOpenAuthModal }: Props) =
       }, TYPING_INDICATOR_DURATION_MS);
     }
   });
+
+  if (isLoadingActiveUser) {
+    return (
+      <section className="space-y-4 px-6 py-12 text-center">
+        <Helmet>
+          <title>ダイレクトメッセージ - CaX</title>
+        </Helmet>
+        <p className="text-cax-text-muted text-sm">読み込み中...</p>
+      </section>
+    );
+  }
 
   if (activeUser === null) {
     return (

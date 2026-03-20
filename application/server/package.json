@@ -11,6 +11,7 @@
     "sound:waveforms": "tsx ./scripts/generateSoundWaveforms.ts",
     "start": "tsx src/index.ts",
     "start:prod": "node dist/index.js",
+    "test": "node --import tsx --test src/**/*.test.ts",
     "typecheck": "tsc --noEmit",
     "seed:generate": "tsx ./scripts/generateSeeds.ts",
     "seed:insert": "tsx ./scripts/insertSeeds.ts"

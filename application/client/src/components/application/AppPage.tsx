@@ -9,6 +9,7 @@ const Navigation = lazy(async () => {
 interface Props {
   activeUser: Models.User | null;
   children: ReactNode;
+  isLoadingActiveUser: boolean;
   onOpenAuthModal: () => void;
   onOpenNewPostModal: () => void;
   onLogout: () => void;
@@ -17,6 +18,7 @@ interface Props {
 export const AppPage = ({
   activeUser,
   children,
+  isLoadingActiveUser,
   onOpenAuthModal,
   onOpenNewPostModal,
   onLogout,
@@ -59,6 +61,7 @@ export const AppPage = ({
             {shouldLoadNavigation ? (
               <Navigation
                 activeUser={activeUser}
+                isLoadingActiveUser={isLoadingActiveUser}
                 onOpenAuthModal={onOpenAuthModal}
                 onOpenNewPostModal={onOpenNewPostModal}
                 onLogout={onLogout}

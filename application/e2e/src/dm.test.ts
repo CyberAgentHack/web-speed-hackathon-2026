@@ -175,6 +175,41 @@ test.describe("DM一覧", () => {
     await expect(page.getByText("入力中…")).toBeVisible({ timeout: 30 * 1000 });
   });
 
+  test("入力中エンドポイントが1文字ごとに送信されないこと", async ({ page, browser }) => {
+    await login(page, "gg3i6j6");
+    await page.goto("/dm");
+
+    await page.getByRole("link", { name: "g16hmw55" }).click();
+    await page.waitForURL("**/dm/*", { timeout: 30 * 1000 });
+
+    const peerContext = await browser.newContext();
+    const peerPage = await peerContext.newPage();
+    await login(peerPage, "g16hmw55");
+    await peerPage.goto("/dm");
+    await peerPage.getByRole("link", { name: "gg3i6j6" }).click();
+    await peerPage.waitForURL("**/dm/*", { timeout: 30 * 1000 });
+
+    const typingRequests: string[] = [];
+    peerPage.on("request", (request) => {
+      if (request.method() !== "POST") {
+        return;
+      }
+
+      if (!/\/api\/v1\/dm\/[^/]+\/typing$/.test(request.url())) {
+        return;
+      }
+
+      typingRequests.push(request.url());
+    });
+
+    const messageInput = peerPage.getByRole("textbox", { name: "内容" });
+    await messageInput.click();
+    await messageInput.pressSequentially("こんにちは", { delay: 10 });
+    await peerPage.waitForTimeout(200);
+
+    expect(typingRequests).toHaveLength(1);
+  });
+
   test("メッセージ・既読がリアルタイムで更新されること", async ({ page, browser }) => {
     await login(page, "gg3i6j6");
     await page.goto("/dm");
