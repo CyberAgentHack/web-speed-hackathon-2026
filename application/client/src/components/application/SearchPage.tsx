@@ -18,23 +18,30 @@ interface Props {
   results: Models.Post[];
 }
 
-const SearchInput = ({ input, meta }: WrappedFieldProps) => (
-  <div className="flex flex-1 flex-col">
-    <input
-      {...input}
-      className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
-        meta.touched && meta.error
-          ? "border-cax-danger focus:border-cax-danger"
-          : "border-cax-border focus:border-cax-brand-strong"
-      }`}
-      placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
-      type="text"
-    />
-    {meta.touched && meta.error && (
-      <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>
-    )}
-  </div>
-);
+interface SearchInputProps extends WrappedFieldProps {
+  externalError?: string;
+}
+
+const SearchInput = ({ input, meta, externalError }: SearchInputProps) => {
+  const errorMessage = externalError || ((meta.touched || meta.submitFailed) && meta.error ? meta.error : null);
+  return (
+    <div className="flex flex-1 flex-col">
+      <input
+        {...input}
+        className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
+          errorMessage
+            ? "border-cax-danger focus:border-cax-danger"
+            : "border-cax-border focus:border-cax-brand-strong"
+        }`}
+        placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
+        type="text"
+      />
+      {errorMessage && (
+        <span className="text-cax-danger mt-1 text-xs">{errorMessage}</span>
+      )}
+    </div>
+  );
+};
 
 const SearchPageComponent = ({
   query,
@@ -43,6 +50,7 @@ const SearchPageComponent = ({
 }: Props & InjectedFormProps<SearchFormData, Props>) => {
   const navigate = useNavigate();
   const [isNegative, setIsNegative] = useState(false);
+  const [validationError, setValidationError] = useState<string | undefined>(undefined);
 
   const parsed = parseSearchQuery(query);
 
@@ -85,6 +93,12 @@ const SearchPageComponent = ({
   }, [parsed]);
 
   const onSubmit = (values: SearchFormData) => {
+    const errors = validate(values);
+    if (errors.searchText) {
+      setValidationError(errors.searchText as string);
+      return;
+    }
+    setValidationError(undefined);
     const sanitizedText = sanitizeSearchText(values.searchText.trim());
     navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
   };
@@ -94,7 +108,7 @@ const SearchPageComponent = ({
       <div className="bg-cax-surface p-4 shadow">
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="flex gap-2">
-            <Field name="searchText" component={SearchInput} />
+            <Field name="searchText" component={SearchInput} externalError={validationError} />
             <Button variant="primary" type="submit">
               検索
             </Button>

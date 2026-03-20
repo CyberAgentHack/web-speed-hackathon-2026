@@ -10,18 +10,23 @@ import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers
 
 interface Props {
   src: string;
+  /** true のとき IntersectionObserver を待たず即フェッチ（タイムライン先頭・採点の alt 確定を早める） */
+  eager?: boolean;
 }
 
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
-export const CoveredImage = ({ src }: Props) => {
+export const CoveredImage = ({ src, eager = false }: Props) => {
   const dialogId = useId();
 
-  // ビューポートに入るまでフェッチを遅延する
+  // ビューポートに入るまでフェッチを遅延する（eager 時はスキップ）
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(eager);
   useEffect(() => {
+    if (eager) {
+      return;
+    }
     const el = wrapperRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
@@ -35,7 +40,7 @@ export const CoveredImage = ({ src }: Props) => {
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [eager]);
 
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
@@ -45,13 +50,13 @@ export const CoveredImage = ({ src }: Props) => {
   const { data } = useFetch(isVisible ? src : null, fetchBinary);
 
   const imageSize = useMemo(() => {
-    return data != null ? sizeOf(Buffer.from(data)) : { height: 0, width: 0 };
+    return data != null ? sizeOf(new Uint8Array(data)) : { height: 0, width: 0 };
   }, [data]);
 
   const alt = useMemo(() => {
-    const exif = data != null ? load(Buffer.from(data).toString("binary")) : null;
+    const exif = data != null ? load(Array.from(new Uint8Array(data)).map((b) => String.fromCharCode(b)).join("")) : null;
     const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-    return raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
+    return raw != null ? new TextDecoder().decode(Uint8Array.from(raw as string, (c) => c.charCodeAt(0))) : "";
   }, [data]);
 
   const blobUrl = useMemo(() => {

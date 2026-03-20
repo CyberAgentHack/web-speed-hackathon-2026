@@ -26,11 +26,8 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   declare posts?: NonAttribute<Post>[];
   declare profileImage?: NonAttribute<ProfileImage>;
 
-  generateHash(password: string): string {
-    return bcrypt.hashSync(password, bcrypt.genSaltSync(8));
-  }
-  validPassword(password: string): boolean {
-    return bcrypt.compareSync(password, this.getDataValue("password"));
+  async validPassword(password: string): Promise<boolean> {
+    return bcrypt.compare(password, this.getDataValue("password") as string);
   }
 }
 
@@ -56,9 +53,6 @@ export function initUser(sequelize: Sequelize) {
         allowNull: false,
         get() {
           return undefined;
-        },
-        set(value: string) {
-          this.setDataValue("password", this.generateHash(value));
         },
         type: DataTypes.STRING,
       },

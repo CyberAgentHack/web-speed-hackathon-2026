@@ -34,7 +34,6 @@ searchRouter.get("/search", async (req, res) => {
   const dateWhere =
     dateConditions.length > 0 ? { createdAt: Object.assign({}, ...dateConditions) } : {};
 
-  // テキスト・ユーザー名・表示名を1クエリで OR 検索（2クエリマージだと順序・件数が変わり VRT と乖離する）
   const keywordWhere = searchTerm
     ? {
         [Op.or]: [
@@ -45,15 +44,31 @@ searchRouter.get("/search", async (req, res) => {
       }
     : {};
 
-  const posts = await Post.findAll({
+  // Step 1: Get matching post IDs with correct pagination (unscoped to avoid images JOIN duplication)
+  const matchingPosts = await Post.unscoped().findAll({
     where: {
       ...keywordWhere,
       ...dateWhere,
     },
+    include: searchTerm
+      ? [{ association: "user", attributes: ["username", "name"] }]
+      : [],
+    attributes: ["id", "createdAt"],
     order: [["createdAt", "DESC"]],
     limit,
     offset,
     subQuery: false,
+  });
+
+  if (matchingPosts.length === 0) {
+    return res.status(200).type("application/json").send([]);
+  }
+
+  // Step 2: Fetch full post data for those IDs (preserving order)
+  const ids = matchingPosts.map((p) => p.id);
+  const posts = await Post.findAll({
+    where: { id: { [Op.in]: ids } },
+    order: [["createdAt", "DESC"]],
   });
 
   return res.status(200).type("application/json").send(posts);
