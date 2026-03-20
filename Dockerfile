@@ -10,7 +10,7 @@ LABEL fly_launch_runtime="Node.js"
 ENV PNPM_HOME=/pnpm
 
 WORKDIR /app
-RUN --mount=type=cache,id=s/e6939569-67bb-458b-b20c-677ae811a138-/root/.npm,target=/root/.npm npm install -g pnpm@${PNPM_VERSION}
+RUN --mount=type=cache,id=s/e6939569-67bb-458b-b20c-677ae811a138-/root/npm,target=/root/.npm npm install -g pnpm@${PNPM_VERSION}
 
 FROM base AS build
 
