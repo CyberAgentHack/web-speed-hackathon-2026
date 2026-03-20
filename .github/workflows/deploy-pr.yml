@@ -1,6 +1,6 @@
 name: Deploy Review App
 on:
-    pull_request:
+    pull_request_target:
         types: [opened, reopened, synchronize, closed]
 
 env:
@@ -23,6 +23,8 @@ jobs:
         steps:
             - name: Get code
               uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+              with:
+                  ref: ${{ github.event.pull_request.head.sha }}
 
             - name: Generate valid app name
               id: generate-app-name
