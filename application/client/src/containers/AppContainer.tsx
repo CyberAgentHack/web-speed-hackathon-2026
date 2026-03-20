@@ -62,6 +62,16 @@ export const AppContainer = () => {
 
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
   useEffect(() => {
+    type PrefetchCache = Record<string, Promise<unknown>>;
+    const cache = (window as unknown as { __q?: PrefetchCache }).__q;
+    const prefetched = cache?.["/api/v1/me"] as Promise<Models.User | null> | undefined;
+    if (prefetched) {
+      delete cache!["/api/v1/me"];
+      void prefetched.then((user) => {
+        if (user !== null) setActiveUser(user);
+      });
+      return;
+    }
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {
         setActiveUser(user);
