@@ -1,7 +1,23 @@
+export class HttpError extends Error {
+  constructor(
+    public readonly status: number,
+    public readonly statusText: string,
+    public readonly body: unknown,
+  ) {
+    super(`${status} ${statusText}`);
+  }
+}
+
 async function baseFetcher(url: string, init?: RequestInit): Promise<Response> {
   const response = await fetch(url, init);
   if (!response.ok) {
-    throw new Error(`${response.status} ${response.statusText}`);
+    let body: unknown = null;
+    try {
+      body = await response.json();
+    } catch {
+      // non-JSON response
+    }
+    throw new HttpError(response.status, response.statusText, body);
   }
   return response;
 }
