@@ -9,7 +9,6 @@ const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
 let imageToolsPromise: Promise<{
   convertImage: typeof import("@web-speed-hackathon-2026/client/src/utils/convert_image").convertImage;
-  MagickFormat: typeof import("@imagemagick/magick-wasm").MagickFormat;
 }> | null = null;
 
 let movieToolsPromise: Promise<{
@@ -22,14 +21,10 @@ let soundToolsPromise: Promise<{
 
 function loadImageTools() {
   if (imageToolsPromise === null) {
-    imageToolsPromise = Promise.all([
-      import(
-        /* webpackChunkName: "feature-image-tools" */ "@web-speed-hackathon-2026/client/src/utils/convert_image"
-      ),
-      import(/* webpackChunkName: "feature-image-tools" */ "@imagemagick/magick-wasm"),
-    ]).then(([imageModule, magickModule]) => ({
+    imageToolsPromise = import(
+      /* webpackChunkName: "feature-image-tools" */ "@web-speed-hackathon-2026/client/src/utils/convert_image"
+    ).then((imageModule) => ({
       convertImage: imageModule.convertImage,
-      MagickFormat: magickModule.MagickFormat,
     }));
     imageToolsPromise = imageToolsPromise.catch((error) => {
       imageToolsPromise = null;
@@ -70,7 +65,7 @@ function loadSoundTools() {
 }
 
 interface SubmitParams {
-  images: File[];
+  images: Array<{ alt: string; file: File }>;
   movie: File | undefined;
   sound: File | undefined;
   text: string;
@@ -112,12 +107,13 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       setIsConverting(true);
       void (async () => {
         try {
-          const { convertImage, MagickFormat } = await loadImageTools();
+          const { convertImage } = await loadImageTools();
           const convertedFiles = await Promise.all(
             files.map((file) =>
-              convertImage(file, { extension: MagickFormat.Jpg }).then(
-                (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
-              ),
+              convertImage(file, { extension: "jpg" }).then(({ alt, blob }) => ({
+                alt,
+                file: new File([blob], "converted.jpg", { type: "image/jpeg" }),
+              })),
             ),
           );
 

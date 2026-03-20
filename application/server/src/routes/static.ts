@@ -45,6 +45,19 @@ async function resolveImagePath({
   ]);
 }
 
+async function resolveMediaPath({
+  extensions,
+  relativePath,
+}: {
+  extensions: string[];
+  relativePath: string;
+}) {
+  return await resolveFirstExistingPath([
+    ...extensions.map((extension) => path.resolve(UPLOAD_PATH, `${relativePath}.${extension}`)),
+    ...extensions.map((extension) => path.resolve(PUBLIC_PATH, `${relativePath}.${extension}`)),
+  ]);
+}
+
 function setStaticHeaders(res: ServerResponse, filePath: string) {
   if (filePath.endsWith(".html")) {
     res.setHeader("Cache-Control", "no-cache");
@@ -56,7 +69,13 @@ function setStaticHeaders(res: ServerResponse, filePath: string) {
     return;
   }
 
-  if (filePath.startsWith(UPLOAD_PATH) || filePath.endsWith(".avif")) {
+  if (
+    filePath.startsWith(UPLOAD_PATH) ||
+    filePath.startsWith(path.join(PUBLIC_PATH, "images")) ||
+    filePath.startsWith(path.join(PUBLIC_PATH, "movies")) ||
+    filePath.startsWith(path.join(PUBLIC_PATH, "sounds")) ||
+    filePath.endsWith(".avif")
+  ) {
     res.setHeader("Cache-Control", IMMUTABLE_ASSET_CACHE_CONTROL);
     return;
   }
@@ -83,6 +102,21 @@ staticRouter.get("/images/:imageId", async (req, res, next) => {
   const filePath = await resolveImagePath({
     acceptHeader: req.headers.accept,
     relativePath: `images/${req.params.imageId}`,
+  });
+
+  if (filePath == null) {
+    next();
+    return;
+  }
+
+  res.setHeader("Cache-Control", IMMUTABLE_ASSET_CACHE_CONTROL);
+  res.sendFile(filePath);
+});
+
+staticRouter.get("/sounds/:soundId", async (req, res, next) => {
+  const filePath = await resolveMediaPath({
+    extensions: ["ogg", "mp3"],
+    relativePath: `sounds/${req.params.soundId}`,
   });
 
   if (filePath == null) {

@@ -8,8 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
-// 変換した動画の拡張子
-const EXTENSION = "gif";
+const ALLOWED_EXTENSIONS = new Set(["gif", "mp4"]);
 
 export const movieRouter = Router();
 
@@ -22,13 +21,13 @@ movieRouter.post("/movies", async (req, res) => {
   }
 
   const type = await fileTypeFromBuffer(req.body);
-  if (type === undefined || type.ext !== EXTENSION) {
+  if (type === undefined || ALLOWED_EXTENSIONS.has(type.ext) === false) {
     throw new httpErrors.BadRequest("Invalid file type");
   }
 
   const movieId = uuidv4();
 
-  const filePath = path.resolve(UPLOAD_PATH, `./movies/${movieId}.${EXTENSION}`);
+  const filePath = path.resolve(UPLOAD_PATH, `./movies/${movieId}.${type.ext}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "movies"), { recursive: true });
   await fs.writeFile(filePath, req.body);
 
