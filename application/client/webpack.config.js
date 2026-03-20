@@ -116,6 +116,11 @@ const config = {
         "node_modules",
         "@imagemagick/magick-wasm/dist/magick.wasm",
       ),
+      "react-router$": path.resolve(
+        __dirname,
+        "node_modules",
+        "react-router/dist/production/index.mjs",
+      ),
     },
     fallback: {
       fs: false,
