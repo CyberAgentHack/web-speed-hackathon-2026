@@ -13,5 +13,5 @@ export function getSoundPath(soundId: string): string {
 }
 
 export function getProfileImagePath(profileImageId: string): string {
-  return `/images/profiles/${profileImageId}.jpg`;
+  return `/images/profiles/${profileImageId}.webp`;
 }
