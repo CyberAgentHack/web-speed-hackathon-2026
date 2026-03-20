@@ -35,7 +35,7 @@ import type {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const seedsDir = path.resolve(__dirname, "../seeds");
 
-const DEFAULT_BATCH_SIZE = 1000;
+const DEFAULT_BATCH_SIZE = 2000;
 
 async function readJsonlFileBatched<T>(
   filename: string,
