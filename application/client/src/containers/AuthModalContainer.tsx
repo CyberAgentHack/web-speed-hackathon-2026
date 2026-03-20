@@ -1,10 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { SubmissionError } from "redux-form";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 
-import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
-import { AuthModalPage } from "@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+
+import type { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
+
+const LazyAuthModalPage = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage").then((m) => ({
+    default: m.AuthModalPage,
+  })),
+);
 
 interface Props {
   id: string;
@@ -37,13 +42,14 @@ function getErrorCode(err: JQuery.jqXHR<unknown>, type: "signin" | "signup"): st
 
 export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
+  const [hasOpened, setHasOpened] = useState(false);
   const [resetKey, setResetKey] = useState(0);
   useEffect(() => {
     if (!ref.current) return;
     const element = ref.current;
 
     const handleToggle = () => {
-      // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
+      setHasOpened(true);
       setResetKey((key) => key + 1);
     };
     element.addEventListener("toggle", handleToggle);
@@ -68,6 +74,7 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
         }
         handleRequestCloseModal();
       } catch (err: unknown) {
+        const { SubmissionError } = await import("redux-form");
         const error = getErrorCode(err as JQuery.jqXHR<unknown>, values.type);
         throw new SubmissionError({
           _error: error,
@@ -79,11 +86,15 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
 
   return (
     <Modal id={id} ref={ref} closedby="any">
-      <AuthModalPage
-        key={resetKey}
-        onRequestCloseModal={handleRequestCloseModal}
-        onSubmit={handleSubmit}
-      />
+      {hasOpened && (
+        <Suspense fallback={null}>
+          <LazyAuthModalPage
+            key={resetKey}
+            onRequestCloseModal={handleRequestCloseModal}
+            onSubmit={handleSubmit}
+          />
+        </Suspense>
+      )}
     </Modal>
   );
 };
