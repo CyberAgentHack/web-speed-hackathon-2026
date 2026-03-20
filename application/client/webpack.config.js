@@ -10,6 +10,7 @@ const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
+const isProd = process.env.NODE_ENV === "production";
 
 /** @type {import('webpack').Configuration} */
 const config = {
@@ -25,18 +26,16 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: isProd ? false : "eval-source-map",
   entry: {
     main: [
-      "core-js",
-      "regenerator-runtime/runtime",
       "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: isProd ? "production" : "development",
   module: {
     rules: [
       {
@@ -59,9 +58,9 @@ const config = {
     ],
   },
   output: {
-    chunkFilename: "scripts/chunk-[contenthash].js",
+    chunkFilename: isProd ? "scripts/chunk-[contenthash].js" : "scripts/chunk-[id].js",
     chunkFormat: false,
-    filename: "scripts/[name].js",
+    filename: isProd ? "scripts/[name]-[contenthash].js" : "scripts/[name].js",
     path: DIST_PATH,
     publicPath: "auto",
     clean: true,
@@ -77,10 +76,10 @@ const config = {
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
+      NODE_ENV: isProd ? "production" : "development",
     }),
     new MiniCssExtractPlugin({
-      filename: "styles/[name].css",
+      filename: isProd ? "styles/[name]-[contenthash].css" : "styles/[name].css",
     }),
     new CopyWebpackPlugin({
       patterns: [
@@ -91,7 +90,8 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: "body",
+      scriptLoading: "defer",
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
   ],
@@ -127,7 +127,7 @@ const config = {
       url: false,
     },
   },
-  optimization: {
+  optimization: isProd ? {} : {
     minimize: false,
     splitChunks: false,
     concatenateModules: false,
@@ -135,7 +135,7 @@ const config = {
     providedExports: false,
     sideEffects: false,
   },
-  cache: false,
+  cache: !isProd,
   ignoreWarnings: [
     {
       module: /@ffmpeg/,
