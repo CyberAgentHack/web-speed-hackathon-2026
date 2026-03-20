@@ -7,29 +7,32 @@ interface Props {
 }
 
 export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
-  const sentinelRef = useRef<HTMLDivElement>(null);
   const latestItem = items[items.length - 1];
-  const fetchMoreRef = useRef(fetchMore);
-  fetchMoreRef.current = fetchMore;
+  const prevReachedRef = useRef(false);
 
   useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
+    const handler = () => {
+      const hasReached = window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight - 100;
 
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting && latestItem !== undefined) {
-        fetchMoreRef.current();
+      if (hasReached && !prevReachedRef.current) {
+        if (latestItem !== undefined) {
+          fetchMore();
+        }
       }
-    });
 
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [latestItem]);
+      prevReachedRef.current = hasReached;
+    };
 
-  return (
-    <>
-      {children}
-      <div ref={sentinelRef} />
-    </>
-  );
+    prevReachedRef.current = false;
+    handler();
+
+    window.addEventListener("scroll", handler, { passive: true });
+    window.addEventListener("resize", handler, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handler);
+      window.removeEventListener("resize", handler);
+    };
+  }, [latestItem, fetchMore]);
+
+  return <>{children}</>;
 };
