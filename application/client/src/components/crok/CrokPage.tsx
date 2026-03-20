@@ -15,7 +15,7 @@ interface Props {
 export const CrokPage = ({ messages, isStreaming, onSendMessage }: Props) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const stickyBarRef = useRef<HTMLDivElement>(null);
-  const showScrollButton = useHasContentBelow(messagesEndRef, stickyBarRef);
+  const showScrollButton = useHasContentBelow(messagesEndRef, stickyBarRef, isStreaming);
 
   const handleScrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

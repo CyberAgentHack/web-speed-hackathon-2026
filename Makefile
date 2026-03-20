@@ -103,11 +103,11 @@ db-reset: seed-generate
 	e2e-auth-auth-modal e2e-user-profile \
 	e2e-posting e2e-dm-single e2e-crok-chat-single
 playwright-install:
-	cd $(APP_DIR) && bun run --filter @web-speed-hackathon-2026/e2e playwright:install
+	cd $(APP_DIR)/e2e && bunx playwright install chromium
 
 e2e-test:
-	cd $(APP_DIR) && \
-		$(if $(E2E_BASE_URL),E2E_BASE_URL=$(E2E_BASE_URL) ,)bun run --filter @web-speed-hackathon-2026/e2e test $(E2E_SPEC) $(if $(E2E_GREP),--grep "$(E2E_GREP)",)
+	cd $(APP_DIR)/e2e && \
+		$(if $(E2E_BASE_URL),E2E_BASE_URL=$(E2E_BASE_URL) ,)bunx playwright test $(E2E_SPEC) $(if $(E2E_GREP),--grep "$(E2E_GREP)",)
 
 e2e-core:
 	$(MAKE) e2e-home
@@ -168,7 +168,7 @@ e2e-full:
 	$(MAKE) e2e-test
 
 e2e-update:
-	cd $(APP_DIR) && bun run --filter @web-speed-hackathon-2026/e2e test:update
+	cd $(APP_DIR)/e2e && bunx playwright test --update-snapshots
 
 .PHONY: score score-targets format-scoring
 score:
