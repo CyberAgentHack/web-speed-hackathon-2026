@@ -1,18 +1,19 @@
-/// <reference types="webpack-dev-server" />
+// @ts-check
 const path = require("path");
 
-const CopyWebpackPlugin = require("copy-webpack-plugin");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const webpack = require("webpack");
+const { rspack } = require("@rspack/core");
 
 const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
+const { RsdoctorRspackPlugin } = require("@rsdoctor/rspack-plugin");
 
-/** @type {import('webpack').Configuration} */
+const isProduction = process.env.NODE_ENV === "production";
+
+/** @type {import("@rspack/core").Configuration} */
 const config = {
+  target: ["web", "es5"],
   devServer: {
     historyApiFallback: true,
     host: "0.0.0.0",
@@ -25,7 +26,7 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: isProduction ? false : "inline-source-map",
   entry: {
     main: [
       "core-js",
@@ -36,18 +37,40 @@ const config = {
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: isProduction ? "production" : "none",
   module: {
     rules: [
       {
         exclude: /node_modules/,
         test: /\.(jsx?|tsx?|mjs|cjs)$/,
-        use: [{ loader: "babel-loader" }],
+        use: [
+          {
+            loader: "builtin:swc-loader",
+            options: {
+              env: {
+                targets: "ie >= 11",
+              },
+              jsc: {
+                parser: {
+                  syntax: "typescript",
+                  tsx: true,
+                },
+                transform: {
+                  react: {
+                    development: !isProduction,
+                    runtime: "automatic",
+                  },
+                },
+              },
+            },
+          },
+        ],
       },
       {
         test: /\.css$/i,
+        type: "javascript/auto",
         use: [
-          { loader: MiniCssExtractPlugin.loader },
+          { loader: rspack.CssExtractRspackPlugin.loader },
           { loader: "css-loader", options: { url: false } },
           { loader: "postcss-loader" },
         ],
@@ -59,30 +82,29 @@ const config = {
     ],
   },
   output: {
-    chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
+    chunkFilename: "scripts/[name]-[contenthash].js",
     filename: "scripts/[name].js",
     path: DIST_PATH,
     publicPath: "auto",
     clean: true,
   },
   plugins: [
-    new webpack.ProvidePlugin({
+    new rspack.ProvidePlugin({
       $: "jquery",
       AudioContext: ["standardized-audio-context", "AudioContext"],
       Buffer: ["buffer", "Buffer"],
       "window.jQuery": "jquery",
     }),
-    new webpack.EnvironmentPlugin({
+    new rspack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
+      NODE_ENV: process.env.NODE_ENV || "production",
     }),
-    new MiniCssExtractPlugin({
+    new rspack.CssExtractRspackPlugin({
       filename: "styles/[name].css",
     }),
-    new CopyWebpackPlugin({
+    new rspack.CopyRspackPlugin({
       patterns: [
         {
           from: path.resolve(__dirname, "node_modules/katex/dist/fonts"),
@@ -90,11 +112,13 @@ const config = {
         },
       ],
     }),
-    new HtmlWebpackPlugin({
-      inject: false,
+    new rspack.HtmlRspackPlugin({
+      inject: "head",
+      scriptLoading: "defer",
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
-  ],
+    process.env.RSDOCTOR && new RsdoctorRspackPlugin({}),
+  ].filter(Boolean),
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
     alias: {
@@ -128,14 +152,57 @@ const config = {
     },
   },
   optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
+    minimize: isProduction,
+    runtimeChunk: {
+      name: "runtime",
+    },
+    splitChunks: {
+      chunks: "all",
+      cacheGroups: {
+        polyfills: {
+          name: "polyfills",
+          test: /[\\/]node_modules[\\/](core-js|regenerator-runtime|jquery|jquery-binarytransport|buffer)[\\/]/,
+          priority: 50,
+          chunks: "initial",
+          enforce: true,
+        },
+        framework: {
+          name: "framework",
+          test: /[\\/]node_modules[\\/](react|react-dom|react-router|react-redux|redux|scheduler)[\\/]/,
+          priority: 40,
+          chunks: "all",
+          enforce: true,
+        },
+        vendors: {
+          name: "vendors",
+          test: /[\\/]node_modules[\\/]/,
+          minChunks: 2,
+          priority: 20,
+          chunks: "all",
+          enforce: true,
+          reuseExistingChunk: true,
+        },
+        common: {
+          name: "common",
+          test: /[\\/]src[\\/]/,
+          minChunks: 2,
+          priority: 10,
+          chunks: "all",
+          reuseExistingChunk: true,
+        },
+        imageMagick: {
+          name: "ImageMagick",
+          test: /[\\/]node_modules[\\/]@imagemagick[\\/]magick-wasm[\\/]/,
+          priority: 30,
+          chunks: "all",
+          enforce: true,
+        },
+        default: false,
+        defaultVendors: false,
+      },
+    },
   },
-  cache: false,
+  cache: true,
   ignoreWarnings: [
     {
       module: /@ffmpeg/,

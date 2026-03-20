@@ -1,20 +1,57 @@
-import { useCallback, useEffect, useId, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useId, useState } from "react";
 import { Helmet, HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
-import { CrokContainer } from "@web-speed-hackathon-2026/client/src/containers/CrokContainer";
-import { DirectMessageContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer";
-import { DirectMessageListContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer";
 import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
-import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
-import { PostContainer } from "@web-speed-hackathon-2026/client/src/containers/PostContainer";
-import { SearchContainer } from "@web-speed-hackathon-2026/client/src/containers/SearchContainer";
-import { TermContainer } from "@web-speed-hackathon-2026/client/src/containers/TermContainer";
-import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
-import { UserProfileContainer } from "@web-speed-hackathon-2026/client/src/containers/UserProfileContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+
+const TimelinePage = lazy(() =>
+  import(
+    /* webpackChunkName: "timeline-page" */ "@web-speed-hackathon-2026/client/src/containers/TimelineContainer"
+  ).then(({ TimelineContainer }) => ({ default: TimelineContainer })),
+);
+const DirectMessageListPage = lazy(() =>
+  import(
+    /* webpackChunkName: "direct-message-list-page" */ "@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer"
+  ).then(({ DirectMessageListContainer }) => ({ default: DirectMessageListContainer })),
+);
+const DirectMessagePage = lazy(() =>
+  import(
+    /* webpackChunkName: "direct-message-page" */ "@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer"
+  ).then(({ DirectMessageContainer }) => ({ default: DirectMessageContainer })),
+);
+const SearchPage = lazy(() =>
+  import(
+    /* webpackChunkName: "search-page" */ "@web-speed-hackathon-2026/client/src/containers/SearchContainer"
+  ).then(({ SearchContainer }) => ({ default: SearchContainer })),
+);
+const UserProfilePage = lazy(() =>
+  import(
+    /* webpackChunkName: "user-profile-page" */ "@web-speed-hackathon-2026/client/src/containers/UserProfileContainer"
+  ).then(({ UserProfileContainer }) => ({ default: UserProfileContainer })),
+);
+const PostPage = lazy(() =>
+  import(
+    /* webpackChunkName: "post-page" */ "@web-speed-hackathon-2026/client/src/containers/PostContainer"
+  ).then(({ PostContainer }) => ({ default: PostContainer })),
+);
+const TermPage = lazy(() =>
+  import(
+    /* webpackChunkName: "terms-page" */ "@web-speed-hackathon-2026/client/src/containers/TermContainer"
+  ).then(({ TermContainer }) => ({ default: TermContainer })),
+);
+const CrokPage = lazy(() =>
+  import(
+    /* webpackChunkName: "crok-page" */ "@web-speed-hackathon-2026/client/src/containers/CrokContainer"
+  ).then(({ CrokContainer }) => ({ default: CrokContainer })),
+);
+const NotFoundPage = lazy(() =>
+  import(
+    /* webpackChunkName: "not-found-page" */ "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer"
+  ).then(({ NotFoundContainer }) => ({ default: NotFoundContainer })),
+);
 
 export const AppContainer = () => {
   const { pathname } = useLocation();
@@ -30,6 +67,9 @@ export const AppContainer = () => {
       .then((user) => {
         setActiveUser(user);
       })
+      .catch(() => {
+        setActiveUser(null);
+      })
       .finally(() => {
         setIsLoadingActiveUser(false);
       });
@@ -42,6 +82,11 @@ export const AppContainer = () => {
 
   const authModalId = useId();
   const newPostModalId = useId();
+  const routeFallback = (
+    <Helmet>
+      <title>読込中 - CaX</title>
+    </Helmet>
+  );
 
   if (isLoadingActiveUser) {
     return (
@@ -61,28 +106,28 @@ export const AppContainer = () => {
         newPostModalId={newPostModalId}
         onLogout={handleLogout}
       >
-        <Routes>
-          <Route element={<TimelineContainer />} path="/" />
-          <Route
-            element={
-              <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
-            }
-            path="/dm"
-          />
-          <Route
-            element={<DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />}
-            path="/dm/:conversationId"
-          />
-          <Route element={<SearchContainer />} path="/search" />
-          <Route element={<UserProfileContainer />} path="/users/:username" />
-          <Route element={<PostContainer />} path="/posts/:postId" />
-          <Route element={<TermContainer />} path="/terms" />
-          <Route
-            element={<CrokContainer activeUser={activeUser} authModalId={authModalId} />}
-            path="/crok"
-          />
-          <Route element={<NotFoundContainer />} path="*" />
-        </Routes>
+        <Suspense fallback={routeFallback}>
+          <Routes>
+            <Route element={<TimelinePage />} path="/" />
+            <Route
+              element={<DirectMessageListPage activeUser={activeUser} authModalId={authModalId} />}
+              path="/dm"
+            />
+            <Route
+              element={<DirectMessagePage activeUser={activeUser} authModalId={authModalId} />}
+              path="/dm/:conversationId"
+            />
+            <Route element={<SearchPage />} path="/search" />
+            <Route element={<UserProfilePage />} path="/users/:username" />
+            <Route element={<PostPage />} path="/posts/:postId" />
+            <Route element={<TermPage />} path="/terms" />
+            <Route
+              element={<CrokPage activeUser={activeUser} authModalId={authModalId} />}
+              path="/crok"
+            />
+            <Route element={<NotFoundPage />} path="*" />
+          </Routes>
+        </Suspense>
       </AppPage>
 
       <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
