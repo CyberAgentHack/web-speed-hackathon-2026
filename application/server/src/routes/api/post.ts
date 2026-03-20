@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 
@@ -10,9 +11,24 @@ export const postRouter = new Hono<SessionEnv>()
     const limit = c.req.query("limit");
     const offset = c.req.query("offset");
 
-    const posts = await Post.scope("detail").findAll({
-      limit: limit != null ? Number(limit) : 30,
+    const effectiveLimit = limit != null ? Number(limit) : 30;
+
+    // Step 1: Get post IDs only (fast, no JOINs)
+    const postIds = await Post.unscoped().findAll({
+      attributes: ["id"],
+      order: [["id", "DESC"]],
+      limit: effectiveLimit,
       ...(offset != null ? { offset: Number(offset) } : {}),
+      raw: true,
+    });
+
+    if (postIds.length === 0) {
+      return c.json([]);
+    }
+
+    // Step 2: Load full details for those IDs only
+    const posts = await Post.scope("detail").findAll({
+      where: { id: { [Op.in]: postIds.map((p) => p.id) } },
     });
 
     return c.json(posts.map((p) => p.toJSON()) as unknown as PostResponse[]);

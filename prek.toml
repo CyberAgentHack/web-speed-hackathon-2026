@@ -49,6 +49,15 @@ always_run = true
 stages = ["pre-push"]
 
 [[repos.hooks]]
+id = "react-doctor"
+name = "react-doctor"
+language = "system"
+entry = "npx -y react-doctor@latest ./application/client --score"
+pass_filenames = false
+always_run = true
+stages = ["pre-push"]
+
+[[repos.hooks]]
 id = "test-all"
 name = "test"
 language = "system"

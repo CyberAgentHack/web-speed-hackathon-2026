@@ -86,6 +86,7 @@ export function initPost(sequelize: Sequelize) {
             { association: "movie" },
             { association: "sound" },
           ],
+          subQuery: true,
           order: [
             ["id", "DESC"],
             ["images", "createdAt", "ASC"],

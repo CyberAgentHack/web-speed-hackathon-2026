@@ -9,8 +9,8 @@ describe("getImagePath", () => {
 });
 
 describe("getMoviePath", () => {
-  test("movieId → /movies/{id}.gif", () => {
-    expect(getMoviePath("mov456")).toBe("/movies/mov456.gif");
+  test("movieId → /movies/{id}.mp4", () => {
+    expect(getMoviePath("mov456")).toBe("/movies/mov456.mp4");
   });
 });
 
