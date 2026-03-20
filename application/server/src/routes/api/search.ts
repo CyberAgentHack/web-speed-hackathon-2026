@@ -1,29 +1,11 @@
 import { Router } from "express";
-import { Op, type Includeable, type Order } from "sequelize";
+import { Op } from "sequelize";
 
-import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
+import { Post } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 import { serializePosts } from "@web-speed-hackathon-2026/server/src/utils/serialize_post";
 
 export const searchRouter = Router();
-
-const SEARCH_POST_INCLUDE: Includeable[] = [
-  {
-    association: "user",
-    include: [{ association: "profileImage" }],
-  },
-  {
-    association: "images",
-    through: { attributes: [] },
-  },
-  { association: "movie" },
-  { association: "sound" },
-] ;
-
-const SEARCH_POST_ORDER: Order = [
-  ["id", "DESC"],
-  ["images", "createdAt", "ASC"],
-] ;
 
 searchRouter.get("/search", async (req, res) => {
   const query = req.query["q"];
@@ -55,59 +37,26 @@ searchRouter.get("/search", async (req, res) => {
     dateConditions.length > 0 ? { createdAt: Object.assign({}, ...dateConditions) } : {};
 
   // テキスト検索条件
-  const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
+  const searchWhere =
+    searchTerm != null
+      ? {
+          [Op.or]: [
+            { text: { [Op.like]: searchTerm } },
+            { "$user.username$": { [Op.like]: searchTerm } },
+            { "$user.name$": { [Op.like]: searchTerm } },
+          ],
+        }
+      : {};
 
-  const postsByText = await Post.unscoped().findAll({
-    include: SEARCH_POST_INCLUDE,
+  const result = await Post.findAll({
     limit,
     offset,
-    order: SEARCH_POST_ORDER,
+    subQuery: false,
     where: {
-      ...textWhere,
       ...dateWhere,
+      ...searchWhere,
     },
   });
-
-  // ユーザー名/名前での検索（キーワードがある場合のみ）
-  let postsByUser: typeof postsByText = [];
-  if (searchTerm) {
-    const users = await User.unscoped().findAll({
-      attributes: ["id"],
-      where: {
-        [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
-      },
-    });
-    const userIds = users.map((user) => user.id);
-
-    if (userIds.length > 0) {
-      postsByUser = await Post.unscoped().findAll({
-        include: SEARCH_POST_INCLUDE,
-        limit,
-        offset,
-        order: SEARCH_POST_ORDER,
-        where: {
-          ...dateWhere,
-          userId: {
-            [Op.in]: userIds,
-          },
-        },
-      });
-    }
-  }
-
-  const postIdSet = new Set<string>();
-  const mergedPosts: typeof postsByText = [];
-
-  for (const post of [...postsByText, ...postsByUser]) {
-    if (!postIdSet.has(post.id)) {
-      postIdSet.add(post.id);
-      mergedPosts.push(post);
-    }
-  }
-
-  mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-
-  const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
 
   return res.status(200).type("application/json").send(serializePosts(result));
 });
