@@ -1,8 +1,8 @@
 ---
-status: done
+status: ready
 priority: p1
 issue_id: "018"
-tags: [e2e, vite, code-splitting, lazy-loading]
+tags: [e2e, vite, code-splitting, lazy-loading, dm]
 dependencies: []
 ---
 
@@ -79,3 +79,17 @@ E2E テストの `login()` ユーティリティが、Vite のコード分割に
 **Learnings:**
 - Vite code splitting と HTML Invoker Commands API の組み合わせは timing 問題を起こしやすい
 - `waitUntil: "domcontentloaded"` vs `"networkidle"` の違いが lazy chunk の有無で致命的になる
+
+### 2026-03-20 - フルテスト実行で追加確認
+
+**By:** Claude Code
+
+**Actions:**
+- 54テスト全実行（`PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` 設定で nix Chromium 使用）
+- 27テスト失敗を確認、DM系は `disabled` ボタンの click タイムアウト (30s) が主因
+- エラーパターン: `element is not enabled` → `pressSequentially()` 後のバリデーション未完了
+- retry #1 では Crok リンク `waitFor({ timeout: 3_000 })` で失敗（ログイン自体未成功）
+
+**Learnings:**
+- 前回分析の lazy chunk 問題に加え、フォームバリデーション非同期問題も発見
+- `pressSequentially()` は入力完了後のバリデーション完了を保証しない
