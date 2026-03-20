@@ -2,7 +2,7 @@ export const sanitizeSearchText = (input: string): string => {
   let text = input;
 
   text = text.replace(
-    /\b(from|until)\s*:?\s*(\d{4}-\d{2}-\d{2})\d*/gi,
+    /\b(since|from|until)\s*:?\s*(\d{4}-\d{2}-\d{2})[^\s]*/gi,
     (_m, key, date) => `${key}:${date}`,
   );
 

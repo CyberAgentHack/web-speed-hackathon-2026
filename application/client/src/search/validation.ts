@@ -3,12 +3,13 @@ import { FormErrors } from "redux-form";
 import {
   parseSearchQuery,
   isValidDate,
+  sanitizeSearchText,
 } from "@web-speed-hackathon-2026/client/src/search/services";
 import { SearchFormData } from "@web-speed-hackathon-2026/client/src/search/types";
 
 export const validate = (values: SearchFormData): FormErrors<SearchFormData> => {
   const errors: FormErrors<SearchFormData> = {};
-  const raw = values.searchText?.trim() || "";
+  const raw = sanitizeSearchText(values.searchText?.trim() || "");
 
   if (!raw) {
     errors.searchText = "検索キーワードを入力してください";

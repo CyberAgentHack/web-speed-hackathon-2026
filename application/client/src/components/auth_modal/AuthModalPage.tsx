@@ -50,7 +50,10 @@ const AuthModalPageComponent = ({
           props={{
             label: "ユーザー名",
             leftItem: <span className="text-cax-text-subtle leading-none">@</span>,
+            autoCapitalize: "none",
             autoComplete: "username",
+            autoCorrect: "off",
+            spellCheck: false,
           }}
         />
 
@@ -70,8 +73,11 @@ const AuthModalPageComponent = ({
           component={FormInputField}
           props={{
             label: "パスワード",
+            autoCapitalize: "none",
             type: "password",
             autoComplete: type === "signup" ? "new-password" : "current-password",
+            autoCorrect: "off",
+            spellCheck: false,
           }}
         />
       </div>

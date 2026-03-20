@@ -101,18 +101,6 @@ authRouter.post("/signup", async (req, res) => {
     return res.status(200).type("application/json").send(user);
   } catch (err) {
     if (err instanceof UniqueConstraintError) {
-      const existingUser = await User.findOne({
-        where: {
-          username: normalized.username,
-        },
-      });
-
-      if (existingUser !== null && existingUser.validPassword(normalized.password)) {
-        req.session.userId = existingUser.id;
-        await saveSession(req);
-        return res.status(200).type("application/json").send(existingUser);
-      }
-
       return res.status(400).type("application/json").send({ code: "USERNAME_TAKEN" });
     }
     if (err instanceof ValidationError) {
@@ -147,6 +135,6 @@ authRouter.post("/signin", async (req, res) => {
 
 authRouter.post("/signout", async (req, res) => {
   await destroySession(req);
-  res.clearCookie("connect.sid");
+  res.clearCookie("connect.sid", { path: "/" });
   return res.status(200).type("application/json").send({});
 });

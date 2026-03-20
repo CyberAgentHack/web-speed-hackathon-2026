@@ -27,13 +27,19 @@ const SearchInput = ({ input, meta }: WrappedFieldProps) => {
       </label>
       <input
         {...input}
+        aria-label="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
+        autoCapitalize="none"
+        autoComplete="off"
+        autoCorrect="off"
         id={id}
         className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
           meta.touched && meta.error
             ? "border-cax-danger focus:border-cax-danger"
             : "border-cax-border focus:border-cax-brand-strong"
         }`}
+        name="search"
         placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
+        spellCheck={false}
         type="text"
       />
       {meta.touched && meta.error && (
