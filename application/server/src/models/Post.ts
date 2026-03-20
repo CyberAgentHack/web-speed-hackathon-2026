@@ -49,7 +49,7 @@ export function initPost(sequelize: Sequelize) {
         include: [
           {
             association: "user",
-            attributes: ["createdAt", "description", "id", "name", "username"],
+            attributes: ["id", "name", "username"],
             include: [{ association: "profileImage", attributes: ["alt", "id"] }],
           },
           {

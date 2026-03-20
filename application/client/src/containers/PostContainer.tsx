@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
@@ -14,9 +15,35 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
     fetchJSON,
   );
 
+  const [shouldLoadComments, setShouldLoadComments] = useState(false);
+
+  useEffect(() => {
+    if (isLoadingPost || post == null) {
+      setShouldLoadComments(false);
+      return;
+    }
+
+    const loadComments = () => {
+      setShouldLoadComments(true);
+    };
+
+    if ("requestIdleCallback" in window) {
+      const idleId = window.requestIdleCallback(loadComments, { timeout: 1500 });
+      return () => {
+        window.cancelIdleCallback(idleId);
+      };
+    }
+
+    const timeoutId = globalThis.setTimeout(loadComments, 300);
+    return () => {
+      globalThis.clearTimeout(timeoutId);
+    };
+  }, [isLoadingPost, post]);
+
   const { data: comments, fetchMore, hasMore } = useInfiniteFetch<Models.Comment>(
     `/api/v1/posts/${postId}/comments`,
     fetchJSON,
+    { enabled: shouldLoadComments, limit: 4 },
   );
 
   if (isLoadingPost) {

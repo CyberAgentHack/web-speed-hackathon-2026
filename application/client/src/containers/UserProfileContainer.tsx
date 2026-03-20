@@ -18,6 +18,7 @@ export const UserProfileContainer = () => {
   const { data: posts, fetchMore, hasMore } = useInfiniteFetch<Models.Post>(
     `/api/v1/users/${username}/posts`,
     fetchJSON,
+    { limit: 8 },
   );
 
   if (isLoadingUser) {
