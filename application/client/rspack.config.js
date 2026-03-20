@@ -13,7 +13,7 @@ const isProduction = process.env.NODE_ENV === "production";
 
 /** @type {import("@rspack/core").Configuration} */
 const config = {
-  target: ["web", "es5"],
+  target: ["web", "browserslist"],
   devServer: {
     historyApiFallback: true,
     host: "0.0.0.0",
@@ -29,8 +29,6 @@ const config = {
   devtool: isProduction ? false : "inline-source-map",
   entry: {
     main: [
-      "core-js",
-      "regenerator-runtime/runtime",
       "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
@@ -48,7 +46,9 @@ const config = {
             loader: "builtin:swc-loader",
             options: {
               env: {
-                targets: "ie >= 11",
+                mode: "usage",
+                coreJs: 3,
+                targets: ["last 1 Chrome version"],
               },
               jsc: {
                 parser: {
@@ -76,8 +76,18 @@ const config = {
         ],
       },
       {
-        resourceQuery: /binary/,
-        type: "asset/bytes",
+        resourceQuery: /url/,
+        type: "asset/resource",
+        generator: {
+          filename: "scripts/[name]-[contenthash][ext]",
+        },
+      },
+      {
+        test: /\.wasm$/,
+        type: "asset/resource",
+        generator: {
+          filename: "scripts/[name]-[contenthash][ext]",
+        },
       },
     ],
   },
@@ -86,6 +96,7 @@ const config = {
     filename: "scripts/[name].js",
     path: DIST_PATH,
     publicPath: "auto",
+    enabledWasmLoadingTypes: ["fetch"],
     clean: true,
   },
   plugins: [
@@ -191,7 +202,7 @@ const config = {
           reuseExistingChunk: true,
         },
         imageMagick: {
-          name: "ImageMagick",
+          name: "image-magick",
           test: /[\\/]node_modules[\\/]@imagemagick[\\/]magick-wasm[\\/]/,
           priority: 30,
           chunks: "all",
