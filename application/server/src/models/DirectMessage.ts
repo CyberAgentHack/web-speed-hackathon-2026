@@ -78,10 +78,12 @@ export function initDirectMessage(sequelize: Sequelize) {
   );
 
   DirectMessage.addHook("afterSave", "onDmSaved", async (message) => {
-    const directMessage = await DirectMessage.findByPk(message.get().id);
-    const conversation = await DirectMessageConversation.findByPk(directMessage?.conversationId);
+    // afterSaveのパラメータを直接使用し、冗長なfindByPk再取得を回避
+    const directMessage = message;
+    const conversationId = message.get().conversationId;
+    const conversation = await DirectMessageConversation.findByPk(conversationId);
 
-    if (directMessage == null || conversation == null) {
+    if (conversation == null) {
       return;
     }
 
