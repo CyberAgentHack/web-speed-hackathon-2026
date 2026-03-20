@@ -28,7 +28,7 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
   }, [isLoadingPost, post]);
 
   if (isLoadingPost) {
-    return null;
+    return <div className="min-h-screen" />;
   }
 
   if (post === null) {

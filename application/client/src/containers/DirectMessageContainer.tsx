@@ -128,7 +128,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     if (conversationError != null) {
       return <NotFoundContainer />;
     }
-    return null;
+    return <div className="min-h-screen" />;
   }
 
   return (

@@ -4,11 +4,9 @@ import { Route, Routes, useLocation, useNavigate } from "react-router";
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
 import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
+import { TermContainer } from "@web-speed-hackathon-2026/client/src/containers/TermContainer";
+import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
-
-const TimelineContainer = lazy(
-  () => import("@web-speed-hackathon-2026/client/src/containers/TimelineContainer"),
-);
 const DirectMessageListContainer = lazy(
   () => import("@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer"),
 );
@@ -23,9 +21,6 @@ const UserProfileContainer = lazy(
 );
 const PostContainer = lazy(
   () => import("@web-speed-hackathon-2026/client/src/containers/PostContainer"),
-);
-const TermContainer = lazy(
-  () => import("@web-speed-hackathon-2026/client/src/containers/TermContainer"),
 );
 const CrokContainer = lazy(
   () => import("@web-speed-hackathon-2026/client/src/containers/CrokContainer"),
@@ -42,7 +37,7 @@ export const AppContainer = () => {
   }, [pathname]);
 
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
-  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
+  const [_isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
   useEffect(() => {
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {
@@ -64,16 +59,6 @@ export const AppContainer = () => {
   const authModalId = useId();
   const newPostModalId = useId();
 
-  useEffect(() => {
-    if (isLoadingActiveUser) {
-      document.title = "読込中 - CaX";
-    }
-  }, [isLoadingActiveUser]);
-
-  if (isLoadingActiveUser) {
-    return null;
-  }
-
   return (
     <>
       <AppPage
@@ -82,7 +67,7 @@ export const AppContainer = () => {
         newPostModalId={newPostModalId}
         onLogout={handleLogout}
       >
-        <Suspense fallback={null}>
+        <Suspense fallback={<div className="min-h-screen" />}>
           <Routes>
             <Route element={<TimelineContainer />} path="/" />
             <Route

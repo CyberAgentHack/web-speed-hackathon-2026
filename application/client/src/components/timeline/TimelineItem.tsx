@@ -27,9 +27,10 @@ const isClickedAnchor = (target: EventTarget | null, currentTarget: Element): bo
  */
 interface Props {
   post: Models.Post;
+  isAboveFold?: boolean;
 }
 
-export const TimelineItem = memo(function TimelineItem({ post }: Props) {
+export const TimelineItem = memo(function TimelineItem({ post, isAboveFold }: Props) {
   const navigate = useNavigate();
 
   /**
@@ -55,7 +56,10 @@ export const TimelineItem = memo(function TimelineItem({ post }: Props) {
           >
             <img
               alt={post.user.profileImage.alt}
+              className="h-full w-full object-cover"
               src={getProfileImagePath(post.user.profileImage.id)}
+              width={64}
+              height={64}
             />
           </Link>
         </div>
@@ -83,7 +87,7 @@ export const TimelineItem = memo(function TimelineItem({ post }: Props) {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea images={post.images} isAboveFold={isAboveFold} />
             </div>
           ) : null}
           {post.movie ? (
