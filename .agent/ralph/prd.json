@@ -128,8 +128,8 @@
         "Typecheck passes"
       ],
       "priority": 7,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "2026-03-20 完了。lodash → ネイティブ Array メソッドに置換。bm25_search.ts と SoundWaveSVG.tsx の2ファイル。"
     },
     {
       "id": "US-008",

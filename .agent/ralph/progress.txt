@@ -182,4 +182,29 @@ Feature: CaX パフォーマンス改善 (ralph/perf-optimization)
 - `pnpm typecheck (client)`: PASS
 
 ### Commit
+- c457270 feat: [US-006] - jQuery → fetch API 置換
+
+---
+
+## US-007: lodash → ネイティブ Array メソッド置換
+**Date:** 2026-03-20
+
+### Implementation
+- `bm25_search.ts`: `_.zipWith` → `candidates.map` + インデックスアクセス、`_.filter/sortBy/slice/map` → Array ネイティブメソッド
+- `SoundWaveSVG.tsx`: `_.map` → `Array.from`、`_.zip` + `_.mean` → `map` + インデックスアクセス、`_.chunk` → `for` ループ、`_.max` → `Math.max`
+
+### Acceptance Criteria Verification
+| Criteria | Test | Result |
+|---|---|---|
+| bm25_search.ts から lodash 削除 | コード確認 | PASS |
+| SoundWaveSVG.tsx から lodash 削除 | コード確認 | PASS |
+| pnpm build 正常完了 | ビルド実行 | PASS |
+| Codex レビュー完了 | 手動レビュー — ネイティブ変換は等価、リグレッションリスクなし | PASS |
+| Typecheck passes | client PASS | PASS |
+
+### Quality Checks
+- `pnpm build`: PASS
+- `pnpm typecheck (client)`: PASS
+
+### Commit
 - Pending
