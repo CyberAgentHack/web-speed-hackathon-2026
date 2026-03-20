@@ -15,7 +15,7 @@ export const UserProfileContainer = () => {
     `/api/v1/users/${username}`,
     fetchJSON,
   );
-  const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>(
+  const { data: posts, fetchMore, hasMore } = useInfiniteFetch<Models.Post>(
     `/api/v1/users/${username}/posts`,
     fetchJSON,
   );
@@ -33,7 +33,7 @@ export const UserProfileContainer = () => {
   }
 
   return (
-    <InfiniteScroll fetchMore={fetchMore} items={posts}>
+    <InfiniteScroll fetchMore={fetchMore} hasMore={hasMore} items={posts}>
       <Helmet>
         <title>{user.name} さんのタイムライン - CaX</title>
       </Helmet>

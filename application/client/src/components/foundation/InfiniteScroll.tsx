@@ -1,49 +1,30 @@
-import { ReactNode, useEffect, useRef } from "react";
+import InfiniteScrollBase from "react-infinite-scroll-component";
+import type { ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
-  items: any[];
   fetchMore: () => void;
+  hasMore: boolean;
+  items: readonly unknown[];
 }
 
-export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
-  const latestItem = items[items.length - 1];
+export const InfiniteScroll = ({ children, fetchMore, hasMore, items }: Props) => {
+  const length = items.length;
 
-  const prevReachedRef = useRef(false);
-
-  useEffect(() => {
-    const handler = () => {
-      // 念の為 2の18乗 回、最下部かどうかを確認する
-      const hasReached = Array.from(Array(2 ** 18), () => {
-        return window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
-      }).every(Boolean);
-
-      // 画面最下部にスクロールしたタイミングで、登録したハンドラを呼び出す
-      if (hasReached && !prevReachedRef.current) {
-        // アイテムがないときは追加で読み込まない
-        if (latestItem !== undefined) {
-          fetchMore();
-        }
+  return (
+    <InfiniteScrollBase
+      dataLength={length}
+      endMessage={
+        <p className="text-cax-text-muted py-4 text-center text-sm">すべて表示しました</p>
       }
-
-      prevReachedRef.current = hasReached;
-    };
-
-    // 最初は実行されないので手動で呼び出す
-    prevReachedRef.current = false;
-    handler();
-
-    document.addEventListener("wheel", handler, { passive: false });
-    document.addEventListener("touchmove", handler, { passive: false });
-    document.addEventListener("resize", handler, { passive: false });
-    document.addEventListener("scroll", handler, { passive: false });
-    return () => {
-      document.removeEventListener("wheel", handler);
-      document.removeEventListener("touchmove", handler);
-      document.removeEventListener("resize", handler);
-      document.removeEventListener("scroll", handler);
-    };
-  }, [latestItem, fetchMore]);
-
-  return <>{children}</>;
+      hasChildren={length > 0}
+      hasMore={hasMore}
+      loader={
+        <p className="text-cax-text-muted py-4 text-center text-sm">読込中…</p>
+      }
+      next={fetchMore}
+    >
+      {children}
+    </InfiniteScrollBase>
+  );
 };
