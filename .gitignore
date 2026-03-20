@@ -223,6 +223,12 @@ $RECYCLE.BIN/
 # omc
 .omc/
 
+# Vite SSR build output
+dist-ssr/
+
+# bundle-stats output
+bundle-stats.json
+
 # bench results
 bench-results/
 

@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
+import { bundleStats } from "rollup-plugin-bundle-stats";
 import { defineConfig } from "vite";
 
 const ROOT = import.meta.dirname;
@@ -11,7 +12,7 @@ export default defineConfig({
   root: resolve(ROOT, "src"),
   publicDir: resolve(ROOT, "../public"),
 
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), bundleStats({ json: true, html: false, outDir: ".." })],
 
   resolve: {
     alias: {

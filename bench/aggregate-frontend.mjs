@@ -38,46 +38,54 @@ if (fs.existsSync(transferPath)) {
   }
 }
 
-// Resource sizes
-const resourcesPath = path.join(dir, "resources.json");
-if (fs.existsSync(resourcesPath)) {
-  const resources = JSON.parse(fs.readFileSync(resourcesPath, "utf8"));
+// Bundle Stats (from rollup-plugin-bundle-stats / bundle-stats-webpack-plugin)
+const bundleStatsPath = path.join(dir, "bundle-stats.json");
+if (fs.existsSync(bundleStatsPath)) {
+  const data = JSON.parse(fs.readFileSync(bundleStatsPath, "utf8"));
 
   console.log(`\n${"=".repeat(60)}`);
-  console.log("Resource Transfer Sizes");
+  console.log("Bundle Stats Summary");
   console.log("=".repeat(60));
 
-  for (const [name, sizes] of Object.entries(resources)) {
-    const stats = computeStats(sizes);
-    summary[`resource_${name}`] = stats;
-    printStatsTable(name, stats, "bytes");
+  // Summary metrics
+  for (const item of (data.summary?.webpack || [])) {
+    console.log(`  ${item.label}: ${item.displayValue}`);
+    summary[`bundleStats_${item.label.replace(/\s+/g, "_")}`] = {
+      value: item.value,
+      displayValue: item.displayValue,
+    };
+  }
 
-    if (stats) {
-      console.log(`  → ${(stats.median / 1024 / 1024).toFixed(2)} MB (median)`);
+  // Size by type
+  console.log("");
+  console.log("  Size by type:");
+  for (const s of (data.sizes || [])) {
+    const val = s.runs?.[0]?.value || 0;
+    const display = s.runs?.[0]?.displayValue || "0B";
+    if (val > 0) {
+      console.log(`    ${s.label}: ${display}`);
+      summary[`bundleStats_size_${s.label}`] = { value: val, displayValue: display };
     }
   }
-}
 
-// Bundle sizes
-const bundlePath = path.join(dir, "bundle_sizes.json");
-if (fs.existsSync(bundlePath)) {
-  const bundles = JSON.parse(fs.readFileSync(bundlePath, "utf8"));
+  // Top assets
+  const assets = (data.assets || [])
+    .map(a => ({ name: a.runs?.[0]?.name || a.label, size: a.runs?.[0]?.value || 0, initial: a.runs?.[0]?.isInitial }))
+    .sort((a, b) => b.size - a.size);
 
-  console.log(`\n${"=".repeat(60)}`);
-  console.log("Bundle Sizes (static, uncompressed)");
-  console.log("=".repeat(60));
-
-  const sorted = Object.entries(bundles).sort((a, b) => b[1] - a[1]);
-  let total = 0;
-
-  for (const [file, size] of sorted) {
-    total += size;
-    console.log(`  ${(size / 1024 / 1024).toFixed(2)} MB  ${file}`);
+  console.log("");
+  console.log("  Top 10 assets:");
+  for (const a of assets.slice(0, 10)) {
+    const kb = (a.size / 1024).toFixed(1);
+    const tag = a.initial ? " [initial]" : "";
+    console.log(`    ${kb.padStart(10)} KB  ${a.name}${tag}`);
   }
-  console.log(`  ${"─".repeat(40)}`);
-  console.log(`  ${(total / 1024 / 1024).toFixed(2)} MB  TOTAL`);
 
-  summary["bundle_total_bytes"] = { value: total };
+  summary["bundleStats_assets_count"] = { value: assets.length };
+  summary["bundleStats_total_js"] = data.sizes?.find(s => s.label === "JS")?.runs?.[0] || {};
+  summary["bundleStats_total_css"] = data.sizes?.find(s => s.label === "CSS")?.runs?.[0] || {};
+  summary["bundleStats_modules_count"] = { value: data.modules?.length || 0 };
+  summary["bundleStats_packages_count"] = { value: data.packages?.length || 0 };
 }
 
 // JSON保存

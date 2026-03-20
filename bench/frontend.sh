@@ -33,44 +33,24 @@ echo "Runs: ${RUNS} | Base: ${BASE_URL} | Output: ${OUTDIR}"
 echo ""
 
 # ---------------------------------------------------------------------------
-# 1. バンドルサイズ分析（静的）
+# 1. バンドルサイズ分析（静的 dist/ サマリー）
 # ---------------------------------------------------------------------------
 echo "── Bundle Size Analysis ──"
 
 if [ -d "${DIST_DIR}" ]; then
   echo ""
-  echo "  Directory sizes:"
-  du -sh "${DIST_DIR}" 2>/dev/null | while read -r line; do echo "    ${line}"; done
+  echo "  Directory size: $(du -sh "${DIST_DIR}" 2>/dev/null | cut -f1)"
 
-  echo ""
-  echo "  JS files (top 20 by size):"
-  find "${DIST_DIR}" -name '*.js' -exec ls -lhS {} + 2>/dev/null | head -20 | while read -r line; do echo "    ${line}"; done
+  # JS/CSS/Other のファイル数とサイズ
+  js_size=$(find "${DIST_DIR}" -name '*.js' -type f -exec stat -c%s {} + 2>/dev/null | awk '{s+=$1} END {print s+0}')
+  css_size=$(find "${DIST_DIR}" -name '*.css' -type f -exec stat -c%s {} + 2>/dev/null | awk '{s+=$1} END {print s+0}')
+  js_count=$(find "${DIST_DIR}" -name '*.js' -type f 2>/dev/null | wc -l)
+  css_count=$(find "${DIST_DIR}" -name '*.css' -type f 2>/dev/null | wc -l)
 
-  echo ""
-  echo "  CSS files:"
-  find "${DIST_DIR}" -name '*.css' -exec ls -lhS {} + 2>/dev/null | while read -r line; do echo "    ${line}"; done
-
-  echo ""
-  echo "  Other assets (top 10 by size):"
-  find "${DIST_DIR}" -not -name '*.js' -not -name '*.css' -not -name '*.html' -not -name '*.map' -type f -exec ls -lhS {} + 2>/dev/null | head -10 | while read -r line; do echo "    ${line}"; done
-
-  # JS バイト数をJSON化
-  echo "  {" > "${OUTDIR}/bundle_sizes.json"
-  first=true
-  find "${DIST_DIR}" -name '*.js' -type f | while read -r f; do
-    size=$(stat -c%s "${f}" 2>/dev/null || stat -f%z "${f}" 2>/dev/null || echo 0)
-    rel=$(echo "${f}" | sed "s|${DIST_DIR}/||")
-    if [ "${first}" = true ]; then
-      first=false
-    else
-      echo "," >> "${OUTDIR}/bundle_sizes.json"
-    fi
-    echo -n "  \"${rel}\": ${size}" >> "${OUTDIR}/bundle_sizes.json"
-  done
-  echo "" >> "${OUTDIR}/bundle_sizes.json"
-  echo "}" >> "${OUTDIR}/bundle_sizes.json"
+  echo "  JS:  ${js_count} files, $(echo "scale=2; ${js_size}/1024/1024" | bc) MB"
+  echo "  CSS: ${css_count} files, $(echo "scale=2; ${css_size}/1024" | bc) KB"
 else
-  echo "  ⚠ ${DIST_DIR} not found. Run 'pnpm build' first."
+  echo "  ${DIST_DIR} not found. Run 'pnpm build' first."
 fi
 
 echo ""
@@ -134,44 +114,73 @@ done
 echo "}" >> "${transfer_json}"
 
 # ---------------------------------------------------------------------------
-# 3. JS / CSS リソース転送量
+# 3. bundle-stats 分析（ビルドツール非依存）
 # ---------------------------------------------------------------------------
-echo "── Resource Transfer Sizes ──"
+BUNDLE_STATS_JSON="application/bundle-stats.json"
 
-resources_json="${OUTDIR}/resources.json"
-echo "{" > "${resources_json}"
-first_res=true
+echo "── Bundle Stats Analysis ──"
 
-RESOURCES=(
-  "main_js:/scripts/main.js"
-  "main_css:/styles/main.css"
-)
+if [ -f "${BUNDLE_STATS_JSON}" ]; then
+  cp "${BUNDLE_STATS_JSON}" "${OUTDIR}/bundle-stats.json"
 
-for entry in "${RESOURCES[@]}"; do
-  res_name="${entry%%:*}"
-  res_path="${entry#*:}"
-  full_url="${BASE_URL}${res_path}"
+  node -e "
+    const data = JSON.parse(require('fs').readFileSync('${BUNDLE_STATS_JSON}', 'utf8'));
 
-  sizes=()
-  for i in $(seq 1 "${RUNS}"); do
-    size=$(curl -sS -o /dev/null -w '%{size_download}' --compressed "${full_url}" 2>/dev/null || echo "0")
-    sizes+=("${size}")
-  done
+    // Summary metrics
+    console.log('  Summary:');
+    for (const item of (data.summary?.webpack || [])) {
+      console.log('    ' + item.label + ': ' + item.displayValue);
+    }
 
-  sizes_json=$(printf '%s\n' "${sizes[@]}" | jq -s '.')
+    // Size by type
+    console.log('');
+    console.log('  Size by type:');
+    for (const s of (data.sizes || [])) {
+      const val = s.runs?.[0]?.displayValue || '0B';
+      if (val !== '0B') console.log('    ' + s.label + ': ' + val);
+    }
 
-  if [ "${first_res}" = true ]; then
-    first_res=false
-  else
-    echo "," >> "${resources_json}"
-  fi
-  echo "\"${res_name}\": ${sizes_json}" >> "${resources_json}"
+    // Top 15 assets by size
+    console.log('');
+    console.log('  Top 15 assets:');
+    const assets = (data.assets || [])
+      .map(a => ({ name: a.runs?.[0]?.name || a.label, size: a.runs?.[0]?.value || 0, initial: a.runs?.[0]?.isInitial }))
+      .sort((a, b) => b.size - a.size)
+      .slice(0, 15);
+    for (const a of assets) {
+      const mb = (a.size / 1024 / 1024).toFixed(2);
+      const kb = (a.size / 1024).toFixed(1);
+      const display = a.size > 1024 * 1024 ? mb + ' MB' : kb + ' KB';
+      const tag = a.initial ? ' [initial]' : '';
+      console.log('    ' + display.padStart(10) + '  ' + a.name + tag);
+    }
 
-  median=$(printf '%s\n' "${sizes[@]}" | sort -n | awk 'NR==int((NR+1)/2)')
-  echo "  ${res_name}: median=${median}B ($(echo "scale=2; ${median}/1024/1024" | bc)MB)"
-done
+    // Top 10 packages by size
+    if (data.packages?.length) {
+      console.log('');
+      console.log('  Top 10 packages:');
+      const pkgs = [...data.packages]
+        .map(p => ({ name: p.label, size: p.runs?.[0]?.value || 0 }))
+        .sort((a, b) => b.size - a.size)
+        .slice(0, 10);
+      for (const p of pkgs) {
+        const kb = (p.size / 1024).toFixed(1);
+        console.log('    ' + kb.padStart(10) + ' KB  ' + p.name);
+      }
+    }
 
-echo "}" >> "${resources_json}"
+    // Insights
+    if (data.insights?.length) {
+      console.log('');
+      console.log('  Insights:');
+      for (const i of data.insights.slice(0, 5)) {
+        console.log('    - ' + i.label);
+      }
+    }
+  "
+else
+  echo "  bundle-stats.json not found. Run 'pnpm build' first."
+fi
 
 echo ""
 echo "=== Aggregating ==="

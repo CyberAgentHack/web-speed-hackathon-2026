@@ -139,7 +139,9 @@ export const AppContainer = ({ ssrData }: AppContainerProps) => {
             />
             <Route element={<SearchContainer ssrPosts={ssrData?.posts} />} path="/search" />
             <Route
-              element={<UserProfileContainer ssrUser={ssrData?.user} ssrPosts={ssrData?.userPosts} />}
+              element={
+                <UserProfileContainer ssrUser={ssrData?.user} ssrPosts={ssrData?.userPosts} />
+              }
               path="/users/:username"
             />
             <Route
