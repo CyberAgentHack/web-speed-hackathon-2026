@@ -6,6 +6,7 @@
 @source "../containers/AuthModalContainer.tsx";
 @source "../containers/NewPostModalContainer.tsx";
 @source "../containers/UserProfileContainer.tsx";
+@source "../components/direct_message/DirectMessageNotificationBadge.tsx";
 @source "../components/application/";
 @source "../components/auth_modal/";
 @source "../components/new_post_modal/";
