@@ -34,18 +34,20 @@ docs/                        # レギュレーション・採点方法
 ## コマンド
 
 ```bash
-# ビルド & 起動
-cd application && pnpm run build && pnpm run start
+# ビルド & 起動 (portless経由、ドメイン名は issue+issue番号)
+cd application && pnpm run build
+portless proxy start
+portless issue2 pnpm run start   # → http://issue2.localhost:1355
 
 # VRT (Visual Regression Test)
 cd application/e2e && pnpm run test          # 実行
 cd application/e2e && pnpm run test:update   # スナップショット更新
 
-# スコア計測
-cd scoring-tool && pnpm start --applicationUrl http://localhost:3000
+# スコア計測 (portless URL を指定)
+cd scoring-tool && pnpm start --applicationUrl http://issue2.localhost:1355
 
 # DB初期化
-curl -X POST http://localhost:3000/api/v1/initialize
+curl -X POST http://issue2.localhost:1355/api/v1/initialize
 
 # 型チェック・フォーマット
 cd application && pnpm run typecheck
