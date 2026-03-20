@@ -1,6 +1,8 @@
 node_modules
 .git
-*.log
+.github
+dist
+build
 
 application/server/seeds
 application/server/upload
