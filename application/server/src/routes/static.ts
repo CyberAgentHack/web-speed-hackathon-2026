@@ -18,15 +18,17 @@ staticRouter.use(history());
 
 staticRouter.use(
   serveStatic(UPLOAD_PATH, {
-    etag: false,
-    lastModified: false,
+    etag: true,
+    lastModified: true,
+    maxAge: "1y",
+    immutable: true,
   }),
 );
 
 staticRouter.use(
   serveStatic(PUBLIC_PATH, {
-    etag: false,
-    lastModified: false,
+    etag: true,
+    lastModified: true,
     maxAge: "1h",
     setHeaders: (res) => {
       res.setHeader("Cache-Control", SHORT_CACHE_CONTROL);
@@ -36,8 +38,8 @@ staticRouter.use(
 
 staticRouter.use(
   serveStatic(CLIENT_DIST_PATH, {
-    etag: false,
-    lastModified: false,
+    etag: true,
+    lastModified: true,
     maxAge: "365d",
     setHeaders: (res, filePath) => {
       if (filePath.endsWith("index.html")) {

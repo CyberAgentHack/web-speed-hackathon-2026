@@ -17,8 +17,7 @@ export const CoveredImage = ({ src }: Props) => {
     });
   }, []);
 
-  const containerRatio = containerSize.height / containerSize.width;
-  const imageRatio = containerRatio || 1;
+  const containerRatio = containerSize.height / containerSize.width || 1;
 
   return (
     <div ref={callbackRef} className="relative h-full w-full overflow-hidden">
@@ -27,8 +26,8 @@ export const CoveredImage = ({ src }: Props) => {
         className={classNames(
           "absolute left-1/2 top-1/2 max-w-none -translate-x-1/2 -translate-y-1/2",
           {
-            "w-auto h-full": containerRatio > imageRatio,
-            "w-full h-auto": containerRatio <= imageRatio,
+            "w-auto h-full": containerRatio > 1,
+            "w-full h-auto": containerRatio <= 1,
           },
         )}
         loading="lazy"
