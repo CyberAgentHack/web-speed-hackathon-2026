@@ -1,9 +1,12 @@
-import { gzip } from "pako";
-
 type JQueryModule = typeof import("jquery");
 type JQueryStatic = JQueryModule extends { default: infer T }
   ? T
   : JQueryModule;
+
+type APIError = Error & {
+  status: number;
+  responseJSON?: unknown;
+};
 
 let jqueryPromise: Promise<JQueryStatic> | null = null;
 let jqueryBinaryTransportPromise: Promise<void> | null = null;
@@ -46,7 +49,7 @@ export async function fetchJSON<T>(url: string): Promise<T> {
     method: "GET",
   });
   if (!response.ok) {
-    throw new Error(`HTTP Error: ${response.status}`);
+    throw await createAPIError(response);
   }
   return response.json();
 }
@@ -60,26 +63,34 @@ export async function sendFile<T>(url: string, file: File): Promise<T> {
     method: "POST",
   });
   if (!response.ok) {
-    throw new Error(`HTTP Error: ${response.status}`);
+    throw await createAPIError(response);
   }
   return response.json();
 }
 
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
-  const jsonString = JSON.stringify(data);
-  const uint8Array = new TextEncoder().encode(jsonString);
-  const compressed = gzip(uint8Array);
-
   const response = await fetch(url, {
-    body: compressed,
+    body: JSON.stringify(data),
     headers: {
-      "Content-Encoding": "gzip",
       "Content-Type": "application/json",
     },
     method: "POST",
   });
   if (!response.ok) {
-    throw new Error(`HTTP Error: ${response.status}`);
+    throw await createAPIError(response);
   }
   return response.json();
+}
+
+async function createAPIError(response: Response): Promise<APIError> {
+  let responseJSON: unknown;
+  const contentType = response.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) {
+    responseJSON = await response.json().catch(() => undefined);
+  }
+
+  const error = new Error(`HTTP Error: ${response.status}`) as APIError;
+  error.status = response.status;
+  error.responseJSON = responseJSON;
+  return error;
 }

@@ -54,7 +54,6 @@ searchRouter.get("/search", async (req, res) => {
       include: [
         {
           association: "user",
-          attributes: { exclude: ["profileImageId"] },
           include: [{ association: "profileImage" }],
           required: true,
           where: {
@@ -86,7 +85,7 @@ searchRouter.get("/search", async (req, res) => {
 
   mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-  const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
+  const result = limit != null ? mergedPosts.slice(0, limit) : mergedPosts;
 
   return res.status(200).type("application/json").send(result);
 });

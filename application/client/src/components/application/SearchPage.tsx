@@ -10,7 +10,6 @@ import {
 import { SearchFormData } from "@web-speed-hackathon-2026/client/src/search/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/search/validation";
 import { analyzeSentiment } from "@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer";
-
 import { Button } from "../foundation/Button";
 
 interface Props {
@@ -18,23 +17,25 @@ interface Props {
   results: Models.Post[];
 }
 
-const SearchInput = ({ input, meta }: WrappedFieldProps) => (
+const SearchInput = ({ input, meta }: WrappedFieldProps) => {
+  const hasError = (meta.touched || meta.submitFailed) && meta.error;
+
+  return (
   <div className="flex flex-1 flex-col">
     <input
       {...input}
       className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
-        meta.touched && meta.error
+        hasError
           ? "border-cax-danger focus:border-cax-danger"
           : "border-cax-border focus:border-cax-brand-strong"
       }`}
       placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
       type="text"
     />
-    {meta.touched && meta.error && (
-      <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>
-    )}
+    {hasError && <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>}
   </div>
-);
+  );
+};
 
 const SearchPageComponent = ({
   query,
@@ -43,6 +44,7 @@ const SearchPageComponent = ({
 }: Props & InjectedFormProps<SearchFormData, Props>) => {
   const navigate = useNavigate();
   const [isNegative, setIsNegative] = useState(false);
+  const [submitErrorText, setSubmitErrorText] = useState<string | null>(null);
 
   const parsed = parseSearchQuery(query);
 
@@ -85,8 +87,29 @@ const SearchPageComponent = ({
   }, [parsed]);
 
   const onSubmit = (values: SearchFormData) => {
-    const sanitizedText = sanitizeSearchText(values.searchText.trim());
+    const rawSearchText = values.searchText ?? "";
+    const sanitizedText = sanitizeSearchText(rawSearchText.trim());
+
+    if (!sanitizedText) {
+      setSubmitErrorText("検索キーワードを入力してください");
+      return;
+    }
+
+    const validationErrors = validate({ searchText: rawSearchText });
+    const validationError = validationErrors.searchText;
+
+    if (validationError != null) {
+      setSubmitErrorText(validationError);
+      return;
+    }
+
     navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
+  };
+
+  const handleClearSubmitError = () => {
+    if (submitErrorText != null) {
+      setSubmitErrorText(null);
+    }
   };
 
   return (
@@ -94,11 +117,14 @@ const SearchPageComponent = ({
       <div className="bg-cax-surface p-4 shadow">
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="flex gap-2">
-            <Field name="searchText" component={SearchInput} />
+            <Field name="searchText" component={SearchInput} onChange={handleClearSubmitError} />
             <Button variant="primary" type="submit">
               検索
             </Button>
           </div>
+          {submitErrorText != null ? (
+            <p className="text-cax-danger mt-2 text-xs">{submitErrorText}</p>
+          ) : null}
         </form>
         <p className="text-cax-text-muted mt-2 text-xs">
           since:YYYY-MM-DD で開始日、until:YYYY-MM-DD で終了日を指定できます
