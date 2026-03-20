@@ -36,6 +36,7 @@ export const NewPostModalContainer = ({ id }: Props) => {
   const dialogId = useId();
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
+  const [hasOpened, setHasOpened] = useState(false);
   useEffect(() => {
     const element = ref.current;
     if (element == null) {
@@ -43,6 +44,7 @@ export const NewPostModalContainer = ({ id }: Props) => {
     }
 
     const handleToggle = () => {
+      setHasOpened(true);
       // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
       setResetKey((key) => key + 1);
     };
@@ -79,16 +81,18 @@ export const NewPostModalContainer = ({ id }: Props) => {
 
   return (
     <Modal aria-labelledby={dialogId} id={id} ref={ref} closedby="any">
-      <Suspense fallback={null}>
-        <NewPostModalPage
-          key={resetKey}
-          id={dialogId}
-          hasError={hasError}
-          isLoading={isLoading}
-          onResetError={handleResetError}
-          onSubmit={handleSubmit}
-        />
-      </Suspense>
+      {hasOpened ? (
+        <Suspense fallback={null}>
+          <NewPostModalPage
+            key={resetKey}
+            id={dialogId}
+            hasError={hasError}
+            isLoading={isLoading}
+            onResetError={handleResetError}
+            onSubmit={handleSubmit}
+          />
+        </Suspense>
+      ) : null}
     </Modal>
   );
 };
