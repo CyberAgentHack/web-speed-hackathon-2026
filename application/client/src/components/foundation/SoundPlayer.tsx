@@ -1,4 +1,10 @@
-import { ReactEventHandler, useCallback, useMemo, useRef, useState } from "react";
+import {
+  ReactEventHandler,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -19,10 +25,13 @@ export const SoundPlayer = ({ sound }: Props) => {
   }, [data]);
 
   const [currentTimeRatio, setCurrentTimeRatio] = useState(0);
-  const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>((ev) => {
-    const el = ev.currentTarget;
-    setCurrentTimeRatio(el.currentTime / el.duration);
-  }, []);
+  const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>(
+    (ev) => {
+      const el = ev.currentTarget;
+      setCurrentTimeRatio(el.currentTime / el.duration);
+    },
+    [],
+  );
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -37,20 +46,26 @@ export const SoundPlayer = ({ sound }: Props) => {
     });
   }, []);
 
-  if (isLoading || data === null || blobUrl === null) {
-    return null;
-  }
-
   return (
     <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
-      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} src={blobUrl} />
+      {blobUrl !== null && (
+        <audio
+          ref={audioRef}
+          loop={true}
+          onTimeUpdate={handleTimeUpdate}
+          src={blobUrl}
+        />
+      )}
       <div className="p-2">
         <button
           className="bg-cax-accent text-cax-surface-raised flex h-8 w-8 items-center justify-center rounded-full text-sm hover:opacity-75"
           onClick={handleTogglePlaying}
           type="button"
         >
-          <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
+          <FontAwesomeIcon
+            iconType={isPlaying ? "pause" : "play"}
+            styleType="solid"
+          />
         </button>
       </div>
       <div className="flex h-full min-w-0 shrink grow flex-col pt-2">
@@ -62,15 +77,19 @@ export const SoundPlayer = ({ sound }: Props) => {
         </p>
         <div className="pt-2">
           <AspectRatioBox aspectHeight={1} aspectWidth={10}>
-            <div className="relative h-full w-full">
-              <div className="absolute inset-0 h-full w-full">
-                <SoundWaveSVG soundData={data} />
+            {isLoading || data === null ? (
+              <div className="h-full w-full animate-pulse rounded-lg bg-cax-surface-subtle" />
+            ) : (
+              <div className="relative h-full w-full">
+                <div className="absolute inset-0 h-full w-full">
+                  <SoundWaveSVG soundData={data} />
+                </div>
+                <div
+                  className="bg-cax-surface-subtle absolute inset-0 h-full w-full opacity-75"
+                  style={{ left: `${currentTimeRatio * 100}%` }}
+                ></div>
               </div>
-              <div
-                className="bg-cax-surface-subtle absolute inset-0 h-full w-full opacity-75"
-                style={{ left: `${currentTimeRatio * 100}%` }}
-              ></div>
-            </div>
+            )}
           </AspectRatioBox>
         </div>
       </div>

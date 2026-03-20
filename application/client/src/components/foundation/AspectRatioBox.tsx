@@ -19,6 +19,7 @@ export const AspectRatioBox = ({
       className="relative w-full"
       style={{
         aspectRatio: `${aspectWidth} / ${aspectHeight}`,
+        minHeight: "100%",
       }}
     >
       {children}
