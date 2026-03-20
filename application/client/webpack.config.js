@@ -79,6 +79,7 @@ const config = {
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
+      ENABLE_REACT_SCAN: "0",
       NODE_ENV: "development",
     }),
     new MiniCssExtractPlugin({
