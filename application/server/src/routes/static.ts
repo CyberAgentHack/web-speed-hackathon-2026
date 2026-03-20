@@ -1,11 +1,12 @@
 import history from "connect-history-api-fallback";
-import { Router } from "express";
+import { Request, Response, Router } from "express";
 import path from "path";
 import serveStatic, { ServeStaticOptions } from "serve-static";
 
 import {
   CLIENT_DIST_PATH,
   PUBLIC_PATH,
+  TERMS_HTML_PATH,
   UPLOAD_PATH,
 } from "@web-speed-hackathon-2026/server/src/paths";
 
@@ -37,6 +38,14 @@ const setStaticCacheHeader = (rootPath: string) => {
 
   return setHeaders;
 };
+
+const sendTermsHtml = (_req: Request, res: Response) => {
+  res.setHeader("Cache-Control", REVALIDATE_CACHE_HEADER);
+  res.sendFile(TERMS_HTML_PATH);
+};
+
+staticRouter.get("/terms", sendTermsHtml);
+staticRouter.get("/terms/", sendTermsHtml);
 
 // SPA 対応のため、ファイルが存在しないときに index.html を返す
 staticRouter.use(history());

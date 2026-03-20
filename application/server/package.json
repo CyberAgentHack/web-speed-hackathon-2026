@@ -7,6 +7,7 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
+    "generate:terms-html": "tsx scripts/generate_terms_html.tsx",
     "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
     "seed:generate": "tsx ./scripts/generateSeeds.ts",
