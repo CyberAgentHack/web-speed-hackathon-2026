@@ -9,11 +9,25 @@ interface ReturnValues<T> {
   fetchMore: () => void;
 }
 
+interface Options {
+  useServerPagination?: boolean;
+}
+
+function withPagination(apiPath: string, limit: number, offset: number): string {
+  const url = new URL(apiPath, window.location.origin);
+  url.searchParams.set("limit", String(limit));
+  url.searchParams.set("offset", String(offset));
+
+  return `${url.pathname}${url.search}`;
+}
+
 export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
+  options: Options = {},
 ): ReturnValues<T> {
-  const internalRef = useRef({ isLoading: false, offset: 0 });
+  const { useServerPagination = true } = options;
+  const internalRef = useRef({ hasMore: true, isLoading: false, offset: 0 });
 
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
     data: [],
@@ -22,8 +36,8 @@ export function useInfiniteFetch<T>(
   });
 
   const fetchMore = useCallback(() => {
-    const { isLoading, offset } = internalRef.current;
-    if (isLoading) {
+    const { hasMore, isLoading, offset } = internalRef.current;
+    if (apiPath === "" || isLoading || !hasMore) {
       return;
     }
 
@@ -32,18 +46,25 @@ export function useInfiniteFetch<T>(
       isLoading: true,
     }));
     internalRef.current = {
+      hasMore,
       isLoading: true,
       offset,
     };
 
-    void fetcher(apiPath).then(
-      (allData) => {
+    const requestPath = useServerPagination ? withPagination(apiPath, LIMIT, offset) : apiPath;
+
+    void fetcher(requestPath).then(
+      (nextData) => {
+        const data =
+          useServerPagination === true ? nextData : nextData.slice(offset, offset + LIMIT);
+
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...data],
           isLoading: false,
         }));
         internalRef.current = {
+          hasMore: data.length === LIMIT,
           isLoading: false,
           offset: offset + LIMIT,
         };
@@ -55,12 +76,13 @@ export function useInfiniteFetch<T>(
           isLoading: false,
         }));
         internalRef.current = {
+          hasMore,
           isLoading: false,
           offset,
         };
       },
     );
-  }, [apiPath, fetcher]);
+  }, [apiPath, fetcher, useServerPagination]);
 
   useEffect(() => {
     setResult(() => ({
@@ -69,12 +91,22 @@ export function useInfiniteFetch<T>(
       isLoading: true,
     }));
     internalRef.current = {
+      hasMore: true,
       isLoading: false,
       offset: 0,
     };
 
+    if (apiPath === "") {
+      setResult(() => ({
+        data: [],
+        error: null,
+        isLoading: false,
+      }));
+      return;
+    }
+
     fetchMore();
-  }, [fetchMore]);
+  }, [apiPath, fetchMore]);
 
   return {
     ...result,
