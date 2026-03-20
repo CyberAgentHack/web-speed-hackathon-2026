@@ -37,6 +37,7 @@ export function useInfiniteFetch<T>(
     }));
     internalRef.current = {
       isLoading: true,
+      isExhausted,
       offset,
     };
 

@@ -1,10 +1,20 @@
+import { Suspense, lazy } from "react";
+
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
-import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
-import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { formatDateJa, toISODateString } from "@web-speed-hackathon-2026/client/src/utils/date_format";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+
+const MovieArea = lazy(async () => {
+  const module = await import("@web-speed-hackathon-2026/client/src/components/post/MovieArea");
+  return { default: module.MovieArea };
+});
+
+const SoundArea = lazy(async () => {
+  const module = await import("@web-speed-hackathon-2026/client/src/components/post/SoundArea");
+  return { default: module.SoundArea };
+});
 
 interface Props {
   post: Models.Post;
@@ -59,12 +69,16 @@ export const PostItem = ({ post }: Props) => {
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
+              <Suspense fallback={null}>
+                <MovieArea movie={post.movie} />
+              </Suspense>
             </div>
           ) : null}
           {post.sound ? (
             <div className="relative mt-2 w-full">
-              <SoundArea sound={post.sound} />
+              <Suspense fallback={null}>
+                <SoundArea sound={post.sound} />
+              </Suspense>
             </div>
           ) : null}
           <p className="mt-2 text-sm sm:mt-4">

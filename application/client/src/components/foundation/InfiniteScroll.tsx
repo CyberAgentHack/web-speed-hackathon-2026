@@ -12,6 +12,11 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
   const prevReachedRef = useRef(false);
   const animationFrameRef = useRef<number | null>(null);
   const isScheduledRef = useRef(false);
+  const latestItemRef = useRef(latestItem);
+
+  useEffect(() => {
+    latestItemRef.current = latestItem;
+  }, [latestItem]);
 
   useEffect(() => {
     const run = () => {
@@ -21,7 +26,7 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
       // 画面最下部にスクロールしたタイミングで、登録したハンドラを呼び出す
       if (hasReached && !prevReachedRef.current) {
         // アイテムがないときは追加で読み込まない
-        if (latestItem !== undefined) {
+        if (latestItemRef.current !== undefined) {
           fetchMore();
         }
       }
@@ -57,7 +62,7 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
       document.removeEventListener("resize", handler);
       document.removeEventListener("scroll", handler);
     };
-  }, [latestItem, fetchMore]);
+  }, [fetchMore]);
 
   return <>{children}</>;
 };
