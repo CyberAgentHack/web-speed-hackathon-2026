@@ -4,11 +4,11 @@ import { SubmissionError } from "redux-form";
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { AuthModalPage } from "@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
+import { useActiveUser } from "@web-speed-hackathon-2026/client/src/contexts/ActiveUserContext";
 import { sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
   id: string;
-  onUpdateActiveUser: (user: Models.User) => void;
 }
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -35,7 +35,8 @@ function getErrorCode(err: JQuery.jqXHR<unknown>, type: "signin" | "signup"): st
   return ERROR_MESSAGES[responseJSON.code]!;
 }
 
-export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
+export const AuthModalContainer = ({ id }: Props) => {
+  const { setActiveUser } = useActiveUser();
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
   useEffect(() => {
@@ -61,10 +62,10 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
       try {
         if (values.type === "signup") {
           const user = await sendJSON<Models.User>("/api/v1/signup", values);
-          onUpdateActiveUser(user);
+          setActiveUser(user);
         } else {
           const user = await sendJSON<Models.User>("/api/v1/signin", values);
-          onUpdateActiveUser(user);
+          setActiveUser(user);
         }
         handleRequestCloseModal();
       } catch (err: unknown) {
@@ -74,7 +75,7 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
         });
       }
     },
-    [handleRequestCloseModal, onUpdateActiveUser],
+    [handleRequestCloseModal, setActiveUser],
   );
 
   return (

@@ -1,16 +1,18 @@
 import type { ReactNode } from "react";
 
 import { Navigation } from "@web-speed-hackathon-2026/client/src/components/application/Navigation";
+import { useActiveUser } from "@web-speed-hackathon-2026/client/src/contexts/ActiveUserContext";
 
 interface Props {
-  activeUser: Models.User | null;
   children: ReactNode;
   authModalId: string;
   newPostModalId: string;
   onLogout: () => void;
 }
 
-export const AppPage = ({ activeUser, children, authModalId, newPostModalId, onLogout }: Props) => {
+export const AppPage = ({ children, authModalId, newPostModalId, onLogout }: Props) => {
+  const { activeUser } = useActiveUser();
+
   return (
     <div className="relative z-0 flex justify-center font-sans">
       <div className="bg-cax-surface text-cax-text flex min-h-screen max-w-full">

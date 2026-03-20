@@ -5,6 +5,7 @@
   "license": "MPL-2.0",
   "author": "CyberAgent, Inc.",
   "scripts": {
+    "api:generate": "orval --config orval.config.ts",
     "build": "NODE_ENV=production webpack",
     "build:analyze": "NODE_ENV=production ANALYZE=1 webpack",
     "typecheck": "tsc"
@@ -14,6 +15,7 @@
     "@ffmpeg/ffmpeg": "0.12.15",
     "@imagemagick/magick-wasm": "0.0.37",
     "@mlc-ai/web-llm": "0.2.80",
+    "@tanstack/react-query": "5.62.8",
     "@web-speed-hackathon-2026/client": "workspace:*",
     "bayesian-bm25": "0.4.0",
     "bluebird": "3.7.2",
@@ -76,6 +78,7 @@
     "css-loader": "7.1.2",
     "html-webpack-plugin": "5.6.4",
     "mini-css-extract-plugin": "2.9.4",
+    "orval": "8.4.0",
     "postcss": "8.5.6",
     "postcss-import": "16.1.1",
     "postcss-loader": "8.2.0",

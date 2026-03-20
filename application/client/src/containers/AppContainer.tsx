@@ -1,11 +1,15 @@
-import { lazy, Suspense, useCallback, useEffect, useId, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useId } from "react";
 import { Helmet, HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
+import { QueryClientProvider } from "@tanstack/react-query";
+
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
+import { ActiveUserProvider, useActiveUser } from "@web-speed-hackathon-2026/client/src/contexts/ActiveUserContext";
+import { queryClient } from "@web-speed-hackathon-2026/client/src/query_client";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
 import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
-import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 const TimelineContainer = lazy(() =>
   import("./TimelineContainer").then((m) => ({
@@ -62,79 +66,72 @@ const RouteFallback = () => (
   </>
 );
 
-export const AppContainer = () => {
+const AppRoutes = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const { isLoading, setActiveUser } = useActiveUser();
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
-  const [activeUser, setActiveUser] = useState<Models.User | null>(null);
-  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
-  useEffect(() => {
-    void fetchJSON<Models.User>("/api/v1/me")
-      .then((user) => {
-        setActiveUser(user);
-      })
-      .finally(() => {
-        setIsLoadingActiveUser(false);
-      });
-  }, [setActiveUser, setIsLoadingActiveUser]);
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
     setActiveUser(null);
     navigate("/");
-  }, [navigate]);
+  }, [navigate, setActiveUser]);
 
   const authModalId = useId();
   const newPostModalId = useId();
 
-  if (isLoadingActiveUser) {
+  if (isLoading) {
     return (
-      <HelmetProvider>
+      <>
         <Helmet>
           <title>読込中 - CaX</title>
         </Helmet>
-      </HelmetProvider>
+      </>
     );
   }
 
   return (
-    <HelmetProvider>
-      <AppPage
-        activeUser={activeUser}
-        authModalId={authModalId}
-        newPostModalId={newPostModalId}
-        onLogout={handleLogout}
-      >
+    <>
+      <AppPage authModalId={authModalId} newPostModalId={newPostModalId} onLogout={handleLogout}>
         <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route element={<TimelineContainer />} path="/" />
             <Route
-              element={
-                <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
-              }
+              element={<DirectMessageListContainer authModalId={authModalId} />}
               path="/dm"
             />
             <Route
-              element={<DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />}
+              element={<DirectMessageContainer authModalId={authModalId} />}
               path="/dm/:conversationId"
             />
             <Route element={<SearchContainer />} path="/search" />
             <Route element={<UserProfileContainer />} path="/users/:username" />
             <Route element={<PostContainer />} path="/posts/:postId" />
             <Route element={<TermContainer />} path="/terms" />
-            <Route
-              element={<CrokContainer activeUser={activeUser} authModalId={authModalId} />}
-              path="/crok"
-            />
+            <Route element={<CrokContainer authModalId={authModalId} />} path="/crok" />
             <Route element={<NotFoundContainer />} path="*" />
           </Routes>
         </Suspense>
       </AppPage>
 
-      <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
+      <AuthModalContainer id={authModalId} />
       <NewPostModalContainer id={newPostModalId} />
+    </>
+  );
+};
+
+export const AppContainer = () => {
+  return (
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <ActiveUserProvider>
+          <AppRoutes />
+        </ActiveUserProvider>
+      </QueryClientProvider>
     </HelmetProvider>
   );
 };
