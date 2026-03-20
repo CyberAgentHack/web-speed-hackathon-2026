@@ -28,7 +28,7 @@
 - [ ] 027-1msポーリングをイベントリスナーに置き換える(setInterval/postTask)
 - [ ] 028-font-displayをblockからswapに変更する
 - [ ] 029-PausableMovie/SoundPlayerにIntersectionObserverで遅延fetchする
-- [ ] 030-DM APIで全メッセージ返却をやめて最新1件+ページネーションにする
+- [x] 030-DM APIで全メッセージ返却をやめて最新1件+ページネーションにする
 
 ## 優先度: 中（LCP/SI/バンドルサイズ改善）
 
