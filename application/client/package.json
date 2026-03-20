@@ -8,7 +8,8 @@
     "build": "vite build",
     "dev": "vite --host 0.0.0.0 --port 8080",
     "analyze": "ANALYZE=true vite build",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "font:subset:terms": "node ./scripts/generate-terms-font-subset.mjs"
   },
   "dependencies": {
     "@imagemagick/magick-wasm": "0.0.37",
@@ -71,6 +72,7 @@
     "postcss-import": "16.1.1",
     "postcss-preset-env": "10.4.0",
     "react-markdown": "10.1.0",
+    "subset-font": "2.4.0",
     "rollup-plugin-visualizer": "6.0.3",
     "typescript": "5.9.3",
     "vite": "7.1.7"
