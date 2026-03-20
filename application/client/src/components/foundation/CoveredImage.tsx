@@ -1,38 +1,18 @@
-import { MouseEvent, useCallback, useEffect, useId, useState } from "react";
+import { MouseEvent, useCallback, useId } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 
 interface Props {
+  alt: string;
   src: string;
 }
 
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
-export const CoveredImage = ({ src }: Props) => {
+export const CoveredImage = ({ alt, src }: Props) => {
   const dialogId = useId();
-  const [alt, setAlt] = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const { load, ImageIFD } = await import("piexifjs");
-        const res = await fetch(src);
-        const buf = await res.arrayBuffer();
-        const binary = Array.from(new Uint8Array(buf)).map((b) => String.fromCharCode(b)).join("");
-        const exif = load(binary);
-        const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-        if (!cancelled && raw != null) {
-          setAlt(new TextDecoder().decode(Uint8Array.from(raw.split("").map((c: string) => c.charCodeAt(0)))));
-        }
-      } catch {
-        // ignore
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [src]);
 
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
