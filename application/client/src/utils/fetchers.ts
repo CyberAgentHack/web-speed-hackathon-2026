@@ -1,5 +1,3 @@
-import { gzip } from "pako";
-
 class RequestError extends Error {
   responseJSON?: unknown;
   status: number;
@@ -99,17 +97,17 @@ export async function sendFile<T>(url: string, file: File): Promise<T> {
 }
 
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
-  const jsonString = JSON.stringify(data);
-  const uint8Array = new TextEncoder().encode(jsonString);
-  const compressed = gzip(uint8Array);
-
-  return requestJSON<T>({
-    body: compressed,
-    headers: {
-      "Content-Encoding": "gzip",
-      "Content-Type": "application/json",
-    },
+  const response = await fetch(url, {
+    body: JSON.stringify(data),
+    headers: { "Content-Type": "application/json" },
     method: "POST",
-    url,
   });
+  if (!response.ok) {
+    throw new RequestError({
+      responseText: await response.text(),
+      status: response.status,
+      statusText: response.statusText,
+    });
+  }
+  return (await response.json()) as T;
 }
