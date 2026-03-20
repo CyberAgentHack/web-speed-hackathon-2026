@@ -2,5 +2,12 @@ node_modules
 .git
 *.log
 
+scoring-tool
+develop-log
+docs
+.github
+
+application/dist
+application/e2e
 application/server/seeds
 application/server/upload
