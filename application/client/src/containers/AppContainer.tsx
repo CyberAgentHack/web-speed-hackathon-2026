@@ -28,6 +28,9 @@ export const AppContainer = () => {
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {
         setActiveUser(user);
+      })
+      .catch(() => {
+        setActiveUser(null);
       });
   }, [setActiveUser]);
   const handleLogout = useCallback(async () => {

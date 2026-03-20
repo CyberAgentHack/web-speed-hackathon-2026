@@ -1,11 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const DEFAULT_LIMIT = 30;
-
-interface Options {
-  initialLimit?: number;
-  pageLimit?: number;
-}
+const LIMIT = 30;
 
 interface ReturnValues<T> {
   data: Array<T>;
@@ -17,12 +12,8 @@ interface ReturnValues<T> {
 export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
-  options?: Options,
 ): ReturnValues<T> {
   const internalRef = useRef({ isLoading: false, offset: 0, hasMore: true });
-  const isFirstRef = useRef(true);
-  const initialLimit = options?.initialLimit ?? DEFAULT_LIMIT;
-  const pageLimit = options?.pageLimit ?? DEFAULT_LIMIT;
 
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
     data: [],
@@ -50,16 +41,15 @@ export function useInfiniteFetch<T>(
       hasMore,
     };
 
-    const limit = isFirstRef.current ? initialLimit : pageLimit;
     const url = apiPath.includes("?")
-      ? `${apiPath}&limit=${limit}&offset=${offset}`
-      : `${apiPath}?limit=${limit}&offset=${offset}`;
+      ? `${apiPath}&limit=${LIMIT}&offset=${offset}`
+      : `${apiPath}?limit=${LIMIT}&offset=${offset}`;
 
     void fetcher(url).then(
       (page) => {
         const receivedCount = page.length;
         const nextOffset = offset + receivedCount;
-        const nextHasMore = receivedCount === limit;
+        const nextHasMore = receivedCount === LIMIT;
         setResult((cur) => ({
           ...cur,
           data: [...cur.data, ...page],
@@ -70,7 +60,6 @@ export function useInfiniteFetch<T>(
           offset: nextOffset,
           hasMore: nextHasMore,
         };
-        isFirstRef.current = false;
       },
       (error) => {
         setResult((cur) => ({
@@ -85,7 +74,7 @@ export function useInfiniteFetch<T>(
         };
       },
     );
-  }, [apiPath, fetcher, initialLimit, pageLimit]);
+  }, [apiPath, fetcher]);
 
   useEffect(() => {
     if (apiPath === "") {
@@ -112,8 +101,6 @@ export function useInfiniteFetch<T>(
       offset: 0,
       hasMore: true,
     };
-    isFirstRef.current = true;
-
     fetchMore();
   }, [fetchMore]);
 

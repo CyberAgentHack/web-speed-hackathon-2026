@@ -1,4 +1,3 @@
-import $ from "jquery";
 import { gzip } from "pako";
 
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {
@@ -10,28 +9,27 @@ export async function fetchBinary(url: string): Promise<ArrayBuffer> {
 }
 
 export async function fetchJSON<T>(url: string): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "json",
+  const res = await fetch(url, {
     method: "GET",
-    url,
   });
-  return result;
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status} ${res.statusText}`);
+  }
+  return (await res.json()) as T;
 }
 
 export async function sendFile<T>(url: string, file: File): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    data: file,
-    dataType: "json",
+  const res = await fetch(url, {
+    body: file,
     headers: {
       "Content-Type": "application/octet-stream",
     },
     method: "POST",
-    processData: false,
-    url,
   });
-  return result;
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status} ${res.statusText}`);
+  }
+  return (await res.json()) as T;
 }
 
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
@@ -39,17 +37,16 @@ export async function sendJSON<T>(url: string, data: object): Promise<T> {
   const uint8Array = new TextEncoder().encode(jsonString);
   const compressed = gzip(uint8Array);
 
-  const result = await $.ajax({
-    async: false,
-    data: compressed,
-    dataType: "json",
+  const res = await fetch(url, {
+    body: compressed,
     headers: {
       "Content-Encoding": "gzip",
       "Content-Type": "application/json",
     },
     method: "POST",
-    processData: false,
-    url,
   });
-  return result;
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status} ${res.statusText}`);
+  }
+  return (await res.json()) as T;
 }

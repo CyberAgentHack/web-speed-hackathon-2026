@@ -1,29 +1,13 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 
 interface Props {
   children: ReactNode;
   items: any[];
   fetchMore: () => void;
-  freezeUntilScroll?: boolean;
 }
 
-export const InfiniteScroll = ({ children, fetchMore, items, freezeUntilScroll }: Props) => {
+export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
   const sentinelRef = useRef<HTMLDivElement | null>(null);
-  const [hasUserScrolled, setHasUserScrolled] = useState(false);
-
-  useEffect(() => {
-    if (!freezeUntilScroll) {
-      return;
-    }
-    const onScroll = () => {
-      if (window.scrollY > 0) {
-        setHasUserScrolled(true);
-      }
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [freezeUntilScroll]);
 
   useEffect(() => {
     const el = sentinelRef.current;
@@ -34,9 +18,6 @@ export const InfiniteScroll = ({ children, fetchMore, items, freezeUntilScroll }
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
-        if (freezeUntilScroll && !hasUserScrolled) {
-          return;
-        }
         if (entry && (entry.isIntersecting || entry.intersectionRatio > 0)) {
           fetchMore();
         }
@@ -48,7 +29,7 @@ export const InfiniteScroll = ({ children, fetchMore, items, freezeUntilScroll }
     return () => {
       observer.disconnect();
     };
-  }, [fetchMore, items.length, freezeUntilScroll, hasUserScrolled]);
+  }, [fetchMore, items.length]);
 
   return (
     <>
