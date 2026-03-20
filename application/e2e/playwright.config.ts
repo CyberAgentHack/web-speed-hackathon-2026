@@ -18,7 +18,7 @@ export default defineConfig({
       maxDiffPixelRatio: 0.03,
     },
   },
-  fullyParallel: true,
+  fullyParallel: false,
   workers: WORKERS,
   projects: [
     {
