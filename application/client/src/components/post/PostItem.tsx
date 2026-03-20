@@ -3,9 +3,9 @@ import { lazy, memo, Suspense, useMemo } from "react";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
+import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
 
-const ImageArea = lazy(() => import("@web-speed-hackathon-2026/client/src/components/post/ImageArea").then(m => ({ default: m.ImageArea })));
-const MovieArea = lazy(() => import("@web-speed-hackathon-2026/client/src/components/post/MovieArea").then(m => ({ default: m.MovieArea })));
 const SoundArea = lazy(() => import("@web-speed-hackathon-2026/client/src/components/post/SoundArea").then(m => ({ default: m.SoundArea })));
 
 interface Props {
@@ -64,12 +64,12 @@ export const PostItem = memo(({ post }: Props) => {
           <Suspense fallback={<div className="h-40 w-full animate-pulse bg-cax-surface-subtle rounded-lg mt-2" />}>
             {post.images?.length > 0 ? (
                 <div className="relative mt-2 w-full">
-                <ImageArea images={post.images} />
+                <ImageArea images={post.images} isPriority={true} />
                 </div>
             ) : null}
             {post.movie ? (
                 <div className="relative mt-2 w-full">
-                <MovieArea movie={post.movie} />
+                <MovieArea movie={post.movie} isPriority={true} />
                 </div>
             ) : null}
             {post.sound ? (
