@@ -22,7 +22,7 @@
 - [x] 003-Babelターゲットをモダンブラウザにしてポリフィルを除去する
 - [x] 007-CoveredImageのバイナリfetch+EXIF解析をAPI経由のalt取得に変更する
 - [x] 016-React.lazyでルートベースコード分割する
-- [ ] 017-HTTP圧縮(compression)を追加する
+- [x] 017-HTTP圧縮(compression)を追加する
 - [x] 018-静的アセットのキャッシュヘッダーを有効化する
 - [x] 019-Connection closeヘッダーを除去する
 - [ ] 027-1msポーリングをイベントリスナーに置き換える(setInterval/postTask)
