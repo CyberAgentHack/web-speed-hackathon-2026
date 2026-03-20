@@ -1,0 +1,39 @@
+# fly.toml app configuration file generated for web-speed-hackathon-2026
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# WARNING: このファイルを変更しないでください。変更した場合、順位対象外となります。
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#
+
+app = "web-speed-hackathon-2026"
+primary_region = "nrt"
+
+[build]
+[build.args]
+NODE_VERSION = "24.14.0"
+
+[env]
+PORT = "8080"
+NODE_ENV = "production"
+
+[http_service]
+internal_port = 8080
+force_https = true
+auto_stop_machines = "stop"
+auto_start_machines = true
+min_machines_running = 0
+processes = ["app"]
+
+[[http_service.checks]]
+interval = "10s"
+timeout = "100s"
+grace_period = "10s"
+method = "GET"
+path = "/"
+
+[[vm]]
+cpu_kind = "shared"
+cpus = 1
+memory_mb = 2048
