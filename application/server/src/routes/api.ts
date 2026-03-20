@@ -13,6 +13,7 @@ import { searchRouter } from "@web-speed-hackathon-2026/server/src/routes/api/se
 import { soundRouter } from "@web-speed-hackathon-2026/server/src/routes/api/sound";
 import { userRouter } from "@web-speed-hackathon-2026/server/src/routes/api/user";
 import { negaposiRouter } from "@web-speed-hackathon-2026/server/src/routes/api/negaposi";
+import { translateRouter } from "@web-speed-hackathon-2026/server/src/routes/api/translate";
 
 export const apiRouter = Router();
 
@@ -27,6 +28,7 @@ apiRouter.use(soundRouter);
 apiRouter.use(authRouter);
 apiRouter.use(crokRouter);
 apiRouter.use(negaposiRouter);
+apiRouter.use(translateRouter);
 
 apiRouter.use(async (err: Error, _req: Request, _res: Response, _next: NextFunction) => {
   if (err instanceof ValidationError) {

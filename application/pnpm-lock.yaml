@@ -30,9 +30,6 @@ importers:
       '@imagemagick/magick-wasm':
         specifier: 0.0.37
         version: 0.0.37
-      '@mlc-ai/web-llm':
-        specifier: 0.2.80
-        version: 0.2.80
       '@web-speed-hackathon-2026/client':
         specifier: workspace:*
         version: 'link:'
@@ -75,9 +72,6 @@ importers:
       jsmediatags:
         specifier: 3.9.7
         version: 3.9.7
-      json-repair-js:
-        specifier: 1.0.0
-        version: 1.0.0
       katex:
         specifier: 0.16.25
         version: 0.16.25
@@ -250,9 +244,6 @@ importers:
       '@google-cloud/translate':
         specifier: 9.3.0
         version: 9.3.0
-      '@mlc-ai/web-llm':
-        specifier: 0.2.80
-        version: 0.2.80
       '@tsconfig/strictest':
         specifier: 2.0.8
         version: 2.0.8
@@ -1043,9 +1034,6 @@ packages:
 
   '@js-sdsl/ordered-map@4.4.2':
     resolution: {integrity: sha512-iUKgm52T8HOE/makSxjqoWhe95ZJA1/G1sYsGev2JDKUSS14KAgg1LHb+Ba+IPow0xflbnSkOsZcO08C7w1gYw==}
-
-  '@mlc-ai/web-llm@0.2.80':
-    resolution: {integrity: sha512-Hwy1OCsK5cOU4nKr2wIJ2qA1g595PENtO5f2d9Wd/GgFsj5X04uxfaaJfqED8eFAJOpQpn/DirogdEY/yp5jQg==}
 
   '@napi-rs/wasm-runtime@1.1.1':
     resolution: {integrity: sha512-p64ah1M1ld8xjWv3qbvFwHiFVWrq1yFvV4f7w+mzaqiR4IlSgkqhcRdHwsGgomwzBH51sRY4NEowLxnaBjcW/A==}
@@ -4759,10 +4747,6 @@ snapshots:
       wrap-ansi-cjs: wrap-ansi@7.0.0
 
   '@js-sdsl/ordered-map@4.4.2': {}
-
-  '@mlc-ai/web-llm@0.2.80':
-    dependencies:
-      loglevel: 1.9.2
 
   '@napi-rs/wasm-runtime@1.1.1':
     dependencies:

@@ -1,23 +1,24 @@
 {
-  "name": "@web-speed-hackathon-2026/application",
-  "private": true,
-  "license": "MPL-2.0",
-  "author": "CyberAgent, Inc.",
-  "type": "module",
-  "scripts": {
-    "build": "pnpm --filter @web-speed-hackathon-2026/client build",
-    "start": "pnpm --filter @web-speed-hackathon-2026/server start",
-    "typecheck": "pnpm run --recursive typecheck",
-    "format": "pnpm run format:oxlint && pnpm run format:oxfmt",
-    "format:oxlint": "oxlint --fix",
-    "format:oxfmt": "oxfmt"
-  },
-  "devDependencies": {
-    "oxfmt": "0.36.0",
-    "oxlint": "1.43.0"
-  },
-  "engines": {
-    "node": "24.14.0"
-  },
-  "packageManager": "pnpm@10.32.1"
+    "name": "@web-speed-hackathon-2026/application",
+    "private": true,
+    "license": "MPL-2.0",
+    "author": "CyberAgent, Inc.",
+    "type": "module",
+    "scripts": {
+        "build": "pnpm --filter @web-speed-hackathon-2026/client build",
+        "start": "pnpm --filter @web-speed-hackathon-2026/server start",
+        "start:local": "pnpm --filter @web-speed-hackathon-2026/server start:local",
+        "typecheck": "pnpm run --recursive typecheck",
+        "format": "pnpm run format:oxlint && pnpm run format:oxfmt",
+        "format:oxlint": "oxlint --fix",
+        "format:oxfmt": "oxfmt"
+    },
+    "devDependencies": {
+        "oxfmt": "0.36.0",
+        "oxlint": "1.43.0"
+    },
+    "engines": {
+        "node": "24.14.0"
+    },
+    "packageManager": "pnpm@10.32.1"
 }
