@@ -3,13 +3,15 @@ interface Options {
 }
 
 export async function convertImage(file: File, options: Options): Promise<Blob> {
-  const [{ initializeImageMagick, ImageMagick, MagickFormat }, { default: magickWasm }] =
-    await Promise.all([
+  const [{ initializeImageMagick, ImageMagick, MagickFormat }, wasmUrl] = await Promise.all([
     import("@imagemagick/magick-wasm"),
-    import("@imagemagick/magick-wasm/magick.wasm?binary"),
-    ]);
+    import("@imagemagick/magick-wasm/magick.wasm?binary").then((mod) => mod.default),
+  ]);
 
-  await initializeImageMagick(magickWasm);
+  const wasmBytes = await fetch(wasmUrl).then(async (response) => {
+    return await response.arrayBuffer();
+  });
+  await initializeImageMagick(new Uint8Array(wasmBytes));
 
   const byteArray = new Uint8Array(await file.arrayBuffer());
 

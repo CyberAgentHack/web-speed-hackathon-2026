@@ -4,7 +4,6 @@ import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
-import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 const TimelineContainer = lazy(async () => {
@@ -44,6 +43,10 @@ const CrokContainer = lazy(async () => {
 const NotFoundContainer = lazy(async () => {
   const mod = await import("@web-speed-hackathon-2026/client/src/containers/NotFoundContainer");
   return { default: mod.NotFoundContainer };
+});
+const NewPostModalContainer = lazy(async () => {
+  const mod = await import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer");
+  return { default: mod.NewPostModalContainer };
 });
 
 export const AppContainer = () => {
@@ -118,7 +121,9 @@ export const AppContainer = () => {
       </AppPage>
 
       <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
-      <NewPostModalContainer id={newPostModalId} />
+      <Suspense fallback={null}>
+        <NewPostModalContainer id={newPostModalId} />
+      </Suspense>
     </HelmetProvider>
   );
 };

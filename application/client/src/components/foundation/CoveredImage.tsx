@@ -1,7 +1,5 @@
 import classNames from "classnames";
-import sizeOf from "image-size";
-import { load, ImageIFD } from "piexifjs";
-import { MouseEvent, RefCallback, useCallback, useId, useMemo, useState } from "react";
+import { MouseEvent, RefCallback, useCallback, useEffect, useId, useMemo, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
@@ -28,16 +26,45 @@ export const CoveredImage = ({ src }: Props) => {
     return new TextDecoder("latin1").decode(new Uint8Array(buffer));
   }, []);
 
-  const imageSize = useMemo(() => {
-    return data != null ? sizeOf(new Uint8Array(data)) : { height: 0, width: 0 };
-  }, [data]);
+  const [imageSize, setImageSize] = useState<{ height?: number; width?: number }>({
+    height: 0,
+    width: 0,
+  });
+  const [alt, setAlt] = useState("");
 
-  const alt = useMemo(() => {
-    const exif = data != null ? load(binaryStringFromArrayBuffer(data)) : null;
-    const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-    return raw != null
-      ? new TextDecoder().decode(Uint8Array.from(raw, (char) => char.charCodeAt(0)))
-      : "";
+  useEffect(() => {
+    let cancelled = false;
+    if (data == null) {
+      setImageSize({ height: 0, width: 0 });
+      setAlt("");
+      return;
+    }
+
+    const loadMetadata = async () => {
+      const [{ default: sizeOf }, { load, ImageIFD }] = await Promise.all([
+        import("image-size"),
+        import("piexifjs"),
+      ]);
+      if (cancelled) {
+        return;
+      }
+
+      setImageSize(sizeOf(new Uint8Array(data)));
+
+      const exif = load(binaryStringFromArrayBuffer(data));
+      const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
+      setAlt(
+        raw != null
+          ? new TextDecoder().decode(Uint8Array.from(raw, (char) => char.charCodeAt(0)))
+          : "",
+      );
+    };
+
+    void loadMetadata();
+
+    return () => {
+      cancelled = true;
+    };
   }, [binaryStringFromArrayBuffer, data]);
 
   const blobUrl = useMemo(() => {

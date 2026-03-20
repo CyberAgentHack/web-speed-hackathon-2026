@@ -5,14 +5,14 @@ module.exports = {
       "@babel/preset-env",
       {
         targets: { chrome: "130" },
-        modules: "commonjs",
+        modules: false,
         useBuiltIns: false,
       },
     ],
     [
       "@babel/preset-react",
       {
-        development: true,
+        development: false,
         runtime: "automatic",
       },
     ],
