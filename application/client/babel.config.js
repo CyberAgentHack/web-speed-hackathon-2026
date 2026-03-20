@@ -4,7 +4,7 @@ module.exports = {
     [
       "@babel/preset-env",
       {
-        targets: "last 1 year",
+        targets: "baseline widely available",
         corejs: "3",
         modules: false,
         useBuiltIns: "usage",
