@@ -1,6 +1,5 @@
-import classNames from "classnames";
 import { load, ImageIFD } from "piexifjs";
-import { MouseEvent, SyntheticEvent, useCallback, useEffect, useId, useState } from "react";
+import { MouseEvent, useCallback, useEffect, useId, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
@@ -21,19 +20,6 @@ export const CoveredImage = ({ src }: Props) => {
   }, []);
 
   const [alt, setAlt] = useState("");
-  const [imageRatio, setImageRatio] = useState(0);
-  const [containerRatio, setContainerRatio] = useState(0);
-
-  const containerRef = useCallback((el: HTMLDivElement | null) => {
-    if (el) {
-      setContainerRatio(el.clientHeight / el.clientWidth);
-    }
-  }, []);
-
-  const handleImgLoad = useCallback((ev: SyntheticEvent<HTMLImageElement>) => {
-    const img = ev.currentTarget;
-    setImageRatio(img.naturalHeight / img.naturalWidth);
-  }, []);
 
   // alt テキストのみバイナリ取得（表示をブロックしない）
   useEffect(() => {
@@ -49,19 +35,8 @@ export const CoveredImage = ({ src }: Props) => {
   }, [src]);
 
   return (
-    <div ref={containerRef} className="relative h-full w-full overflow-hidden">
-      <img
-        alt={alt}
-        className={classNames(
-          "absolute left-1/2 top-1/2 max-w-none -translate-x-1/2 -translate-y-1/2",
-          {
-            "w-auto h-full": containerRatio > imageRatio,
-            "w-full h-auto": containerRatio <= imageRatio,
-          },
-        )}
-        onLoad={handleImgLoad}
-        src={src}
-      />
+    <div className="relative h-full w-full overflow-hidden">
+      <img alt={alt} className="absolute inset-0 h-full w-full object-cover" src={src} />
 
       <button
         className="border-cax-border bg-cax-surface-raised/90 text-cax-text-muted hover:bg-cax-surface absolute right-1 bottom-1 rounded-full border px-2 py-1 text-center text-xs"
