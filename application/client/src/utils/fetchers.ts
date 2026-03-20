@@ -27,5 +27,9 @@ export async function sendJSON<T>(url: string, data: object): Promise<T> {
     },
     method: "POST",
   });
-  return response.json() as Promise<T>;
+  const json = await response.json();
+  if (!response.ok) {
+    throw json;
+  }
+  return json as T;
 }
