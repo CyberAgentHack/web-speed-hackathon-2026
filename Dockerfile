@@ -27,6 +27,8 @@ RUN NODE_OPTIONS="--max-old-space-size=4096" pnpm build
 
 RUN --mount=type=cache,target=/pnpm/store CI=true pnpm install --frozen-lockfile --prod --filter @web-speed-hackathon-2026/server
 
+RUN cd server && pnpm seed:insert
+
 FROM base
 
 COPY --from=build /app /app
