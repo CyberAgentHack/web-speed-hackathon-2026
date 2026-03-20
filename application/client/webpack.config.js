@@ -25,7 +25,7 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: process.env.NODE_ENV === "production" ? "source-map" : "inline-source-map",
+  devtool: process.env.NODE_ENV === "production" ? false : "source-map",
   entry: {
     main: [
       "core-js",
