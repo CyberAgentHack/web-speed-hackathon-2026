@@ -28,9 +28,10 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
  */
 interface Props {
   post: Models.Post;
+  isFirstItem?: boolean;
 }
 
-export const TimelineItem = ({ post }: Props) => {
+export const TimelineItem = ({ post, isFirstItem = false }: Props) => {
   const navigate = useNavigate();
 
   const createdAt = useMemo(() => moment(post.createdAt), [post.createdAt]);
@@ -56,7 +57,7 @@ export const TimelineItem = ({ post }: Props) => {
             className="border-cax-border bg-cax-surface-subtle block h-12 w-12 overflow-hidden rounded-full border hover:opacity-75 sm:h-16 sm:w-16"
             to={`/users/${post.user.username}`}
           >
-            <AvatarImage height={64} profileImage={post.user.profileImage} width={64} />
+            <AvatarImage height={64} profileImage={post.user.profileImage} width={64} fetchPriority={isFirstItem ? "high" : "auto"} />
           </Link>
         </div>
         <div className="min-w-0 shrink grow">
@@ -85,7 +86,7 @@ export const TimelineItem = ({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea images={post.images} fetchPriority={isFirstItem ? "high" : "auto"} />
             </div>
           ) : null}
           {post.movie ? (

@@ -6,9 +6,10 @@ import { getImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_pat
 
 interface Props {
   images: Models.Image[];
+  fetchPriority?: "high" | "low" | "auto";
 }
 
-export const ImageArea = ({ images }: Props) => {
+export const ImageArea = ({ images, fetchPriority = "auto" }: Props) => {
   return (
     <AspectRatioBox aspectHeight={9} aspectWidth={16}>
       <div className="border-cax-border grid h-full w-full grid-cols-2 grid-rows-2 gap-1 overflow-hidden rounded-lg border">
@@ -24,7 +25,7 @@ export const ImageArea = ({ images }: Props) => {
                 "row-span-2": images.length <= 2 || (images.length === 3 && idx === 0),
               })}
             >
-              <CoveredImage src={getImagePath(image.id)} width={image.width} height={image.height} />
+              <CoveredImage src={getImagePath(image.id)} width={image.width} height={image.height} fetchPriority={idx === 0 ? fetchPriority : "auto"} />
             </div>
           );
         })}

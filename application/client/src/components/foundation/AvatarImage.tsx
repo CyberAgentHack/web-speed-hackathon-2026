@@ -9,6 +9,7 @@ interface Props {
   height?: number;
   alt?: string;
   crossOrigin?: "anonymous" | "use-credentials";
+  fetchPriority?: "high" | "low" | "auto";
   onLoad?: React.ReactEventHandler<HTMLImageElement>;
 }
 
@@ -19,6 +20,7 @@ export const AvatarImage = ({
   height = 64,
   alt,
   crossOrigin,
+  fetchPriority = "auto",
   onLoad,
 }: Props) => {
   return (
@@ -26,6 +28,7 @@ export const AvatarImage = ({
       alt={alt ?? profileImage.alt}
       className={classNames("h-full w-full object-cover", className)}
       crossOrigin={crossOrigin}
+      fetchPriority={fetchPriority}
       height={height}
       onLoad={onLoad}
       src={getProfileImagePath(profileImage.id)}
