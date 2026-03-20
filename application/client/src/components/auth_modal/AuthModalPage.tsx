@@ -10,10 +10,12 @@ import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/componen
 
 interface Props {
   onRequestCloseModal: () => void;
+  serverError?: string | null;
 }
 
 const AuthModalPageComponent = ({
   onRequestCloseModal,
+  serverError,
   handleSubmit,
   error,
   invalid,
@@ -89,7 +91,7 @@ const AuthModalPageComponent = ({
         {type === "signin" ? "サインイン" : "登録する"}
       </ModalSubmitButton>
 
-      <ModalErrorMessage>{error}</ModalErrorMessage>
+      <ModalErrorMessage>{serverError ?? error}</ModalErrorMessage>
     </form>
   );
 };

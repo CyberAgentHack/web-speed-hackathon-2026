@@ -1,5 +1,26 @@
 import { gzip } from "pako";
 
+class RequestError extends Error {
+  responseJSON?: unknown;
+  status: number;
+  statusText: string;
+
+  constructor(xhr: XMLHttpRequest) {
+    super(`Request failed: ${xhr.status} ${xhr.statusText}`);
+    this.name = "RequestError";
+    this.status = xhr.status;
+    this.statusText = xhr.statusText;
+
+    if (xhr.responseText.length > 0) {
+      try {
+        this.responseJSON = JSON.parse(xhr.responseText);
+      } catch {
+        this.responseJSON = undefined;
+      }
+    }
+  }
+}
+
 function requestArrayBuffer(url: string): Promise<ArrayBuffer> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -14,7 +35,7 @@ function requestArrayBuffer(url: string): Promise<ArrayBuffer> {
     }
 
     if (xhr.status < 200 || xhr.status >= 300) {
-      reject(new Error(`Request failed: ${xhr.status} ${xhr.statusText}`));
+      reject(new RequestError(xhr));
       return;
     }
 
@@ -54,7 +75,7 @@ function requestJSON<T>({
     }
 
     if (xhr.status < 200 || xhr.status >= 300) {
-      reject(new Error(`Request failed: ${xhr.status} ${xhr.statusText}`));
+      reject(new RequestError(xhr));
       return;
     }
 

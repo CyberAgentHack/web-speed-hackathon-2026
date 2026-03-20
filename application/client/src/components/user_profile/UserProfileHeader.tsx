@@ -1,6 +1,6 @@
 import { FastAverageColor } from "fast-average-color";
 import moment from "moment";
-import { ReactEventHandler, useCallback, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
@@ -10,30 +10,61 @@ interface Props {
 }
 
 export const UserProfileHeader = ({ user }: Props) => {
+  const profileImagePath = getProfileImagePath(user.profileImage.id);
   const [averageColor, setAverageColor] = useState<string | null>(null);
+  const [isReady, setIsReady] = useState(false);
 
-  // 画像の平均色を取得します
-  /** @type {React.ReactEventHandler<HTMLImageElement>} */
-  const handleLoadImage = useCallback<ReactEventHandler<HTMLImageElement>>((ev) => {
-    const fac = new FastAverageColor();
-    const { rgb } = fac.getColor(ev.currentTarget, { mode: "precision" });
-    setAverageColor(rgb);
-    fac.destroy();
-  }, []);
+  useEffect(() => {
+    let isCancelled = false;
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+
+    const handleReady = () => {
+      if (isCancelled) return;
+
+      const fac = new FastAverageColor();
+      try {
+        const { rgb } = fac.getColor(image, { mode: "precision" });
+        setAverageColor(rgb);
+      } finally {
+        fac.destroy();
+        setIsReady(true);
+      }
+    };
+
+    const handleError = () => {
+      if (isCancelled) return;
+      setIsReady(true);
+    };
+
+    image.addEventListener("load", handleReady);
+    image.addEventListener("error", handleError);
+    image.src = profileImagePath;
+
+    if (image.complete && image.naturalWidth > 0) {
+      handleReady();
+    }
+
+    return () => {
+      isCancelled = true;
+      image.removeEventListener("load", handleReady);
+      image.removeEventListener("error", handleError);
+    };
+  }, [profileImagePath]);
 
   return (
     <header className="relative">
-      <div
-        className={`h-32 ${averageColor ? `bg-[${averageColor}]` : "bg-cax-surface-subtle"}`}
-      ></div>
-      <div className="border-cax-border bg-cax-surface-subtle absolute left-2/4 m-0 h-28 w-28 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border sm:h-32 sm:w-32">
-        <img
-          alt=""
-          crossOrigin="anonymous"
-          onLoad={handleLoadImage}
-          src={getProfileImagePath(user.profileImage.id)}
-        />
-      </div>
+      {isReady ? (
+        <>
+          <div
+            className="h-32 bg-cax-surface-subtle"
+            style={averageColor ? { backgroundColor: averageColor } : undefined}
+          ></div>
+          <div className="border-cax-border bg-cax-surface-subtle absolute left-2/4 m-0 h-28 w-28 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border sm:h-32 sm:w-32">
+            <img alt="" crossOrigin="anonymous" src={profileImagePath} />
+          </div>
+        </>
+      ) : null}
       <div className="px-4 pt-20">
         <h1 className="text-2xl font-bold">{user.name}</h1>
         <p className="text-cax-text-muted">@{user.username}</p>
