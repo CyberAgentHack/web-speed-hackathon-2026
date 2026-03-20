@@ -4,12 +4,14 @@ let tokenizerPromise: Promise<Tokenizer<IpadicFeatures>> | null = null;
 
 export async function loadKuromojiTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
   tokenizerPromise ??= (async () => {
-    const [{ default: Bluebird }, kuromojiModule] = await Promise.all([
-      import("bluebird"),
-      import("kuromoji"),
-    ]);
-    const builder = Bluebird.promisifyAll(kuromojiModule.default.builder({ dicPath: "/dicts" }));
-    return builder.buildAsync();
+    const kuromojiModule = await import("kuromoji");
+    const builder = kuromojiModule.default.builder({ dicPath: "/dicts" });
+    return new Promise<Tokenizer<IpadicFeatures>>((resolve, reject) => {
+      builder.build((err: Error | null, tokenizer: Tokenizer<IpadicFeatures>) => {
+        if (err) reject(err);
+        else resolve(tokenizer);
+      });
+    });
   })();
 
   return tokenizerPromise;
