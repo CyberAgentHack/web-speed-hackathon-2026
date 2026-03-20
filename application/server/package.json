@@ -15,6 +15,7 @@
   "dependencies": {
     "@tsconfig/strictest": "2.0.8",
     "@web-speed-hackathon-2026/server": "workspace:*",
+    "audio-decode": "^3.3.0",
     "bcrypt": "6.0.0",
     "body-parser": "2.2.0",
     "connect-history-api-fallback": "2.0.0",
@@ -23,12 +24,12 @@
     "file-type": "21.1.1",
     "http-errors": "2.0.0",
     "music-metadata": "11.10.3",
+    "piexifjs": "1.0.6",
     "sequelize": "6.37.7",
     "serve-static": "2.2.0",
     "sqlite3": "5.1.7",
     "tsx": "4.20.6",
     "uuid": "13.0.0",
-    "piexifjs": "1.0.6",
     "ws": "8.18.3"
   },
   "devDependencies": {

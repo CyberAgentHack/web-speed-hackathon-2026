@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { faker } from "@faker-js/faker/locale/ja";
 
+import { computePeaks } from "@web-speed-hackathon-2026/server/src/utils/compute_peaks";
 import { extractAltFromExif } from "@web-speed-hackathon-2026/server/src/utils/extract_alt_from_exif";
 
 // Set seed for reproducible results
@@ -237,13 +238,15 @@ function generateMovies(): MovieSeed[] {
   }));
 }
 
-function generateSounds(): SoundSeed[] {
-  // Use existing sound data from public/sounds/
-  return EXISTING_SOUNDS.map(({ id, title, artist }) => ({
-    id,
-    title,
-    artist,
-  }));
+async function generateSounds(): Promise<SoundSeed[]> {
+  const soundsDir = path.resolve(__dirname, "../../public/sounds");
+  const results: SoundSeed[] = [];
+  for (const { id, title, artist } of EXISTING_SOUNDS) {
+    const buf = readFileSync(path.join(soundsDir, `${id}.mp3`));
+    const peaks = await computePeaks(buf);
+    results.push({ id, title, artist, peaks });
+  }
+  return results;
 }
 
 const postTemplates = [
@@ -710,7 +713,7 @@ async function main() {
   const movies = generateMovies();
 
   console.log("5. Generating Sounds (using existing assets)...");
-  const sounds = generateSounds();
+  const sounds = await generateSounds();
 
   console.log("6. Generating Posts...");
   const posts = generatePosts(CONFIG.POST_COUNT, users, movies, sounds);

@@ -7,6 +7,7 @@ import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+import { computePeaks } from "@web-speed-hackathon-2026/server/src/utils/compute_peaks";
 import { extractMetadataFromSound } from "@web-speed-hackathon-2026/server/src/utils/extract_metadata_from_sound";
 
 // 変換した音声の拡張子
@@ -29,11 +30,14 @@ soundRouter.post("/sounds", async (req, res) => {
 
   const soundId = uuidv4();
 
-  const { artist, title } = await extractMetadataFromSound(req.body);
+  const [{ artist, title }, peaks] = await Promise.all([
+    extractMetadataFromSound(req.body),
+    computePeaks(req.body),
+  ]);
 
   const filePath = path.resolve(UPLOAD_PATH, `./sounds/${soundId}.${EXTENSION}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds"), { recursive: true });
   await fs.writeFile(filePath, req.body);
 
-  return res.status(200).type("application/json").send({ artist, id: soundId, title });
+  return res.status(200).type("application/json").send({ artist, id: soundId, peaks, title });
 });
