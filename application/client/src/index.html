@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CaX</title>
     <link rel="stylesheet" href="/styles/main.css" />
+    <script>
+    !function(){
+      var p=location.pathname,q=window.__q={},m;
+      function pf(u){q[u]=fetch(u).then(function(r){return r.ok?r.json():null}).catch(function(){return null});}
+      m=p.match(/^\/posts\/([a-f0-9-]+)/);if(m)pf('/api/v1/posts/'+m[1]);
+      m=p.match(/^\/users\/([^/]+)/);if(m)pf('/api/v1/users/'+m[1]);
+      if(p==='/')pf('/api/v1/posts?limit=30&offset=0');
+    }();
+    </script>
     <script src="/scripts/main.js" defer></script>
   </head>
   <body class="bg-cax-canvas text-cax-text">

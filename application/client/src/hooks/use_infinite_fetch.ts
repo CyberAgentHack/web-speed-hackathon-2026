@@ -9,6 +9,8 @@ interface ReturnValues<T> {
   fetchMore: () => void;
 }
 
+type PrefetchCache = Record<string, Promise<unknown>>;
+
 export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
@@ -32,6 +34,37 @@ export function useInfiniteFetch<T>(
       const url = `${apiPath}${separator}limit=${LIMIT}&offset=${offset}`;
 
       setResult((cur) => ({ ...cur, isLoading: true }));
+
+      // Check inline prefetch cache (only for offset=0 / first page)
+      const cache = (window as unknown as { __q?: PrefetchCache }).__q;
+      const prefetched = offset === 0 ? (cache?.[url] as Promise<T[] | null> | undefined) : undefined;
+      if (prefetched) {
+        delete cache![url];
+        void prefetched.then(
+          (pageData) => {
+            isLoadingRef.current = false;
+            if (pageData !== null) {
+              offsetRef.current = pageData.length;
+              if (pageData.length < LIMIT) hasMoreRef.current = false;
+              setResult((cur) => ({ ...cur, data: pageData, isLoading: false }));
+            } else {
+              void fetcher(url).then(
+                (pageData) => {
+                  isLoadingRef.current = false;
+                  offsetRef.current = pageData.length;
+                  if (pageData.length < LIMIT) hasMoreRef.current = false;
+                  setResult((cur) => ({ ...cur, data: pageData, isLoading: false }));
+                },
+                (error) => {
+                  isLoadingRef.current = false;
+                  setResult((cur) => ({ ...cur, error, isLoading: false }));
+                },
+              );
+            }
+          },
+        );
+        return;
+      }
 
       void fetcher(url).then(
         (pageData) => {
