@@ -9,7 +9,8 @@ import ffmpegPath from "ffmpeg-static";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
-import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+import { PUBLIC_PATH, UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+import { computeWaveform } from "@web-speed-hackathon-2026/server/src/utils/compute_waveform";
 import { extractMetadataFromSound } from "@web-speed-hackathon-2026/server/src/utils/extract_metadata_from_sound";
 
 const execFileAsync = promisify(execFile);
@@ -62,4 +63,28 @@ soundRouter.post("/sounds", async (req, res) => {
   await fs.writeFile(filePath, mp3Buffer);
 
   return res.status(200).type("application/json").send({ artist, id: soundId, title });
+});
+
+soundRouter.get("/sounds/:soundId/waveform", async (req, res) => {
+  const { soundId } = req.params;
+  // シードデータは public/sounds/、新規投稿は upload/sounds/ に格納
+  const publicFilePath = path.resolve(PUBLIC_PATH, `./sounds/${soundId}.mp3`);
+  const uploadFilePath = path.resolve(UPLOAD_PATH, `./sounds/${soundId}.mp3`);
+
+  let filePath: string;
+  try {
+    await fs.access(publicFilePath);
+    filePath = publicFilePath;
+  } catch {
+    try {
+      await fs.access(uploadFilePath);
+      filePath = uploadFilePath;
+    } catch {
+      throw new httpErrors.NotFound();
+    }
+  }
+
+  const peaks = await computeWaveform(filePath, soundId);
+  res.setHeader("Cache-Control", "public, max-age=86400");
+  return res.status(200).json({ peaks });
 });
