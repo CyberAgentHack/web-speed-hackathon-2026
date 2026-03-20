@@ -78,6 +78,18 @@ export function initUser(sequelize: Sequelize) {
         attributes: { exclude: ["profileImageId"] },
         include: { association: "profileImage" },
       },
+      hooks: {
+        beforeCreate: async (user: User) => {
+          if (user.changed("password")) {
+            user.setDataValue("password", await user.generateHash(user.getDataValue("password")));
+          }
+        },
+        beforeUpdate: async (user: User) => {
+          if (user.changed("password")) {
+            user.setDataValue("password", await user.generateHash(user.getDataValue("password")));
+          }
+        },
+      },
     },
   );
 }
