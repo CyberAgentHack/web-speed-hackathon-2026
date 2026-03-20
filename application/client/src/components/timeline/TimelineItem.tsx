@@ -1,5 +1,8 @@
-import moment from "moment";
 import { MouseEventHandler, useCallback } from "react";
+
+const dateFormatter = new Intl.DateTimeFormat("ja-JP", { year: "numeric", month: "long", day: "numeric" });
+const formatDate = (d: string | Date) => dateFormatter.format(new Date(d));
+const toISO = (d: string | Date) => new Date(d).toISOString();
 import { Link, useNavigate } from "react-router";
 
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
@@ -76,8 +79,8 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={toISO(post.createdAt)}>
+                {formatDate(post.createdAt)}
               </time>
             </Link>
           </p>
