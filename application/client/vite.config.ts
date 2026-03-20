@@ -45,6 +45,12 @@ export default defineConfig({
           }
           return "assets/[name].[hash][extname]";
         },
+        // vendor分離でメインスレッドブロッキングを分散
+        manualChunks: {
+          "vendor-react": ["react", "react-dom", "react-dom/client"],
+          "vendor-router": ["react-router"],
+          "vendor-redux": ["redux", "react-redux"],
+        },
       },
     },
     cssCodeSplit: true,
