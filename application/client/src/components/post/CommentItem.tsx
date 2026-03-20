@@ -1,6 +1,6 @@
-import moment from "moment";
-
 import { AvatarImage } from "@web-speed-hackathon-2026/client/src/components/foundation/AvatarImage";
+
+import { formatDate } from "@web-speed-hackathon-2026/client/src/utils/date_formatter";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 
@@ -39,8 +39,8 @@ export const CommentItem = ({ comment }: Props) => {
             <TranslatableText text={comment.text} />
           </div>
           <p className="text-cax-text-muted pt-1 text-xs">
-            <time dateTime={moment(comment.createdAt).toISOString()}>
-              {moment(comment.createdAt).locale("ja").format("LL")}
+            <time dateTime={new Date(comment.createdAt).toISOString()}>
+              {formatDate(comment.createdAt)}
             </time>
           </p>
         </div>
