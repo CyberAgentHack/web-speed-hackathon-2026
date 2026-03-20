@@ -1,0 +1,27 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: "8080"
+    expose:
+      - "8080"
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2.10-alpine
+    depends_on:
+      - app
+    ports:
+      - "3333:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
