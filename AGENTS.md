@@ -115,7 +115,7 @@ Dockerfile: マルチステージビルド → Fly.io（NRTリージョン、1CP
 
 - `cd application/e2e && pnpm test` で Playwright E2E + VRT（Visual Regression Testing）を実行できる
 - UI の変更は行わないため、VRT は常に通ることを期待する。VRT が落ちた場合はバグとして修正すること
-- テスト実行前に `pnpm dev` を起動しておく（ブラウザ: 3000、API: 8080）
+- 基本的にdevに対してe2eする（デフォルト)
 - `pnpm start`（3001）に対して E2E を実行する場合は `E2E_BASE_URL=http://localhost:3001 pnpm test`
 - Playwright が Chrome を起動する際にサンドボックスの権限エラーが発生するため、E2E テスト実行時は `dangerouslyDisableSandbox: true` で実行すること
 最初のe2e結果はこの通り。下記二つはflakyとして扱って良い。
