@@ -1,5 +1,7 @@
 # Web Speed Hackathon 2026
 
+++
+
 **"Web Speed Hackathon 2026" は、非常に重たい Web アプリをチューニングして、いかに高速にするかを競う競技です。**
 
 今回のテーマは、架空の SNS サイト「CaX」です。
