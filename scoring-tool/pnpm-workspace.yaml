@@ -1,0 +1,5 @@
+allowBuilds:
+  esbuild: true
+patchedDependencies:
+  lighthouse@12.8.2: patches/lighthouse@12.8.2.patch
+saveExact: true

@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "jsx": "react",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "rewriteRelativeImportExtensions": true,
+    "target": "ESNext"
+  },
+  "extends": ["@tsconfig/strictest/tsconfig.json"]
+}

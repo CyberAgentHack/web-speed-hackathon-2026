@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "noEmit": true,
+    "strict": true,
+    "target": "ESNext",
+    "lib": ["DOM", "ESNext"],
+    "module": "ESNext",
+    "types": ["node"],
+    "moduleResolution": "bundler",
+    "skipLibCheck": true
+  },
+  "include": ["./src", "./playwright.config.ts", "./globalSetup.ts"]
+}
