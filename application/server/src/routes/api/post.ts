@@ -2,11 +2,13 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 
 import { Comment, Post } from "@web-speed-hackathon-2026/server/src/models";
+import { POST_FULL_SCOPE } from "@web-speed-hackathon-2026/server/src/models/Post";
 
 export const postRouter = Router();
 
 postRouter.get("/posts", async (req, res) => {
   const posts = await Post.findAll({
+    ...POST_FULL_SCOPE,
     limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
     offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
   });
@@ -15,7 +17,7 @@ postRouter.get("/posts", async (req, res) => {
 });
 
 postRouter.get("/posts/:postId", async (req, res) => {
-  const post = await Post.findByPk(req.params.postId);
+  const post = await Post.findByPk(req.params.postId, POST_FULL_SCOPE);
 
   if (post === null) {
     throw new httpErrors.NotFound();

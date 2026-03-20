@@ -2,6 +2,7 @@ import { Router } from "express";
 import { Op } from "sequelize";
 
 import { Post } from "@web-speed-hackathon-2026/server/src/models";
+import { POST_FULL_SCOPE } from "@web-speed-hackathon-2026/server/src/models/Post";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 
 export const searchRouter = Router();
@@ -39,6 +40,7 @@ searchRouter.get("/search", async (req, res) => {
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
   const postsByText = await Post.findAll({
+    ...POST_FULL_SCOPE,
     limit,
     offset,
     where: {
@@ -51,6 +53,7 @@ searchRouter.get("/search", async (req, res) => {
   let postsByUser: typeof postsByText = [];
   if (searchTerm) {
     postsByUser = await Post.findAll({
+      attributes: { exclude: ["userId", "movieId", "soundId"] },
       include: [
         {
           association: "user",
