@@ -6,7 +6,12 @@ interface Options {
   extension: MagickFormat;
 }
 
-export async function convertImage(file: File, options: Options): Promise<Blob> {
+interface ConvertedImage {
+  alt: string;
+  blob: Blob;
+}
+
+export async function convertImage(file: File, options: Options): Promise<ConvertedImage> {
   await initializeImageMagick(magickWasm);
 
   const byteArray = new Uint8Array(await file.arrayBuffer());
@@ -15,11 +20,11 @@ export async function convertImage(file: File, options: Options): Promise<Blob> 
     ImageMagick.read(byteArray, (img) => {
       img.format = options.extension;
 
-      const comment = img.comment;
+      const comment = img.comment ?? "";
 
       img.write((output) => {
-        if (comment == null) {
-          resolve(new Blob([output as Uint8Array<ArrayBuffer>]));
+        if (comment === "") {
+          resolve({ alt: "", blob: new Blob([output as Uint8Array<ArrayBuffer>]) });
           return;
         }
 
@@ -35,7 +40,7 @@ export async function convertImage(file: File, options: Options): Promise<Blob> 
         const exifStr = dump({ "0th": { [ImageIFD.ImageDescription]: descriptionBinary } });
         const outputWithExif = insert(exifStr, binary);
         const bytes = Uint8Array.from(outputWithExif.split("").map((c) => c.charCodeAt(0)));
-        resolve(new Blob([bytes]));
+        resolve({ alt: comment, blob: new Blob([bytes]) });
       });
     });
   });

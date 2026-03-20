@@ -67,4 +67,25 @@ test.describe("投稿機能", () => {
     // 投稿内容と画像が表示されていることを確認
     await expect(page.getByText(postText)).toBeVisible();
   });
+
+  test("画像投稿後に画像の alt が即座に利用できる", async ({ page }) => {
+    await page.getByRole("list").getByRole("button", { name: "投稿する" }).click();
+
+    const textarea = page.getByPlaceholder("いまなにしてる？");
+    await expect(textarea).toBeVisible({ timeout: 10_000 });
+    await textarea.fill("画像 alt テスト");
+
+    const fileInput = page.locator('input[type="file"][accept="image/*"]');
+    const imagePath = path.resolve(import.meta.dirname, "../../../docs/assets/analoguma.tiff");
+    await fileInput.setInputFiles(imagePath);
+
+    await page.locator("dialog").getByRole("button", { name: "投稿する" }).click();
+    await page.waitForURL("**/posts/*", { timeout: 60_000 });
+
+    await expect(
+      page
+        .getByRole("article")
+        .getByAltText("熊の形をしたアスキーアート。アナログマというキャプションがついている"),
+    ).toBeVisible({ timeout: 30_000 });
+  });
 });

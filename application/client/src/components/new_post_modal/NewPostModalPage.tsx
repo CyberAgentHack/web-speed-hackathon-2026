@@ -11,8 +11,13 @@ import { convertSound } from "@web-speed-hackathon-2026/client/src/utils/convert
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
+interface PreparedImage {
+  alt: string;
+  file: File;
+}
+
 interface SubmitParams {
-  images: File[];
+  images: PreparedImage[];
   movie: File | undefined;
   sound: File | undefined;
   text: string;
@@ -55,9 +60,10 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
       Promise.all(
         files.map((file) =>
-          convertImage(file, { extension: MagickFormat.Jpg }).then(
-            (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
-          ),
+          convertImage(file, { extension: MagickFormat.Jpg }).then(({ alt, blob }) => ({
+            alt,
+            file: new File([blob], "converted.jpg", { type: "image/jpeg" }),
+          })),
         ),
       )
         .then((convertedFiles) => {

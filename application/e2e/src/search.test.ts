@@ -144,6 +144,27 @@ test.describe("検索ページ", () => {
     await expect(heading).toContainText("の検索結果");
   });
 
+  test("スコアリング相当の長い検索クエリでも入力と再検索ができること", async ({ page }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await page.goto("/search");
+
+    const input = page.getByPlaceholder("検索 (例: キーワード since:2025-01-01 until:2025-12-31)");
+    await input.pressSequentially(`アニメ since:2026-01-06${"0".repeat(20)}x`);
+    await page.getByRole("button", { name: "検索" }).click();
+
+    const heading = page.locator("main h2");
+    await expect(heading).toContainText("「アニメ」", { timeout: 30_000 });
+
+    await input.clear();
+    await input.pressSequentially(
+      `アニメ since:2026-01-06${"0".repeat(10)}x until:2026-01-06${"0".repeat(10)}x`,
+    );
+    await page.getByRole("button", { name: "検索" }).click();
+
+    await expect(heading).toContainText("2026-01-06 以降", { timeout: 30_000 });
+    await expect(heading).toContainText("2026-01-06 以前");
+  });
+
   test("検索結果が見つからない場合、「検索結果が見つかりませんでした」と表示されること", async ({
     page,
   }) => {

@@ -4,13 +4,14 @@ import { Button } from "@web-speed-hackathon-2026/client/src/components/foundati
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 
 interface Props {
+  alt?: string;
   src: string;
 }
 
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
-export const CoveredImage = ({ src }: Props) => {
+export const CoveredImage = ({ alt: initialAlt = "", src }: Props) => {
   const dialogId = useId();
   const [isAltRequested, setIsAltRequested] = useState(false);
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
@@ -19,9 +20,9 @@ export const CoveredImage = ({ src }: Props) => {
   }, []);
 
   // EXIF alt text is loaded lazily after first paint — does not block rendering
-  const [alt, setAlt] = useState("");
+  const [alt, setAlt] = useState(initialAlt);
   useEffect(() => {
-    if (!isAltRequested) {
+    if (!isAltRequested || alt !== "") {
       return;
     }
 
@@ -40,7 +41,10 @@ export const CoveredImage = ({ src }: Props) => {
         const exif = load(binary);
         const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
         if (raw != null) {
-          setAlt(new TextDecoder().decode(Uint8Array.from(raw, (char) => char.charCodeAt(0))));
+          const description = typeof raw === "string" ? raw : String(raw);
+          setAlt(
+            new TextDecoder().decode(Uint8Array.from(description, (char) => char.charCodeAt(0))),
+          );
         }
       } catch {
         // ignore EXIF parse errors
@@ -52,7 +56,7 @@ export const CoveredImage = ({ src }: Props) => {
     return () => {
       cancelled = true;
     };
-  }, [isAltRequested, src]);
+  }, [alt, isAltRequested, src]);
 
   return (
     <div className="relative h-full w-full overflow-hidden">

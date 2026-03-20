@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useId, useState } from "react";
-import { Helmet, HelmetProvider } from "react-helmet";
+import { HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
@@ -57,16 +57,13 @@ export const AppContainer = () => {
   }, [pathname]);
 
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
-  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
   useEffect(() => {
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {
         setActiveUser(user);
       })
-      .finally(() => {
-        setIsLoadingActiveUser(false);
-      });
-  }, [setActiveUser, setIsLoadingActiveUser]);
+      .catch(() => {});
+  }, []);
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
     setActiveUser(null);
@@ -75,29 +72,6 @@ export const AppContainer = () => {
 
   const authModalId = useId();
   const newPostModalId = useId();
-
-  if (isLoadingActiveUser) {
-    return (
-      <HelmetProvider>
-        <Helmet>
-          <title>読込中 - CaX</title>
-        </Helmet>
-        <AppPage
-          activeUser={null}
-          authModalId={authModalId}
-          newPostModalId={newPostModalId}
-          onLogout={handleLogout}
-        >
-          <div className="animate-pulse space-y-3 p-4">
-            <div className="bg-cax-border h-4 w-3/4 rounded" />
-            <div className="bg-cax-border h-4 w-1/2 rounded" />
-            <div className="bg-cax-border h-4 w-5/6 rounded" />
-            <div className="bg-cax-border h-4 w-2/3 rounded" />
-          </div>
-        </AppPage>
-      </HelmetProvider>
-    );
-  }
 
   return (
     <HelmetProvider>
