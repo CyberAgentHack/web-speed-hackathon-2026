@@ -1,5 +1,5 @@
-import { Router } from "express";
-import httpErrors from "http-errors";
+import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
 import { col, where, Op } from "sequelize";
 
 import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
@@ -8,197 +8,246 @@ import {
   DirectMessageConversation,
   User,
 } from "@web-speed-hackathon-2026/server/src/models";
+import { getSession } from "@web-speed-hackathon-2026/server/src/session";
+import { parseJSON } from "@web-speed-hackathon-2026/server/src/utils/parse_json";
+import { upgradeWebSocket } from "@web-speed-hackathon-2026/server/src/websocket";
 
-export const directMessageRouter = Router();
+export const directMessageRouter = new Hono();
 
-directMessageRouter.get("/dm", async (req, res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
+directMessageRouter.get("/dm", async (c) => {
+  const userId = getSession(c);
+  if (userId === undefined) {
+    throw new HTTPException(401);
   }
 
   const conversations = await DirectMessageConversation.findAll({
     where: {
       [Op.and]: [
-        { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
+        { [Op.or]: [{ initiatorId: userId }, { memberId: userId }] },
         where(col("messages.id"), { [Op.not]: null }),
       ],
     },
     order: [[col("messages.createdAt"), "DESC"]],
   });
 
-  const sorted = conversations.map((c) => ({
-    ...c.toJSON(),
-    messages: c.messages?.reverse(),
+  const sorted = conversations.map((conv) => ({
+    ...conv.toJSON(),
+    messages: conv.messages?.reverse(),
   }));
 
-  return res.status(200).type("application/json").send(sorted);
+  return c.json(sorted);
 });
 
-directMessageRouter.post("/dm", async (req, res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
+directMessageRouter.post("/dm", async (c) => {
+  const userId = getSession(c);
+  if (userId === undefined) {
+    throw new HTTPException(401);
   }
 
-  const peer = await User.findByPk(req.body?.peerId);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const body: any = await parseJSON(c);
+  const peer = await User.findByPk(body?.peerId);
   if (peer === null) {
-    throw new httpErrors.NotFound();
+    throw new HTTPException(404);
   }
 
   const [conversation] = await DirectMessageConversation.findOrCreate({
     where: {
       [Op.or]: [
-        { initiatorId: req.session.userId, memberId: peer.id },
-        { initiatorId: peer.id, memberId: req.session.userId },
+        { initiatorId: userId, memberId: peer.id },
+        { initiatorId: peer.id, memberId: userId },
       ],
     },
     defaults: {
-      initiatorId: req.session.userId,
+      initiatorId: userId,
       memberId: peer.id,
     },
   });
   await conversation.reload();
 
-  return res.status(200).type("application/json").send(conversation);
+  return c.json(conversation);
 });
 
-directMessageRouter.ws("/dm/unread", async (req, _res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
-  }
-
-  const handler = (payload: unknown) => {
-    req.ws.send(JSON.stringify({ type: "dm:unread", payload }));
-  };
-
-  eventhub.on(`dm:unread/${req.session.userId}`, handler);
-  req.ws.on("close", () => {
-    eventhub.off(`dm:unread/${req.session.userId}`, handler);
-  });
-
-  const unreadCount = await DirectMessage.count({
-    distinct: true,
-    where: {
-      senderId: { [Op.ne]: req.session.userId },
-      isRead: false,
-    },
-    include: [
-      {
-        association: "conversation",
-        where: {
-          [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
+// WebSocket: unread count notifications
+// Must be registered before /dm/:conversationId to avoid param capture
+directMessageRouter.get(
+  "/dm/unread",
+  upgradeWebSocket(async (c) => {
+    const userId = getSession(c);
+    if (userId === undefined) {
+      return {
+        onOpen(_event, ws) {
+          ws.close(1008, "Unauthorized");
         },
-        required: true,
+      };
+    }
+
+    let handler: ((payload: unknown) => void) | null = null;
+
+    return {
+      async onOpen(_event, ws) {
+        handler = (payload: unknown) => {
+          ws.send(JSON.stringify({ type: "dm:unread", payload }));
+        };
+
+        eventhub.on(`dm:unread/${userId}`, handler);
+
+        const unreadCount = await DirectMessage.count({
+          distinct: true,
+          where: {
+            senderId: { [Op.ne]: userId },
+            isRead: false,
+          },
+          include: [
+            {
+              association: "conversation",
+              where: {
+                [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
+              },
+              required: true,
+            },
+          ],
+        });
+
+        eventhub.emit(`dm:unread/${userId}`, { unreadCount });
       },
-    ],
-  });
+      onClose() {
+        if (handler) {
+          eventhub.off(`dm:unread/${userId}`, handler);
+        }
+      },
+    };
+  }),
+);
 
-  eventhub.emit(`dm:unread/${req.session.userId}`, { unreadCount });
-});
+// HTTP GET: get conversation details
+// WebSocket GET: real-time messages (upgradeWebSocket calls next() for non-WS requests)
+directMessageRouter.get(
+  "/dm/:conversationId",
+  upgradeWebSocket(async (c) => {
+    const userId = getSession(c);
+    if (userId === undefined) {
+      return {
+        onOpen(_event, ws) {
+          ws.close(1008, "Unauthorized");
+        },
+      };
+    }
 
-directMessageRouter.get("/dm/:conversationId", async (req, res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
+    const conversation = await DirectMessageConversation.findOne({
+      where: {
+        id: c.req.param("conversationId"),
+        [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
+      },
+    });
+    if (conversation == null) {
+      return {
+        onOpen(_event, ws) {
+          ws.close(1008, "Not Found");
+        },
+      };
+    }
+
+    const peerId =
+      conversation.initiatorId !== userId ? conversation.initiatorId : conversation.memberId;
+
+    let handleMessageUpdated: ((payload: unknown) => void) | null = null;
+    let handleTyping: ((payload: unknown) => void) | null = null;
+
+    return {
+      onOpen(_event, ws) {
+        handleMessageUpdated = (payload: unknown) => {
+          ws.send(JSON.stringify({ type: "dm:conversation:message", payload }));
+        };
+        eventhub.on(`dm:conversation/${conversation.id}:message`, handleMessageUpdated);
+
+        handleTyping = (payload: unknown) => {
+          ws.send(JSON.stringify({ type: "dm:conversation:typing", payload }));
+        };
+        eventhub.on(`dm:conversation/${conversation.id}:typing/${peerId}`, handleTyping);
+      },
+      onClose() {
+        if (handleMessageUpdated) {
+          eventhub.off(`dm:conversation/${conversation.id}:message`, handleMessageUpdated);
+        }
+        if (handleTyping) {
+          eventhub.off(`dm:conversation/${conversation.id}:typing/${peerId}`, handleTyping);
+        }
+      },
+    };
+  }),
+  // HTTP fallback handler
+  async (c) => {
+    const userId = getSession(c);
+    if (userId === undefined) {
+      throw new HTTPException(401);
+    }
+
+    const conversation = await DirectMessageConversation.findOne({
+      where: {
+        id: c.req.param("conversationId"),
+        [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
+      },
+    });
+    if (conversation === null) {
+      throw new HTTPException(404);
+    }
+
+    return c.json(conversation);
+  },
+);
+
+directMessageRouter.post("/dm/:conversationId/messages", async (c) => {
+  const userId = getSession(c);
+  if (userId === undefined) {
+    throw new HTTPException(401);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const body: any = await parseJSON(c);
+  const bodyText: unknown = body?.body;
+  if (typeof bodyText !== "string" || bodyText.trim().length === 0) {
+    throw new HTTPException(400);
   }
 
   const conversation = await DirectMessageConversation.findOne({
     where: {
-      id: req.params.conversationId,
-      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
+      id: c.req.param("conversationId"),
+      [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
     },
   });
   if (conversation === null) {
-    throw new httpErrors.NotFound();
-  }
-
-  return res.status(200).type("application/json").send(conversation);
-});
-
-directMessageRouter.ws("/dm/:conversationId", async (req, _res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
-  }
-
-  const conversation = await DirectMessageConversation.findOne({
-    where: {
-      id: req.params.conversationId,
-      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
-    },
-  });
-  if (conversation == null) {
-    throw new httpErrors.NotFound();
-  }
-
-  const peerId =
-    conversation.initiatorId !== req.session.userId
-      ? conversation.initiatorId
-      : conversation.memberId;
-
-  const handleMessageUpdated = (payload: unknown) => {
-    req.ws.send(JSON.stringify({ type: "dm:conversation:message", payload }));
-  };
-  eventhub.on(`dm:conversation/${conversation.id}:message`, handleMessageUpdated);
-  req.ws.on("close", () => {
-    eventhub.off(`dm:conversation/${conversation.id}:message`, handleMessageUpdated);
-  });
-
-  const handleTyping = (payload: unknown) => {
-    req.ws.send(JSON.stringify({ type: "dm:conversation:typing", payload }));
-  };
-  eventhub.on(`dm:conversation/${conversation.id}:typing/${peerId}`, handleTyping);
-  req.ws.on("close", () => {
-    eventhub.off(`dm:conversation/${conversation.id}:typing/${peerId}`, handleTyping);
-  });
-});
-
-directMessageRouter.post("/dm/:conversationId/messages", async (req, res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
-  }
-
-  const body: unknown = req.body?.body;
-  if (typeof body !== "string" || body.trim().length === 0) {
-    throw new httpErrors.BadRequest();
-  }
-
-  const conversation = await DirectMessageConversation.findOne({
-    where: {
-      id: req.params.conversationId,
-      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
-    },
-  });
-  if (conversation === null) {
-    throw new httpErrors.NotFound();
+    throw new HTTPException(404);
   }
 
   const message = await DirectMessage.create({
-    body: body.trim(),
+    body: bodyText.trim(),
     conversationId: conversation.id,
-    senderId: req.session.userId,
+    senderId: userId,
   });
   await message.reload();
 
-  return res.status(201).type("application/json").send(message);
+  return c.json(message, 201);
 });
 
-directMessageRouter.post("/dm/:conversationId/read", async (req, res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
+directMessageRouter.post("/dm/:conversationId/read", async (c) => {
+  const userId = getSession(c);
+  if (userId === undefined) {
+    throw new HTTPException(401);
   }
 
   const conversation = await DirectMessageConversation.findOne({
     where: {
-      id: req.params.conversationId,
-      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
+      id: c.req.param("conversationId"),
+      [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
     },
   });
   if (conversation === null) {
-    throw new httpErrors.NotFound();
+    throw new HTTPException(404);
   }
 
   const peerId =
-    conversation.initiatorId !== req.session.userId
-      ? conversation.initiatorId
-      : conversation.memberId;
+    conversation.initiatorId !== userId ? conversation.initiatorId : conversation.memberId;
 
   await DirectMessage.update(
     { isRead: true },
@@ -208,20 +257,21 @@ directMessageRouter.post("/dm/:conversationId/read", async (req, res) => {
     },
   );
 
-  return res.status(200).type("application/json").send({});
+  return c.json({});
 });
 
-directMessageRouter.post("/dm/:conversationId/typing", async (req, res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
+directMessageRouter.post("/dm/:conversationId/typing", async (c) => {
+  const userId = getSession(c);
+  if (userId === undefined) {
+    throw new HTTPException(401);
   }
 
-  const conversation = await DirectMessageConversation.findByPk(req.params.conversationId);
+  const conversation = await DirectMessageConversation.findByPk(c.req.param("conversationId"));
   if (conversation === null) {
-    throw new httpErrors.NotFound();
+    throw new HTTPException(404);
   }
 
-  eventhub.emit(`dm:conversation/${conversation.id}:typing/${req.session.userId}`, {});
+  eventhub.emit(`dm:conversation/${conversation.id}:typing/${userId}`, {});
 
-  return res.status(200).type("application/json").send({});
+  return c.json({});
 });

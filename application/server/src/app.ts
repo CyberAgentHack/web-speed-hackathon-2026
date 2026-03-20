@@ -1,24 +1,17 @@
-import bodyParser from "body-parser";
-import compression from "compression";
-import Express from "express";
+import { compress } from "hono/compress";
 
-import { apiRouter } from "@web-speed-hackathon-2026/server/src/routes/api";
-import { staticRouter } from "@web-speed-hackathon-2026/server/src/routes/static";
-import { sessionMiddleware } from "@web-speed-hackathon-2026/server/src/session";
+import { apiApp } from "@web-speed-hackathon-2026/server/src/routes/api";
+import { staticApp } from "@web-speed-hackathon-2026/server/src/routes/static";
+import { honoApp } from "@web-speed-hackathon-2026/server/src/websocket";
 
-export const app = Express();
+honoApp.use(compress());
 
-app.set("trust proxy", true);
-
-app.use(compression());
-app.use(sessionMiddleware);
-app.use(bodyParser.json());
-app.use(bodyParser.raw({ limit: "10mb" }));
-
-app.use("/api/v1", (_req, res, next) => {
-  res.header("Cache-Control", "no-store");
-  return next();
+honoApp.use("/api/v1/*", async (c, next) => {
+  c.header("Cache-Control", "no-store");
+  await next();
 });
 
-app.use("/api/v1", apiRouter);
-app.use(staticRouter);
+honoApp.route("/api/v1", apiApp);
+honoApp.route("/", staticApp);
+
+export const app = honoApp;
