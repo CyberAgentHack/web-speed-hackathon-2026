@@ -28,9 +28,11 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
  */
 interface Props {
   post: Models.Post;
+  index?: number;
 }
 
-export const TimelineItem = memo(({ post }: Props) => {
+export const TimelineItem = memo(({ post, index = 99 }: Props) => {
+  const isAboveFold = index < 3;
   const navigate = useNavigate();
 
   /**
@@ -56,9 +58,12 @@ export const TimelineItem = memo(({ post }: Props) => {
           >
             <img
               alt={post.user.profileImage.alt}
-              decoding="async"
-              loading="lazy"
+              decoding={isAboveFold ? "sync" : "async"}
+              fetchPriority={isAboveFold ? "high" : "low"}
+              loading={isAboveFold ? "eager" : "lazy"}
               src={getProfileImagePath(post.user.profileImage.id)}
+              width={64}
+              height={64}
             />
           </Link>
         </div>

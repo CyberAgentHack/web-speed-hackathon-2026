@@ -26,8 +26,11 @@ export const PostItem = memo(({ post }: Props) => {
               <img
                 alt={post.user.profileImage.alt}
                 decoding="async"
-                loading="lazy"
+                loading="eager"
+                fetchPriority="high"
                 src={getProfileImagePath(post.user.profileImage.id)}
+                width={64}
+                height={64}
               />
             </Link>
           </div>

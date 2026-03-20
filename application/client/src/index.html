@@ -4,12 +4,24 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CaX</title>
-    <link rel="preload" href="/api/v1/me" as="fetch" crossorigin />
-    <link rel="preload" href="/api/v1/posts?offset=0&limit=30" as="fetch" crossorigin />
+    <link rel="preconnect" href="/api" />
     <link rel="preload" href="/fonts/ReiNoAreMincho-Regular.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/ReiNoAreMincho-Heavy.woff2" as="font" type="font/woff2" crossorigin />
+    <script>
+      window.__PREFETCH__ = {
+        "/api/v1/me": fetch("/api/v1/me").then(function(r){return r.ok?r.json():Promise.reject()}).catch(function(){return null}),
+        "/api/v1/posts?offset=0&limit=30": fetch("/api/v1/posts?offset=0&limit=30").then(function(r){return r.json()})
+      };
+    </script>
   </head>
   <body class="bg-cax-canvas text-cax-text">
-    <div id="app"></div>
+    <div id="app">
+      <div style="max-width:640px;margin:0 auto;padding:1rem">
+        <div style="height:48px;background:#f5f5f4;border-radius:8px;margin-bottom:1rem"></div>
+        <div style="height:120px;background:#fff;border-radius:8px;margin-bottom:0.5rem;border:1px solid #e7e5e4"></div>
+        <div style="height:120px;background:#fff;border-radius:8px;margin-bottom:0.5rem;border:1px solid #e7e5e4"></div>
+        <div style="height:120px;background:#fff;border-radius:8px;margin-bottom:0.5rem;border:1px solid #e7e5e4"></div>
+      </div>
+    </div>
   </body>
 </html>

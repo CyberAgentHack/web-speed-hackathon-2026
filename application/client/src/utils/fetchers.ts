@@ -1,4 +1,10 @@
 export async function fetchJSON<T>(url: string): Promise<T> {
+  // Use prefetched data if available
+  const prefetch = (window as any).__PREFETCH__?.[url];
+  if (prefetch) {
+    delete (window as any).__PREFETCH__[url];
+    return await prefetch as T;
+  }
   const res = await fetch(url, { method: "GET" });
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}`);
