@@ -137,16 +137,21 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     if (conversationError != null) {
       return <NotFoundContainer />;
     }
-    return null;
   }
 
   const peer =
-    conversation.initiator.id !== activeUser?.id ? conversation.initiator : conversation.member;
+    conversation == null
+      ? null
+      : conversation.initiator.id !== activeUser?.id
+        ? conversation.initiator
+        : conversation.member;
 
   return (
     <>
       <Helmet>
-        <title>{peer.name} さんとのダイレクトメッセージ - CaX</title>
+        <title>
+          {peer == null ? "ダイレクトメッセージ - CaX" : `${peer.name} さんとのダイレクトメッセージ - CaX`}
+        </title>
       </Helmet>
       <DirectMessagePage
         conversationError={conversationError}

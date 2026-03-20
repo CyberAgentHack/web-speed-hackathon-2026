@@ -9,6 +9,7 @@ import { TypingIndicator } from "@web-speed-hackathon-2026/client/src/components
 import { CrokLogo } from "@web-speed-hackathon-2026/client/src/components/foundation/CrokLogo";
 
 interface Props {
+  isStreaming?: boolean;
   message: Models.ChatMessage;
 }
 
@@ -22,7 +23,7 @@ const UserMessage = ({ content }: { content: string }) => {
   );
 };
 
-const AssistantMessage = ({ content }: { content: string }) => {
+const AssistantMessage = ({ content, isStreaming = false }: { content: string; isStreaming?: boolean }) => {
   return (
     <div className="mb-6 flex gap-4">
       <div className="h-8 w-8 shrink-0">
@@ -33,10 +34,9 @@ const AssistantMessage = ({ content }: { content: string }) => {
         <div className="markdown text-cax-text max-w-none">
           {content ? (
             <Markdown
-              components={{ pre: CodeBlock }}
-              key={content}
-              rehypePlugins={[rehypeKatex]}
-              remarkPlugins={[remarkMath, remarkGfm]}
+              components={isStreaming ? undefined : { pre: CodeBlock }}
+              rehypePlugins={isStreaming ? undefined : [rehypeKatex]}
+              remarkPlugins={isStreaming ? [remarkGfm] : [remarkMath, remarkGfm]}
             >
               {content}
             </Markdown>
@@ -49,9 +49,9 @@ const AssistantMessage = ({ content }: { content: string }) => {
   );
 };
 
-export const ChatMessage = ({ message }: Props) => {
+export const ChatMessage = ({ isStreaming = false, message }: Props) => {
   if (message.role === "user") {
     return <UserMessage content={message.content} />;
   }
-  return <AssistantMessage content={message.content} />;
+  return <AssistantMessage content={message.content} isStreaming={isStreaming} />;
 };

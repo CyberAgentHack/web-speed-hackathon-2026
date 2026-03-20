@@ -114,7 +114,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     let cancelled = false;
 
     const updateSuggestions = async () => {
-      if (!tokenizer || !inputValue.trim()) {
+      if (isStreaming || !tokenizer || !inputValue.trim()) {
         setSuggestions([]);
         setQueryTokens([]);
         setShowSuggestions(false);
@@ -145,7 +145,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     return () => {
       cancelled = true;
     };
-  }, [inputValue, tokenizer]);
+  }, [inputValue, isStreaming, tokenizer]);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;

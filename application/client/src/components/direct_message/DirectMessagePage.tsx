@@ -17,7 +17,7 @@ import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/
 
 interface Props {
   conversationError: Error | null;
-  conversation: Models.DirectMessageConversation;
+  conversation: Models.DirectMessageConversation | null;
   activeUser: Models.User;
   isPeerTyping: boolean;
   isSubmitting: boolean;
@@ -38,7 +38,11 @@ export const DirectMessagePage = ({
   const textAreaId = useId();
 
   const peer =
-    conversation.initiator.id !== activeUser.id ? conversation.initiator : conversation.member;
+    conversation == null
+      ? null
+      : conversation.initiator.id !== activeUser.id
+        ? conversation.initiator
+        : conversation.member;
 
   const [text, setText] = useState("");
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
@@ -78,7 +82,7 @@ export const DirectMessagePage = ({
     });
 
     return () => window.cancelAnimationFrame(id);
-  }, [conversation.messages.length, isPeerTyping]);
+  }, [conversation?.messages.length, isPeerTyping]);
 
   if (conversationError != null) {
     return (
@@ -94,27 +98,29 @@ export const DirectMessagePage = ({
         <img
           alt={peer.profileImage.alt}
           className="h-12 w-12 rounded-full object-cover"
-          src={getProfileImagePath(peer.profileImage.id)}
+          src={peer == null ? undefined : getProfileImagePath(peer.profileImage.id)}
         />
         <div className="min-w-0">
           <h1 className="overflow-hidden text-xl font-bold text-ellipsis whitespace-nowrap">
-            {peer.name}
+            {peer?.name ?? "ダイレクトメッセージ"}
           </h1>
           <p className="text-cax-text-muted overflow-hidden text-xs text-ellipsis whitespace-nowrap">
-            @{peer.username}
+            {peer == null ? "会話を読み込み中…" : `@${peer.username}`}
           </p>
         </div>
       </header>
 
       <div className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8">
-        {conversation.messages.length === 0 && (
+        {(conversation == null || conversation.messages.length === 0) && (
           <p className="text-cax-text-muted text-center text-sm">
-            まだメッセージはありません。最初のメッセージを送信してみましょう。
+            {conversation == null
+              ? "会話を読み込んでいます。入力欄は先に利用できます。"
+              : "まだメッセージはありません。最初のメッセージを送信してみましょう。"}
           </p>
         )}
 
         <ul className="grid gap-3" data-testid="dm-message-list">
-          {conversation.messages.map((message) => {
+          {(conversation?.messages ?? []).map((message) => {
             const isActiveUserSend = message.sender.id === activeUser.id;
 
             return (
@@ -149,7 +155,7 @@ export const DirectMessagePage = ({
       </div>
 
       <div className="sticky bottom-12 z-10 lg:bottom-0">
-        {isPeerTyping && (
+        {isPeerTyping && peer != null && (
           <p className="bg-cax-surface-raised/75 text-cax-brand absolute inset-x-0 top-0 -translate-y-full px-4 py-1 text-xs">
             <span className="font-bold">{peer.name}</span>さんが入力中…
           </p>
