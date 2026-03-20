@@ -4,6 +4,12 @@ export async function fetchBinary(url: string): Promise<ArrayBuffer> {
 }
 
 export async function fetchJSON<T>(url: string): Promise<T> {
+  const prefetch = (window as any).__PREFETCH__?.[url];
+  if (prefetch) {
+    delete (window as any).__PREFETCH__[url];
+    const data = await prefetch;
+    if (data) return data as T;
+  }
   const res = await fetch(url);
   return res.json();
 }

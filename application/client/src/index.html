@@ -4,6 +4,30 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CaX</title>
+    <link rel="preconnect" href="/" />
+    <link rel="preload" href="/fonts/ReiNoAreMincho-Regular.otf" as="font" type="font/otf" crossorigin />
+    <link rel="preload" href="/fonts/ReiNoAreMincho-Heavy.otf" as="font" type="font/otf" crossorigin />
+    <script>
+      (function() {
+        const fetchJSON = (url) => fetch(url).then(r => r.ok ? r.json() : null).catch(() => null);
+        window.__PREFETCH__ = {
+          "/api/v1/me": fetchJSON("/api/v1/me"),
+          "/api/v1/posts": fetchJSON("/api/v1/posts").then(posts => {
+            if (posts && posts.length > 0) {
+              // LCP 候補画像の先行読み込み
+              posts.slice(0, 3).forEach(p => {
+                if (p.images && p.images[0]) {
+                  const img = new Image();
+                  img.fetchPriority = "high";
+                  img.src = "/api/v1/images/" + p.images[0].id; // 実際のパスに合わせる
+                }
+              });
+            }
+            return posts;
+          })
+        };
+      })();
+    </script>
   </head>
   <body class="bg-cax-canvas text-cax-text">
     <div id="app"></div>
