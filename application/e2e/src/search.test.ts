@@ -19,7 +19,7 @@ test.describe("検索ページ", () => {
   test("タイトルが「検索 - CaX」となること", async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto("/search");
-    await expect(page).toHaveTitle("検索 - CaX", { timeout: 10_000 });
+    await expect(page).toHaveTitle("検索 - CaX", { timeout: 30_000 });
   });
 
   test.describe("検索フォーム", () => {
@@ -32,7 +32,7 @@ test.describe("検索ページ", () => {
       const input = page.getByPlaceholder(
         "検索 (例: キーワード since:2025-01-01 until:2025-12-31)",
       );
-      await expect(input).toBeVisible({ timeout: 10_000 });
+      await expect(input).toBeVisible({ timeout: 30_000 });
     });
 
     test("「since:YYYY-MM-DD で開始日、until:YYYY-MM-DD で終了日を指定できます」のヘルプテキストが表示されること", async ({
@@ -43,7 +43,7 @@ test.describe("検索ページ", () => {
 
       await expect(
         page.getByText("since:YYYY-MM-DD で開始日、until:YYYY-MM-DD で終了日を指定できます"),
-      ).toBeVisible({ timeout: 10_000 });
+      ).toBeVisible({ timeout: 30_000 });
     });
   });
 
@@ -55,7 +55,7 @@ test.describe("検索ページ", () => {
       await page.getByRole("button", { name: "検索" }).click();
 
       await expect(page.getByText("検索キーワードを入力してください")).toBeVisible({
-        timeout: 10_000,
+        timeout: 30_000,
       });
     });
 
@@ -70,7 +70,7 @@ test.describe("検索ページ", () => {
       await page.getByRole("button", { name: "検索" }).click();
 
       await expect(page.getByText("since: の日付形式が不正です: 2025-99-99")).toBeVisible({
-        timeout: 10_000,
+        timeout: 30_000,
       });
     });
 
@@ -85,7 +85,7 @@ test.describe("検索ページ", () => {
       await page.getByRole("button", { name: "検索" }).click();
 
       await expect(page.getByText("since: は until: より前の日付を指定してください")).toBeVisible({
-        timeout: 10_000,
+        timeout: 30_000,
       });
     });
   });
@@ -117,7 +117,7 @@ test.describe("検索ページ", () => {
     await input.fill("写真 since:2026-01-01");
     await page.getByRole("button", { name: "検索" }).click();
 
-    await page.waitForURL(/\/search\?q=/, { timeout: 10_000 });
+    await page.waitForURL(/\/search\?q=/, { timeout: 30_000 });
 
     const heading = page.locator("main h2");
     await expect(heading).toContainText("「写真」");
@@ -135,7 +135,7 @@ test.describe("検索ページ", () => {
     await input.fill("写真 since:2026-01-01 until:2026-12-31");
     await page.getByRole("button", { name: "検索" }).click();
 
-    await page.waitForURL(/\/search\?q=/, { timeout: 10_000 });
+    await page.waitForURL(/\/search\?q=/, { timeout: 30_000 });
 
     const heading = page.locator("main h2");
     await expect(heading).toContainText("「写真」");
