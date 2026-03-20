@@ -226,3 +226,6 @@ application/public/movies/*.gif
 
 # Temp files
 temp/backup-jpg
+
+# Claude Code worktrees
+.claude/worktrees/
