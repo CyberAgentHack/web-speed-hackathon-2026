@@ -18,6 +18,25 @@ export const CoveredImage = ({ alt, src }: Props) => {
     ev.stopPropagation();
   }, []);
 
+  const showModalRef = useCallback(
+    (el: HTMLButtonElement | null) => {
+      if (el) {
+        el.setAttribute("command", "show-modal");
+        el.setAttribute("commandfor", dialogId);
+      }
+    },
+    [dialogId],
+  );
+  const closeRef = useCallback(
+    (el: HTMLButtonElement | null) => {
+      if (el) {
+        el.setAttribute("command", "close");
+        el.setAttribute("commandfor", dialogId);
+      }
+    },
+    [dialogId],
+  );
+
   return (
     <div className="relative h-full w-full overflow-hidden">
       <img
@@ -30,10 +49,9 @@ export const CoveredImage = ({ alt, src }: Props) => {
       />
 
       <button
+        ref={showModalRef}
         className="border-cax-border bg-cax-surface-raised/90 text-cax-text-muted hover:bg-cax-surface absolute right-1 bottom-1 rounded-full border px-2 py-1 text-center text-xs"
         type="button"
-        command="show-modal"
-        commandfor={dialogId}
       >
         ALT を表示する
       </button>
@@ -44,7 +62,7 @@ export const CoveredImage = ({ alt, src }: Props) => {
 
           <p className="text-sm">{alt}</p>
 
-          <Button variant="secondary" command="close" commandfor={dialogId}>
+          <Button ref={closeRef} variant="secondary">
             閉じる
           </Button>
         </div>

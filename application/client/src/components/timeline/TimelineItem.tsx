@@ -1,4 +1,4 @@
-import { MouseEventHandler, useCallback } from "react";
+import { type KeyboardEventHandler, type MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
@@ -46,8 +46,26 @@ export const TimelineItem = ({ post }: Props) => {
     [post, navigate],
   );
 
+  const handleKeyDown = useCallback<KeyboardEventHandler>(
+    (ev) => {
+      if (ev.key === "Enter" || ev.key === " ") {
+        ev.preventDefault();
+        if (!isClickedAnchorOrButton(ev.target, ev.currentTarget)) {
+          void navigate(`/posts/${post.id}`);
+        }
+      }
+    },
+    [post, navigate],
+  );
+
   return (
-    <article className="hover:bg-cax-surface-subtle px-1 sm:px-4" onClick={handleClick}>
+    <article
+      className="hover:bg-cax-surface-subtle px-1 sm:px-4"
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
+    >
       <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
         <div className="shrink-0 grow-0 pr-2 sm:pr-4">
           <Link

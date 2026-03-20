@@ -27,8 +27,9 @@ export const CrokPage = ({ messages, isStreaming, onSendMessage }: Props) => {
         <div className="mx-auto max-w-2xl px-4 py-8">
           {messages.length === 0 && <WelcomeScreen />}
 
+          {/* Using index as key: ChatMessage has no unique id field, and messages are append-only in a conversation */}
           {messages.map((message, index) => (
-            <ChatMessage key={index} message={message} />
+            <ChatMessage key={`${message.role}-${index}`} message={message} />
           ))}
           <div ref={messagesEndRef} />
         </div>

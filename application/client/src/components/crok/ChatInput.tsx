@@ -1,4 +1,5 @@
 import type { Tokenizer, IpadicFeatures } from "kuromoji";
+import type { ReactNode } from "react";
 import {
   useEffect,
   useLayoutEffect,
@@ -22,7 +23,7 @@ interface Props {
 }
 
 // トークン単位でハイライト
-function highlightMatchByTokens(text: string, queryTokens: string[]): React.ReactNode {
+function highlightMatchByTokens(text: string, queryTokens: string[]): ReactNode {
   if (queryTokens.length === 0) return text;
 
   const lowerText = text.toLowerCase();
@@ -54,15 +55,19 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
     }
   }
 
-  const parts: React.ReactNode[] = [];
+  const parts: ReactNode[] = [];
   let lastEnd = 0;
   for (let i = 0; i < merged.length; i++) {
     const range = merged[i]!;
     if (range.start > lastEnd) {
       parts.push(text.slice(lastEnd, range.start));
     }
+    // Using character position as key: each merged range has a unique start position within the text
     parts.push(
-      <span key={i} className="bg-cax-highlight text-cax-highlight-ink">
+      <span
+        key={`highlight-${range.start}-${range.end}`}
+        className="bg-cax-highlight text-cax-highlight-ink"
+      >
         {text.slice(range.start, range.end)}
       </span>,
     );
@@ -206,9 +211,9 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
             role="listbox"
             aria-label="サジェスト候補"
           >
-            {suggestions.map((suggestion, index) => (
+            {suggestions.map((suggestion) => (
               <button
-                key={index}
+                key={suggestion}
                 type="button"
                 className="border-cax-border text-cax-text-muted hover:bg-cax-surface-subtle w-full border-b px-4 py-2 text-left text-sm last:border-b-0"
                 onClick={() => handleSuggestionClick(suggestion)}

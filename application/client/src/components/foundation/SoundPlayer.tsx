@@ -28,6 +28,7 @@ const StaticWaveform = ({ soundId }: { soundId: string }) => {
 
   return (
     <svg className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1">
+      {/* Using index as key is safe here: bars is a static-length computed array of primitives with no stable ID */}
       {bars.map((ratio, idx) => (
         <rect
           key={idx}

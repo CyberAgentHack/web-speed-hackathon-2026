@@ -11,12 +11,3 @@ export class HTTPError extends Error {
     this.responseJSON = responseJSON;
   }
 }
-
-export async function unwrap<T>(responsePromise: Promise<Response>): Promise<T> {
-  const res = await responsePromise;
-  if (!res.ok) {
-    const body = await res.json().catch(() => null);
-    throw new HTTPError(res.status, body);
-  }
-  return res.json() as Promise<T>;
-}
