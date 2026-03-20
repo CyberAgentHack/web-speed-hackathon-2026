@@ -383,7 +383,7 @@
       ],
       "priority": 21,
       "passes": true,
-      "notes": "2026-03-20 完了。setTimeout(500)・useEffect・useRef・useState・window resize リスナーを全削除。CSS aspect-ratio プロパティで置換。子要素の条件付きレンダリングも廃止し即座にレンダリング。E2Eテスト（動画・音声波形・写真cover）全通過。"
+      "notes": "2026-03-20 完了。setTimeout(500)・useEffect・useRef・useState・window resize リスナーを全削除。CSS aspect-ratio プロパティで置換。子要素の条件付きレンダリングも廃止し即座にレンダリング。E2Eテスト（動画・音声波形・写真cover）全通過。Codex レビュー Approved（重大な指摘なし、パフォーマンス改善妥当、リグレッションなし）。"
     },
     {
       "id": "US-023",
