@@ -62,7 +62,7 @@ const config = {
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    filename: "scripts/[name].js",
+    filename: "scripts/[name]-[contenthash].js",
     path: DIST_PATH,
     publicPath: "/",
     clean: true,
@@ -78,7 +78,7 @@ const config = {
       NODE_ENV: isDev ? "development" : "production",
     }),
     ...(isDev ? [] : [new MiniCssExtractPlugin({
-      filename: "styles/[name].css",
+      filename: "styles/[name]-[contenthash].css",
     })]),
     new CopyWebpackPlugin({
       patterns: [

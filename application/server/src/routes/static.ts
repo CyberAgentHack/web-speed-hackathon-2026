@@ -15,21 +15,30 @@ staticRouter.use(history());
 
 staticRouter.use(
   serveStatic(UPLOAD_PATH, {
-    etag: false,
-    lastModified: false,
+    etag: true,
+    lastModified: true,
+    maxAge: 86400000,
   }),
 );
 
 staticRouter.use(
   serveStatic(PUBLIC_PATH, {
-    etag: false,
-    lastModified: false,
+    etag: true,
+    lastModified: true,
+    maxAge: 86400000,
   }),
 );
 
 staticRouter.use(
   serveStatic(CLIENT_DIST_PATH, {
-    etag: false,
-    lastModified: false,
+    etag: true,
+    lastModified: true,
+    setHeaders(res, filePath) {
+      if (/-[0-9a-f]{16,}\.(js|css)$/.test(filePath)) {
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      } else {
+        res.setHeader("Cache-Control", "no-cache");
+      }
+    },
   }),
 );
