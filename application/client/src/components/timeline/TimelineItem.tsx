@@ -28,9 +28,10 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
  */
 interface Props {
   post: Models.Post;
+  eager?: boolean;
 }
 
-export const TimelineItem = memo(({ post }: Props) => {
+export const TimelineItem = memo(({ post, eager }: Props) => {
   const navigate = useNavigate();
 
   /**
@@ -57,7 +58,7 @@ export const TimelineItem = memo(({ post }: Props) => {
             <img
               alt={post.user.profileImage.alt}
               height={64}
-              loading="lazy"
+              loading={eager ? "eager" : "lazy"}
               src={getProfileImagePath(post.user.profileImage.id)}
               width={64}
             />

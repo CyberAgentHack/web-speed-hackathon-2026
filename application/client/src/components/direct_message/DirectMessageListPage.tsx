@@ -100,7 +100,6 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                       alt={peer.profileImage.alt}
                       className="w-12 shrink-0 self-start rounded-full"
                       height={48}
-                      loading="lazy"
                       src={getProfileImagePath(peer.profileImage.id)}
                       width={48}
                     />

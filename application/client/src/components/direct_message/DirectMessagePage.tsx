@@ -111,7 +111,6 @@ export const DirectMessagePage = ({
           alt={peer.profileImage.alt}
           className="h-12 w-12 rounded-full object-cover"
           height={48}
-          loading="lazy"
           src={getProfileImagePath(peer.profileImage.id)}
           width={48}
         />
