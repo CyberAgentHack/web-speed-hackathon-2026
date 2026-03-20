@@ -11,7 +11,7 @@ export const postRouter = new Hono<SessionEnv>()
     const offset = c.req.query("offset");
 
     const posts = await Post.scope("detail").findAll({
-      ...(limit != null ? { limit: Number(limit) } : {}),
+      limit: limit != null ? Number(limit) : 30,
       ...(offset != null ? { offset: Number(offset) } : {}),
     });
 
