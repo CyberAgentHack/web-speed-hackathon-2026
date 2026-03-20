@@ -6,9 +6,9 @@ import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
-import { convertToGif } from "@web-speed-hackathon-2026/server/src/utils/convert_to_gif";
+import { convertToMp4 } from "@web-speed-hackathon-2026/server/src/utils/convert_to_mp4";
 
-const EXTENSION = "gif";
+const EXTENSION = "mp4";
 
 export const movieRouter = Router();
 
@@ -20,7 +20,7 @@ movieRouter.post("/movies", async (req, res) => {
     throw new httpErrors.BadRequest();
   }
 
-  const gifBuffer = await convertToGif(req.body);
+  const gifBuffer = await convertToMp4(req.body);
 
   const movieId = uuidv4();
 
