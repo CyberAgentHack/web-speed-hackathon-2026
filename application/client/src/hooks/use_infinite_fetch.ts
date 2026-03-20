@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { consumeBootstrapData } from "@web-speed-hackathon-2026/client/src/utils/bootstrap_data";
+
 const DEFAULT_LIMIT = 12;
 
 interface Options {
@@ -29,6 +31,16 @@ export function useInfiniteFetch<T>(
     isLoading: true,
   });
 
+  const buildRequestPath = useCallback(
+    (offset: number) => {
+      const requestUrl = new URL(apiPath, window.location.origin);
+      requestUrl.searchParams.set("limit", String(limit));
+      requestUrl.searchParams.set("offset", String(offset));
+      return `${requestUrl.pathname}${requestUrl.search}`;
+    },
+    [apiPath, limit],
+  );
+
   const fetchMore = useCallback(() => {
     const { hasMore, isLoading, offset } = internalRef.current;
     if (!apiPath || !enabled || isLoading || !hasMore) {
@@ -45,11 +57,9 @@ export function useInfiniteFetch<T>(
       offset,
     };
 
-    const requestUrl = new URL(apiPath, window.location.origin);
-    requestUrl.searchParams.set("limit", String(limit));
-    requestUrl.searchParams.set("offset", String(offset));
+    const requestPath = buildRequestPath(offset);
 
-    void fetcher(`${requestUrl.pathname}${requestUrl.search}`).then(
+    void fetcher(requestPath).then(
       (pageData) => {
         const nextHasMore = pageData.length === limit;
         setResult((cur) => ({
@@ -77,7 +87,7 @@ export function useInfiniteFetch<T>(
         };
       },
     );
-  }, [apiPath, enabled, fetcher, limit]);
+  }, [apiPath, buildRequestPath, enabled, fetcher, limit]);
 
   useEffect(() => {
     if (!apiPath || !enabled) {
@@ -107,8 +117,25 @@ export function useInfiniteFetch<T>(
       offset: 0,
     };
 
+    const bootstrapData = consumeBootstrapData<T[]>(buildRequestPath(0));
+    if (bootstrapData !== null) {
+      const nextHasMore = bootstrapData.length === limit;
+      setResult(() => ({
+        data: bootstrapData,
+        error: null,
+        hasMore: nextHasMore,
+        isLoading: false,
+      }));
+      internalRef.current = {
+        hasMore: nextHasMore,
+        isLoading: false,
+        offset: bootstrapData.length,
+      };
+      return;
+    }
+
     fetchMore();
-  }, [apiPath, enabled, fetchMore]);
+  }, [apiPath, buildRequestPath, enabled, fetchMore, limit]);
 
   return {
     ...result,

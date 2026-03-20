@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+import { consumeBootstrapData } from "@web-speed-hackathon-2026/client/src/utils/bootstrap_data";
+
 interface ReturnValues<T> {
   data: T | null;
   error: Error | null;
@@ -31,6 +33,16 @@ export function useFetch<T>(
       error: null,
       isLoading: true,
     }));
+
+    const bootstrapData = consumeBootstrapData<T>(apiPath);
+    if (bootstrapData !== null) {
+      setResult(() => ({
+        data: bootstrapData,
+        error: null,
+        isLoading: false,
+      }));
+      return;
+    }
 
     void fetcher(apiPath).then(
       (data) => {

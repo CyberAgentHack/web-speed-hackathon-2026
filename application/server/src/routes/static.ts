@@ -1,4 +1,3 @@
-import history from "connect-history-api-fallback";
 import { Router } from "express";
 import serveStatic from "serve-static";
 
@@ -7,11 +6,9 @@ import {
   PUBLIC_PATH,
   UPLOAD_PATH,
 } from "@web-speed-hackathon-2026/server/src/paths";
+import { renderAppHtml } from "@web-speed-hackathon-2026/server/src/utils/render_app_html";
 
 export const staticRouter = Router();
-
-// SPA 対応のため、ファイルが存在しないときに index.html を返す
-staticRouter.use(history());
 
 staticRouter.use(
   serveStatic(UPLOAD_PATH, {
@@ -33,3 +30,16 @@ staticRouter.use(
     lastModified: false,
   }),
 );
+
+staticRouter.get("*", async (req, res, next) => {
+  if (/\.[^/]+$/.test(req.path)) {
+    return next();
+  }
+
+  try {
+    const html = await renderAppHtml(req);
+    return res.status(200).type("text/html").send(html);
+  } catch (error) {
+    return next(error);
+  }
+});

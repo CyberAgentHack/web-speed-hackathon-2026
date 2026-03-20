@@ -13,6 +13,7 @@ import { SearchContainer } from "@web-speed-hackathon-2026/client/src/containers
 import { TermContainer } from "@web-speed-hackathon-2026/client/src/containers/TermContainer";
 import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
 import { UserProfileContainer } from "@web-speed-hackathon-2026/client/src/containers/UserProfileContainer";
+import { consumeBootstrapData } from "@web-speed-hackathon-2026/client/src/utils/bootstrap_data";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 const LazyCrokContainer = lazy(async () => {
@@ -45,6 +46,13 @@ export const AppContainer = () => {
     activeUserRequestIdRef.current = requestId;
 
     const loadActiveUser = () => {
+      const bootstrapUser = consumeBootstrapData<Models.User>("/api/v1/me");
+      if (bootstrapUser !== null) {
+        setActiveUser(bootstrapUser);
+        setIsLoadingActiveUser(false);
+        return;
+      }
+
       void fetchJSON<Models.User>("/api/v1/me")
         .then((user) => {
           if (cancelled || activeUserRequestIdRef.current !== requestId) {

@@ -80,10 +80,12 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
+  const [shouldInitTokenizer, setShouldInitTokenizer] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const trimmedInputValue = inputValue.trim();
 
   // サジェストが更新されたら一番下にスクロール
   useLayoutEffect(() => {
@@ -92,8 +94,30 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   }, [suggestions, showSuggestions]);
 
-  // 初回にkuromojiトークナイザーを構築
   useEffect(() => {
+    const enableTokenizer = () => {
+      setShouldInitTokenizer(true);
+    };
+
+    if ("requestIdleCallback" in window) {
+      const idleId = window.requestIdleCallback(enableTokenizer, { timeout: 2000 });
+      return () => {
+        window.cancelIdleCallback(idleId);
+      };
+    }
+
+    const timeoutId = globalThis.setTimeout(enableTokenizer, 300);
+    return () => {
+      globalThis.clearTimeout(timeoutId);
+    };
+  }, []);
+
+  // 初回の入力導線を邪魔しないよう、形態素解析器は idle 後に構築する
+  useEffect(() => {
+    if (!shouldInitTokenizer || tokenizer !== null) {
+      return;
+    }
+
     let mounted = true;
 
     const init = async () => {
@@ -108,13 +132,12 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [shouldInitTokenizer, tokenizer]);
 
   useEffect(() => {
     let cancelled = false;
-
     const updateSuggestions = async () => {
-      if (!tokenizer || !inputValue.trim()) {
+      if (!tokenizer || trimmedInputValue.length < 2) {
         setSuggestions([]);
         setQueryTokens([]);
         setShowSuggestions(false);
@@ -140,12 +163,15 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
       setShowSuggestions(results.length > 0);
     };
 
-    void updateSuggestions();
+    const timeoutId = window.setTimeout(() => {
+      void updateSuggestions();
+    }, 200);
 
     return () => {
       cancelled = true;
+      window.clearTimeout(timeoutId);
     };
-  }, [inputValue, tokenizer]);
+  }, [inputValue, tokenizer, trimmedInputValue]);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
@@ -163,6 +189,9 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
 
   const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
+    if (!shouldInitTokenizer) {
+      setShouldInitTokenizer(true);
+    }
     setInputValue(value);
     adjustTextareaHeight();
   };
@@ -220,6 +249,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
             ref={textareaRef}
             className="text-cax-text placeholder-cax-text-subtle max-h-[200px] min-h-[52px] flex-1 resize-none overflow-y-auto bg-transparent py-3 pr-2 pl-4 focus:outline-none"
             onChange={handleInputChange}
+            onFocus={() => setShouldInitTokenizer(true)}
             onKeyDown={handleKeyDown}
             placeholder="メッセージを入力..."
             lang="ja"
