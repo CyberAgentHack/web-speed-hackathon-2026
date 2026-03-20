@@ -58,19 +58,21 @@ git checkout main
 ```bash
 cd application
 pnpm install
-pnpm build                                          # Vite build → dist/ + dist-ssr/
 pnpm --filter @web-speed-hackathon-2026/server seed:generate
 pnpm --filter @web-speed-hackathon-2026/server seed:insert
-PORT=3333 pnpm start                                # server → http://localhost:3333
+pnpm dev                                            # Vite HMR (:8080) + server auto-restart (:3333) を同時起動
 ```
 
-> **注意:** Port 3000 は vibe-kanban が常時使用しているため、このプロジェクトでは **PORT=3333** を使う。
+> **ポート:** 開発時は **http://localhost:8080** にアクセスする。
+> Vite dev server (HMR) が :8080 で動き、`/api/v1` と `/upload` を :3333 にプロキシする。
+> Port 3000 は vibe-kanban が常時使用しているため、サーバーは **PORT=3333** で起動。
 > VRT/E2E 実行時は `E2E_BASE_URL=http://localhost:3333` を設定すること。
 
-dev server (HMR) を使う場合:
+本番ビルド確認の場合:
 
 ```bash
-pnpm --filter @web-speed-hackathon-2026/client dev   # Vite dev server on :8080, proxy /api → :3333
+pnpm build                                          # Vite build → dist/ + dist-ssr/
+PORT=3333 pnpm start                                # server → http://localhost:3333
 ```
 
 ## アーキテクチャ概要（現在の構成）
