@@ -1,11 +1,11 @@
 import moment from "moment";
 
+import { AvatarImage } from "@web-speed-hackathon-2026/client/src/components/foundation/AvatarImage";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
 import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
 import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   post: Models.Post;
@@ -21,10 +21,7 @@ export const PostItem = ({ post }: Props) => {
               className="border-cax-border bg-cax-surface-subtle block h-14 w-14 overflow-hidden rounded-full border hover:opacity-95 sm:h-16 sm:w-16"
               to={`/users/${post.user.username}`}
             >
-              <img
-                alt={post.user.profileImage.alt}
-                src={getProfileImagePath(post.user.profileImage.id)}
-              />
+              <AvatarImage height={64} profileImage={post.user.profileImage} width={64} />
             </Link>
           </div>
           <div className="min-w-0 shrink grow overflow-hidden text-ellipsis whitespace-nowrap">
