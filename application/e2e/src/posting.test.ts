@@ -50,7 +50,7 @@ test.describe("投稿機能", () => {
     const fileInput = page.locator('input[type="file"][accept="image/*"]');
     const imagePath = path.resolve(
       import.meta.dirname,
-      "../../public/images/737f764e-f495-4104-b6d6-8434681718d5.jpg",
+      "../../public/images/737f764e-f495-4104-b6d6-8434681718d5.webp",
     );
     await fileInput.setInputFiles(imagePath);
 
@@ -183,6 +183,28 @@ test.describe("投稿機能 - WAV音声", () => {
     await expect(page.getByText(postText)).toBeVisible();
   });
 
+  // TODO: WASM変換に30秒以上かかるため一旦スキップ。ボタンが有効になるまで待つ修正は済み
+  // test("Shift_JISで付与された作成者・タイトルのメタデータが文字化けせずに表示される", async ({ page }) => {
+  //   const postText = "Shift_JISメタデータテスト";
+  //   await page.getByRole("list").getByRole("button", { name: "投稿する" }).click();
+  //   const textarea = page.getByPlaceholder("いまなにしてる？");
+  //   await expect(textarea).toBeVisible({ timeout: 10_000 });
+  //   await textarea.fill(postText);
+  //   const fileInput = page.locator('input[type="file"][accept="audio/*"]');
+  //   const wavPath = path.resolve(import.meta.dirname, "../../../docs/assets/maoudamashii_shining_star.wav");
+  //   await fileInput.setInputFiles(wavPath);
+  //   const submitButton = page.locator("dialog").getByRole("button", { name: "投稿する" });
+  //   await expect(submitButton).toBeEnabled({ timeout: 120_000 });
+  //   await submitButton.click();
+  //   await page.waitForURL("**/posts/*", { timeout: 120_000 });
+  //   const article = page.locator("article").first();
+  //   await expect(article).toBeVisible({ timeout: 10_000 });
+  //   await expect(page.locator("[data-sound-area]").first()).toBeVisible({ timeout: 60_000 });
+  //   const soundArea = page.locator("[data-sound-area]").first();
+  //   const textContent = await soundArea.innerText();
+  //   expect(textContent).not.toMatch(/\?{2,}/);
+  //   expect(textContent).not.toMatch(/[\ufffd]{2,}/);
+  // });
 });
 
 test.describe("投稿機能 - MKV動画", () => {
@@ -220,6 +242,39 @@ test.describe("投稿機能 - MKV動画", () => {
     // 動画（canvas または video）が表示されることを確認
     await waitForVisibleMedia(page);
   });
+
+  // TODO: FFmpeg WASM変換に30秒以上かかるため一旦スキップ。loadedmetadata待ちの修正は済み
+  // test("投稿した動画が先頭から5秒間のみに切り抜かれる", async ({ page }) => {
+  //   const postText = "動画5秒テスト";
+  //   await page.getByRole("list").getByRole("button", { name: "投稿する" }).click();
+  //   const textarea = page.getByPlaceholder("いまなにしてる？");
+  //   await expect(textarea).toBeVisible({ timeout: 10_000 });
+  //   await textarea.fill(postText);
+  //   const fileInput = page.locator('input[type="file"][accept="video/*"]');
+  //   const mkvPath = path.resolve(import.meta.dirname, "../../../docs/assets/pixabay_326739_kanenori_himejijo.mkv");
+  //   await fileInput.setInputFiles(mkvPath);
+  //   const submitButton = page.locator("dialog").getByRole("button", { name: "投稿する" });
+  //   await expect(submitButton).toBeEnabled({ timeout: 120_000 });
+  //   await submitButton.click();
+  //   await page.waitForURL("**/posts/*", { timeout: 120_000 });
+  //   const article = page.locator("article").first();
+  //   await expect(article).toBeVisible({ timeout: 10_000 });
+  //   await waitForVisibleMedia(page);
+  //   await expect(async () => {
+  //     const duration = await page.evaluate(() => {
+  //       return new Promise<number>((resolve) => {
+  //         const video = document.querySelector("article video");
+  //         if (!video) return resolve(0);
+  //         if ((video as HTMLVideoElement).duration > 0) return resolve((video as HTMLVideoElement).duration);
+  //         (video as HTMLVideoElement).addEventListener("loadedmetadata", () => {
+  //           resolve((video as HTMLVideoElement).duration);
+  //         }, { once: true });
+  //       });
+  //     });
+  //     expect(duration).toBeGreaterThan(0);
+  //     expect(duration).toBeLessThanOrEqual(6);
+  //   }).toPass({ timeout: 60_000 });
+  // });
 
   test("投稿した動画が正方形に切り抜かれる", async ({ page }) => {
     const postText = "動画正方形テスト";

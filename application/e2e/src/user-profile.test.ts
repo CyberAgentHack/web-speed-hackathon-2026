@@ -35,4 +35,23 @@ test.describe("ユーザー詳細", () => {
     });
   });
 
+  test("サービス利用開始の日時が正しく表示される", async ({ page }) => {
+    await page.goto("/users/o6yq16leo");
+
+    const serviceStartText = page.getByText("からサービスを利用しています");
+    await expect(serviceStartText).toBeVisible({ timeout: 30_000 });
+
+    // header 内の time に限定して複数ヒットを回避
+    const timeElement = page.locator("header time");
+    await expect(timeElement).toBeVisible({ timeout: 10_000 });
+
+    const datetimeAttr = await timeElement.getAttribute("datetime");
+    expect(datetimeAttr).toBeTruthy();
+
+    const parsedDate = new Date(datetimeAttr!);
+    expect(parsedDate.getTime()).not.toBeNaN();
+
+    const displayText = await timeElement.innerText();
+    expect(displayText).toMatch(/\d{4}年\d{1,2}月\d{1,2}日/);
+  });
 });
