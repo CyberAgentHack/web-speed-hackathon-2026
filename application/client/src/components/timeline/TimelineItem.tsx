@@ -1,4 +1,3 @@
-import moment from "moment";
 import { MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
@@ -30,8 +29,14 @@ interface Props {
   post: Models.Post;
 }
 
+const jaDateFormatter = new Intl.DateTimeFormat("ja-JP", {
+  dateStyle: "long",
+});
+
 export const TimelineItem = ({ post }: Props) => {
   const navigate = useNavigate();
+  const createdAt = new Date(post.createdAt);
+  const isValidCreatedAt = !Number.isNaN(createdAt.getTime());
 
   /**
    * ボタンやリンク以外の箇所をクリックしたとき かつ 文字が選択されてないとき、投稿詳細ページに遷移する
@@ -56,6 +61,8 @@ export const TimelineItem = ({ post }: Props) => {
           >
             <img
               alt={post.user.profileImage.alt}
+              decoding="async"
+              loading="lazy"
               src={getProfileImagePath(post.user.profileImage.id)}
             />
           </Link>
@@ -76,8 +83,8 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={isValidCreatedAt ? createdAt.toISOString() : post.createdAt}>
+                {isValidCreatedAt ? jaDateFormatter.format(createdAt) : post.createdAt}
               </time>
             </Link>
           </p>
