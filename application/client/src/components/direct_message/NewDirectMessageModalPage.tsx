@@ -37,7 +37,7 @@ const NewDirectMessageModalPageComponent = ({
           <ModalSubmitButton disabled={submitting || invalid} loading={submitting}>
             DMを開始
           </ModalSubmitButton>
-          <Button variant="secondary" command="close" commandfor={id}>
+          <Button onClick={() => (document.getElementById(id) as HTMLDialogElement)?.close()} variant="secondary">
             キャンセル
           </Button>
         </div>

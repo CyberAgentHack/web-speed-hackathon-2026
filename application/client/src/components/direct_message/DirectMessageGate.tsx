@@ -24,8 +24,7 @@ export const DirectMessageGate = ({
         <button
           className="bg-cax-brand text-cax-surface-raised hover:bg-cax-brand-strong inline-flex items-center justify-center rounded-full px-6 py-2 shadow"
           type="button"
-          command="show-modal"
-          commandfor={authModalId}
+          onClick={() => (document.getElementById(authModalId) as HTMLDialogElement)?.showModal()}
         >
           {buttonLabel}
         </button>

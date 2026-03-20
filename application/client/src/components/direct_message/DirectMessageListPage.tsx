@@ -51,8 +51,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
         <h1 className="text-2xl font-bold">ダイレクトメッセージ</h1>
         <div className="flex flex-wrap items-center gap-4">
           <Button
-            command="show-modal"
-            commandfor={newDmModalId}
+            onClick={() => (document.getElementById(newDmModalId) as HTMLDialogElement)?.showModal()}
             leftItem={<FontAwesomeIcon iconType="paper-plane" styleType="solid" />}
           >
             新しくDMを始める
