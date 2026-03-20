@@ -25,7 +25,13 @@ staticRouter.use(
   serveStatic(PUBLIC_PATH, {
     etag: true,
     lastModified: true,
-    maxAge: 86400000,
+    setHeaders(res, filePath) {
+      if (/\.(otf|woff2?|ttf|eot)$/.test(filePath)) {
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      } else {
+        res.setHeader("Cache-Control", "public, max-age=86400");
+      }
+    },
   }),
 );
 
