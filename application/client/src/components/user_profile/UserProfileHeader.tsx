@@ -32,7 +32,7 @@ export const UserProfileHeader = ({ user }: Props) => {
           crossOrigin="anonymous"
           height={112}
           onLoad={handleLoadImage}
-          src={getOptimizedProfileImagePath(user.profileImage.id, 256)}
+          src={getOptimizedProfileImagePath(user.profileImage?.id, 256)}
           width={112}
         />
       </div>
