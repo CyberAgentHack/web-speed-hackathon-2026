@@ -17,9 +17,18 @@ const response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-
 
 const STOP_POS = new Set(["助詞", "助動詞", "記号"]);
 
+// Cache suggestions in memory — they never change after seed
+let cachedCandidates: string[] | null = null;
+async function getCandidates(): Promise<string[]> {
+  if (cachedCandidates === null) {
+    const suggestions = await QaSuggestion.findAll({ logging: false });
+    cachedCandidates = suggestions.map((s) => s.question);
+  }
+  return cachedCandidates;
+}
+
 crokRouter.get("/crok/suggestions", async (req, res) => {
-  const suggestions = await QaSuggestion.findAll({ logging: false });
-  const candidates = suggestions.map((s) => s.question);
+  const candidates = await getCandidates();
 
   const q = typeof req.query["q"] === "string" ? req.query["q"].trim() : "";
   if (!q) {

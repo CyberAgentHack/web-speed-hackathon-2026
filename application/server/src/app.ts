@@ -14,7 +14,10 @@ app.set("trust proxy", true);
 app.use(compression());
 app.use(sessionMiddleware);
 app.use(bodyParser.json());
-app.use(bodyParser.raw({ limit: "10mb" }));
+
+app.use("/api/v1/images", bodyParser.raw({ limit: "10mb" }));
+app.use("/api/v1/movies", bodyParser.raw({ limit: "10mb" }));
+app.use("/api/v1/sounds", bodyParser.raw({ limit: "10mb" }));
 
 app.use("/api/v1", (_req, res, next) => {
   res.header("Cache-Control", "no-store");
