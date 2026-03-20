@@ -6,6 +6,10 @@ import remarkMath from "remark-math";
 
 import { CodeBlock } from "@web-speed-hackathon-2026/client/src/components/crok/CodeBlock";
 
+const components = { pre: CodeBlock };
+const rehypePlugins = [rehypeKatex];
+const remarkPlugins = [remarkMath, remarkGfm];
+
 interface Props {
   content: string;
 }
@@ -13,10 +17,9 @@ interface Props {
 export const MarkdownRenderer = ({ content }: Props) => {
   return (
     <Markdown
-      components={{ pre: CodeBlock }}
-      key={content}
-      rehypePlugins={[rehypeKatex]}
-      remarkPlugins={[remarkMath, remarkGfm]}
+      components={components}
+      rehypePlugins={rehypePlugins}
+      remarkPlugins={remarkPlugins}
     >
       {content}
     </Markdown>
