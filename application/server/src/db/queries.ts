@@ -137,12 +137,28 @@ export async function findConversationsForList(userId: string) {
   }));
 }
 
-export async function findConversationWithRelations(where: SQL) {
+export async function findConversationWithRelations(where: SQL, messageLimit?: number) {
   const db = getDb();
-  return await db.query.directMessageConversations.findFirst({
+  const withOpts = messageLimit
+    ? {
+        initiator: userWithProfileImage,
+        member: userWithProfileImage,
+        messages: {
+          with: { sender: userWithProfileImage },
+          orderBy: (fields: any, { desc: descFn }: any) => [descFn(fields.createdAt)],
+          limit: messageLimit,
+        },
+      }
+    : conversationFullWith();
+  const result = await db.query.directMessageConversations.findFirst({
     where,
-    with: conversationFullWith(),
+    with: withOpts,
   });
+  if (result && messageLimit) {
+    // DESC取得した結果をASC（古い順）に戻す
+    result.messages = result.messages.reverse();
+  }
+  return result;
 }
 
 export function countUnreadMessages(receiverId: string): number {

@@ -334,6 +334,8 @@ export const directMessageRouter = new Hono<SessionEnv>()
     }
 
     const conversationId = c.req.param("conversationId");
+    const limitParam = c.req.query("limit");
+    const messageLimit = limitParam ? Math.min(parseInt(limitParam, 10), 500) : 50;
     const conversation = await findConversationWithRelations(
       and(
         eq(directMessageConversations.id, conversationId),
@@ -342,6 +344,7 @@ export const directMessageRouter = new Hono<SessionEnv>()
           eq(directMessageConversations.memberId, userId),
         ),
       )!,
+      messageLimit,
     );
     if (!conversation) {
       throw new HTTPException(404);

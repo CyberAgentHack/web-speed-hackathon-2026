@@ -1,4 +1,4 @@
-import React, { Suspense, useCallback, useEffect, useId, useRef } from "react";
+import { useCallback, useEffect, useId, useRef } from "react";
 
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 import useSWR, { useSWRConfig } from "swr";
@@ -6,62 +6,17 @@ import useSWR, { useSWRConfig } from "swr";
 import { apiClient } from "@web-speed-hackathon-2026/client/src/api/client";
 import { getSSRData } from "@web-speed-hackathon-2026/client/src/api/ssr-data";
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
-
-const AuthModalContainer = React.lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/AuthModalContainer").then((m) => ({
-    default: m.AuthModalContainer,
-  })),
-);
-const CrokContainer = React.lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/CrokContainer").then((m) => ({
-    default: m.CrokContainer,
-  })),
-);
-const DirectMessageContainer = React.lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer").then((m) => ({
-    default: m.DirectMessageContainer,
-  })),
-);
-const DirectMessageListContainer = React.lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer").then(
-    (m) => ({ default: m.DirectMessageListContainer }),
-  ),
-);
-const NewPostModalContainer = React.lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer").then((m) => ({
-    default: m.NewPostModalContainer,
-  })),
-);
-const NotFoundContainer = React.lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/NotFoundContainer").then((m) => ({
-    default: m.NotFoundContainer,
-  })),
-);
-const PostContainer = React.lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/PostContainer").then((m) => ({
-    default: m.PostContainer,
-  })),
-);
-const SearchContainer = React.lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/SearchContainer").then((m) => ({
-    default: m.SearchContainer,
-  })),
-);
-const TermContainer = React.lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/TermContainer").then((m) => ({
-    default: m.TermContainer,
-  })),
-);
-const TimelineContainer = React.lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/TimelineContainer").then((m) => ({
-    default: m.TimelineContainer,
-  })),
-);
-const UserProfileContainer = React.lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/UserProfileContainer").then((m) => ({
-    default: m.UserProfileContainer,
-  })),
-);
+import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
+import { CrokContainer } from "@web-speed-hackathon-2026/client/src/containers/CrokContainer";
+import { DirectMessageContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer";
+import { DirectMessageListContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer";
+import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
+import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
+import { PostContainer } from "@web-speed-hackathon-2026/client/src/containers/PostContainer";
+import { SearchContainer } from "@web-speed-hackathon-2026/client/src/containers/SearchContainer";
+import { TermContainer } from "@web-speed-hackathon-2026/client/src/containers/TermContainer";
+import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
+import { UserProfileContainer } from "@web-speed-hackathon-2026/client/src/containers/UserProfileContainer";
 
 export interface SSRData {
   activeUser?: Models.User | null | undefined;
@@ -132,43 +87,37 @@ export const AppContainer = () => {
         newPostModalId={newPostModalId}
         onLogout={handleLogout}
       >
-        <Suspense fallback={null}>
-          <Routes>
-            <Route element={<TimelineContainer />} path="/" />
-            <Route
-              element={
-                <DirectMessageListContainer
-                  activeUser={resolvedActiveUser}
-                  authModalId={authModalId}
-                />
-              }
-              path="/dm"
-            />
-            <Route
-              element={
-                <DirectMessageContainer activeUser={resolvedActiveUser} authModalId={authModalId} />
-              }
-              path="/dm/:conversationId"
-            />
-            <Route element={<SearchContainer />} path="/search" />
-            <Route element={<UserProfileContainer />} path="/users/:username" />
-            <Route element={<PostContainer />} path="/posts/:postId" />
-            <Route element={<TermContainer />} path="/terms" />
-            <Route
-              element={<CrokContainer activeUser={resolvedActiveUser} authModalId={authModalId} />}
-              path="/crok"
-            />
-            <Route element={<NotFoundContainer />} path="*" />
-          </Routes>
-        </Suspense>
+        <Routes>
+          <Route element={<TimelineContainer />} path="/" />
+          <Route
+            element={
+              <DirectMessageListContainer
+                activeUser={resolvedActiveUser}
+                authModalId={authModalId}
+              />
+            }
+            path="/dm"
+          />
+          <Route
+            element={
+              <DirectMessageContainer activeUser={resolvedActiveUser} authModalId={authModalId} />
+            }
+            path="/dm/:conversationId"
+          />
+          <Route element={<SearchContainer />} path="/search" />
+          <Route element={<UserProfileContainer />} path="/users/:username" />
+          <Route element={<PostContainer />} path="/posts/:postId" />
+          <Route element={<TermContainer />} path="/terms" />
+          <Route
+            element={<CrokContainer activeUser={resolvedActiveUser} authModalId={authModalId} />}
+            path="/crok"
+          />
+          <Route element={<NotFoundContainer />} path="*" />
+        </Routes>
       </AppPage>
 
-      <Suspense fallback={null}>
-        <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
-      </Suspense>
-      <Suspense fallback={null}>
-        <NewPostModalContainer id={newPostModalId} />
-      </Suspense>
+      <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
+      <NewPostModalContainer id={newPostModalId} />
     </>
   );
 };

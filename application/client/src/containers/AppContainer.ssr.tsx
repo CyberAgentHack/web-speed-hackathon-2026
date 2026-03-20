@@ -4,9 +4,9 @@
  * SSR ビルドが単一ファイルになり module 変数を全コンポーネントで共有できる。
  * クライアント側は AppContainer.tsx (React.lazy 版) を使う。
  */
-import { Suspense, useCallback, useId, useRef } from "react";
+import { useCallback, useEffect, useId, useRef } from "react";
 
-import { Route, Routes, useNavigate } from "react-router";
+import { Route, Routes, useLocation, useNavigate } from "react-router";
 import useSWR, { useSWRConfig } from "swr";
 
 import { apiClient } from "@web-speed-hackathon-2026/client/src/api/client";
@@ -33,10 +33,15 @@ const activeUserFetcher = async (_key: string): Promise<Models.User | null> => {
 };
 
 export const AppContainer = () => {
+  const { pathname } = useLocation();
   const navigate = useNavigate();
   const { mutate } = useSWRConfig();
   const ssrRef = useRef(getSSRData());
   const ssrActiveUser = ssrRef.current?.activeUser;
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
 
   const { data: activeUser, isLoading: isLoadingActiveUser } = useSWR<
     Models.User | null,
@@ -80,43 +85,37 @@ export const AppContainer = () => {
         newPostModalId={newPostModalId}
         onLogout={handleLogout}
       >
-        <Suspense fallback={null}>
-          <Routes>
-            <Route element={<TimelineContainer />} path="/" />
-            <Route
-              element={
-                <DirectMessageListContainer
-                  activeUser={resolvedActiveUser}
-                  authModalId={authModalId}
-                />
-              }
-              path="/dm"
-            />
-            <Route
-              element={
-                <DirectMessageContainer activeUser={resolvedActiveUser} authModalId={authModalId} />
-              }
-              path="/dm/:conversationId"
-            />
-            <Route element={<SearchContainer />} path="/search" />
-            <Route element={<UserProfileContainer />} path="/users/:username" />
-            <Route element={<PostContainer />} path="/posts/:postId" />
-            <Route element={<TermContainer />} path="/terms" />
-            <Route
-              element={<CrokContainer activeUser={resolvedActiveUser} authModalId={authModalId} />}
-              path="/crok"
-            />
-            <Route element={<NotFoundContainer />} path="*" />
-          </Routes>
-        </Suspense>
+        <Routes>
+          <Route element={<TimelineContainer />} path="/" />
+          <Route
+            element={
+              <DirectMessageListContainer
+                activeUser={resolvedActiveUser}
+                authModalId={authModalId}
+              />
+            }
+            path="/dm"
+          />
+          <Route
+            element={
+              <DirectMessageContainer activeUser={resolvedActiveUser} authModalId={authModalId} />
+            }
+            path="/dm/:conversationId"
+          />
+          <Route element={<SearchContainer />} path="/search" />
+          <Route element={<UserProfileContainer />} path="/users/:username" />
+          <Route element={<PostContainer />} path="/posts/:postId" />
+          <Route element={<TermContainer />} path="/terms" />
+          <Route
+            element={<CrokContainer activeUser={resolvedActiveUser} authModalId={authModalId} />}
+            path="/crok"
+          />
+          <Route element={<NotFoundContainer />} path="*" />
+        </Routes>
       </AppPage>
 
-      <Suspense fallback={null}>
-        <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
-      </Suspense>
-      <Suspense fallback={null}>
-        <NewPostModalContainer id={newPostModalId} />
-      </Suspense>
+      <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
+      <NewPostModalContainer id={newPostModalId} />
     </>
   );
 };

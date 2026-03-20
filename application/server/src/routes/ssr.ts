@@ -110,9 +110,7 @@ function planSSRFetches(urlPath: string): Record<string, string> | null {
   const pathname = parsed.pathname;
 
   if (pathname === "/") {
-    // SSR では最初の2件だけ描画（HTML サイズ削減で LCP 改善）。
-    // 残りはクライアント SWR が取得する。
-    return { posts: "/api/v1/posts?limit=2&offset=0" };
+    return { posts: "/api/v1/posts?limit=15&offset=0" };
   }
 
   const postMatch = pathname.match(/^\/posts\/([^/]+)$/);
