@@ -110,7 +110,7 @@ function planSSRFetches(urlPath: string): Record<string, string> | null {
   const pathname = parsed.pathname;
 
   if (pathname === "/") {
-    return { posts: "/api/v1/posts?limit=15&offset=0" };
+    return { posts: "/api/v1/posts?limit=30&offset=0" };
   }
 
   const postMatch = pathname.match(/^\/posts\/([^/]+)$/);
