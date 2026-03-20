@@ -1,3 +1,4 @@
+import { pipeline, type TranslationPipeline } from "@huggingface/transformers";
 import { Hono } from "hono";
 import * as v from "valibot";
 
@@ -9,26 +10,28 @@ const TranslateBody = v.object({
   target: v.string(),
 });
 
+let translator: TranslationPipeline | null = null;
+
+async function getTranslator(): Promise<TranslationPipeline> {
+  if (!translator) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- pipeline() produces overly complex union type
+    translator = await (pipeline as any)("translation", "Xenova/opus-mt-ja-en", {
+      dtype: "q8",
+    });
+  }
+  return translator!;
+}
+
 export const translateRouter = new Hono<SessionEnv>().post("/translate", async (c) => {
   const body = v.parse(TranslateBody, await c.req.json());
 
-  const url = new URL("https://translate.googleapis.com/translate_a/single");
-  url.searchParams.set("client", "gtx");
-  url.searchParams.set("sl", body.source);
-  url.searchParams.set("tl", body.target);
-  url.searchParams.set("dt", "t");
-  url.searchParams.set("q", body.text);
-
-  const res = await fetch(url.toString());
-  if (!res.ok) {
+  try {
+    const t = await getTranslator();
+    const result = await t(body.text);
+    const translated = (result as { translation_text: string }[])[0]!.translation_text;
+    return c.json({ result: translated });
+  } catch (e) {
+    console.error("Translation error:", e);
     return c.json({ error: "Translation failed" }, 500);
   }
-
-  const data = await res.json();
-  // Google Translate returns [[["translated text","original text",...],...],...]
-  const translated = (data as unknown[][])[0]!
-    .map((segment: unknown) => (segment as string[])[0])
-    .join("");
-
-  return c.json({ result: translated });
 });
