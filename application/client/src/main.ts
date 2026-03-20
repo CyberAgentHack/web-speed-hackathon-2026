@@ -1,4 +1,3 @@
-import "./setup";
 import "regenerator-runtime/runtime";
 import "./index.css";
 import "./buildinfo";
