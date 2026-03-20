@@ -5,6 +5,50 @@ import { Route, Routes, useLocation, useNavigate } from "react-router";
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
+const currentPathname = window.location.pathname;
+
+const loadTimelineContainer =
+  async () => import("@web-speed-hackathon-2026/client/src/containers/TimelineContainer");
+const loadDirectMessageListContainer =
+  async () => import("@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer");
+const loadDirectMessageContainer =
+  async () => import("@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer");
+const loadSearchContainer =
+  async () => import("@web-speed-hackathon-2026/client/src/containers/SearchContainer");
+const loadUserProfileContainer =
+  async () => import("@web-speed-hackathon-2026/client/src/containers/UserProfileContainer");
+const loadPostContainer =
+  async () => import("@web-speed-hackathon-2026/client/src/containers/PostContainer");
+const loadTermContainer =
+  async () => import("@web-speed-hackathon-2026/client/src/containers/TermContainer");
+const loadCrokContainer =
+  async () => import("@web-speed-hackathon-2026/client/src/containers/CrokContainer");
+const loadNotFoundContainer =
+  async () => import("@web-speed-hackathon-2026/client/src/containers/NotFoundContainer");
+
+const timelineContainerPromise = currentPathname === "/" ? loadTimelineContainer() : null;
+const directMessageListContainerPromise =
+  currentPathname === "/dm" ? loadDirectMessageListContainer() : null;
+const directMessageContainerPromise =
+  currentPathname.startsWith("/dm/") ? loadDirectMessageContainer() : null;
+const searchContainerPromise = currentPathname === "/search" ? loadSearchContainer() : null;
+const userProfileContainerPromise =
+  currentPathname.startsWith("/users/") ? loadUserProfileContainer() : null;
+const postContainerPromise = currentPathname.startsWith("/posts/") ? loadPostContainer() : null;
+const termContainerPromise = currentPathname === "/terms" ? loadTermContainer() : null;
+const crokContainerPromise = currentPathname === "/crok" ? loadCrokContainer() : null;
+const notFoundContainerPromise =
+  timelineContainerPromise == null &&
+  directMessageListContainerPromise == null &&
+  directMessageContainerPromise == null &&
+  searchContainerPromise == null &&
+  userProfileContainerPromise == null &&
+  postContainerPromise == null &&
+  termContainerPromise == null &&
+  crokContainerPromise == null
+    ? loadNotFoundContainer()
+    : null;
+
 const AuthModalContainer = lazy(async () => {
   const module = await import("@web-speed-hackathon-2026/client/src/containers/AuthModalContainer");
   return { default: module.AuthModalContainer };
@@ -17,50 +61,47 @@ const NewPostModalContainer = lazy(async () => {
 });
 
 const TimelineContainer = lazy(async () => {
-  const module = await import("@web-speed-hackathon-2026/client/src/containers/TimelineContainer");
+  const module = await (timelineContainerPromise ?? loadTimelineContainer());
   return { default: module.TimelineContainer };
 });
 
 const DirectMessageListContainer = lazy(async () => {
-  const module =
-    await import("@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer");
+  const module = await (directMessageListContainerPromise ?? loadDirectMessageListContainer());
   return { default: module.DirectMessageListContainer };
 });
 
 const DirectMessageContainer = lazy(async () => {
-  const module =
-    await import("@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer");
+  const module = await (directMessageContainerPromise ?? loadDirectMessageContainer());
   return { default: module.DirectMessageContainer };
 });
 
 const SearchContainer = lazy(async () => {
-  const module = await import("@web-speed-hackathon-2026/client/src/containers/SearchContainer");
+  const module = await (searchContainerPromise ?? loadSearchContainer());
   return { default: module.SearchContainer };
 });
 
 const UserProfileContainer = lazy(async () => {
-  const module =
-    await import("@web-speed-hackathon-2026/client/src/containers/UserProfileContainer");
+  const module = await (userProfileContainerPromise ?? loadUserProfileContainer());
   return { default: module.UserProfileContainer };
 });
 
 const PostContainer = lazy(async () => {
-  const module = await import("@web-speed-hackathon-2026/client/src/containers/PostContainer");
+  const module = await (postContainerPromise ?? loadPostContainer());
   return { default: module.PostContainer };
 });
 
 const TermContainer = lazy(async () => {
-  const module = await import("@web-speed-hackathon-2026/client/src/containers/TermContainer");
+  const module = await (termContainerPromise ?? loadTermContainer());
   return { default: module.TermContainer };
 });
 
 const CrokContainer = lazy(async () => {
-  const module = await import("@web-speed-hackathon-2026/client/src/containers/CrokContainer");
+  const module = await (crokContainerPromise ?? loadCrokContainer());
   return { default: module.CrokContainer };
 });
 
 const NotFoundContainer = lazy(async () => {
-  const module = await import("@web-speed-hackathon-2026/client/src/containers/NotFoundContainer");
+  const module = await (notFoundContainerPromise ?? loadNotFoundContainer());
   return { default: module.NotFoundContainer };
 });
 
