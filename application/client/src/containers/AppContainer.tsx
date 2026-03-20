@@ -5,14 +5,16 @@ import { Route, Routes, useLocation, useNavigate } from "react-router";
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { RouteLoadingPage } from "@web-speed-hackathon-2026/client/src/components/application/RouteLoadingPage";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
-import { CrokContainer } from "@web-speed-hackathon-2026/client/src/containers/CrokContainer";
-import { SearchContainer } from "@web-speed-hackathon-2026/client/src/containers/SearchContainer";
 import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
 import { FetchError, fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 const AuthModalContainer = lazy(async () => {
   const mod = await import("@web-speed-hackathon-2026/client/src/containers/AuthModalContainer");
   return { default: mod.AuthModalContainer };
+});
+const CrokContainer = lazy(async () => {
+  const mod = await import("@web-speed-hackathon-2026/client/src/containers/CrokContainer");
+  return { default: mod.CrokContainer };
 });
 const DirectMessageContainer = lazy(async () => {
   const mod = await import("@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer");
@@ -31,6 +33,10 @@ const NewPostModalContainer = lazy(async () => {
 const PostContainer = lazy(async () => {
   const mod = await import("@web-speed-hackathon-2026/client/src/containers/PostContainer");
   return { default: mod.PostContainer };
+});
+const SearchContainer = lazy(async () => {
+  const mod = await import("@web-speed-hackathon-2026/client/src/containers/SearchContainer");
+  return { default: mod.SearchContainer };
 });
 const TermContainer = lazy(async () => {
   const mod = await import("@web-speed-hackathon-2026/client/src/containers/TermContainer");
@@ -134,7 +140,14 @@ export const AppContainer = () => {
             }
             path="/dm/:conversationId"
           />
-          <Route element={<SearchContainer />} path="/search" />
+          <Route
+            element={
+              <Suspense fallback={<RouteLoadingPage />}>
+                <SearchContainer />
+              </Suspense>
+            }
+            path="/search"
+          />
           <Route
             element={
               <Suspense fallback={<RouteLoadingPage />}>
@@ -160,7 +173,11 @@ export const AppContainer = () => {
             path="/terms"
           />
           <Route
-            element={<CrokContainer activeUser={activeUser} onOpenAuthModal={handleOpenAuthModal} />}
+            element={
+              <Suspense fallback={<RouteLoadingPage />}>
+                <CrokContainer activeUser={activeUser} onOpenAuthModal={handleOpenAuthModal} />
+              </Suspense>
+            }
             path="/crok"
           />
           <Route element={<NotFoundContainer />} path="*" />
