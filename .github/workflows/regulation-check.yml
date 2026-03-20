@@ -59,16 +59,72 @@ jobs:
                   echo "Resolved initial commit: ${INITIAL_SHA}"
                   echo "Current commit: ${GITHUB_SHA}"
                   echo "INITIAL_SHA=${INITIAL_SHA}" >> "${GITHUB_ENV}"
+                  echo "INIT_SNAPSHOTS_ARTIFACT=regulation-init-snapshots-${INITIAL_SHA}" >> "${GITHUB_ENV}"
+
+            - name: Remove checked-in snapshots before baseline restore
+              run: find application/e2e/src -maxdepth 1 -type d -name "*.test.ts-snapshots" -exec rm -rf {} +
+
+            - name: Find init snapshots artifact
+              id: find-init-snapshots
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  ARTIFACT_ID=""
+                  for PAGE in $(seq 1 20); do
+                    ARTIFACT_ID="$(curl -fsSL \
+                      -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+                      -H "Accept: application/vnd.github+json" \
+                      "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100&page=${PAGE}" \
+                      | jq -r --arg name "${INIT_SNAPSHOTS_ARTIFACT}" '.artifacts[] | select(.name == $name and .expired == false) | .id' \
+                      | head -n 1)"
+                    if [ -n "${ARTIFACT_ID}" ]; then
+                      break
+                    fi
+                  done
+                  if [ -n "${ARTIFACT_ID}" ]; then
+                    echo "Found init snapshots artifact: ${INIT_SNAPSHOTS_ARTIFACT} (id=${ARTIFACT_ID})"
+                    echo "found=true" >> "${GITHUB_OUTPUT}"
+                    echo "artifact_id=${ARTIFACT_ID}" >> "${GITHUB_OUTPUT}"
+                  else
+                    echo "Init snapshots artifact not found: ${INIT_SNAPSHOTS_ARTIFACT}"
+                    echo "found=false" >> "${GITHUB_OUTPUT}"
+                  fi
+
+            - name: Download init snapshots artifact
+              if: steps.find-init-snapshots.outputs.found == 'true'
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  curl -fsSL \
+                    -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+                    -H "Accept: application/vnd.github+json" \
+                    "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${{ steps.find-init-snapshots.outputs.artifact_id }}/zip" \
+                    -o /tmp/init-snapshots.zip
+                  unzip -o /tmp/init-snapshots.zip -d "${GITHUB_WORKSPACE}"
+
+            - name: Detect whether baseline snapshots are ready
+              id: baseline-snapshots
+              run: |
+                  if find application/e2e/src -maxdepth 1 -type d -name "*.test.ts-snapshots" | grep -q .; then
+                    echo "Baseline snapshots found"
+                    echo "ready=true" >> "${GITHUB_OUTPUT}"
+                  else
+                    echo "Baseline snapshots not found"
+                    echo "ready=false" >> "${GITHUB_OUTPUT}"
+                  fi
 
             - name: Checkout initial commit to worktree
+              if: steps.baseline-snapshots.outputs.ready != 'true'
               run: git worktree add /tmp/wsh-initial "$INITIAL_SHA"
 
             - name: Build and run initial baseline app
+              if: steps.baseline-snapshots.outputs.ready != 'true'
               run: |
                   docker build -t wsh-baseline-initial /tmp/wsh-initial
                   docker run -d --name wsh-baseline-initial -e PORT=8080 -p 18080:8080 wsh-baseline-initial
 
             - name: Wait for initial baseline app
+              if: steps.baseline-snapshots.outputs.ready != 'true'
               run: |
                   echo "Waiting for baseline app on http://localhost:18080 ..."
                   for i in $(seq 1 45); do
@@ -83,10 +139,20 @@ jobs:
                   exit 1
 
             - name: Generate VRT baseline snapshots from initial commit
-              working-directory: application
+              if: steps.baseline-snapshots.outputs.ready != 'true'
+              working-directory: application/e2e
               env:
                   E2E_BASE_URL: http://localhost:18080
-              run: pnpm --filter @web-speed-hackathon-2026/e2e exec playwright test --update-snapshots --workers=1 --retries=2
+              run: pnpm run test -- --update-snapshots --workers=1 --retries=2
+
+            - name: Upload init snapshots artifact
+              if: steps.baseline-snapshots.outputs.ready != 'true'
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              with:
+                  name: ${{ env.INIT_SNAPSHOTS_ARTIFACT }}
+                  path: application/e2e/src/*-snapshots/**
+                  retention-days: 30
+                  if-no-files-found: error
 
             - name: Build current app
               working-directory: application
@@ -118,10 +184,10 @@ jobs:
                   exit 1
 
             - name: Run regulation VRT/E2E against current app
-              working-directory: application
+              working-directory: application/e2e
               env:
                   E2E_BASE_URL: http://localhost:28080
-              run: pnpm --filter @web-speed-hackathon-2026/e2e exec playwright test --workers=1 --retries=2
+              run: pnpm run test -- --workers=1 --retries=2
 
             - name: Upload regulation debug artifacts
               if: failure()
