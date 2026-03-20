@@ -7,6 +7,7 @@
   "scripts": {
     "build": "pnpm --filter @web-speed-hackathon-2026/client build",
     "start": "pnpm --filter @web-speed-hackathon-2026/server start",
+    "dev": "pnpm --parallel --filter @web-speed-hackathon-2026/server --filter @web-speed-hackathon-2026/client dev",
     "typecheck": "pnpm run --recursive typecheck",
     "format": "pnpm run format:oxlint && pnpm run format:oxfmt",
     "format:oxlint": "oxlint --fix",

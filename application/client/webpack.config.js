@@ -7,6 +7,8 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 const webpack = require("webpack");
 
+const isDev = process.env.NODE_ENV !== "production";
+
 const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
@@ -17,16 +19,18 @@ const config = {
   devServer: {
     historyApiFallback: true,
     host: "0.0.0.0",
+    hot: true,
     port: 8080,
     proxy: [
       {
         context: ["/api"],
         target: "http://localhost:3000",
+        ws: true,
       },
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "source-map",
+  devtool: isDev ? "eval-source-map" : "source-map",
   entry: {
     main: [
       "jquery-binarytransport",
@@ -35,7 +39,7 @@ const config = {
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "production",
+  mode: isDev ? "development" : "production",
   module: {
     rules: [
       {
@@ -46,7 +50,7 @@ const config = {
       {
         test: /\.css$/i,
         use: [
-          { loader: MiniCssExtractPlugin.loader },
+          { loader: isDev ? "style-loader" : MiniCssExtractPlugin.loader },
           { loader: "css-loader", options: { url: false } },
           { loader: "postcss-loader" },
         ],
@@ -73,13 +77,12 @@ const config = {
     }),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
-      // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "production",
+      NODE_ENV: isDev ? "development" : "production",
     }),
-    new MiniCssExtractPlugin({
+    ...(isDev ? [] : [new MiniCssExtractPlugin({
       filename: "styles/[name].css",
-    }),
+    })]),
     new CopyWebpackPlugin({
       patterns: [
         {
@@ -130,7 +133,7 @@ const config = {
     },
   },
   optimization: {
-    minimize: true,
+    minimize: !isDev,
     splitChunks: {
       chunks: "all",
     },

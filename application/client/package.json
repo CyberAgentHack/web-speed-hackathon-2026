@@ -7,6 +7,7 @@
   "author": "CyberAgent, Inc.",
   "scripts": {
     "build": "NODE_ENV=production webpack",
+    "dev": "webpack serve",
     "typecheck": "tsc"
   },
   "dependencies": {
@@ -75,6 +76,7 @@
     "@types/react-syntax-highlighter": "15.5.13",
     "@types/redux-form": "^8.3.11",
     "babel-loader": "10.0.0",
+    "style-loader": "4.0.0",
     "copy-webpack-plugin": "13.0.1",
     "css-loader": "7.1.2",
     "html-webpack-plugin": "5.6.4",

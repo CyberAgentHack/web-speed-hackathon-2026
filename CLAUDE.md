@@ -20,7 +20,12 @@ pnpm install --frozen-lockfile
 # ビルド（クライアント）
 cd application && pnpm run build
 
-# サーバー起動（http://localhost:3000/）
+# 開発サーバー起動（HMR + サーバー自動再起動）
+# クライアント: http://localhost:8080/（webpack-dev-server、API は localhost:3000 にプロキシ）
+# サーバー: http://localhost:3000/（tsx --watch）
+cd application && pnpm run dev
+
+# サーバー起動（本番ビルド後、http://localhost:3000/）
 cd application && pnpm run start
 
 # 型チェック（全パッケージ）
