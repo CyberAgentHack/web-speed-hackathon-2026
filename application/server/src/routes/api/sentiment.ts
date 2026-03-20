@@ -13,7 +13,7 @@ function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
   if (!tokenizerPromise) {
     tokenizerPromise = new Promise((resolve, reject) => {
       kuromoji
-        .builder({ dicPath: path.resolve("node_modules/kuromoji/dict") })
+        .builder({ dicPath: path.resolve("../public/dicts") })
         .build((err, tokenizer) => {
           if (err) reject(err);
           else resolve(tokenizer);
