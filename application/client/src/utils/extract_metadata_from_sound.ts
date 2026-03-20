@@ -1,6 +1,7 @@
 import Encoding from "encoding-japanese";
 
-import { loadFFmpeg } from "@web-speed-hackathon-2026/client/src/utils/load_ffmpeg";
+import { FFmpeg } from "@ffmpeg/ffmpeg";
+// import { loadFFmpeg } from "@web-speed-hackathon-2026/client/src/utils/load_ffmpeg";
 
 interface SoundMetadata {
   artist: string;
@@ -13,7 +14,8 @@ const UNKNOWN_TITLE = "Unknown Title";
 
 export async function extractMetadataFromSound(data: File): Promise<SoundMetadata> {
   try {
-    const ffmpeg = await loadFFmpeg();
+    const ffmpeg = new FFmpeg()
+    // const ffmpeg = await loadFFmpeg();
 
     const exportFile = "meta.txt";
 
