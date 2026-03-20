@@ -5,6 +5,7 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
+const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 const webpack = require("webpack");
 
 const SRC_PATH = path.resolve(__dirname, "./src");
@@ -91,6 +92,9 @@ const config = {
       inject: false,
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
+    ...(process.env.ANALYZE === "true"
+      ? [new BundleAnalyzerPlugin({ analyzerMode: "static", openAnalyzer: false })]
+      : []),
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
