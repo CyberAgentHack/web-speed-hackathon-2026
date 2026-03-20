@@ -87,3 +87,5 @@ export const NewPostModalContainer = ({ id }: Props) => {
     </Modal>
   );
 };
+
+export default NewPostModalContainer;

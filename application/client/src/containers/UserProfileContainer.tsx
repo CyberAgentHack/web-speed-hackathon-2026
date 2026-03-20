@@ -41,3 +41,5 @@ export const UserProfileContainer = () => {
     </InfiniteScroll>
   );
 };
+
+export default UserProfileContainer;

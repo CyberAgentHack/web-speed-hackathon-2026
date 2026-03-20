@@ -32,3 +32,5 @@ export const DirectMessageListContainer = ({ activeUser, authModalId }: Props) =
     </>
   );
 };
+
+export default DirectMessageListContainer;
