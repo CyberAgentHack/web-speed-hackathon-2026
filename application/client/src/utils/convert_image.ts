@@ -1,5 +1,5 @@
 import { initializeImageMagick, ImageMagick, MagickFormat } from "@imagemagick/magick-wasm";
-import magickWasm from "@imagemagick/magick-wasm/magick.wasm?binary";
+import magickWasm from "@imagemagick/magick-wasm/magick.wasm?url";
 import { dump, insert, ImageIFD } from "piexifjs";
 
 interface Options {

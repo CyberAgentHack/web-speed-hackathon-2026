@@ -74,15 +74,19 @@ export const DirectMessagePage = ({
   );
 
   useEffect(() => {
-    const id = setInterval(() => {
-      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
+    const scrollToBottom = () => {
+      const height = document.body.scrollHeight;
       if (height !== scrollHeightRef.current) {
         scrollHeightRef.current = height;
         window.scrollTo(0, height);
       }
-    }, 1);
+    };
 
-    return () => clearInterval(id);
+    scrollToBottom();
+
+    const observer = new ResizeObserver(scrollToBottom);
+    observer.observe(document.body);
+    return () => observer.disconnect();
   }, []);
 
   if (conversationError != null) {
