@@ -51,7 +51,9 @@ export function createPage(renderContent: (props: { activeUser: Models.User | nu
     const handleLogout = useCallback(async () => {
       await sendJSON("/api/v1/signout", {});
       setActiveUser(null);
-      window.location.href = "/";
+      if (window.location.pathname.startsWith("/dm")) {
+        window.location.href = "/";
+      }
     }, []);
 
     const newPostModalId = useId();
