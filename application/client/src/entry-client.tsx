@@ -15,7 +15,7 @@ import { store } from "@web-speed-hackathon-2026/client/src/store";
 
 const appEl = document.getElementById("app")!;
 const ssrData = (window as any).__SSR_DATA__ as SSRData | undefined;
-const fallback = buildSWRFallback(window.location.pathname, ssrData);
+const fallback = buildSWRFallback(window.location.pathname + window.location.search, ssrData);
 
 const app = (
   <Provider store={store}>

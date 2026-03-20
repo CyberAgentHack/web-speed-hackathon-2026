@@ -4,12 +4,19 @@ import { Transform } from "node:stream";
 
 import { Hono } from "hono";
 
+import { app } from "@web-speed-hackathon-2026/server/src/app";
 import { CLIENT_DIST_PATH, SSR_DIST_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import type { SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
-import {
-  getServerData,
-  type SSRData,
-} from "@web-speed-hackathon-2026/server/src/ssr/getServerData";
+
+// SSRData: クライアントの AppContainer.SSRData と同じ構造
+interface SSRData {
+  activeUser?: unknown;
+  posts?: unknown[];
+  post?: unknown;
+  comments?: unknown[];
+  user?: unknown;
+  userPosts?: unknown[];
+}
 
 // Production で使う index.html テンプレートを起動時に読み込み
 let templateHtml = "";
@@ -56,8 +63,9 @@ function csrFallbackHtml(): string {
 
 function buildPreloadHints(ssrData: SSRData): string {
   const hints: string[] = [];
-  // LCP 画像 preload: タイムラインの最初の投稿の最初の画像
-  const firstPosts = ssrData.posts ?? ssrData.userPosts ?? [];
+  const firstPosts = (ssrData.posts ?? ssrData.userPosts ?? []) as Array<{
+    images?: Array<{ id: string }>;
+  }>;
   for (const post of firstPosts.slice(0, 5)) {
     if (post.images && post.images.length > 0) {
       hints.push(`<link rel="preload" as="image" href="/images/${post.images[0]!.id}.jpg">`);
@@ -72,6 +80,87 @@ const ssrCache = new Map<string, string>();
 
 export function clearSsrCache() {
   ssrCache.clear();
+}
+
+// app.request() で内部 API を叩いて JSON を返す（HTTP オーバーヘッドなし）
+async function internalFetch(apiPath: string, cookie?: string): Promise<unknown> {
+  const headers: Record<string, string> = {};
+  if (cookie) headers["Cookie"] = cookie;
+  const res = await app.request(apiPath, { headers });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+// ルートごとに必要な API パスを返す（ルートマッチのみ、データ取得ロジックなし）
+function planSSRFetches(urlPath: string): Record<string, string> | null {
+  const parsed = new URL(urlPath, "http://localhost");
+  const pathname = parsed.pathname;
+
+  if (pathname === "/") {
+    return { posts: "/api/v1/posts?limit=30&offset=0" };
+  }
+
+  const postMatch = pathname.match(/^\/posts\/([^/]+)$/);
+  if (postMatch) {
+    const postId = postMatch[1]!;
+    return {
+      post: `/api/v1/posts/${postId}`,
+      comments: `/api/v1/posts/${postId}/comments?limit=30&offset=0`,
+    };
+  }
+
+  const userMatch = pathname.match(/^\/users\/([^/]+)$/);
+  if (userMatch) {
+    const username = userMatch[1]!;
+    return {
+      user: `/api/v1/users/${username}`,
+      userPosts: `/api/v1/users/${username}/posts?limit=30&offset=0`,
+    };
+  }
+
+  if (pathname === "/search") {
+    const q = parsed.searchParams.get("q");
+    if (!q) return { posts: "" }; // 空クエリ → 空配列で返す
+    return { posts: `/api/v1/search?q=${encodeURIComponent(q)}&limit=30&offset=0` };
+  }
+
+  if (pathname === "/terms") {
+    return {};
+  }
+
+  // /dm, /crok 等 → CSR フォールバック
+  return null;
+}
+
+// 全 API を並列で叩き、SSRData を組み立てる
+async function fetchSSRData(urlPath: string, cookie?: string): Promise<SSRData | null> {
+  const plan = planSSRFetches(urlPath);
+  if (plan === null) return null;
+
+  // activeUser は常に取得（cookie があればログインユーザー情報、なければ null）
+  const entries: Array<[string, Promise<unknown>]> = [
+    ["activeUser", cookie ? internalFetch("/api/v1/me", cookie) : Promise.resolve(null)],
+  ];
+
+  for (const [key, apiPath] of Object.entries(plan)) {
+    if (!apiPath) {
+      // 空パス（例: search で q なし）→ 空配列
+      entries.push([key, Promise.resolve([])]);
+    } else {
+      entries.push([key, internalFetch(apiPath, cookie)]);
+    }
+  }
+
+  // 全 Promise を並列解決
+  const keys = entries.map(([k]) => k);
+  const values = await Promise.all(entries.map(([, p]) => p));
+
+  const ssrData: SSRData = {};
+  for (let i = 0; i < keys.length; i++) {
+    (ssrData as Record<string, unknown>)[keys[i]!] = values[i] ?? null;
+  }
+
+  return ssrData;
 }
 
 async function renderToString(url: string, ssrData: SSRData): Promise<string> {
@@ -132,9 +221,13 @@ ssrRouter.get("*", async (c) => {
     const session = c.get("session");
     const userId = session.get()?.userId;
 
+    // URL: パス + クエリストリング
+    const url = new URL(c.req.url);
+    const fullPath = url.pathname + url.search;
+
     // 未ログインなら SSR キャッシュを使う
     if (!userId) {
-      const cached = ssrCache.get(c.req.path);
+      const cached = ssrCache.get(fullPath);
       if (cached) {
         c.header("Content-Type", "text/html; charset=utf-8");
         c.header("Cache-Control", "no-cache");
@@ -142,18 +235,19 @@ ssrRouter.get("*", async (c) => {
       }
     }
 
-    const ssrData = await getServerData(c.req.path, userId);
+    const cookie = c.req.header("Cookie");
+    const ssrData = await fetchSSRData(fullPath, cookie);
 
     if (ssrData === null) {
       c.header("Cache-Control", "no-cache");
       return c.html(csrFallbackHtml());
     }
 
-    const html = await renderToString(c.req.path, ssrData);
+    const html = await renderToString(fullPath, ssrData);
 
     // 未ログインならキャッシュに保存
     if (!userId) {
-      ssrCache.set(c.req.path, html);
+      ssrCache.set(fullPath, html);
     }
 
     c.header("Content-Type", "text/html; charset=utf-8");
