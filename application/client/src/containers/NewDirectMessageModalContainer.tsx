@@ -19,7 +19,9 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
     const element = ref.current;
 
     const handleToggle = () => {
-      setResetKey((key) => key + 1);
+      if (!element.open) {
+        setResetKey((key) => key + 1);
+      }
     };
     element.addEventListener("toggle", handleToggle);
     return () => {
