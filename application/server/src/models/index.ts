@@ -167,6 +167,22 @@ export function initModels(sequelize: Sequelize) {
   });
 }
 
+export function addIndexes(sequelize: Sequelize) {
+  const qi = sequelize.getQueryInterface();
+  return Promise.all([
+    qi.addIndex("Posts", ["userId"]),
+    qi.addIndex("Posts", ["createdAt"]),
+    qi.addIndex("Comments", ["postId"]),
+    qi.addIndex("Users", ["username"]),
+    qi.addIndex("DirectMessages", ["conversationId"]),
+    qi.addIndex("DirectMessages", ["senderId"]),
+    qi.addIndex("DirectMessageConversations", ["initiatorId"]),
+    qi.addIndex("DirectMessageConversations", ["memberId"]),
+    qi.addIndex("PostsImagesRelations", ["postId"]),
+    qi.addIndex("PostsImagesRelations", ["imageId"]),
+  ]);
+}
+
 export {
   User,
   Post,
