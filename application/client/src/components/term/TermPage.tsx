@@ -1,8 +1,28 @@
+export const TERM_HEADINGS = [
+  "利用規約",
+  "第1条（適用）",
+  "第2条（利用登録）",
+  "第3条（ユーザーIDおよびパスワードの管理）",
+  "第4条（利用料金および支払方法）",
+  "第5条（禁止事項）",
+  "第6条（本サービスの提供の停止等）",
+  "第7条（著作権）",
+  "第8条（利用制限および登録抹消）",
+  "第9条（退会）",
+  "第10条（保証の否認および免責事項）",
+  "第11条（サービス内容の変更等）",
+  "第12条（利用規約の変更）",
+  "第13条（個人情報の取扱い）",
+  "第14条（通知または連絡）",
+  "第15条（権利義務の譲渡の禁止）",
+  "第16条（準拠法・裁判管轄）",
+] as const;
+
 export const TermPage = () => {
   return (
     <article className="px-2 pb-16 leading-relaxed md:px-4 md:pt-2">
       <h1 className="mt-4 mb-2 font-[Rei_no_Are_Mincho] text-3xl leading-[normal] font-bold">
-        利用規約
+        {TERM_HEADINGS[0]}
       </h1>
 
       <p>
@@ -10,7 +30,7 @@ export const TermPage = () => {
       </p>
 
       <h2 className="mt-4 mb-2 font-[Rei_no_Are_Mincho] text-2xl leading-[normal] font-bold">
-        第1条（適用）
+        {TERM_HEADINGS[1]}
       </h2>
       <ol className="list-decimal pl-8">
         <li>
@@ -25,7 +45,7 @@ export const TermPage = () => {
       </ol>
 
       <h2 className="mt-4 mb-2 font-[Rei_no_Are_Mincho] text-2xl leading-[normal] font-bold">
-        第2条（利用登録）
+        {TERM_HEADINGS[2]}
       </h2>
       <ol className="list-decimal pl-8">
         <li>
@@ -42,7 +62,7 @@ export const TermPage = () => {
       </ol>
 
       <h2 className="mt-4 mb-2 font-[Rei_no_Are_Mincho] text-2xl leading-[normal] font-bold">
-        第3条（ユーザーIDおよびパスワードの管理）
+        {TERM_HEADINGS[3]}
       </h2>
       <ol className="list-decimal pl-8">
         <li>
@@ -57,7 +77,7 @@ export const TermPage = () => {
       </ol>
 
       <h2 className="mt-4 mb-2 font-[Rei_no_Are_Mincho] text-2xl leading-[normal] font-bold">
-        第4条（利用料金および支払方法）
+        {TERM_HEADINGS[4]}
       </h2>
       <ol className="list-decimal pl-8">
         <li>
@@ -69,7 +89,7 @@ export const TermPage = () => {
       </ol>
 
       <h2 className="mt-4 mb-2 font-[Rei_no_Are_Mincho] text-2xl leading-[normal] font-bold">
-        第5条（禁止事項）
+        {TERM_HEADINGS[5]}
       </h2>
       <p>ユーザーは、本サービスの利用にあたり、以下の行為をしてはなりません。</p>
       <ol className="list-decimal pl-8">
@@ -116,7 +136,7 @@ export const TermPage = () => {
       </ol>
 
       <h2 className="mt-4 mb-2 font-[Rei_no_Are_Mincho] text-2xl leading-[normal] font-bold">
-        第6条（本サービスの提供の停止等）
+        {TERM_HEADINGS[6]}
       </h2>
       <ol className="list-decimal pl-8">
         <li>
@@ -136,7 +156,7 @@ export const TermPage = () => {
       </ol>
 
       <h2 className="mt-4 mb-2 font-[Rei_no_Are_Mincho] text-2xl leading-[normal] font-bold">
-        第7条（著作権）
+        {TERM_HEADINGS[7]}
       </h2>
       <ol className="list-decimal pl-8">
         <li>
@@ -151,7 +171,7 @@ export const TermPage = () => {
       </ol>
 
       <h2 className="mt-4 mb-2 font-[Rei_no_Are_Mincho] text-2xl leading-[normal] font-bold">
-        第8条（利用制限および登録抹消）
+        {TERM_HEADINGS[8]}
       </h2>
       <ol className="list-decimal pl-8">
         <li>
@@ -175,12 +195,12 @@ export const TermPage = () => {
       </ol>
 
       <h2 className="mt-4 mb-2 font-[Rei_no_Are_Mincho] text-2xl leading-[normal] font-bold">
-        第9条（退会）
+        {TERM_HEADINGS[9]}
       </h2>
       <p>ユーザーは、当社の定める退会手続により、本サービスから退会できるものとします。</p>
 
       <h2 className="mt-4 mb-2 font-[Rei_no_Are_Mincho] text-2xl leading-[normal] font-bold">
-        第10条（保証の否認および免責事項）
+        {TERM_HEADINGS[10]}
       </h2>
       <ol className="list-decimal pl-8">
         <li>
@@ -198,42 +218,42 @@ export const TermPage = () => {
       </ol>
 
       <h2 className="mt-4 mb-2 font-[Rei_no_Are_Mincho] text-2xl leading-[normal] font-bold">
-        第11条（サービス内容の変更等）
+        {TERM_HEADINGS[11]}
       </h2>
       <p>
         当社は、ユーザーに通知することなく、本サービスの内容を変更しまたは本サービスの提供を中止することができるものとし、これによってユーザーに生じた損害について一切の責任を負いません。
       </p>
 
       <h2 className="mt-4 mb-2 font-[Rei_no_Are_Mincho] text-2xl leading-[normal] font-bold">
-        第12条（利用規約の変更）
+        {TERM_HEADINGS[12]}
       </h2>
       <p>
         当社は、必要と判断した場合には、ユーザーに通知することなくいつでも本規約を変更することができるものとします。なお、本規約の変更後、本サービスの利用を開始した場合には、当該ユーザーは変更後の規約に同意したものとみなします。
       </p>
 
       <h2 className="mt-4 mb-2 font-[Rei_no_Are_Mincho] text-2xl leading-[normal] font-bold">
-        第13条（個人情報の取扱い）
+        {TERM_HEADINGS[13]}
       </h2>
       <p>
         当社は、本サービスの利用によって取得する個人情報については、当社「プライバシーポリシー」に従い適切に取り扱うものとします。
       </p>
 
       <h2 className="mt-4 mb-2 font-[Rei_no_Are_Mincho] text-2xl leading-[normal] font-bold">
-        第14条（通知または連絡）
+        {TERM_HEADINGS[14]}
       </h2>
       <p>
         ユーザーと当社との間の通知または連絡は、当社の定める方法によって行うものとします。当社は、ユーザーから、当社が別途定める方式に従った変更届け出がない限り、現在登録されている連絡先が有効なものとみなして当該連絡先へ通知または連絡を行い、これらは、発信時にユーザーへ到達したものとみなします。
       </p>
 
       <h2 className="mt-4 mb-2 font-[Rei_no_Are_Mincho] text-2xl leading-[normal] font-bold">
-        第15条（権利義務の譲渡の禁止）
+        {TERM_HEADINGS[15]}
       </h2>
       <p>
         ユーザーは、当社の書面による事前の承諾なく、利用契約上の地位または本規約に基づく権利もしくは義務を第三者に譲渡し、または担保に供することはできません。
       </p>
 
       <h2 className="mt-4 mb-2 font-[Rei_no_Are_Mincho] text-2xl leading-[normal] font-bold">
-        第16条（準拠法・裁判管轄）
+        {TERM_HEADINGS[16]}
       </h2>
       <ol className="list-decimal pl-8">
         <li>本規約の解釈にあたっては、日本法を準拠法とします。</li>
