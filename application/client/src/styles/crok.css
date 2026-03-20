@@ -1,0 +1,14 @@
+@import "tailwindcss" source(none);
+@import "./shared.css";
+
+@source inline("bg-cax-canvas");
+@source "../pages/create-page.tsx";
+@source "../containers/AuthModalContainer.tsx";
+@source "../containers/NewPostModalContainer.tsx";
+@source "../containers/CrokContainer.tsx";
+@source "../components/application/";
+@source "../components/auth_modal/";
+@source "../components/new_post_modal/";
+@source "../components/modal/";
+@source "../components/crok/";
+@source "../components/foundation/";

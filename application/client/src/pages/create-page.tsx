@@ -7,7 +7,6 @@ import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/cont
 import { SSRDataContext } from "@web-speed-hackathon-2026/client/src/contexts/SSRDataContext";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
-import "../index.css";
 import "../buildinfo";
 
 declare global {
