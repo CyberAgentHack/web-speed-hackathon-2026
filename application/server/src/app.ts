@@ -1,4 +1,5 @@
 import bodyParser from "body-parser";
+import compression from "compression";
 import Express from "express";
 import morgan from "morgan";
 
@@ -10,6 +11,7 @@ import { sessionMiddleware } from "@web-speed-hackathon-2026/server/src/session"
 export const app = Express();
 
 app.set("trust proxy", true);
+app.use(compression());
 
 if (process.env['NODE_ENV'] === 'development') {
   console.log('Development mode');
