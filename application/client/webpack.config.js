@@ -11,6 +11,10 @@ const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
+const FFMPEG_CORE_UMD = path.resolve(
+  __dirname,
+  "node_modules/@ffmpeg/core/dist/umd",
+);
 
 const isProd = process.env.NODE_ENV === "production";
 const analyze =
@@ -28,7 +32,14 @@ const config = {
         target: "http://localhost:3000",
       },
     ],
-    static: [PUBLIC_PATH, UPLOAD_PATH],
+    static: [
+      PUBLIC_PATH,
+      UPLOAD_PATH,
+      {
+        directory: FFMPEG_CORE_UMD,
+        publicPath: "/ffmpeg",
+      },
+    ],
   },
   devtool: isProd ? false : "inline-source-map",
   entry: {
@@ -93,6 +104,12 @@ const config = {
           from: path.resolve(__dirname, "node_modules/katex/dist/fonts"),
           to: path.resolve(DIST_PATH, "styles/fonts"),
         },
+        {
+          from: FFMPEG_CORE_UMD,
+          to: path.join(DIST_PATH, "ffmpeg"),
+          filter: (resourcePath) =>
+            /ffmpeg-core\.(js|wasm)$/.test(resourcePath),
+        },
       ],
     }),
     new HtmlWebpackPlugin({
@@ -119,16 +136,6 @@ const config = {
         __dirname,
         "node_modules",
         "@ffmpeg/ffmpeg/dist/esm/index.js",
-      ),
-      "@ffmpeg/core$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/core/dist/umd/ffmpeg-core.js",
-      ),
-      "@ffmpeg/core/wasm$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/core/dist/umd/ffmpeg-core.wasm",
       ),
       "@imagemagick/magick-wasm/magick.wasm$": path.resolve(
         __dirname,
