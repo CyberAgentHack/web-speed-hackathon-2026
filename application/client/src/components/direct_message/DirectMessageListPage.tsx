@@ -93,7 +93,9 @@ const ConversationItem = ({ conversation, activeUser }: { conversation: Models.D
           <img
             alt={peer.profileImage.alt}
             className="w-12 shrink-0 self-start rounded-full"
+            height="48"
             src={getProfileImagePath(peer.profileImage.id)}
+            width="48"
           />
           <div className="flex flex-1 flex-col">
             <div className="flex items-center justify-between">
