@@ -129,7 +129,16 @@ const config = {
   },
   optimization: {
     minimize: true,
-    splitChunks: false,
+    splitChunks: {
+  cacheGroups: {
+    webllm: {
+      test: /[\\/]node_modules[\\/]@mlc-ai[\\/]web-llm[\\/]/,
+      name: "webllm",
+      chunks: "async",
+      priority: 50,
+    },
+  },
+},
     concatenateModules: false,
     usedExports: false,
     providedExports: false,
