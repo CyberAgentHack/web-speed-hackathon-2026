@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "skills": {
+    "best-practices": {
+      "source": "addyosmani/web-quality-skills",
+      "sourceType": "github",
+      "computedHash": "98dafea60ec1a7f5f70f6febcdd4b4fa3fe15723ad9c0b991c0818615bff7ba6"
+    },
+    "core-web-vitals": {
+      "source": "addyosmani/web-quality-skills",
+      "sourceType": "github",
+      "computedHash": "fa437acc2249cea2cb28f190ba7faf8fdfac829d1c1aafa9ce938c6dd9338721"
+    },
+    "ffmpeg": {
+      "source": "digitalsamba/claude-code-video-toolkit",
+      "sourceType": "github",
+      "computedHash": "51fa05bc18bb2691e622aefd1d8ec6d4d96a9e9c44cdf599003c9d6003d11a07"
+    },
+    "optimize": {
+      "source": "pbakaus/impeccable",
+      "sourceType": "github",
+      "computedHash": "b14fdbcfdb033994ddac2ae5cde0277ec1d60d45fe5df1668a157158db814470"
+    },
+    "performance": {
+      "source": "addyosmani/web-quality-skills",
+      "sourceType": "github",
+      "computedHash": "acbafe2fcbfc3a1a67db47c2f6299d5c0e16f543c4e683e38e74a8ccb54888fb"
+    },
+    "performance-optimization": {
+      "source": "supercent-io/skills-template",
+      "sourceType": "github",
+      "computedHash": "5cbae5d5e98c89e02b18cb43d9f7b9175fd95cf3957b2eaafb0f5a32b53205b1"
+    },
+    "sql-optimization-patterns": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "53d0e34ed28c0cb9d9829d37e9fc9dd49bbfbbfce6f7c68f88a45c2cb34b9f60"
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "computedHash": "c858d2d9023e73edb4e5504868cb0e36313e58fd56af12ef888b43c5634a3c17"
+    },
+    "vite": {
+      "source": "antfu/skills",
+      "sourceType": "github",
+      "computedHash": "867ff66238f3152e9c494339ad08dc432dd0df5bcf5cc7a00b61a72b580eb908"
+    },
+    "web-performance-optimization": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "computedHash": "8cfc6abf5a7ee700208117ad52b659cf8388a60e84fce18f87de82b39216bf99"
+    },
+    "web-quality-audit": {
+      "source": "addyosmani/web-quality-skills",
+      "sourceType": "github",
+      "computedHash": "1168be21aa9fe7bdc6e6e053ca05b6ca5a45675a527c103cdf77bc56ce8159af"
+    }
+  }
+}
