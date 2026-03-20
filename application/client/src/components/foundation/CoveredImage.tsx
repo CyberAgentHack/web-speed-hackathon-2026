@@ -8,12 +8,14 @@ interface Props {
   alt: string;
   srcSet?: string;
   sizes?: string;
+  loading?: "lazy" | "eager";
+  fetchPriority?: "high" | "low" | "auto";
 }
 
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
-export const CoveredImage = ({ src, alt, srcSet, sizes }: Props) => {
+export const CoveredImage = ({ src, alt, srcSet, sizes, loading, fetchPriority }: Props) => {
   const dialogId = useId();
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
@@ -26,7 +28,8 @@ export const CoveredImage = ({ src, alt, srcSet, sizes }: Props) => {
         alt={alt}
         className="h-full w-full object-cover"
         decoding="async"
-        loading="lazy"
+        fetchPriority={fetchPriority}
+        loading={loading}
         sizes={sizes}
         src={src}
         srcSet={srcSet}

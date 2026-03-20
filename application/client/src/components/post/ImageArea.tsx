@@ -6,9 +6,10 @@ import { getOptimizedImagePath, getOptimizedImageSrcSet } from "@web-speed-hacka
 
 interface Props {
   images: Models.Image[];
+  isLCP?: boolean;
 }
 
-export const ImageArea = ({ images }: Props) => {
+export const ImageArea = ({ images, isLCP }: Props) => {
   return (
     <AspectRatioBox aspectHeight={9} aspectWidth={16}>
       <div className="border-cax-border grid h-full w-full grid-cols-2 grid-rows-2 gap-1 overflow-hidden rounded-lg border">
@@ -26,6 +27,8 @@ export const ImageArea = ({ images }: Props) => {
             >
               <CoveredImage
                 alt={image.alt}
+                fetchPriority={isLCP && idx === 0 ? "high" : undefined}
+                loading={isLCP ? undefined : "lazy"}
                 sizes="(max-width: 640px) calc(100vw - 80px), 600px"
                 src={getOptimizedImagePath(image.id, 800)}
                 srcSet={getOptimizedImageSrcSet(image.id, [256, 512, 800, 1024])}
