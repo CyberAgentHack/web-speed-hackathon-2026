@@ -17,3 +17,4 @@
 | 15 | P2-01: `compression` ミドルウェア追加 | 未計測 | 29.85/100 (ホーム) | N/A | ADOPT | ホーム画面限定計測で問題なく完走 |
 | 16 | P2-02: API no-cache 限定 + 静的配信 `etag/lastModified` + fingerprinted asset 長期キャッシュ | 未計測 | 29.85/100 (ホーム) | N/A | ADOPT | ホーム画面限定計測で問題なく完走 |
 | 17 | P2-03: 初期描画を即時実行（`window.load` 待ちなし） | 未計測 | 29.85/100 (ホーム) | N/A | ADOPT | 既適用済みを確認、同一条件で採用 |
+| 18 | P3-05: `AuthModalContainer` の lazy load 化 | 29.85/100 (ホーム) | 29.85/100 (ホーム) | 0.00 | ADOPT | スコア同値だが `main` エントリバンドル縮小（約372KiB→321KiB） |
