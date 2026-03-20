@@ -25,7 +25,7 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "source-map",
+  devtool: false,
   entry: {
     main: [
       path.resolve(SRC_PATH, "./index.css"),
@@ -81,6 +81,9 @@ const config = {
         {
           from: path.resolve(__dirname, "node_modules/katex/dist/fonts"),
           to: path.resolve(DIST_PATH, "styles/fonts"),
+          globOptions: {
+            ignore: ["**/*.ttf", "**/*.woff"],
+          },
         },
       ],
     }),
@@ -125,6 +128,20 @@ const config = {
     minimize: true,
     splitChunks: {
       chunks: "all",
+      maxInitialRequests: 15,
+      cacheGroups: {
+        react: {
+          test: /[\\/]node_modules[\\/](react|react-dom|react-router|scheduler)/,
+          priority: 20,
+          name: "react",
+          chunks: "all",
+        },
+        defaultVendors: {
+          test: /[\\/]node_modules[\\/]/,
+          priority: -10,
+          reuseExistingChunk: true,
+        },
+      },
     },
     concatenateModules: true,
     usedExports: true,
