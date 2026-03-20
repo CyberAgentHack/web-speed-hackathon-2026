@@ -48,6 +48,7 @@
     "@rspack/cli": "1.7.9",
     "@rspack/core": "1.7.9",
     "@rspack/dev-server": "1.2.1",
+    "@tailwindcss/postcss": "4.2.2",
     "@tsconfig/strictest": "2.0.8",
     "@types/bluebird": "3.5.42",
     "@types/common-tags": "1.8.4",
@@ -66,6 +67,7 @@
     "postcss-loader": "8.2.0",
     "postcss-preset-env": "10.4.0",
     "react-markdown": "10.1.0",
+    "tailwindcss": "4.2.2",
     "typescript": "5.9.3"
   },
   "engines": {

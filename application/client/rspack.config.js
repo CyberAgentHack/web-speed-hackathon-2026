@@ -97,7 +97,7 @@ const config = {
     process.env.RSDOCTOR && new RsdoctorRspackPlugin(),
   ].filter(Boolean),
   resolve: {
-    conditionNames: ["browser", "import", "module", "..."],
+    conditionNames: ["browser", "module", "..."],
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
     alias: {
       "bayesian-bm25$": path.resolve(__dirname, "node_modules", "bayesian-bm25/dist/index.js"),
