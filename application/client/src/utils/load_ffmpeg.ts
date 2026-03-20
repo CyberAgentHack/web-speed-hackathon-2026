@@ -1,16 +1,19 @@
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 
-export async function loadFFmpeg(): Promise<FFmpeg> {
+const baseURL = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm";
+
+async function internalLoadFFmpeg() {
   const ffmpeg = new FFmpeg();
 
   await ffmpeg.load({
-    coreURL: await import("@ffmpeg/core?binary").then(({ default: b }) => {
-      return URL.createObjectURL(new Blob([b], { type: "text/javascript" }));
-    }),
-    wasmURL: await import("@ffmpeg/core/wasm?binary").then(({ default: b }) => {
-      return URL.createObjectURL(new Blob([b], { type: "application/wasm" }));
-    }),
+    coreURL: `${baseURL}/ffmpeg-core.js`,
+    wasmURL: `${baseURL}/ffmpeg-core.wasm`,
   });
 
+  return ffmpeg;
+}
+
+export async function loadFFmpeg(): Promise<FFmpeg> {
+  const ffmpeg = await internalLoadFFmpeg();
   return ffmpeg;
 }

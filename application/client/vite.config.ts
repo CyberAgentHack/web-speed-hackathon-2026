@@ -10,8 +10,14 @@ export default defineConfig({
     proxy: {
       "/api": "http://localhost:3000",
       "/images": "http://localhost:3000",
+      "/movies": "http://localhost:3000",
+      "/sounds": "http://localhost:3000",
     },
   },
+  optimizeDeps: {
+    exclude: ["@ffmpeg/ffmpeg"],
+  },
+  assetsInclude: ["**/*.wasm?binary"],
   publicDir: join(import.meta.dirname, "../public"),
   plugins: [
     react(),
