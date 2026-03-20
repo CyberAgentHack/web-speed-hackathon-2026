@@ -1,5 +1,9 @@
 # 改善タスク一覧
 
+## 対応必須（VRT失敗の修正）
+
+- [ ] 037-AspectRatioBox CSS aspect-ratio化によるVRT失敗を修正する（投稿クリック遷移・動画自動再生）
+
 ## 優先度: 最高（TBT/INP/FCP に直結）
 
 - [x] 012-InfiniteScrollの2^18ループを除去する
