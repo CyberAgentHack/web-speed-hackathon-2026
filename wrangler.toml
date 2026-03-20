@@ -1,0 +1,7 @@
+name = "wsh2026-proxy"
+main = "proxy/index.ts"
+compatibility_date = "2024-01-01"
+ 
+routes = [
+  { pattern = "wsh2026.f4n.dev/*", zone_name = "f4n.dev" }
+]
