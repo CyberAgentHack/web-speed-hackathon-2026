@@ -12,6 +12,11 @@ interface Props {
   src: string;
 }
 
+function isJpeg(data: ArrayBuffer): boolean {
+  const bytes = new Uint8Array(data);
+  return bytes.length >= 2 && bytes[0] === 0xff && bytes[1] === 0xd8;
+}
+
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
@@ -29,9 +34,17 @@ export const CoveredImage = ({ src }: Props) => {
   }, [data]);
 
   const alt = useMemo(() => {
-    const exif = data != null ? load(Buffer.from(data).toString("binary")) : null;
-    const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-    return raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
+    if (data == null || isJpeg(data) === false) {
+      return "";
+    }
+
+    try {
+      const exif = load(Buffer.from(data).toString("binary"));
+      const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
+      return raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
+    } catch {
+      return "";
+    }
   }, [data]);
 
   const blobUrl = useMemo(() => {
