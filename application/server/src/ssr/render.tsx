@@ -5,7 +5,6 @@ import { CLIENT_DIST_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
 // ビルド済みファイルをキャッシュ
 let templateHtml: string | null = null;
-let mainCssContent: string | null = null;
 let ssrModule: { render: (url: string, data: any) => { html: string; renderLimit: number } } | null = null;
 
 function getTemplate(): string {
@@ -15,18 +14,6 @@ function getTemplate(): string {
   return templateHtml;
 }
 
-function getMainCss(): string | null {
-  if (mainCssContent !== null) return mainCssContent;
-  // Viteのビルド出力からCSSファイルを探す
-  const stylesDir = path.join(CLIENT_DIST_PATH, "styles");
-  if (!fs.existsSync(stylesDir)) return null;
-  const cssFiles = fs.readdirSync(stylesDir).filter((f) => f.endsWith(".css"));
-  // エントリCSS（index.*.css）を優先、なければ最初のCSSファイル
-  const mainCssFile = cssFiles.find((f) => f.startsWith("index.")) ?? cssFiles[0];
-  if (!mainCssFile) return null;
-  mainCssContent = fs.readFileSync(path.join(stylesDir, mainCssFile), "utf-8");
-  return mainCssContent;
-}
 
 async function getSSRModule() {
   if (ssrModule !== null) return ssrModule;
@@ -57,7 +44,6 @@ export async function renderAppShell(url: string, data: SSRData): Promise<string
   }
 
   const template = getTemplate();
-  const css = getMainCss();
   const ssr = await getSSRModule();
 
   // Vite SSRバンドルで実際のクライアントコンポーネントをレンダリング
@@ -77,14 +63,6 @@ export async function renderAppShell(url: string, data: SSRData): Promise<string
     /<script>window\.__PRELOAD_ME.*?<\/script>/,
     dataScript,
   );
-
-  // CSSをインライン化（レンダーブロッキング排除）
-  if (css) {
-    html = html.replace(
-      /<link[^>]*rel="stylesheet"[^>]*>/,
-      `<style>${css}</style>`,
-    );
-  }
 
   // フォントpreload（CSS解析前にフォント取得を開始）
   const fontPreloads = [
