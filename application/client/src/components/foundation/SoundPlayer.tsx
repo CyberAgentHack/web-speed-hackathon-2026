@@ -19,15 +19,26 @@ export const SoundPlayer = ({ sound }: Props) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const handleTogglePlaying = useCallback(() => {
-    setIsPlaying((isPlaying) => {
-      if (isPlaying) {
-        audioRef.current?.pause();
-      } else {
-        audioRef.current?.play();
-      }
-      return !isPlaying;
-    });
-  }, []);
+    const audio = audioRef.current;
+    if (audio == null) {
+      return;
+    }
+
+    if (isPlaying) {
+      audio.pause();
+      setIsPlaying(false);
+      return;
+    }
+
+    void audio.play().then(
+      () => {
+        setIsPlaying(true);
+      },
+      () => {
+        setIsPlaying(false);
+      },
+    );
+  }, [isPlaying]);
 
   return (
     <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
@@ -40,6 +51,7 @@ export const SoundPlayer = ({ sound }: Props) => {
       />
       <div className="p-2">
         <button
+          aria-label={isPlaying ? "音声を一時停止" : "音声を再生"}
           className="bg-cax-accent text-cax-surface-raised flex h-8 w-8 items-center justify-center rounded-full text-sm hover:opacity-75"
           onClick={handleTogglePlaying}
           type="button"

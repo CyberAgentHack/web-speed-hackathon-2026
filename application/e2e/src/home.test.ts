@@ -27,11 +27,11 @@ test.describe("ホーム", () => {
   });
 
   test("動画が自動再生される", async ({ page }) => {
-    const videoPlayer = page.locator('article button[aria-label="動画プレイヤー"]').first();
+    const movieCanvas = page.locator("article [data-movie-area] canvas").first();
 
     await waitForVisibleMedia(page);
 
-    await expect(videoPlayer).toBeVisible({ timeout: 30_000 });
+    await expect(movieCanvas).toBeVisible({ timeout: 30_000 });
   });
 
   test("音声の波形が表示される", async ({ page }) => {
@@ -53,7 +53,7 @@ test.describe("ホーム", () => {
     const firstArticle = page.locator("article").first();
     await expect(firstArticle).toBeVisible({ timeout: 30_000 });
     await firstArticle.click();
-    await page.waitForURL("**/posts/*", { timeout: 10_000 });
+    await expect(page).toHaveURL(/\/posts\/[a-zA-Z0-9-]+/, { timeout: 30_000 });
     expect(page.url()).toMatch(/\/posts\/[a-zA-Z0-9-]+/);
   });
 });

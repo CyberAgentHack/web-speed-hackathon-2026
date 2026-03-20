@@ -6,10 +6,10 @@ import { PostPage } from "@web-speed-hackathon-2026/client/src/components/post/P
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
-import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { fetchJSON, HTTPError } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
-  const { data: post, isLoading: isLoadingPost } = useFetch<Models.Post>(
+  const { data: post, error: postError, isLoading: isLoadingPost } = useFetch<Models.Post>(
     `/api/v1/posts/${postId}`,
     fetchJSON,
   );
@@ -28,7 +28,20 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
   }
 
   if (post === null) {
-    return <NotFoundContainer />;
+    if (postError instanceof HTTPError && postError.status === 404) {
+      return <NotFoundContainer />;
+    }
+
+    return (
+      <>
+        <Helmet>
+          <title>投稿の取得に失敗しました - CaX</title>
+        </Helmet>
+        <section className="px-6 py-10">
+          <p className="text-cax-danger text-sm">投稿の取得に失敗しました</p>
+        </section>
+      </>
+    );
   }
 
   return (
