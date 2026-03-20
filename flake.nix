@@ -11,18 +11,7 @@
       let
         pkgs = import nixpkgs {
           inherit system;
-          overlays = [
-            (final: prev: {
-              nodejs_24 = prev.nodejs_24.overrideAttrs (old: rec {
-                version = "24.14.0";
-                src = prev.fetchurl {
-                  url = "https://nodejs.org/dist/v${version}/node-v${version}.tar.xz";
-                  hash = "sha256-XkuKiIC9Z8pONdHwc1UOxkfUeTIZU2PI5aEy+35uUzc=";
-                };
-              });
-              corepack_24 = prev.corepack_24.override { nodejs = final.nodejs_24; };
-            })
-          ];
+          config.allowUnfree = true;
         };
       in
       {
@@ -34,8 +23,8 @@
             # Database
             sqlite
 
-            # Bench: Browser for Lighthouse headless
-            chromium
+            # Browser: Lighthouse / Playwright / scoring-tool
+            google-chrome
 
             # Bench: Utilities
             jq
@@ -46,9 +35,10 @@
           ];
 
           shellHook = ''
-            export CHROME_PATH="${pkgs.chromium}/bin/chromium"
+            export CHROME_PATH="${pkgs.google-chrome}/bin/google-chrome-stable"
+            export CHROMIUM_PATH="${pkgs.google-chrome}/bin/google-chrome-stable"
             export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1
-            export PUPPETEER_EXECUTABLE_PATH="${pkgs.chromium}/bin/chromium"
+            export PUPPETEER_EXECUTABLE_PATH="${pkgs.google-chrome}/bin/google-chrome-stable"
           '';
         };
       }
