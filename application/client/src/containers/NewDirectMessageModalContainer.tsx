@@ -18,12 +18,12 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
     if (!ref.current) return;
     const element = ref.current;
 
-    const handleToggle = () => {
+    const handleClose = () => {
       setResetKey((key) => key + 1);
     };
-    element.addEventListener("toggle", handleToggle);
+    element.addEventListener("close", handleClose);
     return () => {
-      element.removeEventListener("toggle", handleToggle);
+      element.removeEventListener("close", handleClose);
     };
   }, [ref]);
 
@@ -35,8 +35,14 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
         const userRes = await apiClient.users[":username"].$get({
           param: { username: values.username },
         });
+        if (!userRes.ok) {
+          throw new Error("user not found");
+        }
         const user = await userRes.json();
         const dmRes = await apiClient.dm.$post({ json: { peerId: user.id } });
+        if (!dmRes.ok) {
+          throw new Error("dm create failed");
+        }
         const conversation = await dmRes.json();
         void navigate(`/dm/${conversation.id}`);
       } catch {

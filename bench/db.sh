@@ -31,6 +31,13 @@ if [ ! -f "${DB_PATH}" ]; then
   exit 1
 fi
 
+# ---------------------------------------------------------------------------
+# 0. シードデータ投入（常に最新の初期データで計測する）
+# ---------------------------------------------------------------------------
+echo "── Seeding database ──"
+(cd application && pnpm --filter @web-speed-hackathon-2026/server seed:generate && pnpm --filter @web-speed-hackathon-2026/server seed:insert)
+echo ""
+
 echo "=== DB Benchmark (SQLite) ==="
 echo "Runs: ${RUNS} | DB: ${DB_PATH} | Output: ${OUTDIR}"
 echo ""
@@ -133,7 +140,7 @@ ${query}
 EOSQL
     )
     # 秒→ミリ秒に変換
-    ms=$(echo "${elapsed} * 1000" | bc -l 2>/dev/null || echo "0")
+    ms=$(awk "BEGIN {printf \"%.6f\", ${elapsed:-0} * 1000}")
     times+=("${ms}")
   done
 

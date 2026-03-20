@@ -14,12 +14,14 @@ const PostContainerContent = ({ postId }: { postId: string }) => {
     swrFetcher,
   );
 
+  const PAGE_SIZE = 30;
   const getKey = createInfiniteKey(`/api/v1/posts/${postId}/comments`);
-  const { data, setSize } = useSWRInfinite<Models.Comment[]>(getKey, {
+  const { data, setSize, isValidating } = useSWRInfinite<Models.Comment[]>(getKey, {
     revalidateFirstPage: false,
   });
 
   const comments = data ? data.flat() : [];
+  const hasMore = data ? (data[data.length - 1]?.length ?? 0) >= PAGE_SIZE : true;
 
   if (isLoadingPost) {
     return (
@@ -34,7 +36,12 @@ const PostContainerContent = ({ postId }: { postId: string }) => {
   }
 
   return (
-    <InfiniteScroll fetchMore={() => setSize((s) => s + 1)} items={comments}>
+    <InfiniteScroll
+      fetchMore={() => setSize((s) => s + 1)}
+      items={comments}
+      hasMore={hasMore}
+      isLoading={isValidating}
+    >
       <Helmet>
         <title>{post!.user.name} さんのつぶやき - CaX</title>
       </Helmet>

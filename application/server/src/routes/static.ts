@@ -30,21 +30,6 @@ staticRouter.use(
   }),
 );
 
-// Public assets (images, fonts, etc.) - cache for 1 day
-staticRouter.use(
-  "/*",
-  serveStatic({
-    root: path.relative(process.cwd(), PUBLIC_PATH),
-    onFound: (_path, c) => {
-      if (_path.endsWith(".html")) {
-        c.header("Cache-Control", "no-cache");
-      } else {
-        c.header("Cache-Control", "public, max-age=86400");
-      }
-    },
-  }),
-);
-
 // MIME type lookup for pre-compressed files
 const MIME_TYPES: Record<string, string> = {
   ".js": "application/javascript; charset=utf-8",
@@ -126,3 +111,69 @@ const preCompressedStatic = createMiddleware(async (c, next) => {
 // Client dist (JS/CSS with content hashes) - served with pre-compression support
 staticRouter.use("/scripts/*", preCompressedStatic);
 staticRouter.use("/assets/*", preCompressedStatic);
+
+// Fonts and SVG sprites - serve with pre-compression and immutable cache from public dir
+const publicPreCompressedStatic = createMiddleware(async (c, next) => {
+  const requestPath = c.req.path;
+  const filePath = path.join(PUBLIC_PATH, requestPath);
+
+  if (!fs.existsSync(filePath)) {
+    await next();
+    return;
+  }
+
+  const acceptEncoding = c.req.header("Accept-Encoding") || "";
+  const mimeType = getMimeType(filePath);
+
+  c.header("Cache-Control", "public, max-age=31536000, immutable");
+  c.header("Vary", "Accept-Encoding");
+
+  // Try Brotli first
+  if (acceptEncoding.includes("br")) {
+    const brPath = filePath + ".br";
+    if (fs.existsSync(brPath)) {
+      const body = fs.readFileSync(brPath);
+      c.header("Content-Encoding", "br");
+      c.header("Content-Type", mimeType);
+      c.header("Content-Length", String(body.length));
+      return c.body(body);
+    }
+  }
+
+  // Try Gzip
+  if (acceptEncoding.includes("gzip")) {
+    const gzPath = filePath + ".gz";
+    if (fs.existsSync(gzPath)) {
+      const body = fs.readFileSync(gzPath);
+      c.header("Content-Encoding", "gzip");
+      c.header("Content-Type", mimeType);
+      c.header("Content-Length", String(body.length));
+      return c.body(body);
+    }
+  }
+
+  // Serve original file
+  const body = fs.readFileSync(filePath);
+  c.header("Content-Type", mimeType);
+  c.header("Content-Length", String(body.length));
+  return c.body(body);
+});
+
+staticRouter.use("/fonts/*", publicPreCompressedStatic);
+staticRouter.use("/sprites/*", publicPreCompressedStatic);
+staticRouter.use("/movies/*", publicPreCompressedStatic);
+
+// Public assets (images, etc.) - cache for 1 day (must be after specific routes above)
+staticRouter.use(
+  "/*",
+  serveStatic({
+    root: path.relative(process.cwd(), PUBLIC_PATH),
+    onFound: (_path, c) => {
+      if (_path.endsWith(".html")) {
+        c.header("Cache-Control", "no-cache");
+      } else {
+        c.header("Cache-Control", "public, max-age=86400");
+      }
+    },
+  }),
+);

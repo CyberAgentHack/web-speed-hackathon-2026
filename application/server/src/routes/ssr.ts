@@ -53,8 +53,8 @@ let ssrRender: RenderFn | null = null;
 try {
   const ssrModule = await import(path.resolve(SSR_DIST_PATH, "entry-server.js"));
   ssrRender = ssrModule.render;
-} catch {
-  console.warn("SSR: entry-server.js not found in dist-ssr, SSR will be disabled");
+} catch (e) {
+  console.warn("SSR: entry-server.js not found in dist-ssr, SSR will be disabled", e);
 }
 
 function csrFallbackHtml(): string {
@@ -65,8 +65,13 @@ function buildPreloadHints(ssrData: SSRData): string {
   const hints: string[] = [];
   const firstPosts = (ssrData.posts ?? ssrData.userPosts ?? []) as Array<{
     images?: Array<{ id: string }>;
+    movie?: { id: string } | null;
   }>;
   for (const post of firstPosts.slice(0, 5)) {
+    if (post.movie) {
+      hints.push(`<link rel="preload" as="video" href="/movies/${post.movie.id}.mp4">`);
+      break;
+    }
     if (post.images && post.images.length > 0) {
       hints.push(`<link rel="preload" as="image" href="/images/${post.images[0]!.id}.jpg">`);
       break;
@@ -186,20 +191,24 @@ async function renderToString(url: string, ssrData: SSRData): Promise<string> {
 
     const { pipe } = ssrRender!(url, ssrData, {
       onShellReady() {
+        console.log("SSR: onShellReady called, didError=", didError);
         if (didError) return;
         chunks.push(Buffer.from(beforeOutlet!));
         pipe(collectStream);
         collectStream.on("finish", () => {
-          resolve(Buffer.concat(chunks).toString("utf-8"));
+          const result = Buffer.concat(chunks).toString("utf-8");
+          console.log("SSR: render finished, html length=", result.length);
+          resolve(result);
         });
       },
       onShellError(error: unknown) {
         didError = true;
+        console.error("SSR: onShellError:", error);
         reject(error);
       },
       onError(error: unknown) {
         didError = true;
-        console.error("SSR render error:", error);
+        console.error("SSR: onError:", error);
       },
     });
   });

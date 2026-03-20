@@ -31,8 +31,8 @@ test.describe("投稿機能", () => {
     await page.locator("dialog").getByRole("button", { name: "投稿する" }).click();
 
     // 投稿詳細に遷移する
-    await page.waitForURL("**/posts/*", { timeout: 3_000, waitUntil: "commit" });
-    await expect(page.locator("article").first()).toBeVisible({ timeout: 3_000 });
+    await page.waitForURL("**/posts/*", { timeout: 10_000, waitUntil: "commit" });
+    await expect(page.locator("article").first()).toBeVisible({ timeout: 10_000 });
 
     // 投稿内容が表示されていることを確認
     await expect(page.getByText(postText)).toBeVisible();

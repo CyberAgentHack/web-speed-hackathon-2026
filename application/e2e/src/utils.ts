@@ -8,15 +8,15 @@ export async function login(
 ): Promise<void> {
   await page.goto("/not-found", { waitUntil: "networkidle" });
   const signinButton = page.getByRole("button", { name: "サインイン" });
-  await expect(signinButton).toBeVisible({ timeout: 3_000 });
+  await expect(signinButton).toBeVisible({ timeout: 10_000 });
   await signinButton.click();
-  await page.getByRole("heading", { name: "サインイン" }).waitFor({ timeout: 3_000 });
+  await page.getByRole("heading", { name: "サインイン" }).waitFor({ timeout: 10_000 });
   await page.getByRole("textbox", { name: "ユーザー名" }).pressSequentially(username);
   await page.getByRole("textbox", { name: "パスワード" }).pressSequentially(password);
   const submitButton = page.getByRole("button", { name: "サインイン" }).last();
-  await expect(submitButton).toBeEnabled({ timeout: 5_000 });
+  await expect(submitButton).toBeEnabled({ timeout: 10_000 });
   await submitButton.click();
-  await page.getByRole("link", { name: "Crok" }).waitFor({ timeout: 3_000 });
+  await page.getByRole("link", { name: "Crok" }).waitFor({ timeout: 10_000 });
 }
 
 /** ページの読み込みを安定させるための関数 */

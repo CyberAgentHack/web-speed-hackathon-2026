@@ -14,14 +14,21 @@ export const SearchContainer = () => {
     ? createInfiniteKey(`/api/v1/search?q=${encodeURIComponent(query)}`)
     : () => null;
 
-  const { data, setSize } = useSWRInfinite<Models.Post[]>(getKey, {
+  const PAGE_SIZE = 30;
+  const { data, setSize, isValidating } = useSWRInfinite<Models.Post[]>(getKey, {
     revalidateFirstPage: false,
   });
 
   const posts = data ? data.flat() : [];
+  const hasMore = data ? (data[data.length - 1]?.length ?? 0) >= PAGE_SIZE : true;
 
   return (
-    <InfiniteScroll fetchMore={() => setSize((s) => s + 1)} items={posts}>
+    <InfiniteScroll
+      fetchMore={() => setSize((s) => s + 1)}
+      items={posts}
+      hasMore={hasMore}
+      isLoading={isValidating}
+    >
       <Helmet>
         <title>検索 - CaX</title>
       </Helmet>

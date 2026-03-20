@@ -159,12 +159,18 @@ test.describe("DM一覧", () => {
     await page.getByRole("link", { name: "g16hmw55" }).click();
     await page.waitForURL("**/dm/*", { timeout: 10 * 1000, waitUntil: "commit" });
 
+    // WebSocket接続確立を待つ
+    await page.waitForTimeout(1_000);
+
     const peerContext = await browser.newContext();
     const peerPage = await peerContext.newPage();
     await login(peerPage, "g16hmw55");
     await peerPage.goto("/dm");
     await peerPage.getByRole("link", { name: "gg3i6j6" }).click();
     await peerPage.waitForURL("**/dm/*", { timeout: 10 * 1000, waitUntil: "commit" });
+
+    // WebSocket接続確立を待つ
+    await peerPage.waitForTimeout(1_000);
 
     await expect(page.getByText("入力中…")).not.toBeVisible({ timeout: 10 * 1000 });
 
@@ -182,12 +188,18 @@ test.describe("DM一覧", () => {
     await page.getByRole("link", { name: "jirgqx22" }).click();
     await page.waitForURL("**/dm/*", { timeout: 10 * 1000, waitUntil: "commit" });
 
+    // WebSocket接続確立を待つ
+    await page.waitForTimeout(1_000);
+
     const peerContext = await browser.newContext();
     const peerPage = await peerContext.newPage();
     await login(peerPage, "jirgqx22");
     await peerPage.goto("/dm");
     await peerPage.getByRole("link", { name: "gg3i6j6" }).click();
     await peerPage.waitForURL("**/dm/*", { timeout: 10 * 1000, waitUntil: "commit" });
+
+    // WebSocket接続確立を待つ
+    await peerPage.waitForTimeout(1_000);
 
     const now = `【${new Date().toISOString()}】`;
 

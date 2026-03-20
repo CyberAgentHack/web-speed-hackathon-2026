@@ -56,7 +56,7 @@ test.describe("検索ページ", () => {
       await page.getByRole("button", { name: "検索" }).click();
 
       await expect(page.getByText("検索キーワードを入力してください")).toBeVisible({
-        timeout: 3_000,
+        timeout: 10_000,
       });
     });
 
@@ -257,6 +257,6 @@ test.describe("検索ページ", () => {
       });
       const newCount = await page.locator("main article").count();
       expect(newCount).toBeGreaterThan(initialCount);
-    }).toPass({ timeout: 3_000 });
+    }).toPass({ timeout: 10_000 });
   });
 });

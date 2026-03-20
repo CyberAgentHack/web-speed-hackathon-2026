@@ -4,9 +4,17 @@ interface Props {
   children: ReactNode;
   items: any[];
   fetchMore: () => void;
+  hasMore?: boolean;
+  isLoading?: boolean;
 }
 
-export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
+export const InfiniteScroll = ({
+  children,
+  fetchMore,
+  items,
+  hasMore = true,
+  isLoading = false,
+}: Props) => {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const latestItem = items[items.length - 1];
 
@@ -16,6 +24,9 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
 
     // アイテムがないときは追加で読み込まない
     if (latestItem === undefined) return;
+
+    // これ以上データがない or ロード中なら追加読み込みしない
+    if (!hasMore || isLoading) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -28,7 +39,7 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
 
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [latestItem, fetchMore]);
+  }, [latestItem, fetchMore, hasMore, isLoading]);
 
   return (
     <>

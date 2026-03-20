@@ -5,6 +5,20 @@ import type { MiddlewareHandler } from "hono";
 
 const MIN_COMPRESS_SIZE = 1024;
 
+// Already-compressed or binary formats where dynamic compression is wasteful
+const SKIP_COMPRESS_TYPES = new Set([
+  "font/woff2",
+  "font/woff",
+  "image/avif",
+  "image/webp",
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "video/mp4",
+  "video/webm",
+  "application/wasm",
+]);
+
 type Encoding = "br" | "gzip" | "deflate";
 
 function negotiateEncoding(acceptEncoding: string): Encoding | null {
@@ -42,9 +56,11 @@ export function brotliCompress(): MiddlewareHandler {
     // Skip if already encoded
     if (res.headers.get("Content-Encoding")) return;
 
-    // Skip SSE streams
+    // Skip SSE streams and already-compressed formats
     const contentType = res.headers.get("Content-Type");
     if (contentType?.includes("text/event-stream")) return;
+    const baseType = contentType?.split(";")[0]?.trim();
+    if (baseType && SKIP_COMPRESS_TYPES.has(baseType)) return;
 
     // Check Accept-Encoding
     const acceptEncoding = c.req.header("Accept-Encoding") ?? "";

@@ -12,7 +12,7 @@ export const PausableMovie = ({ src }: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLButtonElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -26,6 +26,12 @@ export const PausableMovie = ({ src }: Props) => {
       },
       { rootMargin: "200px" },
     );
+    // Already visible (SSR hydration) — skip observer
+    if (el.getBoundingClientRect().top < window.innerHeight + 200) {
+      setIsVisible(true);
+      return;
+    }
+    setIsVisible(false);
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
@@ -66,7 +72,7 @@ export const PausableMovie = ({ src }: Props) => {
             loop
             muted
             playsInline
-            preload="none"
+            preload="metadata"
             src={src}
           />
         )}
