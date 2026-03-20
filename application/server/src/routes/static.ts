@@ -44,17 +44,12 @@ staticRouter.use(
 );
 
 // Client dist (JS/CSS with content hashes) - cache immutably for 1 year
-// index.html の自動返却は無効（SPA fallback で処理する）
-staticRouter.use(
-  "/*",
-  serveStatic({
-    root: path.relative(process.cwd(), CLIENT_DIST_PATH),
-    onFound: (_path, c) => {
-      if (_path.endsWith(".html")) {
-        c.header("Cache-Control", "no-cache");
-      } else {
-        c.header("Cache-Control", "public, max-age=31536000, immutable");
-      }
-    },
-  }),
-);
+// index.html は SSR ルーターで処理するので /scripts と /assets のみ配信
+const distStatic = serveStatic({
+  root: path.relative(process.cwd(), CLIENT_DIST_PATH),
+  onFound: (_path, c) => {
+    c.header("Cache-Control", "public, max-age=31536000, immutable");
+  },
+});
+staticRouter.use("/scripts/*", distStatic);
+staticRouter.use("/assets/*", distStatic);

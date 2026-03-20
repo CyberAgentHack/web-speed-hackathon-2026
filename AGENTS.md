@@ -2,6 +2,21 @@
 
 bench を効率的に行うために bench/ を使うこと
 
+### bench 実行時の注意
+
+bench スクリプトの BASE_URL デフォルトは `http://localhost:3000` だが、開発環境では Port 3000 は vibe-kanban が使用中のため **PORT=3333** でサーバーを起動している。bench 実行時は必ず BASE_URL を指定すること:
+
+```bash
+# 手動実行
+./bench/run-all.sh 3 http://localhost:3333
+
+# 個別実行
+./bench/lighthouse.sh 3 http://localhost:3333
+./bench/api.sh 5 5 10 http://localhost:3333
+./bench/frontend.sh 5 http://localhost:3333
+# db.sh はサーバー不要（SQLite 直接アクセス）
+```
+
 deploy前の計測テストとして ./scoring-tool/README.md を実施する
 
 @./README.md

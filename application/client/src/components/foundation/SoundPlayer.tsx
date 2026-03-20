@@ -78,7 +78,7 @@ export const SoundPlayer = ({ sound }: Props) => {
         loop={true}
         onEnded={handleEnded}
         onTimeUpdate={handleTimeUpdate}
-        preload="metadata"
+        preload="none"
         src={soundSrc}
       />
       <div className="p-2">

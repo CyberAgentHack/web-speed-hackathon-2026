@@ -27,17 +27,17 @@ test.describe("ホーム", () => {
   });
 
   test("動画が自動再生される", async ({ page }) => {
-    // PausableMovie: GIF を <img> で表示 (再生中)、一時停止時は canvas にキャプチャ
+    // PausableMovie: MP4 を <video> で自動再生
     const movieArea = page.locator("[data-movie-area]").first();
     await expect(movieArea).toBeVisible({ timeout: 3_000 });
 
-    const movieImg = movieArea.locator("img").first();
-    await expect(movieImg).toBeVisible({ timeout: 3_000 });
+    const movieVideo = movieArea.locator("video").first();
+    await expect(movieVideo).toBeVisible({ timeout: 3_000 });
 
-    const hasContent = await movieImg.evaluate((el: HTMLImageElement) => {
-      return el.naturalWidth > 0 && el.naturalHeight > 0;
+    const isPlaying = await movieVideo.evaluate((el: HTMLVideoElement) => {
+      return !el.paused && el.readyState >= 2;
     });
-    expect(hasContent).toBe(true);
+    expect(isPlaying).toBe(true);
   });
 
   test("音声の波形が表示される", async ({ page }) => {

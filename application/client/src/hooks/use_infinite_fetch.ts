@@ -15,7 +15,11 @@ export function useInfiniteFetch<T>(
   initialData?: T[],
 ): ReturnValues<T> {
   const hasInitial = initialData != null && initialData.length > 0;
-  const internalRef = useRef({ isLoading: false, offset: hasInitial ? initialData.length : 0 });
+  const internalRef = useRef({
+    isLoading: false,
+    offset: hasInitial ? initialData.length : 0,
+    hasMore: !hasInitial || initialData.length >= LIMIT,
+  });
 
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
     data: initialData ?? [],
@@ -23,9 +27,12 @@ export function useInfiniteFetch<T>(
     isLoading: !hasInitial,
   });
 
+  const fetcherRef = useRef(fetcher);
+  fetcherRef.current = fetcher;
+
   const fetchMore = useCallback(() => {
-    const { isLoading, offset } = internalRef.current;
-    if (isLoading) {
+    const { isLoading, offset, hasMore } = internalRef.current;
+    if (isLoading || !hasMore) {
       return;
     }
 
@@ -34,20 +41,34 @@ export function useInfiniteFetch<T>(
       isLoading: true,
     }));
     internalRef.current = {
+      ...internalRef.current,
       isLoading: true,
-      offset,
     };
 
-    void fetcher(apiPath).then(
+    void fetcherRef.current(apiPath).then(
       (allData) => {
+        const newItems = allData.slice(offset, offset + LIMIT);
+        if (newItems.length === 0) {
+          setResult((cur) => ({
+            ...cur,
+            isLoading: false,
+          }));
+          internalRef.current = {
+            isLoading: false,
+            offset,
+            hasMore: false,
+          };
+          return;
+        }
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...newItems],
           isLoading: false,
         }));
         internalRef.current = {
           isLoading: false,
           offset: offset + LIMIT,
+          hasMore: newItems.length >= LIMIT,
         };
       },
       (error) => {
@@ -57,12 +78,12 @@ export function useInfiniteFetch<T>(
           isLoading: false,
         }));
         internalRef.current = {
+          ...internalRef.current,
           isLoading: false,
-          offset,
         };
       },
     );
-  }, [apiPath, fetcher]);
+  }, [apiPath]);
 
   const initialFetchDone = useRef(hasInitial);
   useEffect(() => {
