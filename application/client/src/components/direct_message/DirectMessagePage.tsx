@@ -73,15 +73,25 @@ export const DirectMessagePage = ({
     [onSubmit, text],
   );
 
+  const messagesListRef = useRef<HTMLUListElement>(null);
   useEffect(() => {
+    let pending = false;
     const observer = new MutationObserver(() => {
-      const height = document.body.scrollHeight;
-      if (height !== scrollHeightRef.current) {
-        scrollHeightRef.current = height;
-        window.scrollTo(0, height);
-      }
+      if (pending) return;
+      pending = true;
+      requestAnimationFrame(() => {
+        const height = document.body.scrollHeight;
+        if (height !== scrollHeightRef.current) {
+          scrollHeightRef.current = height;
+          window.scrollTo(0, height);
+        }
+        pending = false;
+      });
     });
-    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    // メッセージリストのみ監視（document.body全体ではなく）
+    if (messagesListRef.current) {
+      observer.observe(messagesListRef.current, { childList: true });
+    }
     window.scrollTo(0, document.body.scrollHeight);
     return () => observer.disconnect();
   }, []);
@@ -122,7 +132,7 @@ export const DirectMessagePage = ({
           </p>
         )}
 
-        <ul className="grid gap-3" data-testid="dm-message-list">
+        <ul ref={messagesListRef} className="grid gap-3" data-testid="dm-message-list">
           {conversation.messages.map((message) => {
             const isActiveUserSend = message.sender.id === activeUser.id;
 

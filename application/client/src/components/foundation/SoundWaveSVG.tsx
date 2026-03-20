@@ -25,18 +25,26 @@ function chunk<T>(arr: T[], size: number): T[][] {
   return result;
 }
 
+// メインスレッドに制御を戻す
+const yieldToMain = () => new Promise<void>((r) => setTimeout(r, 0));
+
 async function calculate(data: ArrayBuffer): Promise<ParsedData> {
   const audioCtx = new AudioContext();
-
   const buffer = await audioCtx.decodeAudioData(data.slice(0));
+
+  await yieldToMain();
   const leftData = Array.from(buffer.getChannelData(0), Math.abs);
+
+  await yieldToMain();
   const rightData = Array.from(buffer.getChannelData(1), Math.abs);
 
+  await yieldToMain();
   const normalized = leftData.map((v, i) => (v + (rightData[i] ?? 0)) / 2);
   const chunks = chunk(normalized, Math.ceil(normalized.length / 100));
   const peaks = chunks.map(mean);
   const max = Math.max(...peaks, 0);
 
+  await audioCtx.close();
   return { max, peaks };
 }
 
