@@ -9,6 +9,7 @@
   "scripts": {
     "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "seed:generate": "tsx ./scripts/generateSeeds.ts",
     "seed:insert": "tsx ./scripts/insertSeeds.ts"
   },
@@ -41,7 +42,8 @@
     "@types/node": "22.18.8",
     "@types/serve-static": "1.15.9",
     "@types/ws": "8.18.1",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "4.1.0"
   },
   "engines": {
     "node": "24.14.0"
