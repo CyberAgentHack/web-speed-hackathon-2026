@@ -95,7 +95,7 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
           touched={touched.username}
           label="ユーザー名"
           leftItem={<span className="text-cax-text-subtle leading-none">@</span>}
-          autoComplete="username"
+          autoComplete="off"
         />
 
         {values.type === "signup" && (
@@ -107,7 +107,7 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
             error={errors.name}
             touched={touched.name}
             label="名前"
-            autoComplete="nickname"
+            autoComplete="off"
           />
         )}
 
@@ -119,7 +119,7 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
           error={errors.password}
           touched={touched.password}
           label="パスワード"
-          autoComplete={values.type === "signup" ? "new-password" : "current-password"}
+          autoComplete="off"
         />
       </div>
 
