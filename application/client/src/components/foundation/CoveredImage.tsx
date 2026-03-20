@@ -7,12 +7,13 @@ import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers
 
 interface Props {
   src: string;
+  priority?: boolean;
 }
 
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
-export const CoveredImage = ({ src }: Props) => {
+export const CoveredImage = ({ src, priority }: Props) => {
   const dialogId = useId();
   const [alt, setAlt] = useState("");
   const [isLoadingAlt, setIsLoadingAlt] = useState(false);
@@ -46,6 +47,8 @@ export const CoveredImage = ({ src }: Props) => {
         alt={alt}
         className="h-full w-full object-cover"
         src={src}
+        fetchPriority={priority ? "high" : "auto"}
+        loading={priority ? "eager" : "lazy"}
       />
 
       <button
