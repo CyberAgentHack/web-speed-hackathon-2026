@@ -10,6 +10,10 @@ interface Props {
   id: string;
 }
 
+interface NewConversationResponse {
+  id: string;
+}
+
 export const NewDirectMessageModalContainer = ({ id }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
@@ -34,7 +38,7 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
     async (values: NewDirectMessageFormData) => {
       try {
         const user = await fetchJSON<Models.User>(`/api/v1/users/${values.username}`);
-        const conversation = await sendJSON<Models.DirectMessageConversation>(`/api/v1/dm`, {
+        const conversation = await sendJSON<NewConversationResponse>(`/api/v1/dm`, {
           peerId: user.id,
         });
         navigate(`/dm/${conversation.id}`);

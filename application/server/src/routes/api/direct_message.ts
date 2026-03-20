@@ -11,6 +11,26 @@ import {
 
 export const directMessageRouter = Router();
 
+function serializeDirectMessage(message: {
+  id: string;
+  body: string;
+  createdAt: Date | string;
+  isRead: boolean;
+  senderId: string;
+  updatedAt?: Date | string;
+}) {
+  return {
+    id: message.id,
+    sender: {
+      id: message.senderId,
+    },
+    body: message.body,
+    isRead: message.isRead,
+    createdAt: message.createdAt,
+    updatedAt: message.updatedAt ?? message.createdAt,
+  };
+}
+
 function buildConversationIncludes() {
   return [
     {
@@ -41,7 +61,6 @@ directMessageRouter.get("/dm", async (req, res) => {
       {
         association: "messages",
         attributes: ["id", "body", "createdAt", "isRead", "senderId"],
-        include: [{ association: "sender", attributes: ["id"] }],
         order: [["createdAt", "ASC"]],
         required: true,
       },
@@ -82,7 +101,9 @@ directMessageRouter.post("/dm", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const peer = await User.findByPk(req.body?.peerId);
+  const peer = await User.findByPk(req.body?.peerId, {
+    attributes: ["id"],
+  });
   if (peer === null) {
     throw new httpErrors.NotFound();
   }
@@ -99,9 +120,8 @@ directMessageRouter.post("/dm", async (req, res) => {
       memberId: peer.id,
     },
   });
-  await conversation.reload();
 
-  return res.status(200).type("application/json").send(conversation);
+  return res.status(200).type("application/json").send({ id: conversation.id });
 });
 
 directMessageRouter.ws("/dm/unread", async (req, _res) => {
@@ -153,7 +173,6 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
       {
         association: "messages",
         attributes: ["id", "body", "createdAt", "isRead", "senderId"],
-        include: [{ association: "sender", attributes: ["id"] }],
         order: [["createdAt", "ASC"]],
         required: false,
       },
@@ -163,7 +182,21 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
     throw new httpErrors.NotFound();
   }
 
-  return res.status(200).type("application/json").send(conversation);
+  const serialized = conversation.toJSON() as Record<string, unknown> & {
+    messages?: Array<{
+      id: string;
+      body: string;
+      createdAt: string;
+      isRead: boolean;
+      senderId: string;
+      updatedAt?: string;
+    }>;
+  };
+
+  return res.status(200).type("application/json").send({
+    ...serialized,
+    messages: serialized.messages?.map(serializeDirectMessage) ?? [],
+  });
 });
 
 directMessageRouter.ws("/dm/:conversationId", async (req, _res) => {
@@ -228,9 +261,17 @@ directMessageRouter.post("/dm/:conversationId/messages", async (req, res) => {
     conversationId: conversation.id,
     senderId: req.session.userId,
   });
-  await message.reload();
 
-  return res.status(201).type("application/json").send(message);
+  return res.status(201).type("application/json").send(
+    serializeDirectMessage({
+      id: message.id,
+      body: message.body,
+      createdAt: message.createdAt,
+      isRead: message.isRead,
+      senderId: message.senderId,
+      updatedAt: message.updatedAt,
+    }),
+  );
 });
 
 directMessageRouter.post("/dm/:conversationId/read", async (req, res) => {

@@ -62,6 +62,7 @@ export function initDirectMessage(sequelize: Sequelize) {
       sequelize,
       indexes: [
         { fields: ["conversationId", "createdAt"] },
+        { fields: ["conversationId", "isRead"] },
         { fields: ["conversationId", "senderId", "isRead"] },
         { fields: ["senderId"] },
       ],
@@ -78,15 +79,16 @@ export function initDirectMessage(sequelize: Sequelize) {
   );
 
   DirectMessage.addHook("afterSave", "onDmSaved", async (message) => {
-    const directMessage = await DirectMessage.findByPk(message.get().id);
-    const conversation = await DirectMessageConversation.findByPk(directMessage?.conversationId);
+    const conversation = await DirectMessageConversation.findByPk(message.conversationId, {
+      attributes: ["id", "initiatorId", "memberId"],
+    });
 
-    if (directMessage == null || conversation == null) {
+    if (conversation == null) {
       return;
     }
 
     const receiverId =
-      conversation.initiatorId === directMessage.senderId
+      conversation.initiatorId === message.senderId
         ? conversation.memberId
         : conversation.initiatorId;
 
@@ -107,7 +109,16 @@ export function initDirectMessage(sequelize: Sequelize) {
       ],
     });
 
-    eventhub.emit(`dm:conversation/${conversation.id}:message`, directMessage);
+    eventhub.emit(`dm:conversation/${conversation.id}:message`, {
+      id: message.id,
+      sender: {
+        id: message.senderId,
+      },
+      body: message.body,
+      isRead: message.isRead,
+      createdAt: message.createdAt,
+      updatedAt: message.updatedAt,
+    });
     eventhub.emit(`dm:unread/${receiverId}`, { unreadCount });
   });
 }
