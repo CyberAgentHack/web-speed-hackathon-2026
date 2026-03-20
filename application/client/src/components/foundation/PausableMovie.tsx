@@ -6,6 +6,7 @@ import { RefCallback, useCallback, useRef, useState } from "react";
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
+import { useInView } from "@web-speed-hackathon-2026/client/src/hooks/use_in_view";
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
@@ -16,7 +17,8 @@ interface Props {
  * クリックすると再生・一時停止を切り替えます。
  */
 export const PausableMovie = ({ src }: Props) => {
-  const { data, isLoading } = useFetch(src, fetchBinary);
+  const { ref: inViewRef, isInView } = useInView<HTMLDivElement>();
+  const { data, isLoading } = useFetch(src, fetchBinary, isInView);
 
   const animatorRef = useRef<Animator>(null);
   const canvasCallbackRef = useCallback<RefCallback<HTMLCanvasElement>>(
@@ -61,30 +63,32 @@ export const PausableMovie = ({ src }: Props) => {
     });
   }, []);
 
-  if (isLoading || data === null) {
-    return null;
-  }
-
   return (
-    <AspectRatioBox aspectHeight={1} aspectWidth={1}>
-      <button
-        aria-label="動画プレイヤー"
-        className="group relative block h-full w-full"
-        onClick={handleClick}
-        type="button"
-      >
-        <canvas ref={canvasCallbackRef} className="w-full" />
-        <div
-          className={classNames(
-            "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
-            {
-              "opacity-0 group-hover:opacity-100": isPlaying,
-            },
-          )}
-        >
-          <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
-        </div>
-      </button>
-    </AspectRatioBox>
+    <div ref={inViewRef} className="w-full">
+      <AspectRatioBox aspectHeight={1} aspectWidth={1}>
+        {isLoading || data === null ? (
+          <div className="bg-cax-surface-subtle h-full w-full" />
+        ) : (
+          <button
+            aria-label="動画プレイヤー"
+            className="group relative block h-full w-full"
+            onClick={handleClick}
+            type="button"
+          >
+            <canvas ref={canvasCallbackRef} className="w-full" />
+            <div
+              className={classNames(
+                "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
+                {
+                  "opacity-0 group-hover:opacity-100": isPlaying,
+                },
+              )}
+            >
+              <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
+            </div>
+          </button>
+        )}
+      </AspectRatioBox>
+    </div>
   );
 };

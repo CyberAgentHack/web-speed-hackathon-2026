@@ -4,3 +4,15 @@ node_modules
 
 application/server/seeds
 application/server/upload
+application/node_modules
+application/dist
+application/upload
+application/client/node_modules
+application/server/node_modules
+application/e2e/node_modules
+application/.pnpm-store
+application/pnpm-store
+application/.turbo
+application/.next
+scoring-tool/node_modules
+**/.DS_Store

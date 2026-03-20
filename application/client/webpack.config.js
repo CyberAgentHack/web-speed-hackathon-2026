@@ -11,6 +11,8 @@ const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
 
+const isProd = process.env.NODE_ENV === "production";
+
 /** @type {import('webpack').Configuration} */
 const config = {
   devServer: {
@@ -25,18 +27,17 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: isProd ? false : "inline-source-map",
   entry: {
     main: [
       "core-js",
       "regenerator-runtime/runtime",
-      "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: isProd ? "production" : "development",
   module: {
     rules: [
       {
@@ -60,7 +61,6 @@ const config = {
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
     filename: "scripts/[name].js",
     path: DIST_PATH,
     publicPath: "auto",
@@ -129,13 +129,12 @@ const config = {
   },
   optimization: {
     minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
+    splitChunks: isProd ? { chunks: "async" } : false,
+    runtimeChunk: isProd ? "single" : false,
+    moduleIds: isProd ? "deterministic" : "named",
+    chunkIds: isProd ? "deterministic" : "named",
   },
-  cache: false,
+  cache: isProd ? { type: "filesystem" } : false,
   ignoreWarnings: [
     {
       module: /@ffmpeg/,
