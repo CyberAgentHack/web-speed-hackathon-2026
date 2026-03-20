@@ -66,9 +66,10 @@ export const PausableMovie = ({ src }: Props) => {
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
       <button
         aria-label="動画プレイヤー"
-        className="group relative block h-full w-full"
+        className={classNames("group relative block h-full w-full", {
+          "pointer-events-none": isLoading,
+        })}
         onClick={handleClick}
-        disabled={isLoading}
         aria-busy={isLoading || undefined}
         type="button"
       >
