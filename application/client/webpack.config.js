@@ -34,6 +34,7 @@ const config = {
     main: [
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
+      ...(!isProduction ? [path.resolve(SRC_PATH, "./react_scan.ts")] : []),
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
