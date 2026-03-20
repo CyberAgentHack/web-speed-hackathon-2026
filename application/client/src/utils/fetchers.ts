@@ -1,5 +1,3 @@
-import { gzip } from "pako";
-
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {
   const res = await fetch(url);
   return res.arrayBuffer();
@@ -22,12 +20,20 @@ export async function sendFile<T>(url: string, file: File): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+async function gzipCompress(data: Uint8Array): Promise<ArrayBuffer> {
+  const cs = new CompressionStream("gzip");
+  const writer = cs.writable.getWriter();
+  void writer.write(data);
+  void writer.close();
+  return new Response(cs.readable).arrayBuffer();
+}
+
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
   const jsonString = JSON.stringify(data);
   const uint8Array = new TextEncoder().encode(jsonString);
-  const compressed = gzip(uint8Array);
+  const compressed = await gzipCompress(uint8Array);
 
-  const res = await fetch(url, {
+  const res = await fetch(url as string | URL, {
     method: "POST",
     headers: {
       "Content-Encoding": "gzip",
