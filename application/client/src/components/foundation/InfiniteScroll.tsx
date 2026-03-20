@@ -10,12 +10,7 @@ interface Props {
 export const InfiniteScroll = ({ children, fetchMore, hasMore, items }: Props) => {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const wasIntersectingRef = useRef(false);
-  const hasMoreRef = useRef(hasMore);
   const hasItemsRef = useRef(items.length > 0);
-
-  useEffect(() => {
-    hasMoreRef.current = hasMore;
-  }, [hasMore]);
 
   useEffect(() => {
     hasItemsRef.current = items.length > 0;
@@ -27,6 +22,12 @@ export const InfiniteScroll = ({ children, fetchMore, hasMore, items }: Props) =
       return;
     }
 
+    if (!hasMore) {
+      return;
+    }
+
+    wasIntersectingRef.current = false;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         const isIntersecting = entry?.isIntersecting ?? false;
@@ -34,8 +35,7 @@ export const InfiniteScroll = ({ children, fetchMore, hasMore, items }: Props) =
         if (
           isIntersecting &&
           !wasIntersectingRef.current &&
-          hasItemsRef.current &&
-          hasMoreRef.current
+          hasItemsRef.current
         ) {
           fetchMore();
         }
@@ -54,7 +54,7 @@ export const InfiniteScroll = ({ children, fetchMore, hasMore, items }: Props) =
     return () => {
       observer.disconnect();
     };
-  }, [fetchMore]);
+  }, [fetchMore, hasMore]);
 
   return (
     <>
