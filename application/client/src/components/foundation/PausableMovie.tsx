@@ -82,8 +82,8 @@ export const PausableMovie = ({ src }: Props) => {
         src={src}
         onLoadedData={handleLoadedData}
       />
-      {isReady ? (
-        <AspectRatioBox aspectHeight={1} aspectWidth={1}>
+      <AspectRatioBox aspectHeight={1} aspectWidth={1}>
+        {isReady ? (
           <button
             aria-label="動画プレイヤー"
             className="group relative block h-full w-full"
@@ -102,8 +102,8 @@ export const PausableMovie = ({ src }: Props) => {
               <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
             </div>
           </button>
-        </AspectRatioBox>
-      ) : null}
+        ) : null}
+      </AspectRatioBox>
     </>
   );
 };

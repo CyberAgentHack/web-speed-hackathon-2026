@@ -33,7 +33,7 @@ staticRouter.use(
     etag: true,
     lastModified: true,
     setHeaders(res, path) {
-      if (path.includes("chunk-") || path.includes("-") && (path.endsWith(".js") || path.endsWith(".css"))) {
+      if (path.includes("chunk-") || (path.includes("-") && (path.endsWith(".js") || path.endsWith(".css")))) {
         res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
       }
     },
