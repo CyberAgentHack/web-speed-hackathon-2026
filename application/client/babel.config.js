@@ -7,7 +7,7 @@ module.exports = {
         targets: "ie 11",
         corejs: "3",
         modules: "commonjs",
-        useBuiltIns: false,
+        useBuiltIns: "usage",
       },
     ],
     [
