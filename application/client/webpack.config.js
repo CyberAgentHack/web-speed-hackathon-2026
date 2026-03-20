@@ -12,7 +12,7 @@ const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
 const isDevelopment = process.env['NODE_ENV'] === 'development';
-const useAnalyzer = isDevelopment;
+const useAnalyzer = process.env['ANALYZE'] === 'true';
 
 /** @type {import('webpack').Configuration} */
 const config = {
@@ -79,7 +79,7 @@ const config = {
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
+      NODE_ENV: process.env.NODE_ENV || "production",
     }),
     new MiniCssExtractPlugin({
       filename: "styles/[name].css",
@@ -144,8 +144,15 @@ const config = {
           priority: 30,
           enforce: true,
         },
+        webllm: {
+          test: /[\\/]node_modules[\\/]@mlc-ai[\\/]/,
+          name: 'vendor-webllm',
+          chunks: 'all',
+          priority: 25,
+          enforce: true,
+        },
         heavy: {
-          test: /[\\/]node_modules[\\/](@ffmpeg|@imagemagick|@mlc-ai|kuromoji|bayesian-bm25|negaposi-analyzer-ja)[\\/]/,
+          test: /[\\/]node_modules[\\/](@ffmpeg|@imagemagick|kuromoji|bayesian-bm25|negaposi-analyzer-ja)[\\/]/,
           name: 'vendor-heavy',
           chunks: 'all',
           priority: 20,
