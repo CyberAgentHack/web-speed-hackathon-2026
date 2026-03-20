@@ -108,7 +108,7 @@ export const AppContainer = () => {
   const authModalId = useId();
   const newPostModalId = useId();
 
-  if (isLoadingActiveUser) {
+  if (typeof window !== "undefined" && isLoadingActiveUser) {
     return (
       <HelmetProvider>
         <Helmet>

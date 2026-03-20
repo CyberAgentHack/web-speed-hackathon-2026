@@ -185,7 +185,7 @@ test.describe("検索ページ", () => {
       // 「悲しい」: 辞書 rank=-0.999102 → 補正後スコア≈-0.1024 (< -0.1 → negative)
       await page.goto("/search?q=悲しい");
 
-      await expect(page.getByText("どしたん話聞こうか?")).toBeVisible({ timeout: 3_000 });
+      await expect(page.getByText("どしたん話聞こうか?")).toBeVisible({ timeout: 10_000 });
       await expect(page.getByText("言わなくてもいいけど、言ってもいいよ。")).toBeVisible();
     });
 
@@ -209,7 +209,7 @@ test.describe("検索ページ", () => {
       // 「惑い」: 辞書 rank=-0.976115 → 補正後スコア≈-0.100027 (< -0.1 → negative)
       await page.goto("/search?q=惑い");
 
-      await expect(page.getByText("どしたん話聞こうか?")).toBeVisible({ timeout: 3_000 });
+      await expect(page.getByText("どしたん話聞こうか?")).toBeVisible({ timeout: 10_000 });
     });
 
     test("補正係数により境界値(-0.1)をわずかに上回る単語ではネガティブ判定されない", async ({

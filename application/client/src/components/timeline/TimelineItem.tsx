@@ -8,10 +8,10 @@ import { TranslatableText } from "@web-speed-hackathon-2026/client/src/component
 import { formatJaLongDate } from "@web-speed-hackathon-2026/client/src/utils/format_date";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
-const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Element): boolean => {
+const isClickedAnchor = (target: EventTarget | null, currentTarget: Element): boolean => {
   while (target !== null && target instanceof Element) {
     const tagName = target.tagName.toLowerCase();
-    if (["button", "a"].includes(tagName)) {
+    if (tagName === "a") {
       return true;
     }
     if (currentTarget === target) {
@@ -40,7 +40,7 @@ export const TimelineItem = ({ post, priority }: Props) => {
   const handleClick = useCallback<MouseEventHandler>(
     (ev) => {
       const isSelectedText = document.getSelection()?.isCollapsed === false;
-      if (!isClickedAnchorOrButton(ev.target, ev.currentTarget) && !isSelectedText) {
+      if (!isClickedAnchor(ev.target, ev.currentTarget) && !isSelectedText) {
         void navigate(`/posts/${post.id}`);
       }
     },
@@ -51,7 +51,7 @@ export const TimelineItem = ({ post, priority }: Props) => {
     (ev) => {
       if (ev.key === "Enter" || ev.key === " ") {
         ev.preventDefault();
-        if (!isClickedAnchorOrButton(ev.target, ev.currentTarget)) {
+        if (!isClickedAnchor(ev.target, ev.currentTarget)) {
           void navigate(`/posts/${post.id}`);
         }
       }

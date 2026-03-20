@@ -53,8 +53,8 @@ let ssrRender: RenderFn | null = null;
 try {
   const ssrModule = await import(path.resolve(SSR_DIST_PATH, "entry-server.js"));
   ssrRender = ssrModule.render;
-} catch (e) {
-  console.warn("SSR: entry-server.js not found in dist-ssr, SSR will be disabled", e);
+} catch {
+  console.warn("SSR: entry-server.js not found in dist-ssr, SSR will be disabled");
 }
 
 function csrFallbackHtml(): string {
@@ -190,25 +190,21 @@ async function renderToString(url: string, ssrData: SSRData): Promise<string> {
     });
 
     const { pipe } = ssrRender!(url, ssrData, {
-      onShellReady() {
-        console.log("SSR: onShellReady called, didError=", didError);
+      onAllReady() {
         if (didError) return;
         chunks.push(Buffer.from(beforeOutlet!));
         pipe(collectStream);
         collectStream.on("finish", () => {
-          const result = Buffer.concat(chunks).toString("utf-8");
-          console.log("SSR: render finished, html length=", result.length);
-          resolve(result);
+          resolve(Buffer.concat(chunks).toString("utf-8"));
         });
       },
       onShellError(error: unknown) {
         didError = true;
-        console.error("SSR: onShellError:", error);
         reject(error);
       },
       onError(error: unknown) {
         didError = true;
-        console.error("SSR: onError:", error);
+        console.error("SSR render error:", error);
       },
     });
   });
