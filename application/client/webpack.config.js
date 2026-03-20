@@ -122,11 +122,11 @@ const config = {
       //   "node_modules",
       //   "@ffmpeg/core/dist/umd/ffmpeg-core.wasm",
       // ),
-      "@imagemagick/magick-wasm/magick.wasm$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@imagemagick/magick-wasm/dist/magick.wasm",
-      ),
+      // "@imagemagick/magick-wasm/magick.wasm$": path.resolve(
+      //   __dirname,
+      //   "node_modules",
+      //   "@imagemagick/magick-wasm/dist/magick.wasm",
+      // ),
     },
     fallback: {
       fs: false,
