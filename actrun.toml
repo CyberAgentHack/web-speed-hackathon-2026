@@ -1,0 +1,12 @@
+# actrun — ローカル bench 実行用設定
+# Usage: actrun workflow run .github/workflows/bench.yml
+
+workspace_mode = "local"
+trust_actions = true
+
+# ローカルでは checkout 不要（既にリポジトリ内）
+local_skip_actions = ["actions/checkout"]
+
+# nix develop で Node.js/pnpm/chromium が揃うので setup-node も不要
+[override."actions/setup-node"]
+run = "echo 'skipped: using nix develop environment'"

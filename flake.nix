@@ -39,6 +39,14 @@
             export CHROMIUM_PATH="${pkgs.google-chrome}/bin/google-chrome-stable"
             export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1
             export PUPPETEER_EXECUTABLE_PATH="${pkgs.google-chrome}/bin/google-chrome-stable"
+
+            # actrun (GitHub Actions 互換ローカルランナー)
+            export npm_config_prefix="$PWD/.npm-global"
+            export PATH="$npm_config_prefix/bin:$PATH"
+            if ! command -v actrun &>/dev/null; then
+              echo "Installing actrun..."
+              npm install -g @mizchi/actrun 2>/dev/null
+            fi
           '';
         };
       }

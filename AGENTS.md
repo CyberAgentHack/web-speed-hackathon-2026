@@ -6,6 +6,38 @@ deploy前の計測テストとして ./scoring-tool/README.md を実施する
 
 @./README.md
 
+---
+
+## ブランチ運用（トランクベース）
+
+| ブランチ | 役割 |
+|---------|------|
+| `main` | 開発トランク。改善を直接積み上げる |
+| `bench` | 計測専用。main から同期して scoring-tool / bench を実行 |
+
+### 計測の流れ
+
+```bash
+# 1. main で改善をコミット
+git add -A && git commit -m "perf: ..."
+
+# 2. bench ブランチに同期
+git checkout bench && git merge main
+
+# 3. actrun でローカル計測（ビルド → サーバー起動 → scoring-tool → bench suite）
+actrun workflow run .github/workflows/bench.yml
+
+# 4. main に戻って開発続行
+git checkout main
+```
+
+### actrun 設定
+
+- `actrun.toml` でローカル実行時の挙動を制御
+- `nix develop` 環境を自動検出（Node.js, pnpm, chromium）
+- `actions/checkout` と `actions/setup-node` はローカルでスキップ
+- `.github/workflows/bench.yml` が scoring-tool と bench/run-all.sh を順に実行
+
 ## 改善方針
 
 以下の「初期構成」は最も遅い状態のベースライン。レギュレーション違反しない限り、構成はどんどん変えてよい。

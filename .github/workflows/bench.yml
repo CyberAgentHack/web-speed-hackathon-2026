@@ -1,0 +1,63 @@
+name: Bench
+on:
+  push:
+    branches:
+      - bench
+  workflow_dispatch:
+
+env:
+  TZ: "Asia/Tokyo"
+  BASE_URL: "http://localhost:3000"
+
+jobs:
+  bench:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # nix develop で Node.js/pnpm/chromium が揃う前提（actrun は flake.nix を自動検出）
+      # GitHub Actions 上では setup-node が必要だが actrun ローカルでは skip される
+      - uses: actions/setup-node@v4
+        if: ${{ !env.ACTRUN_LOCAL }}
+        with:
+          node-version: "24.14.0"
+
+      # ── Build & Seed ──
+      - name: Install dependencies
+        working-directory: application
+        run: pnpm install --frozen-lockfile
+
+      - name: Build client
+        working-directory: application
+        run: pnpm build
+
+      - name: Generate & insert seeds
+        working-directory: application
+        run: |
+          pnpm --filter @web-speed-hackathon-2026/server seed:generate
+          pnpm --filter @web-speed-hackathon-2026/server seed:insert
+
+      # ── Start server ──
+      - name: Start server
+        working-directory: application
+        run: |
+          pnpm start &
+          for i in $(seq 1 30); do
+            curl -sS -o /dev/null "${BASE_URL}/" --max-time 5 2>/dev/null && break
+            sleep 2
+          done
+
+      # ── Scoring Tool ──
+      - name: Install scoring-tool dependencies
+        working-directory: scoring-tool
+        run: pnpm install --frozen-lockfile
+
+      - name: Run scoring-tool
+        working-directory: scoring-tool
+        run: pnpm start --applicationUrl "${BASE_URL}"
+
+      # ── Bench Suite ──
+      - name: Run bench suite
+        run: bash bench/run-all.sh 1 "${BASE_URL}"

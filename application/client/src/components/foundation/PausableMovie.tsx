@@ -18,14 +18,6 @@ export const PausableMovie = ({ src }: Props) => {
   const [isPlaying, setIsPlaying] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Respect prefers-reduced-motion
-  useEffect(() => {
-    if (isLoaded && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      pauseGif();
-      setIsPlaying(false);
-    }
-  }, [isLoaded]);
-
   const pauseGif = useCallback(() => {
     const img = imgRef.current;
     const canvas = canvasRef.current;
@@ -53,6 +45,13 @@ export const PausableMovie = ({ src }: Props) => {
     img.style.visibility = "visible";
     canvas.style.visibility = "hidden";
   }, []);
+
+  useEffect(() => {
+    if (isLoaded && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      pauseGif();
+      setIsPlaying(false);
+    }
+  }, [isLoaded, pauseGif]);
 
   const handleClick = useCallback(() => {
     setIsPlaying((prev) => {

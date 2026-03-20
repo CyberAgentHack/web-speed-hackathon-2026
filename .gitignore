@@ -232,6 +232,9 @@ bundle-stats.json
 # bench results
 bench-results/
 
+# actrun (nix develop でローカルインストール)
+.npm-global/
+
 # Upload files (directories kept via .gitkeep)
 application/upload/**
 !application/upload/**/
