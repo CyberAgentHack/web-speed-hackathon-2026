@@ -1,27 +1,17 @@
-# フォント最適化: font-display swap + woff2 変換
+# フォント最適化: 断念
 
-## 変更内容
+## 試したこと
 
-### index.css
-- `font-display: block` → `swap` に変更（Regular, Heavy 両方）
-  - フォント読み込み中もシステムフォントでテキスト即表示
-- フォント参照を `.otf` → `.woff2` に変更
+### font-display: swap
+- `block` → `swap` に変更
+- VRT 失敗: 利用規約ページの高さが変わる（5083px → 4823px）、ユーザー詳細ページのスクショ差異
+- 原因: swap によるフォントメトリクス差異がレイアウトに影響
 
-### public/fonts/
-- wawoff2 (npm) で OTF → woff2 に変換
-  - Regular: 6.3MB → 3.6MB (42%削減)
-  - Heavy: 6.4MB → 3.7MB (42%削減)
-- 不要になった otf ファイルを削除
+### woff2 変換
+- wawoff2 (npm) で OTF → woff2 に変換（42%削減）
+- VRT 失敗: テキストレンダリングが微妙に変わりスクショ差異（投稿詳細 17%、ユーザー詳細 12%）
 
-## 影響
-- `font-display: swap` でテキスト描画ブロックが解消 → FCP 改善
-- woff2 でフォント転送量が合計 12.7MB → 7.5MB に削減
-- さらに gzip 転送でもう一段圧縮される
+## 結論
 
-## VRT 結果
-
-未計測
-
-## 計測結果
-
-未計測
+どちらもVRTスナップショットとの差異が出るため断念。元の `font-display: block` + OTF に戻した。
+フォントは各6MB超のまま（合計12.7MB）。レギュレーション上スナップショット更新不可。
