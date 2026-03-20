@@ -199,6 +199,9 @@ importers:
       babel-loader:
         specifier: 10.0.0
         version: 10.0.0(@babel/core@7.28.4)(webpack@5.102.1)
+      compression-webpack-plugin:
+        specifier: 12.0.0
+        version: 12.0.0(webpack@5.102.1)
       copy-webpack-plugin:
         specifier: 13.0.1
         version: 13.0.1(webpack@5.102.1)
@@ -2236,6 +2239,12 @@ packages:
   compressible@2.0.18:
     resolution: {integrity: sha512-AF3r7P5dWxL8MxyITRMlORQNaOA2IkAFaTr4k7BUumjPtRpGDTZpl0Pb1XCO6JeDCBdp126Cgs9sMxqSjgYyRg==}
     engines: {node: '>= 0.6'}
+
+  compression-webpack-plugin@12.0.0:
+    resolution: {integrity: sha512-LR4mS19Jqq41XfA3xVMLrtzVNzqJbUHdzPeLRfQoLiAS9s87f0021fDuU89xxVQFcB6d20ufBkv4j1rQ4OowHw==}
+    engines: {node: '>= 20.9.0'}
+    peerDependencies:
+      webpack: ^5.1.0
 
   compression@1.8.1:
     resolution: {integrity: sha512-9mAqGPHLakhCLeNyxPkK4xVo746zQ/czLH1Ky+vkitMnWfWZps8r0qXuwhwizagCRttsL4lfG4pIOvaWLpAP0w==}
@@ -4335,6 +4344,10 @@ packages:
 
   serialize-javascript@6.0.2:
     resolution: {integrity: sha512-Saa1xPByTTq2gdeFZYLLo+RFE35NHZkAbqZeWNd3BpzppeVisAqpDjcp8dyf6uIvEqJRd46jemmyA4iFIeVk8g==}
+
+  serialize-javascript@7.0.4:
+    resolution: {integrity: sha512-DuGdB+Po43Q5Jxwpzt1lhyFSYKryqoNjQSA9M92tyw0lyHIOur+XCalOUe0KTJpyqzT8+fQ5A0Jf7vCx/NKmIg==}
+    engines: {node: '>=20.0.0'}
 
   serve-index@1.9.1:
     resolution: {integrity: sha512-pXHfKNP4qujrtteMrSBb0rc8HJ9Ms/GrXwcUtUtD5s4ewDJI8bT3Cz2zTVRMKtri49pLx2e0Ya8ziP5Ya2pZZw==}
@@ -6833,6 +6846,12 @@ snapshots:
   compressible@2.0.18:
     dependencies:
       mime-db: 1.54.0
+
+  compression-webpack-plugin@12.0.0(webpack@5.102.1):
+    dependencies:
+      schema-utils: 4.3.3
+      serialize-javascript: 7.0.4
+      webpack: 5.102.1(webpack-cli@6.0.1)
 
   compression@1.8.1:
     dependencies:
@@ -9377,6 +9396,8 @@ snapshots:
   serialize-javascript@6.0.2:
     dependencies:
       randombytes: 2.1.0
+
+  serialize-javascript@7.0.4: {}
 
   serve-index@1.9.1:
     dependencies:
