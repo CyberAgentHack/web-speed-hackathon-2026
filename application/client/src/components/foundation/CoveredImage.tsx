@@ -64,6 +64,7 @@ export const CoveredImage = ({ src }: Props) => {
             "w-full h-auto": containerRatio <= imageRatio,
           },
         )}
+        fetchPriority="high"
         src={blobUrl}
       />
 
