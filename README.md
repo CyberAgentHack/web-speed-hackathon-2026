@@ -15,7 +15,7 @@
 
 評価対象となる環境 (URL) を作成し、次のリンクから参加登録をしてください。
 
-https://github.com/CyberAgentHack/web-speed-hackathon-2026/issues/new?template=add-competitor.yml
+https://github.com/CyberAgentHack/web-speed-hackathon-2026-scoring/issues/new?template=add-competitor.yml
 
 ## デプロイ
 
@@ -56,3 +56,4 @@ https://github.com/CyberAgentHack/web-speed-hackathon-2026/issues/new?template=a
     - (Original Font) Source Han Serif JP: OFT 1.1 by Adobe http://www.adobe.com/
 - Text
   - 太宰治『走れメロス』（1940年）
+
