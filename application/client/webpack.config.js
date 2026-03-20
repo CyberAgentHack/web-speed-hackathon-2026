@@ -89,7 +89,7 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: "body",
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
   ],
@@ -130,7 +130,7 @@ const config = {
         chunkIds: "deterministic",
         moduleIds: "deterministic",
         splitChunks: {
-          chunks: "async",
+          chunks: "all",
         },
       }
     : {
