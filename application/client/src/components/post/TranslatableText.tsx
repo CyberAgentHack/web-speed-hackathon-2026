@@ -58,7 +58,9 @@ export const TranslatableText = ({ text }: Props) => {
         {state.type !== "loading" ? (
           <span>{state.text}</span>
         ) : (
-          <span className="bg-cax-surface-subtle text-cax-text-muted">{text}</span>
+          <span className="bg-cax-surface-subtle text-cax-text-muted">
+            {text}
+          </span>
         )}
       </p>
 

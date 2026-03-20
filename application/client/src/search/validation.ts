@@ -1,12 +1,14 @@
-import { FormErrors } from "redux-form";
+import type { FormErrors } from "redux-form";
 
 import {
   parseSearchQuery,
   isValidDate,
 } from "@web-speed-hackathon-2026/client/src/search/services";
-import { SearchFormData } from "@web-speed-hackathon-2026/client/src/search/types";
+import type { SearchFormData } from "@web-speed-hackathon-2026/client/src/search/types";
 
-export const validate = (values: SearchFormData): FormErrors<SearchFormData> => {
+export const validate = (
+  values: SearchFormData,
+): FormErrors<SearchFormData> => {
   const errors: FormErrors<SearchFormData> = {};
   const raw = values.searchText?.trim() || "";
 

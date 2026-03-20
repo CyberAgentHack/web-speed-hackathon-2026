@@ -23,7 +23,10 @@ interface Props {
 }
 
 // トークン単位でハイライト
-function highlightMatchByTokens(text: string, queryTokens: string[]): React.ReactNode {
+function highlightMatchByTokens(
+  text: string,
+  queryTokens: string[],
+): React.ReactNode {
   if (queryTokens.length === 0) return text;
 
   const lowerText = text.toLowerCase();
@@ -79,7 +82,9 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
+  const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(
+    null,
+  );
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
@@ -97,7 +102,9 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     let mounted = true;
 
     const init = async () => {
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
+      const builder = Bluebird.promisifyAll(
+        kuromoji.builder({ dicPath: "/dicts" }),
+      );
       const nextTokenizer = await builder.buildAsync();
       if (mounted) {
         setTokenizer(nextTokenizer);
@@ -121,9 +128,9 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
         return;
       }
 
-      const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-        "/api/v1/crok/suggestions",
-      );
+      const { suggestions: candidates } = await fetchJSON<{
+        suggestions: string[];
+      }>("/api/v1/crok/suggestions");
       if (cancelled) {
         return;
       }
@@ -240,7 +247,9 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
           </div>
         </div>
         <p className="text-cax-text-subtle mt-2 text-center text-xs">
-          {isStreaming ? "AIが応答を生成中..." : "Crok AIは間違いを起こす可能性があります。"}
+          {isStreaming
+            ? "AIが応答を生成中..."
+            : "Crok AIは間違いを起こす可能性があります。"}
         </p>
       </form>
     </div>

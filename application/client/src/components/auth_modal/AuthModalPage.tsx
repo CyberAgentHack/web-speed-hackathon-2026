@@ -1,7 +1,13 @@
 import { useSelector } from "react-redux";
-import { Field, formValueSelector, InjectedFormProps, reduxForm } from "redux-form";
+import type {
+  InjectedFormProps} from "redux-form";
+import {
+  Field,
+  formValueSelector,
+  reduxForm,
+} from "redux-form";
 
-import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
+import type { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/auth/validation";
 import { FormInputField } from "@web-speed-hackathon-2026/client/src/components/foundation/FormInputField";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
@@ -36,7 +42,9 @@ const AuthModalPageComponent = ({
       <div className="flex justify-center">
         <button
           className="text-cax-brand underline"
-          onClick={() => change("type", type === "signin" ? "signup" : "signin")}
+          onClick={() =>
+            change("type", type === "signin" ? "signup" : "signin")
+          }
           type="button"
         >
           {type === "signin" ? "初めての方はこちら" : "サインインはこちら"}
@@ -49,7 +57,9 @@ const AuthModalPageComponent = ({
           component={FormInputField}
           props={{
             label: "ユーザー名",
-            leftItem: <span className="text-cax-text-subtle leading-none">@</span>,
+            leftItem: (
+              <span className="text-cax-text-subtle leading-none">@</span>
+            ),
             autoComplete: "username",
           }}
         />
@@ -71,14 +81,19 @@ const AuthModalPageComponent = ({
           props={{
             label: "パスワード",
             type: "password",
-            autoComplete: type === "signup" ? "new-password" : "current-password",
+            autoComplete:
+              type === "signup" ? "new-password" : "current-password",
           }}
         />
       </div>
 
       {type === "signup" ? (
         <p>
-          <Link className="text-cax-brand underline" onClick={onRequestCloseModal} to="/terms">
+          <Link
+            className="text-cax-brand underline"
+            onClick={onRequestCloseModal}
+            to="/terms"
+          >
             利用規約
           </Link>
           に同意して

@@ -5,7 +5,10 @@ interface Options {
   extension: string;
 }
 
-export async function convertSound(file: File, options: Options): Promise<Blob> {
+export async function convertSound(
+  file: File,
+  options: Options,
+): Promise<Blob> {
   const ffmpeg = await loadFFmpeg();
 
   const exportFile = `export.${options.extension}`;

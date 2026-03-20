@@ -8,7 +8,10 @@ interface Options {
 /**
  * 先頭 5 秒のみ、正方形にくり抜かれた無音動画を作成します
  */
-export async function convertMovie(file: File, options: Options): Promise<Blob> {
+export async function convertMovie(
+  file: File,
+  options: Options,
+): Promise<Blob> {
   const ffmpeg = await loadFFmpeg();
 
   const cropOptions = [

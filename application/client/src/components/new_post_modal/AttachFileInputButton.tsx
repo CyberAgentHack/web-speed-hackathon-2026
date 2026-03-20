@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { ChangeEventHandler, ReactNode } from "react";
+import type { ChangeEventHandler, ReactNode } from "react";
 
 interface Props {
   accept: string;

@@ -8,7 +8,9 @@ interface Props {
 
 export const ModalErrorMessage = ({ children }: Props) => {
   return (
-    <span className={classNames("block text-cax-danger", { hidden: !children })}>
+    <span
+      className={classNames("block text-cax-danger", { hidden: !children })}
+    >
       <span className="mr-1">
         <FontAwesomeIcon iconType="exclamation-circle" styleType="solid" />
       </span>

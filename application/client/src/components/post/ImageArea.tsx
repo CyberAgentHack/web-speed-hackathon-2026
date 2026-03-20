@@ -20,8 +20,10 @@ export const ImageArea = ({ images }: Props) => {
               className={classNames("bg-cax-surface-subtle", {
                 "col-span-1": images.length !== 1,
                 "col-span-2": images.length === 1,
-                "row-span-1": images.length > 2 && (images.length !== 3 || idx !== 0),
-                "row-span-2": images.length <= 2 || (images.length === 3 && idx === 0),
+                "row-span-1":
+                  images.length > 2 && (images.length !== 3 || idx !== 0),
+                "row-span-2":
+                  images.length <= 2 || (images.length === 3 && idx === 0),
               })}
             >
               <CoveredImage src={getImagePath(image.id)} />

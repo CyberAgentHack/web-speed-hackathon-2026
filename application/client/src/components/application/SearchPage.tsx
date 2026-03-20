@@ -1,13 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { Field, InjectedFormProps, reduxForm, WrappedFieldProps } from "redux-form";
+import type {
+  InjectedFormProps,
+  WrappedFieldProps} from "redux-form";
+import {
+  Field,
+  reduxForm
+} from "redux-form";
 
 import { Timeline } from "@web-speed-hackathon-2026/client/src/components/timeline/Timeline";
 import {
   parseSearchQuery,
   sanitizeSearchText,
 } from "@web-speed-hackathon-2026/client/src/search/services";
-import { SearchFormData } from "@web-speed-hackathon-2026/client/src/search/types";
+import type { SearchFormData } from "@web-speed-hackathon-2026/client/src/search/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/search/validation";
 import { analyzeSentiment } from "@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer";
 
@@ -117,8 +123,12 @@ const SearchPageComponent = ({
         <article className="hover:bg-cax-surface-subtle px-1 sm:px-4">
           <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
             <div>
-              <p className="text-cax-text text-lg font-bold">どしたん話聞こうか?</p>
-              <p className="text-cax-text-muted">言わなくてもいいけど、言ってもいいよ。</p>
+              <p className="text-cax-text text-lg font-bold">
+                どしたん話聞こうか?
+              </p>
+              <p className="text-cax-text-muted">
+                言わなくてもいいけど、言ってもいいよ。
+              </p>
             </div>
           </div>
         </article>

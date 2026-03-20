@@ -1,7 +1,16 @@
+import { Buffer } from "buffer";
 import classNames from "classnames";
 import sizeOf from "image-size";
 import { load, ImageIFD } from "piexifjs";
-import { MouseEvent, RefCallback, useCallback, useId, useMemo, useState } from "react";
+import type {
+  MouseEvent,
+  RefCallback} from "react";
+import {
+  useCallback,
+  useId,
+  useMemo,
+  useState,
+} from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
@@ -25,13 +34,16 @@ export const CoveredImage = ({ src }: Props) => {
   const { data, isLoading } = useFetch(src, fetchBinary);
 
   const imageSize = useMemo(() => {
-    return data != null ? sizeOf(Buffer.from(data)) : { height: 0, width: 0 };
+    return data != null ? sizeOf(new Uint8Array(data)) : { height: 0, width: 0 };
   }, [data]);
 
   const alt = useMemo(() => {
-    const exif = data != null ? load(Buffer.from(data).toString("binary")) : null;
+    const exif =
+      data != null ? load(Buffer.from(new Uint8Array(data)).toString("binary")) : null;
     const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-    return raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
+    return raw != null
+      ? new TextDecoder().decode(Buffer.from(raw, "binary"))
+      : "";
   }, [data]);
 
   const blobUrl = useMemo(() => {

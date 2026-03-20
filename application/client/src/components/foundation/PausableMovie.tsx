@@ -1,7 +1,8 @@
 import classNames from "classnames";
 import { Animator, Decoder } from "gifler";
 import { GifReader } from "omggif";
-import { RefCallback, useCallback, useRef, useState } from "react";
+import type { RefCallback} from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -82,7 +83,10 @@ export const PausableMovie = ({ src }: Props) => {
             },
           )}
         >
-          <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
+          <FontAwesomeIcon
+            iconType={isPlaying ? "pause" : "play"}
+            styleType="solid"
+          />
         </div>
       </button>
     </AspectRatioBox>

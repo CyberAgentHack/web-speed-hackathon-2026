@@ -1,18 +1,19 @@
 import classNames from "classnames";
 import moment from "moment";
-import {
+import type {
   ChangeEvent,
+  KeyboardEvent,
+  FormEvent} from "react";
+import {
   useCallback,
   useId,
   useRef,
   useState,
-  KeyboardEvent,
-  FormEvent,
   useEffect,
 } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
+import type { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
@@ -38,7 +39,9 @@ export const DirectMessagePage = ({
   const textAreaId = useId();
 
   const peer =
-    conversation.initiator.id !== activeUser.id ? conversation.initiator : conversation.member;
+    conversation.initiator.id !== activeUser.id
+      ? conversation.initiator
+      : conversation.member;
 
   const [text, setText] = useState("");
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
@@ -55,7 +58,11 @@ export const DirectMessagePage = ({
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLTextAreaElement>) => {
-      if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+      if (
+        event.key === "Enter" &&
+        !event.shiftKey &&
+        !event.nativeEvent.isComposing
+      ) {
         event.preventDefault();
         formRef.current?.requestSubmit();
       }
@@ -75,7 +82,9 @@ export const DirectMessagePage = ({
 
   useEffect(() => {
     const id = setInterval(() => {
-      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
+      const height = Number(
+        window.getComputedStyle(document.body).height.replace("px", ""),
+      );
       if (height !== scrollHeightRef.current) {
         scrollHeightRef.current = height;
         window.scrollTo(0, height);
@@ -88,7 +97,9 @@ export const DirectMessagePage = ({
   if (conversationError != null) {
     return (
       <section className="px-6 py-10">
-        <p className="text-cax-danger text-sm">メッセージの取得に失敗しました</p>
+        <p className="text-cax-danger text-sm">
+          メッセージの取得に失敗しました
+        </p>
       </section>
     );
   }

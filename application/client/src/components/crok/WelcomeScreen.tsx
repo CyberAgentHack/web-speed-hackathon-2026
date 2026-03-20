@@ -7,7 +7,9 @@ export const WelcomeScreen = () => {
         <CrokLogo className="h-full w-full" />
       </div>
       <h1 className="text-cax-text mb-2 text-2xl font-bold">Crok AI</h1>
-      <p className="text-cax-text-muted mb-8">AIアシスタントに質問してみましょう</p>
+      <p className="text-cax-text-muted mb-8">
+        AIアシスタントに質問してみましょう
+      </p>
     </div>
   );
 };
