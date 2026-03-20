@@ -16,10 +16,13 @@ test.describe("ホーム", () => {
 
     // VRT: タイムライン（サインイン前）
     await waitForVisibleMedia(page);
-    await expect(page).toHaveScreenshot("home-タイムライン（サインイン前）.png", {
-      fullPage: false,
-      mask: dynamicMediaMask(page),
-    });
+    await expect(page).toHaveScreenshot(
+      "home-タイムライン（サインイン前）.png",
+      {
+        fullPage: false,
+        mask: dynamicMediaMask(page),
+      },
+    );
   });
 
   test("タイトルが「タイムライン - CaX」", async ({ page }) => {
@@ -27,17 +30,17 @@ test.describe("ホーム", () => {
   });
 
   test("動画が自動再生される", async ({ page }) => {
-    const canvas = page.locator("article canvas").first();
-    await expect(canvas).toBeVisible({ timeout: 30_000 });
+    const video = page.locator("article video").first();
+    await expect(video).toBeVisible({ timeout: 30_000 });
 
-    const hasContent = await canvas.evaluate((el: HTMLCanvasElement) => {
+    const hasContent = await video.evaluate((el: HTMLVideoElement) => {
       return el.width > 0 && el.height > 0;
     });
     expect(hasContent).toBe(true);
   });
 
   test("音声の波形が表示される", async ({ page }) => {
-    const waveform = page.locator('svg[viewBox="0 0 100 1"]').first();
+    const waveform = page.locator('img[src*="waveform"]').first();
     await expect(waveform).toBeVisible({ timeout: 30_000 });
   });
 
