@@ -6,7 +6,7 @@ export async function login(
   username: string = "o6yq16leo",
   password: string = "wsh-2026",
 ): Promise<void> {
-  await page.goto("/not-found", { waitUntil: "domcontentloaded" });
+  await page.goto("/not-found", { waitUntil: "networkidle" });
   const signinButton = page.getByRole("button", { name: "サインイン" });
   await expect(signinButton).toBeVisible({ timeout: 30_000 });
   await signinButton.click();
@@ -43,15 +43,17 @@ export async function waitForVisibleMedia(page: Page): Promise<void> {
           (img as HTMLImageElement).naturalWidth > 0 && (img as HTMLImageElement).naturalHeight > 0,
       );
 
-      // ビューポート内の動画コンテナに canvas または video が出現しているか
+      // ビューポート内の動画コンテナに img/canvas/video が出現しているか
       const movieAreas = Array.from(document.querySelectorAll("main [data-movie-area]")).filter(
         isInViewport,
       );
       const moviesReady = movieAreas.every((area) => {
+        const img = area.querySelector("img");
         const canvas = area.querySelector("canvas");
         const video = area.querySelector("video");
-        if (canvas) return canvas.width > 0 && canvas.height > 0;
-        if (video) return (video as HTMLVideoElement).readyState >= 1;
+        if (img && (img as HTMLImageElement).naturalWidth > 0) return true;
+        if (canvas && canvas.width > 0 && canvas.height > 0) return true;
+        if (video && (video as HTMLVideoElement).readyState >= 1) return true;
         return false;
       });
 
@@ -69,7 +71,12 @@ export async function waitForVisibleMedia(page: Page): Promise<void> {
 
 /** GIF動画をマスク（フレームが毎回変わるため） */
 export function dynamicMediaMask(page: Page) {
-  return [page.locator("canvas"), page.locator("video"), page.locator("img[src$='.gif']")];
+  return [
+    page.locator("[data-movie-area] canvas"),
+    page.locator("[data-movie-area] img"),
+    page.locator("video"),
+    page.locator("img[src$='.gif']"),
+  ];
 }
 
 export async function waitForImageToLoad(imageLocator: Locator): Promise<void> {

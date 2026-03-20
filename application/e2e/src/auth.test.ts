@@ -3,11 +3,24 @@ import { expect, test } from "@playwright/test";
 test.describe("サインイン・新規登録", () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
-    await page.goto("/not-found", { waitUntil: "domcontentloaded" });
+    await page.goto("/not-found", { waitUntil: "networkidle" });
     const signinButton = page.getByRole("button", { name: "サインイン" });
     await expect(signinButton).toBeVisible({ timeout: 30_000 });
     await signinButton.click();
     await page.getByRole("heading", { name: "サインイン" }).waitFor({ timeout: 30_000 });
+  });
+
+  test("サインインモーダルが表示される", async ({ page }) => {
+    // VRT: サインインモーダル初期状態
+    await expect(page).toHaveScreenshot("auth-サインインモーダル.png");
+  });
+
+  test("新規登録モーダルが表示される", async ({ page }) => {
+    await page.getByRole("button", { name: "初めての方はこちら" }).click();
+    await page.getByRole("heading", { name: "新規登録" }).waitFor({ timeout: 30_000 });
+
+    // VRT: 新規登録モーダル初期状態
+    await expect(page).toHaveScreenshot("auth-新規登録モーダル.png");
   });
 
   test("新規登録ができる", async ({ page }) => {
@@ -40,6 +53,9 @@ test.describe("サインイン・新規登録", () => {
     ).toBeVisible({
       timeout: 30_000,
     });
+
+    // VRT: バリデーションエラー状態
+    await expect(page).toHaveScreenshot("auth-新規登録バリデーションエラー.png");
   });
 
   test("既に使われているユーザー名で登録するとエラーが表示される", async ({ page }) => {
@@ -55,6 +71,9 @@ test.describe("サインイン・新規登録", () => {
 
     // エラーメッセージが表示される
     await expect(page.getByText("ユーザー名が使われています")).toBeVisible({ timeout: 30_000 });
+
+    // VRT: サーバーエラー状態
+    await expect(page).toHaveScreenshot("auth-ユーザー名重複エラー.png");
   });
 
   test("未入力の場合はボタンが無効化されている", async ({ page }) => {
@@ -85,5 +104,8 @@ test.describe("サインイン・新規登録", () => {
 
     // エラーメッセージが表示される
     await expect(page.getByText("パスワードが異なります")).toBeVisible({ timeout: 30_000 });
+
+    // VRT: サインイン失敗エラー状態
+    await expect(page).toHaveScreenshot("auth-サインイン失敗エラー.png");
   });
 });

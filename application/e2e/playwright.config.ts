@@ -24,7 +24,17 @@ export default defineConfig({
     {
       name: "Desktop Chrome",
       testMatch: "**/src/**/*.test.ts",
-      use: { ...devices["Desktop Chrome"], channel: "chrome" },
+      use: {
+        ...devices["Desktop Chrome"],
+        ...(process.env["CHROMIUM_PATH"]
+          ? {
+              launchOptions: {
+                executablePath: process.env["CHROMIUM_PATH"],
+                args: ["--no-sandbox"],
+              },
+            }
+          : { channel: "chrome" }),
+      },
     },
   ],
   reporter: "list",

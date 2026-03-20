@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { dynamicMediaMask, scrollEntire, waitForPageToLoad, waitForVisibleMedia } from "./utils";
+import { dynamicMediaMask, scrollEntire, waitForVisibleMedia } from "./utils";
 
 test.describe("ホーム", () => {
   test.beforeEach(async ({ page }) => {
@@ -16,7 +16,6 @@ test.describe("ホーム", () => {
 
     // VRT: タイムライン（サインイン前）
     await waitForVisibleMedia(page);
-    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("home-タイムライン（サインイン前）.png", {
       fullPage: false,
       mask: dynamicMediaMask(page),
@@ -28,11 +27,17 @@ test.describe("ホーム", () => {
   });
 
   test("動画が自動再生される", async ({ page }) => {
-    const videoPlayer = page.locator('article button[aria-label="動画プレイヤー"]').first();
+    // PausableMovie: GIF を <img> で表示 (再生中)、一時停止時は canvas にキャプチャ
+    const movieArea = page.locator("[data-movie-area]").first();
+    await expect(movieArea).toBeVisible({ timeout: 30_000 });
 
-    await waitForVisibleMedia(page);
+    const movieImg = movieArea.locator("img").first();
+    await expect(movieImg).toBeVisible({ timeout: 30_000 });
 
-    await expect(videoPlayer).toBeVisible({ timeout: 30_000 });
+    const hasContent = await movieImg.evaluate((el: HTMLImageElement) => {
+      return el.naturalWidth > 0 && el.naturalHeight > 0;
+    });
+    expect(hasContent).toBe(true);
   });
 
   test("音声の波形が表示される", async ({ page }) => {
@@ -44,10 +49,10 @@ test.describe("ホーム", () => {
     const coveredImage = page.locator("article .grid img").first();
     await expect(coveredImage).toBeVisible({ timeout: 30_000 });
 
-    const position = await coveredImage.evaluate((el) => {
-      return window.getComputedStyle(el).position;
+    const objectFit = await coveredImage.evaluate((el) => {
+      return window.getComputedStyle(el).objectFit;
     });
-    expect(position).toBe("absolute");
+    expect(objectFit).toBe("cover");
   });
 
   test("投稿クリック → 投稿詳細に遷移する", async ({ page }) => {
@@ -67,7 +72,6 @@ test.describe("404ページ", () => {
 
     // VRT: 404
     await waitForVisibleMedia(page);
-    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("home-404.png", {
       fullPage: true,
       mask: dynamicMediaMask(page),

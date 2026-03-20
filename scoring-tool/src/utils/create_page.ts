@@ -13,9 +13,10 @@ type Params = {
 export async function createPage({ device }: Params) {
   const userDataDir = await fs.mkdtemp(path.resolve(os.tmpdir(), "playwright-"));
 
+  const chromiumPath = process.env["CHROMIUM_PATH"] || "chromium";
   const playwrightContext = await playwright.chromium.launchPersistentContext(userDataDir, {
     args: ["--remote-debugging-port=9222"],
-    channel: "chrome",
+    executablePath: chromiumPath,
     devtools: false,
     headless: !debug.enabled("wsh:browser"),
     ...device,

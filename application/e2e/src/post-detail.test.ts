@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { dynamicMediaMask, waitForPageToLoad, waitForVisibleMedia } from "./utils";
+import { dynamicMediaMask, waitForVisibleMedia } from "./utils";
 
 test.describe("投稿詳細", () => {
   test.beforeEach(async ({ page }) => {
@@ -19,7 +19,6 @@ test.describe("投稿詳細", () => {
 
     // VRT: 投稿詳細
     await waitForVisibleMedia(page);
-    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("post-detail-投稿詳細.png", {
       mask: dynamicMediaMask(page),
     });
@@ -43,26 +42,26 @@ test.describe("投稿詳細 - 動画", () => {
 
   test("動画が自動再生され、クリックで一時停止・再生を切り替えられる", async ({ page }) => {
     await page.goto("/");
-    const movieArticle = page.locator('article:has(button[aria-label="動画プレイヤー"])').first();
+    const movieArticle = page.locator("article:has([data-movie-area])").first();
     await expect(movieArticle).toBeVisible({ timeout: 30_000 });
     await movieArticle.locator("time").first().click();
     await page.waitForURL("**/posts/*", { timeout: 30_000 });
 
-    const videoPlayer = page.locator('button[aria-label="動画プレイヤー"]').first();
-    await expect(videoPlayer).toBeVisible({ timeout: 30_000 });
+    const movieArea = page.locator("[data-movie-area]").first();
+    await expect(movieArea).toBeVisible({ timeout: 30_000 });
 
     // VRT: 動画再生中
     await waitForVisibleMedia(page);
-    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("post-detail-動画再生中.png", {
       mask: dynamicMediaMask(page),
     });
 
     // クリックで一時停止
-    await videoPlayer.click();
+    const movieButton = movieArea.locator("button").first();
+    await movieButton.click();
 
     // 再度クリックして再生再開
-    await videoPlayer.click();
+    await movieButton.click();
   });
 });
 
@@ -83,7 +82,6 @@ test.describe("投稿詳細 - 音声", () => {
 
     // VRT: 音声（再生前）
     await waitForVisibleMedia(page);
-    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("post-detail-音声再生前.png", {
       mask: dynamicMediaMask(page),
     });
@@ -113,17 +111,16 @@ test.describe("投稿詳細 - 写真", () => {
     const coveredImage = page.locator(".grid img").first();
     await expect(coveredImage).toBeVisible({ timeout: 30_000 });
 
-    const position = await coveredImage.evaluate((el) => {
-      return window.getComputedStyle(el).position;
+    const objectFit = await coveredImage.evaluate((el) => {
+      return window.getComputedStyle(el).objectFit;
     });
-    expect(position).toBe("absolute");
+    expect(objectFit).toBe("cover");
 
     const naturalWidth = await coveredImage.evaluate((el: HTMLImageElement) => el.naturalWidth);
     expect(naturalWidth).toBeGreaterThan(100);
 
     // VRT: 写真投稿詳細
     await waitForVisibleMedia(page);
-    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("post-detail-写真.png", {
       mask: dynamicMediaMask(page),
     });
