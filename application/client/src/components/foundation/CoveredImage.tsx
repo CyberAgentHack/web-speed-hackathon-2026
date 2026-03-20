@@ -1,4 +1,4 @@
-import { MouseEvent, useCallback, useId, useState } from "react";
+import { MouseEvent, useCallback, useRef, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
@@ -10,20 +10,38 @@ interface Props {
   src: string;
 }
 
+const sanitizeAltText = (value: string): string => {
+  // DOM 属性に設定できない制御文字を除去する
+  return value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "");
+};
+
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
 export const CoveredImage = ({ src, alt, priority = false }: Props) => {
-  const dialogId = useId();
+  const dialogRef = useRef<HTMLDialogElement>(null);
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
     ev.stopPropagation();
   }, []);
 
-  const [resolvedAlt, setResolvedAlt] = useState(alt);
+  const [resolvedAlt, setResolvedAlt] = useState(sanitizeAltText(alt));
   const [isLoadingAlt, setIsLoadingAlt] = useState(false);
+
+  const handleOpenDialog = useCallback((ev: MouseEvent<HTMLButtonElement>) => {
+    ev.stopPropagation();
+    if (dialogRef.current && !dialogRef.current.open) {
+      dialogRef.current.showModal();
+    }
+  }, []);
+
+  const handleCloseDialog = useCallback((ev: MouseEvent<HTMLButtonElement>) => {
+    ev.stopPropagation();
+    dialogRef.current?.close();
+  }, []);
+
   const handleLoadAlt = useCallback(() => {
-    if (resolvedAlt !== "" || isLoadingAlt) {
+    if (resolvedAlt !== "" || isLoadingAlt || src.trim() === "") {
       return;
     }
 
@@ -42,13 +60,21 @@ export const CoveredImage = ({ src, alt, priority = false }: Props) => {
         const decoded = new TextDecoder().decode(
           Uint8Array.from(raw, (char) => char.charCodeAt(0)),
         );
-        setResolvedAlt(decoded);
+        setResolvedAlt(sanitizeAltText(decoded));
       })
       .catch(() => undefined)
       .finally(() => {
         setIsLoadingAlt(false);
       });
   }, [isLoadingAlt, resolvedAlt, src]);
+
+  const handleShowAltClick = useCallback(
+    (ev: MouseEvent<HTMLButtonElement>) => {
+      handleOpenDialog(ev);
+      handleLoadAlt();
+    },
+    [handleLoadAlt, handleOpenDialog],
+  );
 
   return (
     <div className="relative h-full w-full overflow-hidden">
@@ -63,21 +89,19 @@ export const CoveredImage = ({ src, alt, priority = false }: Props) => {
 
       <button
         className="border-cax-border bg-cax-surface-raised/90 text-cax-text-muted hover:bg-cax-surface absolute right-1 bottom-1 rounded-full border px-2 py-1 text-center text-xs"
-        onClick={handleLoadAlt}
+        onClick={handleShowAltClick}
         type="button"
-        command="show-modal"
-        commandfor={dialogId}
       >
         ALT を表示する
       </button>
 
-      <Modal id={dialogId} closedby="any" onClick={handleDialogClick}>
+      <Modal closedby="any" onClick={handleDialogClick} ref={dialogRef}>
         <div className="grid gap-y-6">
           <h1 className="text-center text-2xl font-bold">画像の説明</h1>
 
           <p className="text-sm">{isLoadingAlt ? "読み込み中..." : resolvedAlt}</p>
 
-          <Button variant="secondary" command="close" commandfor={dialogId}>
+          <Button onClick={handleCloseDialog} variant="secondary">
             閉じる
           </Button>
         </div>
