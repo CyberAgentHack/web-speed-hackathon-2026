@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode } from "react";
 
 interface Props {
   aspectHeight: number;
@@ -10,25 +10,9 @@ interface Props {
  * 親要素の横幅を基準にして、指定したアスペクト比のブロック要素を作ります
  */
 export const AspectRatioBox = ({ aspectHeight, aspectWidth, children }: Props) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [clientHeight, setClientHeight] = useState(0);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    function calcStyle() {
-      const clientWidth = ref.current?.clientWidth ?? 0;
-      setClientHeight((clientWidth / aspectWidth) * aspectHeight);
-    }
-    const observer = new ResizeObserver(() => calcStyle());
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [aspectHeight, aspectWidth]);
-
   return (
-    <div ref={ref} className="relative h-1 w-full" style={{ height: clientHeight }}>
-      {/* 高さが計算できるまで render しない */}
-      {clientHeight !== 0 ? <div className="absolute inset-0">{children}</div> : null}
+    <div className="relative w-full" style={{ aspectRatio: `${aspectWidth} / ${aspectHeight}` }}>
+      <div className="absolute inset-0">{children}</div>
     </div>
   );
 };
