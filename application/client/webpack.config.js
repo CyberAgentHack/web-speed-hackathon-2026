@@ -36,7 +36,7 @@ const config = {
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: process.env.NODE_ENV === "development" ? "development" : "production",
   module: {
     rules: [
       {
@@ -128,14 +128,12 @@ const config = {
     },
   },
   optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
+    minimize: process.env.NODE_ENV !== "development",
+    splitChunks: {
+      chunks: "all",
+    },
   },
-  cache: false,
+  cache: process.env.NODE_ENV === "development",
   ignoreWarnings: [
     {
       module: /@ffmpeg/,
