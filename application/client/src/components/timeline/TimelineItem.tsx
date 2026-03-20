@@ -1,4 +1,3 @@
-import moment from "moment";
 import { MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
@@ -29,6 +28,12 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
 interface Props {
   post: Models.Post;
 }
+
+const dateFormatter = new Intl.DateTimeFormat("ja-JP", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
 
 export const TimelineItem = ({ post }: Props) => {
   const navigate = useNavigate();
@@ -76,8 +81,8 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={new Date(post.createdAt).toISOString()}>
+                {dateFormatter.format(new Date(post.createdAt))}
               </time>
             </Link>
           </p>
