@@ -13,9 +13,13 @@ export const DirectMessageNotificationBadge = () => {
   const [unreadCount, updateUnreadCount] = useState(0);
   const displayCount = unreadCount > 99 ? "99+" : String(unreadCount);
 
-  useWs("/api/v1/dm/unread", (event: DmUnreadEvent) => {
-    updateUnreadCount(event.payload.unreadCount);
-  });
+  useWs(
+    "/api/v1/dm/unread",
+    (event: DmUnreadEvent) => {
+      updateUnreadCount(event.payload.unreadCount);
+    },
+    { delayMs: 5000 },
+  );
 
   if (unreadCount === 0) {
     return null;

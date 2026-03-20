@@ -37,9 +37,13 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     void loadConversations();
   }, [loadConversations]);
 
-  useWs("/api/v1/dm/unread", () => {
-    void loadConversations();
-  });
+  useWs(
+    "/api/v1/dm/unread",
+    () => {
+      void loadConversations();
+    },
+    { delayMs: 5000 },
+  );
 
   if (conversations == null) {
     return null;

@@ -5,12 +5,14 @@ import { BrowserRouter } from "react-router";
 import { AppContainer } from "@web-speed-hackathon-2026/client/src/containers/AppContainer";
 import { store } from "@web-speed-hackathon-2026/client/src/store";
 
-window.addEventListener("load", () => {
-  createRoot(document.getElementById("app")!).render(
+const appNode = document.getElementById("app");
+
+if (appNode != null) {
+  createRoot(appNode).render(
     <Provider store={store}>
       <BrowserRouter>
         <AppContainer />
       </BrowserRouter>
     </Provider>,
   );
-});
+}
