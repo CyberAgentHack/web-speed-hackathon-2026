@@ -1,4 +1,4 @@
-import { Comment, Post, User } from "@web-speed-hackathon-2026/server/src/models";
+import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
 
 const INITIAL_LIMIT = 30;
 
@@ -43,11 +43,6 @@ export async function fetchSSRData(
       if (post) {
         routeData[`/api/v1/posts/${postId}`] = post.toJSON();
       }
-      const comments = await Comment.scope("withUser").findAll({
-        where: { postId },
-        limit: INITIAL_LIMIT,
-      });
-      routeData[`/api/v1/posts/${postId}/comments`] = comments.map((c) => c.toJSON());
     }
 
     // User profile page: /users/:username
