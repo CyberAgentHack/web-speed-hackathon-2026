@@ -39,39 +39,3 @@ https://github.com/CyberAgentHack/web-speed-hackathon-2026/issues/new?template=a
 
 ローカルで計測する方法は [./scoring-tool/README.md](./scoring-tool/README.md) を参照してください。
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## ライセンス
-
-- Code
-  - MPL-2.0 by CyberAgent, Inc.
-- Sounds
-  - シャイニングスター: CC BY 3.0 by 魔王魂 https://maou.audio/
-  - その他: CC0 1.0 by https://freepd.com/
-- Images
-  - Unsplash License by https://unsplash.com/
-- Videos
-  - Big Buck Bunny: CC BY 3.0 by Blender Foundation https://peach.blender.org/
-  - 姫路城: Pixabay Content License by https://pixabay.com/
-- Fonts
-  - 例のアレ明朝: OFL 1.1 by CyberAgent, Inc.
-    - (Original Font) Source Han Serif JP: OFT 1.1 by Adobe http://www.adobe.com/
-- Text
-  - 太宰治『走れメロス』（1940年）
