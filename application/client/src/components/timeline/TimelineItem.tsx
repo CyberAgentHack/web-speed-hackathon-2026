@@ -72,7 +72,7 @@ export const TimelineItem = ({ post, prioritizeImage = false }: Props) => {
             <AvatarImage
               alt={post.user.profileImage.alt}
               className="h-full w-full"
-              loading="eager"
+              loading={prioritizeImage ? "eager" : "lazy"}
               size={64}
               src={getProfileImagePath(post.user.profileImage.id, "avatar")}
             />

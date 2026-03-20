@@ -48,20 +48,21 @@ export function initPost(sequelize: Sequelize) {
       ],
       defaultScope: {
         attributes: {
-          exclude: ["userId", "movieId", "soundId"],
+          exclude: ["userId", "movieId", "soundId", "updatedAt"],
         },
         include: [
           {
             association: "user",
-            attributes: { exclude: ["profileImageId"] },
-            include: [{ association: "profileImage" }],
+            attributes: ["id", "name", "username"],
+            include: [{ association: "profileImage", attributes: ["id", "alt"] }],
           },
           {
             association: "images",
+            attributes: ["id", "alt"],
             through: { attributes: [] },
           },
-          { association: "movie" },
-          { association: "sound" },
+          { association: "movie", attributes: ["id"] },
+          { association: "sound", attributes: ["artist", "id", "title"] },
         ],
         order: [
           ["id", "DESC"],
