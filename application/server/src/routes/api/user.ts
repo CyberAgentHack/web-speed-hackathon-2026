@@ -60,8 +60,8 @@ userRouter.get("/users/:username/posts", async (req, res) => {
   }
 
   const posts = await Post.findAll({
-    limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
-    offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
+    limit: req.query["limit"] != null ? Number(req.query["limit"]) : 30,
+    offset: req.query["offset"] != null ? Number(req.query["offset"]) : 0,
     where: {
       userId: user.id,
     },
