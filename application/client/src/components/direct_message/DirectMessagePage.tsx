@@ -74,15 +74,19 @@ export const DirectMessagePage = ({
   );
 
   useEffect(() => {
-    const id = setInterval(() => {
+    let rafId: number | null = null;
+    const scroll = () => {
       const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
       if (height !== scrollHeightRef.current) {
         scrollHeightRef.current = height;
         window.scrollTo(0, height);
       }
-    }, 1);
-
-    return () => clearInterval(id);
+      rafId = requestAnimationFrame(scroll);
+    };
+    rafId = requestAnimationFrame(scroll);
+    return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
   }, []);
 
   if (conversationError != null) {
@@ -125,6 +129,7 @@ export const DirectMessagePage = ({
 
             return (
               <li
+                key={message.id}
                 className={classNames(
                   "flex flex-col w-full",
                   isActiveUserSend ? "items-end" : "items-start",
