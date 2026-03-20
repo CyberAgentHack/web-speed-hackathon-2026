@@ -1,4 +1,4 @@
-import { Suspense, lazy, useCallback, useEffect, useId, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useState } from "react";
 import { Helmet, HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
@@ -61,8 +61,8 @@ export const AppContainer = () => {
     navigate("/");
   }, [navigate]);
 
-  const authModalId = useId();
-  const newPostModalId = useId();
+  const authModalId = "auth-modal";
+  const newPostModalId = "new-post-modal";
 
   if (isLoadingActiveUser) {
     return (

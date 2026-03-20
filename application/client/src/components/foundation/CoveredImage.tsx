@@ -1,6 +1,5 @@
 import classNames from "classnames";
 import sizeOf from "image-size";
-import { load, ImageIFD } from "piexifjs";
 import { MouseEvent, RefCallback, useCallback, useId, useMemo, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -9,13 +8,59 @@ import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
+  alt?: string;
   src: string;
+}
+
+function readJpegImageDescription(buffer: ArrayBuffer): string {
+  const view = new DataView(buffer);
+  let offset = 2; // Skip FF D8 SOI
+
+  while (offset + 4 < view.byteLength) {
+    if (view.getUint8(offset) !== 0xff) break;
+    const marker = view.getUint8(offset + 1);
+    const segLen = view.getUint16(offset + 2);
+
+    if (marker === 0xe1) {
+      // APP1: check for "Exif\0\0"
+      const exifMagic = String.fromCharCode(
+        view.getUint8(offset + 4),
+        view.getUint8(offset + 5),
+        view.getUint8(offset + 6),
+        view.getUint8(offset + 7),
+      );
+      if (exifMagic === "Exif") {
+        const tiffStart = offset + 10;
+        const byteOrder = view.getUint16(tiffStart);
+        const le = byteOrder === 0x4949;
+        const getU16 = (o: number) => view.getUint16(tiffStart + o, le);
+        const getU32 = (o: number) => view.getUint32(tiffStart + o, le);
+
+        const ifdOffset = getU32(4);
+        const entryCount = getU16(ifdOffset);
+
+        for (let i = 0; i < entryCount; i++) {
+          const e = ifdOffset + 2 + i * 12;
+          if (getU16(e) === 0x010e) {
+            // ImageDescription
+            const count = getU32(e + 4);
+            const valOffset = count <= 4 ? e + 8 : getU32(e + 8);
+            const bytes = new Uint8Array(buffer, tiffStart + valOffset, count - 1);
+            return new TextDecoder().decode(bytes);
+          }
+        }
+      }
+    }
+    if (marker === 0xda) break; // SOS
+    offset += 2 + segLen;
+  }
+  return "";
 }
 
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
-export const CoveredImage = ({ src }: Props) => {
+export const CoveredImage = ({ alt: altFallback = "", src }: Props) => {
   const dialogId = useId();
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
@@ -29,10 +74,8 @@ export const CoveredImage = ({ src }: Props) => {
   }, [data]);
 
   const alt = useMemo(() => {
-    const exif = data != null ? load(Buffer.from(data).toString("binary")) : null;
-    const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-    return raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
-  }, [data]);
+    return (data != null ? readJpegImageDescription(data) : "") || altFallback;
+  }, [data, altFallback]);
 
   const blobUrl = useMemo(() => {
     return data != null ? URL.createObjectURL(new Blob([data])) : null;

@@ -104,11 +104,6 @@ const config = {
     alias: {
       "bayesian-bm25$": path.resolve(__dirname, "node_modules", "bayesian-bm25/dist/index.js"),
       ["kuromoji$"]: path.resolve(__dirname, "node_modules", "kuromoji/build/kuromoji.js"),
-      "@imagemagick/magick-wasm/magick.wasm$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@imagemagick/magick-wasm/dist/magick.wasm",
-      ),
     },
     fallback: {
       fs: false,
@@ -136,7 +131,7 @@ const config = {
           enforce: true,
         },
         heavy: {
-          test: /[\\/]node_modules[\\/](@imagemagick|kuromoji|bayesian-bm25|negaposi-analyzer-ja)[\\/]/,
+          test: /[\\/]node_modules[\\/](kuromoji|bayesian-bm25|negaposi-analyzer-ja)[\\/]/,
           name: 'vendor-heavy',
           chunks: 'async',
           priority: 20,
