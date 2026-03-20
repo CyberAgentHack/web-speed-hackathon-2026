@@ -1,12 +1,8 @@
 import classNames from "classnames";
-import { Animator, Decoder } from "gifler";
-import { GifReader } from "omggif";
-import { RefCallback, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
-import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
   src: string;
