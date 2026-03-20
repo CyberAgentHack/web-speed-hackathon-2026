@@ -59,7 +59,7 @@ userRouter.get("/users/:username/posts", async (req, res) => {
     throw new httpErrors.NotFound();
   }
 
-  const posts = await Post.findAll({
+  const posts = await Post.scope("detail").findAll({
     limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
     offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
     where: {
