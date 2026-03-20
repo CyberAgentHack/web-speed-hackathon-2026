@@ -6,6 +6,25 @@
     <title>CaX</title>
   </head>
   <body class="bg-cax-canvas text-cax-text">
-    <div id="app"></div>
+    <div id="app">
+      <!-- スケルトン: React hydration 前に FCP/LCP を発生させる -->
+      <div class="relative z-0 flex justify-center font-sans">
+        <div class="bg-cax-surface text-cax-text flex min-h-screen max-w-full">
+          <aside class="relative z-10">
+            <nav class="border-cax-border bg-cax-surface fixed right-0 bottom-0 left-0 z-10 h-12 border-t lg:relative lg:h-full lg:w-48 lg:border-t-0 lg:border-r"></nav>
+          </aside>
+          <main class="relative z-0 w-screen max-w-screen-sm min-w-0 shrink pb-12 lg:pb-0">
+            <div style="padding:1rem">
+              <div style="height:24px;width:60%;background:#e5e5e5;border-radius:4px;margin-bottom:12px"></div>
+              <div style="height:16px;width:90%;background:#e5e5e5;border-radius:4px;margin-bottom:8px"></div>
+              <div style="height:16px;width:75%;background:#e5e5e5;border-radius:4px;margin-bottom:8px"></div>
+              <div style="height:200px;width:100%;background:#e5e5e5;border-radius:8px;margin-bottom:16px"></div>
+              <div style="height:16px;width:85%;background:#e5e5e5;border-radius:4px;margin-bottom:8px"></div>
+              <div style="height:16px;width:70%;background:#e5e5e5;border-radius:4px"></div>
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
