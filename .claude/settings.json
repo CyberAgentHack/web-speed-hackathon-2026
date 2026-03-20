@@ -16,7 +16,8 @@
       "WebFetch(domain:www.npmjs.com)",
       "WebSearch",
       "WebFetch(domain:github.com)",
-      "Bash(BASE_URL=http://wsh.localhost:1355 pnpm run test)"
+      "Bash(BASE_URL=http://wsh.localhost:1355 pnpm run test)",
+      "Bash(find /Users/kenya.masuko/dev/web-speed-hackathon-2026/application -path */node_modules -prune -o -name *kuromoji* -o -name *dicts*)"
     ]
   },
   "enabledPlugins": {

@@ -62,6 +62,10 @@ cd application && pnpm run format
 - `POST /api/v1/initialize` でDB初期化できること必須
 - コード・ファイルは全て変更可、外部SaaS利用可
 
+## チケット管理
+
+https://github.com/KenyaMasuko/web-speed-hackathon-2026/issues
+
 ## 採点 (1150点満点)
 
 **ページの表示** (9ページ × 100点 = 900点):
