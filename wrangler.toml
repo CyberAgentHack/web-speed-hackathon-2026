@@ -1,4 +1,4 @@
-name = "wsh2026-proxy"
+name = "web-speed-hackathon-2026"
 main = "proxy/index.ts"
 compatibility_date = "2024-01-01"
  
