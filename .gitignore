@@ -224,3 +224,10 @@ application/upload/**
 .claude/*
 doc/*
 CLAUDE.md
+
+# レギュレーション手動テスト（コミット対象外）
+e2e-regulation-test.spec.ts
+playwright.regulation.config.ts
+application/e2e/src/regulation.test.ts
+test-results/
+*.last-run.json
