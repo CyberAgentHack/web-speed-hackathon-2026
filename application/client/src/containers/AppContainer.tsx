@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useId, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useId } from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
@@ -13,7 +14,8 @@ import { SearchContainer } from "@web-speed-hackathon-2026/client/src/containers
 import { TermContainer } from "@web-speed-hackathon-2026/client/src/containers/TermContainer";
 import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
 import { UserProfileContainer } from "@web-speed-hackathon-2026/client/src/containers/UserProfileContainer";
-import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+
+import { getMeQueryOptions, useSignOut } from "../auth/hooks";
 
 export const AppContainer = () => {
   const { pathname } = useLocation();
@@ -22,22 +24,18 @@ export const AppContainer = () => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
-  const [activeUser, setActiveUser] = useState<Models.User | null>(null);
-  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
-  useEffect(() => {
-    void fetchJSON<Models.User>("/api/v1/me")
-      .then((user) => {
-        setActiveUser(user);
-      })
-      .finally(() => {
-        setIsLoadingActiveUser(false);
-      });
-  }, [setActiveUser, setIsLoadingActiveUser]);
-  const handleLogout = useCallback(async () => {
-    await sendJSON("/api/v1/signout", {});
-    setActiveUser(null);
-    navigate("/");
-  }, [navigate]);
+  const { data: me, isLoading: isLoadingActiveUser } = useQuery(getMeQueryOptions());
+  const activeUser = me ?? null;
+  const signOutMutation = useSignOut({
+    mutationConfig: {
+      onSuccess: () => {
+        navigate("/");
+      },
+    },
+  });
+  const handleLogout = async () => {
+    await signOutMutation.mutateAsync();
+  };
 
   const authModalId = useId();
   const newPostModalId = useId();
@@ -78,7 +76,7 @@ export const AppContainer = () => {
         </Routes>
       </AppPage>
 
-      <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
+      <AuthModalContainer id={authModalId} />
       <NewPostModalContainer id={newPostModalId} />
     </>
   );

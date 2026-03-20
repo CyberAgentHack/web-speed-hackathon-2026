@@ -14,6 +14,7 @@
     "@ffmpeg/ffmpeg": "0.12.15",
     "@imagemagick/magick-wasm": "0.0.37",
     "@mlc-ai/web-llm": "0.2.80",
+    "@tanstack/react-query": "5.91.2",
     "@web-speed-hackathon-2026/client": "workspace:*",
     "bayesian-bm25": "0.4.0",
     "bluebird": "3.7.2",

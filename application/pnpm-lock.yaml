@@ -33,6 +33,9 @@ importers:
       '@mlc-ai/web-llm':
         specifier: 0.2.80
         version: 0.2.80
+      '@tanstack/react-query':
+        specifier: 5.91.2
+        version: 5.91.2(react@19.2.0)
       '@web-speed-hackathon-2026/client':
         specifier: workspace:*
         version: 'link:'
@@ -891,6 +894,14 @@ packages:
     resolution: {integrity: sha512-mEiF5HO1QqCLXoNEfXVA1Tzo+cYsrqV7w9Juj2wdUFyW07JRenqMG225MvPwr3ZD9N1bFQj46X7r33iHxLUW0w==}
     peerDependencies:
       vite: ^5.2.0 || ^6 || ^7 || ^8
+
+  '@tanstack/query-core@5.91.2':
+    resolution: {integrity: sha512-Uz2pTgPC1mhqrrSGg18RKCWT/pkduAYtxbcyIyKBhw7dTWjXZIzqmpzO2lBkyWr4hlImQgpu1m1pei3UnkFRWw==}
+
+  '@tanstack/react-query@5.91.2':
+    resolution: {integrity: sha512-GClLPzbM57iFXv+FlvOUL56XVe00PxuTaVEyj1zAObhRiKF008J5vedmaq7O6ehs+VmPHe8+PUQhMuEyv8d9wQ==}
+    peerDependencies:
+      react: ^18 || ^19
 
   '@tokenizer/inflate@0.4.1':
     resolution: {integrity: sha512-2mAv+8pkG6GIZiF1kNg1jAjh27IDxEPKwdGul3snfztFerfPGI1LjDezZp3i7BElXompqEtPmoPx6c2wgtWsOA==}
@@ -3142,6 +3153,13 @@ snapshots:
       '@tailwindcss/oxide': 4.2.2
       tailwindcss: 4.2.2
       vite: 8.0.1(@types/node@22.18.8)(jiti@2.6.1)(tsx@4.20.6)
+
+  '@tanstack/query-core@5.91.2': {}
+
+  '@tanstack/react-query@5.91.2(react@19.2.0)':
+    dependencies:
+      '@tanstack/query-core': 5.91.2
+      react: 19.2.0
 
   '@tokenizer/inflate@0.4.1':
     dependencies:
