@@ -69,7 +69,6 @@ const config = {
       : []),
     new webpack.ProvidePlugin({
       $: "jquery",
-      AudioContext: ["standardized-audio-context", "AudioContext"],
       Buffer: ["buffer", "Buffer"],
       "window.jQuery": "jquery",
     }),

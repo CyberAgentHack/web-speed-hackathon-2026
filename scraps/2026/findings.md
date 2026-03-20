@@ -50,16 +50,25 @@
 | ライブラリ | 理由 | 代替案 |
 | --- | --- | --- |
 | `moment` | ~300KB | `day.js` |
-| `lodash` | ~70KB (全体 import) | ネイティブ JS |
-| `jquery` + `jquery-binarytransport` | ~87KB | `fetch` |
-| `bluebird` | Promise ライブラリ | ネイティブ `Promise` (**対応済み**) |
+| `lodash` | 544 KB (全体 import) | ネイティブ JS (`SoundWaveSVG.tsx` で使用) |
+| `standardized-audio-context` | **466 KB** | 不要 — `AudioContext` はモダンブラウザにネイティブ実装。`webpack.config.js` の `ProvidePlugin` でグローバル注入されている仕込み |
+| `jquery` + `jquery-binarytransport` | 285 + 48 KB | `fetch` に置き換え (`fetchers.ts`) |
+| `bluebird` | 183 KB | `gifler` (→ `PausableMovie.tsx`) の依存として流入。GIF → WebM/MP4 変換で `gifler` ごと除去できる |
+| `moment` | 176 KB | `day.js` |
+| `piexifjs` | 79 KB | `CoveredImage.tsx` で使用。用途要確認 |
 | `kuromoji` | 形態素解析 (辞書込みで重い) | サーバー側に移行 (**対応済み**) |
 | `negaposi-analyzer-ja` | 感情極性分析 | サーバー側に移行 (**対応済み**) |
 | `bayesian-bm25` | BM25 検索 (Crok サジェスト) | サーバー側に移行 (**対応済み**) |
 | `@mlc-ai/web-llm` | フロント LLM 翻訳 | `POST /api/v1/translate` に移行 (**対応済み**) |
-| `react-syntax-highlighter` | シンタックスハイライト (全言語バンドル) | light ビルド化 (**未対応**) |
+| `react-syntax-highlighter` | シンタックスハイライト (全言語バンドル) | `React.lazy` で遅延分離 (**対応済み**) |
 
 `kuromoji` + `negaposi-analyzer-ja` は検索画面の「ネガポジ判定」および Crok のサジェスト絞り込みで使用。
+
+### `fetchers.ts` の仕込み
+
+`fetchers.ts` の全関数が `$.ajax({ async: false })` (同期 XHR) を使用。リクエスト中メインスレッドをブロックするため TBT が大幅に増加する。`fetch` に置き換えれば `jquery` + `jquery-binarytransport` も除去できる。
+
+また `sendJSON` は `pako` で gzip 圧縮したリクエストを送信している (`Content-Encoding: gzip`)。サーバー側の対応状況を確認してから除去すること。
 
 ---
 
