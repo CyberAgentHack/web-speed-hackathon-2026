@@ -6,7 +6,7 @@ import sharp from "sharp";
 const IMAGES_DIR = path.resolve(import.meta.dirname!, "../public/images");
 const PROFILES_DIR = path.join(IMAGES_DIR, "profiles");
 
-const HD_MAX = 1280;
+const HD_MAX = 640;
 const PROFILE_SIZE = 128;
 const MOZJPEG_QUALITY = 80;
 
