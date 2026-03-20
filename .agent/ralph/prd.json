@@ -267,8 +267,8 @@
         "Typecheck passes"
       ],
       "priority": 14,
-      "passes": false,
-      "notes": "Tailwind v4 は PostCSS プラグインまたは @tailwindcss/cli で使える。index.html 内の @theme, @utility, @layer 定義を CSS ファイルに移動する必要がある。"
+      "passes": true,
+      "notes": "2026-03-20 完了。CDN script + <style type=text/tailwindcss> を削除し、index.css に @import 'tailwindcss' + @theme/@utility/@layer を移動。postcss.config.js を @tailwindcss/postcss に変更。rspack conditionNames から 'import' 削除で ESM/CJS interop バグも修正。E2E 27テスト全通過。"
     },
     {
       "id": "US-015",
@@ -284,7 +284,7 @@
       ],
       "priority": 15,
       "passes": false,
-      "notes": ""
+      "notes": "Suspense の fallback={null} を使用すること。CLS を防ぐため、スケルトンではなく null にする（AppPage のヘッダー/ナビは即表示され、メインエリア内にコンテンツが出るだけなのでシフトは起きない）。createBrowserRouter への移行は不要。"
     },
     {
       "id": "US-016",
@@ -382,8 +382,8 @@
         "Typecheck passes"
       ],
       "priority": 21,
-      "passes": false,
-      "notes": "CSS aspect-ratio は Chrome でサポート済み。JS 計算が不要になればTBT改善にも寄与する。"
+      "passes": true,
+      "notes": "2026-03-20 完了。setTimeout(500)・useEffect・useRef・useState・window resize リスナーを全削除。CSS aspect-ratio プロパティで置換。子要素の条件付きレンダリングも廃止し即座にレンダリング。E2Eテスト（動画・音声波形・写真cover）全通過。"
     },
     {
       "id": "US-023",
@@ -433,6 +433,23 @@
       "priority": 22,
       "passes": false,
       "notes": "現在は全静的ファイルに maxAge: 7d が設定されている。ハッシュ付きファイルは immutable で 1年キャッシュにできる。HTML は短いキャッシュにする必要がある。"
+    },
+    {
+      "id": "US-025",
+      "title": "音声波形の事前計算とクライアント fetch 廃止",
+      "description": "開発者として、音声波形（peaks）をサーバーサイドで事前計算し、クライアントでの音声バイナリ fetch + decodeAudioData を完全に廃止したい。",
+      "acceptanceCriteria": [
+        "Sound モデルに peaks カラム（JSON配列）が追加されている",
+        "シード生成時に ffmpeg/ffprobe で peak 配列を計算し、seed データに含まれている",
+        "音声アップロード時にサーバーサイドで peak 検出が行われ、peaks カラムに保存される",
+        "SoundWaveSVG が props で peaks を受け取り、fetch や decodeAudioData を行わない",
+        "音声の波形が正しく表示される",
+        "E2Eテスト（cd application/e2e && pnpm test）が通る",
+        "Typecheck passes"
+      ],
+      "priority": 25,
+      "passes": false,
+      "notes": "現在 SoundWaveSVG はクライアントで音声全体を fetch → AudioContext.decodeAudioData → 100チャンクの平均振幅を計算している。事前計算すればクライアントの音声 fetch と CPU コストを完全に排除できる。"
     }
   ]
 }

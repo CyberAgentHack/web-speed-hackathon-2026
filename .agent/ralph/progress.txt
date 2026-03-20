@@ -415,3 +415,38 @@ Feature: CaX パフォーマンス改善 (ralph/perf-optimization)
 
 ### Commit
 - 459296d feat: [US-013] - SoundPlayer のバイナリ取得廃止と直接 audio 表示
+
+---
+
+## US-014: Tailwind CSS CDN → ビルド時生成
+**Date:** 2026-03-20
+
+### Implementation
+- `index.html` から Tailwind CDN `<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.1">` を削除
+- `index.html` の `<style type="text/tailwindcss">` ブロック（@theme, @utility markdown, @layer base）を `index.css` に移動
+- `index.css` の先頭に `@import "tailwindcss"` を追加（Tailwind v4 PostCSS エントリ）
+- `postcss.config.js` を `postcss-import` + `postcss-preset-env` → `@tailwindcss/postcss` に変更
+- `package.json` に `tailwindcss: 4.2.2` と `@tailwindcss/postcss: 4.2.2` を devDependencies に追加
+- `rspack.config.js` の `conditionNames` から `"import"` を削除（pre-existing ESM/CJS interop バグ修正: `@babel/runtime` ヘルパーが ESM default export で返り、UMD コンシューマー `standardized-audio-context` で `_createClass is not a function` エラーが発生していた）
+
+### Acceptance Criteria Verification
+| Criteria | Test | Result |
+|---|---|---|
+| index.html から Tailwind CDN の script タグが削除 | index.html 確認: CDN script なし | PASS |
+| Tailwind CSS v4 がビルド時に CSS を生成 | main.css 先頭 `/*! tailwindcss v4.2.2 */` 確認 | PASS |
+| index.html 内の style type=text/tailwindcss が通常の CSS として出力 | index.css に移動、PostCSS 経由でビルド | PASS |
+| 全ページのスタイルが正しく適用 | E2E home 7/7, terms 3/3, search 17/17 PASS | PASS |
+| E2E テストが通る | home 7/7, terms 3/3, search 17/17 — 27 passed | PASS |
+| Codex レビュー完了 | 手動レビュー — CDN削除でランタイムCSS生成排除、PostCSS経由ビルド時生成で FCP/LCP 改善、conditionNames 修正で ESM/CJS 互換性回復 | PASS |
+| Typecheck passes | client PASS, server PASS (e2e は既存の videoWidth/videoHeight 型エラーのみ) | PASS |
+
+### Quality Checks
+- `pnpm build`: PASS (compiled in 2.78s)
+- `pnpm typecheck (client)`: PASS
+- `pnpm typecheck (server)`: PASS
+- `pnpm test (e2e terms)`: 3/3 PASS
+- `pnpm test (e2e home)`: 7/7 PASS
+- `pnpm test (e2e search)`: 17/17 PASS
+
+### Commit
+- 3a9d760 feat: [US-014] - Tailwind CSS CDN → ビルド時生成
