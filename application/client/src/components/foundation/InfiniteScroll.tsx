@@ -2,14 +2,20 @@ import { ReactNode, useEffect, useRef } from "react";
 
 interface Props {
   children: ReactNode;
+  hasMore: boolean;
   items: any[];
   fetchMore: () => void;
 }
 
-export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
+export const InfiniteScroll = ({ children, fetchMore, hasMore, items }: Props) => {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const wasIntersectingRef = useRef(false);
+  const hasMoreRef = useRef(hasMore);
   const hasItemsRef = useRef(items.length > 0);
+
+  useEffect(() => {
+    hasMoreRef.current = hasMore;
+  }, [hasMore]);
 
   useEffect(() => {
     hasItemsRef.current = items.length > 0;
@@ -25,7 +31,12 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
       ([entry]) => {
         const isIntersecting = entry?.isIntersecting ?? false;
 
-        if (isIntersecting && !wasIntersectingRef.current && hasItemsRef.current) {
+        if (
+          isIntersecting &&
+          !wasIntersectingRef.current &&
+          hasItemsRef.current &&
+          hasMoreRef.current
+        ) {
           fetchMore();
         }
 
