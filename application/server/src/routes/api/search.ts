@@ -84,7 +84,7 @@ searchRouter.get("/search", async (req, res) => {
 
   const normalizedOffset = Number.isFinite(offset) ? Math.max(0, offset ?? 0) : 0;
   const normalizedLimit =
-    Number.isFinite(limit) && (limit ?? 0) > 0 ? limit : mergedPosts.length;
+    Number.isFinite(limit) && (limit ?? 0) > 0 ? Number(limit) : mergedPosts.length;
 
   const result = mergedPosts.slice(normalizedOffset, normalizedOffset + normalizedLimit);
 

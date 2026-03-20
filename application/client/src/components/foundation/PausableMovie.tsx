@@ -7,6 +7,9 @@ interface Props {
   src: string;
 }
 
+const MOVIE_POSTER_DATA_URI =
+  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+
 /**
  * クリックすると再生・一時停止を切り替えます。
  */
@@ -60,8 +63,9 @@ export const PausableMovie = ({ src }: Props) => {
           className="h-full w-full object-cover"
           loop={true}
           muted={true}
+          poster={MOVIE_POSTER_DATA_URI}
           playsInline={true}
-          preload="metadata"
+          preload="auto"
           onLoadedMetadata={handleLoadMovie}
           src={isNearViewport ? src : undefined}
         />

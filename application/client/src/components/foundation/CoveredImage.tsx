@@ -8,6 +8,8 @@ interface Props {
   alt: string;
   priority?: boolean;
   src: string;
+  srcSet?: string;
+  sizes?: string;
 }
 
 const sanitizeAltText = (value: string): string => {
@@ -18,7 +20,7 @@ const sanitizeAltText = (value: string): string => {
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
-export const CoveredImage = ({ src, alt, priority = false }: Props) => {
+export const CoveredImage = ({ src, srcSet, sizes, alt, priority = false }: Props) => {
   const dialogRef = useRef<HTMLDialogElement>(null);
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
@@ -87,7 +89,9 @@ export const CoveredImage = ({ src, alt, priority = false }: Props) => {
         loading={priority ? "eager" : "lazy"}
         onError={() => setIsPriorityImageReady(true)}
         onLoad={() => setIsPriorityImageReady(true)}
+        sizes={sizes}
         src={src}
+        srcSet={srcSet}
         style={priority && !isPriorityImageReady ? { visibility: "hidden" } : undefined}
       />
 

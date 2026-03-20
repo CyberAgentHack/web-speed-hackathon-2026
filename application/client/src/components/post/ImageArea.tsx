@@ -10,10 +10,20 @@ interface Props {
 }
 
 export const ImageArea = ({ images, prioritizeFirstImage = false }: Props) => {
+  const isSingleImage = images.length === 1;
+  const sizes = isSingleImage
+    ? "(max-width: 640px) calc(100vw - 1rem), (max-width: 1024px) 560px, 640px"
+    : "(max-width: 640px) calc((100vw - 1rem) / 2), (max-width: 1024px) 280px, 320px";
+
   return (
     <AspectRatioBox aspectHeight={9} aspectWidth={16}>
       <div className="border-cax-border grid h-full w-full grid-cols-2 grid-rows-2 gap-1 overflow-hidden rounded-lg border">
         {images.map((image, idx) => {
+          const srcSet = [320, 480, 640, 960]
+            .map((width) => `${getImagePath(image.id, { w: width })} ${width}w`)
+            .join(", ");
+          const src = getImagePath(image.id, { w: prioritizeFirstImage && idx === 0 ? 960 : 640 });
+
           return (
             <div
               key={image.id}
@@ -28,7 +38,9 @@ export const ImageArea = ({ images, prioritizeFirstImage = false }: Props) => {
               <CoveredImage
                 alt={image.alt}
                 priority={prioritizeFirstImage && idx === 0}
-                src={getImagePath(image.id)}
+                sizes={sizes}
+                src={src}
+                srcSet={srcSet}
               />
             </div>
           );
