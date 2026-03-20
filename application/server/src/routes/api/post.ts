@@ -6,20 +6,16 @@ import { Comment, Post } from "@web-speed-hackathon-2026/server/src/models";
 export const postRouter = Router();
 
 postRouter.get("/posts", async (req, res) => {
-  const posts = await Post.scope("withAll").findAll({
+  const posts = await Post.findAll({
     limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
     offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
-    order: [
-      ["id", "DESC"],
-      ["images", "createdAt", "ASC"],
-    ],
   });
 
   return res.status(200).type("application/json").send(posts);
 });
 
 postRouter.get("/posts/:postId", async (req, res) => {
-  const post = await Post.scope("withAll").findByPk(req.params.postId);
+  const post = await Post.findByPk(req.params.postId);
 
   if (post === null) {
     throw new httpErrors.NotFound();
@@ -29,7 +25,7 @@ postRouter.get("/posts/:postId", async (req, res) => {
 });
 
 postRouter.get("/posts/:postId/comments", async (req, res) => {
-  const posts = await Comment.scope("withUser").findAll({
+  const posts = await Comment.findAll({
     limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
     offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
     where: {

@@ -40,9 +40,12 @@ export const DirectMessagePage = ({
   const peer =
     conversation.initiator.id !== activeUser.id ? conversation.initiator : conversation.member;
 
+  const messages = conversation.messages ?? [];
+
   const [text, setText] = useState("");
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
+  const scrollHeightRef = useRef(0);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -73,11 +76,16 @@ export const DirectMessagePage = ({
   );
 
   useEffect(() => {
-    const id = window.requestAnimationFrame(() => {
-      window.scrollTo(0, document.body.scrollHeight);
-    });
-    return () => window.cancelAnimationFrame(id);
-  }, [conversation.messages.length, isPeerTyping]);
+    const id = setInterval(() => {
+      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
+      if (height !== scrollHeightRef.current) {
+        scrollHeightRef.current = height;
+        window.scrollTo(0, height);
+      }
+    }, 1);
+
+    return () => clearInterval(id);
+  }, []);
 
   if (conversationError != null) {
     return (
@@ -91,9 +99,9 @@ export const DirectMessagePage = ({
     <section className="bg-cax-surface flex min-h-[calc(100vh-(--spacing(12)))] flex-col lg:min-h-screen">
       <header className="border-cax-border bg-cax-surface sticky top-0 z-10 flex items-center gap-2 border-b px-4 py-3">
         <img
-          alt={peer.profileImage?.alt}
+          alt={peer.profileImage.alt}
           className="h-12 w-12 rounded-full object-cover"
-          src={getProfileImagePath(peer.profileImage?.id)}
+          src={getProfileImagePath(peer.profileImage.id)}
         />
         <div className="min-w-0">
           <h1 className="overflow-hidden text-xl font-bold text-ellipsis whitespace-nowrap">
@@ -106,14 +114,14 @@ export const DirectMessagePage = ({
       </header>
 
       <div className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8">
-        {conversation.messages.length === 0 && (
+        {messages.length === 0 && (
           <p className="text-cax-text-muted text-center text-sm">
             まだメッセージはありません。最初のメッセージを送信してみましょう。
           </p>
         )}
 
         <ul className="grid gap-3" data-testid="dm-message-list">
-          {conversation.messages.map((message) => {
+          {messages.map((message) => {
             const isActiveUserSend = message.sender.id === activeUser.id;
 
             return (

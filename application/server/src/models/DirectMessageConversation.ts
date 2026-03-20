@@ -46,6 +46,7 @@ export function initDirectMessageConversation(sequelize: Sequelize) {
     },
     {
       sequelize,
+      // messages は件数が多くなりやすいため default に含めない（一覧は /dm で latestMessage のみ、詳細はルート側で include）
       defaultScope: {
         include: [
           { association: "initiator", include: [{ association: "profileImage" }] },

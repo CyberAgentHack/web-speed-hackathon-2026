@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const LIMIT = 30;
 
+/** apiPath に既にクエリがある場合は & で limit/offset を付与する */
 function buildUrl(apiPath: string, offset: number): string {
   const sep = apiPath.includes("?") ? "&" : "?";
   return `${apiPath}${sep}limit=${LIMIT}&offset=${offset}`;

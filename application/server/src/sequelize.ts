@@ -14,7 +14,10 @@ export async function initializeSequelize() {
   _sequelize = null;
   await prevSequelize?.close();
 
-  const TEMP_PATH = path.resolve(os.tmpdir(), "wsh-database.sqlite");
+  const TEMP_PATH = path.resolve(
+    await fs.mkdtemp(path.resolve(os.tmpdir(), "./wsh-")),
+    "./database.sqlite",
+  );
   await fs.copyFile(DATABASE_PATH, TEMP_PATH);
 
   _sequelize = new Sequelize({

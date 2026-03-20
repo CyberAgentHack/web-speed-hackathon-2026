@@ -46,27 +46,23 @@ export function initPost(sequelize: Sequelize) {
         attributes: {
           exclude: ["userId", "movieId", "soundId"],
         },
+        include: [
+          {
+            association: "user",
+            attributes: { exclude: ["profileImageId"] },
+            include: [{ association: "profileImage" }],
+          },
+          {
+            association: "images",
+            through: { attributes: [] },
+          },
+          { association: "movie" },
+          { association: "sound" },
+        ],
         order: [
           ["id", "DESC"],
           ["images", "createdAt", "ASC"],
         ],
-      },
-      scopes: {
-        withAll: {
-          include: [
-            {
-              association: "user",
-              attributes: { exclude: ["profileImageId"] },
-              include: [{ association: "profileImage" }],
-            },
-            {
-              association: "images",
-              through: { attributes: [] },
-            },
-            { association: "movie" },
-            { association: "sound" },
-          ],
-        },
       },
     },
   );

@@ -1,5 +1,4 @@
 import moment from "moment";
-import { memo } from "react";
 
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
@@ -12,7 +11,7 @@ interface Props {
   post: Models.Post;
 }
 
-export const PostItem = memo(({ post }: Props) => {
+export const PostItem = ({ post }: Props) => {
   return (
     <article className="px-1 sm:px-4">
       <div className="border-cax-border border-b px-4 pt-4 pb-4">
@@ -23,9 +22,8 @@ export const PostItem = memo(({ post }: Props) => {
               to={`/users/${post.user.username}`}
             >
               <img
-                alt={post.user.profileImage?.alt}
-                loading="lazy"
-                src={getProfileImagePath(post.user.profileImage?.id)}
+                alt={post.user.profileImage.alt}
+                src={getProfileImagePath(post.user.profileImage.id)}
               />
             </Link>
           </div>
@@ -78,4 +76,4 @@ export const PostItem = memo(({ post }: Props) => {
       </div>
     </article>
   );
-});
+};

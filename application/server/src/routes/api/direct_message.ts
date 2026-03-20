@@ -1,6 +1,6 @@
 import { Router } from "express";
 import httpErrors from "http-errors";
-import { Op, QueryTypes, literal } from "sequelize";
+import { literal, Op, QueryTypes } from "sequelize";
 
 import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
 import {
@@ -16,14 +16,17 @@ directMessageRouter.get("/dm", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  // メッセージが存在する会話のみ取得（messages を全件ロードせずに EXISTS で絞り込む）
+  const sequelize = DirectMessage.sequelize!;
+  // SQLite 用の識別子クォート（Sequelize インスタンスの quoteIdentifier は型定義に無いためローカルで行う）
+  const dmTable = `"${DirectMessage.tableName}"`;
+  const convTable = `"${DirectMessageConversation.tableName}"`;
+
+  // メッセージが1件以上ある会話のみ（messages を全件ロードしない）
   const conversations = await DirectMessageConversation.findAll({
     where: {
       [Op.and]: [
         { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
-        literal(
-          `EXISTS (SELECT 1 FROM "DirectMessages" WHERE "conversationId" = "DirectMessageConversation"."id")`,
-        ),
+        literal(`EXISTS (SELECT 1 FROM ${dmTable} AS dm WHERE dm.conversationId = ${convTable}.id)`),
       ],
     },
   });
@@ -34,30 +37,30 @@ directMessageRouter.get("/dm", async (req, res) => {
 
   const conversationIds = conversations.map((c) => c.id);
 
-  // 各会話の最新メッセージIDを1クエリで取得
-  const rawLatest = await DirectMessage.sequelize!.query<{ id: string }>(
-    `SELECT dm.id
-     FROM "DirectMessages" dm
-     INNER JOIN (
-       SELECT "conversationId", MAX("createdAt") AS "maxDate"
-       FROM "DirectMessages"
-       WHERE "conversationId" IN (${conversationIds.map(() => "?").join(",")})
-       GROUP BY "conversationId"
-     ) AS latest ON dm."conversationId" = latest."conversationId"
-       AND dm."createdAt" = latest."maxDate"`,
+  // 各会話の最新メッセージを1クエリで取得（createdAt 同率は id 降順）
+  const placeholders = conversationIds.map(() => "?").join(",");
+  const rawLatest = await sequelize.query<{ id: string }>(
+    `SELECT ranked.id AS id FROM (
+      SELECT id,
+        ROW_NUMBER() OVER (PARTITION BY conversationId ORDER BY datetime(createdAt) DESC, id DESC) AS rn
+      FROM ${dmTable}
+      WHERE conversationId IN (${placeholders})
+    ) AS ranked WHERE ranked.rn = 1`,
     { replacements: conversationIds, type: QueryTypes.SELECT },
   );
 
   const latestMessageIds = rawLatest.map((r) => r.id);
+  if (latestMessageIds.length === 0) {
+    return res.status(200).type("application/json").send([]);
+  }
 
-  // sender情報付きで最新メッセージを取得
   const latestMessages = await DirectMessage.findAll({
     where: { id: { [Op.in]: latestMessageIds } },
     include: [{ association: "sender", include: [{ association: "profileImage" }] }],
   });
 
-  // 未読メッセージがある会話IDを一括取得
-  const unreadDms = await DirectMessage.findAll({
+  // 相手からの未読がある会話IDを一括取得
+  const unreadRows = await DirectMessage.findAll({
     attributes: ["conversationId"],
     where: {
       conversationId: { [Op.in]: conversationIds },
@@ -66,9 +69,8 @@ directMessageRouter.get("/dm", async (req, res) => {
     },
     group: ["conversationId"],
   });
-  const unreadConversationIds = new Set(unreadDms.map((dm) => dm.conversationId));
+  const unreadConversationIds = new Set(unreadRows.map((dm) => dm.conversationId));
 
-  // 最新メッセージ順にソートしてレスポンスを組み立てる
   const latestMessageByConversation = new Map(latestMessages.map((m) => [m.conversationId, m]));
 
   const sorted = conversations
@@ -153,7 +155,6 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  // DM詳細: 全メッセージを昇順で明示的に取得（separate: true で ORDER BY が確実に適用される）
   const conversation = await DirectMessageConversation.findOne({
     where: {
       id: req.params.conversationId,
@@ -178,11 +179,8 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
 
 directMessageRouter.ws("/dm/:conversationId", async (req, _res) => {
   if (req.session.userId === undefined) {
-    console.log(`[WS] /dm/:conversationId UNAUTHORIZED`);
     throw new httpErrors.Unauthorized();
   }
-
-  console.log(`[WS] /dm/${req.params.conversationId} connected user=${req.session.userId?.slice(0,8)}`);
 
   const conversation = await DirectMessageConversation.findOne({
     where: {
@@ -191,7 +189,6 @@ directMessageRouter.ws("/dm/:conversationId", async (req, _res) => {
     },
   });
   if (conversation == null) {
-    console.log(`[WS] /dm/${req.params.conversationId} conversation NOT FOUND`);
     throw new httpErrors.NotFound();
   }
 
@@ -200,15 +197,11 @@ directMessageRouter.ws("/dm/:conversationId", async (req, _res) => {
       ? conversation.initiatorId
       : conversation.memberId;
 
-  console.log(`[WS] /dm/${conversation.id?.slice(0,8)} registered events for user=${req.session.userId?.slice(0,8)} peer=${peerId?.slice(0,8)}`);
-
   const handleMessageUpdated = (payload: unknown) => {
-    console.log(`[WS] sending dm:conversation:message to user=${req.session.userId?.slice(0,8)}`);
     req.ws.send(JSON.stringify({ type: "dm:conversation:message", payload }));
   };
   eventhub.on(`dm:conversation/${conversation.id}:message`, handleMessageUpdated);
   req.ws.on("close", () => {
-    console.log(`[WS] /dm/${conversation.id?.slice(0,8)} closed for user=${req.session.userId?.slice(0,8)}`);
     eventhub.off(`dm:conversation/${conversation.id}:message`, handleMessageUpdated);
   });
 
@@ -271,15 +264,13 @@ directMessageRouter.post("/dm/:conversationId/read", async (req, res) => {
       ? conversation.initiatorId
       : conversation.memberId;
 
-  const readStart = Date.now();
-  const [affectedCount] = await DirectMessage.update(
+  await DirectMessage.update(
     { isRead: true },
     {
       where: { conversationId: conversation.id, senderId: peerId, isRead: false },
       individualHooks: true,
     },
   );
-  console.log(`[sendRead] convId=${conversation.id?.slice(0,8)} affected=${affectedCount} elapsed=${Date.now()-readStart}ms`);
 
   return res.status(200).type("application/json").send({});
 });

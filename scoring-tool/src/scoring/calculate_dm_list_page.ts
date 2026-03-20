@@ -75,9 +75,6 @@ export async function calculateDmListPage({ baseUrl, playwrightPage, puppeteerPa
       playwrightPage,
       puppeteerPage,
       timeout: 120 * 1000,
-      // DM ページは WebSocket を張り続けるため、`networkidle` 等の待機条件だとタイムアウトしやすい
-      waitUntil: "load",
-      waitForRequestsComplete: false,
       url: new URL("/dm", baseUrl).href,
     });
   } catch (err) {

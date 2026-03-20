@@ -1,5 +1,5 @@
 import moment from "moment";
-import { memo, MouseEventHandler, useCallback } from "react";
+import { MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
@@ -30,7 +30,7 @@ interface Props {
   post: Models.Post;
 }
 
-export const TimelineItem = memo(({ post }: Props) => {
+export const TimelineItem = ({ post }: Props) => {
   const navigate = useNavigate();
 
   /**
@@ -55,9 +55,8 @@ export const TimelineItem = memo(({ post }: Props) => {
             to={`/users/${post.user.username}`}
           >
             <img
-              alt={post.user.profileImage?.alt}
-              loading="lazy"
-              src={getProfileImagePath(post.user.profileImage?.id)}
+              alt={post.user.profileImage.alt}
+              src={getProfileImagePath(post.user.profileImage.id)}
             />
           </Link>
         </div>
@@ -104,4 +103,4 @@ export const TimelineItem = memo(({ post }: Props) => {
       </div>
     </article>
   );
-});
+};

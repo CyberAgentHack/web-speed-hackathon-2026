@@ -49,11 +49,22 @@ userRouter.get("/users/:username", async (req, res) => {
 });
 
 userRouter.get("/users/:username/posts", async (req, res) => {
-  const posts = await Post.scope("withAll").findAll({
-    where: { "$user.username$": req.params.username },
+  const user = await User.findOne({
+    where: {
+      username: req.params.username,
+    },
+  });
+
+  if (user === null) {
+    throw new httpErrors.NotFound();
+  }
+
+  const posts = await Post.findAll({
     limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
     offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
-    subQuery: false,
+    where: {
+      userId: user.id,
+    },
   });
 
   return res.status(200).type("application/json").send(posts);

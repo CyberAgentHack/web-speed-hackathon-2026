@@ -24,7 +24,6 @@ searchRouter.get("/search", async (req, res) => {
   const limit = req.query["limit"] != null ? Number(req.query["limit"]) : undefined;
   const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
 
-  // 日付条件を構築
   const dateConditions: Record<symbol, Date>[] = [];
   if (sinceDate) {
     dateConditions.push({ [Op.gte]: sinceDate });
@@ -35,7 +34,7 @@ searchRouter.get("/search", async (req, res) => {
   const dateWhere =
     dateConditions.length > 0 ? { createdAt: Object.assign({}, ...dateConditions) } : {};
 
-  // テキスト・ユーザー名・名前を1クエリで OR 検索
+  // テキスト・ユーザー名・表示名を1クエリで OR 検索（2クエリマージだと順序・件数が変わり VRT と乖離する）
   const keywordWhere = searchTerm
     ? {
         [Op.or]: [
@@ -46,7 +45,7 @@ searchRouter.get("/search", async (req, res) => {
       }
     : {};
 
-  const posts = await Post.scope("withAll").findAll({
+  const posts = await Post.findAll({
     where: {
       ...keywordWhere,
       ...dateWhere,

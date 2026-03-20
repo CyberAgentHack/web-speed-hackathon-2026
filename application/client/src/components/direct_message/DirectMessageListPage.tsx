@@ -74,17 +74,18 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                 ? conversation.initiator
                 : conversation.member;
 
+            // 一覧はサーバー集約の latestMessage / hasUnread を使う（会話ごとの全メッセージ走査を避ける）
             const lastMessage = conversation.latestMessage;
-            const hasUnread = conversation.hasUnread;
+            const hasUnread = Boolean(conversation.hasUnread);
 
             return (
               <li className="grid" key={conversation.id}>
                 <Link className="hover:bg-cax-surface-subtle px-4" to={`/dm/${conversation.id}`}>
                   <div className="border-cax-border flex gap-4 border-b px-4 pt-2 pb-4">
                     <img
-                      alt={peer.profileImage?.alt}
+                      alt={peer.profileImage.alt}
                       className="w-12 shrink-0 self-start rounded-full"
-                      src={getProfileImagePath(peer.profileImage?.id)}
+                      src={getProfileImagePath(peer.profileImage.id)}
                     />
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-center justify-between">

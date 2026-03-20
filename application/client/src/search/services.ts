@@ -1,3 +1,6 @@
+/** YYYY-MM-DD（数値形式のみ。妥当な暦日は Date で確認） */
+const ISO_DATE_IN_TOKEN = /(\d{4}-\d{2}-\d{2})/;
+
 export const sanitizeSearchText = (input: string): string => {
   let text = input;
 
@@ -9,37 +12,38 @@ export const sanitizeSearchText = (input: string): string => {
   return text;
 };
 
+/**
+ * 検索クエリからキーワードと since/until の日付を取り出す。
+ * 重い入れ子正規表現は使わず、トークン単位で処理する。
+ */
 export const parseSearchQuery = (query: string) => {
-  const sincePattern = /since:(\d{4}-\d{2}-\d{2})/;
-  const untilPattern = /until:(\d{4}-\d{2}-\d{2})/;
+  const sincePart = query.match(/\bsince:[^\s]*/)?.[0] ?? "";
+  const untilPart = query.match(/\buntil:[^\s]*/)?.[0] ?? "";
 
-  const sincePart = query.match(/since:[^\s]*/)?.[0] || "";
-  const untilPart = query.match(/until:[^\s]*/)?.[0] || "";
-
-  const sinceMatch = sincePattern.exec(sincePart);
-  const untilMatch = untilPattern.exec(untilPart);
-
-  const keywords = query
-    .replace(/since:.*(\d{4}-\d{2}-\d{2}).*/g, "")
-    .replace(/until:.*(\d{4}-\d{2}-\d{2}).*/g, "")
-    .trim();
-
-  const extractDate = (s: string | null) => {
-    if (!s) return null;
-    const m = /(\d{4}-\d{2}-\d{2})/.exec(s);
-    return m ? m[1] : null;
+  const extractDate = (token: string): string | null => {
+    if (!token) return null;
+    const m = ISO_DATE_IN_TOKEN.exec(token);
+    return m ? m[1]! : null;
   };
+
+  // since:/until: トークンをまとめて除き、空白を正規化（グリーディな .* は使わない）
+  let keywords = query
+    .trim()
+    .replace(/\bsince:[^\s]*/g, " ")
+    .replace(/\buntil:[^\s]*/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
   return {
     keywords,
-    sinceDate: extractDate(sinceMatch ? sinceMatch[1]! : null),
-    untilDate: extractDate(untilMatch ? untilMatch[1]! : null),
+    sinceDate: extractDate(sincePart),
+    untilDate: extractDate(untilPart),
   };
 };
 
 export const isValidDate = (dateStr: string): boolean => {
-  const slowDateLike = /^(\d+)-(\d+)-(\d+)$/;
-  if (!slowDateLike.test(dateStr)) return false;
+  // (\d+)+ のような入れ子量指定子は避け、固定形式で先に弾く
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;
 
   const date = new Date(dateStr);
   return !Number.isNaN(date.getTime());
