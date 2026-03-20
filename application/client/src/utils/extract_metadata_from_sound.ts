@@ -1,6 +1,6 @@
 import Encoding from "encoding-japanese";
 
-import { loadFFmpeg } from "@web-speed-hackathon-2026/client/src/utils/load_ffmpeg";
+import type { loadFFmpeg } from "@web-speed-hackathon-2026/client/src/utils/load_ffmpeg";
 
 interface SoundMetadata {
   artist: string;
@@ -11,10 +11,11 @@ interface SoundMetadata {
 const UNKNOWN_ARTIST = "Unknown Artist";
 const UNKNOWN_TITLE = "Unknown Title";
 
-export async function extractMetadataFromSound(data: File): Promise<SoundMetadata> {
+export async function extractMetadataFromSound(
+  ffmpeg: Awaited<ReturnType<typeof loadFFmpeg>>,
+  data: File,
+): Promise<SoundMetadata> {
   try {
-    const ffmpeg = await loadFFmpeg();
-
     const exportFile = "meta.txt";
 
     await ffmpeg.writeFile("file", new Uint8Array(await data.arrayBuffer()));
@@ -22,8 +23,6 @@ export async function extractMetadataFromSound(data: File): Promise<SoundMetadat
     await ffmpeg.exec(["-i", "file", "-f", "ffmetadata", exportFile]);
 
     const output = (await ffmpeg.readFile(exportFile)) as Uint8Array<ArrayBuffer>;
-
-    ffmpeg.terminate();
 
     const outputUtf8 = Encoding.convert(output, {
       to: "UNICODE",
