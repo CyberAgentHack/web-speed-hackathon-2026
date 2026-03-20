@@ -1,5 +1,6 @@
 import path from "node:path";
 
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
 
@@ -21,7 +22,7 @@ function fixZlibjsPlugin(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [react(), fixZlibjsPlugin()],
+  plugins: [tailwindcss(), react(), fixZlibjsPlugin()],
   root: SRC_PATH,
   publicDir: false,
   build: {
