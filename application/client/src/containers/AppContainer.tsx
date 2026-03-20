@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useId, useState } from "react";
-import { Helmet, HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
@@ -44,17 +43,11 @@ export const AppContainer = () => {
   const newPostModalId = useId();
 
   if (isLoadingActiveUser) {
-    return (
-      <HelmetProvider>
-        <Helmet>
-          <title>読込中 - CaX</title>
-        </Helmet>
-      </HelmetProvider>
-    );
+    return <title>読込中 - CaX</title>;
   }
 
   return (
-    <HelmetProvider>
+    <>
       <AppPage
         activeUser={activeUser}
         authModalId={authModalId}
@@ -87,6 +80,6 @@ export const AppContainer = () => {
 
       <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
       <NewPostModalContainer id={newPostModalId} />
-    </HelmetProvider>
+    </>
   );
 };
