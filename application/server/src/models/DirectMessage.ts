@@ -64,7 +64,8 @@ export function initDirectMessage(sequelize: Sequelize) {
         include: [
           {
             association: "sender",
-            include: [{ association: "profileImage" }],
+            attributes: ["id", "name", "username"],
+            include: [{ association: "profileImage", attributes: ["alt", "id"] }],
           },
         ],
         order: [["createdAt", "ASC"]],

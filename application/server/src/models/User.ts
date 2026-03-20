@@ -79,7 +79,10 @@ export function initUser(sequelize: Sequelize) {
       sequelize,
       defaultScope: {
         attributes: { exclude: ["profileImageId"] },
-        include: { association: "profileImage" },
+        include: {
+          association: "profileImage",
+          attributes: ["alt", "id"],
+        },
       },
     },
   );

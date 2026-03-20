@@ -49,15 +49,16 @@ export function initPost(sequelize: Sequelize) {
         include: [
           {
             association: "user",
-            attributes: { exclude: ["profileImageId"] },
-            include: [{ association: "profileImage" }],
+            attributes: ["createdAt", "description", "id", "name", "username"],
+            include: [{ association: "profileImage", attributes: ["alt", "id"] }],
           },
           {
             association: "images",
+            attributes: ["alt", "id"],
             through: { attributes: [] },
           },
-          { association: "movie" },
-          { association: "sound" },
+          { association: "movie", attributes: ["id"] },
+          { association: "sound", attributes: ["artist", "id", "title"] },
         ],
         order: [
           ["id", "DESC"],
