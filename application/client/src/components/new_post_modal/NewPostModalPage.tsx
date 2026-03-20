@@ -7,8 +7,13 @@ import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/comp
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
+interface ImageUpload {
+  alt: string;
+  file: File;
+}
+
 interface SubmitParams {
-  images: File[];
+  images: ImageUpload[];
   movie: File | undefined;
   sound: File | undefined;
   text: string;
@@ -56,9 +61,10 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
         .then(([{ MagickFormat }, { convertImage }]) =>
           Promise.all(
             files.map((file) =>
-              convertImage(file, { extension: MagickFormat.Jpg }).then(
-                (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
-              ),
+              convertImage(file, { extension: MagickFormat.Jpg }).then(({ alt, blob }) => ({
+                alt,
+                file: new File([blob], "converted.jpg", { type: "image/jpeg" }),
+              })),
             ),
           ),
         )

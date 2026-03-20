@@ -17,6 +17,15 @@ export function useFetch<T>(
   });
 
   useEffect(() => {
+    if (!apiPath) {
+      setResult(() => ({
+        data: null,
+        error: null,
+        isLoading: false,
+      }));
+      return;
+    }
+
     setResult(() => ({
       data: null,
       error: null,

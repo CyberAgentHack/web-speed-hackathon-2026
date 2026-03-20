@@ -27,10 +27,13 @@ imageRouter.post("/images", async (req, res) => {
   }
 
   const imageId = uuidv4();
+  const imageAltHeader = req.get("X-Image-Alt");
+  const alt =
+    imageAltHeader != null ? decodeURIComponent(imageAltHeader).slice(0, 1024) : "";
 
   const filePath = path.resolve(UPLOAD_PATH, `./images/${imageId}.${EXTENSION}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
   await fs.writeFile(filePath, req.body);
 
-  return res.status(200).type("application/json").send({ id: imageId });
+  return res.status(200).type("application/json").send({ alt, id: imageId });
 });

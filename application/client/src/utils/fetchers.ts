@@ -75,12 +75,17 @@ export async function fetchJSON<T>(url: string): Promise<T> {
   return parseJSONResponse<T>(response);
 }
 
-export async function sendFile<T>(url: string, file: File): Promise<T> {
+export async function sendFile<T>(
+  url: string,
+  file: File,
+  headers?: Record<string, string>,
+): Promise<T> {
   const response = await fetch(url, {
     body: file,
     credentials: "same-origin",
     headers: {
       "Content-Type": "application/octet-stream",
+      ...headers,
     },
     method: "POST",
   });

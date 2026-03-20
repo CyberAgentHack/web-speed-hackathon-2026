@@ -1,5 +1,5 @@
 import { Suspense, lazy, useCallback, useEffect, useId, useState } from "react";
-import { Helmet, HelmetProvider } from "react-helmet";
+import { HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
@@ -50,16 +50,6 @@ export const AppContainer = () => {
   const authModalId = useId();
   const newPostModalId = useId();
 
-  if (isLoadingActiveUser) {
-    return (
-      <HelmetProvider>
-        <Helmet>
-          <title>読込中 - CaX</title>
-        </Helmet>
-      </HelmetProvider>
-    );
-  }
-
   return (
     <HelmetProvider>
       <AppPage
@@ -72,12 +62,18 @@ export const AppContainer = () => {
           <Route element={<TimelineContainer />} path="/" />
           <Route
             element={
-              <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
+              isLoadingActiveUser ? null : (
+                <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
+              )
             }
             path="/dm"
           />
           <Route
-            element={<DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />}
+            element={
+              isLoadingActiveUser ? null : (
+                <DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />
+              )
+            }
             path="/dm/:conversationId"
           />
           <Route element={<SearchContainer />} path="/search" />
@@ -87,7 +83,9 @@ export const AppContainer = () => {
           <Route
             element={
               <Suspense fallback={null}>
-                <LazyCrokContainer activeUser={activeUser} authModalId={authModalId} />
+                {!isLoadingActiveUser ? (
+                  <LazyCrokContainer activeUser={activeUser} authModalId={authModalId} />
+                ) : null}
               </Suspense>
             }
             path="/crok"
