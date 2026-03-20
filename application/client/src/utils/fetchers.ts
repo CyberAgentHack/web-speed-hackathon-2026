@@ -12,13 +12,17 @@ export async function fetchBinary(url: string): Promise<ArrayBuffer> {
   return result;
 }
 
-export async function fetchJSON<T>(url: string): Promise<T> {
+export async function fetchJSON<T>(url: string, data?: object): Promise<T> {
+  const start = performance.now();
   const result = await $.ajax({
     async: true,
     dataType: "json",
     method: "GET",
+    data,
     url,
   });
+  const end = performance.now();
+  console.log(`fetchJSON: ${url} took ${end - start} ms`);
   return result;
 }
 

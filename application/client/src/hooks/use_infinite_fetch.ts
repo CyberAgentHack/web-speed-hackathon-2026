@@ -11,7 +11,8 @@ interface ReturnValues<T> {
 
 export function useInfiniteFetch<T>(
   apiPath: string,
-  fetcher: (apiPath: string) => Promise<T[]>,
+  fetcher: (apiPath: string, dataQuery?: object) => Promise<T[]>,
+  dataQuery?: object
 ): ReturnValues<T> {
   const internalRef = useRef({ isLoading: false, offset: 0 });
 
@@ -36,11 +37,16 @@ export function useInfiniteFetch<T>(
       offset,
     };
 
-    void fetcher(apiPath).then(
+    const _dataQuery =dataQuery ?? {
+      offset,
+      limit: LIMIT,
+    };
+    void fetcher(apiPath, _dataQuery).then(
       (allData) => {
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          // data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...allData],
           isLoading: false,
         }));
         internalRef.current = {
@@ -60,7 +66,7 @@ export function useInfiniteFetch<T>(
         };
       },
     );
-  }, [apiPath, fetcher]);
+  }, [apiPath, fetcher, dataQuery]);
 
   useEffect(() => {
     setResult(() => ({
