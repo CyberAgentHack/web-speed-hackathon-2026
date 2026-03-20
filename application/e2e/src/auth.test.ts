@@ -23,7 +23,11 @@ test.describe("サインイン・新規登録", () => {
     await page.getByRole("button", { name: "登録する" }).click();
 
     // サインイン状態になる
+    await page.getByRole("link", { name: "マイページ" }).waitFor({ timeout: 10_000 });
     await page.getByRole("link", { name: "Crok" }).waitFor({ timeout: 10_000 });
+
+    await page.getByRole("link", { name: "マイページ" }).click();
+    await page.getByRole("heading", { name: "テストユーザー" }).waitFor({ timeout: 10_000 });
   });
 
   test("日本語ユーザー名で登録するとエラーが表示される", async ({ page }) => {
