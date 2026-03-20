@@ -15,10 +15,12 @@ export const UserProfileContainer = () => {
     `/api/v1/users/${username}`,
     fetchJSON,
   );
-  const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>(
-    `/api/v1/users/${username}/posts`,
-    fetchJSON,
-  );
+  const {
+    data: posts,
+    fetchMore,
+    hasMore,
+    isLoading,
+  } = useInfiniteFetch<Models.Post>(`/api/v1/users/${username}/posts`, fetchJSON);
 
   if (isLoadingUser) {
     return (
@@ -33,7 +35,7 @@ export const UserProfileContainer = () => {
   }
 
   return (
-    <InfiniteScroll fetchMore={fetchMore} items={posts}>
+    <InfiniteScroll fetchMore={fetchMore} hasMore={hasMore} isLoading={isLoading}>
       <Helmet>
         <title>{user.name} さんのタイムライン - CaX</title>
       </Helmet>

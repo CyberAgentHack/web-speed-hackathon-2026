@@ -4,3 +4,5 @@ declare namespace JQuery {
     responseType?: XMLHttpRequestResponseType;
   }
 }
+
+declare module "jquery-binarytransport";

@@ -1,9 +1,14 @@
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useId, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
-import { NewPostModalPage } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage";
 import { sendFile, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+
+const NewPostModalPage = lazy(async () => {
+  const module =
+    await import("@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage");
+  return { default: module.NewPostModalPage };
+});
 
 interface SubmitParams {
   images: File[];
@@ -15,7 +20,7 @@ interface SubmitParams {
 async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promise<Models.Post> {
   const payload = {
     images: images
-      ? await Promise.all(images.map((image) => sendFile("/api/v1/images", image)))
+      ? await Promise.all(images.map((image) => sendFile<{ alt: string; id: string }>("/api/v1/images", image)))
       : [],
     movie: movie ? await sendFile("/api/v1/movies", movie) : undefined,
     sound: sound ? await sendFile("/api/v1/sounds", sound) : undefined,
@@ -33,6 +38,7 @@ export const NewPostModalContainer = ({ id }: Props) => {
   const dialogId = useId();
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
+  const [shouldLoadModalContent, setShouldLoadModalContent] = useState(false);
   useEffect(() => {
     const element = ref.current;
     if (element == null) {
@@ -40,6 +46,9 @@ export const NewPostModalContainer = ({ id }: Props) => {
     }
 
     const handleToggle = () => {
+      if (element.open) {
+        setShouldLoadModalContent(true);
+      }
       // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
       setResetKey((key) => key + 1);
     };
@@ -76,14 +85,24 @@ export const NewPostModalContainer = ({ id }: Props) => {
 
   return (
     <Modal aria-labelledby={dialogId} id={id} ref={ref} closedby="any">
-      <NewPostModalPage
-        key={resetKey}
-        id={dialogId}
-        hasError={hasError}
-        isLoading={isLoading}
-        onResetError={handleResetError}
-        onSubmit={handleSubmit}
-      />
+      {shouldLoadModalContent ? (
+        <Suspense
+          fallback={
+            <div className="text-cax-text-muted p-6 text-center text-sm">
+              モーダルを読み込み中...
+            </div>
+          }
+        >
+          <NewPostModalPage
+            key={resetKey}
+            id={dialogId}
+            hasError={hasError}
+            isLoading={isLoading}
+            onResetError={handleResetError}
+            onSubmit={handleSubmit}
+          />
+        </Suspense>
+      ) : null}
     </Modal>
   );
 };

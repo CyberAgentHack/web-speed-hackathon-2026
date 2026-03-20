@@ -1,10 +1,28 @@
 import { Router } from "express";
-import { Op } from "sequelize";
+import { Op, WhereOptions, col, where } from "sequelize";
 
-import { Post } from "@web-speed-hackathon-2026/server/src/models";
+import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
+import { analyzeSearchSentiment } from "@web-speed-hackathon-2026/server/src/utils/analyze_search_sentiment";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 
 export const searchRouter = Router();
+
+searchRouter.get("/search/sentiment", async (req, res) => {
+  const query = req.query["q"];
+
+  if (typeof query !== "string" || query.trim() === "") {
+    return res.status(200).type("application/json").send({ label: "neutral", score: 0 });
+  }
+
+  const { keywords } = parseSearchQuery(query);
+
+  if (!keywords) {
+    return res.status(200).type("application/json").send({ label: "neutral", score: 0 });
+  }
+
+  const sentiment = await analyzeSearchSentiment(keywords);
+  return res.status(200).type("application/json").send(sentiment);
+});
 
 searchRouter.get("/search", async (req, res) => {
   const query = req.query["q"];
@@ -35,58 +53,57 @@ searchRouter.get("/search", async (req, res) => {
   const dateWhere =
     dateConditions.length > 0 ? { createdAt: Object.assign({}, ...dateConditions) } : {};
 
-  // テキスト検索条件
-  const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
+  const keywordWhere: WhereOptions<Post> = searchTerm
+    ? {
+        [Op.or]: [
+          { text: { [Op.like]: searchTerm } },
+          where(col("user.username"), { [Op.like]: searchTerm }),
+          where(col("user.name"), { [Op.like]: searchTerm }),
+        ],
+      }
+    : {};
 
-  const postsByText = await Post.findAll({
+  const matchingPostRows = await Post.findAll({
+    attributes: ["id"],
+    include: searchTerm
+      ? [
+          {
+            association: "user",
+            attributes: [],
+            model: User,
+            required: false,
+          },
+        ]
+      : [],
     limit,
     offset,
+    order: [["createdAt", "DESC"]],
+    subQuery: false,
     where: {
-      ...textWhere,
       ...dateWhere,
+      ...keywordWhere,
     },
   });
 
-  // ユーザー名/名前での検索（キーワードがある場合のみ）
-  let postsByUser: typeof postsByText = [];
-  if (searchTerm) {
-    postsByUser = await Post.findAll({
-      include: [
-        {
-          association: "user",
-          attributes: { exclude: ["profileImageId"] },
-          include: [{ association: "profileImage" }],
-          required: true,
-          where: {
-            [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
-          },
-        },
-        {
-          association: "images",
-          through: { attributes: [] },
-        },
-        { association: "movie" },
-        { association: "sound" },
-      ],
-      limit,
-      offset,
-      where: dateWhere,
-    });
+  const postIds = matchingPostRows.map(({ id }) => id);
+
+  if (postIds.length === 0) {
+    return res.status(200).type("application/json").send([]);
   }
 
-  const postIdSet = new Set<string>();
-  const mergedPosts: typeof postsByText = [];
+  const posts = await Post.findAll({
+    where: {
+      id: {
+        [Op.in]: postIds,
+      },
+    },
+  });
 
-  for (const post of [...postsByText, ...postsByUser]) {
-    if (!postIdSet.has(post.id)) {
-      postIdSet.add(post.id);
-      mergedPosts.push(post);
-    }
-  }
+  const postsById = new Map(posts.map((post) => [post.id, post]));
+  const orderedPosts = postIds.flatMap((postId) => {
+    const post = postsById.get(postId);
+    return post == null ? [] : [post];
+  });
 
-  mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-
-  const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
-
-  return res.status(200).type("application/json").send(result);
+  return res.status(200).type("application/json").send(orderedPosts);
 });

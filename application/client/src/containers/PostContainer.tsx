@@ -14,10 +14,12 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
     fetchJSON,
   );
 
-  const { data: comments, fetchMore } = useInfiniteFetch<Models.Comment>(
-    `/api/v1/posts/${postId}/comments`,
-    fetchJSON,
-  );
+  const {
+    data: comments,
+    fetchMore,
+    hasMore,
+    isLoading,
+  } = useInfiniteFetch<Models.Comment>(`/api/v1/posts/${postId}/comments`, fetchJSON);
 
   if (isLoadingPost) {
     return (
@@ -32,7 +34,7 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
   }
 
   return (
-    <InfiniteScroll fetchMore={fetchMore} items={comments}>
+    <InfiniteScroll fetchMore={fetchMore} hasMore={hasMore} isLoading={isLoading}>
       <Helmet>
         <title>{post.user.name} さんのつぶやき - CaX</title>
       </Helmet>
