@@ -1,7 +1,7 @@
-import moment from "moment";
-
+import { AvatarImage } from "@web-speed-hackathon-2026/client/src/components/foundation/AvatarImage";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
+import { formatJapaneseDate, toIsoDateTime } from "@web-speed-hackathon-2026/client/src/utils/date";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
@@ -17,8 +17,9 @@ export const CommentItem = ({ comment }: Props) => {
             className="border-cax-border bg-cax-surface-subtle block h-8 w-8 overflow-hidden rounded-full border hover:opacity-75 sm:h-12 sm:w-12"
             to={`/users/${comment.user.username}`}
           >
-            <img
+            <AvatarImage
               alt={comment.user.profileImage.alt}
+              size={48}
               src={getProfileImagePath(comment.user.profileImage.id)}
             />
           </Link>
@@ -42,8 +43,8 @@ export const CommentItem = ({ comment }: Props) => {
             <TranslatableText text={comment.text} />
           </div>
           <p className="text-cax-text-muted pt-1 text-xs">
-            <time dateTime={moment(comment.createdAt).toISOString()}>
-              {moment(comment.createdAt).locale("ja").format("LL")}
+            <time dateTime={toIsoDateTime(comment.createdAt)}>
+              {formatJapaneseDate(comment.createdAt)}
             </time>
           </p>
         </div>

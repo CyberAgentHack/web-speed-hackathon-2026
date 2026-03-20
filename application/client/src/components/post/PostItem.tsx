@@ -1,10 +1,10 @@
-import moment from "moment";
-
+import { AvatarImage } from "@web-speed-hackathon-2026/client/src/components/foundation/AvatarImage";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
 import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
 import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
+import { formatJapaneseDate, toIsoDateTime } from "@web-speed-hackathon-2026/client/src/utils/date";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
@@ -21,8 +21,10 @@ export const PostItem = ({ post }: Props) => {
               className="border-cax-border bg-cax-surface-subtle block h-14 w-14 overflow-hidden rounded-full border hover:opacity-95 sm:h-16 sm:w-16"
               to={`/users/${post.user.username}`}
             >
-              <img
+              <AvatarImage
                 alt={post.user.profileImage.alt}
+                loading="eager"
+                size={64}
                 src={getProfileImagePath(post.user.profileImage.id)}
               />
             </Link>
@@ -67,8 +69,8 @@ export const PostItem = ({ post }: Props) => {
           ) : null}
           <p className="mt-2 text-sm sm:mt-4">
             <Link className="text-cax-text-muted hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={toIsoDateTime(post.createdAt)}>
+                {formatJapaneseDate(post.createdAt)}
               </time>
             </Link>
           </p>

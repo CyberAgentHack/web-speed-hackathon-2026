@@ -1,9 +1,16 @@
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useId, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
-import { NewPostModalPage } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage";
 import { sendFile, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+
+const NewPostModalPage = lazy(async () =>
+  import("@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage").then(
+    (module) => ({
+      default: module.NewPostModalPage,
+    }),
+  ),
+);
 
 interface SubmitParams {
   images: File[];
@@ -33,6 +40,7 @@ export const NewPostModalContainer = ({ id }: Props) => {
   const dialogId = useId();
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
+  const [shouldRenderPage, setShouldRenderPage] = useState(false);
   useEffect(() => {
     const element = ref.current;
     if (element == null) {
@@ -42,6 +50,9 @@ export const NewPostModalContainer = ({ id }: Props) => {
     const handleToggle = () => {
       // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
       setResetKey((key) => key + 1);
+      if (element.open) {
+        setShouldRenderPage(true);
+      }
     };
     element.addEventListener("toggle", handleToggle);
     return () => {
@@ -76,14 +87,18 @@ export const NewPostModalContainer = ({ id }: Props) => {
 
   return (
     <Modal aria-labelledby={dialogId} id={id} ref={ref} closedby="any">
-      <NewPostModalPage
-        key={resetKey}
-        id={dialogId}
-        hasError={hasError}
-        isLoading={isLoading}
-        onResetError={handleResetError}
-        onSubmit={handleSubmit}
-      />
+      {shouldRenderPage ? (
+        <Suspense fallback={null}>
+          <NewPostModalPage
+            key={resetKey}
+            id={dialogId}
+            hasError={hasError}
+            isLoading={isLoading}
+            onResetError={handleResetError}
+            onSubmit={handleSubmit}
+          />
+        </Suspense>
+      ) : null}
     </Modal>
   );
 };

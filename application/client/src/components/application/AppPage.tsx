@@ -22,7 +22,7 @@ export const AppPage = ({ activeUser, children, authModalId, newPostModalId, onL
             onLogout={onLogout}
           />
         </aside>
-        <main className="relative z-0 w-screen max-w-screen-sm min-w-0 shrink pb-12 lg:pb-0">
+        <main className="relative z-0 w-screen max-w-screen-sm min-w-0 shrink pb-12 lg:pb-0 min-h-screen">
           {children}
         </main>
       </div>

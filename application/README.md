@@ -24,6 +24,53 @@ CaX のアプリケーションコードです。
      ```
 3. アプリケーションには `http://localhost:3000/` でアクセスします
 
+## Lighthouse CLI
+
+ローカルで Lighthouse CLI を使って HTML / JSON レポートを保存できます。
+
+### 前提
+
+- アプリケーションを `http://localhost:3000/` で起動しておきます
+- 初回は依存パッケージをインストールします
+  - ```bash
+    pnpm install --frozen-lockfile
+    ```
+
+### 使い方
+
+- mobile 計測
+  - ```bash
+    pnpm run analyze:lighthouse:mobile
+    ```
+- desktop 計測
+  - ```bash
+    pnpm run analyze:lighthouse:desktop
+    ```
+- 既定では mobile でトップページを計測
+  - ```bash
+    pnpm run analyze:lighthouse
+    ```
+
+別 URL を測る場合は `--url` を付けます。
+
+```bash
+pnpm run analyze:lighthouse:mobile -- --url http://localhost:3000/settings
+```
+
+### 出力先
+
+レポートは `reports/lighthouse/` に保存されます。
+
+- HTML: `reports/lighthouse/<slug>.<device>.report.html`
+- JSON: `reports/lighthouse/<slug>.<device>.report.json`
+
+例:
+
+- `reports/lighthouse/home.mobile.report.html`
+- `reports/lighthouse/home.mobile.report.json`
+- `reports/lighthouse/settings.desktop.report.html`
+- `reports/lighthouse/settings.desktop.report.json`
+
 ## ディレクトリ構成
 
 pnpm workspaces を採用しています。

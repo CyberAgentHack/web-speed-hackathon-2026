@@ -1,0 +1,31 @@
+export const avifImageIds = new Set<string>([
+  "029b4b75-bbcc-4aa5-8bd7-e4bb12a33cd3",
+  "078c4d42-12e3-4c1d-823c-9ba552f6b066",
+  "26117ade-f330-46a2-8c48-767b6f472613",
+  "85946f86-c0bd-4d6b-83b7-94eb32dcbcf4",
+  "9c8c5258-f659-4890-8b7f-0485097d957b",
+  "a21c9b2c-9fc7-4d3c-8488-a465150f7b1c",
+  "da2bfcde-14fd-473c-ae79-572d95152b61",
+  "eb487309-79ed-40d0-9fee-382ed8486b70",
+]);
+
+export const avifThumbImageIds = new Set<string>([
+  "029b4b75-bbcc-4aa5-8bd7-e4bb12a33cd3",
+  "078c4d42-12e3-4c1d-823c-9ba552f6b066",
+  "18358ca6-0aa7-4592-9926-1ec522b9aacb",
+  "19b3516f-ccfc-4d76-a45c-fc2aade43afe",
+  "26117ade-f330-46a2-8c48-767b6f472613",
+  "3a5915dc-6ef0-4c66-ad4b-bba9c724cfbc",
+  "4685b32a-43d2-4478-bb79-2cdb56f8ecf0",
+  "49b8af97-9536-4a23-86f6-21526ff2715b",
+  "5e7212da-6b4c-4eb2-b828-b0bc35bfbc1c",
+  "6d532fa5-daff-4876-a26f-b5c8669d1176",
+  "824ddc65-8afc-4cd5-8176-1a8053758e72",
+  "85946f86-c0bd-4d6b-83b7-94eb32dcbcf4",
+  "af15685e-2e43-4453-bc8f-55e386bd5963",
+  "da2bfcde-14fd-473c-ae79-572d95152b61",
+  "ddc7053e-0f2f-49b1-9c07-e1060e2fa4aa",
+  "eb487309-79ed-40d0-9fee-382ed8486b70",
+  "f046441d-b837-4dc7-b0ae-5cf2604eab4c",
+  "f478a152-02f8-46a3-91ce-d1d7944d303a",
+]);

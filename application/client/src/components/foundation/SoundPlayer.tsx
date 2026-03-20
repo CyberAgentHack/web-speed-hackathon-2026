@@ -1,22 +1,21 @@
-import { ReactEventHandler, useCallback, useMemo, useRef, useState } from "react";
+import { ReactEventHandler, Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import { SoundWaveSVG } from "@web-speed-hackathon-2026/client/src/components/foundation/SoundWaveSVG";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
-import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getSoundPath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+
+const SoundWaveSVG = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/components/foundation/SoundWaveSVG").then((m) => ({
+    default: m.SoundWaveSVG,
+  })),
+);
 
 interface Props {
   sound: Models.Sound;
 }
 
 export const SoundPlayer = ({ sound }: Props) => {
-  const { data, isLoading } = useFetch(getSoundPath(sound.id), fetchBinary);
-
-  const blobUrl = useMemo(() => {
-    return data !== null ? URL.createObjectURL(new Blob([data])) : null;
-  }, [data]);
+  const soundUrl = getSoundPath(sound.id);
 
   const [currentTimeRatio, setCurrentTimeRatio] = useState(0);
   const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>((ev) => {
@@ -37,13 +36,39 @@ export const SoundPlayer = ({ sound }: Props) => {
     });
   }, []);
 
-  if (isLoading || data === null || blobUrl === null) {
-    return null;
-  }
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry!.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px 0px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const [soundData, setSoundData] = useState<ArrayBuffer | null>(null);
+  useEffect(() => {
+    if (!isVisible) return;
+    let cancelled = false;
+    fetch(soundUrl)
+      .then((res) => res.arrayBuffer())
+      .then((buf) => {
+        if (!cancelled) setSoundData(buf);
+      });
+    return () => { cancelled = true; };
+  }, [soundUrl, isVisible]);
 
   return (
-    <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
-      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} src={blobUrl} />
+    <div ref={containerRef} className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
+      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} src={soundUrl} preload="metadata" />
       <div className="p-2">
         <button
           className="bg-cax-accent text-cax-surface-raised flex h-8 w-8 items-center justify-center rounded-full text-sm hover:opacity-75"
@@ -64,7 +89,11 @@ export const SoundPlayer = ({ sound }: Props) => {
           <AspectRatioBox aspectHeight={1} aspectWidth={10}>
             <div className="relative h-full w-full">
               <div className="absolute inset-0 h-full w-full">
-                <SoundWaveSVG soundData={data} />
+                {soundData != null ? (
+                  <Suspense fallback={null}>
+                    <SoundWaveSVG soundData={soundData} />
+                  </Suspense>
+                ) : null}
               </div>
               <div
                 className="bg-cax-surface-subtle absolute inset-0 h-full w-full opacity-75"

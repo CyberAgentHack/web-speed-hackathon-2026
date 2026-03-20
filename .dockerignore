@@ -4,3 +4,16 @@ node_modules
 
 application/server/seeds
 application/server/upload
+
+# Build artifacts regenerated inside Docker
+application/dist
+application/reports
+# Test infrastructure (not needed for production build)
+application/e2e
+
+# Documentation (not needed for build)
+docs
+
+# OS / editor files
+**/.DS_Store
+.DS_Store

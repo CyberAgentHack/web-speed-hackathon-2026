@@ -7,17 +7,42 @@
   "scripts": {
     "build": "pnpm --filter @web-speed-hackathon-2026/client build",
     "start": "pnpm --filter @web-speed-hackathon-2026/server start",
+    "analyze:lighthouse": "node ./scripts/run-lighthouse.mjs",
+    "analyze:lighthouse:mobile": "node ./scripts/run-lighthouse.mjs --device mobile",
+    "analyze:lighthouse:desktop": "node ./scripts/run-lighthouse.mjs --device desktop",
+    "generate:image-thumbnails": "node ./scripts/generate-image-thumbnails.mjs --apply",
+    "generate:image-thumbnails:dry-run": "node ./scripts/generate-image-thumbnails.mjs",
+    "compress:public-assets": "node ./scripts/compress-public-assets.mjs --apply",
+    "compress:public-assets:dry-run": "node ./scripts/compress-public-assets.mjs",
+    "generate:avif-variants": "node ./scripts/generate-avif-variants.mjs --apply",
+    "generate:avif-variants:dry-run": "node ./scripts/generate-avif-variants.mjs",
+    "recompress:public-media": "node ./scripts/recompress-public-media.mjs --apply",
+    "recompress:public-media:dry-run": "node ./scripts/recompress-public-media.mjs",
     "typecheck": "pnpm run --recursive typecheck",
     "format": "pnpm run format:oxlint && pnpm run format:oxfmt",
     "format:oxlint": "oxlint --fix",
     "format:oxfmt": "oxfmt"
   },
   "devDependencies": {
+    "ffmpeg-static": "5.3.0",
+    "lighthouse": "12.8.2",
     "oxfmt": "0.36.0",
-    "oxlint": "1.43.0"
+    "oxlint": "1.43.0",
+    "sharp": "0.34.5"
   },
   "engines": {
     "node": "24.14.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "core-js",
+      "bcrypt",
+      "esbuild",
+      "sqlite3",
+      "negaposi-analyzer-ja",
+      "sharp",
+      "ffmpeg-static"
+    ]
   },
   "packageManager": "pnpm@10.32.1"
 }

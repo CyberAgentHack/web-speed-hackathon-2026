@@ -1,12 +1,26 @@
-import moment from "moment";
-import { MouseEventHandler, useCallback } from "react";
+import { MouseEventHandler, Suspense, lazy, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
+import { AvatarImage } from "@web-speed-hackathon-2026/client/src/components/foundation/AvatarImage";
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
-import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
-import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
-import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
+import { formatJapaneseDate, toIsoDateTime } from "@web-speed-hackathon-2026/client/src/utils/date";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+
+const MovieArea = lazy(async () =>
+  import("@web-speed-hackathon-2026/client/src/components/post/MovieArea").then((module) => ({
+    default: module.MovieArea,
+  })),
+);
+const SoundArea = lazy(async () =>
+  import("@web-speed-hackathon-2026/client/src/components/post/SoundArea").then((module) => ({
+    default: module.SoundArea,
+  })),
+);
+const TranslatableText = lazy(async () =>
+  import("@web-speed-hackathon-2026/client/src/components/post/TranslatableText").then((module) => ({
+    default: module.TranslatableText,
+  })),
+);
 
 const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Element): boolean => {
   while (target !== null && target instanceof Element) {
@@ -28,9 +42,10 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
  */
 interface Props {
   post: Models.Post;
+  prioritizeImage?: boolean;
 }
 
-export const TimelineItem = ({ post }: Props) => {
+export const TimelineItem = ({ post, prioritizeImage = false }: Props) => {
   const navigate = useNavigate();
 
   /**
@@ -54,8 +69,10 @@ export const TimelineItem = ({ post }: Props) => {
             className="border-cax-border bg-cax-surface-subtle block h-12 w-12 overflow-hidden rounded-full border hover:opacity-75 sm:h-16 sm:w-16"
             to={`/users/${post.user.username}`}
           >
-            <img
+            <AvatarImage
               alt={post.user.profileImage.alt}
+              loading="eager"
+              size={64}
               src={getProfileImagePath(post.user.profileImage.id)}
             />
           </Link>
@@ -76,27 +93,37 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={toIsoDateTime(post.createdAt)}>
+                {formatJapaneseDate(post.createdAt)}
               </time>
             </Link>
           </p>
           <div className="text-cax-text leading-relaxed">
-            <TranslatableText text={post.text} />
+            <Suspense fallback={<><p>{post.text}</p><p><span className="text-cax-accent">Show Translation</span></p></>}>
+              <TranslatableText text={post.text} />
+            </Suspense>
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea images={post.images} prioritizeLcpCandidate={prioritizeImage} variant="thumb" />
             </div>
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
+              <Suspense fallback={
+                <div className="border-cax-border bg-cax-surface-subtle overflow-hidden rounded-lg border" style={{ aspectRatio: "1/1" }} />
+              }>
+                <MovieArea movie={post.movie} />
+              </Suspense>
             </div>
           ) : null}
           {post.sound ? (
             <div className="relative mt-2 w-full">
-              <SoundArea sound={post.sound} />
+              <Suspense fallback={
+                <div className="border-cax-border bg-cax-surface-subtle overflow-hidden rounded-lg border" style={{ minHeight: "100px" }} />
+              }>
+                <SoundArea sound={post.sound} />
+              </Suspense>
             </div>
           ) : null}
         </div>

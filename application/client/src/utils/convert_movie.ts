@@ -31,6 +31,14 @@ export async function convertMovie(file: File, options: Options): Promise<Blob> 
     "-vf",
     `crop=${cropOptions}`,
     "-an",
+    "-c:v",
+    "libvpx-vp9",
+    "-b:v",
+    "0",
+    "-crf",
+    "35",
+    "-deadline",
+    "good",
     exportFile,
   ]);
 

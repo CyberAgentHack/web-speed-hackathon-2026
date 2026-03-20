@@ -1,6 +1,5 @@
-import Bluebird from "bluebird";
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -9,17 +8,29 @@ import {
   type FormEvent,
   type KeyboardEvent,
 } from "react";
+import type { IpadicFeatures, Tokenizer } from "kuromoji";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import {
-  extractTokens,
-  filterSuggestionsBM25,
-} from "@web-speed-hackathon-2026/client/src/utils/bm25_search";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { loadKuromojiTokenizer } from "@web-speed-hackathon-2026/client/src/utils/load_kuromoji_tokenizer";
 
 interface Props {
   isStreaming: boolean;
   onSendMessage: (message: string) => void;
+}
+
+let suggestionsPromise: Promise<string[]> | null = null;
+
+const fallbackTokenize = (text: string) =>
+  (text.toLowerCase().match(/[a-z0-9]+|[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]+/gu) ??
+    [])
+    .filter((token) => token.length > 0);
+
+async function loadSuggestions(): Promise<string[]> {
+  suggestionsPromise ??= fetchJSON<{ suggestions: string[] }>("/api/v1/crok/suggestions").then(
+    ({ suggestions }) => suggestions,
+  );
+  return suggestionsPromise;
 }
 
 // トークン単位でハイライト
@@ -77,13 +88,26 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
 }
 
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const ensureTokenizerLoaded = useCallback(() => {
+    if (tokenizer != null) {
+      return;
+    }
+
+    void loadKuromojiTokenizer()
+      .then((nextTokenizer) => {
+        setTokenizer(nextTokenizer);
+      })
+      .catch(() => {
+        setTokenizer(null);
+      });
+  }, [tokenizer]);
 
   // サジェストが更新されたら一番下にスクロール
   useLayoutEffect(() => {
@@ -92,42 +116,43 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   }, [suggestions, showSuggestions]);
 
-  // 初回にkuromojiトークナイザーを構築
-  useEffect(() => {
-    let mounted = true;
-
-    const init = async () => {
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
-      if (mounted) {
-        setTokenizer(nextTokenizer);
-      }
-    };
-    init();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
   useEffect(() => {
     let cancelled = false;
 
     const updateSuggestions = async () => {
-      if (!tokenizer || !inputValue.trim()) {
+      if (!inputValue.trim()) {
         setSuggestions([]);
         setQueryTokens([]);
         setShowSuggestions(false);
         return;
       }
 
-      const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-        "/api/v1/crok/suggestions",
-      );
+      const candidates = await loadSuggestions();
       if (cancelled) {
         return;
       }
 
+      if (tokenizer == null) {
+        ensureTokenizerLoaded();
+      }
+
+      if (!tokenizer) {
+        const tokens = fallbackTokenize(inputValue);
+        const results = candidates
+          .filter((candidate) =>
+            tokens.some((token) => candidate.toLowerCase().includes(token.toLowerCase())),
+          )
+          .slice(0, 10);
+
+        setQueryTokens(tokens);
+        setSuggestions(results);
+        setShowSuggestions(results.length > 0);
+        return;
+      }
+
+      const [{ extractTokens, filterSuggestionsBM25 }] = await Promise.all([
+        import("@web-speed-hackathon-2026/client/src/utils/bm25_search"),
+      ]);
       const tokens = extractTokens(tokenizer.tokenize(inputValue));
       const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
 
@@ -145,26 +170,11 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     return () => {
       cancelled = true;
     };
-  }, [inputValue, tokenizer]);
-
-  const adjustTextareaHeight = () => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = "auto";
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
-    }
-  };
-
-  const resetTextareaHeight = () => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
-  };
+  }, [ensureTokenizerLoaded, inputValue, tokenizer]);
 
   const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setInputValue(value);
-    adjustTextareaHeight();
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -182,7 +192,6 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
       setSuggestions([]);
       setQueryTokens([]);
       setShowSuggestions(false);
-      resetTextareaHeight();
     }
   };
 
@@ -217,9 +226,12 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
         )}
         <div className="border-cax-border bg-cax-surface-subtle focus-within:border-cax-brand-strong relative flex items-end rounded-2xl border transition-colors">
           <textarea
-            ref={textareaRef}
-            className="text-cax-text placeholder-cax-text-subtle max-h-[200px] min-h-[52px] flex-1 resize-none overflow-y-auto bg-transparent py-3 pr-2 pl-4 focus:outline-none"
+            className="text-cax-text placeholder-cax-text-subtle [field-sizing:content] max-h-[200px] min-h-[52px] flex-1 resize-none overflow-y-auto bg-transparent py-3 pr-2 pl-4 focus:outline-none"
             onChange={handleInputChange}
+            onFocus={() => {
+              ensureTokenizerLoaded();
+              void loadSuggestions();
+            }}
             onKeyDown={handleKeyDown}
             placeholder="メッセージを入力..."
             lang="ja"

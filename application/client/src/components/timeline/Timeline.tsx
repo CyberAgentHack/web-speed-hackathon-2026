@@ -5,10 +5,12 @@ interface Props {
 }
 
 export const Timeline = ({ timeline }: Props) => {
+  const prioritizedPostId = timeline.find((post) => post.images != null && post.images.length > 0)?.id;
+
   return (
     <section>
       {timeline.map((post) => {
-        return <TimelineItem key={post.id} post={post} />;
+        return <TimelineItem key={post.id} post={post} prioritizeImage={post.id === prioritizedPostId} />;
       })}
     </section>
   );

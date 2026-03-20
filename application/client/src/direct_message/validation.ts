@@ -1,11 +1,11 @@
-import { FormErrors } from "redux-form";
-
 import { NewDirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
 
-export const validate = (
-  values: NewDirectMessageFormData,
-): FormErrors<NewDirectMessageFormData> => {
-  const errors: FormErrors<NewDirectMessageFormData> = {};
+export interface NewDMFormErrors {
+  username?: string;
+}
+
+export const validate = (values: NewDirectMessageFormData): NewDMFormErrors => {
+  const errors: NewDMFormErrors = {};
 
   const normalizedUsername = values.username?.trim().replace(/^@/, "") || "";
 

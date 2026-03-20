@@ -24,6 +24,9 @@ export async function initializeSequelize() {
     dialect: "sqlite",
     logging: false,
     storage: TEMP_PATH,
+    retry: { max: 5 },
   });
+  await _sequelize.query("PRAGMA journal_mode = WAL;");
+  await _sequelize.query("PRAGMA busy_timeout = 5000;");
   initModels(_sequelize);
 }

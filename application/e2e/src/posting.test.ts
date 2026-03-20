@@ -50,7 +50,7 @@ test.describe("投稿機能", () => {
     const fileInput = page.locator('input[type="file"][accept="image/*"]');
     const imagePath = path.resolve(
       import.meta.dirname,
-      "../../public/images/737f764e-f495-4104-b6d6-8434681718d5.jpg",
+      "../../public/images/737f764e-f495-4104-b6d6-8434681718d5.webp",
     );
     await fileInput.setInputFiles(imagePath);
 
