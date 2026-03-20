@@ -41,8 +41,7 @@ export const AppContainer = () => {
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
     setActiveUser(null);
-    navigate("/");
-  }, [navigate]);
+  }, []);
 
   const authModalId = useId();
   const newPostModalId = useId();
