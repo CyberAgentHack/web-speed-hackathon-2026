@@ -18,6 +18,7 @@ export const UserProfileContainer = () => {
   const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>(
     `/api/v1/users/${username}/posts`,
     fetchJSON,
+    { limit: 30 },
   );
 
   useDocumentTitle(
