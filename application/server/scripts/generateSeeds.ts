@@ -1,15 +1,10 @@
 import { createWriteStream, promises as fs } from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { faker } from "@faker-js/faker/locale/ja";
-import ffmpegPath from "ffmpeg-static";
-import ffmpeg from "fluent-ffmpeg";
 
-if (ffmpegPath) {
-  ffmpeg.setFfmpegPath(ffmpegPath);
-}
+import { extractPeaks } from "@web-speed-hackathon-2026/server/src/utils/convert_sound";
 
 // Set seed for reproducible results
 faker.seed(123);
@@ -241,44 +236,18 @@ function generateMovies(): MovieSeed[] {
   }));
 }
 
-async function computePeaksForFile(filePath: string): Promise<number[]> {
-  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "peaks-"));
-  const pcmPath = path.join(tmpDir, "pcm.raw");
-  try {
-    await new Promise<void>((resolve, reject) => {
-      ffmpeg(filePath)
-        .outputOptions(["-ac", "1", "-f", "s16le", "-acodec", "pcm_s16le"])
-        .output(pcmPath)
-        .on("end", () => resolve())
-        .on("error", (err: Error) => reject(err))
-        .run();
-    });
-    const pcmBuffer = await fs.readFile(pcmPath);
-    const samples = new Int16Array(pcmBuffer.buffer, pcmBuffer.byteOffset, pcmBuffer.byteLength / 2);
-    const chunkSize = Math.ceil(samples.length / 100);
-    const peaks: number[] = [];
-    for (let i = 0; i < samples.length; i += chunkSize) {
-      const end = Math.min(i + chunkSize, samples.length);
-      let sum = 0;
-      for (let j = i; j < end; j++) {
-        sum += Math.abs(samples[j]!);
-      }
-      peaks.push(sum / (end - i));
-    }
-    const max = Math.max(...peaks, 1);
-    return peaks.map((p) => Math.round((p / max) * 1000) / 1000);
-  } finally {
-    await fs.rm(tmpDir, { recursive: true, force: true });
-  }
-}
-
 async function generateSounds(): Promise<SoundSeed[]> {
   const publicSoundsDir = path.resolve(__dirname, "../../public/sounds");
   const results: SoundSeed[] = [];
   for (const { id, title, artist } of EXISTING_SOUNDS) {
     const filePath = path.join(publicSoundsDir, `${id}.mp3`);
-    const peaks = await computePeaksForFile(filePath);
-    results.push({ id, title, artist, peaks });
+    const tmpDir = await fs.mkdtemp(path.join(path.dirname(filePath), "peaks-"));
+    try {
+      const peaks = await extractPeaks(filePath, tmpDir);
+      results.push({ id, title, artist, peaks });
+    } finally {
+      await fs.rm(tmpDir, { recursive: true, force: true });
+    }
   }
   return results;
 }

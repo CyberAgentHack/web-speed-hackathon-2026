@@ -382,7 +382,7 @@ paths:
         - Assets
       summary: 音声アップロード
       operationId: uploadSound
-      description: バイナリデータを直接送信（上限 10 MB、MP3 のみ）
+      description: バイナリデータを直接送信（上限 10 MB、MP3/WAV）
       security:
         - session: []
       requestBody:
@@ -834,7 +834,7 @@ components:
 
     Sound:
       type: object
-      required: [id, title, artist]
+      required: [id, title, artist, peaks]
       properties:
         id:
           type: string
@@ -843,6 +843,10 @@ components:
           type: string
         artist:
           type: string
+        peaks:
+          type: array
+          items:
+            type: number
 
     Post:
       type: object

@@ -11,7 +11,7 @@ export class Sound extends Model<InferAttributes<Sound>, InferCreationAttributes
   declare id: string;
   declare title: string;
   declare artist: string;
-  declare peaks: number[] | null;
+  declare peaks: number[];
 }
 
 export function initSound(sequelize: Sequelize) {
@@ -29,8 +29,7 @@ export function initSound(sequelize: Sequelize) {
         type: DataTypes.UUID,
       },
       peaks: {
-        allowNull: true,
-        defaultValue: null,
+        allowNull: false,
         type: DataTypes.JSON,
       },
       title: {
