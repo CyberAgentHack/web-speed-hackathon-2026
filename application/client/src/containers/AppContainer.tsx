@@ -8,16 +8,30 @@ import { DirectMessageContainer } from "@web-speed-hackathon-2026/client/src/con
 import { DirectMessageListContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer";
 import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
-import { PostContainer } from "@web-speed-hackathon-2026/client/src/containers/PostContainer";
 import { SearchContainer } from "@web-speed-hackathon-2026/client/src/containers/SearchContainer";
 import { TermContainer } from "@web-speed-hackathon-2026/client/src/containers/TermContainer";
-import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
-import { UserProfileContainer } from "@web-speed-hackathon-2026/client/src/containers/UserProfileContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 const CrokContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/CrokContainer").then((module) => ({
     default: module.CrokContainer,
+  })),
+);
+const TimelineContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/TimelineContainer").then((module) => ({
+    default: module.TimelineContainer,
+  })),
+);
+const UserProfileContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/UserProfileContainer").then(
+    (module) => ({
+      default: module.UserProfileContainer,
+    }),
+  ),
+);
+const PostContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/PostContainer").then((module) => ({
+    default: module.PostContainer,
   })),
 );
 
@@ -55,7 +69,14 @@ export const AppContainer = () => {
         onLogout={handleLogout}
       >
         <Routes>
-          <Route element={<TimelineContainer />} path="/" />
+          <Route
+            element={
+              <Suspense fallback={null}>
+                <TimelineContainer />
+              </Suspense>
+            }
+            path="/"
+          />
           <Route
             element={
               <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
@@ -67,8 +88,22 @@ export const AppContainer = () => {
             path="/dm/:conversationId"
           />
           <Route element={<SearchContainer />} path="/search" />
-          <Route element={<UserProfileContainer />} path="/users/:username" />
-          <Route element={<PostContainer />} path="/posts/:postId" />
+          <Route
+            element={
+              <Suspense fallback={null}>
+                <UserProfileContainer />
+              </Suspense>
+            }
+            path="/users/:username"
+          />
+          <Route
+            element={
+              <Suspense fallback={null}>
+                <PostContainer />
+              </Suspense>
+            }
+            path="/posts/:postId"
+          />
           <Route element={<TermContainer />} path="/terms" />
           <Route
             element={
