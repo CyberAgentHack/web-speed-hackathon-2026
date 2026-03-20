@@ -71,7 +71,7 @@ find "$SRC_ROOT" -type f -iname '*.gif' -print0 \
       ffmpeg -hide_banner -loglevel error -y -i "$src" \
         -movflags +faststart \
         -pix_fmt yuv420p \
-        -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" \
+        -vf "scale=512:trunc(ih*512/iw/2)*2" \
         "$dst"
     ' _ '{}' "$SRC_ROOT" "$DST_ROOT"
 
