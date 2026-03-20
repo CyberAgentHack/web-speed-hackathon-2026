@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import path from "path";
 
 import history from "connect-history-api-fallback";
@@ -9,8 +10,19 @@ import {
   PUBLIC_PATH,
   UPLOAD_PATH,
 } from "@web-speed-hackathon-2026/server/src/paths";
+import { renderAppShell } from "@web-speed-hackathon-2026/server/src/ssr";
 
 export const staticRouter = Router();
+
+let indexTemplateCache: string | null = null;
+
+async function getIndexTemplate(): Promise<string> {
+  if (indexTemplateCache == null) {
+    indexTemplateCache = await readFile(path.resolve(CLIENT_DIST_PATH, "index.html"), "utf-8");
+  }
+
+  return indexTemplateCache;
+}
 
 const IMMUTABLE_EXTENSIONS = new Set([
   ".js",
@@ -54,6 +66,26 @@ function setStaticCacheHeaders(
 
 // SPA 対応のため、ファイルが存在しないときに index.html を返す
 staticRouter.use(history());
+
+staticRouter.get(/.*/, async (req, res, next) => {
+  if (path.extname(req.path) !== "") {
+    return next();
+  }
+
+  if (req.accepts("html") !== "html") {
+    return next();
+  }
+
+  try {
+    const template = await getIndexTemplate();
+    const appHtml = renderAppShell(req.path);
+    const html = template.replace('<div id="app"></div>', `<div id="app">${appHtml}</div>`);
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    return res.status(200).send(html);
+  } catch {
+    return next();
+  }
+});
 
 staticRouter.use(
   serveStatic(UPLOAD_PATH, {

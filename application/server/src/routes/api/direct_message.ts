@@ -16,7 +16,25 @@ directMessageRouter.get("/dm", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversations = await DirectMessageConversation.findAll({
+  const conversations = await DirectMessageConversation.unscoped().findAll({
+    include: [
+      {
+        association: "initiator",
+        attributes: ["id", "username", "name"],
+        include: [{ association: "profileImage", attributes: ["id", "alt"] }],
+      },
+      {
+        association: "member",
+        attributes: ["id", "username", "name"],
+        include: [{ association: "profileImage", attributes: ["id", "alt"] }],
+      },
+      {
+        association: "messages",
+        attributes: ["id", "body", "isRead", "createdAt"],
+        include: [{ association: "sender", attributes: ["id"] }],
+        required: false,
+      },
+    ],
     where: {
       [Op.and]: [
         { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
@@ -28,7 +46,9 @@ directMessageRouter.get("/dm", async (req, res) => {
 
   const sorted = conversations.map((c) => ({
     ...c.toJSON(),
-    messages: c.messages?.reverse(),
+    messages: c.messages
+      ?.slice()
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime()),
   }));
 
   return res.status(200).type("application/json").send(sorted);
@@ -100,7 +120,25 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversation = await DirectMessageConversation.findOne({
+  const conversation = await DirectMessageConversation.unscoped().findOne({
+    include: [
+      {
+        association: "initiator",
+        attributes: ["id", "username", "name"],
+        include: [{ association: "profileImage", attributes: ["id", "alt"] }],
+      },
+      {
+        association: "member",
+        attributes: ["id", "username", "name"],
+        include: [{ association: "profileImage", attributes: ["id", "alt"] }],
+      },
+      {
+        association: "messages",
+        attributes: ["id", "body", "isRead", "createdAt"],
+        include: [{ association: "sender", attributes: ["id"] }],
+        required: false,
+      },
+    ],
     where: {
       id: req.params.conversationId,
       [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
