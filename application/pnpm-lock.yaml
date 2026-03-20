@@ -283,6 +283,9 @@ importers:
       body-parser:
         specifier: 2.2.0
         version: 2.2.0
+      compression:
+        specifier: 1.8.1
+        version: 1.8.1
       connect-history-api-fallback:
         specifier: 2.0.0
         version: 2.0.0
@@ -329,6 +332,9 @@ importers:
       '@types/body-parser':
         specifier: 1.19.6
         version: 1.19.6
+      '@types/compression':
+        specifier: 1.8.1
+        version: 1.8.1
       '@types/connect-history-api-fallback':
         specifier: 1.5.4
         version: 1.5.4
@@ -1738,6 +1744,9 @@ packages:
 
   '@types/common-tags@1.8.4':
     resolution: {integrity: sha512-S+1hLDJPjWNDhcGxsxEbepzaxWqURP/o+3cP4aa2w7yBXgdcmKGQtZzP8JbyfOd0m+33nh+8+kvxYE2UJtBDkg==}
+
+  '@types/compression@1.8.1':
+    resolution: {integrity: sha512-kCFuWS0ebDbmxs0AXYn6e2r2nrGAb5KwQhknjSPSPgJcGd8+HVSILlUyFhGqML2gk39HcG7D1ydW9/qpYkN00Q==}
 
   '@types/connect-history-api-fallback@1.5.4':
     resolution: {integrity: sha512-n6Cr2xS1h4uAulPRdlw6Jl6s1oG8KrVilPN2yUITEs+K48EzMJJ3W1xy8K5eWuFvjp3R74AOIGSmp2UfBJ8HFw==}
@@ -6259,6 +6268,11 @@ snapshots:
       '@types/node': 22.18.8
 
   '@types/common-tags@1.8.4': {}
+
+  '@types/compression@1.8.1':
+    dependencies:
+      '@types/express': 5.0.3
+      '@types/node': 22.18.8
 
   '@types/connect-history-api-fallback@1.5.4':
     dependencies:
