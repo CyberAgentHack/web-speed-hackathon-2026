@@ -7,7 +7,6 @@ import { sendFile, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/f
 
 interface ImageWithAlt {
   file: File;
-  alt: string;
 }
 
 interface SubmitParams {
@@ -20,8 +19,8 @@ interface SubmitParams {
 async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promise<Models.Post> {
   const uploadedImages = await Promise.all(
     images.map(async (image) => {
-      const result = await sendFile<{ id: string }>("/api/v1/images", image.file);
-      return { id: result.id, alt: image.alt };
+      const result = await sendFile<{ id: string; alt: string }>("/api/v1/images", image.file);
+      return { id: result.id, alt: result.alt };
     }),
   );
 
