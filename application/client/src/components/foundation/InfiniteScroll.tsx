@@ -15,15 +15,20 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
       return;
     }
     const element = sentinelRef.current;
-    if (!element) {
+    if (element === null) {
       return;
     }
 
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry?.isIntersecting) {
-        fetchMore();
-      }
-    });
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          fetchMore();
+        }
+      },
+      {
+        rootMargin: "10px",
+      },
+    );
     observer.observe(element);
     return () => observer.disconnect();
   }, [latestItem, fetchMore]);
