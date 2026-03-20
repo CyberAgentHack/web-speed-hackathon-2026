@@ -27,7 +27,7 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: env === "production" ? false : "module-source-map",
+  devtool: env === "production" ? false : "eval",
   entry: {
     main: [
       "core-js",
