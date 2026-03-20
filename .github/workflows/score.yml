@@ -1,0 +1,247 @@
+name: Score
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        types: [opened, reopened, synchronize]
+
+# Cancel in-progress runs for the same ref to avoid queuing multiple
+# scoring jobs that each take up to 20 minutes.
+concurrency:
+    group: score-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    score:
+        name: Build & Score
+        runs-on: ubuntu-24.04
+        # Scoring can take up to 20 minutes. Allow generous headroom for
+        # Node/pnpm setup and build time on top of that.
+        timeout-minutes: 45
+
+        permissions:
+            contents: read
+            issues: write
+            pull-requests: write
+
+        steps:
+            # ------------------------------------------------------------------ #
+            # 1. Checkout
+            # ------------------------------------------------------------------ #
+            - name: Checkout repository
+              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+            # ------------------------------------------------------------------ #
+            # 2. Set up Node.js (exact version from mise.toml)
+            # ------------------------------------------------------------------ #
+            - name: Set up Node.js 24.14.0
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+              with:
+                  node-version: "24.14.0"
+
+            # ------------------------------------------------------------------ #
+            # 3. Set up pnpm (exact version matching packageManager field)
+            # ------------------------------------------------------------------ #
+            - name: Set up pnpm 10.32.1
+              uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+              with:
+                  version: "10.32.1"
+
+            # ------------------------------------------------------------------ #
+            # 4. Cache pnpm store for both application and scoring-tool
+            # ------------------------------------------------------------------ #
+            - name: Get pnpm store directory
+              id: pnpm-cache
+              run: echo "store=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+            - name: Cache pnpm store
+              uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+              with:
+                  path: ${{ steps.pnpm-cache.outputs.store }}
+                  key: pnpm-store-${{ runner.os }}-${{ hashFiles('application/pnpm-lock.yaml', 'scoring-tool/pnpm-lock.yaml') }}
+                  restore-keys: |
+                      pnpm-store-${{ runner.os }}-
+
+            # ------------------------------------------------------------------ #
+            # 5. Install application dependencies
+            # ------------------------------------------------------------------ #
+            - name: Install application dependencies
+              working-directory: application
+              run: pnpm install --frozen-lockfile
+
+            # ------------------------------------------------------------------ #
+            # 6. Build the application
+            #    NODE_OPTIONS is required to prevent OOM during the client build.
+            # ------------------------------------------------------------------ #
+            - name: Build application
+              working-directory: application
+              env:
+                  NODE_OPTIONS: "--max-old-space-size=4096"
+              run: pnpm run build
+
+            # ------------------------------------------------------------------ #
+            # 7. Start the application server in the background
+            #    server/src/index.ts reads process.env["PORT"] || 3000
+            #    Set PORT=8080 to match the scoring tool URL below.
+            # ------------------------------------------------------------------ #
+            - name: Start application server
+              working-directory: application
+              env:
+                  PORT: "8080"
+                  NODE_ENV: "production"
+              run: |
+                  pnpm run start > /tmp/app-server.log 2>&1 &
+                  echo "APP_PID=$!" >> $GITHUB_ENV
+
+            # ------------------------------------------------------------------ #
+            # 8. Wait for the server to become ready
+            #    Poll http://localhost:8080/ every 2 seconds for up to 90 seconds.
+            # ------------------------------------------------------------------ #
+            - name: Wait for application server to be ready
+              run: |
+                  echo "Waiting for server on http://localhost:8080 ..."
+                  for i in $(seq 1 45); do
+                    if curl --silent --fail --max-time 3 http://localhost:8080/ > /dev/null 2>&1; then
+                      echo "Server is ready (attempt ${i})"
+                      exit 0
+                    fi
+                    echo "  Attempt ${i}/45 - not ready yet, retrying in 2s ..."
+                    sleep 2
+                  done
+                  echo "ERROR: Server did not become ready within 90 seconds"
+                  echo "--- Last 50 lines of server log ---"
+                  tail -50 /tmp/app-server.log || true
+                  exit 1
+
+            # ------------------------------------------------------------------ #
+            # 9. Install scoring-tool dependencies
+            # ------------------------------------------------------------------ #
+            - name: Install scoring-tool dependencies
+              working-directory: scoring-tool
+              run: pnpm install --frozen-lockfile
+
+            # ------------------------------------------------------------------ #
+            # 10. Install Chrome stable for Playwright
+            #     create_page.ts uses channel: "chrome" (Google Chrome stable),
+            #     NOT the bundled Playwright Chromium. ubuntu-24.04 runners do not
+            #     pre-install Chrome; this step installs it with system deps.
+            # ------------------------------------------------------------------ #
+            - name: Install Chrome and Playwright system dependencies
+              working-directory: scoring-tool
+              run: npx playwright install chrome --with-deps
+
+            # ------------------------------------------------------------------ #
+            # 11. Run the scoring tool
+            #
+            #     IMPORTANT: We unset GITHUB_ACTIONS before running the tool.
+            #     When set, the tool instantiates GitHubWriter which calls
+            #     github.context.payload.issue!.number — undefined for push/
+            #     pull_request events — causing an immediate TypeError crash.
+            #     Unsetting GITHUB_ACTIONS forces the CLIWriter path instead.
+            #     We capture stdout to a file and post results ourselves (step 12).
+            #
+            #     Competition time checks are skipped (no --competitionStartAt/EndAt)
+            #     so the pipeline works at any time during development.
+            # ------------------------------------------------------------------ #
+            - name: Run scoring tool
+              id: scoring
+              working-directory: scoring-tool
+              env:
+                  GITHUB_ACTIONS: ""
+              run: |
+                  set -o pipefail
+                  pnpm start --applicationUrl http://localhost:8080 \
+                    2>&1 | tee /tmp/score-output.txt
+
+            # ------------------------------------------------------------------ #
+            # 12. Post score results
+            #
+            #     pull_request: post/update a PR comment (hidden marker prevents
+            #     duplicate comments on repeated pushes to the same PR).
+            #     push to main: append to $GITHUB_STEP_SUMMARY (Actions UI).
+            # ------------------------------------------------------------------ #
+            - name: Post score results
+              if: always()
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  SCORE_BODY="$(cat /tmp/score-output.txt 2>/dev/null || echo 'Score output not available')"
+                  COMMENT_MARKER="<!-- wsh-score-result -->"
+
+                  if [ "${{ github.event_name }}" = "pull_request" ]; then
+                    PR_NUMBER="${{ github.event.pull_request.number }}"
+                    REPO="${{ github.repository }}"
+
+                    COMMENT_BODY="${COMMENT_MARKER}
+                  ## Web Speed Hackathon 2026 - Score Results
+
+                  <details>
+                  <summary>View score report</summary>
+
+                  \`\`\`
+                  ${SCORE_BODY}
+                  \`\`\`
+
+                  </details>
+
+                  Commit: \`${{ github.sha }}\`"
+
+                    # Update existing comment if present, otherwise create new one.
+                    EXISTING_COMMENT_ID=$(gh api \
+                      "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+                      --jq ".[] | select(.body | startswith(\"${COMMENT_MARKER}\")) | .id" \
+                      2>/dev/null | head -1)
+
+                    if [ -n "$EXISTING_COMMENT_ID" ]; then
+                      echo "Updating existing score comment (id: ${EXISTING_COMMENT_ID})"
+                      gh api \
+                        --method PATCH \
+                        "repos/${REPO}/issues/comments/${EXISTING_COMMENT_ID}" \
+                        -f body="${COMMENT_BODY}"
+                    else
+                      echo "Creating new score comment on PR #${PR_NUMBER}"
+                      gh pr comment "${PR_NUMBER}" \
+                        --repo "${REPO}" \
+                        --body "${COMMENT_BODY}"
+                    fi
+
+                  else
+                    echo "## Web Speed Hackathon 2026 - Score Results" >> $GITHUB_STEP_SUMMARY
+                    echo "" >> $GITHUB_STEP_SUMMARY
+                    echo "Commit: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+                    echo "" >> $GITHUB_STEP_SUMMARY
+                    echo "<details>" >> $GITHUB_STEP_SUMMARY
+                    echo "<summary>View score report</summary>" >> $GITHUB_STEP_SUMMARY
+                    echo "" >> $GITHUB_STEP_SUMMARY
+                    echo '```' >> $GITHUB_STEP_SUMMARY
+                    cat /tmp/score-output.txt >> $GITHUB_STEP_SUMMARY
+                    echo '```' >> $GITHUB_STEP_SUMMARY
+                    echo "" >> $GITHUB_STEP_SUMMARY
+                    echo "</details>" >> $GITHUB_STEP_SUMMARY
+                  fi
+
+            # ------------------------------------------------------------------ #
+            # 13. Upload server and scoring logs on failure
+            # ------------------------------------------------------------------ #
+            - name: Upload debug logs
+              if: failure()
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              with:
+                  name: debug-logs-${{ github.run_id }}-${{ github.run_attempt }}
+                  path: |
+                      /tmp/app-server.log
+                      /tmp/score-output.txt
+                  retention-days: 7
+                  if-no-files-found: ignore
+
+            # ------------------------------------------------------------------ #
+            # 14. Stop the application server
+            # ------------------------------------------------------------------ #
+            - name: Stop application server
+              if: always()
+              run: |
+                  if [ -n "${APP_PID}" ]; then
+                    echo "Stopping server (PID ${APP_PID})"
+                    kill "${APP_PID}" 2>/dev/null || true
+                  fi
