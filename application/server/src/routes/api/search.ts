@@ -21,8 +21,10 @@ searchRouter.get("/search", async (req, res) => {
   }
 
   const searchTerm = keywords ? `%${keywords}%` : null;
-  const limit = req.query["limit"] != null ? Number(req.query["limit"]) : undefined;
-  const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
+  const limit =
+    req.query["limit"] != null ? Number(req.query["limit"]) : undefined;
+  const offset =
+    req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
 
   // 日付条件を構築
   const dateConditions: Record<symbol, Date>[] = [];
@@ -33,42 +35,42 @@ searchRouter.get("/search", async (req, res) => {
     dateConditions.push({ [Op.lte]: untilDate });
   }
   const dateWhere =
-    dateConditions.length > 0 ? { createdAt: Object.assign({}, ...dateConditions) } : {};
+    dateConditions.length > 0
+      ? { createdAt: Object.assign({}, ...dateConditions) }
+      : {};
 
   // テキスト検索条件
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
-  const postsByText = await Post.findAll({
-    where: {
-      ...textWhere,
-      ...dateWhere,
-    },
-  });
+  const [postsByText, postsByUser] = await Promise.all([
+    Post.findAll({
+      where: { ...textWhere, ...dateWhere },
+    }),
 
-  // ユーザー名/名前での検索（キーワードがある場合のみ）
-  let postsByUser: typeof postsByText = [];
-  if (searchTerm) {
-    postsByUser = await Post.findAll({
-      include: [
-        {
-          association: "user",
-          attributes: { exclude: ["profileImageId"] },
-          include: [{ association: "profileImage" }],
-          required: true,
-          where: {
-            [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
-          },
-        },
-        {
-          association: "images",
-          through: { attributes: [] },
-        },
-        { association: "movie" },
-        { association: "sound" },
-      ],
-      where: dateWhere,
-    });
-  }
+    // ユーザー名/名前での検索（キーワードがある場合のみ）
+    searchTerm
+      ? Post.findAll({
+          include: [
+            {
+              association: "user",
+              attributes: { exclude: ["profileImageId"] },
+              include: [{ association: "profileImage" }],
+              required: true,
+              where: {
+                [Op.or]: [
+                  { username: { [Op.like]: searchTerm } },
+                  { name: { [Op.like]: searchTerm } },
+                ],
+              },
+            },
+            { association: "images", through: { attributes: [] } },
+            { association: "movie" },
+            { association: "sound" },
+          ],
+          where: dateWhere,
+        })
+      : Promise.resolve([]),
+  ]);
 
   const postIdSet = new Set<string>();
   const mergedPosts: typeof postsByText = [];
@@ -82,7 +84,11 @@ searchRouter.get("/search", async (req, res) => {
 
   mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-  const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
+  const start = offset ?? 0;
+  const result = mergedPosts.slice(
+    start,
+    limit != null ? start + limit : undefined,
+  );
 
   return res.status(200).type("application/json").send(result);
 });
