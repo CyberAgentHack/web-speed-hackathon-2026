@@ -43,7 +43,20 @@ const config = {
       {
         exclude: /node_modules/,
         test: /\.(jsx?|tsx?|mjs|cjs)$/,
-        use: [{ loader: "babel-loader" }],
+        use: [{ 
+          loader: "babel-loader",
+          options: {
+            // 外部の .babelrc 等を無視して、ここで本番設定を強制します
+            presets: [
+              ["@babel/preset-env", { modules: false }],
+              ["@babel/preset-react", { 
+                runtime: "automatic", 
+                development: false // ★ これが jsxDEV を消す決定打です
+              }],
+              "@babel/preset-typescript"
+            ]
+          }
+        }],
       },
       {
         test: /\.css$/i,
@@ -100,7 +113,7 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: true,
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
     new BundleAnalyzerPlugin({ // ここを追記
@@ -142,7 +155,7 @@ const config = {
   },
   optimization: {
       minimize: false,             // コードを圧縮する
-      splitChunks: { chunks: 'all' }, // 共通ライブラリを別ファイルに分ける
+      splitChunks: false, // 共通ライブラリを別ファイルに分ける
       concatenateModules: true,   // モジュールを連結してサイズ削減
       usedExports: true,          // 未使用コードの抽出
       providedExports: true,
