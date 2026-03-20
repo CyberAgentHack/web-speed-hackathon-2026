@@ -12,7 +12,7 @@ const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
 
-const env = 'development';
+const env = process.env.NODE_ENV ?? 'development';
 
 /** @type {import('webpack').Configuration} */
 const config = {
