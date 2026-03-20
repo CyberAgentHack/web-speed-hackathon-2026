@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CaX</title>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
-    <script src="/scripts/main.js" defer></script>
-    <link rel="stylesheet" href="/styles/main.css" />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.1" defer></script>
     <style type="text/tailwindcss">
       @layer base {
@@ -175,6 +173,16 @@
     </style>
   </head>
   <body class="bg-cax-canvas text-cax-text">
+    <script>
+      window.__PREFETCH__ = {};
+      var postsPath = "/api/v1/posts?limit=30&offset=0";
+      window.__PREFETCH__[postsPath] = fetch(postsPath).then(function (r) {
+        return r.ok ? r.json() : Promise.reject(r);
+      });
+      window.__PREFETCH__["/api/v1/me"] = fetch("/api/v1/me").then(function (r) {
+        return r.ok ? r.json() : Promise.reject(r);
+      });
+    </script>
     <div id="app"></div>
   </body>
 </html>

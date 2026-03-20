@@ -1,13 +1,23 @@
 node_modules
+**/node_modules
 .git
+**/.git
 *.log
 
 scoring-tool
 develop-log
 docs
 .github
+.ref-*
 
 application/dist
 application/e2e
 application/server/seeds
 application/server/upload
+application/client/node_modules/.cache
+
+**/.cache
+**/.turbo
+**/coverage
+**/.env
+**/.env.*

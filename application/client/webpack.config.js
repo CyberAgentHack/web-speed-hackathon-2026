@@ -53,13 +53,15 @@ const config = {
       },
       {
         resourceQuery: /binary/,
-        type: "asset/bytes",
+        type: "asset/resource",
+        generator: {
+          filename: "assets/[name]-[contenthash][ext]",
+        },
       },
     ],
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
     filename: "scripts/[name].js",
     path: DIST_PATH,
     publicPath: "auto",
@@ -88,7 +90,8 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: true,
+      scriptLoading: "defer",
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
   ],
@@ -126,6 +129,27 @@ const config = {
   },
   cache: {
     type: "filesystem",
+  },
+  optimization: {
+    splitChunks: {
+      chunks: "all",
+      maxAsyncRequests: 20,
+      maxInitialRequests: 20,
+      cacheGroups: {
+        react: {
+          chunks: "all",
+          name: "react-vendor",
+          priority: 20,
+          test: /[\\/]node_modules[\\/](react|react-dom|react-router|react-redux|redux)[\\/]/,
+        },
+        vendor: {
+          chunks: "initial",
+          name: "vendor",
+          priority: 10,
+          test: /[\\/]node_modules[\\/]/,
+        },
+      },
+    },
   },
   ignoreWarnings: [
     {

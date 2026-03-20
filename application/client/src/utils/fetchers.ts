@@ -12,6 +12,12 @@ export class HttpError extends Error {
   }
 }
 
+declare global {
+  interface Window {
+    __PREFETCH__?: Record<string, Promise<unknown>>;
+  }
+}
+
 async function parseResponseBody(response: Response): Promise<unknown> {
   const contentType = response.headers.get("content-type") ?? "";
   if (contentType.includes("application/json")) {
@@ -42,6 +48,16 @@ export async function fetchBinary(url: string): Promise<ArrayBuffer> {
 }
 
 export async function fetchJSON<T>(url: string): Promise<T> {
+  const prefetched = window.__PREFETCH__?.[url];
+  if (prefetched != null) {
+    delete window.__PREFETCH__?.[url];
+    try {
+      return (await prefetched) as T;
+    } catch {
+      // Fallback to normal fetch when prefetch failed.
+    }
+  }
+
   const response = await fetch(url, {
     credentials: "same-origin",
     method: "GET",

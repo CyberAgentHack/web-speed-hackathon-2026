@@ -18,3 +18,4 @@
 8. [08-spa-link-and-layout-observer-optimization.md](./08-spa-link-and-layout-observer-optimization.md)
 9. [09-build-and-deploy-time-reduction.md](./09-build-and-deploy-time-reduction.md)
 10. [10-ci-deploy-cache-strategy-for-under-10-min.md](./10-ci-deploy-cache-strategy-for-under-10-min.md)
+11. [11-reference-based-lazyload-and-docker-build-optimization.md](./11-reference-based-lazyload-and-docker-build-optimization.md)
