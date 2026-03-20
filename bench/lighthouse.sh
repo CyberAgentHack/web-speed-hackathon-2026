@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -uo pipefail
+# Note: -e を外して lighthouse の非ゼロ終了でスクリプトが死なないようにする
 
 # =============================================================================
 # lighthouse.sh — Lighthouse 統計的ベンチマーク
@@ -37,11 +38,25 @@ declare -A PAGES=(
   [terms]="/terms"
 )
 
+# Lighthouse は CHROME_PATH で Chrome バイナリを探す
+if [ -z "${CHROME_PATH:-}" ]; then
+  for candidate in chromium chromium-browser google-chrome; do
+    found="$(command -v "${candidate}" 2>/dev/null || true)"
+    if [ -n "${found}" ]; then
+      CHROME_PATH="${found}"
+      break
+    fi
+  done
+  CHROME_PATH="${CHROME_PATH:-chromium}"
+fi
+export CHROME_PATH
 CHROME_FLAGS="--headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage"
 
 echo "=== Lighthouse Benchmark ==="
-echo "Runs: ${RUNS} | Base: ${BASE_URL} | Output: ${OUTDIR}"
+echo "Runs: ${RUNS} | Base: ${BASE_URL} | Chrome: ${CHROME_PATH} | Output: ${OUTDIR}"
 echo ""
+
+FAILED_COUNT=0
 
 for name in "${!PAGES[@]}"; do
   page_path="${PAGES[$name]}"
@@ -52,27 +67,35 @@ for name in "${!PAGES[@]}"; do
 
   for i in $(seq 1 "${RUNS}"); do
     echo -n "  run ${i}/${RUNS}... "
+    lh_exit=0
     npx lighthouse "${BASE_URL}${page_path}" \
       --output=json \
       --output-path="${page_dir}/run_${i}.json" \
       --chrome-flags="${CHROME_FLAGS}" \
       --only-categories=performance \
       --quiet \
-      2>/dev/null
+      2>"${page_dir}/run_${i}.log" || lh_exit=$?
 
-    # 即座にスコア表示
-    score=$(node -e "
-      const r = JSON.parse(require('fs').readFileSync('${page_dir}/run_${i}.json','utf8'));
-      console.log((r.categories.performance.score * 100).toFixed(0));
-    " 2>/dev/null || echo "ERR")
-    echo "score=${score}"
+    if [ "${lh_exit}" -ne 0 ] || [ ! -f "${page_dir}/run_${i}.json" ]; then
+      echo "FAILED (exit=${lh_exit}, log: ${page_dir}/run_${i}.log)"
+      FAILED_COUNT=$((FAILED_COUNT + 1))
+    else
+      score=$(node -e "
+        const r = JSON.parse(require('fs').readFileSync('${page_dir}/run_${i}.json','utf8'));
+        console.log((r.categories.performance.score * 100).toFixed(0));
+      " 2>/dev/null || echo "ERR")
+      echo "score=${score}"
+    fi
   done
   echo ""
 done
 
 echo "=== Aggregating ==="
-node bench/aggregate-lighthouse.mjs "${OUTDIR}"
+node bench/aggregate-lighthouse.mjs "${OUTDIR}" || echo "Aggregation failed"
 
 echo ""
 echo "Results saved to: ${OUTDIR}"
 echo "Summary: ${OUTDIR}/summary.json"
+if [ "${FAILED_COUNT}" -gt 0 ]; then
+  echo "WARNING: ${FAILED_COUNT} run(s) failed"
+fi

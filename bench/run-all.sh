@@ -11,18 +11,24 @@ set -euo pipefail
 #   ./bench/run-all.sh [RUNS] [BASE_URL] [MEM_LIMIT]
 #   RUNS       計測回数（デフォルト: 3）。DB は RUNS×4 回。
 #   BASE_URL   対象URL（デフォルト: http://localhost:3000）
-#   MEM_LIMIT  各ステップのメモリ上限（デフォルト: 8G）
+#   MEM_LIMIT  各ステップのメモリ上限（デフォルト: 24G）
+#   CPU_LIMIT  各ステップのCPU上限 %（デフォルト: 50% = 全コアの半分）
+#              100% = 1コア分、800% = 8コア分
 #
 # 前提: アプリケーションサーバーが起動済みであること
 # =============================================================================
 
 RUNS="${1:-3}"
 BASE_URL="${2:-http://localhost:3000}"
-MEM_LIMIT="${3:-8G}"
+MEM_LIMIT="${3:-24G}"
+# CPU上限: 全コアの50%（例: 16コアなら800% = 8コア分）
+NPROC=$(nproc 2>/dev/null || echo 4)
+DEFAULT_CPU_LIMIT=$((NPROC * 50))
+CPU_LIMIT="${4:-${DEFAULT_CPU_LIMIT}}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# systemd-run でメモリ制限付き実行するラッパー
-# 上限を超えると OOM killer が即座にプロセスを kill する
+# systemd-run でリソース制限付き実行するラッパー
+# メモリ上限超過 → OOM kill、CPU上限 → スロットリング
 run_capped() {
   local label="$1"
   shift
@@ -30,10 +36,10 @@ run_capped() {
     systemd-run --user --scope \
       -p MemoryMax="${MEM_LIMIT}" \
       -p MemorySwapMax=0 \
+      -p CPUQuota="${CPU_LIMIT}%" \
       --description="bench: ${label}" \
       "$@"
   else
-    # systemd-run が使えない環境ではそのまま実行
     "$@"
   fi
 }
@@ -73,6 +79,7 @@ echo "║  Commit:    $(printf '%-43s' "${COMMIT_HASH}")║"
 echo "║  Runs:      $(printf '%-43s' "${RUNS}")║"
 echo "║  Base:      $(printf '%-43s' "${BASE_URL}")║"
 echo "║  Mem limit: $(printf '%-43s' "${MEM_LIMIT}")║"
+echo "║  CPU limit: $(printf '%-43s' "${CPU_LIMIT}% (${NPROC} cores total)")║"
 echo "║  Output:    $(printf '%-43s' "${BENCH_OUTDIR}")║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
