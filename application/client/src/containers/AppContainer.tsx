@@ -9,26 +9,18 @@ import NewPostModalContainer from "./NewPostModalContainer";
 import { fetchJSON, sendJSON } from "../utils/fetchers";
 // import TimelineContainer from "./TimelineContainer";
 
-const CrokContainer = React.lazy(() =>
-  import(/* webpackChunkName: "Crok" */ "./CrokContainer"),
-);
-const DirectMessageContainer = React.lazy(() =>
-  import(/* webpackChunkName: "DM" */ "./DirectMessageContainer"),
-);
+import CrokContainer from "./CrokContainer";
+import DirectMessageContainer from "./DirectMessageContainer";
 import DirectMessageListContainer from "./DirectMessageListContainer";
 const NotFoundContainer = React.lazy(() =>
   import(/* webpackChunkName: "NotFound" */ "./NotFoundContainer"),
 );
 import PostContainer from "./PostContainer";
 import SearchContainer from "./SearchContainer";
-const TermContainer = React.lazy(() =>
-  import(/* webpackChunkName: "Term" */ "./TermContainer"),
-);
+import TermContainer from "./TermContainer";
 // Static import for LCP optimization
 import TimelineContainer from "./TimelineContainer";
-const UserProfileContainer = React.lazy(() =>
-  import(/* webpackChunkName: "UserProfile" */ "./UserProfileContainer"),
-);
+import UserProfileContainer from "./UserProfileContainer";
 
 const AppContainer = () => {
   const { pathname } = useLocation();
