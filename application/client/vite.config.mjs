@@ -31,6 +31,7 @@ export default defineConfig(async () => {
   }
 
   return {
+    plugins,
     root: SRC_PATH,
     publicDir: path.resolve(__dirname, '../public'),
     build: {
