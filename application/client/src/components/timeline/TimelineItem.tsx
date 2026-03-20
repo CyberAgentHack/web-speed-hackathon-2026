@@ -1,4 +1,3 @@
-import moment from "moment";
 import { type MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
@@ -7,6 +6,7 @@ import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/
 import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { formatDate } from "../../utils/format-date";
 
 const isClickedAnchorOrButton = (
   target: EventTarget | null,
@@ -91,8 +91,8 @@ export const TimelineItem = ({ post, isFv }: Props) => {
               className="text-cax-text-muted pr-1 hover:underline"
               to={`/posts/${post.id}`}
             >
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={new Date(post.createdAt).toISOString()}>
+                {formatDate(post.createdAt, "yyyy年M月d日")}
               </time>
             </Link>
           </p>

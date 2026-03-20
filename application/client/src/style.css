@@ -1,4 +1,8 @@
+@layer normalize, theme, base, components, utilities;
+
 @import "tailwindcss";
+
+@import "normalize.css" layer(normalize);
 
 @layer base {
   button:not(:disabled),
@@ -165,9 +169,6 @@
 }
 
 /* index.css */
-@layer normalize, theme, base, components, utilities;
-
-@import "normalize.css" layer(normalize);
 
 @font-face {
   /* Source Han Serif JP Regular の Y 軸を 1/1.43 に縮小した改変フォント */
