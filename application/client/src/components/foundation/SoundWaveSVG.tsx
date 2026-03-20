@@ -7,7 +7,9 @@ interface ParsedData {
 
 async function calculate(data: ArrayBuffer): Promise<ParsedData> {
   const audioCtx = new AudioContext();
+  // 音声をデコードする
   const buffer = await audioCtx.decodeAudioData(data.slice(0));
+  // 左右の音声データの絶対値の平均を取り、100個のchunkに分けてピーク値を算出する
   const left = buffer.getChannelData(0);
   const right = buffer.getChannelData(1);
   const len = left.length;
@@ -21,6 +23,7 @@ async function calculate(data: ArrayBuffer): Promise<ParsedData> {
     }
     peaks.push(sum / (end - i));
   }
+  // chunk の平均の中から最大値を取る
   const max = Math.max(...peaks, 0);
   return { max, peaks };
 }

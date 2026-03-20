@@ -8,6 +8,9 @@ interface Props {
   src: string;
 }
 
+/**
+ * クリックすると再生・一時停止を切り替えます。
+ */
 export const PausableMovie = ({ src }: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -33,6 +36,7 @@ export const PausableMovie = ({ src }: Props) => {
       >
         <video
           ref={videoRef}
+          // 視覚効果 off のとき動画を自動再生しない
           autoPlay={!window.matchMedia("(prefers-reduced-motion: reduce)").matches}
           className="w-full"
           loop

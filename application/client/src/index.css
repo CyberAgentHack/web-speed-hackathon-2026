@@ -2,6 +2,7 @@
 @import "normalize.css" layer(normalize);
 
 @font-face {
+  /* Source Han Serif JP Regular の Y 軸を 1/1.43 に縮小した改変フォント */
   font-family: "Rei no Are Mincho";
   font-display: swap;
   src: url(/fonts/ReiNoAreMincho-Regular.woff2) format("woff2");
@@ -9,6 +10,7 @@
 }
 
 @font-face {
+  /* Source Han Serif JP Heavy の Y 軸を 1/1.43 に縮小した改変フォント */
   font-family: "Rei no Are Mincho";
   font-display: swap;
   src: url(/fonts/ReiNoAreMincho-Heavy.woff2) format("woff2");
@@ -54,6 +56,7 @@
   @apply text-sm wrap-anywhere;
   line-break: strict;
 
+  /* インライン要素 */
   :where(a) {
     @apply text-cax-accent decoration-cax-accent underline underline-offset-2;
   }
@@ -70,6 +73,7 @@
     @apply decoration-cax-text-subtle line-through;
   }
 
+  /* ブロック要素 */
   :where(p) {
     @apply text-cax-text my-6;
   }
@@ -80,6 +84,7 @@
     @apply border-cax-border my-10 border-t;
   }
 
+  /* リスト */
   :where(ol) {
     @apply my-6 list-decimal pl-6;
   }
@@ -96,6 +101,7 @@
     @apply my-2;
   }
 
+  /* テーブル */
   :where(table) {
     @apply text-cax-text my-6 w-full table-auto text-sm;
   }
@@ -130,6 +136,7 @@
     @apply pb-0;
   }
 
+  /* 見出し */
   :where(h1, h2, h3, h4, h5, h6) {
     @apply text-cax-text text-pretty;
   }
@@ -155,6 +162,7 @@
     @apply mt-0;
   }
 
+  /* 注釈 */
   :where(.footnotes) {
     @apply border-cax-border mt-8 border-t;
   }
@@ -168,9 +176,11 @@
     @apply my-0;
   }
 
+  /* 最初の要素はマージンを0にする */
   & > *:first-child {
     @apply mt-0;
   }
+  /* 最後の要素はマージンを0にする */
   & > *:last-child {
     @apply mb-0;
   }
