@@ -30,6 +30,7 @@ export const AvatarImage = ({
       crossOrigin={crossOrigin}
       fetchPriority={fetchPriority}
       height={height}
+      loading={fetchPriority === "high" ? "eager" : "lazy"}
       onLoad={onLoad}
       src={getProfileImagePath(profileImage.id)}
       width={width}

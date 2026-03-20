@@ -65,6 +65,7 @@ export const CoveredImage = ({ src, width, height, fetchPriority = "auto" }: Pro
         alt={alt}
         fetchPriority={fetchPriority}
         height={height}
+        loading={fetchPriority === "high" ? "eager" : "lazy"}
         width={width}
         className={classNames(
           "absolute left-1/2 top-1/2 max-w-none -translate-x-1/2 -translate-y-1/2",
