@@ -69,6 +69,21 @@ export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }
             icon={<FontAwesomeIcon iconType="balance-scale" styleType="solid" />}
             text="利用規約"
           />
+          {activeUser !== null ? (
+            <li className="lg:hidden">
+              <button
+                aria-label="サインアウト"
+                className="hover:bg-cax-brand-soft flex h-12 w-12 flex-col items-center justify-center rounded-full sm:h-auto sm:w-24 sm:rounded-sm sm:px-2"
+                type="button"
+                onClick={onLogout}
+              >
+                <span className="relative text-xl">
+                  <FontAwesomeIcon iconType="sign-out-alt" styleType="solid" />
+                </span>
+                <span className="hidden sm:inline sm:text-sm">サインアウト</span>
+              </button>
+            </li>
+          ) : null}
         </ul>
 
         {activeUser !== null ? <AccountMenu user={activeUser} onLogout={onLogout} /> : null}

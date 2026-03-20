@@ -42,7 +42,7 @@ searchRouter.get("/search", async (req, res) => {
   // テキスト検索条件
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
-  const [postsByText, postsByUser] = await Promise.all([
+  const [postsByText, postsByUserIds] = await Promise.all([
     Post.findAll({
       limit: fetchLimit,
       order: [["createdAt", "DESC"]],
@@ -53,12 +53,12 @@ searchRouter.get("/search", async (req, res) => {
     }),
     // ユーザー名/名前での検索（キーワードがある場合のみ）
     searchTerm
-      ? Post.findAll({
+      ? Post.unscoped().findAll({
+          attributes: ["id"],
           include: [
             {
               association: "user",
-              attributes: { exclude: ["profileImageId"] },
-              include: [{ association: "profileImage" }],
+              attributes: [],
               required: true,
               where: {
                 [Op.or]: [
@@ -67,19 +67,23 @@ searchRouter.get("/search", async (req, res) => {
                 ],
               },
             },
-            {
-              association: "images",
-              through: { attributes: [] },
-            },
-            { association: "movie" },
-            { association: "sound" },
           ],
           limit: fetchLimit,
           order: [["createdAt", "DESC"]],
+          subQuery: false,
           where: dateWhere,
         })
-      : Promise.resolve([] as typeof postsByText),
+      : Promise.resolve([] as Post[]),
   ]);
+
+  const postsByUser =
+    postsByUserIds.length > 0
+      ? await Post.findAll({
+          where: {
+            id: postsByUserIds.map((post) => post.id),
+          },
+        })
+      : [];
 
   const postIdSet = new Set<string>();
   const mergedPosts: typeof postsByText = [];

@@ -11,7 +11,7 @@ app.set("trust proxy", true);
 
 app.use(sessionMiddleware);
 app.use(bodyParser.json());
-app.use(bodyParser.raw({ limit: "10mb" }));
+app.use(bodyParser.raw({ limit: "40mb" }));
 
 app.use((_req, res, next) => {
   res.header({

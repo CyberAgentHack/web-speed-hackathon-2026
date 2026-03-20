@@ -18,7 +18,12 @@ function mean(arr: (number | undefined)[]): number {
 }
 
 async function calculate(data: ArrayBuffer): Promise<ParsedData> {
-  const audioCtx = new AudioContext();
+  const AudioContextClass = window.AudioContext;
+  if (!AudioContextClass) {
+    return { max: 0, peaks: [] };
+  }
+
+  const audioCtx = new AudioContextClass();
 
   const buffer = await audioCtx.decodeAudioData(data.slice(0));
   const leftData = buffer.getChannelData(0);
@@ -39,6 +44,8 @@ async function calculate(data: ArrayBuffer): Promise<ParsedData> {
     peaks.push(avg);
     if (avg > max) max = avg;
   }
+
+  await audioCtx.close().catch(() => {});
 
   return { max, peaks };
 }

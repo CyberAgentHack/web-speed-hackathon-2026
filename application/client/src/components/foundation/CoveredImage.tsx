@@ -1,4 +1,3 @@
-import { load, ImageIFD } from "piexifjs";
 import { MouseEvent, useCallback, useEffect, useId, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -13,6 +12,7 @@ interface Props {
  */
 export const CoveredImage = ({ src }: Props) => {
   const dialogId = useId();
+  const [isAltRequested, setIsAltRequested] = useState(false);
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
     ev.stopPropagation();
@@ -21,26 +21,38 @@ export const CoveredImage = ({ src }: Props) => {
   // EXIF alt text is loaded lazily after first paint — does not block rendering
   const [alt, setAlt] = useState("");
   useEffect(() => {
+    if (!isAltRequested) {
+      return;
+    }
+
     let cancelled = false;
-    fetch(src)
-      .then((r) => r.arrayBuffer())
-      .then((data) => {
-        if (cancelled) return;
-        try {
-          const exif = load(Buffer.from(data).toString("binary"));
-          const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-          if (raw != null) {
-            setAlt(new TextDecoder().decode(Buffer.from(raw, "binary")));
-          }
-        } catch {
-          // ignore EXIF parse errors
+    const parseAlt = async () => {
+      try {
+        const [{ ImageIFD, load }, response] = await Promise.all([import("piexifjs"), fetch(src)]);
+        const data = await response.arrayBuffer();
+        if (cancelled) {
+          return;
         }
-      })
-      .catch(() => {});
+
+        const binary = Array.from(new Uint8Array(data), (byte) => String.fromCharCode(byte)).join(
+          "",
+        );
+        const exif = load(binary);
+        const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
+        if (raw != null) {
+          setAlt(new TextDecoder().decode(Uint8Array.from(raw, (char) => char.charCodeAt(0))));
+        }
+      } catch {
+        // ignore EXIF parse errors
+      }
+    };
+
+    void parseAlt();
+
     return () => {
       cancelled = true;
     };
-  }, [src]);
+  }, [isAltRequested, src]);
 
   return (
     <div className="relative h-full w-full overflow-hidden">
@@ -52,6 +64,7 @@ export const CoveredImage = ({ src }: Props) => {
         type="button"
         command="show-modal"
         commandfor={dialogId}
+        onClick={() => setIsAltRequested(true)}
       >
         ALT を表示する
       </button>

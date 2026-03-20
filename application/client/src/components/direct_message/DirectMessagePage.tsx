@@ -1,14 +1,14 @@
 import classNames from "classnames";
 import {
   ChangeEvent,
+  FormEvent,
+  KeyboardEvent,
   useCallback,
-  useLayoutEffect,
+  useEffect,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
-  KeyboardEvent,
-  FormEvent,
-  useEffect,
 } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
