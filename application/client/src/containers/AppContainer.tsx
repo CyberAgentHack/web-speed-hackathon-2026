@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useId, useState, lazy, Suspense } from "react";
-import { Helmet, HelmetProvider } from "react-helmet";
+import { HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
-// 1. AppPage のインポートを復活させる
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
-// コンテナ類（TimelineContainer は軽量化したデバッグ版が呼ばれます）
+// コンテナ類：これらは lazy のままでOK（初期表示の JS 量を減らすため）
 const TimelineContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/TimelineContainer").then(m => ({ default: m.TimelineContainer })));
 const DirectMessageListContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer").then(m => ({ default: m.DirectMessageListContainer })));
 const DirectMessageContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer").then(m => ({ default: m.DirectMessageContainer })));
@@ -17,7 +16,6 @@ const PostContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/co
 const TermContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/TermContainer").then(m => ({ default: m.TermContainer })));
 const CrokContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/CrokContainer").then(m => ({ default: m.CrokContainer })));
 const NotFoundContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/NotFoundContainer").then(m => ({ default: m.NotFoundContainer })));
-
 const NewPostModalContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer").then(m => ({ default: m.NewPostModalContainer })));
 
 export const AppContainer = () => {
@@ -52,14 +50,13 @@ export const AppContainer = () => {
 
   return (
     <HelmetProvider>
-      {/* 2. 素の div を AppPage に戻す。props も忘れずに。 */}
       <AppPage
         activeUser={activeUser}
         authModalId={authModalId}
         newPostModalId={newPostModalId}
         onLogout={handleLogout}
       >
-        <Suspense fallback={<div style={{ padding: "20px" }}>コンテンツ読込中...</div>}>
+        <Suspense fallback={<div style={{ padding: "20px" }}>読み込み中...</div>}>
           <Routes>
             <Route element={<TimelineContainer />} path="/" />
             <Route element={<DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />} path="/dm" />
@@ -75,8 +72,6 @@ export const AppContainer = () => {
       </AppPage>
 
       <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
-
-      {/* 投稿モーダルは重いライブラリを呼ぶので Suspense で囲う */}
       {activeUser && (
         <Suspense fallback={null}>
           <NewPostModalContainer id={newPostModalId} />

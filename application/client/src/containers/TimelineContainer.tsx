@@ -1,29 +1,24 @@
 import { Helmet } from "react-helmet";
+import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
 import { TimelinePage } from "@web-speed-hackathon-2026/client/src/components/timeline/TimelinePage";
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 export const TimelineContainer = () => {
-  const { data: posts } = useInfiniteFetch<Models.Post>("/api/v1/posts", fetchJSON);
-
-  // 【デバッグ用】最初の5件だけに絞り込む
-  // これで点数が跳ね上がるなら、大量のDOM描画が原因です。
-  const limitedPosts = posts?.slice(0, 5) ?? [];
+  const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>("/api/v1/posts", fetchJSON);
 
   return (
-    <div>
+    <>
       <Helmet>
-        <title>タイムライン(軽量版) - CaX</title>
+        <title>タイムライン - CaX</title>
       </Helmet>
-      
       {/* 
-        一旦 InfiniteScroll を外します。
-        これが原因で Best Practices が「！」になっている（スクロールイベントの暴走）可能性が高いです。
+        デバッグ用の <div> を削除し、InfiniteScroll を本来の形で戻します。
+        中身の TimelineItem が軽量化されていれば、これで 20点台は維持できるはずです。
       */}
-      <div style={{ padding: "10px", background: "#fff" }}>
-        <p>表示件数制限中: {limitedPosts.length} / {posts?.length ?? 0} 件</p>
-        <TimelinePage timeline={limitedPosts} />
-      </div>
-    </div>
+      <InfiniteScroll fetchMore={fetchMore} items={posts}>
+        <TimelinePage timeline={posts} />
+      </InfiniteScroll>
+    </>
   );
 };
