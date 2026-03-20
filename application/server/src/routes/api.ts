@@ -15,6 +15,11 @@ import { userRouter } from "@web-speed-hackathon-2026/server/src/routes/api/user
 
 export const apiRouter = Router();
 
+apiRouter.use((_req, res, next) => {
+  res.setHeader("Cache-Control", "no-store");
+  return next();
+});
+
 apiRouter.use(initializeRouter);
 apiRouter.use(userRouter);
 apiRouter.use(postRouter);

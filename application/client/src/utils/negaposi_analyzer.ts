@@ -1,6 +1,6 @@
 import Bluebird from "bluebird";
-import analyze from "negaposi-analyzer-ja";
 import type { Tokenizer, IpadicFeatures } from "kuromoji";
+import analyze from "negaposi-analyzer-ja";
 
 async function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
   const { default: kuromoji } = await import("kuromoji");

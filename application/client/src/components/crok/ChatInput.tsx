@@ -1,4 +1,5 @@
 import Bluebird from "bluebird";
+import type { Tokenizer, IpadicFeatures } from "kuromoji";
 import {
   useEffect,
   useLayoutEffect,
@@ -8,7 +9,6 @@ import {
   type FormEvent,
   type KeyboardEvent,
 } from "react";
-import type { Tokenizer, IpadicFeatures } from "kuromoji";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import {
