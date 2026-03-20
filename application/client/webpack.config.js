@@ -5,6 +5,7 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const webpack = require("webpack");
+const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 
 const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
@@ -94,12 +95,21 @@ const config = {
       inject: false,
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
+    new BundleAnalyzerPlugin(),
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
     alias: {
-      "bayesian-bm25$": path.resolve(__dirname, "node_modules", "bayesian-bm25/dist/index.js"),
-      ["kuromoji$"]: path.resolve(__dirname, "node_modules", "kuromoji/build/kuromoji.js"),
+      "bayesian-bm25$": path.resolve(
+        __dirname,
+        "node_modules",
+        "bayesian-bm25/dist/index.js",
+      ),
+      ["kuromoji$"]: path.resolve(
+        __dirname,
+        "node_modules",
+        "kuromoji/build/kuromoji.js",
+      ),
       "@ffmpeg/ffmpeg$": path.resolve(
         __dirname,
         "node_modules",
@@ -139,7 +149,8 @@ const config = {
   ignoreWarnings: [
     {
       module: /@ffmpeg/,
-      message: /Critical dependency: the request of a dependency is an expression/,
+      message:
+        /Critical dependency: the request of a dependency is an expression/,
     },
   ],
 };
