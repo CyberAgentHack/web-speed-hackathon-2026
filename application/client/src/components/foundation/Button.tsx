@@ -10,10 +10,14 @@ interface Props extends ComponentPropsWithRef<"button"> {
 export const Button = forwardRef<HTMLButtonElement, Props>(
   ({ variant = "primary", leftItem, rightItem, className, children, onClick, ...props }, ref) => {
     const handleClick = (ev: React.MouseEvent<HTMLButtonElement>) => {
-      if (props.command === "show-modal" && props.commandfor) {
+      if (props.commandfor) {
         const dialog = document.getElementById(props.commandfor) as HTMLDialogElement | null;
         if (dialog && typeof dialog.showModal === "function") {
-          dialog.showModal();
+          if (props.command === "show-modal") {
+            dialog.showModal();
+          } else if (props.command === "close") {
+            dialog.close();
+          }
         }
       }
       onClick?.(ev);

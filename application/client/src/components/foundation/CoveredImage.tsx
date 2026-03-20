@@ -11,7 +11,7 @@ interface Props {
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
-export const CoveredImage = ({ src, isPriority }: Props) => {
+export const CoveredImage = ({ src }: Props) => {
   const dialogId = useId();
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
@@ -32,14 +32,14 @@ export const CoveredImage = ({ src, isPriority }: Props) => {
           decoding="async"
         />
 
-        <button
-          className="border-cax-border bg-cax-surface-raised/90 text-cax-text-muted hover:bg-cax-surface absolute right-1 bottom-1 rounded-full border px-2 py-1 text-center text-xs"
-          type="button"
+        <Button
+          className="absolute right-1 bottom-1 px-2 py-1 text-xs"
           command="show-modal"
           commandfor={dialogId}
+          variant="secondary"
         >
           ALT を表示する
-        </button>
+        </Button>
       </div>
 
       <Modal id={dialogId} closedby="any" onClick={handleDialogClick}>
