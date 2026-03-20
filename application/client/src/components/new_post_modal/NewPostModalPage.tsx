@@ -72,6 +72,12 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
         })
         .catch((err) => {
           console.error(err);
+          setParams((params) => ({
+            ...params,
+            images: files,
+            movie: undefined,
+            sound: undefined,
+          }));
           setIsConverting(false);
         });
     }

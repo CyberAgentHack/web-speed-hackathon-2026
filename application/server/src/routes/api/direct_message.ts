@@ -56,9 +56,9 @@ directMessageRouter.post("/dm", async (req, res) => {
       memberId: peer.id,
     },
   });
-  await conversation.reload();
+  const loaded = await DirectMessageConversation.findByPk(conversation.id);
 
-  return res.status(200).type("application/json").send(conversation);
+  return res.status(200).type("application/json").send(loaded);
 });
 
 directMessageRouter.ws("/dm/unread", async (req, _res) => {
