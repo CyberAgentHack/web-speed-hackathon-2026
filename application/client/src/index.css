@@ -1,5 +1,4 @@
-@layer normalize, theme, base, components, utilities;
-
+@import "tailwindcss" source(".");
 @import "normalize.css" layer(normalize);
 
 @font-face {
@@ -22,4 +21,238 @@
   height: 1em;
   vertical-align: -0.125em;
   width: 1em;
+}
+
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@theme {
+  --color-cax-canvas: var(--color-stone-100);
+  --color-cax-surface: var(--color-white);
+  --color-cax-surface-raised: var(--color-white);
+  --color-cax-surface-subtle: var(--color-stone-50);
+  --color-cax-overlay: var(--color-slate-950);
+  --color-cax-border: var(--color-stone-300);
+  --color-cax-border-strong: var(--color-stone-400);
+  --color-cax-text: var(--color-teal-950);
+  --color-cax-text-muted: var(--color-teal-700);
+  --color-cax-text-subtle: var(--color-slate-500);
+  --color-cax-brand: var(--color-teal-700);
+  --color-cax-brand-strong: var(--color-teal-800);
+  --color-cax-brand-soft: var(--color-teal-100);
+  --color-cax-accent: var(--color-orange-700);
+  --color-cax-accent-soft: var(--color-orange-100);
+  --color-cax-danger: var(--color-red-600);
+  --color-cax-danger-soft: var(--color-red-100);
+  --color-cax-highlight: var(--color-amber-200);
+  --color-cax-highlight-ink: var(--color-amber-950);
+}
+
+@layer components {
+  .markdown {
+    color: var(--color-cax-text);
+    font-size: 0.875rem;
+    line-break: strict;
+    overflow-wrap: anywhere;
+  }
+
+  .markdown :where(a) {
+    color: var(--color-cax-accent);
+    text-decoration: underline;
+    text-decoration-color: var(--color-cax-accent);
+    text-underline-offset: 2px;
+  }
+
+  .markdown :where(strong) {
+    font-weight: 700;
+  }
+
+  .markdown :where(em) {
+    font-style: italic;
+  }
+
+  .markdown :where(code):not(:where(pre > code)) {
+    background-color: var(--color-cax-surface-subtle);
+    border-radius: 0.25rem;
+    color: var(--color-cax-text);
+    font-family: monospace;
+    padding: 0.125rem 0.25rem;
+  }
+
+  .markdown :where(del) {
+    color: inherit;
+    text-decoration: line-through;
+  }
+
+  .markdown :where(p) {
+    color: var(--color-cax-text);
+    margin-block: 1.5rem;
+  }
+
+  .markdown :where(blockquote) {
+    border-left: 4px solid var(--color-cax-border);
+    color: var(--color-cax-text-muted);
+    margin-block: 1.5rem;
+    padding-left: 1rem;
+  }
+
+  .markdown :where(hr) {
+    border: 0;
+    border-top: 1px solid var(--color-cax-border);
+    margin-block: 2.5rem;
+  }
+
+  .markdown :where(ol) {
+    list-style: decimal;
+    margin-block: 1.5rem;
+    padding-left: 1.5rem;
+  }
+
+  .markdown :where(ul) {
+    list-style: disc;
+    margin-block: 1.5rem;
+    padding-left: 1.5rem;
+  }
+
+  .markdown :where(li) {
+    margin-block: 0.5rem;
+  }
+
+  .markdown :where(ol > li, ul > li)::marker {
+    color: var(--color-cax-text-muted);
+  }
+
+  .markdown :where(ol ol, ul ul, ol ul, ul ol) {
+    margin-block: 0.5rem;
+  }
+
+  .markdown :where(table) {
+    color: var(--color-cax-text);
+    font-size: 0.875rem;
+    margin-block: 1.5rem;
+    table-layout: auto;
+    width: 100%;
+  }
+
+  .markdown :where(thead) {
+    border-bottom: 1px solid var(--color-cax-border);
+  }
+
+  .markdown :where(thead th) {
+    font-weight: 700;
+    padding-inline: 0.5rem;
+    padding-bottom: 0.375rem;
+  }
+
+  .markdown :where(tbody tr) {
+    border-bottom: 1px solid var(--color-cax-border);
+  }
+
+  .markdown :where(tbody tr:last-child) {
+    border-bottom: 0;
+  }
+
+  .markdown :where(tbody td) {
+    vertical-align: baseline;
+  }
+
+  .markdown :where(tfoot) {
+    border-top: 1px solid var(--color-cax-border);
+  }
+
+  .markdown :where(tfoot td) {
+    vertical-align: top;
+  }
+
+  .markdown :where(th, td) {
+    text-align: left;
+  }
+
+  .markdown :where(tbody td, tfoot td) {
+    padding: 0.375rem 0.5rem;
+  }
+
+  .markdown :where(tbody tr:last-child td, tfoot tr:last-child td) {
+    padding-bottom: 0;
+  }
+
+  .markdown :where(h1, h2, h3, h4, h5, h6) {
+    color: var(--color-cax-text);
+    text-wrap: pretty;
+  }
+
+  .markdown :where(h1, h2, h3, h4) {
+    font-weight: 700;
+  }
+
+  .markdown :where(h1, h2) {
+    font-size: 1.5rem;
+    margin-block: 2.5rem 2rem;
+  }
+
+  .markdown :where(h3) {
+    font-size: 1.25rem;
+    margin-block: 2rem 1.5rem;
+  }
+
+  .markdown :where(h4) {
+    font-size: 1.125rem;
+    margin-block: 1.5rem 1rem;
+  }
+
+  .markdown :where(h5) {
+    border-bottom: 1px solid var(--color-cax-border);
+    font-weight: 700;
+    margin-block: 1.5rem 1rem;
+    padding: 0.125rem 0 0.125rem 0.5rem;
+  }
+
+  .markdown :where(h6) {
+    border-bottom: 1px solid var(--color-cax-border);
+    margin-block: 1.5rem 1rem;
+    padding: 0.125rem 0 0.125rem 0.5rem;
+  }
+
+  .markdown :where(h1 + *, h2 + *, h3 + *, h4 + *, h5 + *, h6 + *) {
+    margin-top: 0;
+  }
+
+  .markdown :where(.footnotes) {
+    border-top: 1px solid var(--color-cax-border);
+    margin-top: 2rem;
+  }
+
+  .markdown :where(.footnotes h2) {
+    border: 0;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+  }
+
+  .markdown :where(.footnotes ol) {
+    font-size: 0.875rem;
+    margin: 2rem 0 0;
+  }
+
+  .markdown :where(.footnotes ol li p) {
+    margin-block: 0;
+  }
+
+  .markdown > *:first-child {
+    margin-top: 0;
+  }
+
+  .markdown > *:last-child {
+    margin-bottom: 0;
+  }
 }
