@@ -15,13 +15,21 @@ interface Props {
 export const NewDirectMessageModalContainer = forwardRef<HTMLDialogElement, Props>(
   ({ id }, ref) => {
     const internalRef = useRef<HTMLDialogElement>(null);
-    const modalRef = (ref as any) || internalRef;
     const dispatch = useDispatch();
     const [resetKey, setResetKey] = useState(0);
 
+    // Forward the ref to the parent
     useEffect(() => {
-      if (!modalRef.current) return;
-      const element = modalRef.current;
+      if (typeof ref === "function") {
+        ref(internalRef.current);
+      } else if (ref) {
+        (ref as any).current = internalRef.current;
+      }
+    }, [ref]);
+
+    useEffect(() => {
+      if (!internalRef.current) return;
+      const element = internalRef.current;
 
       const handleToggle = () => {
         setResetKey((key) => key + 1);
@@ -31,7 +39,7 @@ export const NewDirectMessageModalContainer = forwardRef<HTMLDialogElement, Prop
       return () => {
         element.removeEventListener("toggle", handleToggle);
       };
-    }, [modalRef, dispatch]);
+    }, [dispatch]);
 
     const navigate = useNavigate();
 
@@ -53,11 +61,11 @@ export const NewDirectMessageModalContainer = forwardRef<HTMLDialogElement, Prop
     );
 
     const handleClose = useCallback(() => {
-      modalRef.current?.close();
-    }, [modalRef]);
+      internalRef.current?.close();
+    }, []);
 
     return (
-      <Modal id={id} ref={modalRef} closedby="any">
+      <Modal id={id} ref={internalRef} closedby="any">
         <NewDirectMessageModalPage
           key={resetKey}
           id={id}
