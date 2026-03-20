@@ -74,10 +74,10 @@ export const PausableMovie = ({ src }: Props) => {
   };
 
   return (
-    <div
+    <button
       className="group relative block h-full w-full overflow-hidden"
       onClick={togglePlay}
-      role="presentation"
+      type="button"
     >
       {/* Hidden but active video element for MP4 playback */}
       <video
@@ -99,6 +99,6 @@ export const PausableMovie = ({ src }: Props) => {
           <span className="text-4xl text-white drop-shadow-md">▶</span>
         </div>
       )}
-    </div>
+    </button>
   );
 };
