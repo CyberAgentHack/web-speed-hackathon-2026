@@ -11,13 +11,18 @@ interface SearchResponse {
   posts: Models.Post[];
 }
 
+async function fetchSearchResponses(apiPath: string): Promise<SearchResponse[]> {
+  const response = await fetchJSON<SearchResponse>(apiPath);
+  return [response];
+}
+
 export const SearchContainer = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
 
   const { data: responses, fetchMore } = useInfiniteFetch<SearchResponse>(
     query ? `/api/v1/search?q=${encodeURIComponent(query)}` : "",
-    fetchJSON,
+    fetchSearchResponses,
   );
   const posts = responses.flatMap((response) => response.posts);
   const isNegativeQuery = responses[0]?.isNegativeQuery ?? false;
