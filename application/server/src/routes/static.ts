@@ -14,22 +14,13 @@ export const staticRouter = Router();
 staticRouter.use(history());
 
 staticRouter.use(
-  serveStatic(UPLOAD_PATH, {
-    etag: false,
-    lastModified: false,
-  }),
+  serveStatic(UPLOAD_PATH),
 );
 
 staticRouter.use(
-  serveStatic(PUBLIC_PATH, {
-    etag: false,
-    lastModified: false,
-  }),
+  serveStatic(PUBLIC_PATH),
 );
 
 staticRouter.use(
-  serveStatic(CLIENT_DIST_PATH, {
-    etag: false,
-    lastModified: false,
-  }),
+  serveStatic(CLIENT_DIST_PATH),
 );
