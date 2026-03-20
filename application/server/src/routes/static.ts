@@ -1,3 +1,4 @@
+import * as fs from "node:fs";
 import * as path from "node:path";
 
 import history from "connect-history-api-fallback";
@@ -10,10 +11,51 @@ import {
   UPLOAD_PATH,
 } from "@web-speed-hackathon-2026/server/src/paths";
 
+// サーバー起動時に dist/index.html からクリティカルリソースのパスを抽出
+const indexHtmlPath = path.join(CLIENT_DIST_PATH, "index.html");
+const preloadLinkValues: string[] = [];
+try {
+  const indexHtml = fs.readFileSync(indexHtmlPath, "utf-8");
+  const seen = new Set<string>();
+  // <link rel="stylesheet"> の href を抽出（属性順序・大小文字に依存しない）
+  for (const m of indexHtml.matchAll(/<link\b[^>]*>/gi)) {
+    const tag = m[0];
+    if (!/rel\s*=\s*["']stylesheet["']/i.test(tag)) continue;
+    const hrefMatch = tag.match(/href\s*=\s*["']([^"']+)["']/i);
+    const href = hrefMatch?.[1];
+    if (href && !seen.has(href)) {
+      seen.add(href);
+      preloadLinkValues.push(`<${href}>; rel=preload; as=style`);
+    }
+  }
+  // エントリ JS のみ preload（チャンクとの優先度競合を避けるため main のみ）
+  for (const m of indexHtml.matchAll(/<script\b[^>]*>/gi)) {
+    const tag = m[0];
+    const srcMatch = tag.match(/src\s*=\s*["'](\/[^"']*main[^"']*\.js)["']/i);
+    const src = srcMatch?.[1];
+    if (src && !seen.has(src)) {
+      seen.add(src);
+      preloadLinkValues.push(`<${src}>; rel=preload; as=script`);
+    }
+  }
+} catch {
+  // index.html が存在しない場合（開発時等）はスキップ
+}
+
 export const staticRouter = Router();
 
 // SPA 対応のため、ファイルが存在しないときに index.html を返す
 staticRouter.use(history());
+
+// history() による URL 書き換え後に判定し、HTML レスポンス時のみ Link ヘッダーを付与
+staticRouter.use((req, res, next) => {
+  if (preloadLinkValues.length > 0 && req.method === "GET" && req.url.endsWith(".html")) {
+    for (const value of preloadLinkValues) {
+      res.append("Link", value);
+    }
+  }
+  next();
+});
 
 staticRouter.use(
   serveStatic(UPLOAD_PATH, {

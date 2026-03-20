@@ -22,13 +22,9 @@ app.use(
 app.use("/api/v1", sessionMiddleware);
 app.use("/api/v1", bodyParser.json());
 app.use("/api/v1", bodyParser.raw({ limit: "10mb" }));
-
-app.use((_req, res, next) => {
-  if (_req.path.startsWith("/api/")) {
-    res.header("Cache-Control", "no-cache");
-  }
+app.use("/api/v1", (_req, res, next) => {
+  res.header("Cache-Control", "no-cache");
   return next();
 });
-
 app.use("/api/v1", apiRouter);
 app.use(staticRouter);
