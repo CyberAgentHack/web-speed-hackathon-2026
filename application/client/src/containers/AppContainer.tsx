@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useId, useState } from "react";
+import { lazy, startTransition, Suspense, useCallback, useEffect, useId, useState } from "react";
 import { Helmet, HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
@@ -25,16 +25,14 @@ export const AppContainer = () => {
   }, [pathname]);
 
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
-  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
   useEffect(() => {
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {
-        setActiveUser(user);
-      })
-      .finally(() => {
-        setIsLoadingActiveUser(false);
+        startTransition(() => {
+          setActiveUser(user);
+        });
       });
-  }, [setActiveUser, setIsLoadingActiveUser]);
+  }, []);
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
     setActiveUser(null);
