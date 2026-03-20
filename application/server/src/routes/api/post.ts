@@ -1,50 +1,61 @@
-import { Router } from "express";
-import httpErrors from "http-errors";
+import { Hono } from "hono";
+import type { Context } from "hono";
 
 import { Comment, Post } from "@web-speed-hackathon-2026/server/src/models";
 
-export const postRouter = Router();
+export const postRouter = new Hono();
 
-postRouter.get("/posts", async (req, res) => {
+postRouter.get("/posts", async (c: Context) => {
+  const limit = c.req.query("limit") != null ? Number(c.req.query("limit")) : undefined;
+  const offset = c.req.query("offset") != null ? Number(c.req.query("offset")) : undefined;
+
   const posts = await Post.findAll({
-    limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
-    offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
+    limit,
+    offset,
   });
 
-  return res.status(200).type("application/json").send(posts);
+  return c.json(posts, 200);
 });
 
-postRouter.get("/posts/:postId", async (req, res) => {
-  const post = await Post.findByPk(req.params.postId);
+postRouter.get("/posts/:postId", async (c: Context) => {
+  const postId = c.req.param("postId");
+  const post = await Post.findByPk(postId);
 
   if (post === null) {
-    throw new httpErrors.NotFound();
+    return c.json({ message: "Not Found" }, 404);
   }
 
-  return res.status(200).type("application/json").send(post);
+  return c.json(post, 200);
 });
 
-postRouter.get("/posts/:postId/comments", async (req, res) => {
+postRouter.get("/posts/:postId/comments", async (c: Context) => {
+  const postId = c.req.param("postId");
+  const limit = c.req.query("limit") != null ? Number(c.req.query("limit")) : undefined;
+  const offset = c.req.query("offset") != null ? Number(c.req.query("offset")) : undefined;
+
   const posts = await Comment.findAll({
-    limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
-    offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
+    limit,
+    offset,
     where: {
-      postId: req.params.postId,
+      postId,
     },
   });
 
-  return res.status(200).type("application/json").send(posts);
+  return c.json(posts, 200);
 });
 
-postRouter.post("/posts", async (req, res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
+postRouter.post("/posts", async (c: Context) => {
+  const session = c.get("session" as never) as Record<string, unknown>;
+  if (session["userId"] === undefined) {
+    return c.json({ message: "Unauthorized" }, 401);
   }
+
+  const body = c.get("body" as never) || await c.req.json();
 
   const post = await Post.create(
     {
-      ...req.body,
-      userId: req.session.userId,
+      ...body,
+      userId: session["userId"],
     },
     {
       include: [
@@ -58,5 +69,5 @@ postRouter.post("/posts", async (req, res) => {
     },
   );
 
-  return res.status(200).type("application/json").send(post);
+  return c.json(post, 200);
 });

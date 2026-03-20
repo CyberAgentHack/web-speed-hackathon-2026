@@ -1,6 +1,4 @@
-import { Router, NextFunction, Request, Response } from "express";
-import httpErrors from "http-errors";
-import { ValidationError } from "sequelize";
+import { Hono } from "hono";
 
 import { authRouter } from "@web-speed-hackathon-2026/server/src/routes/api/auth";
 import { crokRouter } from "@web-speed-hackathon-2026/server/src/routes/api/crok";
@@ -12,36 +10,34 @@ import { postRouter } from "@web-speed-hackathon-2026/server/src/routes/api/post
 import { searchRouter } from "@web-speed-hackathon-2026/server/src/routes/api/search";
 import { soundRouter } from "@web-speed-hackathon-2026/server/src/routes/api/sound";
 import { userRouter } from "@web-speed-hackathon-2026/server/src/routes/api/user";
+import { ValidationError } from "sequelize";
 
-export const apiRouter = Router();
+export const apiRouter = new Hono();
 
-apiRouter.use(initializeRouter);
-apiRouter.use(userRouter);
-apiRouter.use(postRouter);
-apiRouter.use(directMessageRouter);
-apiRouter.use(searchRouter);
-apiRouter.use(movieRouter);
-apiRouter.use(imageRouter);
-apiRouter.use(soundRouter);
-apiRouter.use(authRouter);
-apiRouter.use(crokRouter);
+apiRouter.route("/", initializeRouter);
+apiRouter.route("/", userRouter);
+apiRouter.route("/", postRouter);
+apiRouter.route("/", directMessageRouter);
+apiRouter.route("/", searchRouter);
+apiRouter.route("/", movieRouter);
+apiRouter.route("/", imageRouter);
+apiRouter.route("/", soundRouter);
+apiRouter.route("/", authRouter);
+apiRouter.route("/", crokRouter);
 
-apiRouter.use(async (err: Error, _req: Request, _res: Response, _next: NextFunction) => {
+apiRouter.onError(async (err, c) => {
   if (err instanceof ValidationError) {
-    throw new httpErrors.BadRequest();
+    return c.json({ message: "Bad Request" }, 400);
   }
-  throw err;
-});
 
-apiRouter.use(async (err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  if (!httpErrors.isHttpError(err) || err.status === 500) {
+  if (!(err instanceof Error)) {
+    return c.json({ message: "Internal Server Error" }, 500);
+  }
+
+  if (!("status" in err) || (err as any).status === 500) {
     console.error(err);
   }
 
-  return res
-    .status(httpErrors.isHttpError(err) ? err.status : 500)
-    .type("application/json")
-    .send({
-      message: err.message,
-    });
+  const statusCode = (err as any).status || 500;
+  return c.json({ message: err.message }, statusCode);
 });

@@ -1,39 +1,39 @@
+import { Hono } from "hono";
+import type { Context } from "hono";
+import { fileTypeFromBuffer } from "file-type";
 import { promises as fs } from "fs";
 import path from "path";
-
-import { Router } from "express";
-import { fileTypeFromBuffer } from "file-type";
-import httpErrors from "http-errors";
-import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import { extractMetadataFromSound } from "@web-speed-hackathon-2026/server/src/utils/extract_metadata_from_sound";
 
-// 変換した音声の拡張子
 const EXTENSION = "mp3";
 
-export const soundRouter = Router();
+export const soundRouter = new Hono();
 
-soundRouter.post("/sounds", async (req, res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
-  }
-  if (Buffer.isBuffer(req.body) === false) {
-    throw new httpErrors.BadRequest();
+soundRouter.post("/sounds", async (c: Context) => {
+  const session = c.get("session" as never) as Record<string, unknown>;
+  if (session["userId"] === undefined) {
+    return c.json({ message: "Unauthorized" }, 401);
   }
 
-  const type = await fileTypeFromBuffer(req.body);
+  const rawBody = c.get("rawBody" as never) as Buffer | undefined;
+  if (!rawBody) {
+    return c.json({ message: "Bad Request" }, 400);
+  }
+
+  const type = await fileTypeFromBuffer(rawBody);
   if (type === undefined || type.ext !== EXTENSION) {
-    throw new httpErrors.BadRequest("Invalid file type");
+    return c.json({ message: "Invalid file type" }, 400);
   }
 
-  const soundId = uuidv4();
+  const soundId = crypto.randomUUID();
 
-  const { artist, title } = await extractMetadataFromSound(req.body);
+  const { artist, title } = await extractMetadataFromSound(rawBody);
 
   const filePath = path.resolve(UPLOAD_PATH, `./sounds/${soundId}.${EXTENSION}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds"), { recursive: true });
-  await fs.writeFile(filePath, req.body);
+  await fs.writeFile(filePath, rawBody);
 
-  return res.status(200).type("application/json").send({ artist, id: soundId, title });
+  return c.json({ artist, id: soundId, title }, 200);
 });

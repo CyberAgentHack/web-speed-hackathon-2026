@@ -1,30 +1,29 @@
-import { Router } from "express";
-import { Op } from "sequelize";
+import { Hono } from "hono";
+import type { Context } from "hono";
 
 import { Post } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
+import { Op } from "sequelize";
 
-export const searchRouter = Router();
+export const searchRouter = new Hono();
 
-searchRouter.get("/search", async (req, res) => {
-  const query = req.query["q"];
+searchRouter.get("/search", async (c: Context) => {
+  const query = c.req.query("q");
 
   if (typeof query !== "string" || query.trim() === "") {
-    return res.status(200).type("application/json").send([]);
+    return c.json([], 200);
   }
 
   const { keywords, sinceDate, untilDate } = parseSearchQuery(query);
 
-  // キーワードも日付フィルターもない場合は空配列を返す
   if (!keywords && !sinceDate && !untilDate) {
-    return res.status(200).type("application/json").send([]);
+    return c.json([], 200);
   }
 
   const searchTerm = keywords ? `%${keywords}%` : null;
-  const limit = req.query["limit"] != null ? Number(req.query["limit"]) : undefined;
-  const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
+  const limit = c.req.query("limit") != null ? Number(c.req.query("limit")) : undefined;
+  const offset = c.req.query("offset") != null ? Number(c.req.query("offset")) : undefined;
 
-  // 日付条件を構築
   const dateConditions: Record<symbol, Date>[] = [];
   if (sinceDate) {
     dateConditions.push({ [Op.gte]: sinceDate });
@@ -35,7 +34,6 @@ searchRouter.get("/search", async (req, res) => {
   const dateWhere =
     dateConditions.length > 0 ? { createdAt: Object.assign({}, ...dateConditions) } : {};
 
-  // テキスト検索条件
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
   const postsByText = await Post.findAll({
@@ -47,7 +45,6 @@ searchRouter.get("/search", async (req, res) => {
     },
   });
 
-  // ユーザー名/名前での検索（キーワードがある場合のみ）
   let postsByUser: typeof postsByText = [];
   if (searchTerm) {
     postsByUser = await Post.findAll({
@@ -88,5 +85,5 @@ searchRouter.get("/search", async (req, res) => {
 
   const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
 
-  return res.status(200).type("application/json").send(result);
+  return c.json(result, 200);
 });

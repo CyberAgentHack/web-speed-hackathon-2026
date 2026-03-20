@@ -1,5 +1,5 @@
-import { Router } from "express";
-import httpErrors from "http-errors";
+import { Hono } from "hono";
+import type { Context } from "hono";
 import { col, where, Op } from "sequelize";
 
 import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
@@ -9,17 +9,19 @@ import {
   User,
 } from "@web-speed-hackathon-2026/server/src/models";
 
-export const directMessageRouter = Router();
+export const directMessageRouter = new Hono();
 
-directMessageRouter.get("/dm", async (req, res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
+directMessageRouter.get("/dm", async (c: Context) => {
+  const session = c.get("session" as never) as Record<string, unknown>;
+  const userId = session["userId"] as string | undefined;
+  if (userId === undefined) {
+    return c.json({ message: "Unauthorized" }, 401);
   }
 
   const conversations = await DirectMessageConversation.findAll({
     where: {
       [Op.and]: [
-        { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
+        { [Op.or]: [{ initiatorId: userId }, { memberId: userId }] },
         where(col("messages.id"), { [Op.not]: null }),
       ],
     },
@@ -31,172 +33,144 @@ directMessageRouter.get("/dm", async (req, res) => {
     messages: c.messages?.reverse(),
   }));
 
-  return res.status(200).type("application/json").send(sorted);
+  return c.json(sorted, 200);
 });
 
-directMessageRouter.post("/dm", async (req, res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
+directMessageRouter.post("/dm", async (c: Context) => {
+  const session = c.get("session" as never) as Record<string, unknown>;
+  const userId = session["userId"] as string | undefined;
+  if (userId === undefined) {
+    return c.json({ message: "Unauthorized" }, 401);
   }
 
-  const peer = await User.findByPk(req.body?.peerId);
+  const body = c.get("body" as never) || await c.req.json();
+  const peer = await User.findByPk(body?.peerId);
   if (peer === null) {
-    throw new httpErrors.NotFound();
+    return c.json({ message: "Not Found" }, 404);
   }
 
   const [conversation] = await DirectMessageConversation.findOrCreate({
     where: {
       [Op.or]: [
-        { initiatorId: req.session.userId, memberId: peer.id },
-        { initiatorId: peer.id, memberId: req.session.userId },
+        { initiatorId: userId, memberId: peer.id },
+        { initiatorId: peer.id, memberId: userId },
       ],
     },
     defaults: {
-      initiatorId: req.session.userId,
+      initiatorId: userId,
       memberId: peer.id,
     },
   });
   await conversation.reload();
 
-  return res.status(200).type("application/json").send(conversation);
+  return c.json(conversation, 200);
 });
 
-directMessageRouter.ws("/dm/unread", async (req, _res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
+directMessageRouter.get("/dm/unread/ws", async (c: Context) => {
+  const session = c.get("session" as never) as Record<string, unknown>;
+  const userId = session["userId"] as string | undefined;
+  if (userId === undefined) {
+    return c.json({ message: "Unauthorized" }, 401);
   }
-
-  const handler = (payload: unknown) => {
-    req.ws.send(JSON.stringify({ type: "dm:unread", payload }));
-  };
-
-  eventhub.on(`dm:unread/${req.session.userId}`, handler);
-  req.ws.on("close", () => {
-    eventhub.off(`dm:unread/${req.session.userId}`, handler);
-  });
 
   const unreadCount = await DirectMessage.count({
     distinct: true,
     where: {
-      senderId: { [Op.ne]: req.session.userId },
+      senderId: { [Op.ne]: userId },
       isRead: false,
     },
     include: [
       {
         association: "conversation",
         where: {
-          [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
+          [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
         },
         required: true,
       },
     ],
   });
 
-  eventhub.emit(`dm:unread/${req.session.userId}`, { unreadCount });
+  eventhub.emit(`dm:unread/${userId}`, { unreadCount });
+  return c.json({ unreadCount }, 200);
 });
 
-directMessageRouter.get("/dm/:conversationId", async (req, res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
+directMessageRouter.get("/dm/:conversationId", async (c: Context) => {
+  const session = c.get("session" as never) as Record<string, unknown>;
+  const userId = session["userId"] as string | undefined;
+  if (userId === undefined) {
+    return c.json({ message: "Unauthorized" }, 401);
   }
 
+  const conversationId = c.req.param("conversationId");
   const conversation = await DirectMessageConversation.findOne({
     where: {
-      id: req.params.conversationId,
-      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
+      id: conversationId,
+      [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
     },
   });
   if (conversation === null) {
-    throw new httpErrors.NotFound();
+    return c.json({ message: "Not Found" }, 404);
   }
 
-  return res.status(200).type("application/json").send(conversation);
+  return c.json(conversation, 200);
 });
 
-directMessageRouter.ws("/dm/:conversationId", async (req, _res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
+directMessageRouter.post("/dm/:conversationId/messages", async (c: Context) => {
+  const session = c.get("session" as never) as Record<string, unknown>;
+  const userId = session["userId"] as string | undefined;
+  if (userId === undefined) {
+    return c.json({ message: "Unauthorized" }, 401);
   }
 
+  const body = c.get("body" as never) || await c.req.json();
+  const messageBody: unknown = body?.body;
+  if (typeof messageBody !== "string" || messageBody.trim().length === 0) {
+    return c.json({ message: "Bad Request" }, 400);
+  }
+
+  const conversationId = c.req.param("conversationId");
   const conversation = await DirectMessageConversation.findOne({
     where: {
-      id: req.params.conversationId,
-      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
-    },
-  });
-  if (conversation == null) {
-    throw new httpErrors.NotFound();
-  }
-
-  const peerId =
-    conversation.initiatorId !== req.session.userId
-      ? conversation.initiatorId
-      : conversation.memberId;
-
-  const handleMessageUpdated = (payload: unknown) => {
-    req.ws.send(JSON.stringify({ type: "dm:conversation:message", payload }));
-  };
-  eventhub.on(`dm:conversation/${conversation.id}:message`, handleMessageUpdated);
-  req.ws.on("close", () => {
-    eventhub.off(`dm:conversation/${conversation.id}:message`, handleMessageUpdated);
-  });
-
-  const handleTyping = (payload: unknown) => {
-    req.ws.send(JSON.stringify({ type: "dm:conversation:typing", payload }));
-  };
-  eventhub.on(`dm:conversation/${conversation.id}:typing/${peerId}`, handleTyping);
-  req.ws.on("close", () => {
-    eventhub.off(`dm:conversation/${conversation.id}:typing/${peerId}`, handleTyping);
-  });
-});
-
-directMessageRouter.post("/dm/:conversationId/messages", async (req, res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
-  }
-
-  const body: unknown = req.body?.body;
-  if (typeof body !== "string" || body.trim().length === 0) {
-    throw new httpErrors.BadRequest();
-  }
-
-  const conversation = await DirectMessageConversation.findOne({
-    where: {
-      id: req.params.conversationId,
-      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
+      id: conversationId,
+      [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
     },
   });
   if (conversation === null) {
-    throw new httpErrors.NotFound();
+    return c.json({ message: "Not Found" }, 404);
   }
 
   const message = await DirectMessage.create({
-    body: body.trim(),
+    body: messageBody.trim(),
     conversationId: conversation.id,
-    senderId: req.session.userId,
+    senderId: userId,
   });
   await message.reload();
 
-  return res.status(201).type("application/json").send(message);
+  eventhub.emit(`dm:conversation/${conversation.id}:message`, message);
+
+  return c.json(message, 201);
 });
 
-directMessageRouter.post("/dm/:conversationId/read", async (req, res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
+directMessageRouter.post("/dm/:conversationId/read", async (c: Context) => {
+  const session = c.get("session" as never) as Record<string, unknown>;
+  const userId = session["userId"] as string | undefined;
+  if (userId === undefined) {
+    return c.json({ message: "Unauthorized" }, 401);
   }
 
+  const conversationId = c.req.param("conversationId");
   const conversation = await DirectMessageConversation.findOne({
     where: {
-      id: req.params.conversationId,
-      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
+      id: conversationId,
+      [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
     },
   });
   if (conversation === null) {
-    throw new httpErrors.NotFound();
+    return c.json({ message: "Not Found" }, 404);
   }
 
   const peerId =
-    conversation.initiatorId !== req.session.userId
+    conversation.initiatorId !== userId
       ? conversation.initiatorId
       : conversation.memberId;
 
@@ -208,20 +182,23 @@ directMessageRouter.post("/dm/:conversationId/read", async (req, res) => {
     },
   );
 
-  return res.status(200).type("application/json").send({});
+  return c.json({}, 200);
 });
 
-directMessageRouter.post("/dm/:conversationId/typing", async (req, res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
+directMessageRouter.post("/dm/:conversationId/typing", async (c: Context) => {
+  const session = c.get("session" as never) as Record<string, unknown>;
+  const userId = session["userId"] as string | undefined;
+  if (userId === undefined) {
+    return c.json({ message: "Unauthorized" }, 401);
   }
 
-  const conversation = await DirectMessageConversation.findByPk(req.params.conversationId);
+  const conversationId = c.req.param("conversationId");
+  const conversation = await DirectMessageConversation.findByPk(conversationId);
   if (conversation === null) {
-    throw new httpErrors.NotFound();
+    return c.json({ message: "Not Found" }, 404);
   }
 
-  eventhub.emit(`dm:conversation/${conversation.id}:typing/${req.session.userId}`, {});
+  eventhub.emit(`dm:conversation/${conversation.id}:typing/${userId}`, {});
 
-  return res.status(200).type("application/json").send({});
+  return c.json({}, 200);
 });

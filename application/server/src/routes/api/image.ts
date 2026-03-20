@@ -1,36 +1,36 @@
+import { Hono } from "hono";
+import type { Context } from "hono";
+
+import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+import { fileTypeFromBuffer } from "file-type";
 import { promises as fs } from "fs";
 import path from "path";
 
-import { Router } from "express";
-import { fileTypeFromBuffer } from "file-type";
-import httpErrors from "http-errors";
-import { v4 as uuidv4 } from "uuid";
-
-import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
-
-// 変換した画像の拡張子
 const EXTENSION = "jpg";
 
-export const imageRouter = Router();
+export const imageRouter = new Hono();
 
-imageRouter.post("/images", async (req, res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
-  }
-  if (Buffer.isBuffer(req.body) === false) {
-    throw new httpErrors.BadRequest();
+imageRouter.post("/images", async (c: Context) => {
+  const session = c.get("session" as never) as Record<string, unknown>;
+  if (session["userId"] === undefined) {
+    return c.json({ message: "Unauthorized" }, 401);
   }
 
-  const type = await fileTypeFromBuffer(req.body);
+  const rawBody = c.get("rawBody" as never) as Buffer | undefined;
+  if (!rawBody) {
+    return c.json({ message: "Bad Request" }, 400);
+  }
+
+  const type = await fileTypeFromBuffer(rawBody);
   if (type === undefined || type.ext !== EXTENSION) {
-    throw new httpErrors.BadRequest("Invalid file type");
+    return c.json({ message: "Invalid file type" }, 400);
   }
 
-  const imageId = uuidv4();
+  const imageId = crypto.randomUUID();
 
   const filePath = path.resolve(UPLOAD_PATH, `./images/${imageId}.${EXTENSION}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
-  await fs.writeFile(filePath, req.body);
+  await fs.writeFile(filePath, rawBody);
 
-  return res.status(200).type("application/json").send({ id: imageId });
+  return c.json({ id: imageId }, 200);
 });
