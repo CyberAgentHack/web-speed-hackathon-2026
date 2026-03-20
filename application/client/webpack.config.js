@@ -120,6 +120,7 @@ const config = {
     },
   },
   optimization: {
+    minimize: true,
     runtimeChunk: "single",
     splitChunks: {
       chunks: "all",
