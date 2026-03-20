@@ -2,7 +2,6 @@ import * as github from "@actions/github";
 import { defineCommand, runMain } from "citty";
 import { stripIndents } from "common-tags";
 import debug from "debug";
-import _ from "lodash";
 import { inject } from "regexparam";
 
 import { calculate, TARGET_NAME_LIST } from "./calculate";
@@ -12,6 +11,7 @@ import type { MetricKey, Result, TargetCategory } from "./result";
 import { CLIWriter } from "./writer/cli_writer";
 import { EmptyWriter } from "./writer/empty_writer";
 import { GitHubWriter } from "./writer/github_writer";
+import { sum, round } from 'lodash'
 
 const SCORE_SECTION_LIST: Array<{
   category: TargetCategory;
@@ -291,8 +291,12 @@ const command = defineCommand({
       }
 
       {
-        const totalScore = _.round(_.sum(_.map(results, ({ scoreX100 }) => scoreX100)) / 100, 2);
-        const totalMaxScore = _.sum(_.map(results, ({ target }) => target.maxScore));
+        const totalScore = round(
+          sum(results.map(({ scoreX100 }) => scoreX100)) / 100,
+          2
+        )
+
+        const totalMaxScore = sum(results.map(({ target }) => target.maxScore));
 
         const { rank } = await sendScoreToDashboard(totalScore);
 
