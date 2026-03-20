@@ -1,11 +1,8 @@
-import { combineReducers, legacy_createStore as createStore, Dispatch, UnknownAction } from "redux";
-import { reducer as formReducer, FormAction } from "redux-form";
+import { legacy_createStore as createStore, Dispatch, UnknownAction } from "redux";
 
-const rootReducer = combineReducers({
-  form: formReducer,
-});
+const rootReducer = (state = {}) => state;
 
 export type RootState = ReturnType<typeof rootReducer>;
-export type AppDispatch = Dispatch<UnknownAction | FormAction>;
+export type AppDispatch = Dispatch<UnknownAction>;
 
 export const store = createStore(rootReducer);
