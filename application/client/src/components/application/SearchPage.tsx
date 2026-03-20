@@ -1,13 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { Field, InjectedFormProps, reduxForm, WrappedFieldProps } from "redux-form";
 
 import { Timeline } from "@web-speed-hackathon-2026/client/src/components/timeline/Timeline";
 import {
   parseSearchQuery,
   sanitizeSearchText,
 } from "@web-speed-hackathon-2026/client/src/search/services";
-import { SearchFormData } from "@web-speed-hackathon-2026/client/src/search/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/search/validation";
 import { analyzeSentiment } from "@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer";
 
@@ -18,33 +16,48 @@ interface Props {
   results: Models.Post[];
 }
 
-const SearchInput = ({ input, meta }: WrappedFieldProps) => (
+const SearchInput = ({
+  value,
+  error,
+  onChange,
+}: {
+  value: string;
+  error?: string;
+  onChange: (value: string) => void;
+}) => (
   <div className="flex flex-1 flex-col">
+    <label className="sr-only" htmlFor="search-query-input">
+      検索 (例: キーワード since:2025-01-01 until:2025-12-31)
+    </label>
     <input
-      {...input}
+      aria-label="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
       className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
-        meta.touched && meta.error
+        error
           ? "border-cax-danger focus:border-cax-danger"
           : "border-cax-border focus:border-cax-brand-strong"
       }`}
+      id="search-query-input"
+      onChange={(ev) => onChange(ev.currentTarget.value)}
       placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
       type="text"
+      value={value}
     />
-    {meta.touched && meta.error && (
-      <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>
-    )}
+    {error ? <span className="text-cax-danger mt-1 text-xs">{error}</span> : null}
   </div>
 );
 
-const SearchPageComponent = ({
-  query,
-  results,
-  handleSubmit,
-}: Props & InjectedFormProps<SearchFormData, Props>) => {
+export const SearchPage = ({ query, results }: Props) => {
   const navigate = useNavigate();
   const [isNegative, setIsNegative] = useState(false);
+  const [searchText, setSearchText] = useState(query);
+
+  useEffect(() => {
+    setSearchText(query);
+  }, [query]);
 
   const parsed = parseSearchQuery(query);
+  const errors = useMemo(() => validate({ searchText }), [searchText]);
+  const error = errors.searchText;
 
   useEffect(() => {
     if (!parsed.keywords) {
@@ -84,18 +97,23 @@ const SearchPageComponent = ({
     return parts.join(" ");
   }, [parsed]);
 
-  const onSubmit = (values: SearchFormData) => {
-    const sanitizedText = sanitizeSearchText(values.searchText.trim());
+  const onSubmit = (ev: FormEvent<HTMLFormElement>) => {
+    ev.preventDefault();
+    if (error) {
+      return;
+    }
+
+    const sanitizedText = sanitizeSearchText(searchText.trim());
     navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
   };
 
   return (
     <div className="flex flex-col gap-4">
       <div className="bg-cax-surface p-4 shadow">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={onSubmit}>
           <div className="flex gap-2">
-            <Field name="searchText" component={SearchInput} />
-            <Button variant="primary" type="submit">
+            <SearchInput error={error} onChange={setSearchText} value={searchText} />
+            <Button variant="primary" type="submit" disabled={!!error}>
               検索
             </Button>
           </div>
@@ -105,15 +123,19 @@ const SearchPageComponent = ({
         </p>
       </div>
 
-      {query && (
+      {query ? (
         <div className="px-4">
-          <h2 className="text-lg font-bold">
+          <h2
+            aria-label={`${searchConditionText} の検索結果`}
+            className="text-lg font-bold"
+            tabIndex={-1}
+          >
             {searchConditionText} の検索結果 ({results.length} 件)
           </h2>
         </div>
-      )}
+      ) : null}
 
-      {isNegative && (
+      {isNegative ? (
         <article className="hover:bg-cax-surface-subtle px-1 sm:px-4">
           <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
             <div>
@@ -122,7 +144,7 @@ const SearchPageComponent = ({
             </div>
           </div>
         </article>
-      )}
+      ) : null}
 
       {query && results.length === 0 ? (
         <div className="text-cax-text-muted flex items-center justify-center p-8">
@@ -134,9 +156,3 @@ const SearchPageComponent = ({
     </div>
   );
 };
-
-export const SearchPage = reduxForm<SearchFormData, Props>({
-  form: "search",
-  enableReinitialize: true,
-  validate,
-})(SearchPageComponent);

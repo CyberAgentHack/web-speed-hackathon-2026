@@ -55,6 +55,8 @@ export function initDirectMessageConversation(sequelize: Sequelize) {
       scopes: {
         withMessages: {
           include: [
+            { association: "initiator", include: [{ association: "profileImage" }] },
+            { association: "member", include: [{ association: "profileImage" }] },
             {
               association: "messages",
               separate: true,

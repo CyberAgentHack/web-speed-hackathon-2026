@@ -61,14 +61,10 @@ const config = {
     chunkFilename: "scripts/chunk-[contenthash].js",
     filename: "scripts/[name]-[contenthash].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     clean: true,
   },
   plugins: [
-    new webpack.ProvidePlugin({
-      AudioContext: ["standardized-audio-context", "AudioContext"],
-      Buffer: ["buffer", "Buffer"],
-    }),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
       COMMIT_HASH: process.env.SOURCE_VERSION || "",

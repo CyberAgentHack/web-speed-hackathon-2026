@@ -1,6 +1,4 @@
 import classNames from "classnames";
-import { Animator, Decoder } from "gifler";
-import { GifReader } from "omggif";
 import { RefCallback, useCallback, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
@@ -22,7 +20,11 @@ export const PausableMovie = ({ src }: Props) => {
 
   const [isCanvasReady, setIsCanvasReady] = useState(false);
 
-  const animatorRef = useRef<Animator>(null);
+  const animatorRef = useRef<{
+    start: () => void;
+    stop: () => void;
+    onFrame: (frame: unknown) => void;
+  } | null>(null);
   const canvasCallbackRef = useCallback<RefCallback<HTMLCanvasElement>>(
     (el) => {
       animatorRef.current?.stop();
@@ -31,26 +33,33 @@ export const PausableMovie = ({ src }: Props) => {
         return;
       }
 
-      // GIF を解析する
-      const reader = new GifReader(new Uint8Array(data));
-      const frames = Decoder.decodeFramesSync(reader);
-      const animator = new Animator(reader, frames);
+      const setupCanvasPlayer = async () => {
+        const [{ Animator, Decoder }, { GifReader }] = await Promise.all([
+          import("gifler"),
+          import("omggif"),
+        ]);
 
-      animator.animateInCanvas(el);
-      animator.onFrame(frames[0]!);
+        const reader = new GifReader(new Uint8Array(data));
+        const frames = Decoder.decodeFramesSync(reader);
+        const animator = new Animator(reader, frames);
 
-      setIsCanvasReady(true);
+        animator.animateInCanvas(el);
+        animator.onFrame(frames[0]!);
 
-      // 視覚効果 off のとき GIF を自動再生しない
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        setIsPlaying(false);
-        animator.stop();
-      } else {
-        setIsPlaying(true);
-        animator.start();
-      }
+        setIsCanvasReady(true);
 
-      animatorRef.current = animator;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          setIsPlaying(false);
+          animator.stop();
+        } else {
+          setIsPlaying(true);
+          animator.start();
+        }
+
+        animatorRef.current = animator;
+      };
+
+      void setupCanvasPlayer();
     },
     [data],
   );
