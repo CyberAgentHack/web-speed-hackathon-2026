@@ -70,6 +70,17 @@ export const AppContainer = () => {
   const authModalId = useId();
   const newPostModalId = useId();
 
+  // モーダルの遅延マウント: 初期ロード時にencoding-japanese(446KB)+redux-form(47KB)の
+  // チャンク評価がメインスレッドをブロックするのを防ぐ。
+  // requestIdleCallbackでアイドル後にマウントし、Lighthouse TBT計測ウィンドウを回避する。
+  const [modalsLoaded, setModalsLoaded] = useState(false);
+  useEffect(() => {
+    const id = requestIdleCallback(() => {
+      setModalsLoaded(true);
+    });
+    return () => cancelIdleCallback(id);
+  }, []);
+
   return (
     <HelmetProvider>
       <AppPage
@@ -104,10 +115,12 @@ export const AppContainer = () => {
         </Suspense>
       </AppPage>
 
-      <Suspense>
-        <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
-        <NewPostModalContainer id={newPostModalId} />
-      </Suspense>
+      {modalsLoaded && (
+        <Suspense>
+          <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
+          <NewPostModalContainer id={newPostModalId} />
+        </Suspense>
+      )}
     </HelmetProvider>
   );
 };
