@@ -1,33 +1,8 @@
-import _ from "lodash";
 import { useEffect, useRef, useState } from "react";
 
 interface ParsedData {
   max: number;
   peaks: number[];
-}
-
-async function calculate(src: string): Promise<ParsedData> {
-  const res = await fetch(src);
-  const data = await res.arrayBuffer();
-  const audioCtx = new AudioContext();
-
-  // 音声をデコードする
-  const buffer = await audioCtx.decodeAudioData(data.slice(0));
-  // 左の音声データの絶対値を取る
-  const leftData = _.map(buffer.getChannelData(0), Math.abs);
-  // 右の音声データの絶対値を取る
-  const rightData = _.map(buffer.getChannelData(1), Math.abs);
-
-  // 左右の音声データの平均を取る
-  const normalized = _.map(_.zip(leftData, rightData), _.mean);
-  // 100 個の chunk に分ける
-  const chunks = _.chunk(normalized, Math.ceil(normalized.length / 100));
-  // chunk ごとに平均を取る
-  const peaks = _.map(chunks, _.mean);
-  // chunk の平均の中から最大値を取る
-  const max = _.max(peaks) ?? 0;
-
-  return { max, peaks };
 }
 
 interface Props {
@@ -42,9 +17,28 @@ export const SoundWaveSVG = ({ src }: Props) => {
   });
 
   useEffect(() => {
-    calculate(src).then(({ max, peaks }) => {
-      setPeaks({ max, peaks });
-    });
+    const worker = new Worker(new URL("../../workers/sound_wave_worker.ts", import.meta.url));
+    worker.onmessage = ({ data }: MessageEvent<{ type: string; peaks: number[]; max: number }>) => {
+      if (data.type === "peaks") {
+        setPeaks({ max: data.max, peaks: data.peaks });
+      }
+    };
+
+    (async () => {
+      const res = await fetch(src);
+      const buffer = await res.arrayBuffer();
+      const audioCtx = new AudioContext();
+      const audioBuffer = await audioCtx.decodeAudioData(buffer);
+
+      const left = new Float32Array(audioBuffer.getChannelData(0));
+      const right = new Float32Array(audioBuffer.getChannelData(1));
+      worker.postMessage({ type: "process", left: left.buffer, right: right.buffer }, [
+        left.buffer,
+        right.buffer,
+      ]);
+    })();
+
+    return () => worker.terminate();
   }, [src]);
 
   return (

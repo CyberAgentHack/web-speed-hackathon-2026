@@ -1,12 +1,8 @@
 import classNames from "classnames";
-import { Animator, Decoder } from "gifler";
-import { GifReader } from "omggif";
-import { RefCallback, useCallback, useRef, useState } from "react";
+import { RefCallback, useCallback, useEffect, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
-import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
   src: string;
@@ -16,48 +12,53 @@ interface Props {
  * クリックすると再生・一時停止を切り替えます。
  */
 export const PausableMovie = ({ src }: Props) => {
-  const { data, isLoading } = useFetch(src, fetchBinary);
-
-  const animatorRef = useRef<Animator>(null);
-  const canvasCallbackRef = useCallback<RefCallback<HTMLCanvasElement>>(
-    (el) => {
-      animatorRef.current?.stop();
-
-      if (el === null || data === null) {
-        return;
-      }
-
-      // GIF を解析する
-      const reader = new GifReader(new Uint8Array(data));
-      const frames = Decoder.decodeFramesSync(reader);
-      const animator = new Animator(reader, frames);
-
-      animator.animateInCanvas(el);
-      animator.onFrame(frames[0]!);
-
-      // 視覚効果 off のとき GIF を自動再生しない
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        setIsPlaying(false);
-        animator.stop();
-      } else {
-        setIsPlaying(true);
-        animator.start();
-      }
-
-      animatorRef.current = animator;
-    },
-    [data],
-  );
-
+  const workerRef = useRef<Worker | null>(null);
+  const canvasElRef = useRef<HTMLCanvasElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(true);
-  const handleClick = useCallback(() => {
-    setIsPlaying((isPlaying) => {
-      if (isPlaying) {
-        animatorRef.current?.stop();
-      } else {
-        animatorRef.current?.start();
+  const [isLoading, setIsLoading] = useState(true);
+
+  // WebWorkerでデコードと描画をする
+  const canvasCallbackRef = useCallback<RefCallback<HTMLCanvasElement>>((el) => {
+    canvasElRef.current = el;
+    if (el === null) {
+      workerRef.current?.terminate();
+      workerRef.current = null;
+      return;
+    }
+    const worker = new Worker(new URL("../../workers/gif_worker.ts", import.meta.url));
+    worker.onmessage = ({ data }: MessageEvent<{ type: string; isPlaying: boolean }>) => {
+      if (data.type === "ready") {
+        setIsLoading(false);
+        setIsPlaying(data.isPlaying);
       }
-      return !isPlaying;
+    };
+    workerRef.current = worker;
+    const offscreen = el.transferControlToOffscreen();
+    worker.postMessage({ type: "init", canvas: offscreen }, [offscreen]);
+  }, []);
+
+  // IntersectionObserverで画面に入ったときに動画の読み込みを開始する
+  useEffect(() => {
+    const el = canvasElRef.current;
+    if (!el || !workerRef.current) return;
+
+    const worker = workerRef.current;
+    const autoPlay = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting) {
+        worker.postMessage({ type: "load", url: src, autoPlay });
+        observer.disconnect();
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [src]);
+
+  const handleClick = useCallback(() => {
+    setIsPlaying((prev) => {
+      workerRef.current?.postMessage({ type: prev ? "pause" : "play" });
+      return !prev;
     });
   }, []);
 
