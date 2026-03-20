@@ -3,6 +3,7 @@ import Markdown from "react-markdown";
 import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
+import { memo } from "react";
 
 import { CodeBlock } from "@web-speed-hackathon-2026/client/src/components/crok/CodeBlock";
 import { TypingIndicator } from "@web-speed-hackathon-2026/client/src/components/crok/TypingIndicator";
@@ -49,9 +50,9 @@ const AssistantMessage = ({ content }: { content: string }) => {
   );
 };
 
-export const ChatMessage = ({ message }: Props) => {
+export const ChatMessage = memo(({ message }: Props) => {
   if (message.role === "user") {
     return <UserMessage content={message.content} />;
   }
   return <AssistantMessage content={message.content} />;
-};
+});
