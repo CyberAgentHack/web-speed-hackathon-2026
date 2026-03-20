@@ -4,7 +4,7 @@ import { formatLL } from "@web-speed-hackathon-2026/client/src/utils/format_date
 import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
 import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { getProfileImagePath, getProfileImageSrcSet } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   post: Models.Post;
@@ -22,7 +22,10 @@ export const PostItem = ({ post }: Props) => {
             >
               <img
                 alt={post.user.profileImage.alt}
+                loading="lazy"
                 src={getProfileImagePath(post.user.profileImage.id)}
+                srcSet={getProfileImageSrcSet(post.user.profileImage.id)}
+                sizes="64px"
               />
             </Link>
           </div>
