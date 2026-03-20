@@ -4,6 +4,9 @@ import { MouseEvent, RefCallback, useCallback, useEffect, useId, useState } from
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
+import {
+  RESPONSIVE_IMAGE_WIDTHS,
+} from "@web-speed-hackathon-2026/client/src/utils/get_path";
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
@@ -11,6 +14,7 @@ interface Props {
   width: number;
   height: number;
   fetchPriority?: "high" | "low" | "auto";
+  sizes?: string;
 }
 
 function isJpeg(data: ArrayBuffer): boolean {
@@ -21,10 +25,23 @@ function isJpeg(data: ArrayBuffer): boolean {
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
-export const CoveredImage = ({ src, width, height, fetchPriority = "auto" }: Props) => {
+export const CoveredImage = ({
+  src,
+  width,
+  height,
+  fetchPriority = "auto",
+  sizes,
+}: Props) => {
   const dialogId = useId();
   const [alt, setAlt] = useState("");
   const [containerSize, setContainerSize] = useState({ height: 0, width: 0 });
+  const srcSet = [
+    ...RESPONSIVE_IMAGE_WIDTHS.filter((candidateWidth) => candidateWidth < width).map(
+      (candidateWidth) =>
+        `${src.replace(/\.webp$/, `-${candidateWidth}w.webp`)} ${candidateWidth}w`,
+    ),
+    `${src} ${width}w`,
+  ].join(", ");
 
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
@@ -74,7 +91,9 @@ export const CoveredImage = ({ src, width, height, fetchPriority = "auto" }: Pro
             "w-full h-auto": containerRatio <= imageRatio,
           },
         )}
+        sizes={sizes}
         src={src}
+        srcSet={srcSet}
       />
 
       <button

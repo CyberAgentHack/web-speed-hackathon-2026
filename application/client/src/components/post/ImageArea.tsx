@@ -14,6 +14,11 @@ export const ImageArea = ({ images, fetchPriority = "auto" }: Props) => {
     <AspectRatioBox aspectHeight={9} aspectWidth={16}>
       <div className="border-cax-border grid h-full w-full grid-cols-2 grid-rows-2 gap-1 overflow-hidden rounded-lg border">
         {images.map((image, idx) => {
+          const sizes =
+            images.length === 1
+              ? "(max-width: 640px) calc(100vw - 32px), 640px"
+              : "(max-width: 640px) calc((100vw - 36px) / 2), 320px";
+
           return (
             <div
               key={image.id}
@@ -25,7 +30,13 @@ export const ImageArea = ({ images, fetchPriority = "auto" }: Props) => {
                 "row-span-2": images.length <= 2 || (images.length === 3 && idx === 0),
               })}
             >
-              <CoveredImage src={getImagePath(image.id)} width={image.width} height={image.height} fetchPriority={idx === 0 ? fetchPriority : "auto"} />
+              <CoveredImage
+                src={getImagePath(image.id)}
+                width={image.width}
+                height={image.height}
+                fetchPriority={idx === 0 ? fetchPriority : "auto"}
+                sizes={sizes}
+              />
             </div>
           );
         })}

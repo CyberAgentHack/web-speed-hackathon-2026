@@ -1,6 +1,11 @@
 import classNames from "classnames";
 
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import {
+  getProfileImagePath,
+  getResponsiveProfileImagePath,
+  PROFILE_IMAGE_SOURCE_WIDTH,
+  RESPONSIVE_PROFILE_IMAGE_WIDTHS,
+} from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   profileImage: Models.ProfileImage;
@@ -23,6 +28,15 @@ export const AvatarImage = ({
   fetchPriority = "auto",
   onLoad,
 }: Props) => {
+  const srcSet = [
+    ...RESPONSIVE_PROFILE_IMAGE_WIDTHS.filter(
+      (candidateWidth) => candidateWidth < PROFILE_IMAGE_SOURCE_WIDTH,
+    ).map(
+      (candidateWidth) => `${getResponsiveProfileImagePath(profileImage.id, candidateWidth)} ${candidateWidth}w`,
+    ),
+    `${getProfileImagePath(profileImage.id)} ${PROFILE_IMAGE_SOURCE_WIDTH}w`,
+  ].join(", ");
+
   return (
     <img
       alt={alt ?? profileImage.alt}
@@ -32,7 +46,9 @@ export const AvatarImage = ({
       height={height}
       loading={fetchPriority === "high" ? "eager" : "lazy"}
       onLoad={onLoad}
+      sizes={`${width}px`}
       src={getProfileImagePath(profileImage.id)}
+      srcSet={srcSet}
       width={width}
     />
   );
