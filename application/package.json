@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm --filter @web-speed-hackathon-2026/server dev & pnpm --filter @web-speed-hackathon-2026/client dev",
-    "build": "pnpm --filter @web-speed-hackathon-2026/client build",
+    "build": "pnpm --filter @web-speed-hackathon-2026/client build && pnpm --filter @web-speed-hackathon-2026/server build",
     "start": "pnpm --filter @web-speed-hackathon-2026/server start",
     "typecheck": "pnpm run --recursive typecheck",
     "format": "pnpm run format:oxlint && pnpm run format:oxfmt",
