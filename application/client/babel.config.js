@@ -5,7 +5,6 @@ module.exports = {
       "@babel/preset-env",
       {
         targets: "ie 11",
-        corejs: "3",
         modules: "commonjs",
         useBuiltIns: false,
       },
@@ -13,7 +12,7 @@ module.exports = {
     [
       "@babel/preset-react",
       {
-        development: true,
+        development: process.env.NODE_ENV !== "production",
         runtime: "automatic",
       },
     ],

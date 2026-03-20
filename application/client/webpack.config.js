@@ -1,6 +1,7 @@
 /// <reference types="webpack-dev-server" />
 const path = require("path");
 
+const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
@@ -10,6 +11,51 @@ const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
+const ANALYZE_MODE =
+  process.env.ANALYZE === "static" ? "static" : process.env.ANALYZE ? "server" : null;
+
+const plugins = [
+  new webpack.ProvidePlugin({
+    $: "jquery",
+    AudioContext: ["standardized-audio-context", "AudioContext"],
+    Buffer: ["buffer", "Buffer"],
+    "window.jQuery": "jquery",
+  }),
+  new webpack.EnvironmentPlugin({
+    BUILD_DATE: new Date().toISOString(),
+    // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
+    COMMIT_HASH: process.env.SOURCE_VERSION || "",
+    NODE_ENV: "production",
+  }),
+  new MiniCssExtractPlugin({
+    filename: "styles/[name].css",
+  }),
+  new CopyWebpackPlugin({
+    patterns: [
+      {
+        from: path.resolve(__dirname, "node_modules/katex/dist/fonts"),
+        to: path.resolve(DIST_PATH, "styles/fonts"),
+      },
+    ],
+  }),
+  new HtmlWebpackPlugin({
+    inject: false,
+    template: path.resolve(SRC_PATH, "./index.html"),
+  }),
+];
+
+if (ANALYZE_MODE) {
+  plugins.push(
+    new BundleAnalyzerPlugin({
+      analyzerMode: ANALYZE_MODE,
+      analyzerPort: 8888,
+      generateStatsFile: true,
+      openAnalyzer: true,
+      reportFilename: "bundle-report.html",
+      statsFilename: "bundle-stats.json",
+    }),
+  );
+}
 
 /** @type {import('webpack').Configuration} */
 const config = {
@@ -36,7 +82,7 @@ const config = {
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: "production",
   module: {
     rules: [
       {
@@ -66,35 +112,7 @@ const config = {
     publicPath: "auto",
     clean: true,
   },
-  plugins: [
-    new webpack.ProvidePlugin({
-      $: "jquery",
-      AudioContext: ["standardized-audio-context", "AudioContext"],
-      Buffer: ["buffer", "Buffer"],
-      "window.jQuery": "jquery",
-    }),
-    new webpack.EnvironmentPlugin({
-      BUILD_DATE: new Date().toISOString(),
-      // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
-      COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
-    }),
-    new MiniCssExtractPlugin({
-      filename: "styles/[name].css",
-    }),
-    new CopyWebpackPlugin({
-      patterns: [
-        {
-          from: path.resolve(__dirname, "node_modules/katex/dist/fonts"),
-          to: path.resolve(DIST_PATH, "styles/fonts"),
-        },
-      ],
-    }),
-    new HtmlWebpackPlugin({
-      inject: false,
-      template: path.resolve(SRC_PATH, "./index.html"),
-    }),
-  ],
+  plugins,
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
     alias: {

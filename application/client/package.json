@@ -5,7 +5,10 @@
   "license": "MPL-2.0",
   "author": "CyberAgent, Inc.",
   "scripts": {
-    "build": "NODE_ENV=development webpack",
+    "build": "NODE_ENV=production webpack",
+    "analyze": "ANALYZE=server pnpm build",
+    "analyze:server": "ANALYZE=server pnpm build",
+    "analyze:static": "ANALYZE=static pnpm build",
     "typecheck": "tsc"
   },
   "dependencies": {
@@ -85,6 +88,7 @@
     "react-markdown": "10.1.0",
     "typescript": "5.9.3",
     "webpack": "5.102.1",
+    "webpack-bundle-analyzer": "5.2.0",
     "webpack-cli": "6.0.1",
     "webpack-dev-server": "5.2.2"
   },
