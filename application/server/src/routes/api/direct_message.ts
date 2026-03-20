@@ -100,17 +100,34 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversation = await DirectMessageConversation.findOne({
+  const conversation = await DirectMessageConversation.unscoped().findOne({
     where: {
       id: req.params.conversationId,
       [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
+    include: [
+      { association: "initiator", include: [{ association: "profileImage" }] },
+      { association: "member", include: [{ association: "profileImage" }] },
+      {
+        association: "messages",
+        include: [{ association: "sender", include: [{ association: "profileImage" }] }],
+        order: [["createdAt", "DESC"]],
+        limit: 50,
+        required: false,
+        separate: true,
+      },
+    ],
   });
   if (conversation === null) {
     throw new httpErrors.NotFound();
   }
 
-  return res.status(200).type("application/json").send(conversation);
+  const result = {
+    ...conversation.toJSON(),
+    messages: (conversation.messages ?? []).reverse(),
+  };
+
+  return res.status(200).type("application/json").send(result);
 });
 
 directMessageRouter.ws("/dm/:conversationId", async (req, _res) => {
