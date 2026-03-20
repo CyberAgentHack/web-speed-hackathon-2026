@@ -23,14 +23,14 @@ export const SearchPage = ({ query, results, initialValues }: Props) => {
   const [isNegative, setIsNegative] = useState(false);
   const [searchText, setSearchText] = useState(initialValues.searchText);
   const [touched, setTouched] = useState(false);
+  const [submitError, setSubmitError] = useState<string | undefined>(undefined);
 
   // Reinitialize when initialValues change (equivalent to enableReinitialize)
   useEffect(() => {
     setSearchText(initialValues.searchText);
     setTouched(false);
+    setSubmitError(undefined);
   }, [initialValues.searchText]);
-
-  const errors = validate({ searchText });
 
   const parsed = parseSearchQuery(query);
 
@@ -86,8 +86,10 @@ export const SearchPage = ({ query, results, initialValues }: Props) => {
       setTouched(true);
       const currentErrors = validate({ searchText });
       if (Object.keys(currentErrors).length > 0) {
+        setSubmitError(currentErrors.searchText);
         return;
       }
+      setSubmitError(undefined);
       const sanitizedText = sanitizeSearchText(searchText.trim());
       navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
     },
@@ -108,15 +110,15 @@ export const SearchPage = ({ query, results, initialValues }: Props) => {
                 onChange={handleChange}
                 onBlur={handleBlur}
                 className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
-                  touched && errors.searchText
+                  touched && submitError
                     ? "border-cax-danger focus:border-cax-danger"
                     : "border-cax-border focus:border-cax-brand-strong"
                 }`}
                 placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
                 type="text"
               />
-              {touched && errors.searchText && (
-                <span className="text-cax-danger mt-1 text-xs">{errors.searchText}</span>
+              {touched && submitError && (
+                <span className="text-cax-danger mt-1 text-xs">{submitError}</span>
               )}
             </div>
             <Button variant="primary" type="submit">

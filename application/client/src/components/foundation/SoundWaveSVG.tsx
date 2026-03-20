@@ -10,9 +10,13 @@ export const SoundWaveSVG = ({ soundId }: Props) => {
   const [peaks, setPeaks] = useState<number[]>([]);
 
   useEffect(() => {
-    fetchJSON<{ peaks: number[] }>(`/api/v1/waveform/${soundId}`).then(({ peaks }) => {
-      setPeaks(peaks);
-    });
+    fetchJSON<{ peaks: number[] }>(`/api/v1/waveform/${soundId}`)
+      .then(({ peaks }) => {
+        setPeaks(peaks);
+      })
+      .catch(() => {
+        // Waveform not available yet
+      });
   }, [soundId]);
 
   const pathD = useMemo(() => {
