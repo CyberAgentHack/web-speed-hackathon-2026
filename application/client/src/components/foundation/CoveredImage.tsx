@@ -21,24 +21,26 @@ export const CoveredImage = ({ src, isPriority }: Props) => {
   const alt = "画像";
 
   return (
-    <div className="relative h-full w-full overflow-hidden">
-      <img
-        alt={alt}
-        className="h-full w-full object-cover"
-        src={src}
-        loading={isPriority ? "eager" : "lazy"}
-        fetchPriority={isPriority ? "high" : undefined}
-        decoding={isPriority ? "sync" : "async"}
-      />
+    <>
+      <div className="relative h-full w-full overflow-hidden">
+        <img
+          alt={alt}
+          className="h-full w-full object-cover"
+          src={src}
+          loading={isPriority ? "eager" : "lazy"}
+          fetchPriority={isPriority ? "high" : undefined}
+          decoding={isPriority ? "sync" : "async"}
+        />
 
-      <button
-        className="border-cax-border bg-cax-surface-raised/90 text-cax-text-muted hover:bg-cax-surface absolute right-1 bottom-1 rounded-full border px-2 py-1 text-center text-xs"
-        type="button"
-        command="show-modal"
-        commandfor={dialogId}
-      >
-        ALT を表示する
-      </button>
+        <button
+          className="border-cax-border bg-cax-surface-raised/90 text-cax-text-muted hover:bg-cax-surface absolute right-1 bottom-1 rounded-full border px-2 py-1 text-center text-xs"
+          type="button"
+          command="show-modal"
+          commandfor={dialogId}
+        >
+          ALT を表示する
+        </button>
+      </div>
 
       <Modal id={dialogId} closedby="any" onClick={handleDialogClick}>
         <div className="grid gap-y-6">
@@ -51,6 +53,6 @@ export const CoveredImage = ({ src, isPriority }: Props) => {
           </Button>
         </div>
       </Modal>
-    </div>
+    </>
   );
 };

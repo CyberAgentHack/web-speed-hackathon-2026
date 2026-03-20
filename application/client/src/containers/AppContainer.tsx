@@ -4,10 +4,10 @@ import { Helmet, HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
-import AuthModalContainer from "./AuthModalContainer";
-import NewPostModalContainer from "./NewPostModalContainer";
+const AuthModalContainer = React.lazy(() => import("./AuthModalContainer"));
+const NewPostModalContainer = React.lazy(() => import("./NewPostModalContainer"));
 import { fetchJSON, sendJSON } from "../utils/fetchers";
-import TimelineContainer from "./TimelineContainer";
+// import TimelineContainer from "./TimelineContainer";
 
 const CrokContainer = React.lazy(() =>
   import(/* webpackChunkName: "Crok" */ "./CrokContainer"),
@@ -31,9 +31,9 @@ const TermContainer = React.lazy(() =>
   import(/* webpackChunkName: "Term" */ "./TermContainer"),
 );
 // Static import for LCP optimization
-// const TimelineContainer = React.lazy(() =>
-//   import(/* webpackChunkName: "Timeline" */ "./TimelineContainer"),
-// );
+const TimelineContainer = React.lazy(() =>
+  import(/* webpackChunkName: "Timeline" */ "./TimelineContainer"),
+);
 const UserProfileContainer = React.lazy(() =>
   import(/* webpackChunkName: "UserProfile" */ "./UserProfileContainer"),
 );

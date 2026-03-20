@@ -66,8 +66,9 @@ export const TimelineItem = memo(({ post, isPriority }: Props) => {
             <img
               alt={post.user.profileImage.alt}
               src={getProfileImagePath(post.user.profileImage.id)}
-              loading="lazy"
-              decoding="async"
+              loading={isPriority ? "eager" : "lazy"}
+              fetchPriority={isPriority ? "high" : undefined}
+              decoding={isPriority ? "sync" : "async"}
             />
           </Link>
         </div>
@@ -93,21 +94,32 @@ export const TimelineItem = memo(({ post, isPriority }: Props) => {
           <div className="text-cax-text leading-relaxed">
             <TranslatableText text={post.text} />
           </div>
-          <Suspense fallback={<div className="h-20 w-full animate-pulse bg-cax-surface-subtle rounded-lg mt-2" />}>
-            {post.images?.length > 0 ? (
-                <div className="relative mt-2 w-full">
-                <ImageArea images={post.images} isPriority={isPriority} />
+          <Suspense
+            fallback={
+              <div className="mt-2 w-full h-full">
+                <div
+                  className="relative w-full"
+                  style={{ aspectRatio: "16 / 9" }}
+                >
+                  <div className="absolute inset-0 animate-pulse bg-cax-surface-subtle rounded-lg" />
                 </div>
+              </div>
+            }
+          >
+            {post.images?.length > 0 ? (
+              <div className="relative mt-2 w-full">
+                <ImageArea images={post.images} isPriority={isPriority} />
+              </div>
             ) : null}
             {post.movie ? (
-                <div className="relative mt-2 w-full">
+              <div className="relative mt-2 w-full">
                 <MovieArea movie={post.movie} isPriority={isPriority} />
-                </div>
+              </div>
             ) : null}
             {post.sound ? (
-                <div className="relative mt-2 w-full">
+              <div className="relative mt-2 w-full">
                 <SoundArea sound={post.sound} />
-                </div>
+              </div>
             ) : null}
           </Suspense>
         </div>

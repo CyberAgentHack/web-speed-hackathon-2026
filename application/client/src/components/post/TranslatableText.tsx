@@ -1,6 +1,8 @@
-import { memo, useCallback, useState } from "react";
+import { lazy, memo, Suspense, useCallback, useState } from "react";
 
 import { createTranslator } from "@web-speed-hackathon-2026/client/src/utils/create_translator";
+ 
+ const LazyMarkdown = lazy(() => import(/* webpackChunkName: "MarkdownRenderer" */ "../crok/MarkdownRenderer"));
 
 type State =
   | { type: "idle"; text: string }
@@ -55,12 +57,14 @@ export const TranslatableText = memo(({ text }: Props) => {
   return (
     <>
       <p>
-        {state.type !== "loading" ? (
-          <span>{state.text}</span>
-        ) : (
-          <span className="bg-cax-surface-subtle text-cax-text-muted">{text}</span>
-        )}
-      </p>
+         <Suspense fallback={<div className="animate-pulse bg-cax-surface-subtle h-4 w-full rounded" />}>
+            {state.type !== "loading" ? (
+              <LazyMarkdown content={state.text} />
+            ) : (
+             <span className="bg-cax-surface-subtle text-cax-text-muted">{text}</span>
+           )}
+         </Suspense>
+       </p>
 
       <p>
         <button

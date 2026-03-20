@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { TimelineItem } from "@web-speed-hackathon-2026/client/src/components/timeline/TimelineItem";
+import { IntersectionRender } from "@web-speed-hackathon-2026/client/src/components/foundation/IntersectionRender";
 
 interface Props {
   timeline: Models.Post[];
@@ -23,7 +24,14 @@ export const Timeline = ({ timeline }: Props) => {
   return (
     <section>
       {timeline.slice(0, visibleCount).map((post, index) => {
-        return <TimelineItem key={post.id} post={post} isPriority={index === 0} />;
+        if (index === 0) {
+          return <TimelineItem key={post.id} post={post} isPriority={true} />;
+        }
+        return (
+          <IntersectionRender key={post.id} height="100px">
+            <TimelineItem post={post} />
+          </IntersectionRender>
+        );
       })}
     </section>
   );

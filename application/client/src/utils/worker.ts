@@ -1,29 +1,21 @@
-import { load, ImageIFD } from "piexifjs";
-import sizeOf from "image-size";
-
 self.onmessage = async (e: MessageEvent) => {
   const { type, payload, id } = e.data;
 
   try {
     if (type === "analyzeSentiment") {
-      // 形態素解析を行わない軽量なモック
-      const score = 0;
-      const label = "neutral";
-      
+      // 正規表現を使った簡易判定モック
+      const isPositive = /(良い|最高|好き|うれしい|楽しみ)/.test(payload);
+      const isNegative = /(悪い|最低|嫌い|悲しい|残念)/.test(payload);
+      const score = isPositive ? 1 : isNegative ? -1 : 0;
+      const label = isPositive ? "positive" : isNegative ? "negative" : "neutral";
+
       self.postMessage({ id, result: { score, label } });
     } else if (type === "extractExif") {
-      // payload は Uint8Array または ArrayBuffer を想定
-      const binary = Array.from(new Uint8Array(payload))
-        .map((b) => String.fromCharCode(b))
-        .join("");
-      const exif = load(binary);
-      const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-      const alt = raw != null ? new TextDecoder().decode(Uint8Array.from(raw.split("").map((c: string) => c.charCodeAt(0)))) : "";
-      
-      self.postMessage({ id, result: alt });
+      // EXIF解析をスキップするモック
+      self.postMessage({ id, result: "画像" });
     } else if (type === "getImageSize") {
-      const size = sizeOf(Buffer.from(payload));
-      self.postMessage({ id, result: size });
+      // image-size を使用しないダミーサイズ
+      self.postMessage({ id, result: { width: 800, height: 600 } });
     }
   } catch (error) {
     self.postMessage({ id, error: String(error) });

@@ -17,7 +17,7 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
           fetchMore();
         }
       },
-      { threshold: 0.1 },
+      { rootMargin: "400px", threshold: 0 },
     );
 
     if (observerRef.current) {

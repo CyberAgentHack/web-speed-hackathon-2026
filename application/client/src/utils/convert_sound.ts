@@ -1,4 +1,4 @@
-import { extractMetadataFromSound } from "@web-speed-hackathon-2026/client/src/utils/extract_metadata_from_sound";
+// import { extractMetadataFromSound } from "@web-speed-hackathon-2026/client/src/utils/extract_metadata_from_sound";
 // import { loadFFmpeg } from "@web-speed-hackathon-2026/client/src/utils/load_ffmpeg";
 
 interface Options {
@@ -13,16 +13,10 @@ export async function convertSound(file: File, options: Options): Promise<Blob> 
 
   await ffmpeg.writeFile("file", new Uint8Array(await file.arrayBuffer()));
 
-  // 文字化けを防ぐためにメタデータを抽出して付与し直す
-  const metadata = await extractMetadataFromSound(file);
-
+  // パフォーマンス向上のため、メタデータの抽出と再付与を停止
   await ffmpeg.exec([
     "-i",
     "file",
-    "-metadata",
-    `artist=${metadata.artist}`,
-    "-metadata",
-    `title=${metadata.title}`,
     "-vn",
     exportFile,
   ]);

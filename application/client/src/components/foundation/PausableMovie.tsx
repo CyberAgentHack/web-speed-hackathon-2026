@@ -11,10 +11,10 @@ interface Props {
 /**
  * クリックすると再生・一時停止を切り替えます。
  */
-export const PausableMovie = ({ src, isPriority }: Props) => {
+export const PausableMovie = ({ src }: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [hasStarted, setHasStarted] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
 
   const handleClick = useCallback(() => {
     if (videoRef.current) {
@@ -41,10 +41,8 @@ export const PausableMovie = ({ src, isPriority }: Props) => {
           ref={videoRef}
           className="h-full w-full object-cover"
           src={src}
-          // LCPと通信最適化のための要件
-          preload={isPriority ? "auto" : "none"}
-          {...({ fetchPriority: isPriority ? "high" : "auto" } as any)}
-          autoPlay
+          // LCPと通信最適化のため、動画本体のプリロードは行わない
+          preload="none"
           loop
           muted
           playsInline

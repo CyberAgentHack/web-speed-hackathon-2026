@@ -29,7 +29,7 @@ export const IntersectionRender = ({ children, height = "200px" }: Props) => {
   }, []);
 
   return (
-    <div ref={ref} style={{ minHeight: isIntersecting ? "auto" : height }}>
+    <div ref={ref} style={{ minHeight: height }}>
       {isIntersecting ? children : null}
     </div>
   );
