@@ -4,10 +4,11 @@ import { getMoviePath } from "@web-speed-hackathon-2026/client/src/utils/get_pat
 
 interface Props {
   movie: Models.Movie;
+  prioritize?: boolean;
   variant?: "preview" | "interactive";
 }
 
-export const MovieArea = ({ movie, variant = "interactive" }: Props) => {
+export const MovieArea = ({ movie, prioritize = false, variant = "interactive" }: Props) => {
   const src = getMoviePath(movie.id);
 
   return (
@@ -21,7 +22,8 @@ export const MovieArea = ({ movie, variant = "interactive" }: Props) => {
             alt="投稿されたGIF画像"
             className="h-full w-full object-cover"
             decoding="async"
-            loading="lazy"
+            fetchPriority={prioritize ? "high" : "auto"}
+            loading={prioritize ? "eager" : "lazy"}
             src={src}
           />
         </AspectRatioBox>
