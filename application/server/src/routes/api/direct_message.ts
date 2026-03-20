@@ -17,11 +17,24 @@ directMessageRouter.get("/dm", async (req, res) => {
   }
 
   const conversations = await DirectMessageConversation.findAll({
+    include: [
+      {
+        association: "initiator",
+        attributes: { exclude: ["profileImageId"] },
+        include: [{ association: "profileImage" }],
+      },
+      {
+        association: "member",
+        attributes: { exclude: ["profileImageId"] },
+        include: [{ association: "profileImage" }],
+      },
+      {
+        association: "messages",
+        required: true,
+      },
+    ],
     where: {
-      [Op.and]: [
-        { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
-        where(col("messages.id"), { [Op.not]: null }),
-      ],
+      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
     order: [[col("messages.createdAt"), "DESC"]],
   });

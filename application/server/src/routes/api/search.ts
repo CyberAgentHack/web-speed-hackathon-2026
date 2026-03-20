@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { Op } from "sequelize";
 
-import { Post } from "@web-speed-hackathon-2026/server/src/models";
+import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 
 export const searchRouter = Router();
@@ -39,8 +39,19 @@ searchRouter.get("/search", async (req, res) => {
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
   const postsByText = await Post.findAll({
-    limit,
-    offset,
+    include: [
+      {
+        association: "user",
+        attributes: { exclude: ["profileImageId"] },
+        include: [{ association: "profileImage" }],
+      },
+      {
+        association: "images",
+        through: { attributes: [] },
+      },
+      { association: "movie" },
+      { association: "sound" },
+    ],
     where: {
       ...textWhere,
       ...dateWhere,
@@ -50,28 +61,35 @@ searchRouter.get("/search", async (req, res) => {
   // ユーザー名/名前での検索（キーワードがある場合のみ）
   let postsByUser: typeof postsByText = [];
   if (searchTerm) {
-    postsByUser = await Post.findAll({
-      include: [
-        {
-          association: "user",
-          attributes: { exclude: ["profileImageId"] },
-          include: [{ association: "profileImage" }],
-          required: true,
-          where: {
-            [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
-          },
-        },
-        {
-          association: "images",
-          through: { attributes: [] },
-        },
-        { association: "movie" },
-        { association: "sound" },
-      ],
-      limit,
-      offset,
-      where: dateWhere,
+    const matchedUsers = await User.unscoped().findAll({
+      attributes: ["id"],
+      where: {
+        [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
+      },
     });
+    const matchedUserIds = matchedUsers.map((user) => user.id);
+
+    if (matchedUserIds.length > 0) {
+      postsByUser = await Post.findAll({
+        include: [
+          {
+            association: "user",
+            attributes: { exclude: ["profileImageId"] },
+            include: [{ association: "profileImage" }],
+          },
+          {
+            association: "images",
+            through: { attributes: [] },
+          },
+          { association: "movie" },
+          { association: "sound" },
+        ],
+        where: {
+          ...dateWhere,
+          userId: { [Op.in]: matchedUserIds },
+        },
+      });
+    }
   }
 
   const postIdSet = new Set<string>();
