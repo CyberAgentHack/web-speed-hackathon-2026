@@ -1,10 +1,10 @@
 const jaDateFormat = new Intl.DateTimeFormat("ja", { year: "numeric", month: "long", day: "numeric" });
-import { memo, MouseEventHandler, useCallback } from "react";
+import { lazy, memo, MouseEventHandler, Suspense, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
-import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
-import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
-import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
+const ImageArea = lazy(() => import("@web-speed-hackathon-2026/client/src/components/post/ImageArea").then(m => ({ default: m.ImageArea })));
+const MovieArea = lazy(() => import("@web-speed-hackathon-2026/client/src/components/post/MovieArea").then(m => ({ default: m.MovieArea })));
+const SoundArea = lazy(() => import("@web-speed-hackathon-2026/client/src/components/post/SoundArea").then(m => ({ default: m.SoundArea })));
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
@@ -85,21 +85,23 @@ export const TimelineItem = memo(({ post }: Props) => {
           <div className="text-cax-text leading-relaxed">
             <TranslatableText text={post.text} />
           </div>
-          {post.images?.length > 0 ? (
-            <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
-            </div>
-          ) : null}
-          {post.movie ? (
-            <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
-            </div>
-          ) : null}
-          {post.sound ? (
-            <div className="relative mt-2 w-full">
-              <SoundArea sound={post.sound} />
-            </div>
-          ) : null}
+          <Suspense fallback={null}>
+            {post.images?.length > 0 ? (
+              <div className="relative mt-2 w-full">
+                <ImageArea images={post.images} />
+              </div>
+            ) : null}
+            {post.movie ? (
+              <div className="relative mt-2 w-full">
+                <MovieArea movie={post.movie} />
+              </div>
+            ) : null}
+            {post.sound ? (
+              <div className="relative mt-2 w-full">
+                <SoundArea sound={post.sound} />
+              </div>
+            ) : null}
+          </Suspense>
         </div>
       </div>
     </article>

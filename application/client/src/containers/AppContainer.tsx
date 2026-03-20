@@ -4,18 +4,30 @@ import { Route, Routes, useLocation, useNavigate } from "react-router";
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { useTitle } from "@web-speed-hackathon-2026/client/src/hooks/use_title";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
-import { injectFormReducer } from "@web-speed-hackathon-2026/client/src/store";
 
-const AuthModalContainer = lazy(() => injectFormReducer().then(() => import("@web-speed-hackathon-2026/client/src/containers/AuthModalContainer")).then(m => ({ default: m.AuthModalContainer })));
+// Redux Provider + redux-form を使うコンテナは動的importでReduxProviderごとロード
+const loadReduxProvider = () => import("@web-speed-hackathon-2026/client/src/components/foundation/ReduxProvider").then(m => m.ReduxProvider);
+const injectFormReducer = () => import("@web-speed-hackathon-2026/client/src/store").then(m => m.injectFormReducer());
+
+const AuthModalContainer = lazy(async () => {
+  const [Provider, , m] = await Promise.all([loadReduxProvider(), injectFormReducer(), import("@web-speed-hackathon-2026/client/src/containers/AuthModalContainer")]);
+  return { default: (props: any) => <Provider><m.AuthModalContainer {...props} /></Provider> };
+});
+const NewPostModalContainer = lazy(async () => {
+  const [Provider, , m] = await Promise.all([loadReduxProvider(), injectFormReducer(), import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer")]);
+  return { default: (props: any) => <Provider><m.NewPostModalContainer {...props} /></Provider> };
+});
+const SearchContainer = lazy(async () => {
+  const [Provider, , m] = await Promise.all([loadReduxProvider(), injectFormReducer(), import("@web-speed-hackathon-2026/client/src/containers/SearchContainer")]);
+  return { default: (props: any) => <Provider><m.SearchContainer {...props} /></Provider> };
+});
 const CrokContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/CrokContainer").then(m => ({ default: m.CrokContainer })));
 const DirectMessageContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer").then(m => ({ default: m.DirectMessageContainer })));
 const DirectMessageListContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer").then(m => ({ default: m.DirectMessageListContainer })));
-const NewPostModalContainer = lazy(() => injectFormReducer().then(() => import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer")).then(m => ({ default: m.NewPostModalContainer })));
 const NotFoundContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/NotFoundContainer").then(m => ({ default: m.NotFoundContainer })));
 const PostContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/PostContainer").then(m => ({ default: m.PostContainer })));
-const SearchContainer = lazy(() => injectFormReducer().then(() => import("@web-speed-hackathon-2026/client/src/containers/SearchContainer")).then(m => ({ default: m.SearchContainer })));
 const TermContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/TermContainer").then(m => ({ default: m.TermContainer })));
-const TimelineContainer = lazy(() => import(/* webpackPrefetch: true */ "@web-speed-hackathon-2026/client/src/containers/TimelineContainer").then(m => ({ default: m.TimelineContainer })));
+import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
 const UserProfileContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/UserProfileContainer").then(m => ({ default: m.UserProfileContainer })));
 
 export const AppContainer = () => {
@@ -25,9 +37,13 @@ export const AppContainer = () => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
-  const [activeUser, setActiveUser] = useState<Models.User | null>(null);
-  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
+  // SSRデータがあれば同期的に初期化（余計なレンダリングサイクルを避ける）
+  const ssrUser = (window as any).__SSR_USER__ as Models.User | null | undefined;
+  const hasSSRUser = ssrUser !== undefined;
+  const [activeUser, setActiveUser] = useState<Models.User | null>(hasSSRUser ? ssrUser : null);
+  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(!hasSSRUser);
   useEffect(() => {
+    if (hasSSRUser) return;
     const preloaded = (window as any).__PRELOAD_ME as Promise<Response> | undefined;
     const promise = preloaded
       ? preloaded.then((res) => { if (!res.ok) throw new Error(); return res.json() as Promise<Models.User>; })
@@ -40,7 +56,7 @@ export const AppContainer = () => {
       .finally(() => {
         setIsLoadingActiveUser(false);
       });
-  }, [setActiveUser, setIsLoadingActiveUser]);
+  }, [setActiveUser, setIsLoadingActiveUser, hasSSRUser]);
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
     setActiveUser(null);
