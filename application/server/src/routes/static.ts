@@ -15,21 +15,55 @@ staticRouter.use(history());
 
 staticRouter.use(
   serveStatic(UPLOAD_PATH, {
-    etag: false,
-    lastModified: false,
+    etag: true,
+    lastModified: true,
+    maxAge: "1d",
   }),
 );
 
 staticRouter.use(
   serveStatic(PUBLIC_PATH, {
-    etag: false,
-    lastModified: false,
+    etag: true,
+    lastModified: true,
+    maxAge: "1d",
+  }),
+);
+
+// Content-hashed chunks get long cache; main.js/main.css get short cache
+staticRouter.use(
+  "/scripts",
+  serveStatic(CLIENT_DIST_PATH + "/scripts", {
+    etag: true,
+    lastModified: true,
+    setHeaders(res, filePath) {
+      if (/chunk-[a-f0-9]+\.js$/.test(filePath)) {
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      } else {
+        res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+      }
+    },
+  }),
+);
+
+staticRouter.use(
+  "/styles",
+  serveStatic(CLIENT_DIST_PATH + "/styles", {
+    etag: true,
+    lastModified: true,
+    setHeaders(res, filePath) {
+      if (/fonts\//.test(filePath)) {
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      } else {
+        res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+      }
+    },
   }),
 );
 
 staticRouter.use(
   serveStatic(CLIENT_DIST_PATH, {
-    etag: false,
-    lastModified: false,
+    etag: true,
+    lastModified: true,
+    maxAge: 0,
   }),
 );
