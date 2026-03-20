@@ -6,7 +6,7 @@ module.exports = {
       {
         targets: { browsers: ["defaults"] },
         corejs: "3",
-        modules: "commonjs",
+        modules: "auto",
         useBuiltIns: "usage",
       },
     ],
