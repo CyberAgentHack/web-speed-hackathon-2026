@@ -1,4 +1,16 @@
-import moment from "moment";
+const jaRelativeFormat = new Intl.RelativeTimeFormat("ja", { numeric: "auto" });
+
+function formatRelativeTime(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const seconds = Math.floor(diff / 1000);
+  if (seconds < 60) return jaRelativeFormat.format(-seconds, "second");
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return jaRelativeFormat.format(-minutes, "minute");
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return jaRelativeFormat.format(-hours, "hour");
+  const days = Math.floor(hours / 24);
+  return jaRelativeFormat.format(-days, "day");
+}
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -100,7 +112,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {formatRelativeTime(lastMessage.createdAt)}
                           </time>
                         )}
                       </div>
