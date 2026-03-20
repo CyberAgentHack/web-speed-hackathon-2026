@@ -35,6 +35,8 @@ declare namespace Models {
   interface Sound {
     artist: string;
     id: string;
+    max: number;
+    peaks: number[];
     title: string;
   }
 

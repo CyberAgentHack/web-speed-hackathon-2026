@@ -1,7 +1,8 @@
 import { createWriteStream } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
+import { readFileSync } from "node:fs";
+import { calculateSoundWave } from "@web-speed-hackathon-2026/server/src/utils/calculate_sound_wave";
 import { extractImageMetadata } from "@web-speed-hackathon-2026/server/src/utils/extract_image_metadata";
 
 import { faker } from "@faker-js/faker/locale/ja";
@@ -248,13 +249,17 @@ function generateMovies(): MovieSeed[] {
   }));
 }
 
-function generateSounds(): SoundSeed[] {
-  // Use existing sound data from public/sounds/
-  return EXISTING_SOUNDS.map(({ id, title, artist }) => ({
-    id,
-    title,
-    artist,
-  }));
+async function generateSounds(): Promise<SoundSeed[]> {
+  const soundsDir = path.resolve(__dirname, "../../public/sounds");
+  const results: SoundSeed[] = [];
+
+  for (const { id, title, artist } of EXISTING_SOUNDS) {
+    const mp3Buffer = readFileSync(path.join(soundsDir, `${id}.mp3`));
+    const { max, peaks } = await calculateSoundWave(new Uint8Array(mp3Buffer).buffer);
+    results.push({ id, title, artist, max, peaks });
+  }
+
+  return results;
 }
 
 const postTemplates = [
@@ -721,7 +726,7 @@ async function main() {
   const movies = generateMovies();
 
   console.log("5. Generating Sounds (using existing assets)...");
-  const sounds = generateSounds();
+  const sounds = await generateSounds();
 
   console.log("6. Generating Posts...");
   const posts = generatePosts(CONFIG.POST_COUNT, users, movies, sounds);

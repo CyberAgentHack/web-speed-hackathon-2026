@@ -11,6 +11,8 @@ export class Sound extends Model<InferAttributes<Sound>, InferCreationAttributes
   declare id: string;
   declare title: string;
   declare artist: string;
+  declare max: number;
+  declare peaks: number[];
 }
 
 export function initSound(sequelize: Sequelize) {
@@ -31,6 +33,14 @@ export function initSound(sequelize: Sequelize) {
         allowNull: false,
         defaultValue: "Unknown",
         type: DataTypes.STRING,
+      },
+      max: {
+        allowNull: false,
+        type: DataTypes.FLOAT,
+      },
+      peaks: {
+        allowNull: false,
+        type: DataTypes.JSON,
       },
     },
     {

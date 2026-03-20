@@ -42,18 +42,18 @@ postRouter.post("/posts", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const { images, ...postData } = req.body;
+  const { images, sound, ...postData } = req.body;
 
   const post = await getSequelize().transaction(async (transaction) => {
     const created = await Post.create(
       {
         ...postData,
+        soundId: sound?.id,
         userId: req.session.userId,
       },
       {
         include: [
           { association: "movie" },
-          { association: "sound" },
         ],
         transaction,
       },

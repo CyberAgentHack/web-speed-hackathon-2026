@@ -5,7 +5,6 @@ import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components
 import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/components/modal/ModalErrorMessage";
 import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/components/modal/ModalSubmitButton";
 import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/AttachFileInputButton";
-import { convertSound } from "@web-speed-hackathon-2026/client/src/utils/convert_sound";
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
@@ -78,16 +77,12 @@ export const NewPostModalPage = ({
 
       setHasFileError(isValid !== true);
       if (isValid) {
-        convertSound(file, { extension: "mp3" }).then((converted) => {
-          setParams((params) => ({
-            ...params,
-            images: [],
-            movie: undefined,
-            sound: new File([converted], "converted.mp3", {
-              type: "audio/mpeg",
-            }),
-          }));
-        });
+        setParams((params) => ({
+          ...params,
+          images: [],
+          movie: undefined,
+          sound: file,
+        }));
       }
     },
     [],

@@ -2,11 +2,13 @@ import { promises as fs } from "fs";
 import path from "path";
 
 import { Router } from "express";
-import { fileTypeFromBuffer } from "file-type";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
+import { Sound } from "@web-speed-hackathon-2026/server/src/models";
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+import { calculateSoundWave } from "@web-speed-hackathon-2026/server/src/utils/calculate_sound_wave";
+import { convertSoundToMp3 } from "@web-speed-hackathon-2026/server/src/utils/convert_sound_to_mp3";
 import { extractMetadataFromSound } from "@web-speed-hackathon-2026/server/src/utils/extract_metadata_from_sound";
 
 // 変換した音声の拡張子
@@ -22,18 +24,29 @@ soundRouter.post("/sounds", async (req, res) => {
     throw new httpErrors.BadRequest();
   }
 
-  const type = await fileTypeFromBuffer(req.body);
-  if (type === undefined || type.ext !== EXTENSION) {
-    throw new httpErrors.BadRequest("Invalid file type");
+  // FFmpegでMP3に変換
+  let mp3Buffer: Buffer;
+  try {
+    mp3Buffer = await convertSoundToMp3(req.body);
+  } catch {
+    throw new httpErrors.BadRequest("Failed to convert audio file");
   }
 
   const soundId = uuidv4();
 
-  const { artist, title } = await extractMetadataFromSound(req.body);
+  // メタデータ抽出
+  const { artist, title } = await extractMetadataFromSound(mp3Buffer);
 
+  // 波形データ計算
+  const { max, peaks } = await calculateSoundWave(new Uint8Array(mp3Buffer).buffer);
+
+  // ファイル保存
   const filePath = path.resolve(UPLOAD_PATH, `./sounds/${soundId}.${EXTENSION}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds"), { recursive: true });
-  await fs.writeFile(filePath, req.body);
+  await fs.writeFile(filePath, mp3Buffer);
 
-  return res.status(200).type("application/json").send({ artist, id: soundId, title });
+  // Soundレコード作成
+  await Sound.create({ id: soundId, artist: artist ?? "Unknown", title: title ?? "Unknown", max, peaks });
+
+  return res.status(200).type("application/json").send({ id: soundId });
 });
