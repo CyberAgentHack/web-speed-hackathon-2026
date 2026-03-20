@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useId, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 
 import { Timeline } from "@web-speed-hackathon-2026/client/src/components/timeline/Timeline";
@@ -19,6 +19,7 @@ interface Props {
 
 export const SearchPage = ({ query, results, initialValues }: Props) => {
   const navigate = useNavigate();
+  const searchInputId = useId();
   const [isNegative, setIsNegative] = useState(false);
   const [searchText, setSearchText] = useState(initialValues.searchText);
   const [touched, setTouched] = useState(false);
@@ -99,7 +100,9 @@ export const SearchPage = ({ query, results, initialValues }: Props) => {
         <form onSubmit={handleSubmit}>
           <div className="flex gap-2">
             <div className="flex flex-1 flex-col">
+              <label htmlFor={searchInputId} className="sr-only">検索 (例: キーワード since:2025-01-01 until:2025-12-31)</label>
               <input
+                id={searchInputId}
                 name="searchText"
                 value={searchText}
                 onChange={handleChange}
@@ -109,7 +112,6 @@ export const SearchPage = ({ query, results, initialValues }: Props) => {
                     ? "border-cax-danger focus:border-cax-danger"
                     : "border-cax-border focus:border-cax-brand-strong"
                 }`}
-                aria-label="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
                 placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
                 type="text"
               />
