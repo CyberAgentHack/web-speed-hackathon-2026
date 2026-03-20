@@ -2,14 +2,6 @@
 
 @layer theme, base, components, utilities;
 
-@font-face {
-  /* Source Han Serif JP Heavy の Y 軸を 1/1.43 に縮小した改変フォント（利用規約見出し用サブセット） */
-  font-family: "Rei no Are Mincho";
-  font-display: swap;
-  src: url(/fonts/ReiNoAreMincho-Heavy-subset.woff2) format("woff2");
-  font-weight: bold;
-}
-
 .font-awesome {
   height: 1em;
   vertical-align: -0.125em;
