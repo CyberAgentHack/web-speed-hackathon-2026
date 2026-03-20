@@ -10,6 +10,6 @@ export function getSoundPath(soundId: string): string {
   return `/sounds/${soundId}.mp3`;
 }
 
-export function getProfileImagePath(profileImageId: string): string {
-  return `/images/profiles/${profileImageId}.jpg`;
+export function getProfileImagePath(profileImageId: string, size = 48): string {
+  return `/images/profiles/${profileImageId}.jpg?w=${size}&h=${size}`;
 }
