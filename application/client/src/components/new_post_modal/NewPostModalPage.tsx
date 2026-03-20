@@ -170,7 +170,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       void (async () => {
         try {
           const { convertMovie } = await loadMovieTools();
-          const converted = await convertMovie(file, { extension: "gif", size: undefined });
+          const converted = await convertMovie(file, { extension: "gif", size: 360 });
           setParams((params) => ({
             ...params,
             images: [],

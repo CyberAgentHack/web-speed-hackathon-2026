@@ -6,6 +6,9 @@ interface Options {
   extension: MagickFormat;
 }
 
+const MAX_IMAGE_DIMENSION = 1280;
+const JPEG_QUALITY = 75;
+
 export async function convertImage(file: File, options: Options): Promise<Blob> {
   await initializeImageMagick(magickWasm);
 
@@ -14,6 +17,14 @@ export async function convertImage(file: File, options: Options): Promise<Blob> 
   return new Promise((resolve) => {
     ImageMagick.read(byteArray, (img) => {
       img.format = options.extension;
+      const maxDimension = Math.max(img.width, img.height);
+      if (maxDimension > MAX_IMAGE_DIMENSION) {
+        const scale = MAX_IMAGE_DIMENSION / maxDimension;
+        img.resize(Math.round(img.width * scale), Math.round(img.height * scale));
+      }
+      if (options.extension === MagickFormat.Jpg) {
+        img.quality = JPEG_QUALITY;
+      }
 
       const comment = img.comment;
 

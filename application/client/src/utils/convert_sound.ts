@@ -22,6 +22,8 @@ export async function convertSound(file: File, options: Options): Promise<Blob> 
     `artist=${metadata.artist}`,
     "-metadata",
     `title=${metadata.title}`,
+    "-b:a",
+    "96k",
     "-vn",
     exportFile,
   ]);
