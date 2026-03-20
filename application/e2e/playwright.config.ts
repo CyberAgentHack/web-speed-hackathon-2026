@@ -3,6 +3,7 @@ import os from "node:os";
 import { defineConfig, devices } from "@playwright/test";
 
 const BASE_URL = process.env["E2E_BASE_URL"] ?? "http://localhost:3000";
+const CHROMIUM_PATH = process.env["PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH"];
 
 // PCスペックやチューニングの進み具合によってテストの安定性が変わるため、E2E_WORKERSの数を調整しながら利用してください
 // デフォルトでは、論理CPUの数の半分を利用します
@@ -26,13 +27,8 @@ export default defineConfig({
       testMatch: "**/src/**/*.test.ts",
       use: {
         ...devices["Desktop Chrome"],
-        ...(process.env["CHROMIUM_PATH"]
-          ? {
-              launchOptions: {
-                executablePath: process.env["CHROMIUM_PATH"],
-                args: ["--no-sandbox"],
-              },
-            }
+        ...(CHROMIUM_PATH
+          ? { launchOptions: { executablePath: CHROMIUM_PATH } }
           : { channel: "chrome" }),
       },
     },
