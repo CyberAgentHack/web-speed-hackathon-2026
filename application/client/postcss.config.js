@@ -7,5 +7,6 @@ module.exports = {
     postcssPresetEnv({
       stage: 3,
     }),
+    { "@tailwindcss/postcss": {} },
   ],
 };
