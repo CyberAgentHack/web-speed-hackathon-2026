@@ -4,7 +4,7 @@ import { useParams } from "react-router";
 
 import { DirectMessageGate } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageGate";
 import { DirectMessagePage } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessagePage";
-import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
+import NotFoundContainer from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
@@ -25,7 +25,7 @@ interface Props {
   authModalId: string;
 }
 
-export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
+const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   const { conversationId = "" } = useParams<{ conversationId: string }>();
 
   const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(null);
@@ -139,3 +139,4 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     </>
   );
 };
+export default DirectMessageContainer;

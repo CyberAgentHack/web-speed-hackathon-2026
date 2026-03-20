@@ -29,7 +29,7 @@ interface Props {
   id: string;
 }
 
-export const NewPostModalContainer = ({ id }: Props) => {
+const NewPostModalContainer = ({ id }: Props) => {
   const dialogId = useId();
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
@@ -87,3 +87,4 @@ export const NewPostModalContainer = ({ id }: Props) => {
     </Modal>
   );
 };
+export default NewPostModalContainer;

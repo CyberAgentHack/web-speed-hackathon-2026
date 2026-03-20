@@ -55,8 +55,8 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
       Promise.all(
         files.map((file) =>
-          convertImage(file, { extension: MagickFormat.Jpg }).then(
-            (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
+          convertImage(file, { extension: MagickFormat.Avif }).then(
+            (blob) => new File([blob], "converted.avif", { type: "image/avif" }),
           ),
         ),
       )

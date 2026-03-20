@@ -3,57 +3,43 @@ import { Helmet, HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
-import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
-import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
-import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+const AuthModalContainer = React.lazy(() =>
+  import(/* webpackChunkName: "Auth" */ "./AuthModalContainer"),
+);
+const NewPostModalContainer = React.lazy(() =>
+  import(/* webpackChunkName: "NewPost" */ "./NewPostModalContainer"),
+);
+import { fetchJSON, sendJSON } from "../utils/fetchers";
 
 const CrokContainer = React.lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/CrokContainer").then((m) => ({
-    default: m.CrokContainer,
-  })),
+  import(/* webpackChunkName: "Crok" */ "./CrokContainer"),
 );
 const DirectMessageContainer = React.lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer").then((m) => ({
-    default: m.DirectMessageContainer,
-  })),
+  import(/* webpackChunkName: "DM" */ "./DirectMessageContainer"),
 );
 const DirectMessageListContainer = React.lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer").then((m) => ({
-    default: m.DirectMessageListContainer,
-  })),
+  import(/* webpackChunkName: "DMList" */ "./DirectMessageListContainer"),
 );
 const NotFoundContainer = React.lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/NotFoundContainer").then((m) => ({
-    default: m.NotFoundContainer,
-  })),
+  import(/* webpackChunkName: "NotFound" */ "./NotFoundContainer"),
 );
 const PostContainer = React.lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/PostContainer").then((m) => ({
-    default: m.PostContainer,
-  })),
+  import(/* webpackChunkName: "Post" */ "./PostContainer"),
 );
 const SearchContainer = React.lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/SearchContainer").then((m) => ({
-    default: m.SearchContainer,
-  })),
+  import(/* webpackChunkName: "Search" */ "./SearchContainer"),
 );
 const TermContainer = React.lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/TermContainer").then((m) => ({
-    default: m.TermContainer,
-  })),
+  import(/* webpackChunkName: "Term" */ "./TermContainer"),
 );
 const TimelineContainer = React.lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/TimelineContainer").then((m) => ({
-    default: m.TimelineContainer,
-  })),
+  import(/* webpackChunkName: "Timeline" */ "./TimelineContainer"),
 );
 const UserProfileContainer = React.lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/UserProfileContainer").then((m) => ({
-    default: m.UserProfileContainer,
-  })),
+  import(/* webpackChunkName: "UserProfile" */ "./UserProfileContainer"),
 );
 
-export const AppContainer = () => {
+const AppContainer = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   useEffect(() => {
@@ -66,6 +52,9 @@ export const AppContainer = () => {
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {
         setActiveUser(user);
+      })
+      .catch(() => {
+        setActiveUser(null);
       })
       .finally(() => {
         setIsLoadingActiveUser(false);
@@ -124,8 +113,11 @@ export const AppContainer = () => {
         </Suspense>
       </AppPage>
 
-      <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
-      <NewPostModalContainer id={newPostModalId} />
+      <Suspense fallback={null}>
+        <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
+        <NewPostModalContainer id={newPostModalId} />
+      </Suspense>
     </HelmetProvider>
   );
 };
+export default AppContainer;

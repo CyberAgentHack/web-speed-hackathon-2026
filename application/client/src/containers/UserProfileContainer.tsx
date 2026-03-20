@@ -3,12 +3,12 @@ import { useParams } from "react-router";
 
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
 import { UserProfilePage } from "@web-speed-hackathon-2026/client/src/components/user_profile/UserProfilePage";
-import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
+import NotFoundContainer from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
-export const UserProfileContainer = () => {
+const UserProfileContainer = () => {
   const { username } = useParams();
 
   const { data: user, isLoading: isLoadingUser } = useFetch<Models.User>(
@@ -41,3 +41,5 @@ export const UserProfileContainer = () => {
     </InfiniteScroll>
   );
 };
+
+export default UserProfileContainer;

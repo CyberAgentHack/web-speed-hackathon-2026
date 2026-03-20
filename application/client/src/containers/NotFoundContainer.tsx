@@ -2,7 +2,7 @@ import { Helmet } from "react-helmet";
 
 import { NotFoundPage } from "@web-speed-hackathon-2026/client/src/components/application/NotFoundPage";
 
-export const NotFoundContainer = () => {
+const NotFoundContainer = () => {
   return (
     <>
       <Helmet>
@@ -12,3 +12,4 @@ export const NotFoundContainer = () => {
     </>
   );
 };
+export default NotFoundContainer;

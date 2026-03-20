@@ -35,7 +35,7 @@ function getErrorCode(err: any, type: "signin" | "signup"): string {
   return ERROR_MESSAGES[responseJSON.code]!;
 }
 
-export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
+const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
   useEffect(() => {
@@ -87,3 +87,4 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
     </Modal>
   );
 };
+export default AuthModalContainer;

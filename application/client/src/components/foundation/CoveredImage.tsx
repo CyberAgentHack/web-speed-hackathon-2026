@@ -29,10 +29,17 @@ export const CoveredImage = ({ src }: Props) => {
   }, [data]);
 
   const alt = useMemo(() => {
-    const exif = data != null ? load(Buffer.from(data).toString("binary")) : null;
-    const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-    return raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
-  }, [data]);
+    if (data == null || imageSize.type == null || !["jpg", "jpeg"].includes(imageSize.type)) {
+      return "";
+    }
+    try {
+      const exif = load(Buffer.from(data).toString("binary"));
+      const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
+      return raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
+    } catch {
+      return "";
+    }
+  }, [data, imageSize.type]);
 
   const blobUrl = useMemo(() => {
     return data != null ? URL.createObjectURL(new Blob([data])) : null;

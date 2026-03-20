@@ -10,7 +10,7 @@ type Props = {
   authModalId: string;
 };
 
-export const CrokContainer = ({ activeUser, authModalId }: Props) => {
+const CrokContainer = ({ activeUser, authModalId }: Props) => {
   const [messages, setMessages] = useState<Models.ChatMessage[]>([]);
 
   const sseOptions = useMemo(
@@ -85,3 +85,4 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
     </>
   );
 };
+export default CrokContainer;

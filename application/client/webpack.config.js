@@ -41,7 +41,15 @@ const config = {
       {
         exclude: /node_modules/,
         test: /\.(jsx?|tsx?|mjs|cjs)$/,
-        use: [{ loader: "babel-loader" }],
+        use: [
+          {
+            loader: "esbuild-loader",
+            options: {
+              target: "esnext",
+              loader: "tsx",
+            },
+          },
+        ],
       },
       {
         test: /\.css$/i,
@@ -59,7 +67,7 @@ const config = {
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
+    // chunkFormat を削除してデフォルト（web）に任せる
     filename: "scripts/[name].js",
     path: DIST_PATH,
     publicPath: "auto",
@@ -102,6 +110,7 @@ const config = {
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
     alias: {
+      "@web-speed-hackathon-2026/client": path.resolve(__dirname, "."),
       "bayesian-bm25$": path.resolve(__dirname, "node_modules", "bayesian-bm25/dist/index.js"),
       ["kuromoji$"]: path.resolve(__dirname, "node_modules", "kuromoji/build/kuromoji.js"),
       "@ffmpeg/ffmpeg$": path.resolve(
@@ -134,11 +143,9 @@ const config = {
   optimization: {
     minimize: true,
     splitChunks: {
-      chunks: "all",
-      minSize: 10000,
-      maxSize: 5000000, // 5MB
+      chunks: "async",
     },
-    concatenateModules: true,
+    concatenateModules: false,
     usedExports: true,
     providedExports: true,
     sideEffects: true,
