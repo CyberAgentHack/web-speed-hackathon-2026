@@ -48,13 +48,14 @@ searchRouter.get("/search", async (req, res) => {
   });
 
   // ユーザー名/名前での検索（キーワードがある場合のみ）
+  // Post.unscoped() でdefaultScopeのincludeとの競合を回避
   let postsByUser: typeof postsByText = [];
   if (searchTerm) {
-    postsByUser = await Post.findAll({
+    postsByUser = await Post.unscoped().findAll({
       include: [
         {
           association: "user",
-          attributes: { exclude: ["profileImageId"] },
+          attributes: ["id", "username", "name", "description", "createdAt", "profileImageId"],
           include: [{ association: "profileImage" }],
           required: true,
           where: {
@@ -86,7 +87,5 @@ searchRouter.get("/search", async (req, res) => {
 
   mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-  const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
-
-  return res.status(200).type("application/json").send(result);
+  return res.status(200).type("application/json").send(mergedPosts);
 });
