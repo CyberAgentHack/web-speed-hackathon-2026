@@ -40,7 +40,7 @@ export const AvatarImage = ({
   return (
     <img
       alt={alt ?? profileImage.alt}
-      className={classNames("h-full w-full object-cover", className)}
+      className={classNames(className, "object-cover")}
       crossOrigin={crossOrigin}
       fetchPriority={fetchPriority}
       height={height}
