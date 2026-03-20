@@ -20,8 +20,9 @@ pnpm dev
 # ビルド（クライアント、本番用）
 pnpm build
 
-# サーバー起動（ポート3000、クライアントの dist を配信）
-pnpm start
+# サーバー起動（クライアントの dist を配信）
+# ローカルではポート3001で起動する（本番は fly.toml の PORT=8080 を使用）
+PORT=3001 pnpm start
 
 # 型チェック（全ワークスペース）
 pnpm typecheck
