@@ -49,11 +49,11 @@ pnpm ワークスペースによるモノレポ（`application/` 配下）。
 ### Client (`application/client/`)
 - React 19 + React Router 7 SPA、Rspack + SWC でバンドル
 - 状態管理: Redux（redux-form のみ）
-- スタイル: PostCSS（Tailwind は CDN 読み込み）
-- API呼び出し: jQuery AJAX ラッパー（`src/utils/fetchers.ts`）、gzip圧縮POST
-- カスタムHooks: `use_fetch`, `use_infinite_fetch`（無限スクロール）, `use_sse`（SSE）, `use_ws`（WebSocket）
-- メディア処理: FFmpeg WASM（動画変換）、ImageMagick WASM（画像変換）
-- 検索: BM25 + kuromoji（日本語形態解析）、negaposi-analyzer-ja（感情分析）
+- スタイル: PostCSS（Tailwind v4 ビルド時生成）
+- API呼び出し: fetch API ラッパー（`src/utils/fetchers.ts`）、gzip圧縮POST（pako）
+- カスタムHooks: `use_fetch`, `use_infinite_fetch`（無限スクロール、サーバーサイドページネーション対応）, `use_sse`（SSE）, `use_ws`（WebSocket）
+- メディア処理: FFmpeg WASM（動画変換、投稿時のみ）
+- 検索: BM25 + kuromoji（日本語形態解析、dynamic import）、感情分析はサーバーサイド（`/api/v1/sentiment`）
 - AI チャット: @mlc-ai/web-llm（ブラウザ内LLM）
 - エントリ: `src/index.tsx` → `AppContainer.tsx`
 - コンテナ/プレゼンテーション分離: `src/containers/` にロジック、`src/components/` にUI
@@ -90,17 +90,37 @@ pnpm ワークスペースによるモノレポ（`application/` 配下）。
 - `HtmlRspackPlugin` で `inject: true`（script/link タグ自動挿入）
 - KaTeX フォントを `CopyRspackPlugin` で dist にコピー
 
+## 完了済みの改善
+
+- ~~jQuery依存のAPI層~~ → fetch API に置換（US-006）
+- ~~core-js/regenerator-runtime の不要なポリフィル~~ → 削除（US-002）
+- ~~lodash（全体インポート）~~ → ネイティブ Array メソッドに置換（US-007）
+- ~~Tailwind CDN版~~ → ビルド時生成（PostCSS）に移行（US-014）
+- ~~Cache-Control: max-age=0~~ → 適切なキャッシュ設定 + immutable（US-003, US-022）
+- ~~Connection: close ヘッダー~~ → 削除（US-003）
+- ~~画像の未最適化~~ → WebP 変換・リサイズ（US-009）
+- ~~GIF動画~~ → MP4 変換 + `<video>` タグ化（US-010）
+- ~~OTFフォント~~ → WOFF2 サブセット + font-display: swap（US-011）
+- ~~bluebird~~ → native Promise に置換（US-019）
+- ~~InfiniteScroll の 2^18 ループ~~ → IntersectionObserver（US-008）
+- ~~AspectRatioBox の setTimeout(500)~~ → CSS aspect-ratio（US-021）
+- ~~SSE crok の意図的遅延~~ → 削除（US-018）
+- ~~感情分析のクライアント処理~~ → サーバーサイド API 化（US-023）
+- ~~検索 API の 2 回クエリ~~ → 1 クエリに統合（US-024）
+- ~~kuromoji 静的 import~~ → dynamic import（US-020）
+- ~~CoveredImage バイナリ取得~~ → 直接 `<img src>`（US-012）
+- ~~SoundPlayer バイナリ取得~~ → 直接 `<audio src>`（US-013）
+- ~~ルート単位コード分割なし~~ → React.lazy + Suspense（US-015）
+- ~~useInfiniteFetch 全データ取得~~ → サーバーサイドページネーション（US-016）
+- ~~画像 lazy loading なし~~ → loading="lazy" 追加（US-017）
+
 ## 主要な改善ポイント（まだ残っている遅い箇所）
 
-- jQuery依存のAPI層
-- core-js/regenerator-runtime の不要なポリフィル
-- moment.js（大きいバンドル）
-- lodash（全体インポート）
-- ブラウザ内でFFmpeg/ImageMagick WASM を動かしている
-- Tailwind CDN版
-- Cache-Control: max-age=0（キャッシュ無効）
-- Connection: close ヘッダー
-- 画像・動画・音声の未最適化
+- 音声波形のクライアント計算（SoundWaveSVG が fetch + decodeAudioData で毎回計算）→ サーバーサイド事前計算が必要（US-025）
+- FFmpeg WASM がクライアントに残っている（投稿時の動画変換用）
+- @mlc-ai/web-llm（ブラウザ内LLM、巨大バンドル）
+- CSS チャンク分割による FOUC（splitChunks で CSS が遅延ロードされる）
+- redux-form（レガシー依存）
 
 ## テストアカウント
 
