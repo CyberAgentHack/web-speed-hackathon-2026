@@ -14,9 +14,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.raw({ limit: "10mb" }));
 
 app.use((req, res, next) => {
-  res.header({
-    Connection: "close",
-  });
   if (req.path.startsWith("/api/")) {
     res.header({
       "Cache-Control": "max-age=0, no-transform",
