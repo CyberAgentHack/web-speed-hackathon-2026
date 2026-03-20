@@ -30,14 +30,10 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
     prevReachedRef.current = false;
     handler();
 
-    document.addEventListener("wheel", handler, { passive: false });
-    document.addEventListener("touchmove", handler, { passive: false });
-    document.addEventListener("resize", handler, { passive: false });
-    document.addEventListener("scroll", handler, { passive: false });
+    window.addEventListener("resize", handler, { passive: true });
+    document.addEventListener("scroll", handler, { passive: true });
     return () => {
-      document.removeEventListener("wheel", handler);
-      document.removeEventListener("touchmove", handler);
-      document.removeEventListener("resize", handler);
+      window.removeEventListener("resize", handler);
       document.removeEventListener("scroll", handler);
     };
   }, [latestItem, fetchMore]);
