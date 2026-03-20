@@ -21,7 +21,7 @@ jobs:
       - name: Force push main to dev repository
         env:
           TARGET_REPO: shimaf4979/web-speed-hackathon-2026-dev
-          PAT: ${{ secrets.PAT }}
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
-          git remote add dev "https://x-access-token:${PAT}@github.com/${TARGET_REPO}.git"
+          git remote add dev "https://x-access-token:${PAT_TOKEN}@github.com/${TARGET_REPO}.git"
           git push --force dev refs/heads/main:refs/heads/main
