@@ -348,7 +348,7 @@ paths:
         - Assets
       summary: 動画アップロード
       operationId: uploadMovie
-      description: バイナリデータを直接送信（上限 10 MB、GIF のみ）
+      description: バイナリデータを直接送信（上限 10 MB、動画ファイルをサーバー側で GIF に変換）
       security:
         - session: []
       requestBody:
@@ -382,7 +382,7 @@ paths:
         - Assets
       summary: 音声アップロード
       operationId: uploadSound
-      description: バイナリデータを直接送信（上限 10 MB、MP3 のみ）
+      description: バイナリデータを直接送信（上限 10 MB、音声ファイルをサーバー側で MP3 に変換）
       security:
         - session: []
       requestBody:

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { Op } from "sequelize";
 
-import { Post } from "@web-speed-hackathon-2026/server/src/models";
+import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 
 export const searchRouter = Router();
@@ -50,27 +50,28 @@ searchRouter.get("/search", async (req, res) => {
   // ユーザー名/名前での検索（キーワードがある場合のみ）
   let postsByUser: typeof postsByText = [];
   if (searchTerm) {
-    postsByUser = await Post.findAll({
-      include: [
-        {
-          association: "user",
-          attributes: { exclude: ["profileImageId"] },
-          include: [{ association: "profileImage" }],
-          required: true,
-          where: {
-            [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
-          },
-        },
-        {
-          association: "images",
-          through: { attributes: [] },
-        },
-        { association: "movie" },
-        { association: "sound" },
-      ],
-      limit: fetchLimit,
-      where: dateWhere,
+    const users = await User.findAll({
+      attributes: ["id"],
+      where: {
+        [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
+      },
     });
+
+    const userIds = users.map((user) => user.id);
+
+    if (userIds.length === 0) {
+      postsByUser = [];
+    } else {
+    postsByUser = await Post.findAll({
+      limit: fetchLimit,
+      where: {
+        ...dateWhere,
+        userId: {
+          [Op.in]: userIds,
+        },
+      },
+    });
+    }
   }
 
   const postIdSet = new Set<string>();
