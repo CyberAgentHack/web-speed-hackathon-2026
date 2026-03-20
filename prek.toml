@@ -1,0 +1,32 @@
+default_install_hook_types = ["pre-commit", "pre-push"]
+
+[[repos]]
+repo = "local"
+
+[[repos.hooks]]
+id = "oxlint"
+name = "oxlint"
+language = "system"
+entry = "pnpm --filter @web-speed-hackathon-2026/application run format:oxlint"
+pass_filenames = false
+stages = ["pre-commit"]
+types_or = ["ts", "tsx", "javascript", "jsx"]
+
+[[repos.hooks]]
+id = "oxfmt"
+name = "oxfmt"
+language = "system"
+entry = "pnpm --filter @web-speed-hackathon-2026/application run format:oxfmt"
+pass_filenames = false
+stages = ["pre-commit"]
+types_or = ["ts", "tsx", "javascript", "jsx"]
+
+[[repos.hooks]]
+id = "typecheck"
+name = "typecheck"
+language = "system"
+entry = "pnpm --filter @web-speed-hackathon-2026/application run typecheck"
+pass_filenames = false
+always_run = true
+stages = ["pre-commit"]
+
