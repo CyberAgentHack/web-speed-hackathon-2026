@@ -13,7 +13,8 @@ module.exports = {
     [
       "@babel/preset-react",
       {
-        development: true,
+        development: false,
+        // development: true,
         runtime: "automatic",
       },
     ],
