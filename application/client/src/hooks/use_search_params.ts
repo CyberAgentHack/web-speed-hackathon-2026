@@ -1,29 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 export function useSearchParams(): [URLSearchParams] {
   const [searchParams, setSearchParams] = useState(
     () => new URLSearchParams(window.location.search),
   );
-  const lastSearchRef = useRef(window.location.search);
 
   useEffect(() => {
-    let active = true;
-
-    const poll = () => {
-      if (!active) return;
-      const currentSearch = window.location.search;
-      if (currentSearch !== lastSearchRef.current) {
-        lastSearchRef.current = currentSearch;
-        setSearchParams(new URLSearchParams(currentSearch));
-      }
-      scheduler.postTask(poll, { priority: "user-blocking", delay: 1 });
-    };
-
-    scheduler.postTask(poll, { priority: "user-blocking", delay: 1 });
-
-    return () => {
-      active = false;
-    };
+    const handler = () => setSearchParams(new URLSearchParams(window.location.search));
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
   }, []);
 
   return [searchParams];
