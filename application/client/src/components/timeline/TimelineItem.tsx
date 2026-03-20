@@ -8,7 +8,10 @@ import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
-const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Element): boolean => {
+const isClickedAnchorOrButton = (
+  target: EventTarget | null,
+  currentTarget: Element
+): boolean => {
   while (target !== null && target instanceof Element) {
     const tagName = target.tagName.toLowerCase();
     if (["button", "a"].includes(tagName)) {
@@ -39,15 +42,21 @@ export const TimelineItem = ({ post }: Props) => {
   const handleClick = useCallback<MouseEventHandler>(
     (ev) => {
       const isSelectedText = document.getSelection()?.isCollapsed === false;
-      if (!isClickedAnchorOrButton(ev.target, ev.currentTarget) && !isSelectedText) {
+      if (
+        !isClickedAnchorOrButton(ev.target, ev.currentTarget) &&
+        !isSelectedText
+      ) {
         navigate(`/posts/${post.id}`);
       }
     },
-    [post, navigate],
+    [post, navigate]
   );
 
   return (
-    <article className="hover:bg-cax-surface-subtle px-1 sm:px-4" onClick={handleClick}>
+    <article
+      className="hover:bg-cax-surface-subtle px-1 sm:px-4"
+      onClick={handleClick}
+    >
       <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
         <div className="shrink-0 grow-0 pr-2 sm:pr-4">
           <Link
@@ -57,6 +66,7 @@ export const TimelineItem = ({ post }: Props) => {
             <img
               alt={post.user.profileImage.alt}
               src={getProfileImagePath(post.user.profileImage.id)}
+              decoding="async"
             />
           </Link>
         </div>
@@ -75,7 +85,10 @@ export const TimelineItem = ({ post }: Props) => {
               @{post.user.username}
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
-            <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
+            <Link
+              className="text-cax-text-muted pr-1 hover:underline"
+              to={`/posts/${post.id}`}
+            >
               <time dateTime={moment(post.createdAt).toISOString()}>
                 {moment(post.createdAt).locale("ja").format("LL")}
               </time>
