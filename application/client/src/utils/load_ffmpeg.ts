@@ -1,15 +1,14 @@
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 
+import coreUrl from "@ffmpeg/core?binary";
+import wasmUrl from "@ffmpeg/core/wasm?binary";
+
 export async function loadFFmpeg(): Promise<FFmpeg> {
   const ffmpeg = new FFmpeg();
 
   await ffmpeg.load({
-    coreURL: await import("@ffmpeg/core?binary").then(({ default: b }) => {
-      return URL.createObjectURL(new Blob([b], { type: "text/javascript" }));
-    }),
-    wasmURL: await import("@ffmpeg/core/wasm?binary").then(({ default: b }) => {
-      return URL.createObjectURL(new Blob([b], { type: "application/wasm" }));
-    }),
+    coreURL: coreUrl,
+    wasmURL: wasmUrl,
   });
 
   return ffmpeg;
