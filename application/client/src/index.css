@@ -26,41 +26,6 @@
   width: 1em;
 }
 
-/* CCSS Modal Overlay: CSS checkbox state management (TBT improvement) */
-.ccss-modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  align-items: center;
-  justify-content: center;
-}
-
-body:has(#ccss-auth-modal:checked) .auth-modal-overlay {
-  display: flex;
-}
-
-body:has(#ccss-new-post-modal:checked) .new-post-modal-overlay {
-  display: flex;
-}
-
-/* CCSS AccountMenu dropdown */
-.account-menu-dropdown {
-  display: none;
-}
-
-body:has(#ccss-account-menu:checked) .account-menu-dropdown {
-  display: block;
-}
-
-/* CCSS Modal Panel (replaces dialog) */
-.ccss-modal-panel {
-  position: relative;
-  z-index: 51;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
 /* Hide static fallback nav once React portal renders the React nav */
 #ccss-nav-root:has(nav + nav) > nav:first-child {
   display: none;
