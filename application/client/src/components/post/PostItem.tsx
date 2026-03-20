@@ -66,7 +66,10 @@ export const PostItem = ({ post }: Props) => {
             </div>
           ) : null}
           <p className="mt-2 text-sm sm:mt-4">
-            <Link className="text-cax-text-muted hover:underline" to={`/posts/${post.id}`}>
+            <Link
+              className="text-cax-text-muted hover:underline"
+              to={`/posts/${post.id}`}
+            >
               <time dateTime={moment(post.createdAt).toISOString()}>
                 {moment(post.createdAt).locale("ja").format("LL")}
               </time>

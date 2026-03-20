@@ -12,7 +12,14 @@ interface Props {
   commandfor?: string;
 }
 
-export const NavigationItem = ({ badge, href, icon, command, commandfor, text }: Props) => {
+export const NavigationItem = ({
+  badge,
+  href,
+  icon,
+  command,
+  commandfor,
+  text,
+}: Props) => {
   const location = useLocation();
   const isActive = location.pathname === href;
   return (
@@ -29,7 +36,9 @@ export const NavigationItem = ({ badge, href, icon, command, commandfor, text }:
             {icon}
             {badge}
           </span>
-          <span className="hidden sm:inline sm:text-sm lg:text-xl lg:font-bold">{text}</span>
+          <span className="hidden sm:inline sm:text-sm lg:text-xl lg:font-bold">
+            {text}
+          </span>
         </Link>
       ) : (
         <button
@@ -42,7 +51,9 @@ export const NavigationItem = ({ badge, href, icon, command, commandfor, text }:
             {icon}
             {badge}
           </span>
-          <span className="hidden sm:inline sm:text-sm lg:text-xl lg:font-bold">{text}</span>
+          <span className="hidden sm:inline sm:text-sm lg:text-xl lg:font-bold">
+            {text}
+          </span>
         </button>
       )}
     </li>

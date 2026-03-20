@@ -11,7 +11,9 @@ interface SoundMetadata {
 const UNKNOWN_ARTIST = "Unknown Artist";
 const UNKNOWN_TITLE = "Unknown Title";
 
-export async function extractMetadataFromSound(data: File): Promise<SoundMetadata> {
+export async function extractMetadataFromSound(
+  data: File,
+): Promise<SoundMetadata> {
   try {
     const ffmpeg = await loadFFmpeg();
 
@@ -21,7 +23,9 @@ export async function extractMetadataFromSound(data: File): Promise<SoundMetadat
 
     await ffmpeg.exec(["-i", "file", "-f", "ffmetadata", exportFile]);
 
-    const output = (await ffmpeg.readFile(exportFile)) as Uint8Array<ArrayBuffer>;
+    const output = (await ffmpeg.readFile(
+      exportFile,
+    )) as Uint8Array<ArrayBuffer>;
 
     ffmpeg.terminate();
 

@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { ComponentPropsWithRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 
 interface Props extends ComponentPropsWithRef<"input"> {
   leftItem?: ReactNode;

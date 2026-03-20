@@ -23,7 +23,10 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
         setMessages((prev) => {
           const lastMessage = prev[prev.length - 1];
           if (lastMessage?.role === "assistant") {
-            return [...prev.slice(0, -1), { ...lastMessage, content: finalContent }];
+            return [
+              ...prev.slice(0, -1),
+              { ...lastMessage, content: finalContent },
+            ];
           }
           return prev;
         });
@@ -72,7 +75,10 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
 
   if (!activeUser) {
     return (
-      <CrokGate headline="Crokを利用するにはサインインしてください" authModalId={authModalId} />
+      <CrokGate
+        headline="Crokを利用するにはサインインしてください"
+        authModalId={authModalId}
+      />
     );
   }
 
@@ -81,7 +87,11 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
       <Helmet>
         <title>Crok - CaX</title>
       </Helmet>
-      <CrokPage isStreaming={isStreaming} messages={displayMessages} onSendMessage={sendMessage} />
+      <CrokPage
+        isStreaming={isStreaming}
+        messages={displayMessages}
+        onSendMessage={sendMessage}
+      />
     </>
   );
 };

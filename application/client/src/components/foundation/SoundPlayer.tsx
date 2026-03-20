@@ -1,4 +1,11 @@
-import { ReactEventHandler, useCallback, useMemo, useRef, useState } from "react";
+import type {
+  ReactEventHandler} from "react";
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -19,10 +26,13 @@ export const SoundPlayer = ({ sound }: Props) => {
   }, [data]);
 
   const [currentTimeRatio, setCurrentTimeRatio] = useState(0);
-  const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>((ev) => {
-    const el = ev.currentTarget;
-    setCurrentTimeRatio(el.currentTime / el.duration);
-  }, []);
+  const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>(
+    (ev) => {
+      const el = ev.currentTarget;
+      setCurrentTimeRatio(el.currentTime / el.duration);
+    },
+    [],
+  );
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -43,14 +53,22 @@ export const SoundPlayer = ({ sound }: Props) => {
 
   return (
     <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
-      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} src={blobUrl} />
+      <audio
+        ref={audioRef}
+        loop={true}
+        onTimeUpdate={handleTimeUpdate}
+        src={blobUrl}
+      />
       <div className="p-2">
         <button
           className="bg-cax-accent text-cax-surface-raised flex h-8 w-8 items-center justify-center rounded-full text-sm hover:opacity-75"
           onClick={handleTogglePlaying}
           type="button"
         >
-          <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
+          <FontAwesomeIcon
+            iconType={isPlaying ? "pause" : "play"}
+            styleType="solid"
+          />
         </button>
       </div>
       <div className="flex h-full min-w-0 shrink grow flex-col pt-2">
