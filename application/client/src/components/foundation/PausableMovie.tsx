@@ -61,7 +61,16 @@ export const PausableMovie = ({ src }: Props) => {
     });
   }, []);
 
-  if (isLoading || data === null) {
+  // バイナリ取得中は img でプレースホルダー表示（LCP に貢献させる）
+  if (isLoading) {
+    return (
+      <AspectRatioBox aspectHeight={1} aspectWidth={1}>
+        <img alt="" className="h-full w-full object-cover" src={src} />
+      </AspectRatioBox>
+    );
+  }
+
+  if (data === null) {
     return null;
   }
 

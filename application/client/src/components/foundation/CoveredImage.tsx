@@ -1,11 +1,9 @@
 import classNames from "classnames";
-import sizeOf from "image-size";
 import { load, ImageIFD } from "piexifjs";
-import { MouseEvent, RefCallback, useCallback, useId, useMemo, useState } from "react";
+import { MouseEvent, SyntheticEvent, useCallback, useEffect, useId, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
@@ -22,39 +20,36 @@ export const CoveredImage = ({ src }: Props) => {
     ev.stopPropagation();
   }, []);
 
-  const { data, isLoading } = useFetch(src, fetchBinary);
+  const [alt, setAlt] = useState("");
+  const [imageRatio, setImageRatio] = useState(0);
+  const [containerRatio, setContainerRatio] = useState(0);
 
-  const imageSize = useMemo(() => {
-    return data != null ? sizeOf(Buffer.from(data)) : { height: 0, width: 0 };
-  }, [data]);
-
-  const alt = useMemo(() => {
-    const exif = data != null ? load(Buffer.from(data).toString("binary")) : null;
-    const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-    return raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
-  }, [data]);
-
-  const blobUrl = useMemo(() => {
-    return data != null ? URL.createObjectURL(new Blob([data])) : null;
-  }, [data]);
-
-  const [containerSize, setContainerSize] = useState({ height: 0, width: 0 });
-  const callbackRef = useCallback<RefCallback<HTMLDivElement>>((el) => {
-    setContainerSize({
-      height: el?.clientHeight ?? 0,
-      width: el?.clientWidth ?? 0,
-    });
+  const containerRef = useCallback((el: HTMLDivElement | null) => {
+    if (el) {
+      setContainerRatio(el.clientHeight / el.clientWidth);
+    }
   }, []);
 
-  if (isLoading || data === null || blobUrl === null) {
-    return null;
-  }
+  const handleImgLoad = useCallback((ev: SyntheticEvent<HTMLImageElement>) => {
+    const img = ev.currentTarget;
+    setImageRatio(img.naturalHeight / img.naturalWidth);
+  }, []);
 
-  const containerRatio = containerSize.height / containerSize.width;
-  const imageRatio = imageSize?.height / imageSize?.width;
+  // alt テキストのみバイナリ取得（表示をブロックしない）
+  useEffect(() => {
+    fetchBinary(src)
+      .then((data) => {
+        const exif = load(Buffer.from(data).toString("binary"));
+        const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
+        if (raw != null) {
+          setAlt(new TextDecoder().decode(Buffer.from(raw, "binary")));
+        }
+      })
+      .catch(() => {});
+  }, [src]);
 
   return (
-    <div ref={callbackRef} className="relative h-full w-full overflow-hidden">
+    <div ref={containerRef} className="relative h-full w-full overflow-hidden">
       <img
         alt={alt}
         className={classNames(
@@ -64,7 +59,8 @@ export const CoveredImage = ({ src }: Props) => {
             "w-full h-auto": containerRatio <= imageRatio,
           },
         )}
-        src={blobUrl}
+        onLoad={handleImgLoad}
+        src={src}
       />
 
       <button
