@@ -103,7 +103,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     if (isValid) {
       setIsConverting(true);
 
-      convertMovie(file, { extension: "gif", size: undefined })
+      convertMovie(file, { extension: "gif", size: 480 })
         .then((converted) => {
           setParams((params) => ({
             ...params,
