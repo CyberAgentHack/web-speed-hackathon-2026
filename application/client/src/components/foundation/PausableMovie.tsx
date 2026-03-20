@@ -1,12 +1,8 @@
 import classNames from "classnames";
-import { Animator, Decoder } from "gifler";
-import { GifReader } from "omggif";
-import { RefCallback, useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
-import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
   src: string;
@@ -14,66 +10,119 @@ interface Props {
 
 /**
  * クリックすると再生・一時停止を切り替えます。
+ * GIF を `<img>` で表示し、一時停止時は canvas にフレームをキャプチャして表示します。
  */
 export const PausableMovie = ({ src }: Props) => {
-  const { data, isLoading } = useFetch(src, fetchBinary);
-
-  const animatorRef = useRef<Animator>(null);
-  const canvasCallbackRef = useCallback<RefCallback<HTMLCanvasElement>>(
-    (el) => {
-      animatorRef.current?.stop();
-
-      if (el === null || data === null) {
-        return;
-      }
-
-      // GIF を解析する
-      const reader = new GifReader(new Uint8Array(data));
-      const frames = Decoder.decodeFramesSync(reader);
-      const animator = new Animator(reader, frames);
-
-      animator.animateInCanvas(el);
-      animator.onFrame(frames[0]!);
-
-      // 視覚効果 off のとき GIF を自動再生しない
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        setIsPlaying(false);
-        animator.stop();
-      } else {
-        setIsPlaying(true);
-        animator.start();
-      }
-
-      animatorRef.current = animator;
-    },
-    [data],
-  );
-
+  const imgRef = useRef<HTMLImageElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const placeholderRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
-  const handleClick = useCallback(() => {
-    setIsPlaying((isPlaying) => {
-      if (isPlaying) {
-        animatorRef.current?.stop();
-      } else {
-        animatorRef.current?.start();
-      }
-      return !isPlaying;
-    });
+  const [isVisible, setIsVisible] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // IntersectionObserver: track visibility
+  useEffect(() => {
+    const target = placeholderRef.current ?? buttonRef.current;
+    if (target == null) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry != null) {
+          setIsVisible(entry.isIntersecting);
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    observer.observe(target);
+    return () => {
+      observer.disconnect();
+    };
+  }, [isLoaded]);
+
+  // Respect prefers-reduced-motion
+  useEffect(() => {
+    if (isLoaded && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      pauseGif();
+      setIsPlaying(false);
+    }
+  }, [isLoaded]);
+
+  const pauseGif = useCallback(() => {
+    const img = imgRef.current;
+    const canvas = canvasRef.current;
+    if (img == null || canvas == null) return;
+
+    // Capture the current frame to canvas
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext("2d");
+    if (ctx != null) {
+      ctx.drawImage(img, 0, 0);
+    }
+    // Show canvas, hide img
+    canvas.style.display = "block";
+    img.style.display = "none";
   }, []);
 
-  if (isLoading || data === null) {
-    return null;
+  const resumeGif = useCallback(() => {
+    const img = imgRef.current;
+    const canvas = canvasRef.current;
+    if (img == null || canvas == null) return;
+
+    // Re-trigger GIF animation by re-assigning src
+    const currentSrc = img.src;
+    img.src = "";
+    img.src = currentSrc;
+
+    // Show img, hide canvas
+    img.style.display = "block";
+    canvas.style.display = "none";
+  }, []);
+
+  const handleClick = useCallback(() => {
+    setIsPlaying((prev) => {
+      if (prev) {
+        pauseGif();
+      } else {
+        resumeGif();
+      }
+      return !prev;
+    });
+  }, [pauseGif, resumeGif]);
+
+  const handleLoad = useCallback(() => {
+    setIsLoaded(true);
+  }, []);
+
+  if (!isVisible && !isLoaded) {
+    // Render a placeholder that the IntersectionObserver can observe
+    return (
+      <AspectRatioBox aspectHeight={1} aspectWidth={1}>
+        <div ref={placeholderRef} className="h-full w-full" />
+      </AspectRatioBox>
+    );
   }
 
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
       <button
+        ref={buttonRef}
         aria-label="動画プレイヤー"
         className="group relative block h-full w-full"
         onClick={handleClick}
         type="button"
       >
-        <canvas ref={canvasCallbackRef} className="w-full" />
+        <img
+          ref={imgRef}
+          alt=""
+          className="w-full"
+          decoding="async"
+          onLoad={handleLoad}
+          src={src}
+        />
+        <canvas ref={canvasRef} className="w-full" style={{ display: "none" }} />
         <div
           className={classNames(
             "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
