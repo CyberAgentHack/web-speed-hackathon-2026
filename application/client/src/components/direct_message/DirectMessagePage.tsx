@@ -43,7 +43,6 @@ export const DirectMessagePage = ({
     conversation.initiator.id !== activeUser.id ? conversation.initiator : conversation.member;
 
   const [text, setText] = useState("");
-  const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
 
   const handleChange = useCallback(
@@ -172,11 +171,11 @@ export const DirectMessagePage = ({
             </label>
             <textarea
               id={textAreaId}
-              className="border-cax-border placeholder-cax-text-subtle focus:outline-cax-brand w-full resize-none rounded-xl border px-3 py-2 focus:outline-2 focus:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="border-cax-border placeholder-cax-text-subtle focus:outline-cax-brand [field-sizing:content] w-full resize-none rounded-xl border px-3 py-2 focus:outline-2 focus:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               value={text}
               onChange={handleChange}
               onKeyDown={handleKeyDown}
-              rows={textAreaRows}
+              rows={1}
               disabled={isSubmitting}
             />
           </div>
