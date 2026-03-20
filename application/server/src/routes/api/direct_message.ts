@@ -16,7 +16,7 @@ directMessageRouter.get("/dm", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversations = await DirectMessageConversation.findAll({
+  const conversations = await DirectMessageConversation.scope(["withParticipants", "withMessages"]).findAll({
     where: {
       [Op.and]: [
         { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
@@ -56,9 +56,9 @@ directMessageRouter.post("/dm", async (req, res) => {
       memberId: peer.id,
     },
   });
-  await conversation.reload();
+  const fullConversation = await DirectMessageConversation.scope(["withParticipants", "withMessages"]).findByPk(conversation.id);
 
-  return res.status(200).type("application/json").send(conversation);
+  return res.status(200).type("application/json").send(fullConversation);
 });
 
 directMessageRouter.ws("/dm/unread", async (req, _res) => {
@@ -100,7 +100,7 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversation = await DirectMessageConversation.findOne({
+  const conversation = await DirectMessageConversation.scope(["withParticipants", "withMessages"]).findOne({
     where: {
       id: req.params.conversationId,
       [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
@@ -175,9 +175,9 @@ directMessageRouter.post("/dm/:conversationId/messages", async (req, res) => {
     conversationId: conversation.id,
     senderId: req.session.userId,
   });
-  await message.reload();
+  const fullMessage = await DirectMessage.scope("withSender").findByPk(message.id);
 
-  return res.status(201).type("application/json").send(message);
+  return res.status(201).type("application/json").send(fullMessage);
 });
 
 directMessageRouter.post("/dm/:conversationId/read", async (req, res) => {

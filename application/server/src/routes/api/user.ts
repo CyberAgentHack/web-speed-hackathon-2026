@@ -9,7 +9,7 @@ userRouter.get("/me", async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
   }
-  const user = await User.findByPk(req.session.userId);
+  const user = await User.scope("withProfileImage").findByPk(req.session.userId);
 
   if (user === null) {
     throw new httpErrors.NotFound();
@@ -22,7 +22,7 @@ userRouter.put("/me", async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
   }
-  const user = await User.findByPk(req.session.userId);
+  const user = await User.scope("withProfileImage").findByPk(req.session.userId);
 
   if (user === null) {
     throw new httpErrors.NotFound();
@@ -35,7 +35,7 @@ userRouter.put("/me", async (req, res) => {
 });
 
 userRouter.get("/users/:username", async (req, res) => {
-  const user = await User.findOne({
+  const user = await User.scope("withProfileImage").findOne({
     where: {
       username: req.params.username,
     },
@@ -59,7 +59,7 @@ userRouter.get("/users/:username/posts", async (req, res) => {
     throw new httpErrors.NotFound();
   }
 
-  const posts = await Post.findAll({
+  const posts = await Post.scope("withRelations").findAll({
     limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
     offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
     where: {
