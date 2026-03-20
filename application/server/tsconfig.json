@@ -1,7 +1,7 @@
 {
   "extends": ["@tsconfig/strictest/tsconfig.json"],
   "compilerOptions": {
-    "baseUrl": ".",
+    "composite": true,
     "noEmit": true,
     "checkJs": true,
     "jsx": "react-jsx",
@@ -9,7 +9,7 @@
     "lib": ["DOM", "ESNext"],
     "module": "esnext",
     "moduleResolution": "bundler",
-    "exactOptionalPropertyTypes": false,
+    "exactOptionalPropertyTypes": true,
     "paths": {
       "@web-speed-hackathon-2026/server/*": ["./*"]
     }

@@ -12,7 +12,7 @@ test.describe("投稿詳細", () => {
     const firstArticle = page.locator("article").first();
     await expect(firstArticle).toBeVisible({ timeout: 3_000 });
     await firstArticle.click();
-    await page.waitForURL("**/posts/*", { timeout: 3_000 });
+    await page.waitForURL("**/posts/*", { timeout: 3_000, waitUntil: "commit" });
 
     const article = page.locator("article").first();
     await expect(article).toBeVisible({ timeout: 3_000 });
@@ -29,7 +29,7 @@ test.describe("投稿詳細", () => {
     const firstArticle = page.locator("article").first();
     await expect(firstArticle).toBeVisible({ timeout: 3_000 });
     await firstArticle.click();
-    await page.waitForURL("**/posts/*", { timeout: 3_000 });
+    await page.waitForURL("**/posts/*", { timeout: 3_000, waitUntil: "commit" });
 
     await expect(page).toHaveTitle(/さんのつぶやき - CaX/, { timeout: 3_000 });
   });
@@ -45,7 +45,7 @@ test.describe("投稿詳細 - 動画", () => {
     const movieArticle = page.locator("article:has([data-movie-area])").first();
     await expect(movieArticle).toBeVisible({ timeout: 3_000 });
     await movieArticle.locator("time").first().click();
-    await page.waitForURL("**/posts/*", { timeout: 3_000 });
+    await page.waitForURL("**/posts/*", { timeout: 3_000, waitUntil: "commit" });
 
     const movieArea = page.locator("[data-movie-area]").first();
     await expect(movieArea).toBeVisible({ timeout: 3_000 });
@@ -75,7 +75,7 @@ test.describe("投稿詳細 - 音声", () => {
     const soundArticle = page.locator('article:has(svg[viewBox="0 0 100 1"])').first();
     await expect(soundArticle).toBeVisible({ timeout: 3_000 });
     await soundArticle.locator("time").first().click();
-    await page.waitForURL("**/posts/*", { timeout: 3_000 });
+    await page.waitForURL("**/posts/*", { timeout: 3_000, waitUntil: "commit" });
 
     const waveform = page.locator('svg[viewBox="0 0 100 1"]').first();
     await expect(waveform).toBeVisible({ timeout: 3_000 });
@@ -107,7 +107,7 @@ test.describe("投稿詳細 - 写真", () => {
     const imageArticle = page.locator("article:has(.grid img)").first();
     await expect(imageArticle).toBeVisible({ timeout: 3_000 });
     await imageArticle.click();
-    await page.waitForURL("**/posts/*", { timeout: 3_000 });
+    await page.waitForURL("**/posts/*", { timeout: 3_000, waitUntil: "commit" });
 
     const coveredImage = page.locator(".grid img").first();
     await expect(coveredImage).toBeVisible({ timeout: 3_000 });
@@ -116,6 +116,10 @@ test.describe("投稿詳細 - 写真", () => {
       return window.getComputedStyle(el).objectFit;
     });
     expect(objectFit).toBe("cover");
+
+    await coveredImage.evaluate((el: HTMLImageElement) =>
+      el.complete ? Promise.resolve() : el.decode(),
+    );
 
     const naturalWidth = await coveredImage.evaluate((el: HTMLImageElement) => el.naturalWidth);
     expect(naturalWidth).toBeGreaterThan(100);

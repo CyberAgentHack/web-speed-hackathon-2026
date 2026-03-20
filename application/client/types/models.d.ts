@@ -1,28 +1,17 @@
 declare namespace Models {
+  interface ProfileImage {
+    alt: string;
+    id: string;
+  }
+
   interface User {
     createdAt: string;
     description: string;
     id: string;
     name: string;
     password: string;
-    posts: Array<Models.Post>;
-    profileImage: Models.ProfileImage;
+    profileImage: ProfileImage;
     username: string;
-  }
-
-  interface ProfileImage {
-    alt: string;
-    id: string;
-  }
-
-  interface Post {
-    createdAt: string;
-    id: string;
-    images: Array<Models.Image>;
-    movie: Models.Movie;
-    sound: Models.Sound;
-    text: string;
-    user: Models.User;
   }
 
   interface Image {
@@ -40,17 +29,27 @@ declare namespace Models {
     id: string;
   }
 
+  interface Post {
+    createdAt: string;
+    id: string;
+    images: Image[];
+    movie: Movie | null;
+    sound: Sound | null;
+    text: string;
+    user: User;
+  }
+
   interface Comment {
     createdAt: string;
     id: string;
-    post: Models.Post;
+    post: Post;
     text: string;
-    user: Models.User;
+    user: User;
   }
 
   interface DirectMessage {
     id: string;
-    sender: Models.User;
+    sender: User;
     body: string;
     isRead: boolean;
     createdAt: string;
@@ -59,9 +58,9 @@ declare namespace Models {
 
   interface DirectMessageConversation {
     id: string;
-    initiator: Models.User;
-    member: Models.User;
-    messages: Array<Models.DirectMessage>;
+    initiator: User;
+    member: User;
+    messages: DirectMessage[];
   }
 
   interface ChatMessage {

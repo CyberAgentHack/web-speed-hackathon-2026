@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
+import { apiClient } from "@web-speed-hackathon-2026/client/src/api/client";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { NewPostModalPage } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage";
-import { sendFile, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { sendFile } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface SubmitParams {
   images: File[];
@@ -22,7 +23,8 @@ async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promis
     text,
   };
 
-  return sendJSON("/api/v1/posts", payload);
+  const res = await apiClient.posts.$post({ json: payload });
+  return res.json();
 }
 
 interface Props {
@@ -64,7 +66,7 @@ export const NewPostModalContainer = ({ id }: Props) => {
         setIsLoading(true);
         const post = await sendNewPost(params);
         ref.current?.close();
-        navigate(`/posts/${post.id}`);
+        void navigate(`/posts/${post.id}`);
       } catch {
         setHasError(true);
       } finally {

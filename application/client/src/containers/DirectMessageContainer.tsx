@@ -2,12 +2,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useParams } from "react-router";
 
+import { apiClient } from "@web-speed-hackathon-2026/client/src/api/client";
 import { DirectMessageGate } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageGate";
 import { DirectMessagePage } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessagePage";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
-import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface DmUpdateEvent {
   type: "dm:conversation:message";
@@ -41,9 +41,10 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     }
 
     try {
-      const data = await fetchJSON<Models.DirectMessageConversation>(
-        `/api/v1/dm/${conversationId}`,
-      );
+      const res = await apiClient.dm[":conversationId"].$get({
+        param: { conversationId },
+      });
+      const data = await res.json();
       setConversation(data);
       setConversationError(null);
     } catch (error) {
@@ -53,7 +54,9 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   }, [activeUser, conversationId]);
 
   const sendRead = useCallback(async () => {
-    await sendJSON(`/api/v1/dm/${conversationId}/read`, {});
+    await apiClient.dm[":conversationId"].read.$post({
+      param: { conversationId },
+    });
   }, [conversationId]);
 
   useEffect(() => {
@@ -65,10 +68,12 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     async (params: DirectMessageFormData) => {
       setIsSubmitting(true);
       try {
-        await sendJSON(`/api/v1/dm/${conversationId}/messages`, {
-          body: params.body,
-        });
-        loadConversation();
+        await apiClient.dm[":conversationId"].messages.$post({
+          param: { conversationId },
+          json: { body: params.body },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any);
+        void loadConversation();
       } finally {
         setIsSubmitting(false);
       }
@@ -77,7 +82,9 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   );
 
   const handleTyping = useCallback(async () => {
-    void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
+    void apiClient.dm[":conversationId"].typing.$post({
+      param: { conversationId },
+    });
   }, [conversationId]);
 
   useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {

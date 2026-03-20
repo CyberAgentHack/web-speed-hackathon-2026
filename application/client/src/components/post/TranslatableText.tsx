@@ -17,7 +17,7 @@ export const TranslatableText = ({ text }: Props) => {
   const handleClick = useCallback(() => {
     switch (state.type) {
       case "idle": {
-        (async () => {
+        void (async () => {
           updateState({ type: "loading" });
           try {
             using translator = await createTranslator({

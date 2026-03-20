@@ -86,7 +86,7 @@ const SearchPageComponent = ({
 
   const onSubmit = (values: SearchFormData) => {
     const sanitizedText = sanitizeSearchText(values.searchText.trim());
-    navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
+    void navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
   };
 
   return (

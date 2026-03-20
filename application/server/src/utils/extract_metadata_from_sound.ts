@@ -1,8 +1,8 @@
 import * as MusicMetadata from "music-metadata";
 
 interface SoundMetadata {
-  artist?: string;
-  title?: string;
+  artist?: string | undefined;
+  title?: string | undefined;
 }
 
 export async function extractMetadataFromSound(data: Buffer): Promise<SoundMetadata> {

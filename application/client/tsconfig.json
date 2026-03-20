@@ -9,9 +9,10 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "paths": {
-      "@web-speed-hackathon-2026/client/*": ["./*"]
+      "@web-speed-hackathon-2026/client/*": ["./*"],
+      "@web-speed-hackathon-2026/server/*": ["../server/*"]
     },
-    "exactOptionalPropertyTypes": false
+    "exactOptionalPropertyTypes": true
   },
   "include": ["./src", "./types"]
 }

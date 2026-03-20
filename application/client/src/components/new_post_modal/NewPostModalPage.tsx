@@ -84,7 +84,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     if (isValid) {
       setIsConverting(true);
 
-      convertSound(file, { extension: "mp3" }).then((converted) => {
+      void convertSound(file, { extension: "mp3" }).then((converted) => {
         setParams((params) => ({
           ...params,
           images: [],

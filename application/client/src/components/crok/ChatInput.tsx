@@ -9,12 +9,12 @@ import {
   type KeyboardEvent,
 } from "react";
 
+import { apiClient } from "@web-speed-hackathon-2026/client/src/api/client";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import {
   extractTokens,
   filterSuggestionsBM25,
 } from "@web-speed-hackathon-2026/client/src/utils/bm25_search";
-import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
   isStreaming: boolean;
@@ -107,7 +107,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
         setTokenizer(nextTokenizer);
       }
     };
-    init();
+    void init();
 
     return () => {
       mounted = false;
@@ -125,9 +125,8 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
         return;
       }
 
-      const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-        "/api/v1/crok/suggestions",
-      );
+      const res = await apiClient.crok.suggestions.$get();
+      const { suggestions: candidates } = (await res.json()) as { suggestions: string[] };
       if (cancelled) {
         return;
       }

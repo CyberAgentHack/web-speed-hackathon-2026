@@ -7,14 +7,21 @@
   "scripts": {
     "build": "pnpm --filter @web-speed-hackathon-2026/client build",
     "start": "pnpm --filter @web-speed-hackathon-2026/server start",
+    "test": "pnpm run test:unit && pnpm run test:e2e",
+    "test:unit": "pnpm --filter @web-speed-hackathon-2026/server --filter @web-speed-hackathon-2026/client run test",
+    "test:e2e": "pnpm --filter @web-speed-hackathon-2026/e2e test",
     "typecheck": "pnpm run --recursive typecheck",
     "format": "pnpm run format:oxlint && pnpm run format:oxfmt",
-    "format:oxlint": "oxlint --fix",
-    "format:oxfmt": "oxfmt"
+    "format:oxlint": "oxlint --fix --type-aware --type-check",
+    "format:oxfmt": "oxfmt",
+    "lint": "oxlint --type-aware --type-check",
+    "lint:fix": "oxlint --fix --type-aware --type-check"
   },
   "devDependencies": {
     "oxfmt": "0.36.0",
-    "oxlint": "1.43.0"
+    "oxlint": "1.43.0",
+    "oxlint-tsgolint": "0.17.1",
+    "vitest": "4.1.0"
   },
   "engines": {
     "node": "24.14.0"

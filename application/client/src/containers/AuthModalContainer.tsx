@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SubmissionError } from "redux-form";
 
+import { apiClient, HTTPError } from "@web-speed-hackathon-2026/client/src/api/client";
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { AuthModalPage } from "@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
-import { sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
   id: string;
@@ -59,13 +59,18 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   const handleSubmit = useCallback(
     async (values: AuthFormData) => {
       try {
-        if (values.type === "signup") {
-          const user = await sendJSON<Models.User>("/api/v1/signup", values);
-          onUpdateActiveUser(user);
-        } else {
-          const user = await sendJSON<Models.User>("/api/v1/signin", values);
-          onUpdateActiveUser(user);
+        const res =
+          values.type === "signup"
+            ? await apiClient.signup.$post({ json: values })
+            : await apiClient.signin.$post({ json: values });
+        if (!res.ok) {
+          throw new HTTPError(res.status, await res.json());
         }
+        const user = await res.json();
+        if ("code" in user) {
+          throw new HTTPError(res.status, user);
+        }
+        onUpdateActiveUser(user);
         handleRequestCloseModal();
       } catch (err: unknown) {
         const error = getErrorCode(err as { responseJSON?: unknown }, values.type);

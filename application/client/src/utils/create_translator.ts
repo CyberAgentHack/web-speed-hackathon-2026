@@ -55,7 +55,7 @@ export async function createTranslator(params: Params): Promise<Translator> {
       return String(parsed.result);
     },
     [Symbol.dispose]: () => {
-      engine.unload();
+      void engine.unload();
     },
   };
 }

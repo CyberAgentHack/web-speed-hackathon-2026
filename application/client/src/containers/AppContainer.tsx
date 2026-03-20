@@ -2,6 +2,7 @@ import { useCallback, useEffect, useId, useState } from "react";
 import { Helmet, HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
+import { apiClient } from "@web-speed-hackathon-2026/client/src/api/client";
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
 import { CrokContainer } from "@web-speed-hackathon-2026/client/src/containers/CrokContainer";
@@ -14,19 +15,18 @@ import { SearchContainer } from "@web-speed-hackathon-2026/client/src/containers
 import { TermContainer } from "@web-speed-hackathon-2026/client/src/containers/TermContainer";
 import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
 import { UserProfileContainer } from "@web-speed-hackathon-2026/client/src/containers/UserProfileContainer";
-import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 export interface SSRData {
-  activeUser?: Models.User | null;
-  posts?: Models.Post[];
-  post?: Models.Post | null;
-  comments?: Models.Comment[];
-  user?: Models.User | null;
-  userPosts?: Models.Post[];
+  activeUser?: Models.User | null | undefined;
+  posts?: Models.Post[] | undefined;
+  post?: Models.Post | null | undefined;
+  comments?: Models.Comment[] | undefined;
+  user?: Models.User | null | undefined;
+  userPosts?: Models.Post[] | undefined;
 }
 
 interface AppContainerProps {
-  ssrData?: SSRData;
+  ssrData?: SSRData | undefined;
 }
 
 export const AppContainer = ({ ssrData }: AppContainerProps) => {
@@ -43,7 +43,9 @@ export const AppContainer = ({ ssrData }: AppContainerProps) => {
   const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(!hasSSRActiveUser);
   useEffect(() => {
     if (hasSSRActiveUser) return;
-    void fetchJSON<Models.User>("/api/v1/me")
+    void apiClient.me
+      .$get()
+      .then((res) => res.json())
       .then((user) => {
         setActiveUser(user);
       })
@@ -52,9 +54,9 @@ export const AppContainer = ({ ssrData }: AppContainerProps) => {
       });
   }, [hasSSRActiveUser]);
   const handleLogout = useCallback(async () => {
-    await sendJSON("/api/v1/signout", {});
+    await apiClient.signout.$post();
     setActiveUser(null);
-    navigate("/");
+    void navigate("/");
   }, [navigate]);
 
   const authModalId = useId();

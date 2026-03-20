@@ -13,31 +13,33 @@ import { extractMetadataFromSound } from "@web-speed-hackathon-2026/server/src/u
 
 const EXTENSION = "mp3";
 
-export const soundRouter = new Hono<SessionEnv>();
+export const soundRouter = new Hono<SessionEnv>().post(
+  "/sounds",
+  bodyLimit({ maxSize: 10 * 1024 * 1024 }),
+  async (c) => {
+    const userId = c.var.session.get()?.userId;
+    if (userId === undefined) {
+      throw new HTTPException(401);
+    }
 
-soundRouter.post("/sounds", bodyLimit({ maxSize: 10 * 1024 * 1024 }), async (c) => {
-  const userId = c.var.session.get()?.userId;
-  if (userId === undefined) {
-    throw new HTTPException(401);
-  }
+    const buffer = Buffer.from(await c.req.arrayBuffer());
+    if (buffer.length === 0) {
+      throw new HTTPException(400);
+    }
 
-  const buffer = Buffer.from(await c.req.arrayBuffer());
-  if (buffer.length === 0) {
-    throw new HTTPException(400);
-  }
+    const type = await fileTypeFromBuffer(buffer);
+    if (type === undefined || type.ext !== EXTENSION) {
+      throw new HTTPException(400, { message: "Invalid file type" });
+    }
 
-  const type = await fileTypeFromBuffer(buffer);
-  if (type === undefined || type.ext !== EXTENSION) {
-    throw new HTTPException(400, { message: "Invalid file type" });
-  }
+    const soundId = uuidv4();
 
-  const soundId = uuidv4();
+    const { artist, title } = await extractMetadataFromSound(buffer);
 
-  const { artist, title } = await extractMetadataFromSound(buffer);
+    const filePath = path.resolve(UPLOAD_PATH, `./sounds/${soundId}.${EXTENSION}`);
+    await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds"), { recursive: true });
+    await fs.writeFile(filePath, buffer);
 
-  const filePath = path.resolve(UPLOAD_PATH, `./sounds/${soundId}.${EXTENSION}`);
-  await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds"), { recursive: true });
-  await fs.writeFile(filePath, buffer);
-
-  return c.json({ artist, id: soundId, title });
-});
+    return c.json({ artist, id: soundId, title });
+  },
+);

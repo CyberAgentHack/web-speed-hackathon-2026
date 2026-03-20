@@ -22,7 +22,7 @@ export async function convertImage(file: File, options: Options): Promise<Blob> 
 
       const comment = img.comment;
 
-      img.write(async (output) => {
+      void img.write(async (output) => {
         if (comment == null) {
           resolve(new Blob([output as Uint8Array<ArrayBuffer>]));
           return;

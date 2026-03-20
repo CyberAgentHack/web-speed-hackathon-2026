@@ -1,29 +1,32 @@
 import { Helmet } from "react-helmet";
 import { useParams } from "react-router";
 
+import { apiClient } from "@web-speed-hackathon-2026/client/src/api/client";
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
 import { PostPage } from "@web-speed-hackathon-2026/client/src/components/post/PostPage";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
-import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface PostContainerContentProps {
   postId: string | undefined;
-  ssrPost?: Models.Post | null;
-  ssrComments?: Models.Comment[];
+  ssrPost?: Models.Post | null | undefined;
+  ssrComments?: Models.Comment[] | undefined;
 }
 
 const PostContainerContent = ({ postId, ssrPost, ssrComments }: PostContainerContentProps) => {
   const { data: post, isLoading: isLoadingPost } = useFetch<Models.Post>(
     `/api/v1/posts/${postId}`,
-    fetchJSON,
+    () => apiClient.posts[":postId"].$get({ param: { postId: postId! } }).then((res) => res.json()),
     ssrPost,
   );
 
   const { data: comments, fetchMore } = useInfiniteFetch<Models.Comment>(
     `/api/v1/posts/${postId}/comments`,
-    fetchJSON,
+    () =>
+      apiClient.posts[":postId"].comments
+        .$get({ param: { postId: postId! } })
+        .then((res) => res.json()),
     ssrComments,
   );
 
@@ -50,8 +53,8 @@ const PostContainerContent = ({ postId, ssrPost, ssrComments }: PostContainerCon
 };
 
 interface PostContainerProps {
-  ssrPost?: Models.Post | null;
-  ssrComments?: Models.Comment[];
+  ssrPost?: Models.Post | null | undefined;
+  ssrComments?: Models.Comment[] | undefined;
 }
 
 export const PostContainer = ({ ssrPost, ssrComments }: PostContainerProps) => {

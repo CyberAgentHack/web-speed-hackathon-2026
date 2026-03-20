@@ -12,6 +12,13 @@ const WORKERS = process.env["E2E_WORKERS"]
   : Math.max(1, Math.floor(os.cpus().length / 2));
 
 export default defineConfig({
+  webServer: {
+    command: "pnpm --filter @web-speed-hackathon-2026/server start",
+    cwd: "..",
+    url: BASE_URL,
+    reuseExistingServer: true,
+    timeout: 30_000,
+  },
   globalSetup: "./globalSetup.ts",
   expect: {
     timeout: 60_000,

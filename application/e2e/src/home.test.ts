@@ -59,7 +59,7 @@ test.describe("ホーム", () => {
     const firstArticle = page.locator("article").first();
     await expect(firstArticle).toBeVisible({ timeout: 3_000 });
     await firstArticle.click();
-    await page.waitForURL("**/posts/*", { timeout: 3_000 });
+    await page.waitForURL("**/posts/*", { timeout: 3_000, waitUntil: "commit" });
     expect(page.url()).toMatch(/\/posts\/[a-zA-Z0-9-]+/);
   });
 });

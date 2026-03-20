@@ -1,13 +1,13 @@
 import { Helmet } from "react-helmet";
 
+import { apiClient } from "@web-speed-hackathon-2026/client/src/api/client";
 import { SearchPage } from "@web-speed-hackathon-2026/client/src/components/application/SearchPage";
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
 import { useSearchParams } from "@web-speed-hackathon-2026/client/src/hooks/use_search_params";
-import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface SearchContainerProps {
-  ssrPosts?: Models.Post[];
+  ssrPosts?: Models.Post[] | undefined;
 }
 
 export const SearchContainer = ({ ssrPosts }: SearchContainerProps) => {
@@ -16,7 +16,7 @@ export const SearchContainer = ({ ssrPosts }: SearchContainerProps) => {
 
   const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>(
     query ? `/api/v1/search?q=${encodeURIComponent(query)}` : "",
-    fetchJSON,
+    () => apiClient.search.$get({ query: { q: query } }).then((res) => res.json()),
     ssrPosts,
   );
 

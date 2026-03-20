@@ -1,16 +1,16 @@
 import { Helmet } from "react-helmet";
 import { useParams } from "react-router";
 
+import { apiClient } from "@web-speed-hackathon-2026/client/src/api/client";
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
 import { UserProfilePage } from "@web-speed-hackathon-2026/client/src/components/user_profile/UserProfilePage";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
-import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface UserProfileContainerProps {
-  ssrUser?: Models.User | null;
-  ssrPosts?: Models.Post[];
+  ssrUser?: Models.User | null | undefined;
+  ssrPosts?: Models.Post[] | undefined;
 }
 
 export const UserProfileContainer = ({ ssrUser, ssrPosts }: UserProfileContainerProps) => {
@@ -18,12 +18,18 @@ export const UserProfileContainer = ({ ssrUser, ssrPosts }: UserProfileContainer
 
   const { data: user, isLoading: isLoadingUser } = useFetch<Models.User>(
     `/api/v1/users/${username}`,
-    fetchJSON,
+    () =>
+      apiClient.users[":username"]
+        .$get({ param: { username: username! } })
+        .then((res) => res.json()),
     ssrUser,
   );
   const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>(
     `/api/v1/users/${username}/posts`,
-    fetchJSON,
+    () =>
+      apiClient.users[":username"].posts
+        .$get({ param: { username: username! } })
+        .then((res) => res.json()),
     ssrPosts,
   );
 

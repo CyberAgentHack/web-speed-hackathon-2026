@@ -3,28 +3,29 @@ import { Op } from "sequelize";
 
 import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
 import type { SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
+import type { PostResponse } from "@web-speed-hackathon-2026/server/src/types/api";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 
-export const searchRouter = new Hono<SessionEnv>();
-
-searchRouter.get("/search", async (c) => {
+export const searchRouter = new Hono<SessionEnv>().get("/search", async (c) => {
   const query = c.req.query("q");
 
   if (typeof query !== "string" || query.trim() === "") {
-    return c.json([]);
+    return c.json([] as PostResponse[]);
   }
 
   const { keywords, sinceDate, untilDate } = parseSearchQuery(query);
 
   if (!keywords && !sinceDate && !untilDate) {
-    return c.json([]);
+    return c.json([] as PostResponse[]);
   }
 
   const searchTerm = keywords ? `%${keywords}%` : null;
   const limitParam = c.req.query("limit");
   const offsetParam = c.req.query("offset");
-  const limit = limitParam != null ? Number(limitParam) : undefined;
-  const offset = offsetParam != null ? Number(offsetParam) : undefined;
+  const limitOffset = {
+    ...(limitParam != null ? { limit: Number(limitParam) } : {}),
+    ...(offsetParam != null ? { offset: Number(offsetParam) } : {}),
+  };
 
   const dateConditions: Record<symbol, Date>[] = [];
   if (sinceDate) {
@@ -38,9 +39,11 @@ searchRouter.get("/search", async (c) => {
 
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
+  const limit = limitParam != null ? Number(limitParam) : undefined;
+  const offset = offsetParam != null ? Number(offsetParam) : undefined;
+
   const postsByText = await Post.scope("detail").findAll({
-    limit,
-    offset,
+    ...limitOffset,
     where: {
       ...textWhere,
       ...dateWhere,
@@ -60,8 +63,7 @@ searchRouter.get("/search", async (c) => {
     const matchedUserIds = matchedUsers.map((u) => u.id);
     if (matchedUserIds.length > 0) {
       postsByUser = await Post.scope("detail").findAll({
-        limit,
-        offset,
+        ...limitOffset,
         where: {
           ...dateWhere,
           userId: { [Op.in]: matchedUserIds },
@@ -82,7 +84,7 @@ searchRouter.get("/search", async (c) => {
 
   mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-  const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
+  const result = mergedPosts.slice(offset ?? 0, (offset ?? 0) + (limit ?? mergedPosts.length));
 
-  return c.json(result);
+  return c.json(result.map((p) => p.toJSON()) as unknown as PostResponse[]);
 });

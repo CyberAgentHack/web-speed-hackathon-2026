@@ -39,6 +39,7 @@
             export CHROMIUM_PATH="${pkgs.google-chrome}/bin/google-chrome-stable"
             export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1
             export PUPPETEER_EXECUTABLE_PATH="${pkgs.google-chrome}/bin/google-chrome-stable"
+            export PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH="${pkgs.google-chrome}/bin/google-chrome-stable"
 
             # actrun (GitHub Actions 互換ローカルランナー)
             export npm_config_prefix="$PWD/.npm-global"

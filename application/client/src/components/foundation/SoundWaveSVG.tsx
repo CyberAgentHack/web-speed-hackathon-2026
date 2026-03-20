@@ -61,7 +61,7 @@ export const SoundWaveSVG = ({ soundData }: Props) => {
   });
 
   useEffect(() => {
-    calculate(soundData).then(({ max, peaks }) => {
+    void calculate(soundData).then(({ max, peaks }) => {
       setPeaks({ max, peaks });
     });
   }, [soundData]);

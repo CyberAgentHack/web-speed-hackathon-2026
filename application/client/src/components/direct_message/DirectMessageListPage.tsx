@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 
+import { apiClient } from "@web-speed-hackathon-2026/client/src/api/client";
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
-import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { formatRelativeTime } from "@web-speed-hackathon-2026/client/src/utils/format_date";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
@@ -24,7 +24,9 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     }
 
     try {
-      const conversations = await fetchJSON<Array<Models.DirectMessageConversation>>("/api/v1/dm");
+      const res = await apiClient.dm.$get();
+      const conversations =
+        (await res.json()) as unknown as Array<Models.DirectMessageConversation>;
       setConversations(conversations);
       setError(null);
     } catch (error) {

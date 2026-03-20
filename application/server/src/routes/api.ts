@@ -14,18 +14,19 @@ import { soundRouter } from "@web-speed-hackathon-2026/server/src/routes/api/sou
 import { userRouter } from "@web-speed-hackathon-2026/server/src/routes/api/user";
 import type { SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
 
-export const apiRouter = new Hono<SessionEnv>();
+export const apiRouter = new Hono<SessionEnv>()
+  .route("", initializeRouter)
+  .route("", userRouter)
+  .route("", postRouter)
+  .route("", directMessageRouter)
+  .route("", searchRouter)
+  .route("", movieRouter)
+  .route("", imageRouter)
+  .route("", soundRouter)
+  .route("", authRouter)
+  .route("", crokRouter);
 
-apiRouter.route("", initializeRouter);
-apiRouter.route("", userRouter);
-apiRouter.route("", postRouter);
-apiRouter.route("", directMessageRouter);
-apiRouter.route("", searchRouter);
-apiRouter.route("", movieRouter);
-apiRouter.route("", imageRouter);
-apiRouter.route("", soundRouter);
-apiRouter.route("", authRouter);
-apiRouter.route("", crokRouter);
+export type ApiType = typeof apiRouter;
 
 apiRouter.onError((err, c) => {
   if (err instanceof ValidationError) {

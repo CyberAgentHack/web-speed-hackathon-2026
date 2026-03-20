@@ -21,10 +21,10 @@ export function useSearchParams(): [URLSearchParams] {
         lastSearchRef.current = currentSearch;
         setSearchParams(new URLSearchParams(currentSearch));
       }
-      scheduler.postTask(poll, { priority: "user-blocking", delay: 1 });
+      void scheduler.postTask(poll, { priority: "user-blocking", delay: 1 });
     };
 
-    scheduler.postTask(poll, { priority: "user-blocking", delay: 1 });
+    void scheduler.postTask(poll, { priority: "user-blocking", delay: 1 });
 
     return () => {
       active = false;

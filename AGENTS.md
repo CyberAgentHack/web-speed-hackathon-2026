@@ -49,6 +49,17 @@ git checkout main
 
 `nix develop` で開発に必要なツールが揃う（Node.js 24, pnpm, sqlite, chromium 等）。
 
+### 環境変数（`nix develop` の shellHook で自動設定）
+
+| 変数 | 用途 |
+|------|------|
+| `CHROME_PATH` | Lighthouse / scoring-tool 用 |
+| `CHROMIUM_PATH` | Lighthouse / scoring-tool 用 |
+| `PUPPETEER_EXECUTABLE_PATH` | Puppeteer 用 |
+| `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` | Playwright (E2E/VRT) 用。未設定だと `channel: "chrome"` で `/opt/google/chrome/chrome` を探しに行き失敗する |
+
+**注意:** `nix develop` 外でコミットすると VRT の pre-commit hook が Chrome を見つけられず失敗する。必ず `nix develop` シェル内で作業すること。
+
 ### 起動手順
 
 ```bash

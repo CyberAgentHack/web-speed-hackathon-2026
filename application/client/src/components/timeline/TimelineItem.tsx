@@ -40,7 +40,7 @@ export const TimelineItem = ({ post }: Props) => {
     (ev) => {
       const isSelectedText = document.getSelection()?.isCollapsed === false;
       if (!isClickedAnchorOrButton(ev.target, ev.currentTarget) && !isSelectedText) {
-        navigate(`/posts/${post.id}`);
+        void navigate(`/posts/${post.id}`);
       }
     },
     [post, navigate],
