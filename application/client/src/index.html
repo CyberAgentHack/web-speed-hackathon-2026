@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="<%= css %>" />
     <% } %>
     <% for (const js of htmlWebpackPlugin.files.js) { %>
-    <script src="<%= js %>"></script>
+    <script src="<%= js %>" defer></script>
     <% } %>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.1"></script>
     <style type="text/tailwindcss">
