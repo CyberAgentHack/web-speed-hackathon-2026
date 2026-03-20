@@ -19,7 +19,7 @@
         "Typecheck passes"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "Sequelize のモデル定義に indexes を追加する。initialize 時に DB がリセットされるため、sync 時にインデックスが再作成される仕組みが必要。"
     },
     {

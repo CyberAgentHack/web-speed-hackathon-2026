@@ -60,6 +60,16 @@ export function initDirectMessage(sequelize: Sequelize) {
     },
     {
       sequelize,
+      indexes: [
+        {
+          fields: ["conversationId"],
+          name: "direct_messages_conversation_id",
+        },
+        {
+          fields: ["isRead"],
+          name: "direct_messages_is_read",
+        },
+      ],
       defaultScope: {
         include: [
           {

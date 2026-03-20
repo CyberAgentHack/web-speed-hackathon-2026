@@ -313,7 +313,7 @@ test.describe("投稿機能 - MKV動画", () => {
         }
         const video = document.querySelector("article video");
         if (video) {
-          return Math.abs(video.videoWidth - video.videoHeight) < 5;
+          return Math.abs((video as HTMLVideoElement).videoWidth - (video as HTMLVideoElement).videoHeight) < 5;
         }
         return false;
       });

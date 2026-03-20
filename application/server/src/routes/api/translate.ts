@@ -17,7 +17,7 @@ const TARGET_LANG_MAP: Record<string, deepl.TargetLanguageCode> = {
   de: "de",
   fr: "fr",
   es: "es",
-  zh: "zh-hans",
+  zh: "zh-HANS",
   ko: "ko",
 };
 

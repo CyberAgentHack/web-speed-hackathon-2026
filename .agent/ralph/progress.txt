@@ -4,3 +4,53 @@ Branch: ralph/perf-phase2
 Started: 2026-03-21
 
 ---
+
+## 2026-03-21 - US-001 SQLite インデックス追加
+
+Implementation:
+- `application/server/src/models/Post.ts` に `userId` と `createdAt` のインデックスを追加
+- `application/server/src/models/Comment.ts` に `postId` のインデックスを追加
+- `application/server/src/models/DirectMessage.ts` に `conversationId` と `isRead` のインデックスを追加
+- `application/server/src/models/DirectMessageConversation.ts` に `initiatorId` と `memberId` のインデックスを追加
+- `application/server/src/sequelize.ts` で `initModels()` 後に `await _sequelize.sync()` を実行し、既存DBコピー後にも不足インデックスを反映するよう変更
+- 受け入れ条件の `Typecheck passes` を満たすため、既存の型エラーを `application/e2e/src/posting.test.ts`、`application/server/src/routes/api/sentiment.ts`、`application/server/src/routes/api/translate.ts` で最小修正
+
+Acceptance Criteria Verification:
+- AC: Post モデルに userId, createdAt のインデックスが追加されている
+  Test case: `mise exec -- pnpm --filter @web-speed-hackathon-2026/server exec node --import tsx --input-type=module --eval 'import { initializeSequelize } from "./src/sequelize.ts"; import { Post } from "./src/models/index.ts"; const show = async (table) => (await Post.sequelize.getQueryInterface().showIndex(table)).map((index) => ({ name: index.name, fields: index.fields.map((field) => field.attribute) })); await initializeSequelize(); console.log(JSON.stringify({ Posts: await show("Posts") }, null, 2)); await Post.sequelize?.close();'`
+  Result: `posts_user_id` と `posts_created_at` が `Posts` に生成されることを確認
+- AC: Comment モデルに postId のインデックスが追加されている
+  Test case: 同上コマンド
+  Result: `comments_post_id` が `Comments` に生成されることを確認
+- AC: DirectMessage モデルに conversationId, isRead のインデックスが追加されている
+  Test case: 同上コマンド
+  Result: `direct_messages_conversation_id` と `direct_messages_is_read` が `DirectMessages` に生成されることを確認
+- AC: DirectMessageConversation モデルに initiatorId, memberId のインデックスが追加されている
+  Test case: 同上コマンド
+  Result: `direct_message_conversations_initiator_id` と `direct_message_conversations_member_id` が `DirectMessageConversations` に生成されることを確認
+- AC: sequelize.sync() または同等の方法でインデックスが DB に反映される
+  Test case: `application/server/src/sequelize.ts` の実装確認と上記インデックス確認コマンド
+  Result: `initializeSequelize()` 内で `await _sequelize.sync()` を実行し、初期化直後の `showIndex()` で対象インデックス生成を確認
+- AC: POST /api/v1/initialize 後もインデックスが有効である
+  Test case: `mise exec -- pnpm --filter @web-speed-hackathon-2026/server exec node --import tsx --input-type=module --eval 'import "./src/utils/express_websocket_support.ts"; import { app } from "./src/app.ts"; import { initializeSequelize } from "./src/sequelize.ts"; import { Post } from "./src/models/index.ts"; const server = app.listen(0, "127.0.0.1"); await new Promise((resolve) => server.once("listening", resolve)); const address = server.address(); if (typeof address !== "object" || address == null) throw new Error("no address"); await initializeSequelize(); const response = await fetch(`http://127.0.0.1:${address.port}/api/v1/initialize`, { method: "POST" }); if (!response.ok) throw new Error(`initialize failed: ${response.status}`); const show = async (table) => (await Post.sequelize.getQueryInterface().showIndex(table)).map((index) => index.name); console.log(JSON.stringify({ Posts: await show("Posts"), Comments: await show("Comments"), DirectMessages: await show("DirectMessages"), DirectMessageConversations: await show("DirectMessageConversations") }, null, 2)); await Post.sequelize?.close(); await new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));'`
+  Result: `/api/v1/initialize` 実行後も対象インデックス名が全テーブルに残っていることを確認
+- AC: 該当箇所のE2Eテストが通っていること
+  Test case: `mise exec -- pnpm build`; `mise exec -- pnpm --filter @web-speed-hackathon-2026/server exec env PORT=3011 tsx src/index.ts`; `E2E_BASE_URL=http://localhost:3011 CI=1 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/home.test.ts src/post-detail.test.ts src/dm.test.ts`
+  Result: 31 tests passed
+- AC: codex skill で review を受けること
+  Test case: 別Codexエージェント `Ptolemy` にローカル変更のレビューを移譲
+  Result: `Typecheck passes` 未達の指摘を受領し、`posting.test.ts` の型修正を追加して解消。インデックス実装自体は妥当とのレビュー結果を確認
+- AC: Typecheck passes
+  Test case: `mise exec -- pnpm typecheck`
+  Result: passed
+
+Quality Checks:
+- `mise trust` -> passed (`No untrusted config files found.`)
+- `mise install` -> passed (`mise all tools are installed`)
+- `mise exec -- pnpm install` -> passed
+- `mise exec -- pnpm typecheck` -> passed
+- `mise exec -- pnpm build` -> passed (Rspack size warning only)
+- `E2E_BASE_URL=http://localhost:3011 CI=1 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/home.test.ts src/post-detail.test.ts src/dm.test.ts` -> passed (31 tests)
+
+Commit:
+- Message: `feat: [US-001] - SQLite インデックス追加`

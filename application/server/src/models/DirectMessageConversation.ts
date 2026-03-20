@@ -46,6 +46,16 @@ export function initDirectMessageConversation(sequelize: Sequelize) {
     },
     {
       sequelize,
+      indexes: [
+        {
+          fields: ["initiatorId"],
+          name: "direct_message_conversations_initiator_id",
+        },
+        {
+          fields: ["memberId"],
+          name: "direct_message_conversations_member_id",
+        },
+      ],
       defaultScope: {
         include: [
           { association: "initiator", include: [{ association: "profileImage" }] },
