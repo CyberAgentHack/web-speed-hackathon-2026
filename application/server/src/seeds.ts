@@ -1,36 +1,26 @@
-// @ts-nocheck
 import { createReadStream } from "node:fs";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 
+import bcrypt from "bcrypt";
+import type Database from "better-sqlite3";
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+
 import {
-  Comment,
-  DirectMessage,
-  DirectMessageConversation,
-  Image,
-  Movie,
-  Post,
-  PostsImagesRelation,
-  ProfileImage,
-  QaSuggestion,
-  Sound,
-  User,
-} from "@web-speed-hackathon-2026/server/src/models";
-import type {
-  CommentSeed,
-  DirectMessageConversationSeed,
-  DirectMessageSeed,
-  ImageSeed,
-  MovieSeed,
-  PostSeed,
-  PostsImagesRelationSeed,
-  ProfileImageSeed,
-  QaSuggestionSeed,
-  SoundSeed,
-  UserSeed,
-} from "@web-speed-hackathon-2026/server/src/types/seed";
+  comments,
+  directMessageConversations,
+  directMessages,
+  images,
+  movies,
+  posts,
+  postsImagesRelations,
+  profileImages,
+  qaSuggestions,
+  sounds,
+  users,
+} from "@web-speed-hackathon-2026/server/src/db/schema";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const seedsDir = path.resolve(__dirname, "../seeds");
@@ -39,7 +29,7 @@ const DEFAULT_BATCH_SIZE = 1000;
 
 async function readJsonlFileBatched<T>(
   filename: string,
-  callback: (batch: T[]) => Promise<void>,
+  callback: (batch: T[]) => void,
   batchSize: number = DEFAULT_BATCH_SIZE,
 ): Promise<void> {
   const filePath = path.join(seedsDir, filename);
@@ -69,7 +59,7 @@ async function readJsonlFileBatched<T>(
       batch.push(JSON.parse(trimmedLine));
 
       if (batch.length >= batchSize) {
-        await callback(batch);
+        callback(batch);
         batch = [];
       }
     } catch {
@@ -79,50 +69,100 @@ async function readJsonlFileBatched<T>(
   }
 
   if (batch.length > 0) {
-    await callback(batch);
+    callback(batch);
   }
 }
 
-export async function insertSeeds(sequelize: Sequelize) {
-  await sequelize.transaction(async (transaction) => {
-    await readJsonlFileBatched<ProfileImageSeed>("profileImages.jsonl", async (batch) => {
-      await ProfileImage.bulkCreate(batch, { transaction });
-    });
-    await readJsonlFileBatched<ImageSeed>("images.jsonl", async (batch) => {
-      await Image.bulkCreate(batch, { transaction });
-    });
-    await readJsonlFileBatched<MovieSeed>("movies.jsonl", async (batch) => {
-      await Movie.bulkCreate(batch, { transaction });
-    });
-    await readJsonlFileBatched<SoundSeed>("sounds.jsonl", async (batch) => {
-      await Sound.bulkCreate(batch, { transaction });
-    });
-    await readJsonlFileBatched<UserSeed>("users.jsonl", async (batch) => {
-      await User.bulkCreate(batch, { transaction });
-    });
-    await readJsonlFileBatched<PostSeed>("posts.jsonl", async (batch) => {
-      await Post.bulkCreate(batch, { transaction });
-    });
-    await readJsonlFileBatched<PostsImagesRelationSeed>(
-      "postsImagesRelation.jsonl",
-      async (batch) => {
-        await PostsImagesRelation.bulkCreate(batch, { transaction });
-      },
-    );
-    await readJsonlFileBatched<CommentSeed>("comments.jsonl", async (batch) => {
-      await Comment.bulkCreate(batch, { transaction });
-    });
-    await readJsonlFileBatched<DirectMessageConversationSeed>(
-      "directMessageConversations.jsonl",
-      async (batch) => {
-        await DirectMessageConversation.bulkCreate(batch, { transaction });
-      },
-    );
-    await readJsonlFileBatched<DirectMessageSeed>("directMessages.jsonl", async (batch) => {
-      await DirectMessage.bulkCreate(batch, { transaction });
-    });
-    await readJsonlFileBatched<QaSuggestionSeed>("qaSuggestions.jsonl", async (batch) => {
-      await QaSuggestion.bulkCreate(batch, { transaction });
+function fillTimestamps<T extends Record<string, unknown>>(
+  row: T,
+  now: string,
+): T & { createdAt: string; updatedAt: string } {
+  return {
+    ...row,
+    createdAt: (row["createdAt"] as string) ?? now,
+    updatedAt: (row["updatedAt"] as string) ?? (row["createdAt"] as string) ?? now,
+  };
+}
+
+export async function insertSeeds(db: BetterSQLite3Database, sqlite: Database.Database) {
+  const now = new Date().toISOString();
+
+  // Collect all data first (async JSONL reads), then insert in a sync transaction
+  const allData: { table: string; rows: Record<string, unknown>[] }[] = [];
+
+  await readJsonlFileBatched<Record<string, unknown>>("profileImages.jsonl", (batch) => {
+    allData.push({ table: "profileImages", rows: batch.map((r) => fillTimestamps(r, now)) });
+  });
+  await readJsonlFileBatched<Record<string, unknown>>("images.jsonl", (batch) => {
+    allData.push({ table: "images", rows: batch.map((r) => fillTimestamps(r, now)) });
+  });
+  await readJsonlFileBatched<Record<string, unknown>>("movies.jsonl", (batch) => {
+    allData.push({ table: "movies", rows: batch.map((r) => fillTimestamps(r, now)) });
+  });
+  await readJsonlFileBatched<Record<string, unknown>>("sounds.jsonl", (batch) => {
+    allData.push({ table: "sounds", rows: batch.map((r) => fillTimestamps(r, now)) });
+  });
+  await readJsonlFileBatched<Record<string, unknown>>("users.jsonl", (batch) => {
+    allData.push({
+      table: "users",
+      rows: batch.map((r) => ({
+        ...fillTimestamps(r, now),
+        password: bcrypt.hashSync(r["password"] as string, bcrypt.genSaltSync(8)),
+      })),
     });
   });
+  await readJsonlFileBatched<Record<string, unknown>>("posts.jsonl", (batch) => {
+    allData.push({
+      table: "posts",
+      rows: batch.map((r) => ({
+        ...fillTimestamps(r, now),
+        movieId: (r["movieId"] as string) ?? null,
+        soundId: (r["soundId"] as string) ?? null,
+      })),
+    });
+  });
+  await readJsonlFileBatched<Record<string, unknown>>("postsImagesRelation.jsonl", (batch) => {
+    allData.push({ table: "postsImagesRelations", rows: batch.map((r) => fillTimestamps(r, now)) });
+  });
+  await readJsonlFileBatched<Record<string, unknown>>("comments.jsonl", (batch) => {
+    allData.push({ table: "comments", rows: batch.map((r) => fillTimestamps(r, now)) });
+  });
+  await readJsonlFileBatched<Record<string, unknown>>(
+    "directMessageConversations.jsonl",
+    (batch) => {
+      allData.push({
+        table: "directMessageConversations",
+        rows: batch.map((r) => fillTimestamps(r, now)),
+      });
+    },
+  );
+  await readJsonlFileBatched<Record<string, unknown>>("directMessages.jsonl", (batch) => {
+    allData.push({ table: "directMessages", rows: batch.map((r) => fillTimestamps(r, now)) });
+  });
+  await readJsonlFileBatched<Record<string, unknown>>("qaSuggestions.jsonl", (batch) => {
+    allData.push({ table: "qaSuggestions", rows: batch });
+  });
+
+  const tableMap: Record<string, any> = {
+    profileImages,
+    images,
+    movies,
+    sounds,
+    users,
+    posts,
+    postsImagesRelations,
+    comments,
+    directMessageConversations,
+    directMessages,
+    qaSuggestions,
+  };
+
+  sqlite.transaction(() => {
+    for (const { table, rows } of allData) {
+      const schema = tableMap[table];
+      if (rows.length > 0) {
+        db.insert(schema).values(rows).run();
+      }
+    }
+  })();
 }

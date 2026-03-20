@@ -1,15 +1,27 @@
-import { Op } from "sequelize";
+import { and, eq, gte, inArray, like, lte, type SQL } from "drizzle-orm";
 
-import { Comment, Post, User } from "@web-speed-hackathon-2026/server/src/models";
+import {
+  findComments,
+  findPostDetail,
+  findPostsDetail,
+  findUserWithProfile,
+  findUsersBySearch,
+} from "@web-speed-hackathon-2026/server/src/db/queries";
+import { posts, users } from "@web-speed-hackathon-2026/server/src/db/schema";
+import {
+  serializeComment,
+  serializePostDetail,
+  serializeUser,
+} from "@web-speed-hackathon-2026/server/src/db/serializers";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 
 export interface SSRData {
-  activeUser?: ReturnType<typeof User.prototype.toJSON> | null;
-  posts?: ReturnType<typeof Post.prototype.toJSON>[];
-  post?: ReturnType<typeof Post.prototype.toJSON> | null;
-  comments?: ReturnType<typeof Comment.prototype.toJSON>[];
-  user?: ReturnType<typeof User.prototype.toJSON> | null;
-  userPosts?: ReturnType<typeof Post.prototype.toJSON>[];
+  activeUser?: ReturnType<typeof serializeUser> | null;
+  posts?: ReturnType<typeof serializePostDetail>[];
+  post?: ReturnType<typeof serializePostDetail> | null;
+  comments?: ReturnType<typeof serializeComment>[];
+  user?: ReturnType<typeof serializeUser> | null;
+  userPosts?: ReturnType<typeof serializePostDetail>[];
 }
 
 interface SSRRouteMatch {
@@ -27,7 +39,6 @@ function matchRoute(url: string): SSRRouteMatch | null {
     }
   }
 
-  // SSR 対象ルートのマッチング
   if (pathname === "/") {
     return { route: "timeline", params: {}, query };
   }
@@ -50,7 +61,6 @@ function matchRoute(url: string): SSRRouteMatch | null {
     return { route: "terms", params: {}, query };
   }
 
-  // DM, Crok, 404 → SSR スキップ
   return null;
 }
 
@@ -58,71 +68,48 @@ export async function getServerData(url: string, sessionUserId?: string): Promis
   const match = matchRoute(url);
   if (!match) return null;
 
-  // activeUser は全 SSR ルート共通
   let activeUser: SSRData["activeUser"] = null;
   if (sessionUserId) {
-    const userModel = await User.findByPk(sessionUserId);
-    activeUser = userModel ? userModel.toJSON() : null;
+    const userModel = await findUserWithProfile(eq(users.id, sessionUserId));
+    activeUser = userModel ? serializeUser(userModel) : null;
   }
 
   switch (match.route) {
     case "timeline": {
-      const postIds = await Post.unscoped().findAll({
-        attributes: ["id"],
-        order: [["id", "DESC"]],
-        limit: 30,
-        offset: 0,
-        raw: true,
-      });
-      const posts =
-        postIds.length > 0
-          ? await Post.scope("detail").findAll({
-              where: { id: { [Op.in]: postIds.map((p) => p.id) } },
-            })
-          : [];
-      return { activeUser, posts: posts.map((p) => p.toJSON()) };
+      const rawPosts = await findPostsDetail({ limit: 30, offset: 0 });
+      return { activeUser, posts: rawPosts.map(serializePostDetail) };
     }
 
     case "post": {
-      const post = await Post.scope("detail").findByPk(match.params["postId"]!);
-      if (!post) {
+      const rawPost = await findPostDetail(match.params["postId"]!);
+      if (!rawPost) {
         return { activeUser, post: null, comments: [] };
       }
-      const comments = await Comment.findAll({
-        where: { postId: match.params["postId"]! },
+      const rawComments = await findComments(match.params["postId"]!, {
         limit: 30,
         offset: 0,
       });
       return {
         activeUser,
-        post: post.toJSON(),
-        comments: comments.map((c) => c.toJSON()),
+        post: serializePostDetail(rawPost),
+        comments: rawComments.map(serializeComment),
       };
     }
 
     case "userProfile": {
-      const user = await User.findOne({ where: { username: match.params["username"]! } });
-      if (!user) {
+      const userModel = await findUserWithProfile(eq(users.username, match.params["username"]!));
+      if (!userModel) {
         return { activeUser, user: null, userPosts: [] };
       }
-      const userPostIds = await Post.unscoped().findAll({
-        attributes: ["id"],
-        where: { userId: user.id },
-        order: [["id", "DESC"]],
+      const rawPosts = await findPostsDetail({
+        where: eq(posts.userId, userModel.id),
         limit: 30,
         offset: 0,
-        raw: true,
       });
-      const userPosts =
-        userPostIds.length > 0
-          ? await Post.scope("detail").findAll({
-              where: { id: { [Op.in]: userPostIds.map((p) => p.id) } },
-            })
-          : [];
       return {
         activeUser,
-        user: user.toJSON(),
-        userPosts: userPosts.map((p) => p.toJSON()),
+        user: serializeUser(userModel),
+        userPosts: rawPosts.map(serializePostDetail),
       };
     }
 
@@ -138,65 +125,43 @@ export async function getServerData(url: string, sessionUserId?: string): Promis
       }
 
       const searchTerm = keywords ? `%${keywords}%` : null;
-      const dateConditions: Record<symbol, Date>[] = [];
-      if (sinceDate) dateConditions.push({ [Op.gte]: sinceDate });
-      if (untilDate) dateConditions.push({ [Op.lte]: untilDate });
-      const dateWhere =
-        dateConditions.length > 0 ? { createdAt: Object.assign({}, ...dateConditions) } : {};
-      const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
+      const dateConditions: SQL[] = [];
+      if (sinceDate) dateConditions.push(gte(posts.createdAt, sinceDate.toISOString()));
+      if (untilDate) dateConditions.push(lte(posts.createdAt, untilDate.toISOString()));
 
-      // Step 1: Get post IDs matching text criteria
-      const textPostIds = await Post.unscoped().findAll({
-        attributes: ["id", "createdAt"],
-        where: { ...textWhere, ...dateWhere },
-        order: [["createdAt", "DESC"]],
-        raw: true,
-      });
+      const textConditions: SQL[] = [...dateConditions];
+      if (searchTerm) textConditions.push(like(posts.text, searchTerm));
 
-      // Step 2: Get post IDs matching user criteria
-      let userPostIds: { id: string; createdAt: Date }[] = [];
+      const textQuery: Parameters<typeof findPostsDetail>[0] = { limit: 30, offset: 0 };
+      if (textConditions.length > 0) textQuery.where = and(...textConditions)!;
+      const postsByText = await findPostsDetail(textQuery);
+
+      let postsByUser: typeof postsByText = [];
       if (searchTerm) {
-        const matchedUsers = await User.unscoped().findAll({
-          attributes: ["id"],
-          where: {
-            [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
-          },
-        });
+        const matchedUsers = findUsersBySearch(searchTerm);
         const matchedUserIds = matchedUsers.map((u) => u.id);
         if (matchedUserIds.length > 0) {
-          userPostIds = await Post.unscoped().findAll({
-            attributes: ["id", "createdAt"],
-            where: { ...dateWhere, userId: { [Op.in]: matchedUserIds } },
-            order: [["createdAt", "DESC"]],
-            raw: true,
+          postsByUser = await findPostsDetail({
+            limit: 30,
+            offset: 0,
+            where: and(inArray(posts.userId, matchedUserIds), ...dateConditions)!,
           });
         }
       }
 
-      // Merge, deduplicate, sort, and slice
-      const seenIds = new Set<string>();
-      const allPosts: { id: string; createdAt: Date }[] = [];
-      for (const p of [...textPostIds, ...userPostIds]) {
-        if (!seenIds.has(p.id)) {
-          seenIds.add(p.id);
-          allPosts.push(p);
+      const postIdSet = new Set<string>();
+      const mergedPosts: typeof postsByText = [];
+      for (const post of [...postsByText, ...postsByUser]) {
+        if (!postIdSet.has(post.id)) {
+          postIdSet.add(post.id);
+          mergedPosts.push(post);
         }
       }
-      allPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      const sliced = allPosts.slice(0, 30);
 
-      if (sliced.length === 0) {
-        return { activeUser, posts: [] };
-      }
+      mergedPosts.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      const result = mergedPosts.slice(0, 30);
 
-      // Step 3: Load full details
-      const posts = await Post.scope("detail").findAll({
-        where: { id: { [Op.in]: sliced.map((p) => p.id) } },
-      });
-      const postsMap = new Map(posts.map((p) => [p.id, p]));
-      const sorted = sliced.map((s) => postsMap.get(s.id)!).filter(Boolean);
-
-      return { activeUser, posts: sorted.map((p) => p.toJSON()) };
+      return { activeUser, posts: result.map(serializePostDetail) };
     }
 
     case "terms": {

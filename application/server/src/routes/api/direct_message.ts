@@ -1,14 +1,27 @@
+import { and, eq, or } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { col, where, Op } from "sequelize";
+import { v4 as uuidv4 } from "uuid";
 
 import { upgradeWebSocket } from "@web-speed-hackathon-2026/server/src/app";
-import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
+import { getDb } from "@web-speed-hackathon-2026/server/src/db";
 import {
-  DirectMessage,
-  DirectMessageConversation,
-  User,
-} from "@web-speed-hackathon-2026/server/src/models";
+  countUnreadMessages,
+  emitDmNotifications,
+  findConversationWithRelations,
+  findConversations,
+  findUserWithProfile,
+} from "@web-speed-hackathon-2026/server/src/db/queries";
+import {
+  directMessageConversations,
+  directMessages,
+  users,
+} from "@web-speed-hackathon-2026/server/src/db/schema";
+import {
+  serializeConversation,
+  serializeDirectMessage,
+} from "@web-speed-hackathon-2026/server/src/db/serializers";
+import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
 import type { SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
 import type {
   DirectMessageConversationResponse,
@@ -22,22 +35,24 @@ export const directMessageRouter = new Hono<SessionEnv>()
       throw new HTTPException(401);
     }
 
-    const conversations = await DirectMessageConversation.findAll({
-      where: {
-        [Op.and]: [
-          { [Op.or]: [{ initiatorId: userId }, { memberId: userId }] },
-          where(col("messages.id"), { [Op.not]: null }),
-        ],
-      },
-      order: [[col("messages.createdAt"), "DESC"]],
-    });
+    const conversations = await findConversations(userId);
 
-    const sorted = conversations.map((c) => ({
-      ...c.toJSON(),
-      messages: c.messages?.reverse(),
+    const filtered = conversations
+      .filter((conv) => conv.messages.length > 0)
+      .sort((a, b) => {
+        const aLast = a.messages[a.messages.length - 1]!.createdAt;
+        const bLast = b.messages[b.messages.length - 1]!.createdAt;
+        return bLast.localeCompare(aLast);
+      });
+
+    const result = filtered.map((conv) => ({
+      ...serializeConversation(conv as Parameters<typeof serializeConversation>[0]),
+      messages: conv.messages.map((m) =>
+        serializeDirectMessage(m as Parameters<typeof serializeDirectMessage>[0]),
+      ),
     }));
 
-    return c.json(sorted as unknown as DirectMessageConversationResponse[]);
+    return c.json(result as unknown as DirectMessageConversationResponse[]);
   })
   .post("/dm", async (c) => {
     const userId = c.var.session.get()?.userId;
@@ -46,26 +61,45 @@ export const directMessageRouter = new Hono<SessionEnv>()
     }
 
     const body = await c.req.json();
-    const peer = await User.findByPk(body?.peerId);
-    if (peer === null) {
+    const peer = await findUserWithProfile(eq(users.id, body?.peerId));
+    if (!peer) {
       throw new HTTPException(404);
     }
 
-    const [conversation] = await DirectMessageConversation.findOrCreate({
-      where: {
-        [Op.or]: [
-          { initiatorId: userId, memberId: peer.id },
-          { initiatorId: peer.id, memberId: userId },
-        ],
-      },
-      defaults: {
-        initiatorId: userId,
-        memberId: peer.id,
-      },
-    });
-    await conversation.reload();
+    let conversation = await findConversationWithRelations(
+      or(
+        and(
+          eq(directMessageConversations.initiatorId, userId),
+          eq(directMessageConversations.memberId, peer.id),
+        ),
+        and(
+          eq(directMessageConversations.initiatorId, peer.id),
+          eq(directMessageConversations.memberId, userId),
+        ),
+      )!,
+    );
 
-    return c.json(conversation.toJSON() as unknown as DirectMessageConversationResponse);
+    if (!conversation) {
+      const db = getDb();
+      const id = uuidv4();
+      const now = new Date().toISOString();
+      db.insert(directMessageConversations)
+        .values({
+          id,
+          initiatorId: userId,
+          memberId: peer.id,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .run();
+      conversation = await findConversationWithRelations(eq(directMessageConversations.id, id));
+    }
+
+    return c.json(
+      serializeConversation(
+        conversation as Parameters<typeof serializeConversation>[0],
+      ) as unknown as DirectMessageConversationResponse,
+    );
   })
   .post("/dm/:conversationId/messages", async (c) => {
     const userId = c.var.session.get()?.userId;
@@ -79,24 +113,55 @@ export const directMessageRouter = new Hono<SessionEnv>()
       throw new HTTPException(400);
     }
 
-    const conversation = await DirectMessageConversation.findOne({
-      where: {
-        id: c.req.param("conversationId"),
-        [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
-      },
-    });
-    if (conversation === null) {
+    const db = getDb();
+    const conversationId = c.req.param("conversationId");
+    const conversation = db
+      .select()
+      .from(directMessageConversations)
+      .where(
+        and(
+          eq(directMessageConversations.id, conversationId),
+          or(
+            eq(directMessageConversations.initiatorId, userId),
+            eq(directMessageConversations.memberId, userId),
+          ),
+        ),
+      )
+      .get();
+
+    if (!conversation) {
       throw new HTTPException(404);
     }
 
-    const message = await DirectMessage.create({
-      body: body.trim(),
-      conversationId: conversation.id,
-      senderId: userId,
-    });
-    await message.reload();
+    const messageId = uuidv4();
+    const now = new Date().toISOString();
+    db.insert(directMessages)
+      .values({
+        id: messageId,
+        body: body.trim(),
+        conversationId: conversation.id,
+        senderId: userId,
+        isRead: false,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run();
 
-    return c.json(message.toJSON() as unknown as DirectMessageResponse, 201);
+    await emitDmNotifications(messageId);
+
+    const message = await db.query.directMessages.findFirst({
+      where: eq(directMessages.id, messageId),
+      with: {
+        sender: { with: { profileImage: true } },
+      },
+    });
+
+    return c.json(
+      serializeDirectMessage(
+        message as Parameters<typeof serializeDirectMessage>[0],
+      ) as unknown as DirectMessageResponse,
+      201,
+    );
   })
   .post("/dm/:conversationId/read", async (c) => {
     const userId = c.var.session.get()?.userId;
@@ -104,26 +169,58 @@ export const directMessageRouter = new Hono<SessionEnv>()
       throw new HTTPException(401);
     }
 
-    const conversation = await DirectMessageConversation.findOne({
-      where: {
-        id: c.req.param("conversationId"),
-        [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
-      },
-    });
-    if (conversation === null) {
+    const db = getDb();
+    const conversationId = c.req.param("conversationId");
+    const conversation = db
+      .select()
+      .from(directMessageConversations)
+      .where(
+        and(
+          eq(directMessageConversations.id, conversationId),
+          or(
+            eq(directMessageConversations.initiatorId, userId),
+            eq(directMessageConversations.memberId, userId),
+          ),
+        ),
+      )
+      .get();
+
+    if (!conversation) {
       throw new HTTPException(404);
     }
 
     const peerId =
       conversation.initiatorId !== userId ? conversation.initiatorId : conversation.memberId;
 
-    await DirectMessage.update(
-      { isRead: true },
-      {
-        where: { conversationId: conversation.id, senderId: peerId, isRead: false },
-        individualHooks: true,
-      },
-    );
+    const targetIds = db
+      .select({ id: directMessages.id })
+      .from(directMessages)
+      .where(
+        and(
+          eq(directMessages.conversationId, conversation.id),
+          eq(directMessages.senderId, peerId),
+          eq(directMessages.isRead, false),
+        ),
+      )
+      .all();
+
+    if (targetIds.length > 0) {
+      const now = new Date().toISOString();
+      db.update(directMessages)
+        .set({ isRead: true, updatedAt: now })
+        .where(
+          and(
+            eq(directMessages.conversationId, conversation.id),
+            eq(directMessages.senderId, peerId),
+            eq(directMessages.isRead, false),
+          ),
+        )
+        .run();
+
+      for (const { id } of targetIds) {
+        await emitDmNotifications(id);
+      }
+    }
 
     return c.json({});
   })
@@ -133,17 +230,25 @@ export const directMessageRouter = new Hono<SessionEnv>()
       throw new HTTPException(401);
     }
 
-    const conversation = await DirectMessageConversation.findOne({
-      where: {
-        id: c.req.param("conversationId"),
-        [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
-      },
-    });
-    if (conversation === null) {
+    const conversationId = c.req.param("conversationId");
+    const conversation = await findConversationWithRelations(
+      and(
+        eq(directMessageConversations.id, conversationId),
+        or(
+          eq(directMessageConversations.initiatorId, userId),
+          eq(directMessageConversations.memberId, userId),
+        ),
+      )!,
+    );
+    if (!conversation) {
       throw new HTTPException(404);
     }
 
-    return c.json(conversation.toJSON() as unknown as DirectMessageConversationResponse);
+    return c.json(
+      serializeConversation(
+        conversation as Parameters<typeof serializeConversation>[0],
+      ) as unknown as DirectMessageConversationResponse,
+    );
   })
   .post("/dm/:conversationId/typing", async (c) => {
     const userId = c.var.session.get()?.userId;
@@ -151,8 +256,14 @@ export const directMessageRouter = new Hono<SessionEnv>()
       throw new HTTPException(401);
     }
 
-    const conversation = await DirectMessageConversation.findByPk(c.req.param("conversationId"));
-    if (conversation === null) {
+    const db = getDb();
+    const conversation = db
+      .select()
+      .from(directMessageConversations)
+      .where(eq(directMessageConversations.id, c.req.param("conversationId")))
+      .get();
+
+    if (!conversation) {
       throw new HTTPException(404);
     }
 
@@ -183,23 +294,7 @@ directMessageRouter.get(
           eventhub.off(`dm:unread/${userId}`, handler);
         });
 
-        const unreadCount = await DirectMessage.count({
-          distinct: true,
-          where: {
-            senderId: { [Op.ne]: userId },
-            isRead: false,
-          },
-          include: [
-            {
-              association: "conversation",
-              where: {
-                [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
-              },
-              required: true,
-            },
-          ],
-        });
-
+        const unreadCount = countUnreadMessages(userId);
         eventhub.emit(`dm:unread/${userId}`, { unreadCount });
       },
     };
@@ -210,7 +305,7 @@ directMessageRouter.get(
   "/dm/:conversationId",
   upgradeWebSocket((c) => {
     const userId = c.var["session"].get()?.userId;
-    const conversationId = c.req.param("conversationId");
+    const conversationId = c.req.param("conversationId")!;
 
     return {
       async onOpen(_evt, ws) {
@@ -219,13 +314,22 @@ directMessageRouter.get(
           return;
         }
 
-        const conversation = await DirectMessageConversation.findOne({
-          where: {
-            id: conversationId,
-            [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
-          },
-        });
-        if (conversation == null) {
+        const db = getDb();
+        const conversation = db
+          .select()
+          .from(directMessageConversations)
+          .where(
+            and(
+              eq(directMessageConversations.id, conversationId),
+              or(
+                eq(directMessageConversations.initiatorId, userId),
+                eq(directMessageConversations.memberId, userId),
+              ),
+            ),
+          )
+          .get();
+
+        if (!conversation) {
           ws.close();
           return;
         }

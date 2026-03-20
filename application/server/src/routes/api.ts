@@ -1,6 +1,5 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { ValidationError } from "sequelize";
 
 import { authRouter } from "@web-speed-hackathon-2026/server/src/routes/api/auth";
 import { crokRouter } from "@web-speed-hackathon-2026/server/src/routes/api/crok";
@@ -29,9 +28,6 @@ export const apiRouter = new Hono<SessionEnv>()
 export type ApiType = typeof apiRouter;
 
 apiRouter.onError((err, c) => {
-  if (err instanceof ValidationError) {
-    return c.json({ message: "Bad Request" }, 400);
-  }
   if (err instanceof HTTPException) {
     return c.json({ message: err.message }, err.status);
   }

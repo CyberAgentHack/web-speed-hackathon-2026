@@ -1,60 +1,39 @@
-import { Op } from "sequelize";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
+import { v4 as uuidv4 } from "uuid";
 
-import { Comment, Post } from "@web-speed-hackathon-2026/server/src/models";
+import { getDb, getSqlite } from "@web-speed-hackathon-2026/server/src/db";
+import {
+  findComments,
+  findPostDetail,
+  findPostsDetail,
+} from "@web-speed-hackathon-2026/server/src/db/queries";
+import { posts, postsImagesRelations } from "@web-speed-hackathon-2026/server/src/db/schema";
+import {
+  serializeComment,
+  serializePostDetail,
+} from "@web-speed-hackathon-2026/server/src/db/serializers";
 import type { SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
 import type { CommentResponse, PostResponse } from "@web-speed-hackathon-2026/server/src/types/api";
+import { parsePagination } from "@web-speed-hackathon-2026/server/src/utils/parse_pagination";
 
 export const postRouter = new Hono<SessionEnv>()
   .get("/posts", async (c) => {
-    const limit = c.req.query("limit");
-    const offset = c.req.query("offset");
-
-    const effectiveLimit = limit != null ? Number(limit) : 30;
-
-    // Step 1: Get post IDs only (fast, no JOINs)
-    const postIds = await Post.unscoped().findAll({
-      attributes: ["id"],
-      order: [["id", "DESC"]],
-      limit: effectiveLimit,
-      ...(offset != null ? { offset: Number(offset) } : {}),
-      raw: true,
-    });
-
-    if (postIds.length === 0) {
-      return c.json([]);
-    }
-
-    // Step 2: Load full details for those IDs only
-    const posts = await Post.scope("detail").findAll({
-      where: { id: { [Op.in]: postIds.map((p) => p.id) } },
-    });
-
-    return c.json(posts.map((p) => p.toJSON()) as unknown as PostResponse[]);
+    const pagination = parsePagination(c.req.query());
+    const results = await findPostsDetail(pagination);
+    return c.json<PostResponse[]>(results.map(serializePostDetail) as unknown as PostResponse[]);
   })
   .get("/posts/:postId", async (c) => {
-    const post = await Post.scope("detail").findByPk(c.req.param("postId"));
-
-    if (post === null) {
+    const post = await findPostDetail(c.req.param("postId"));
+    if (!post) {
       throw new HTTPException(404);
     }
-
-    return c.json(post.toJSON() as unknown as PostResponse);
+    return c.json<PostResponse>(serializePostDetail(post) as unknown as PostResponse);
   })
   .get("/posts/:postId/comments", async (c) => {
-    const limit = c.req.query("limit");
-    const offset = c.req.query("offset");
-
-    const comments = await Comment.findAll({
-      ...(limit != null ? { limit: Number(limit) } : {}),
-      ...(offset != null ? { offset: Number(offset) } : {}),
-      where: {
-        postId: c.req.param("postId"),
-      },
-    });
-
-    return c.json(comments.map((c) => c.toJSON()) as unknown as CommentResponse[]);
+    const pagination = parsePagination(c.req.query());
+    const results = await findComments(c.req.param("postId"), pagination);
+    return c.json<CommentResponse[]>(results.map(serializeComment) as unknown as CommentResponse[]);
   })
   .post("/posts", async (c) => {
     const userId = c.var.session.get()?.userId;
@@ -63,22 +42,37 @@ export const postRouter = new Hono<SessionEnv>()
     }
 
     const body = await c.req.json();
-    const post = await Post.create(
-      {
-        ...body,
-        userId,
-      },
-      {
-        include: [
-          {
-            association: "images",
-            through: { attributes: [] },
-          },
-          { association: "movie" },
-          { association: "sound" },
-        ],
-      },
-    );
+    const db = getDb();
+    const sqlite = getSqlite();
+    const postId = uuidv4();
+    const now = new Date().toISOString();
 
-    return c.json(post.toJSON() as unknown as PostResponse);
+    const createPost = sqlite.transaction(() => {
+      db.insert(posts)
+        .values({
+          id: postId,
+          text: body.text,
+          userId,
+          movieId: body.movie?.id ?? null,
+          soundId: body.sound?.id ?? null,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .run();
+
+      for (const img of body.images ?? []) {
+        db.insert(postsImagesRelations)
+          .values({
+            postId,
+            imageId: img.id,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .run();
+      }
+    });
+    createPost();
+
+    const post = await findPostDetail(postId);
+    return c.json<PostResponse>(serializePostDetail(post!) as unknown as PostResponse);
   });

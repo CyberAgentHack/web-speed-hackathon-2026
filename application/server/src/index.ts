@@ -2,10 +2,10 @@ import { serve } from "@hono/node-server";
 
 import { app, injectWebSocket, routesReady } from "@web-speed-hackathon-2026/server/src/app";
 
-import { initializeSequelize } from "./sequelize";
+import { initializeDb } from "./db";
 
 async function main() {
-  await initializeSequelize();
+  await initializeDb();
   await routesReady;
 
   const port = Number(process.env["PORT"] || 3000);

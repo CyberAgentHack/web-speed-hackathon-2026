@@ -2,14 +2,13 @@ import fs from "node:fs/promises";
 
 import { Hono } from "hono";
 
+import { initializeDb } from "@web-speed-hackathon-2026/server/src/db";
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import type { SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
-
-import { initializeSequelize } from "../../sequelize";
-import { sessionStore } from "../../session";
+import { sessionStore } from "@web-speed-hackathon-2026/server/src/session";
 
 export const initializeRouter = new Hono<SessionEnv>().post("/initialize", async (c) => {
-  await initializeSequelize();
+  await initializeDb();
   sessionStore.clear();
   await fs.rm(UPLOAD_PATH, { force: true, recursive: true });
 

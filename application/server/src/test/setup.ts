@@ -1,7 +1,7 @@
 import { beforeAll } from "vitest";
 
-import { initializeSequelize } from "../sequelize";
+import { initializeDb } from "../db";
 
 beforeAll(async () => {
-  await initializeSequelize();
+  await initializeDb();
 });

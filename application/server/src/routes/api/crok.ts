@@ -6,7 +6,8 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { streamSSE } from "hono/streaming";
 
-import { QaSuggestion } from "@web-speed-hackathon-2026/server/src/models";
+import { getDb } from "@web-speed-hackathon-2026/server/src/db";
+import { qaSuggestions } from "@web-speed-hackathon-2026/server/src/db/schema";
 import type { SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -14,8 +15,9 @@ const response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-
 
 export const crokRouter = new Hono<SessionEnv>()
   .get("/crok/suggestions", async (c) => {
-    const suggestions = await QaSuggestion.findAll({ logging: false });
-    return c.json({ suggestions: suggestions.map((s) => s.question) });
+    const db = getDb();
+    const rows = db.select().from(qaSuggestions).all();
+    return c.json({ suggestions: rows.map((s) => s.question) });
   })
   .get("/crok", async (c) => {
     const userId = c.var.session.get()?.userId;

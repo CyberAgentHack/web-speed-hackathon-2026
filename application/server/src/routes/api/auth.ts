@@ -1,47 +1,67 @@
+import bcrypt from "bcrypt";
+import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { UniqueConstraintError, ValidationError } from "sequelize";
+import { v4 as uuidv4 } from "uuid";
 
-import { User } from "@web-speed-hackathon-2026/server/src/models";
+import { getDb } from "@web-speed-hackathon-2026/server/src/db";
+import { findUserWithProfile } from "@web-speed-hackathon-2026/server/src/db/queries";
+import { users } from "@web-speed-hackathon-2026/server/src/db/schema";
+import { serializeUser } from "@web-speed-hackathon-2026/server/src/db/serializers";
 import type { SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
 import type { UserResponse } from "@web-speed-hackathon-2026/server/src/types/api";
 
 export const authRouter = new Hono<SessionEnv>()
   .post("/signup", async (c) => {
-    try {
-      const body = await c.req.json();
-      const { id: userId } = await User.create(body);
-      const user = await User.findByPk(userId);
+    const body = await c.req.json();
 
-      c.var.session.set({ userId });
-      return c.json(user!.toJSON() as unknown as UserResponse);
-    } catch (err) {
-      if (err instanceof UniqueConstraintError) {
+    if (!/^[a-z0-9_-]+$/i.test(body.username)) {
+      return c.json({ code: "INVALID_USERNAME" as const }, 400);
+    }
+
+    const db = getDb();
+    const id = uuidv4();
+    const now = new Date().toISOString();
+
+    try {
+      db.insert(users)
+        .values({
+          id,
+          username: body.username,
+          name: body.name,
+          description: body.description ?? "",
+          password: bcrypt.hashSync(body.password, bcrypt.genSaltSync(8)),
+          createdAt: now,
+          updatedAt: now,
+        })
+        .run();
+    } catch (err: unknown) {
+      if (err instanceof Error && err.message.includes("UNIQUE constraint failed")) {
         return c.json({ code: "USERNAME_TAKEN" as const }, 400);
-      }
-      if (err instanceof ValidationError) {
-        return c.json({ code: "INVALID_USERNAME" as const }, 400);
       }
       throw err;
     }
+
+    const user = await findUserWithProfile(eq(users.id, id));
+    c.var.session.set({ userId: id });
+    return c.json<UserResponse>(serializeUser(user!) as unknown as UserResponse);
   })
   .post("/signin", async (c) => {
     const body = await c.req.json();
-    const user = await User.findOne({
-      where: {
-        username: body.username,
-      },
-    });
+    const db = getDb();
 
-    if (user === null) {
+    const row = db.select().from(users).where(eq(users.username, body.username)).get();
+    if (!row) {
       throw new HTTPException(400);
     }
-    if (!user.validPassword(body.password)) {
+    if (!bcrypt.compareSync(body.password, row.password)) {
       throw new HTTPException(400);
     }
 
-    c.var.session.set({ userId: user.id });
-    return c.json(user.toJSON() as unknown as UserResponse);
+    c.var.session.set({ userId: row.id });
+
+    const user = await findUserWithProfile(eq(users.id, row.id));
+    return c.json<UserResponse>(serializeUser(user!) as unknown as UserResponse);
   })
   .post("/signout", async (c) => {
     c.var.session.delete();
