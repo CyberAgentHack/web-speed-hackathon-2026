@@ -26,7 +26,7 @@ removed=0
 while IFS= read -r -d '' src; do
   rel="${src#"$SRC_ROOT"/}"
   rel_no_ext="${rel%.*}"
-  dst="$DST_ROOT/$rel_no_ext.jpeg"
+  dst="$DST_ROOT/$rel_no_ext.jpg"
   base_no_ext="$DST_ROOT/$rel_no_ext"
 
   mkdir -p "$(dirname "$dst")"
@@ -41,10 +41,10 @@ while IFS= read -r -d '' src; do
     removed=$((removed + 1))
   done < <(find "$DST_ROOT" -type f -path "$base_no_ext.*" -print0)
 
-  # Output as jpeg and shrink only when the image is wider than 512px.
+  # Output as jpg and shrink only when the image is wider than 512px.
   convert "$src" -resize '512x>' "$dst"
 
   processed=$((processed + 1))
-done < <(find "$SRC_ROOT" -type f \( -iname '*.jpg' -o -iname '*.jpeg' \) -print0)
+done < <(find "$SRC_ROOT" -type f \( -iname '*.jpg' -o -iname '*.jpg' \) -print0)
 
-echo "Done: $processed jpeg files written to $DST_ROOT (removed: $removed)"
+echo "Done: $processed jpg files written to $DST_ROOT (removed: $removed)"

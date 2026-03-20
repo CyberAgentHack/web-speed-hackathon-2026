@@ -9,6 +9,14 @@ interface ReturnValues<T> {
   fetchMore: () => void;
 }
 
+function buildPaginatedApiPath(apiPath: string, offset: number): string {
+  const baseUrl = typeof window === "undefined" ? "http://localhost" : window.location.origin;
+  const url = new URL(apiPath, baseUrl);
+  url.searchParams.set("limit", String(LIMIT));
+  url.searchParams.set("offset", String(offset));
+  return `${url.pathname}${url.search}`;
+}
+
 export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
@@ -23,7 +31,7 @@ export function useInfiniteFetch<T>(
 
   const fetchMore = useCallback(() => {
     const { isLoading, offset } = internalRef.current;
-    if (isLoading) {
+    if (isLoading || apiPath === "") {
       return;
     }
 
@@ -36,16 +44,16 @@ export function useInfiniteFetch<T>(
       offset,
     };
 
-    void fetcher(apiPath).then(
-      (allData) => {
+    void fetcher(buildPaginatedApiPath(apiPath, offset)).then(
+      (fetchedData) => {
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...fetchedData],
           isLoading: false,
         }));
         internalRef.current = {
           isLoading: false,
-          offset: offset + LIMIT,
+          offset: offset + fetchedData.length,
         };
       },
       (error) => {
