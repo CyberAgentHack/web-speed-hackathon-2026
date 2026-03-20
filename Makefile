@@ -24,6 +24,7 @@ help:
 	@echo ""
 	@echo "  CaX アプリケーション（$(APP_DIR)）"
 	@echo "    make build          … クライアントビルド（bun run build）"
+	@echo "    make analyze        … クライアント bundle 分析（webpack-bundle-analyzer）"
 	@echo "    make start          … サーバー起動（bun run start）→ 通常 http://localhost:3000/"
 	@echo "    make typecheck      … ワークスペース全体の型チェック"
 	@echo "    make format         … oxlint --fix + oxfmt"
@@ -72,9 +73,12 @@ install-app:
 install-scoring:
 	cd $(SCORE_DIR) && bun install --frozen-lockfile
 
-.PHONY: build start typecheck format clean
+.PHONY: build analyze start typecheck format clean
 build:
 	cd $(APP_DIR) && bun run build
+
+analyze:
+	cd $(APP_DIR) && bun run analyze
 
 clean:
 	rm -rf $(APP_DIR)/dist $(APP_DIR)/e2e/test-results

@@ -1,6 +1,7 @@
 /// <reference types="webpack-dev-server" />
 const path = require("path");
 
+const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
@@ -25,18 +26,16 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: false,
   entry: {
     main: [
-      "core-js",
-      "regenerator-runtime/runtime",
       "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: "production",
   module: {
     rules: [
       {
@@ -54,13 +53,15 @@ const config = {
       },
       {
         resourceQuery: /binary/,
-        type: "asset/bytes",
+        type: "asset/resource",
+        generator: {
+          filename: "assets/[name][contenthash][ext]",
+        },
       },
     ],
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
     filename: "scripts/[name].js",
     path: DIST_PATH,
     publicPath: "auto",
@@ -77,7 +78,6 @@ const config = {
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
     }),
     new MiniCssExtractPlugin({
       filename: "styles/[name].css",
@@ -94,6 +94,9 @@ const config = {
       inject: false,
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
+    ...(process.env.ANALYZE === "true"
+      ? [new BundleAnalyzerPlugin()]
+      : []),
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
@@ -128,14 +131,20 @@ const config = {
     },
   },
   optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
+    minimize: true,
+    splitChunks: {
+      chunks: "async",
+      maxSize: 500_000,
+    },
+    runtimeChunk: "single",
+    concatenateModules: true,
+    usedExports: true,
+    providedExports: true,
+    sideEffects: true,
   },
-  cache: false,
+  cache: {
+    type: "filesystem",
+  },
   ignoreWarnings: [
     {
       module: /@ffmpeg/,
