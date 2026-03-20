@@ -14,7 +14,7 @@ app.use(
   compression({
     filter(req, res) {
       // SSE はストリーミングなので圧縮しない（バッファリングで遅延する）
-      if (res.getHeader("Content-Type") === "text/event-stream") {
+      if (req.path === "/api/v1/crok") {
         return false;
       }
       return compression.filter(req, res);
