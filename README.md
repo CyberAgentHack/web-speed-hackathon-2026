@@ -1,4 +1,4 @@
-# 本リポジトリはHA-researcherによる、下記協議への挑戦リポジトリです。
+# 本リポジトリはHA-researcherによる、下記競技への挑戦リポジトリです。
 
 # Web Speed Hackathon 2026
 
