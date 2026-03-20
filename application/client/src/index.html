@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CaX</title>
     <link rel="preload" as="image" type="image/avif" href="/images/029b4b75-bbcc-4aa5-8bd7-e4bb12a33cd3.thumb.avif" fetchpriority="high" />
-    <script>window.__PREFETCH_TIMELINE__=fetch("/api/v1/posts?limit=15&offset=0",{headers:{Accept:"application/json"},credentials:"same-origin"}).then(function(r){return r.json()});</script>
+    <script>window.__PREFETCH_JSON__=window.__PREFETCH_JSON__||{};(function(){var p=window.location.pathname;if(p==="/"){window.__PREFETCH_TIMELINE__=fetch("/api/v1/posts?limit=15&offset=0",{headers:{Accept:"application/json"},credentials:"same-origin"}).then(function(r){return r.json()});return}var m=p.match(/^\/posts\/([^/?#]+)/);if(!m){return}var postId=m[1];var apiPath="/api/v1/posts/"+postId;window.__PREFETCH_JSON__[apiPath]=fetch(apiPath,{headers:{Accept:"application/json"},credentials:"same-origin"}).then(function(r){if(!r.ok){throw new Error("Failed to prefetch post detail")}return r.json()})})();</script>
     <script defer src="/scripts/vendor.js"></script>
     <script defer src="/scripts/main.js"></script>
     <link rel="stylesheet" href="/styles/main.css" />
