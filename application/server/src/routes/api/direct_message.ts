@@ -23,15 +23,10 @@ directMessageRouter.get("/dm", async (req, res) => {
         where(col("messages.id"), { [Op.not]: null }),
       ],
     },
-    order: [[col("messages.createdAt"), "DESC"]],
+    order: [[col("messages.createdAt"), "ASC"]],
   });
 
-  const sorted = conversations.map((c) => ({
-    ...c.toJSON(),
-    messages: c.messages?.reverse(),
-  }));
-
-  return res.status(200).type("application/json").send(sorted);
+  return res.status(200).type("application/json").send(conversations);
 });
 
 directMessageRouter.post("/dm", async (req, res) => {
