@@ -2,10 +2,18 @@
 @import "./shared.css";
 
 @font-face {
-  /* Source Han Serif JP Heavy の Y 軸を 1/1.43 に縮小した改変フォント（利用規約見出し用サブセット） */
+  /* 利用規約見出し用サブセット Part 1: タイトル + 第1条〜第5条 */
   font-family: "Rei no Are Mincho";
   font-display: swap;
-  src: url(/fonts/ReiNoAreMincho-Heavy-subset.woff2) format("woff2");
+  src: url(/fonts/ReiNoAreMincho-Heavy-subset-1.woff2) format("woff2");
+  font-weight: bold;
+}
+
+@font-face {
+  /* 利用規約見出し用サブセット Part 2: 第6条〜第16条 */
+  font-family: "Rei no Are Mincho Later";
+  font-display: swap;
+  src: url(/fonts/ReiNoAreMincho-Heavy-subset-2.woff2) format("woff2");
   font-weight: bold;
 }
 
