@@ -14,10 +14,11 @@ import { Button } from "../foundation/Button";
 interface Props {
   query: string;
   results: Models.Post[];
+  isLoading: boolean;
   initialValues: { searchText: string };
 }
 
-export const SearchPage = ({ query, results, initialValues }: Props) => {
+export const SearchPage = ({ query, results, isLoading, initialValues }: Props) => {
   const navigate = useNavigate();
   const [isNegative, setIsNegative] = useState(false);
   const [searchText, setSearchText] = useState(initialValues.searchText);
@@ -117,7 +118,7 @@ export const SearchPage = ({ query, results, initialValues }: Props) => {
         </p>
       </div>
 
-      {query && (
+      {query && !isLoading && (
         <div className="px-4">
           <h2 className="text-lg font-bold">
             {searchConditionText} の検索結果 ({results.length} 件)
@@ -136,7 +137,7 @@ export const SearchPage = ({ query, results, initialValues }: Props) => {
         </article>
       )}
 
-      {query && results.length === 0 ? (
+      {query && !isLoading && results.length === 0 ? (
         <div className="text-cax-text-muted flex items-center justify-center p-8">
           検索結果が見つかりませんでした
         </div>
