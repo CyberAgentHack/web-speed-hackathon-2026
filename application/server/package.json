@@ -9,6 +9,7 @@
   "scripts": {
     "start": "tsx src/index.ts",
     "compress:assets": "node --import tsx ./scripts/compressStaticAssets.ts",
+    "movies:generate-videos": "node --import tsx ./scripts/generateMovieVideos.ts",
     "movies:resize": "node --import tsx ./scripts/resizeMovies.ts",
     "typecheck": "tsc --noEmit",
     "seed:generate": "tsx ./scripts/generateSeeds.ts",

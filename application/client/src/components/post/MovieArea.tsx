@@ -1,5 +1,6 @@
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { PausableMovie } from "@web-speed-hackathon-2026/client/src/components/foundation/PausableMovie";
+import { PausableVideo } from "@web-speed-hackathon-2026/client/src/components/foundation/PausableVideo";
 import { getMoviePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
@@ -9,14 +10,17 @@ interface Props {
 }
 
 export const MovieArea = ({ movie, prioritize = false, variant = "interactive" }: Props) => {
-  const src = getMoviePath(movie.id);
+  const extension = movie.extension ?? "gif";
+  const src = getMoviePath(movie.id, extension);
+  const isVideo = extension === "mp4" || extension === "webm";
+  const isInteractive = variant === "interactive";
 
   return (
     <div
       className="border-cax-border bg-cax-surface-subtle relative h-full w-full overflow-hidden rounded-lg border"
       data-movie-area
     >
-      {variant === "preview" ? (
+      {!isInteractive && !isVideo ? (
         <AspectRatioBox aspectHeight={1} aspectWidth={1}>
           <img
             alt="投稿されたGIF画像"
@@ -28,7 +32,7 @@ export const MovieArea = ({ movie, prioritize = false, variant = "interactive" }
           />
         </AspectRatioBox>
       ) : (
-        <PausableMovie src={src} />
+        isVideo ? <PausableVideo src={src} /> : <PausableMovie src={src} />
       )}
     </div>
   );

@@ -22,13 +22,23 @@ export async function convertMovie(file: File, options: Options): Promise<Blob> 
 
   await ffmpeg.writeFile("file", new Uint8Array(await file.arrayBuffer()));
 
+  const filterArguments =
+    options.extension === "webm"
+      ? ["-vf", baseFilter]
+      : [
+          "-filter_complex",
+          `${baseFilter},split[v1][v2];[v1]palettegen=stats_mode=diff[p];[v2][p]paletteuse=dither=bayer:bayer_scale=5`,
+        ];
+
   await ffmpeg.exec([
     "-i",
     "file",
     "-t",
     "5",
-    "-filter_complex",
-    `${baseFilter},split[v1][v2];[v1]palettegen=stats_mode=diff[p];[v2][p]paletteuse=dither=bayer:bayer_scale=5`,
+    ...(options.extension === "webm"
+      ? ["-c:v", "libvpx", "-deadline", "realtime", "-cpu-used", "5", "-b:v", "0", "-crf", "32"]
+      : []),
+    ...filterArguments,
     "-an",
     exportFile,
   ]);

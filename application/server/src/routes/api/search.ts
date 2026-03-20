@@ -3,6 +3,7 @@ import { Op } from "sequelize";
 
 import { Post } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
+import { serializePosts } from "@web-speed-hackathon-2026/server/src/utils/serialize_post";
 
 export const searchRouter = Router();
 
@@ -88,5 +89,5 @@ searchRouter.get("/search", async (req, res) => {
 
   const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
 
-  return res.status(200).type("application/json").send(result);
+  return res.status(200).type("application/json").send(serializePosts(result));
 });

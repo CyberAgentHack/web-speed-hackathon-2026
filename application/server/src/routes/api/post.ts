@@ -2,6 +2,7 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 
 import { Comment, Post } from "@web-speed-hackathon-2026/server/src/models";
+import { serializePost, serializePosts } from "@web-speed-hackathon-2026/server/src/utils/serialize_post";
 
 export const postRouter = Router();
 
@@ -11,7 +12,7 @@ postRouter.get("/posts", async (req, res) => {
     offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
   });
 
-  return res.status(200).type("application/json").send(posts);
+  return res.status(200).type("application/json").send(serializePosts(posts));
 });
 
 postRouter.get("/posts/:postId", async (req, res) => {
@@ -21,7 +22,7 @@ postRouter.get("/posts/:postId", async (req, res) => {
     throw new httpErrors.NotFound();
   }
 
-  return res.status(200).type("application/json").send(post);
+  return res.status(200).type("application/json").send(serializePost(post));
 });
 
 postRouter.get("/posts/:postId/comments", async (req, res) => {
@@ -58,5 +59,5 @@ postRouter.post("/posts", async (req, res) => {
     },
   );
 
-  return res.status(200).type("application/json").send(post);
+  return res.status(200).type("application/json").send(serializePost(post));
 });

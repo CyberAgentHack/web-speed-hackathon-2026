@@ -37,6 +37,7 @@ declare namespace Models {
   }
 
   interface Movie {
+    extension?: "gif" | "mp4" | "webm";
     id: string;
   }
 

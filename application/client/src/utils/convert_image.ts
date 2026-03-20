@@ -4,6 +4,7 @@ import { dump, insert, ImageIFD } from "piexifjs";
 
 interface Options {
   extension: MagickFormat;
+  maxSize?: number | undefined;
 }
 
 export async function convertImage(file: File, options: Options): Promise<Blob> {
@@ -13,6 +14,14 @@ export async function convertImage(file: File, options: Options): Promise<Blob> 
 
   return new Promise((resolve) => {
     ImageMagick.read(byteArray, (img) => {
+      if (options.maxSize != null) {
+        const longestEdge = Math.max(img.width, img.height);
+        if (longestEdge > options.maxSize) {
+          const scale = options.maxSize / longestEdge;
+          img.resize(Math.round(img.width * scale), Math.round(img.height * scale));
+        }
+      }
+
       img.format = options.extension;
 
       const comment = img.comment;
