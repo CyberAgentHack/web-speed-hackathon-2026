@@ -41,10 +41,9 @@ export const PausableMovie = ({ src }: Props) => {
       }
 
       // メインスレッドを解放してから GIF を解析する
-      setTimeout(() => {
-        if (decodedDataRef.current === data) return;
-        decodedDataRef.current = data;
+      decodedDataRef.current = data;
 
+      setTimeout(() => {
         const reader = new GifReader(new Uint8Array(data));
         const frames = Decoder.decodeFramesSync(reader);
         const animator = new Animator(reader, frames);
