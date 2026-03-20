@@ -91,13 +91,16 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
     <div className="ccss-modal-overlay auth-modal-overlay">
       {/* Backdrop - click to close */}
       <div className="bg-cax-overlay/50 fixed inset-0 z-40" onClick={handleRequestCloseModal} />
-      <div className="bg-cax-surface relative z-50 w-full max-w-[calc(min(var(--container-md),100%)-var(--spacing)*4)] rounded-lg p-4">
+      <dialog
+        open
+        className="bg-cax-surface relative z-50 m-0 w-full max-w-[calc(min(var(--container-md),100%)-var(--spacing)*4)] rounded-lg border-none p-4"
+      >
         <AuthModalPage
           key={resetKey}
           onRequestCloseModal={handleRequestCloseModal}
           onSubmit={handleSubmit}
         />
-      </div>
+      </dialog>
     </div>
   );
 };
