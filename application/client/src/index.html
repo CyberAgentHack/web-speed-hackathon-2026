@@ -4,7 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CaX</title>
-    <!-- API preload 削除: fetch() との重複リクエストを防止 -->
+    <link rel="preload" href="/api/v1/me" as="fetch" crossorigin>
+    <link rel="preload" href="/api/v1/posts?limit=10&offset=0" as="fetch" crossorigin>
   </head>
   <body class="bg-cax-canvas text-cax-text">
     <div id="app"></div>
