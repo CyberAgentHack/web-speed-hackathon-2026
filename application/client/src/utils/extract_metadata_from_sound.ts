@@ -1,5 +1,3 @@
-import Encoding from "encoding-japanese";
-
 import { loadFFmpeg } from "@web-speed-hackathon-2026/client/src/utils/load_ffmpeg";
 
 interface SoundMetadata {
@@ -11,9 +9,14 @@ interface SoundMetadata {
 const UNKNOWN_ARTIST = "Unknown Artist";
 const UNKNOWN_TITLE = "Unknown Title";
 
+/**
+ * 音声ファイルからFFmpegでメタデータ（artist/title）を抽出する。
+ * encoding-japaneseは446KBと大きいため、初期バンドルに含めずdynamic importで遅延ロードする。
+ */
 export async function extractMetadataFromSound(data: File): Promise<SoundMetadata> {
   try {
     const ffmpeg = await loadFFmpeg();
+    const { default: Encoding } = await import("encoding-japanese");
 
     const exportFile = "meta.txt";
 
