@@ -6,7 +6,6 @@ import serveStatic, { ServeStaticOptions } from "serve-static";
 import {
   CLIENT_DIST_PATH,
   PUBLIC_PATH,
-  TERMS_HTML_PATH,
   UPLOAD_PATH,
 } from "@web-speed-hackathon-2026/server/src/paths";
 
@@ -39,19 +38,14 @@ const setStaticCacheHeader = (rootPath: string) => {
   return setHeaders;
 };
 
-const sendTermsHtml = (_req: Request, res: Response) => {
-  res.setHeader("Cache-Control", REVALIDATE_CACHE_HEADER);
-  res.sendFile(TERMS_HTML_PATH);
-};
-
 const sendHomeHtml = (_req: Request, res: Response) => {
   res.setHeader("Cache-Control", REVALIDATE_CACHE_HEADER);
   res.sendFile(path.resolve(CLIENT_DIST_PATH, "index.html"));
 };
 
 staticRouter.get("/", sendHomeHtml);
-staticRouter.get("/terms", sendTermsHtml);
-staticRouter.get("/terms/", sendTermsHtml);
+staticRouter.get("/terms", sendHomeHtml);
+staticRouter.get("/terms/", sendHomeHtml);
 
 // SPA 対応のため、ファイルが存在しないときに index.html を返す
 staticRouter.use(history());

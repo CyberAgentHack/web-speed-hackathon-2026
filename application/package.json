@@ -5,7 +5,7 @@
   "author": "CyberAgent, Inc.",
   "type": "module",
   "scripts": {
-    "build": "pnpm --filter @web-speed-hackathon-2026/client build && pnpm --filter @web-speed-hackathon-2026/server generate:terms-html",
+    "build": "pnpm --filter @web-speed-hackathon-2026/client build",
     "start": "pnpm --filter @web-speed-hackathon-2026/server start",
     "analyze:lighthouse": "node ./scripts/run-lighthouse.mjs --mode scoring --device desktop",
     "analyze:lighthouse:mobile": "node ./scripts/run-lighthouse.mjs --mode cli --device mobile",

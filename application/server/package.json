@@ -7,8 +7,7 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "generate:terms-html": "tsx scripts/generate_terms_html.tsx",
-    "start": "pnpm run generate:terms-html && tsx src/index.ts",
+    "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
     "seed:generate": "tsx ./scripts/generateSeeds.ts",
     "seed:insert": "tsx ./scripts/insertSeeds.ts"

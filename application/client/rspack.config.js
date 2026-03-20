@@ -31,11 +31,6 @@ const config = {
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
-    terms: [
-      path.resolve(SRC_PATH, "./index.css"),
-      path.resolve(SRC_PATH, "./buildinfo.ts"),
-      path.resolve(SRC_PATH, "./terms.tsx"),
-    ],
   },
   mode: "production",
   module: {
