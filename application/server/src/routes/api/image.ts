@@ -2,14 +2,14 @@ import { promises as fs } from "fs";
 import path from "path";
 
 import { Router } from "express";
-import { fileTypeFromBuffer } from "file-type";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+import sharp from "sharp";
 
 // 変換した画像の拡張子
-const EXTENSION = "jpg";
+const OUT_EXTENSION = "jpg";
 
 export const imageRouter = Router();
 
@@ -21,16 +21,23 @@ imageRouter.post("/images", async (req, res) => {
     throw new httpErrors.BadRequest();
   }
 
-  const type = await fileTypeFromBuffer(req.body);
-  if (type === undefined || type.ext !== EXTENSION) {
-    throw new httpErrors.BadRequest("Invalid file type");
-  }
-
   const imageId = uuidv4();
+  const outDir = path.resolve(UPLOAD_PATH, "images");
+  const filePath = path.resolve(outDir, `${imageId}.${OUT_EXTENSION}`);
+  await fs.mkdir(outDir, { recursive: true });
 
-  const filePath = path.resolve(UPLOAD_PATH, `./images/${imageId}.${EXTENSION}`);
-  await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
-  await fs.writeFile(filePath, req.body);
+  try {
+    await sharp(req.body)
+      .jpeg({
+        quality: 80,
+        mozjpeg: true,
+      })
+      .withMetadata()
+      .toFile(filePath);
 
-  return res.status(200).type("application/json").send({ id: imageId });
+    return res.status(200).type("application/json").send({ id: imageId });
+  } catch (e) {
+    console.error("Error processing image:", e);
+    throw new httpErrors.InternalServerError("Failed to process image");
+  }
 });
