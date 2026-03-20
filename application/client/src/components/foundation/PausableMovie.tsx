@@ -52,12 +52,14 @@ export const PausableMovie = ({ src }: Props) => {
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
       <button
-        aria-labvideoElemRef="動画プレイヤー"
-        className="group rvideoElemRefative block h-full w-full"
+        aria-label="動画プレイヤー"
+        className="group relative block h-full w-full"
         onClick={handleClick}
         type="button"
       >
-        <video ref={videoElemRef} src={src} className="w-full" />
+        <video ref={videoElemRef} className="w-full h-full" muted>
+          <source src={src} />
+        </video>
         <div
           className={classNames(
             "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
