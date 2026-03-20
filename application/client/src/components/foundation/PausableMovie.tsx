@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -15,6 +15,12 @@ interface Props {
  */
 export const PausableMovie = ({ posterSrc, src }: Props) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [displayPosterSrc, setDisplayPosterSrc] = useState(posterSrc);
+
+  useEffect(() => {
+    setDisplayPosterSrc(posterSrc);
+  }, [posterSrc]);
+
   const handleClick = useCallback(() => {
     setIsPlaying((current) => !current);
   }, []);
@@ -33,7 +39,12 @@ export const PausableMovie = ({ posterSrc, src }: Props) => {
           className="h-full w-full object-cover"
           decoding="async"
           loading="lazy"
-          src={isPlaying ? src : posterSrc}
+          onError={() => {
+            if (displayPosterSrc !== src) {
+              setDisplayPosterSrc(src);
+            }
+          }}
+          src={isPlaying ? src : displayPosterSrc}
         />
 
         <div

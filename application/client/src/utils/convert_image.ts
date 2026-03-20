@@ -11,6 +11,8 @@ interface ConvertedImage {
   blob: Blob;
 }
 
+const MAX_IMAGE_DIMENSION = 1600;
+
 export async function convertImage(file: File, options: Options): Promise<ConvertedImage> {
   await initializeImageMagick(magickWasm);
 
@@ -18,6 +20,12 @@ export async function convertImage(file: File, options: Options): Promise<Conver
 
   return new Promise((resolve) => {
     ImageMagick.read(byteArray, (img) => {
+      const longestEdge = Math.max(img.width, img.height);
+      if (longestEdge > MAX_IMAGE_DIMENSION) {
+        const scale = MAX_IMAGE_DIMENSION / longestEdge;
+        img.resize(Math.round(img.width * scale), Math.round(img.height * scale));
+      }
+
       img.format = options.extension;
 
       const comment = img.comment ?? "";

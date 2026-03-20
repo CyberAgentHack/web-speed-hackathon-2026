@@ -21,6 +21,7 @@ export const CoveredImage = ({
 }: Props) => {
   const dialogId = useId();
   const [isAltRequested, setIsAltRequested] = useState(false);
+  const [displaySrc, setDisplaySrc] = useState(src);
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
     ev.stopPropagation();
@@ -28,6 +29,10 @@ export const CoveredImage = ({
 
   // EXIF alt text is loaded lazily after first paint — does not block rendering
   const [alt, setAlt] = useState(initialAlt);
+  useEffect(() => {
+    setDisplaySrc(src);
+  }, [src]);
+
   useEffect(() => {
     if (!isAltRequested || alt !== "") {
       return;
@@ -66,7 +71,7 @@ export const CoveredImage = ({
     return () => {
       cancelled = true;
     };
-  }, [alt, isAltRequested, src]);
+  }, [alt, isAltRequested, metadataSrc, src]);
 
   return (
     <div className="relative h-full w-full overflow-hidden">
@@ -76,7 +81,12 @@ export const CoveredImage = ({
         className="absolute inset-0 h-full w-full object-cover"
         decoding="async"
         loading={loading}
-        src={src}
+        onError={() => {
+          if (metadataSrc != null && displaySrc !== metadataSrc) {
+            setDisplaySrc(metadataSrc);
+          }
+        }}
+        src={displaySrc}
       />
 
       <button
