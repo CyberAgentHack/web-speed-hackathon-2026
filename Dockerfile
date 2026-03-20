@@ -22,7 +22,7 @@ RUN pnpm install --frozen-lockfile
 
 COPY ./application .
 
-RUN NODE_OPTIONS="--max-old-space-size=4096" pnpm build
+RUN echo "cache-bust-v2" && NODE_OPTIONS="--max-old-space-size=4096" pnpm build
 
 # Convert seed GIF movies to MP4 for native <video> playback
 RUN for gif in public/movies/*.gif; do \
