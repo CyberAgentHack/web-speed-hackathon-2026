@@ -102,6 +102,12 @@ const config = {
       "bayesian-bm25$": path.resolve(__dirname, "node_modules", "bayesian-bm25/dist/index.js"),
       ["kuromoji$"]: path.resolve(__dirname, "node_modules", "kuromoji/build/kuromoji.js"),
       "bluebird$": path.resolve(SRC_PATH, "./shims/bluebird.js"),
+      "react/jsx-runtime": path.resolve(__dirname, "node_modules", "preact/jsx-runtime"),
+      "react/jsx-dev-runtime": path.resolve(__dirname, "node_modules", "preact/jsx-runtime"),
+      "react-dom/test-utils": path.resolve(__dirname, "node_modules", "preact/test-utils"),
+      "react-dom/client": path.resolve(__dirname, "node_modules", "preact/compat/client"),
+      "react-dom": path.resolve(__dirname, "node_modules", "preact/compat"),
+      "react": path.resolve(SRC_PATH, "./shims/react-compat.js"),
     },
     fallback: {
       fs: false,
@@ -115,7 +121,7 @@ const config = {
       chunks: 'all',
       cacheGroups: {
         react: {
-          test: /[\\/]node_modules[\\/](react|react-dom|react-router|redux|react-redux|redux-form|scheduler)[\\/]/,
+          test: /[\\/]node_modules[\\/](preact|react-router|scheduler)[\\/]/,
           name: 'vendor-react',
           chunks: 'all',
           priority: 30,
@@ -145,7 +151,7 @@ const config = {
         vendors: {
           test: /[\\/]node_modules[\\/]/,
           name: 'vendor',
-          chunks: 'all',
+          chunks: 'initial',
           priority: 10,
           enforce: true,
         },
