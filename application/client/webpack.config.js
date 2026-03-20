@@ -28,7 +28,7 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: "eval",
   entry: {
     main: [
       "core-js",
