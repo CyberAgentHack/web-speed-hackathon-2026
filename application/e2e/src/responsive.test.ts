@@ -8,7 +8,7 @@ test.describe("レスポンシブ", () => {
     await page.goto("/");
 
     const articles = page.locator("article");
-    await expect(articles.first()).toBeVisible({ timeout: 30_000 });
+    await expect(articles.first()).toBeVisible({ timeout: 3_000 });
 
     const hasOverflow = await page.evaluate(() => {
       return document.documentElement.scrollWidth > document.documentElement.clientWidth;
@@ -32,7 +32,7 @@ test.describe("レスポンシブ", () => {
     await page.goto("/");
 
     const articles = page.locator("article");
-    await expect(articles.first()).toBeVisible({ timeout: 30_000 });
+    await expect(articles.first()).toBeVisible({ timeout: 3_000 });
 
     const hasOverflow = await page.evaluate(() => {
       return document.documentElement.scrollWidth > document.documentElement.clientWidth;

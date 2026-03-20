@@ -17,7 +17,7 @@ test.describe("投稿機能", () => {
     await page.getByRole("list").getByRole("button", { name: "投稿する" }).click();
 
     const textarea = page.getByPlaceholder("いまなにしてる？");
-    await expect(textarea).toBeVisible({ timeout: 30_000 });
+    await expect(textarea).toBeVisible({ timeout: 3_000 });
     await textarea.fill(postText);
 
     // VRT: 投稿モーダル（テキスト入力後）
@@ -31,8 +31,8 @@ test.describe("投稿機能", () => {
     await page.locator("dialog").getByRole("button", { name: "投稿する" }).click();
 
     // 投稿詳細に遷移する
-    await page.waitForURL("**/posts/*", { timeout: 30_000 });
-    await expect(page.locator("article").first()).toBeVisible({ timeout: 30_000 });
+    await page.waitForURL("**/posts/*", { timeout: 3_000 });
+    await expect(page.locator("article").first()).toBeVisible({ timeout: 3_000 });
 
     // 投稿内容が表示されていることを確認
     await expect(page.getByText(postText)).toBeVisible();
@@ -44,7 +44,7 @@ test.describe("投稿機能", () => {
     await page.getByRole("list").getByRole("button", { name: "投稿する" }).click();
 
     const textarea = page.getByPlaceholder("いまなにしてる？");
-    await expect(textarea).toBeVisible({ timeout: 30_000 });
+    await expect(textarea).toBeVisible({ timeout: 3_000 });
     await textarea.fill(postText);
 
     // 画像ファイルを添付
@@ -62,8 +62,8 @@ test.describe("投稿機能", () => {
     await page.waitForURL("**/posts/*", { timeout: 60_000 });
 
     const article = page.locator("article").first();
-    await expect(article).toBeVisible({ timeout: 30_000 });
-    await expect(article.locator("img").first()).toBeVisible({ timeout: 30_000 });
+    await expect(article).toBeVisible({ timeout: 3_000 });
+    await expect(article.locator("img").first()).toBeVisible({ timeout: 3_000 });
 
     // 投稿内容と画像が表示されていることを確認
     await expect(page.getByText(postText)).toBeVisible();

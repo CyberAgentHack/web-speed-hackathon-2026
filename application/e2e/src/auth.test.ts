@@ -5,9 +5,9 @@ test.describe("サインイン・新規登録", () => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto("/not-found", { waitUntil: "networkidle" });
     const signinButton = page.getByRole("button", { name: "サインイン" });
-    await expect(signinButton).toBeVisible({ timeout: 30_000 });
+    await expect(signinButton).toBeVisible({ timeout: 3_000 });
     await signinButton.click();
-    await page.getByRole("heading", { name: "サインイン" }).waitFor({ timeout: 30_000 });
+    await page.getByRole("heading", { name: "サインイン" }).waitFor({ timeout: 3_000 });
   });
 
   test("サインインモーダルが表示される", async ({ page }) => {
@@ -17,7 +17,7 @@ test.describe("サインイン・新規登録", () => {
 
   test("新規登録モーダルが表示される", async ({ page }) => {
     await page.getByRole("button", { name: "初めての方はこちら" }).click();
-    await page.getByRole("heading", { name: "新規登録" }).waitFor({ timeout: 30_000 });
+    await page.getByRole("heading", { name: "新規登録" }).waitFor({ timeout: 3_000 });
 
     // VRT: 新規登録モーダル初期状態
     await expect(page).toHaveScreenshot("auth-新規登録モーダル.png");
@@ -25,7 +25,7 @@ test.describe("サインイン・新規登録", () => {
 
   test("新規登録ができる", async ({ page }) => {
     await page.getByRole("button", { name: "初めての方はこちら" }).click();
-    await page.getByRole("heading", { name: "新規登録" }).waitFor({ timeout: 30_000 });
+    await page.getByRole("heading", { name: "新規登録" }).waitFor({ timeout: 3_000 });
 
     const username = `test_${Date.now().toString(36)}`;
 
@@ -36,12 +36,12 @@ test.describe("サインイン・新規登録", () => {
     await page.getByRole("button", { name: "登録する" }).click();
 
     // サインイン状態になる
-    await page.getByRole("link", { name: "Crok" }).waitFor({ timeout: 30_000 });
+    await page.getByRole("link", { name: "Crok" }).waitFor({ timeout: 3_000 });
   });
 
   test("日本語ユーザー名で登録するとエラーが表示される", async ({ page }) => {
     await page.getByRole("button", { name: "初めての方はこちら" }).click();
-    await page.getByRole("heading", { name: "新規登録" }).waitFor({ timeout: 30_000 });
+    await page.getByRole("heading", { name: "新規登録" }).waitFor({ timeout: 3_000 });
 
     await page.getByRole("textbox", { name: "ユーザー名" }).pressSequentially("テストユーザー");
     await page.getByRole("textbox", { name: "名前" }).pressSequentially("テスト");
@@ -51,7 +51,7 @@ test.describe("サインイン・新規登録", () => {
     await expect(
       page.getByText("ユーザー名に使用できるのは英数字とアンダースコア(_)のみです"),
     ).toBeVisible({
-      timeout: 30_000,
+      timeout: 3_000,
     });
 
     // VRT: バリデーションエラー状態
@@ -60,7 +60,7 @@ test.describe("サインイン・新規登録", () => {
 
   test("既に使われているユーザー名で登録するとエラーが表示される", async ({ page }) => {
     await page.getByRole("button", { name: "初めての方はこちら" }).click();
-    await page.getByRole("heading", { name: "新規登録" }).waitFor({ timeout: 30_000 });
+    await page.getByRole("heading", { name: "新規登録" }).waitFor({ timeout: 3_000 });
 
     // 既存ユーザー名を使用
     await page.getByRole("textbox", { name: "ユーザー名" }).pressSequentially("o6yq16leo");
@@ -70,7 +70,7 @@ test.describe("サインイン・新規登録", () => {
     await page.getByRole("button", { name: "登録する" }).click();
 
     // エラーメッセージが表示される
-    await expect(page.getByText("ユーザー名が使われています")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText("ユーザー名が使われています")).toBeVisible({ timeout: 3_000 });
 
     // VRT: サーバーエラー状態
     await expect(page).toHaveScreenshot("auth-ユーザー名重複エラー.png");
@@ -78,7 +78,7 @@ test.describe("サインイン・新規登録", () => {
 
   test("未入力の場合はボタンが無効化されている", async ({ page }) => {
     await page.getByRole("button", { name: "初めての方はこちら" }).click();
-    await page.getByRole("heading", { name: "新規登録" }).waitFor({ timeout: 30_000 });
+    await page.getByRole("heading", { name: "新規登録" }).waitFor({ timeout: 3_000 });
 
     // 何も入力しない状態で登録ボタンが無効
     await expect(page.getByRole("button", { name: "登録する" })).toBeDisabled();
@@ -103,7 +103,7 @@ test.describe("サインイン・新規登録", () => {
     await page.getByRole("button", { name: "サインイン" }).last().click();
 
     // エラーメッセージが表示される
-    await expect(page.getByText("パスワードが異なります")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText("パスワードが異なります")).toBeVisible({ timeout: 3_000 });
 
     // VRT: サインイン失敗エラー状態
     await expect(page).toHaveScreenshot("auth-サインイン失敗エラー.png");

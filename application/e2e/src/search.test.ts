@@ -20,7 +20,7 @@ test.describe("検索ページ", () => {
   test("タイトルが「検索 - CaX」となること", async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto("/search");
-    await expect(page).toHaveTitle("検索 - CaX", { timeout: 30_000 });
+    await expect(page).toHaveTitle("検索 - CaX", { timeout: 3_000 });
   });
 
   test.describe("検索フォーム", () => {
@@ -33,7 +33,7 @@ test.describe("検索ページ", () => {
       const input = page.getByPlaceholder(
         "検索 (例: キーワード since:2025-01-01 until:2025-12-31)",
       );
-      await expect(input).toBeVisible({ timeout: 30_000 });
+      await expect(input).toBeVisible({ timeout: 3_000 });
     });
 
     test("「since:YYYY-MM-DD で開始日、until:YYYY-MM-DD で終了日を指定できます」のヘルプテキストが表示されること", async ({
@@ -44,7 +44,7 @@ test.describe("検索ページ", () => {
 
       await expect(
         page.getByText("since:YYYY-MM-DD で開始日、until:YYYY-MM-DD で終了日を指定できます"),
-      ).toBeVisible({ timeout: 30_000 });
+      ).toBeVisible({ timeout: 3_000 });
     });
   });
 
@@ -56,7 +56,7 @@ test.describe("検索ページ", () => {
       await page.getByRole("button", { name: "検索" }).click();
 
       await expect(page.getByText("検索キーワードを入力してください")).toBeVisible({
-        timeout: 30_000,
+        timeout: 3_000,
       });
     });
 
@@ -71,7 +71,7 @@ test.describe("検索ページ", () => {
       await page.getByRole("button", { name: "検索" }).click();
 
       await expect(page.getByText("since: の日付形式が不正です: 2025-99-99")).toBeVisible({
-        timeout: 30_000,
+        timeout: 3_000,
       });
     });
 
@@ -86,7 +86,7 @@ test.describe("検索ページ", () => {
       await page.getByRole("button", { name: "検索" }).click();
 
       await expect(page.getByText("since: は until: より前の日付を指定してください")).toBeVisible({
-        timeout: 30_000,
+        timeout: 3_000,
       });
     });
   });
@@ -95,7 +95,7 @@ test.describe("検索ページ", () => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto("/search?q=写真");
 
-    await expect(page.locator("main article").first()).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator("main article").first()).toBeVisible({ timeout: 3_000 });
 
     // 検索条件と件数を含む見出しが表示される
     const heading = page.locator("main h2");
@@ -119,7 +119,7 @@ test.describe("検索ページ", () => {
     await input.fill("写真 since:2026-01-01");
     await page.getByRole("button", { name: "検索" }).click();
 
-    await page.waitForURL(/\/search\?q=/, { timeout: 30_000 });
+    await page.waitForURL(/\/search\?q=/, { timeout: 3_000 });
 
     const heading = page.locator("main h2");
     await expect(heading).toContainText("「写真」");
@@ -137,7 +137,7 @@ test.describe("検索ページ", () => {
     await input.fill("写真 since:2026-01-01 until:2026-12-31");
     await page.getByRole("button", { name: "検索" }).click();
 
-    await page.waitForURL(/\/search\?q=/, { timeout: 30_000 });
+    await page.waitForURL(/\/search\?q=/, { timeout: 3_000 });
 
     const heading = page.locator("main h2");
     await expect(heading).toContainText("「写真」");
@@ -153,7 +153,7 @@ test.describe("検索ページ", () => {
     await page.goto("/search?q=xyzzynonexistent12345");
 
     await expect(page.getByText("検索結果が見つかりませんでした")).toBeVisible({
-      timeout: 30_000,
+      timeout: 3_000,
     });
   });
 
@@ -185,7 +185,7 @@ test.describe("検索ページ", () => {
       // 「悲しい」: 辞書 rank=-0.999102 → 補正後スコア≈-0.1024 (< -0.1 → negative)
       await page.goto("/search?q=悲しい");
 
-      await expect(page.getByText("どしたん話聞こうか?")).toBeVisible({ timeout: 30_000 });
+      await expect(page.getByText("どしたん話聞こうか?")).toBeVisible({ timeout: 3_000 });
       await expect(page.getByText("言わなくてもいいけど、言ってもいいよ。")).toBeVisible();
     });
 
@@ -197,7 +197,7 @@ test.describe("検索ページ", () => {
       await page.goto("/search?q=嬉しい");
 
       await expect(page.getByText("検索結果が見つかりませんでした")).toBeVisible({
-        timeout: 30_000,
+        timeout: 3_000,
       });
       await expect(page.getByText("どしたん話聞こうか?")).not.toBeVisible();
     });
@@ -209,7 +209,7 @@ test.describe("検索ページ", () => {
       // 「惑い」: 辞書 rank=-0.976115 → 補正後スコア≈-0.100027 (< -0.1 → negative)
       await page.goto("/search?q=惑い");
 
-      await expect(page.getByText("どしたん話聞こうか?")).toBeVisible({ timeout: 30_000 });
+      await expect(page.getByText("どしたん話聞こうか?")).toBeVisible({ timeout: 3_000 });
     });
 
     test("補正係数により境界値(-0.1)をわずかに上回る単語ではネガティブ判定されない", async ({
@@ -220,7 +220,7 @@ test.describe("検索ページ", () => {
       await page.goto("/search?q=没落");
 
       await expect(page.getByText("検索結果が見つかりませんでした")).toBeVisible({
-        timeout: 30_000,
+        timeout: 3_000,
       });
       await expect(page.getByText("どしたん話聞こうか?")).not.toBeVisible();
     });
@@ -232,7 +232,7 @@ test.describe("検索ページ", () => {
       await page.goto("/search?q=嫌い");
 
       await expect(page.getByText("検索結果が見つかりませんでした")).toBeVisible({
-        timeout: 30_000,
+        timeout: 3_000,
       });
       await expect(page.getByText("どしたん話聞こうか?")).not.toBeVisible();
     });
@@ -242,7 +242,7 @@ test.describe("検索ページ", () => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto("/search?q=写真");
 
-    await expect(page.locator("main article").first()).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator("main article").first()).toBeVisible({ timeout: 3_000 });
 
     const initialCount = await page.locator("main article").count();
     expect(initialCount).toBeGreaterThanOrEqual(1);
@@ -257,6 +257,6 @@ test.describe("検索ページ", () => {
       });
       const newCount = await page.locator("main article").count();
       expect(newCount).toBeGreaterThan(initialCount);
-    }).toPass({ timeout: 30_000 });
+    }).toPass({ timeout: 3_000 });
   });
 });
