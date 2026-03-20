@@ -54,58 +54,26 @@ jobs:
               working-directory: application/e2e
               run: pnpm exec playwright install chrome --with-deps
 
-            - name: Detect initial commit hash
+            - name: Detect baseline commit hash
               run: |
-                  INITIAL_SHA="$(git rev-list --max-parents=0 --reverse upstream/main | head -n 1)"
-                  if [ -z "${INITIAL_SHA}" ]; then
-                    echo "ERROR: Failed to resolve initial commit hash from upstream/main"
+                  BASELINE_SHA="$(git rev-parse upstream/main)"
+                  if [ -z "${BASELINE_SHA}" ]; then
+                    echo "ERROR: Failed to resolve upstream/main commit hash"
                     exit 1
                   fi
-                  echo "Resolved initial commit from upstream/main: ${INITIAL_SHA}"
+                  echo "Resolved baseline commit from upstream/main: ${BASELINE_SHA}"
                   echo "Current commit: ${GITHUB_SHA}"
-                  echo "INITIAL_SHA=${INITIAL_SHA}" >> "${GITHUB_ENV}"
-                  echo "INIT_SNAPSHOTS_ARTIFACT=regulation-init-snapshots-${INITIAL_SHA}" >> "${GITHUB_ENV}"
+                  echo "BASELINE_SHA=${BASELINE_SHA}" >> "${GITHUB_ENV}"
 
             - name: Remove checked-in snapshots before baseline restore
               run: find application/e2e/src -maxdepth 1 -type d -name "*.test.ts-snapshots" -exec rm -rf {} +
 
-            - name: Find init snapshots artifact
-              id: find-init-snapshots
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              run: |
-                  ARTIFACT_ID=""
-                  for PAGE in $(seq 1 20); do
-                    ARTIFACT_ID="$(curl -fsSL \
-                      -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-                      -H "Accept: application/vnd.github+json" \
-                      "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100&page=${PAGE}" \
-                      | jq -r --arg name "${INIT_SNAPSHOTS_ARTIFACT}" '.artifacts[] | select(.name == $name and .expired == false) | .id' \
-                      | head -n 1)"
-                    if [ -n "${ARTIFACT_ID}" ]; then
-                      break
-                    fi
-                  done
-                  if [ -n "${ARTIFACT_ID}" ]; then
-                    echo "Found init snapshots artifact: ${INIT_SNAPSHOTS_ARTIFACT} (id=${ARTIFACT_ID})"
-                    echo "found=true" >> "${GITHUB_OUTPUT}"
-                    echo "artifact_id=${ARTIFACT_ID}" >> "${GITHUB_OUTPUT}"
-                  else
-                    echo "Init snapshots artifact not found: ${INIT_SNAPSHOTS_ARTIFACT}"
-                    echo "found=false" >> "${GITHUB_OUTPUT}"
-                  fi
-
-            - name: Download init snapshots artifact
-              if: steps.find-init-snapshots.outputs.found == 'true'
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              run: |
-                  curl -fsSL \
-                    -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-                    -H "Accept: application/vnd.github+json" \
-                    "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${{ steps.find-init-snapshots.outputs.artifact_id }}/zip" \
-                    -o /tmp/init-snapshots.zip
-                  unzip -o /tmp/init-snapshots.zip -d "${GITHUB_WORKSPACE}"
+            - name: Cache baseline snapshots
+              id: cache-baseline
+              uses: actions/cache@v4
+              with:
+                  path: application/e2e/src/*-snapshots/**
+                  key: regulation-snapshots-${{ env.BASELINE_SHA }}
 
             - name: Detect whether baseline snapshots are ready
               id: baseline-snapshots
@@ -118,17 +86,17 @@ jobs:
                     echo "ready=false" >> "${GITHUB_OUTPUT}"
                   fi
 
-            - name: Checkout initial commit to worktree
+            - name: Checkout baseline commit to worktree
               if: steps.baseline-snapshots.outputs.ready != 'true'
-              run: git worktree add /tmp/wsh-initial "$INITIAL_SHA"
+              run: git worktree add /tmp/wsh-baseline "${BASELINE_SHA}"
 
-            - name: Build and run initial baseline app
+            - name: Build and run baseline app
               if: steps.baseline-snapshots.outputs.ready != 'true'
               run: |
-                  docker build -t wsh-baseline-initial /tmp/wsh-initial
-                  docker run -d --name wsh-baseline-initial -e PORT=8080 -p 18080:8080 wsh-baseline-initial
+                  docker build -t wsh-baseline /tmp/wsh-baseline
+                  docker run -d --name wsh-baseline -e PORT=8080 -p 18080:8080 wsh-baseline
 
-            - name: Wait for initial baseline app
+            - name: Wait for baseline app
               if: steps.baseline-snapshots.outputs.ready != 'true'
               run: |
                   echo "Waiting for baseline app on http://localhost:18080 ..."
@@ -140,24 +108,15 @@ jobs:
                     sleep 2
                   done
                   echo "ERROR: Baseline app did not become ready"
-                  docker logs --tail 100 wsh-baseline-initial || true
+                  docker logs --tail 100 wsh-baseline || true
                   exit 1
 
-            - name: Generate VRT baseline snapshots from initial commit
+            - name: Generate VRT baseline snapshots from baseline commit
               if: steps.baseline-snapshots.outputs.ready != 'true'
               working-directory: application/e2e
               env:
                   E2E_BASE_URL: http://localhost:18080
               run: pnpm exec playwright test --update-snapshots --workers=2 --retries=2
-
-            - name: Upload init snapshots artifact
-              if: steps.baseline-snapshots.outputs.ready != 'true'
-              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-              with:
-                  name: ${{ env.INIT_SNAPSHOTS_ARTIFACT }}
-                  path: application/e2e/src/*-snapshots/**
-                  retention-days: 30
-                  if-no-files-found: error
 
             - name: Build current app
               working-directory: application
@@ -211,5 +170,5 @@ jobs:
                   if [ -n "${CURRENT_APP_PID}" ]; then
                     kill "${CURRENT_APP_PID}" 2>/dev/null || true
                   fi
-                  docker rm -f wsh-baseline-initial >/dev/null 2>&1 || true
-                  git worktree remove /tmp/wsh-initial --force || true
+                  docker rm -f wsh-baseline >/dev/null 2>&1 || true
+                  git worktree remove /tmp/wsh-baseline --force || true
