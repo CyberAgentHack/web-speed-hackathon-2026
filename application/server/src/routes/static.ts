@@ -10,7 +10,7 @@ import {
 
 export const staticRouter = Router();
 
-staticRouter.use(history());
+staticRouter.use(history() as unknown as import("express").RequestHandler);
 
 staticRouter.use(
   serveStatic(UPLOAD_PATH, {
