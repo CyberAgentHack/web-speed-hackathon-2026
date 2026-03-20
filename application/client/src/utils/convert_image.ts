@@ -6,8 +6,13 @@ interface Options {
 
 export async function convertImage(file: File, options: Options): Promise<Blob> {
   const { initializeImageMagick, ImageMagick } = await import("@imagemagick/magick-wasm");
-  const { default: magickWasm } = await import("@imagemagick/magick-wasm/magick.wasm?binary");
-  await initializeImageMagick(magickWasm);
+  const wasmPath = new URL(
+    "../../node_modules/@imagemagick/magick-wasm/dist/magick.wasm",
+    import.meta.url,
+  ).pathname;
+  const wasmResponse = await fetch(wasmPath);
+  const wasmBytes = new Uint8Array(await wasmResponse.arrayBuffer());
+  await initializeImageMagick(wasmBytes);
 
   const byteArray = new Uint8Array(await file.arrayBuffer());
 

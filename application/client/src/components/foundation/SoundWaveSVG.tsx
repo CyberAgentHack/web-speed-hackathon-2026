@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { AudioContext } from "standardized-audio-context";
 
 interface ParsedData {
   max: number;
