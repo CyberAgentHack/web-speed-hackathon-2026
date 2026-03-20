@@ -36,11 +36,13 @@ export function useInfiniteFetch<T>(
       offset,
     };
 
-    void fetcher(apiPath).then(
-      (allData) => {
+    // サーバーサイドページネーション: limit/offset をクエリパラメータで渡す
+    const sep = apiPath.includes("?") ? "&" : "?";
+    void fetcher(`${apiPath}${sep}limit=${LIMIT}&offset=${offset}`).then(
+      (pageData) => {
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...pageData],
           isLoading: false,
         }));
         internalRef.current = {

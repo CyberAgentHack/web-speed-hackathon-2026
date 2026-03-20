@@ -15,7 +15,6 @@ searchRouter.get("/search", async (req, res) => {
 
   const { keywords, sinceDate, untilDate } = parseSearchQuery(query);
 
-  // キーワードも日付フィルターもない場合は空配列を返す
   if (!keywords && !sinceDate && !untilDate) {
     return res.status(200).type("application/json").send([]);
   }
@@ -24,55 +23,41 @@ searchRouter.get("/search", async (req, res) => {
   const limit = req.query["limit"] != null ? Number(req.query["limit"]) : undefined;
   const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
 
-  // 日付条件を構築
-  const dateConditions: Record<symbol, Date>[] = [];
-  if (sinceDate) {
-    dateConditions.push({ [Op.gte]: sinceDate });
-  }
-  if (untilDate) {
-    dateConditions.push({ [Op.lte]: untilDate });
-  }
-  const dateWhere =
-    dateConditions.length > 0 ? { createdAt: Object.assign({}, ...dateConditions) } : {};
+  const dateWhere: Record<symbol, Date>[] = [];
+  if (sinceDate) dateWhere.push({ [Op.gte]: sinceDate });
+  if (untilDate) dateWhere.push({ [Op.lte]: untilDate });
+  const dateCondition = dateWhere.length > 0 ? { createdAt: Object.assign({}, ...dateWhere) } : {};
 
-  // テキスト検索条件
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
-  const postsByText = await Post.findAll({
-    limit,
-    offset,
-    where: {
-      ...textWhere,
-      ...dateWhere,
-    },
-  });
-
-  // ユーザー名/名前での検索（キーワードがある場合のみ）
-  let postsByUser: typeof postsByText = [];
-  if (searchTerm) {
-    postsByUser = await Post.findAll({
-      include: [
-        {
-          association: "user",
-          attributes: { exclude: ["profileImageId"] },
-          include: [{ association: "profileImage" }],
-          required: true,
-          where: {
-            [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
-          },
-        },
-        {
-          association: "images",
-          through: { attributes: [] },
-        },
-        { association: "movie" },
-        { association: "sound" },
-      ],
-      limit,
-      offset,
-      where: dateWhere,
-    });
-  }
+  // テキスト検索とユーザー名検索を並列実行して重複除去
+  const [postsByText, postsByUser] = await Promise.all([
+    Post.findAll({ limit, offset, where: { ...textWhere, ...dateCondition } }),
+    searchTerm
+      ? Post.findAll({
+          include: [
+            {
+              association: "user",
+              attributes: { exclude: ["profileImageId"] },
+              include: [{ association: "profileImage" }],
+              required: true,
+              where: {
+                [Op.or]: [
+                  { username: { [Op.like]: searchTerm } },
+                  { name: { [Op.like]: searchTerm } },
+                ],
+              },
+            },
+            { association: "images", through: { attributes: [] } },
+            { association: "movie" },
+            { association: "sound" },
+          ],
+          limit,
+          offset,
+          where: dateCondition,
+        })
+      : Promise.resolve([]),
+  ]);
 
   const postIdSet = new Set<string>();
   const mergedPosts: typeof postsByText = [];
@@ -86,7 +71,7 @@ searchRouter.get("/search", async (req, res) => {
 
   mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-  const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
+  const result = mergedPosts.slice(offset ?? 0, (offset ?? 0) + (limit ?? mergedPosts.length));
 
   return res.status(200).type("application/json").send(result);
 });

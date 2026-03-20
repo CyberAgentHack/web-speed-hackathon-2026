@@ -16,6 +16,24 @@ import { userRouter } from "@web-speed-hackathon-2026/server/src/routes/api/user
 
 export const apiRouter = Router();
 
+// パブリック GET に短期キャッシュ + stale-while-revalidate を設定
+// プライベート系ルート (me / dm / crok) は個別に private, no-store を設定
+apiRouter.use((req, res, next) => {
+  if (req.method === "GET") {
+    const path = req.path;
+    if (
+      path.startsWith("/me") ||
+      path.startsWith("/dm") ||
+      path.startsWith("/crok")
+    ) {
+      res.setHeader("Cache-Control", "private, no-store");
+    } else {
+      res.setHeader("Cache-Control", "public, max-age=5, stale-while-revalidate=60");
+    }
+  }
+  next();
+});
+
 apiRouter.use(initializeRouter);
 apiRouter.use(userRouter);
 apiRouter.use(postRouter);
