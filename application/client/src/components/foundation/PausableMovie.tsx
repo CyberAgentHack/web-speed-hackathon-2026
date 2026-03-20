@@ -1,11 +1,10 @@
 import classNames from "classnames";
 import { Animator, Decoder } from "gifler";
 import { GifReader } from "omggif";
-import { RefCallback, useCallback, useRef, useState } from "react";
+import { RefCallback, useCallback, useEffect, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
@@ -18,9 +17,22 @@ interface Props {
  * クリックすると再生/一時停止を切り替える GIF プレイヤー。
  */
 export const PausableMovie = ({ src, width, height }: Props) => {
-  const { data, isLoading } = useFetch(src, fetchBinary);
-
+  const [data, setData] = useState<ArrayBuffer | null>(null);
+  const [isPlaying, setIsPlaying] = useState(true);
   const animatorRef = useRef<Animator>(null);
+
+  // GIF データを非同期フェッチ
+  useEffect(() => {
+    (async () => {
+      try {
+        const binaryData = await fetchBinary(src);
+        setData(binaryData);
+      } catch {
+        // Ignore fetch errors
+      }
+    })();
+  }, [src]);
+
   const canvasCallbackRef = useCallback<RefCallback<HTMLCanvasElement>>(
     (el) => {
       animatorRef.current?.stop();
@@ -30,11 +42,26 @@ export const PausableMovie = ({ src, width, height }: Props) => {
       }
 
       const reader = new GifReader(new Uint8Array(data));
-      const frames = Decoder.decodeFramesSync(reader);
-      const animator = new Animator(reader, frames);
+
+      // 最初のフレームだけ先にデコード
+      const firstFrame = Decoder.decodeFramesSync(reader, 1);
+      const animator = new Animator(reader, firstFrame);
 
       animator.animateInCanvas(el);
-      animator.onFrame(frames[0]!);
+      animator.onFrame(firstFrame[0]!);
+
+      // 残りのフレームを非同期でデコード（requestIdleCallback で優先度を下げる）
+      if (typeof requestIdleCallback !== "undefined") {
+        requestIdleCallback(() => {
+          try {
+            const allFrames = Decoder.decodeFramesSync(reader);
+            // フレームを更新
+            animator.frames = allFrames;
+          } catch {
+            // Ignore decoding errors
+          }
+        });
+      }
 
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         setIsPlaying(false);
@@ -48,8 +75,6 @@ export const PausableMovie = ({ src, width, height }: Props) => {
     },
     [data],
   );
-
-  const [isPlaying, setIsPlaying] = useState(true);
   const handleClick = useCallback(() => {
     setIsPlaying((currentIsPlaying) => {
       if (currentIsPlaying) {
@@ -64,28 +89,27 @@ export const PausableMovie = ({ src, width, height }: Props) => {
 
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
-      {isLoading || data === null ? (
-        <div aria-hidden="true" className="h-full w-full animate-pulse bg-cax-surface-subtle" />
-      ) : (
-        <button
-          aria-label="動画プレイヤー"
-          className="group relative block h-full w-full"
-          onClick={handleClick}
-          type="button"
+      <button
+        aria-label="動画プレイヤー"
+        className="group relative block h-full w-full"
+        onClick={handleClick}
+        type="button"
+      >
+        {data === null && (
+          <div aria-hidden="true" className="absolute inset-0 h-full w-full animate-pulse bg-cax-surface-subtle" />
+        )}
+        <canvas ref={canvasCallbackRef} className="h-full w-full" width={width} height={height} />
+        <div
+          className={classNames(
+            "absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-cax-overlay/50 text-3xl text-cax-surface-raised",
+            {
+              "opacity-0 group-hover:opacity-100": isPlaying,
+            },
+          )}
         >
-          <canvas ref={canvasCallbackRef} className="h-full w-full" width={width} height={height} />
-          <div
-            className={classNames(
-              "absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-cax-overlay/50 text-3xl text-cax-surface-raised",
-              {
-                "opacity-0 group-hover:opacity-100": isPlaying,
-              },
-            )}
-          >
-            <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
-          </div>
-        </button>
-      )}
+          <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
+        </div>
+      </button>
     </AspectRatioBox>
   );
 };
