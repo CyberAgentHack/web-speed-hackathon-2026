@@ -10,6 +10,7 @@ const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
+const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 
 /** @type {import('webpack').Configuration} */
 const config = {
@@ -93,6 +94,10 @@ const config = {
     new HtmlWebpackPlugin({
       inject: false,
       template: path.resolve(SRC_PATH, "./index.html"),
+    }),
+    new BundleAnalyzerPlugin({ // ここを追記
+      analyzerMode: 'server',
+      openAnalyzer: true,
     }),
   ],
   resolve: {
