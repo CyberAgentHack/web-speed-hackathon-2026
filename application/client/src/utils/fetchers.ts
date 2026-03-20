@@ -30,16 +30,20 @@ async function gzipCompress(data: Uint8Array): Promise<ArrayBuffer> {
 
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
   const jsonString = JSON.stringify(data);
-  const uint8Array = new TextEncoder().encode(jsonString);
-  const compressed = await gzipCompress(uint8Array);
+
+  // 小さいペイロードはgzip不要（圧縮オーバーヘッドの方が大きい）
+  const useGzip = jsonString.length > 1024;
+  const body = useGzip
+    ? await gzipCompress(new TextEncoder().encode(jsonString))
+    : jsonString;
 
   const res = await fetch(url as string | URL, {
     method: "POST",
     headers: {
-      "Content-Encoding": "gzip",
+      ...(useGzip ? { "Content-Encoding": "gzip" } : {}),
       "Content-Type": "application/json",
     },
-    body: compressed,
+    body,
   });
   return res.json() as Promise<T>;
 }
