@@ -4,7 +4,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CaX</title>
-    <link rel="stylesheet" href="/styles/main.css" />
+    <link
+      rel="preload"
+      href="/styles/main.css"
+      as="style"
+      onload="
+        this.onload = null;
+        this.rel = 'stylesheet';
+      "
+    />
+    <noscript>
+      <link rel="stylesheet" href="/styles/main.css" />
+    </noscript>
+
+    <link
+      rel="preload"
+      href="/font/ReiNoAreMincho-Heavy.otf"
+      as="font"
+      type="font/opentype"
+    />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" />
     <style>
       html,
@@ -16,10 +34,7 @@
       body {
         background: #f5f5f4;
         color: #042f2e;
-        font-family:
-          "Hiragino Sans",
-          "Yu Gothic",
-          sans-serif;
+        font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
       }
 
       .app-shell {
