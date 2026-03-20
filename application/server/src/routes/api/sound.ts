@@ -45,7 +45,11 @@ soundRouter.post("/sounds", async (req, res) => {
     ]);
 
     const outputBuffer = await fs.readFile(outputPath);
-    const { artist, title } = await extractMetadataFromSound(outputBuffer);
+    // Try extracting from original input first (handles Shift-JIS WAV), fall back to converted MP3
+    let { artist, title } = await extractMetadataFromSound(req.body as Buffer);
+    if (!artist && !title) {
+      ({ artist, title } = await extractMetadataFromSound(outputBuffer));
+    }
 
     const filePath = path.resolve(UPLOAD_PATH, `./sounds/${soundId}.${EXTENSION}`);
     await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds"), { recursive: true });
