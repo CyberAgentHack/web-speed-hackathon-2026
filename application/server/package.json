@@ -26,6 +26,7 @@
     "http-errors": "2.0.0",
     "kuromoji": "0.1.2",
     "music-metadata": "11.10.3",
+    "negaposi-analyzer-ja": "1.0.1",
     "sequelize": "6.37.7",
     "serve-static": "2.2.0",
     "sqlite3": "5.1.7",

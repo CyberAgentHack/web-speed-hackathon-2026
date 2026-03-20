@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { Router } from "express";
 import httpErrors from "http-errors";
 import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
+import analyze from "negaposi-analyzer-ja";
 
 import { QaSuggestion } from "@web-speed-hackathon-2026/server/src/models";
 import {
@@ -88,4 +89,23 @@ crokRouter.get("/crok", async (req, res) => {
   }
 
   res.end();
+});
+
+crokRouter.get("/negaposi", async (req, res) => {
+  const query = req.query["q"];
+  if (typeof query !== "string") {
+    res.json({ suggestions: [] });
+    return;
+  }
+
+  const tokens = tokenizer.tokenize(query);
+  const score = analyze(tokens);
+
+  if (score > 0.1) {
+    return res.json({ label: "positive" });
+  } else if (score < -0.1) {
+    return res.json({ label: "negative" });
+  } else {
+    return res.json({ label: "neutral" });
+  }
 });

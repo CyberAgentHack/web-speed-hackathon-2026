@@ -23,3 +23,12 @@ export const fetchSuggestions = async (query: string) => {
 
   return result;
 };
+
+export const fetchNegaposi = async (query: string) => {
+  const result = await fetchJSON<{
+    score: number;
+    label: "positive" | "negative" | "neutral";
+  }>(`/api/v1/negaposi?q=${encodeURIComponent(query)}`);
+
+  return result;
+};

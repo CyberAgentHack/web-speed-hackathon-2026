@@ -14,9 +14,10 @@ import {
 } from "@web-speed-hackathon-2026/client/src/search/services";
 import { type SearchFormData } from "@web-speed-hackathon-2026/client/src/search/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/search/validation";
-import { analyzeSentiment } from "@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer";
 
 import { Button } from "../foundation/Button";
+import { useDebounceEffect } from "../../hooks/use_debounce_effect";
+import { fetchNegaposi } from "../../utils/fetch_with_cache";
 
 interface Props {
   query: string;
@@ -50,30 +51,35 @@ const SearchPageComponent = ({
   const [isNegative, setIsNegative] = useState(false);
 
   const parsed = parseSearchQuery(query);
+  const keywords = parsed.keywords;
 
-  useEffect(() => {
-    if (!parsed.keywords) {
-      setIsNegative(false);
-      return;
-    }
+  useDebounceEffect(
+    () => {
+      if (keywords == null || keywords.trim().length === 0) {
+        setIsNegative(false);
+        return;
+      }
 
-    let isMounted = true;
-    analyzeSentiment(parsed.keywords)
-      .then((result) => {
-        if (isMounted) {
-          setIsNegative(result.label === "negative");
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setIsNegative(false);
-        }
-      });
+      let isMounted = true;
+      fetchNegaposi(keywords)
+        .then((result) => {
+          if (isMounted) {
+            setIsNegative(result.label === "negative");
+          }
+        })
+        .catch(() => {
+          if (isMounted) {
+            setIsNegative(false);
+          }
+        });
 
-    return () => {
-      isMounted = false;
-    };
-  }, [parsed.keywords]);
+      return () => {
+        isMounted = false;
+      };
+    },
+    100,
+    [keywords],
+  );
 
   const searchConditionText = useMemo(() => {
     const parts: string[] = [];

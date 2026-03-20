@@ -4,6 +4,7 @@ import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
 import { useSearchParams } from "@web-speed-hackathon-2026/client/src/hooks/use_search_params";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { SearchPage } from "../components/application/SearchPage";
 
 export const SearchContainer = () => {
   const [searchParams] = useSearchParams();
@@ -19,7 +20,11 @@ export const SearchContainer = () => {
       <Helmet>
         <title>検索 - CaX</title>
       </Helmet>
-      {/* <SearchPage query={query} results={posts} initialValues={{ searchText: query }} /> */}
+      <SearchPage
+        query={query}
+        results={posts}
+        initialValues={{ searchText: query }}
+      />
     </InfiniteScroll>
   );
 };
