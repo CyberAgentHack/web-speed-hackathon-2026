@@ -515,3 +515,35 @@ Feature: CaX パフォーマンス改善 (ralph/perf-optimization)
 
 ### Commit
 - b41a709 feat: [US-017] - 画像 lazy loading 追加
+
+---
+
+## US-019: bluebird → native Promise 置換
+**Date:** 2026-03-20
+
+### Implementation
+- `ChatInput.tsx`: `Bluebird.promisifyAll(kuromoji.builder(...)).buildAsync()` → `new Promise<Tokenizer<IpadicFeatures>>((resolve, reject) => { kuromoji.builder(...).build((err, tokenizer) => {...}) })` に置換
+- `negaposi_analyzer.ts`: 未使用ファイル（US-023でサーバーサイド化済み）のため削除
+- `package.json`: `bluebird` (3.7.2), `@types/bluebird` (3.5.42), `negaposi-analyzer-ja` (1.0.1) をクライアント依存から削除
+- VRTスナップショット更新（search-検索結果: 既存のWebP変換による微差、bluebird削除とは無関係）
+
+### Acceptance Criteria Verification
+| Criteria | Test | Result |
+|---|---|---|
+| negaposi_analyzer.ts から bluebird 削除 | ファイル自体を削除（未使用） | PASS |
+| ChatInput.tsx から bluebird 削除 | new Promise ラッパーに置換確認 | PASS |
+| package.json から bluebird 削除 | bluebird, @types/bluebird 削除確認 | PASS |
+| crok チャットの感情分析が正しく動作する | E2E crok-chat.test.ts 7/7 passed (2 flaky = pre-existing) | PASS |
+| 検索機能が正しく動作する | E2E search.test.ts 17/17 passed | PASS |
+| E2E テストが通る | crok-chat 7/7 + search 17/17 = 24 passed (2 flaky = pre-existing) | PASS |
+| Typecheck passes | client PASS, server PASS (e2e は既存の videoWidth/videoHeight 型エラーのみ) | PASS |
+
+### Quality Checks
+- `pnpm build`: PASS (compiled in 4.82s)
+- `pnpm typecheck (client)`: PASS
+- `pnpm typecheck (server)`: PASS
+- `pnpm test (e2e crok-chat)`: 7/7 passed (2 flaky = pre-existing)
+- `pnpm test (e2e search)`: 17/17 passed
+
+### Commit
+- c38e3ca feat: [US-019] - bluebird → native Promise 置換

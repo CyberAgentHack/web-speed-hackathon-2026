@@ -35,9 +35,6 @@ importers:
       bayesian-bm25:
         specifier: 0.4.0
         version: 0.4.0
-      bluebird:
-        specifier: 3.7.2
-        version: 3.7.2
       buffer:
         specifier: 6.0.3
         version: 6.0.3
@@ -74,9 +71,6 @@ importers:
       langs:
         specifier: 2.0.0
         version: 2.0.0
-      negaposi-analyzer-ja:
-        specifier: 1.0.1
-        version: 1.0.1
       normalize.css:
         specifier: 8.0.1
         version: 8.0.1
@@ -135,9 +129,6 @@ importers:
       '@tsconfig/strictest':
         specifier: 2.0.8
         version: 2.0.8
-      '@types/bluebird':
-        specifier: 3.5.42
-        version: 3.5.42
       '@types/common-tags':
         specifier: 1.8.4
         version: 1.8.4
@@ -1576,9 +1567,6 @@ packages:
   '@types/bcrypt@6.0.0':
     resolution: {integrity: sha512-/oJGukuH3D2+D+3H4JWLaAsJ/ji86dhRidzZ/Od7H/i8g+aCmvkeCc6Ni/f9uxGLSQVCRZkX2/lqEFG2BvWtlQ==}
 
-  '@types/bluebird@3.5.42':
-    resolution: {integrity: sha512-Jhy+MWRlro6UjVi578V/4ZGNfeCOcNCp0YaFNIUGFKlImowqwb1O/22wDVk3FDGMLqxdpOV3qQHD5fPEH4hK6A==}
-
   '@types/body-parser@1.19.6':
     resolution: {integrity: sha512-HLFeCYgz89uk22N5Qg3dvGvsv46B8GLvKKo1zKG4NybA8U2DiEO3w9lqGg29t/tfLRJpJ6iQxnVw4OnB7MoM9g==}
 
@@ -1935,9 +1923,6 @@ packages:
 
   bl@4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
-
-  bluebird@3.7.2:
-    resolution: {integrity: sha512-XpNj6GDQzdfW+r2Wnn7xiSAd7TM3jzkxGXBGTtWKuSXv1xUV+azxAm8jdWZN06QTQk+2N2XB9jRDkvbmQmcRtg==}
 
   body-parser@1.20.4:
     resolution: {integrity: sha512-ZTgYYLMOXY9qKU/57FAo8F+HA2dGX7bqGc71txDRC1rS4frdFI5R7NhluHxH6M0YItAP0sHB4uqAOcYKxO6uGA==}
@@ -5707,8 +5692,6 @@ snapshots:
     dependencies:
       '@types/node': 22.18.8
 
-  '@types/bluebird@3.5.42': {}
-
   '@types/body-parser@1.19.6':
     dependencies:
       '@types/connect': 3.4.38
@@ -6138,8 +6121,6 @@ snapshots:
       buffer: 5.7.1
       inherits: 2.0.4
       readable-stream: 3.6.2
-
-  bluebird@3.7.2: {}
 
   body-parser@1.20.4:
     dependencies:

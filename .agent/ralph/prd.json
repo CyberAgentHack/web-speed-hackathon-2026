@@ -350,8 +350,8 @@
         "Typecheck passes"
       ],
       "priority": 19,
-      "passes": false,
-      "notes": "kuromoji.builder() の promisify 化に bluebird が使われている。new Promise() でラップするだけで置換可能。"
+      "passes": true,
+      "notes": "2026-03-20 完了。Bluebird.promisifyAll → new Promise ラッパーに置換。negaposi_analyzer.ts は未使用（US-023でサーバーサイド化済み）のため削除。negaposi-analyzer-ja もクライアントから削除。"
     },
     {
       "id": "US-020",
