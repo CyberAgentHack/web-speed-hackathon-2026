@@ -1,7 +1,6 @@
 import classNames from "classnames";
 import { useCallback, useRef, useState } from "react";
 
-import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 
 interface Props {
@@ -49,7 +48,7 @@ export const PausableMovie = ({ src }: Props) => {
   }, []);
 
   return (
-    <AspectRatioBox aspectHeight={1} aspectWidth={1}>
+    <div className="w-full" style={{ aspectRatio: "1 / 1" }}>
       <button
         aria-label="動画プレイヤー"
         className="group relative block h-full w-full"
@@ -77,6 +76,6 @@ export const PausableMovie = ({ src }: Props) => {
           <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
         </div>
       </button>
-    </AspectRatioBox>
+    </div>
   );
 };
