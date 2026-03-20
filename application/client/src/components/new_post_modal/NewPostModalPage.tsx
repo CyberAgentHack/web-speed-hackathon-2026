@@ -1,18 +1,12 @@
 import { MagickFormat } from "@imagemagick/magick-wasm";
-import type {
-  ChangeEventHandler,
-  FormEventHandler} from "react";
-import {
-  useCallback,
-  useState,
-} from "react";
+import type { ChangeEventHandler, FormEventHandler } from "react";
+import { useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/components/modal/ModalErrorMessage";
 import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/components/modal/ModalSubmitButton";
 import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/AttachFileInputButton";
 import { convertImage } from "@web-speed-hackathon-2026/client/src/utils/convert_image";
-import { convertMovie } from "@web-speed-hackathon-2026/client/src/utils/convert_movie";
 import { convertSound } from "@web-speed-hackathon-2026/client/src/utils/convert_sound";
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
@@ -128,22 +122,12 @@ export const NewPostModalPage = ({
 
       setHasFileError(isValid !== true);
       if (isValid) {
-        setIsConverting(true);
-
-        convertMovie(file, { extension: "gif", size: undefined })
-          .then((converted) => {
-            setParams((params) => ({
-              ...params,
-              images: [],
-              movie: new File([converted], "converted.gif", {
-                type: "image/gif",
-              }),
-              sound: undefined,
-            }));
-
-            setIsConverting(false);
-          })
-          .catch(console.error);
+        setParams((params) => ({
+          ...params,
+          images: [],
+          movie: file,
+          sound: undefined,
+        }));
       }
     },
     [],
