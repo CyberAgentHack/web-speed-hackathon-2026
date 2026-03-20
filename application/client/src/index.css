@@ -1,3 +1,5 @@
+@layer normalize, theme, base, components, utilities;
+
 @import "tailwindcss";
 @import "normalize.css" layer(normalize);
 
@@ -160,7 +162,7 @@
 @font-face {
   /* Source Han Serif JP Regular の Y 軸を 1/1.43 に縮小した改変フォント */
   font-family: "Rei no Are Mincho";
-  font-display: swap;
+  font-display: block;
   src: url(/fonts/ReiNoAreMincho-Regular.otf) format("opentype");
   font-weight: normal;
 }
@@ -168,7 +170,7 @@
 @font-face {
   /* Source Han Serif JP Heavy の Y 軸を 1/1.43 に縮小した改変フォント */
   font-family: "Rei no Are Mincho";
-  font-display: swap;
+  font-display: block;
   src: url(/fonts/ReiNoAreMincho-Heavy.otf) format("opentype");
   font-weight: bold;
 }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const LIMIT = 10;
+const LIMIT = 30;
 
 function withPagination(apiPath: string, offset: number): string {
   const url = new URL(apiPath, window.location.origin);

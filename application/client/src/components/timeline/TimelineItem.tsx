@@ -9,11 +9,22 @@ import { TranslatableText } from "@web-speed-hackathon-2026/client/src/component
 import { formatLongDate, toISOString } from "@web-speed-hackathon-2026/client/src/utils/date";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
-const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Element): boolean => {
+const isClickedInteractiveElement = (
+  target: EventTarget | null,
+  currentTarget: Element,
+): boolean => {
   while (target !== null && target instanceof Element) {
     const tagName = target.tagName.toLowerCase();
-    if (["button", "a"].includes(tagName)) {
+    if (tagName === "a") {
       return true;
+    }
+    if (tagName === "button") {
+      // タイムライン上の動画プレビューは投稿詳細へ遷移させる
+      const hasPreviewMovie =
+        target.querySelector("video") !== null || target.querySelector("canvas") !== null;
+      if (!hasPreviewMovie) {
+        return true;
+      }
     }
     if (currentTarget === target) {
       return false;
@@ -41,7 +52,7 @@ export const TimelineItem = ({ post, prioritizeMedia = false }: Props) => {
   const handleClick = useCallback<MouseEventHandler>(
     (ev) => {
       const isSelectedText = document.getSelection()?.isCollapsed === false;
-      if (!isClickedAnchorOrButton(ev.target, ev.currentTarget) && !isSelectedText) {
+      if (!isClickedInteractiveElement(ev.target, ev.currentTarget) && !isSelectedText) {
         navigate(`/posts/${post.id}`);
       }
     },

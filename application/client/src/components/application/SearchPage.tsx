@@ -73,8 +73,6 @@ export const SearchPage = ({ query, results, initialValues }: Props) => {
   }, [parsed]);
 
   const onSubmit = (values: SearchFormData) => {
-    const validationErrors = validate(values);
-    if (Object.keys(validationErrors).length > 0) return;
     const sanitizedText = sanitizeSearchText(values.searchText.trim());
     navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
   };
@@ -86,7 +84,11 @@ export const SearchPage = ({ query, results, initialValues }: Props) => {
           <div className="flex gap-2">
             <div className="flex flex-1 flex-col">
               <input
-                {...register("searchText")}
+                {...register("searchText", {
+                  validate: (searchText) => {
+                    return validate({ searchText }).searchText ?? true;
+                  },
+                })}
                 className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
                   errors.searchText
                     ? "border-cax-danger focus:border-cax-danger"
