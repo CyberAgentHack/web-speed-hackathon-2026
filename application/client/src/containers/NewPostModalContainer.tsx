@@ -3,23 +3,16 @@ import { useNavigate } from "react-router";
 
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { MODAL_IDS } from "@web-speed-hackathon-2026/client/src/constants";
-import { NewPostModalPage } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage";
+import { NewPostModalPage, SubmitParams } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage";
 import { sendFile, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
-
-interface SubmitParams {
-  images: File[];
-  movie: File | undefined;
-  sound: File | undefined;
-  text: string;
-}
 
 async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promise<Models.Post> {
   const payload = {
     images: images
       ? await Promise.all(images.map((image) => sendFile("/api/v1/images", image)))
       : [],
-    movie: movie ? await sendFile("/api/v1/movies", movie) : undefined,
-    sound: sound ? await sendFile("/api/v1/sounds", sound) : undefined,
+    movie: movie ?? undefined,
+    sound: sound ?? undefined,
     text,
   };
 

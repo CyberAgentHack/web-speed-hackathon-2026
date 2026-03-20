@@ -6,15 +6,14 @@ import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/componen
 import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/components/modal/ModalSubmitButton";
 import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/AttachFileInputButton";
 import { convertImage } from "@web-speed-hackathon-2026/client/src/utils/convert_image";
-import { convertMovie } from "@web-speed-hackathon-2026/client/src/utils/convert_movie";
-import { convertSound } from "@web-speed-hackathon-2026/client/src/utils/convert_sound";
+import { sendFile } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
-interface SubmitParams {
+export interface SubmitParams {
   images: File[];
-  movie: File | undefined;
-  sound: File | undefined;
+  movie: Record<string, unknown> | undefined;
+  sound: Record<string, unknown> | undefined;
   text: string;
 }
 
@@ -82,16 +81,18 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     if (isValid) {
       setIsConverting(true);
 
-      convertSound(file, { extension: "mp3" }).then((converted) => {
-        setParams((params) => ({
-          ...params,
-          images: [],
-          movie: undefined,
-          sound: new File([converted], "converted.mp3", { type: "audio/mpeg" }),
-        }));
+      sendFile<Record<string, unknown>>("/api/v1/sounds", file)
+        .then((result) => {
+          setParams((params) => ({
+            ...params,
+            images: [],
+            movie: undefined,
+            sound: result,
+          }));
 
-        setIsConverting(false);
-      });
+          setIsConverting(false);
+        })
+        .catch(console.error);
     }
   }, []);
 
@@ -103,14 +104,12 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     if (isValid) {
       setIsConverting(true);
 
-      convertMovie(file, { extension: "mp4", size: undefined })
-        .then((converted) => {
+      sendFile<Record<string, unknown>>("/api/v1/movies", file)
+        .then((result) => {
           setParams((params) => ({
             ...params,
             images: [],
-            movie: new File([converted], "converted.mp4", {
-              type: "video/mp4",
-            }),
+            movie: result,
             sound: undefined,
           }));
 

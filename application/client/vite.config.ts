@@ -29,9 +29,6 @@ export default defineConfig({
       kuromoji: path.resolve(__dirname, "node_modules/kuromoji/build/kuromoji.js"),
     },
   },
-  optimizeDeps: {
-    exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/core"],
-  },
   build: {
     outDir: path.resolve(__dirname, "../dist"),
     emptyOutDir: true,
