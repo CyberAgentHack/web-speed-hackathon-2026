@@ -1,34 +1,16 @@
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
-import analyze from "negaposi-analyzer-ja";
-
-async function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
-  return new Promise((resolve, reject) => {
-    kuromoji.builder({ dicPath: "/dicts" }).build((err, tokenizer) => {
-      if (err) reject(err);
-      else resolve(tokenizer);
-    });
-  });
-}
+import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 type SentimentResult = {
   score: number;
-  label: "positive" | "negative" | "neutral";
+  isNegative: boolean;
 };
 
-export async function analyzeSentiment(text: string): Promise<SentimentResult> {
-  const tokenizer = await getTokenizer();
-  const tokens = tokenizer.tokenize(text);
-
-  const score = analyze(tokens);
-
-  let label: SentimentResult["label"];
-  if (score > 0.1) {
-    label = "positive";
-  } else if (score < -0.1) {
-    label = "negative";
-  } else {
-    label = "neutral";
+export async function analyzeSentiment(text: string): Promise<{ label: "positive" | "negative" | "neutral" }> {
+  try {
+    const result = await fetchJSON<SentimentResult>(`/api/v1/sentiment?text=${encodeURIComponent(text)}`);
+    const label = result.isNegative ? "negative" : result.score > 0.1 ? "positive" : "neutral";
+    return { label };
+  } catch {
+    return { label: "neutral" };
   }
-
-  return { score, label };
 }
