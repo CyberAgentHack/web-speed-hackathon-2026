@@ -15,21 +15,28 @@ staticRouter.use(history());
 
 staticRouter.use(
   serveStatic(UPLOAD_PATH, {
-    etag: false,
-    lastModified: false,
+    setHeaders: (res) => {
+      res.setHeader("Cache-Control", "public, max-age=86400");
+    },
   }),
 );
 
 staticRouter.use(
   serveStatic(PUBLIC_PATH, {
-    etag: false,
-    lastModified: false,
+    setHeaders: (res) => {
+      res.setHeader("Cache-Control", "public, max-age=86400");
+    },
   }),
 );
 
 staticRouter.use(
   serveStatic(CLIENT_DIST_PATH, {
-    etag: false,
-    lastModified: false,
+    setHeaders: (res, filePath) => {
+      if (filePath.includes("/assets/") || filePath.includes("/styles/")) {
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      } else {
+        res.setHeader("Cache-Control", "no-cache");
+      }
+    },
   }),
 );
