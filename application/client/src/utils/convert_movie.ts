@@ -19,25 +19,25 @@ export async function convertMovie(file: File, options: Options): Promise<Blob> 
     .join(",");
   const exportFile = `export.${options.extension}`;
 
-  await ffmpeg.writeFile("file", new Uint8Array(await file.arrayBuffer()));
+  try {
+    await ffmpeg.writeFile("file", new Uint8Array(await file.arrayBuffer()));
 
-  await ffmpeg.exec([
-    "-i",
-    "file",
-    "-t",
-    "5",
-    "-r",
-    "10",
-    "-vf",
-    `crop=${cropOptions}`,
-    "-an",
-    exportFile,
-  ]);
+    await ffmpeg.exec([
+      "-i",
+      "file",
+      "-t",
+      "5",
+      "-r",
+      "10",
+      "-vf",
+      `crop=${cropOptions}`,
+      "-an",
+      exportFile,
+    ]);
 
-  const output = (await ffmpeg.readFile(exportFile)) as Uint8Array<ArrayBuffer>;
-
-  ffmpeg.terminate();
-
-  const blob = new Blob([output]);
-  return blob;
+    const output = (await ffmpeg.readFile(exportFile)) as Uint8Array<ArrayBuffer>;
+    return new Blob([output]);
+  } finally {
+    ffmpeg.terminate();
+  }
 }

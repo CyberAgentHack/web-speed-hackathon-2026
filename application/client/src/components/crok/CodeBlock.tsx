@@ -1,6 +1,9 @@
-import { ComponentProps, isValidElement, ReactElement, ReactNode } from "react";
-import SyntaxHighlighter from "react-syntax-highlighter";
-import { atomOneLight } from "react-syntax-highlighter/dist/esm/styles/hljs";
+import { ComponentProps, isValidElement, ReactElement, ReactNode, useEffect, useState } from "react";
+
+interface HighlighterState {
+  SyntaxHighlighter: null | ((props: any) => ReactElement);
+  style: unknown;
+}
 
 const getLanguage = (children: ReactElement<ComponentProps<"code">>) => {
   const className = children.props.className;
@@ -18,6 +21,40 @@ export const CodeBlock = ({ children }: ComponentProps<"pre">) => {
   if (!isCodeElement(children)) return <>{children}</>;
   const language = getLanguage(children);
   const code = children.props.children?.toString() ?? "";
+  const [{ SyntaxHighlighter, style }, setHighlighter] = useState<HighlighterState>({
+    SyntaxHighlighter: null,
+    style: null,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void Promise.all([
+      import("react-syntax-highlighter"),
+      import("react-syntax-highlighter/dist/esm/styles/hljs"),
+    ]).then(([highlighterModule, styleModule]) => {
+      if (cancelled) {
+        return;
+      }
+
+      setHighlighter({
+        SyntaxHighlighter: highlighterModule.default,
+        style: styleModule.atomOneLight,
+      });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (SyntaxHighlighter == null || style == null) {
+    return (
+      <pre className="border-cax-border bg-cax-surface-subtle overflow-x-auto rounded-lg border px-4 py-3 text-sm">
+        <code>{code}</code>
+      </pre>
+    );
+  }
 
   return (
     <SyntaxHighlighter
@@ -28,7 +65,7 @@ export const CodeBlock = ({ children }: ComponentProps<"pre">) => {
         border: "1px solid var(--color-cax-border)",
       }}
       language={language}
-      style={atomOneLight}
+      style={style as any}
     >
       {code}
     </SyntaxHighlighter>

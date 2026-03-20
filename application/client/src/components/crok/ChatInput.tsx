@@ -1,5 +1,4 @@
-import Bluebird from "bluebird";
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
+import type { Tokenizer, IpadicFeatures } from "kuromoji";
 import {
   useEffect,
   useLayoutEffect,
@@ -97,7 +96,14 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     let mounted = true;
 
     const init = async () => {
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
+      const [bluebirdModule, kuromojiModule] = await Promise.all([
+        import("bluebird"),
+        import("kuromoji"),
+      ]);
+
+      const builder = bluebirdModule.default.promisifyAll(
+        kuromojiModule.default.builder({ dicPath: "/dicts" }),
+      );
       const nextTokenizer = await builder.buildAsync();
       if (mounted) {
         setTokenizer(nextTokenizer);
@@ -112,6 +118,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
 
   useEffect(() => {
     let cancelled = false;
+    let timerId: number | null = null;
 
     const updateSuggestions = async () => {
       if (!tokenizer || !inputValue.trim()) {
@@ -140,10 +147,15 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
       setShowSuggestions(results.length > 0);
     };
 
-    void updateSuggestions();
+    timerId = window.setTimeout(() => {
+      void updateSuggestions();
+    }, 180);
 
     return () => {
       cancelled = true;
+      if (timerId != null) {
+        window.clearTimeout(timerId);
+      }
     };
   }, [inputValue, tokenizer]);
 
