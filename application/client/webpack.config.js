@@ -148,7 +148,6 @@ const config = {
     providedExports: false,
     sideEffects: false,
   },
-  cache: false,
   ignoreWarnings: [
     {
       module: /@ffmpeg/,
