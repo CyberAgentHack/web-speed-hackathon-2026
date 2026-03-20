@@ -34,7 +34,7 @@ authRouter.post("/signin", async (req, res) => {
   if (user === null) {
     throw new httpErrors.BadRequest();
   }
-  if (!user.validPassword(req.body.password)) {
+  if (!(await user.validPassword(req.body.password))) {
     throw new httpErrors.BadRequest();
   }
 
