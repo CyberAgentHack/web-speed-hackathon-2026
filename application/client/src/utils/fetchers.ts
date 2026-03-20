@@ -1,40 +1,44 @@
-import $ from "jquery";
 import { gzip } from "pako";
 
+export class FetchError extends Error {
+  status: number;
+  responseJSON: unknown;
+
+  constructor(response: Response, body?: unknown) {
+    super(`HTTP ${response.status}`);
+    this.status = response.status;
+    this.responseJSON = body;
+  }
+}
+
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "binary",
-    method: "GET",
-    responseType: "arraybuffer",
-    url,
-  });
-  return result;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new FetchError(response);
+  }
+  return response.arrayBuffer();
 }
 
 export async function fetchJSON<T>(url: string): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "json",
-    method: "GET",
-    url,
-  });
-  return result;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new FetchError(response);
+  }
+  return response.json() as Promise<T>;
 }
 
 export async function sendFile<T>(url: string, file: File): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    data: file,
-    dataType: "json",
+  const response = await fetch(url, {
+    method: "POST",
     headers: {
       "Content-Type": "application/octet-stream",
     },
-    method: "POST",
-    processData: false,
-    url,
+    body: file,
   });
-  return result;
+  if (!response.ok) {
+    throw new FetchError(response);
+  }
+  return response.json() as Promise<T>;
 }
 
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
@@ -42,17 +46,22 @@ export async function sendJSON<T>(url: string, data: object): Promise<T> {
   const uint8Array = new TextEncoder().encode(jsonString);
   const compressed = gzip(uint8Array);
 
-  const result = await $.ajax({
-    async: false,
-    data: compressed,
-    dataType: "json",
+  const response = await fetch(url, {
+    method: "POST",
     headers: {
       "Content-Encoding": "gzip",
       "Content-Type": "application/json",
     },
-    method: "POST",
-    processData: false,
-    url,
+    body: compressed,
   });
-  return result;
+  if (!response.ok) {
+    let body: unknown;
+    try {
+      body = await response.json();
+    } catch {
+      // body is not JSON
+    }
+    throw new FetchError(response, body);
+  }
+  return response.json() as Promise<T>;
 }
