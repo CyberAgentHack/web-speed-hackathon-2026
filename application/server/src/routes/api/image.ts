@@ -8,9 +8,6 @@ import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
-// 変換した画像の拡張子
-const EXTENSION = "jpg";
-
 export const imageRouter = Router();
 
 imageRouter.post("/images", async (req, res) => {
@@ -22,15 +19,17 @@ imageRouter.post("/images", async (req, res) => {
   }
 
   const type = await fileTypeFromBuffer(req.body);
-  if (type === undefined || type.ext !== EXTENSION) {
+  if (type === undefined || type.ext !== "jpg") {
     throw new httpErrors.BadRequest("Invalid file type");
   }
 
   const imageId = uuidv4();
 
-  const filePath = path.resolve(UPLOAD_PATH, `./images/${imageId}.${EXTENSION}`);
-  await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
-  await fs.writeFile(filePath, req.body);
+  const imagesDir = path.resolve(UPLOAD_PATH, "images");
+  await fs.mkdir(imagesDir, { recursive: true });
+  // JPG で保存 + クライアントが .webp で参照するため同じ内容を .webp でも保存
+  await fs.writeFile(path.resolve(imagesDir, `${imageId}.jpg`), req.body);
+  await fs.writeFile(path.resolve(imagesDir, `${imageId}.webp`), req.body);
 
   return res.status(200).type("application/json").send({ id: imageId });
 });
