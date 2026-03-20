@@ -62,7 +62,7 @@ importers:
         version: 9.5.0
       gifler:
         specifier: github:themadcreator/gifler#v0.3.0
-        version: https://codeload.github.com/themadcreator/gifler/tar.gz/c3259b071c7782f85d4928a5f03d0b378ed003b5
+        version: https://codeload.github.com/themadcreator/gifler/tar.gz/89484cb3db174c584a3138e89664f0167a7760c1
       image-size:
         specifier: 2.0.2
         version: 2.0.2
@@ -217,6 +217,9 @@ importers:
       css-loader:
         specifier: 7.1.2
         version: 7.1.2(webpack@5.102.1)
+      esbuild:
+        specifier: 0.25.11
+        version: 0.25.11
       html-webpack-plugin:
         specifier: 5.6.4
         version: 5.6.4(webpack@5.102.1)
@@ -243,7 +246,7 @@ importers:
         version: 5.9.3
       webpack:
         specifier: 5.102.1
-        version: 5.102.1(webpack-cli@6.0.1)
+        version: 5.102.1(esbuild@0.25.11)(webpack-cli@6.0.1)
       webpack-cli:
         specifier: 6.0.1
         version: 6.0.1(webpack-dev-server@5.2.2)(webpack@5.102.1)
@@ -2667,8 +2670,8 @@ packages:
   get-tsconfig@4.13.0:
     resolution: {integrity: sha512-1VKTZJCwBrvbd+Wn3AOgQP/2Av+TfTCOlE4AcRJE72W1ksZXbAx8PPBR9RzgTeSPzlPMHrbANMH3LbltH73wxQ==}
 
-  gifler@https://codeload.github.com/themadcreator/gifler/tar.gz/c3259b071c7782f85d4928a5f03d0b378ed003b5:
-    resolution: {tarball: https://codeload.github.com/themadcreator/gifler/tar.gz/c3259b071c7782f85d4928a5f03d0b378ed003b5}
+  gifler@https://codeload.github.com/themadcreator/gifler/tar.gz/89484cb3db174c584a3138e89664f0167a7760c1:
+    resolution: {tarball: https://codeload.github.com/themadcreator/gifler/tar.gz/89484cb3db174c584a3138e89664f0167a7760c1}
     version: 0.3.0
 
   github-from-package@0.0.0:
@@ -6259,17 +6262,17 @@ snapshots:
 
   '@webpack-cli/configtest@3.0.1(webpack-cli@6.0.1)(webpack@5.102.1)':
     dependencies:
-      webpack: 5.102.1(webpack-cli@6.0.1)
+      webpack: 5.102.1(esbuild@0.25.11)(webpack-cli@6.0.1)
       webpack-cli: 6.0.1(webpack-dev-server@5.2.2)(webpack@5.102.1)
 
   '@webpack-cli/info@3.0.1(webpack-cli@6.0.1)(webpack@5.102.1)':
     dependencies:
-      webpack: 5.102.1(webpack-cli@6.0.1)
+      webpack: 5.102.1(esbuild@0.25.11)(webpack-cli@6.0.1)
       webpack-cli: 6.0.1(webpack-dev-server@5.2.2)(webpack@5.102.1)
 
   '@webpack-cli/serve@3.0.1(webpack-cli@6.0.1)(webpack-dev-server@5.2.2)(webpack@5.102.1)':
     dependencies:
-      webpack: 5.102.1(webpack-cli@6.0.1)
+      webpack: 5.102.1(esbuild@0.25.11)(webpack-cli@6.0.1)
       webpack-cli: 6.0.1(webpack-dev-server@5.2.2)(webpack@5.102.1)
     optionalDependencies:
       webpack-dev-server: 5.2.2(webpack-cli@6.0.1)(webpack@5.102.1)
@@ -6376,7 +6379,7 @@ snapshots:
     dependencies:
       '@babel/core': 7.28.4
       find-up: 5.0.0
-      webpack: 5.102.1(webpack-cli@6.0.1)
+      webpack: 5.102.1(esbuild@0.25.11)(webpack-cli@6.0.1)
 
   babel-plugin-polyfill-corejs2@0.4.14(@babel/core@7.28.4):
     dependencies:
@@ -6671,7 +6674,7 @@ snapshots:
       schema-utils: 4.3.3
       serialize-javascript: 6.0.2
       tinyglobby: 0.2.15
-      webpack: 5.102.1(webpack-cli@6.0.1)
+      webpack: 5.102.1(esbuild@0.25.11)(webpack-cli@6.0.1)
 
   core-js-compat@3.45.1:
     dependencies:
@@ -6719,7 +6722,7 @@ snapshots:
       postcss-value-parser: 4.2.0
       semver: 7.7.3
     optionalDependencies:
-      webpack: 5.102.1(webpack-cli@6.0.1)
+      webpack: 5.102.1(esbuild@0.25.11)(webpack-cli@6.0.1)
 
   css-prefers-color-scheme@10.0.0(postcss@8.5.6):
     dependencies:
@@ -7161,7 +7164,7 @@ snapshots:
     dependencies:
       resolve-pkg-maps: 1.0.0
 
-  gifler@https://codeload.github.com/themadcreator/gifler/tar.gz/c3259b071c7782f85d4928a5f03d0b378ed003b5:
+  gifler@https://codeload.github.com/themadcreator/gifler/tar.gz/89484cb3db174c584a3138e89664f0167a7760c1:
     dependencies:
       bluebird: 3.7.2
       omggif: 1.0.10
@@ -7326,7 +7329,7 @@ snapshots:
       pretty-error: 4.0.0
       tapable: 2.3.0
     optionalDependencies:
-      webpack: 5.102.1(webpack-cli@6.0.1)
+      webpack: 5.102.1(esbuild@0.25.11)(webpack-cli@6.0.1)
 
   htmlparser2@6.1.0:
     dependencies:
@@ -8074,7 +8077,7 @@ snapshots:
     dependencies:
       schema-utils: 4.3.3
       tapable: 2.3.0
-      webpack: 5.102.1(webpack-cli@6.0.1)
+      webpack: 5.102.1(esbuild@0.25.11)(webpack-cli@6.0.1)
 
   minimalistic-assert@1.0.1: {}
 
@@ -8532,7 +8535,7 @@ snapshots:
       postcss: 8.5.6
       semver: 7.7.3
     optionalDependencies:
-      webpack: 5.102.1(webpack-cli@6.0.1)
+      webpack: 5.102.1(esbuild@0.25.11)(webpack-cli@6.0.1)
     transitivePeerDependencies:
       - typescript
 
@@ -9346,14 +9349,16 @@ snapshots:
       mkdirp: 1.0.4
       yallist: 4.0.0
 
-  terser-webpack-plugin@5.3.14(webpack@5.102.1):
+  terser-webpack-plugin@5.3.14(esbuild@0.25.11)(webpack@5.102.1):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       jest-worker: 27.5.1
       schema-utils: 4.3.3
       serialize-javascript: 6.0.2
       terser: 5.44.0
-      webpack: 5.102.1(webpack-cli@6.0.1)
+      webpack: 5.102.1(esbuild@0.25.11)(webpack-cli@6.0.1)
+    optionalDependencies:
+      esbuild: 0.25.11
 
   terser@5.44.0:
     dependencies:
@@ -9567,7 +9572,7 @@ snapshots:
       import-local: 3.2.0
       interpret: 3.1.1
       rechoir: 0.8.0
-      webpack: 5.102.1(webpack-cli@6.0.1)
+      webpack: 5.102.1(esbuild@0.25.11)(webpack-cli@6.0.1)
       webpack-merge: 6.0.1
     optionalDependencies:
       webpack-dev-server: 5.2.2(webpack-cli@6.0.1)(webpack@5.102.1)
@@ -9581,7 +9586,7 @@ snapshots:
       range-parser: 1.2.1
       schema-utils: 4.3.3
     optionalDependencies:
-      webpack: 5.102.1(webpack-cli@6.0.1)
+      webpack: 5.102.1(esbuild@0.25.11)(webpack-cli@6.0.1)
 
   webpack-dev-server@5.2.2(webpack-cli@6.0.1)(webpack@5.102.1):
     dependencies:
@@ -9614,7 +9619,7 @@ snapshots:
       webpack-dev-middleware: 7.4.5(webpack@5.102.1)
       ws: 8.18.3
     optionalDependencies:
-      webpack: 5.102.1(webpack-cli@6.0.1)
+      webpack: 5.102.1(esbuild@0.25.11)(webpack-cli@6.0.1)
       webpack-cli: 6.0.1(webpack-dev-server@5.2.2)(webpack@5.102.1)
     transitivePeerDependencies:
       - bufferutil
@@ -9630,7 +9635,7 @@ snapshots:
 
   webpack-sources@3.3.3: {}
 
-  webpack@5.102.1(webpack-cli@6.0.1):
+  webpack@5.102.1(esbuild@0.25.11)(webpack-cli@6.0.1):
     dependencies:
       '@types/eslint-scope': 3.7.7
       '@types/estree': 1.0.8
@@ -9654,7 +9659,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 4.3.3
       tapable: 2.3.0
-      terser-webpack-plugin: 5.3.14(webpack@5.102.1)
+      terser-webpack-plugin: 5.3.14(esbuild@0.25.11)(webpack@5.102.1)
       watchpack: 2.4.4
       webpack-sources: 3.3.3
     optionalDependencies:
