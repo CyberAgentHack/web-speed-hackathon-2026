@@ -23,6 +23,7 @@
     "express": "5.1.0",
     "express-session": "1.18.2",
     "file-type": "21.1.1",
+    "google-translate-api-x": "10.7.2",
     "http-errors": "2.0.0",
     "kuromoji": "0.1.2",
     "music-metadata": "11.10.3",
@@ -37,9 +38,9 @@
   "devDependencies": {
     "@faker-js/faker": "10.2.0",
     "@types/bcrypt": "6.0.0",
+    "@types/bluebird": "3.5.42",
     "@types/body-parser": "1.19.6",
     "@types/connect-history-api-fallback": "1.5.4",
-    "@types/bluebird": "3.5.42",
     "@types/express": "5.0.3",
     "@types/express-session": "1.18.2",
     "@types/http-errors": "2.0.5",
