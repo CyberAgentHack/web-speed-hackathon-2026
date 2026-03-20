@@ -1,8 +1,10 @@
-import { createWriteStream } from "node:fs";
+import { createWriteStream, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { faker } from "@faker-js/faker/locale/ja";
+
+import { extractAltFromExif } from "@web-speed-hackathon-2026/server/src/utils/extract_alt_from_exif";
 
 // Set seed for reproducible results
 faker.seed(123);
@@ -219,10 +221,11 @@ function generateUsers(count: number, profileImages: ProfileImageSeed[]): UserSe
 
 function generateImages(): ImageSeed[] {
   // Use existing image IDs from public/images/
+  const imagesDir = path.resolve(__dirname, "../../public/images");
   const baseTime = now - ONE_WEEK_MS;
   return EXISTING_IMAGE_IDS.map((id, i) => ({
     id,
-    alt: "",
+    alt: extractAltFromExif(readFileSync(path.join(imagesDir, `${id}.jpg`))),
     createdAt: new Date(baseTime + i * 60 * 1000).toISOString(),
   }));
 }
