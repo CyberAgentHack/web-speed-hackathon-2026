@@ -4,7 +4,7 @@ import path from "path";
 import { Router } from "express";
 import { fileTypeFromBuffer } from "file-type";
 import httpErrors from "http-errors";
-import { load, ImageIFD } from "piexifjs";
+import piexif from "piexifjs";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
@@ -19,8 +19,8 @@ const EXTENSION = "jpg";
 function extractAltFromExif(buffer: Buffer): string {
   try {
     const binary = buffer.toString("binary");
-    const exif = load(binary);
-    const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
+    const exif = piexif.load(binary);
+    const raw = exif?.["0th"]?.[piexif.ImageIFD.ImageDescription];
     if (raw != null) {
       return new TextDecoder().decode(Buffer.from(raw as string, "binary"));
     }

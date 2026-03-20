@@ -27,7 +27,6 @@ export const CoveredImage = ({ alt, src }: Props) => {
         className="h-full w-full object-cover"
         width={640}
         height={360}
-        loading="lazy"
         decoding="async"
         src={src}
       />

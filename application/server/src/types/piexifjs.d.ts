@@ -1,9 +1,12 @@
 declare module "piexifjs" {
-  export const ImageIFD: {
-    ImageDescription: number;
-    [key: string]: number;
+  const piexif: {
+    ImageIFD: {
+      ImageDescription: number;
+      [key: string]: number;
+    };
+    load(data: string): Record<string, Record<number, unknown>>;
+    dump(exifObj: Record<string, Record<number, unknown>>): string;
+    insert(exifStr: string, jpegData: string): string;
   };
-  export function load(data: string): Record<string, Record<number, unknown>>;
-  export function dump(exifObj: Record<string, Record<number, unknown>>): string;
-  export function insert(exifStr: string, jpegData: string): string;
+  export default piexif;
 }

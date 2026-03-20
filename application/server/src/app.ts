@@ -10,8 +10,15 @@ export const app = Express();
 
 app.set("trust proxy", true);
 
-// gzip圧縮でレスポンスサイズを削減する
-app.use(compression());
+// gzip圧縮でレスポンスサイズを削減する（SSEはバッファリングすると送信が止まるため除外）
+app.use(compression({
+  filter: (req, res) => {
+    if (res.getHeader("Content-Type") === "text/event-stream") {
+      return false;
+    }
+    return compression.filter(req, res);
+  },
+}));
 
 app.use(sessionMiddleware);
 app.use(bodyParser.json());
