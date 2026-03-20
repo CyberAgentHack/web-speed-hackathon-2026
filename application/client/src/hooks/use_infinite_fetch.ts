@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const LIMIT = 30;
 
@@ -20,7 +20,7 @@ export function useInfiniteFetch<T>(
     canFetchMore: true,
   });
 
-  const [result, setResult] = useState<Omit<ReturnValues<T>, 'fetchMore'>>({
+  const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
     data: [],
     error: null,
     isLoading: true,
@@ -43,8 +43,8 @@ export function useInfiniteFetch<T>(
     };
 
     const url = new URL(apiPath, window.location.origin);
-    url.searchParams.set('offset', String(offset));
-    url.searchParams.set('limit', String(LIMIT));
+    url.searchParams.set("offset", String(offset));
+    url.searchParams.set("limit", String(LIMIT));
 
     void fetcher(url.toString()).then(
       (pageData) => {
