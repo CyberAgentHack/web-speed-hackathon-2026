@@ -1,12 +1,22 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router";
 
 import { getMeQueryOptions, useSignOut } from "@web-speed-hackathon-2026/client/src/auth/hooks";
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 
-import { AuthModalContainer } from "./containers/AuthModalContainer";
-import { NewPostModalContainer } from "./containers/NewPostModalContainer";
+const AuthModalContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/AuthModalContainer").then((module) => ({
+    default: module.AuthModalContainer,
+  })),
+);
+const NewPostModalContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer").then(
+    (module) => ({
+      default: module.NewPostModalContainer,
+    }),
+  ),
+);
 
 export const AppLayoutContainer = () => {
   const { pathname } = useLocation();
@@ -33,8 +43,12 @@ export const AppLayoutContainer = () => {
         <Outlet />
       </AppPage>
 
-      <AuthModalContainer />
-      <NewPostModalContainer />
+      <Suspense>
+        <AuthModalContainer />
+      </Suspense>
+      <Suspense>
+        <NewPostModalContainer />
+      </Suspense>
     </Suspense>
   );
 };
