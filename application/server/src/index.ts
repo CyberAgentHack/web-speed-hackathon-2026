@@ -6,11 +6,17 @@ import { initializeSequelize } from "./sequelize";
 async function main() {
   await initializeSequelize();
 
-  const server = app.listen(Number(process.env["PORT"] || 3000), "0.0.0.0", () => {
+  const host = "0.0.0.0";
+  const port = Number(process.env["PORT"] || 3000);
+
+  const server = app.listen(port, host, () => {
     const address = server.address();
-    if (typeof address === "object") {
+    if (address != null && typeof address === "object") {
       console.log(`Listening on ${address?.address}:${address?.port}`);
+      return;
     }
+
+    console.log(`Listening on ${host}:${port}`);
   });
 }
 
