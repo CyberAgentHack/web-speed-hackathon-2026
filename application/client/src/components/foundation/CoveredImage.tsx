@@ -22,7 +22,7 @@ export const CoveredImage = ({ alt, src }: Props) => {
     <div className="relative h-full w-full overflow-hidden">
       <img
         alt={alt}
-        className="absolute inset-0 h-full w-full object-cover"
+        className="absolute inset-0 block h-full w-full max-w-none object-cover object-center"
         loading="lazy"
         src={src}
       />
