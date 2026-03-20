@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const LIMIT = 30;
+// 初期ロード件数を削減してDOM構築コストを抑え、TBTを改善する
+const LIMIT = 10;
 
 interface ReturnValues<T> {
   data: Array<T>;
