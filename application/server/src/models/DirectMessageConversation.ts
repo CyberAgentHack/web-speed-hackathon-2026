@@ -52,10 +52,10 @@ export function initDirectMessageConversation(sequelize: Sequelize) {
           { association: "member", include: [{ association: "profileImage" }] },
         ],
       },
+      indexes: [
+        { fields: ["initiatorId"] },
+        { fields: ["memberId"] },
+      ],
     },
   );
-
-  // Add indexes for foreign keys to improve query performance
-  DirectMessageConversation.addIndex({ fields: ['initiatorId'] });
-  DirectMessageConversation.addIndex({ fields: ['memberId'] });
 }

@@ -53,10 +53,10 @@ export function initComment(sequelize: Sequelize) {
         ],
         order: [["createdAt", "ASC"]],
       },
+      indexes: [
+        { fields: ["userId"] },
+        { fields: ["postId"] },
+      ],
     },
   );
-
-  // Add indexes for foreign keys to improve query performance
-  Comment.addIndex({ fields: ['userId'] });
-  Comment.addIndex({ fields: ['postId'] });
 }

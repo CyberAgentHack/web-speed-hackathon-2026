@@ -36,10 +36,10 @@ export function initPostsImagesRelation(sequelize: Sequelize) {
     },
     {
       sequelize,
+      indexes: [
+        { fields: ["postId"] },
+        { fields: ["imageId"] },
+      ],
     },
   );
-
-  // Add indexes for foreign keys to improve query performance
-  PostsImagesRelation.addIndex({ fields: ['postId'] });
-  PostsImagesRelation.addIndex({ fields: ['imageId'] });
 }

@@ -69,13 +69,13 @@ export function initDirectMessage(sequelize: Sequelize) {
         ],
         order: [["createdAt", "ASC"]],
       },
+      indexes: [
+        { fields: ["conversationId"] },
+        { fields: ["senderId"] },
+        { fields: ["conversationId", "isRead"] },
+      ],
     },
   );
-
-  // Add indexes for foreign keys to improve query performance
-  DirectMessage.addIndex({ fields: ['conversationId'] });
-  DirectMessage.addIndex({ fields: ['senderId'] });
-  DirectMessage.addIndex({ fields: ['conversationId', 'isRead'] });
 
   DirectMessage.addHook("afterSave", "onDmSaved", async (message) => {
     const directMessage = await DirectMessage.findByPk(message.get().id);
