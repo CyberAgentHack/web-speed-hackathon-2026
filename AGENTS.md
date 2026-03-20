@@ -107,6 +107,12 @@ pnpm ワークスペースによるモノレポ（`application/` 配下）。
 Dockerfile: マルチステージビルド → Fly.io（NRTリージョン、1CPU/2GB）
 本番: PORT=8080, NODE_ENV=production
 
+## リグレッションチェック
+
+- `cd application/e2e && pnpm test` で Playwright E2E + VRT（Visual Regression Testing）を実行できる
+- UI の変更は行わないため、VRT は常に通ることを期待する。VRT が落ちた場合はバグとして修正すること
+- テスト実行前にサーバーがポート3000で起動している必要がある（`cd application && pnpm start`）
+
 ## Ralph Workflow
 
 - Ralph runtime files live under `.agent/ralph/`
