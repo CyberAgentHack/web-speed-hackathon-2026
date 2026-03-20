@@ -47,7 +47,7 @@ export const TimelineItem = memo(({ post }: Props) => {
   );
 
   return (
-    <article className="hover:bg-cax-surface-subtle px-1 sm:px-4" onClick={handleClick} style={{ contentVisibility: "auto", containIntrinsicSize: "0 200px" }}>
+    <article className="hover:bg-cax-surface-subtle px-1 sm:px-4" onClick={handleClick}>
       <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
         <div className="shrink-0 grow-0 pr-2 sm:pr-4">
           <Link
