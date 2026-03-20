@@ -1,11 +1,29 @@
 import { Router } from "express";
-import { Op } from "sequelize";
+import { Op, type Includeable, type Order } from "sequelize";
 
-import { Post } from "@web-speed-hackathon-2026/server/src/models";
+import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 import { serializePosts } from "@web-speed-hackathon-2026/server/src/utils/serialize_post";
 
 export const searchRouter = Router();
+
+const SEARCH_POST_INCLUDE: Includeable[] = [
+  {
+    association: "user",
+    include: [{ association: "profileImage" }],
+  },
+  {
+    association: "images",
+    through: { attributes: [] },
+  },
+  { association: "movie" },
+  { association: "sound" },
+] ;
+
+const SEARCH_POST_ORDER: Order = [
+  ["id", "DESC"],
+  ["images", "createdAt", "ASC"],
+] ;
 
 searchRouter.get("/search", async (req, res) => {
   const query = req.query["q"];
@@ -39,9 +57,11 @@ searchRouter.get("/search", async (req, res) => {
   // テキスト検索条件
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
-  const postsByText = await Post.findAll({
+  const postsByText = await Post.unscoped().findAll({
+    include: SEARCH_POST_INCLUDE,
     limit,
     offset,
+    order: SEARCH_POST_ORDER,
     where: {
       ...textWhere,
       ...dateWhere,
@@ -51,28 +71,28 @@ searchRouter.get("/search", async (req, res) => {
   // ユーザー名/名前での検索（キーワードがある場合のみ）
   let postsByUser: typeof postsByText = [];
   if (searchTerm) {
-    postsByUser = await Post.findAll({
-      include: [
-        {
-          association: "user",
-          attributes: { exclude: ["profileImageId"] },
-          include: [{ association: "profileImage" }],
-          required: true,
-          where: {
-            [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
+    const users = await User.unscoped().findAll({
+      attributes: ["id"],
+      where: {
+        [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
+      },
+    });
+    const userIds = users.map((user) => user.id);
+
+    if (userIds.length > 0) {
+      postsByUser = await Post.unscoped().findAll({
+        include: SEARCH_POST_INCLUDE,
+        limit,
+        offset,
+        order: SEARCH_POST_ORDER,
+        where: {
+          ...dateWhere,
+          userId: {
+            [Op.in]: userIds,
           },
         },
-        {
-          association: "images",
-          through: { attributes: [] },
-        },
-        { association: "movie" },
-        { association: "sound" },
-      ],
-      limit,
-      offset,
-      where: dateWhere,
-    });
+      });
+    }
   }
 
   const postIdSet = new Set<string>();
