@@ -13,11 +13,11 @@ interface Props {
  */
 export const PausableMovie = ({ src }: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const isGif = src.endsWith(".gif");
+  const isAnimatedImage = src.endsWith(".gif") || src.endsWith(".webp");
 
   const [isPlaying, setIsPlaying] = useState(true);
   const handleClick = useCallback(() => {
-    if (isGif) return;
+    if (isAnimatedImage) return;
     setIsPlaying((isPlaying) => {
       if (isPlaying) {
         videoRef.current?.pause();
@@ -26,7 +26,7 @@ export const PausableMovie = ({ src }: Props) => {
       }
       return !isPlaying;
     });
-  }, [isGif]);
+  }, [isAnimatedImage]);
 
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
@@ -36,8 +36,8 @@ export const PausableMovie = ({ src }: Props) => {
         onClick={handleClick}
         type="button"
       >
-        {isGif ? (
-          <img className="h-full w-full object-cover" src={src} alt="" />
+        {isAnimatedImage ? (
+          <img className="h-full w-full object-cover" loading="lazy" src={src} alt="" />
         ) : (
           <video
             ref={videoRef}
@@ -49,7 +49,7 @@ export const PausableMovie = ({ src }: Props) => {
             src={src}
           />
         )}
-        {!isGif && (
+        {!isAnimatedImage && (
           <div
             className={classNames(
               "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
