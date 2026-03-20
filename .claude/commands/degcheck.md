@@ -20,7 +20,11 @@ pnpm --filter @web-speed-hackathon-2026/client build
 
 `http://localhost:3000/` にアクセスできるか確認してください。
 
-- アクセスできない場合は「サーバーが起動していません。`cd application && pnpm run start` で起動してから再実行してください」と案内して終了
+- アクセスできない場合は、バックグラウンドでサーバーを起動する:
+  ```bash
+  cd application && pnpm run start &
+  ```
+  起動後、`http://localhost:3000/` にアクセスできるようになるまで数秒待ってからリトライする（最大30秒）
 - アクセスできる場合は次へ
 
 ## Step 3: DB初期化
