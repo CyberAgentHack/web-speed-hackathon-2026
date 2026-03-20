@@ -76,8 +76,7 @@ jobs:
               working-directory: application
               env:
                   E2E_BASE_URL: http://localhost:18080
-                  E2E_WORKERS: "2"
-              run: pnpm --filter @web-speed-hackathon-2026/e2e test:update
+              run: pnpm --filter @web-speed-hackathon-2026/e2e exec playwright test --update-snapshots --workers=1 --retries=2
 
             - name: Build current app
               working-directory: application
@@ -112,8 +111,7 @@ jobs:
               working-directory: application
               env:
                   E2E_BASE_URL: http://localhost:28080
-                  E2E_WORKERS: "2"
-              run: pnpm --filter @web-speed-hackathon-2026/e2e test
+              run: pnpm --filter @web-speed-hackathon-2026/e2e exec playwright test --workers=1 --retries=2
 
             - name: Upload regulation debug artifacts
               if: failure()
