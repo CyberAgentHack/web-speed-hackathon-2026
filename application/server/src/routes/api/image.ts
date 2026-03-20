@@ -78,7 +78,7 @@ imageRouter.post("/images", async (req, res) => {
   const imageId = uuidv4();
   const filePath = path.resolve(UPLOAD_PATH, `./images/${imageId}.${EXTENSION}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
-  await sharp(req.body).avif({ quality: 50, speed: 8 }).toFile(filePath);
+  await sharp(req.body).avif({ quality: 50, effort: 2 }).toFile(filePath);
   await Image.create({ id: imageId, alt });
 
   return res.status(200).type("application/json").send({ id: imageId });

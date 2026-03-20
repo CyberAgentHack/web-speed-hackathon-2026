@@ -55,7 +55,6 @@ export function initPost(sequelize: Sequelize) {
           {
             association: "images",
             through: { attributes: [] },
-            separate: true,
             order: [["createdAt", "ASC"]],
           },
           { association: "movie" },
