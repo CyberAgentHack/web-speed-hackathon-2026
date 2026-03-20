@@ -67,4 +67,28 @@ test.describe("投稿機能", () => {
     // 投稿内容と画像が表示されていることを確認
     await expect(page.getByText(postText)).toBeVisible();
   });
+
+  test("音声の投稿ができる", async ({ page }) => {
+    const postText = "音声を添付したテスト投稿です。";
+
+    await page.getByRole("list").getByRole("button", { name: "投稿する" }).click();
+
+    const textarea = page.getByPlaceholder("いまなにしてる？");
+    await expect(textarea).toBeVisible({ timeout: 10_000 });
+    await textarea.fill(postText);
+
+    const fileInput = page.locator('input[type="file"][accept="audio/*"]');
+    const audioPath = path.resolve(import.meta.dirname, "../../../docs/assets/maoudamashii_shining_star.wav");
+    await fileInput.setInputFiles(audioPath);
+
+    await page.locator("dialog").getByRole("button", { name: "投稿する" }).click();
+
+    await page.waitForURL("**/posts/*", { timeout: 120_000 });
+
+    const article = page.locator("article").first();
+    await expect(article).toBeVisible({ timeout: 10_000 });
+    await expect(article.getByText(postText)).toBeVisible({ timeout: 30_000 });
+    await expect(article.getByText("シャイニングスター")).toBeVisible({ timeout: 30_000 });
+    await expect(article.getByText("魔王魂")).toBeVisible({ timeout: 30_000 });
+  });
 });
