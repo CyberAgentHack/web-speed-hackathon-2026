@@ -30,6 +30,7 @@ export const UserProfileHeader = ({ user }: Props) => {
         <img
           alt=""
           crossOrigin="anonymous"
+          loading="lazy"
           onLoad={handleLoadImage}
           src={getProfileImageThumbnailPath(user.profileImage.id)}
         />

@@ -62,6 +62,7 @@ export const CoveredImage = ({ src }: Props) => {
             "w-full h-auto": containerRatio <= imageRatio,
           },
         )}
+        loading="lazy"
         src={src}
       />
 
