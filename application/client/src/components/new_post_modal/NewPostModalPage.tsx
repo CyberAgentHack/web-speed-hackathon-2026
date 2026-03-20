@@ -1,4 +1,3 @@
-import { MagickFormat } from "@imagemagick/magick-wasm";
 import { ChangeEventHandler, FormEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -53,24 +52,26 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     if (isValid) {
       setIsConverting(true);
 
-      Promise.all(
-        files.map((file) =>
-          convertImage(file, { extension: MagickFormat.Jpg }).then(
-            (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
+      import("@imagemagick/magick-wasm").then(({ MagickFormat }) =>
+        Promise.all(
+          files.map((file) =>
+            convertImage(file, { extension: MagickFormat.Jpg }).then(
+              (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
+            ),
           ),
-        ),
-      )
-        .then((convertedFiles) => {
-          setParams((params) => ({
-            ...params,
-            images: convertedFiles,
-            movie: undefined,
-            sound: undefined,
-          }));
+        )
+          .then((convertedFiles) => {
+            setParams((params) => ({
+              ...params,
+              images: convertedFiles,
+              movie: undefined,
+              sound: undefined,
+            }));
 
-          setIsConverting(false);
-        })
-        .catch(console.error);
+            setIsConverting(false);
+          })
+          .catch(console.error),
+      );
     }
   }, []);
 
