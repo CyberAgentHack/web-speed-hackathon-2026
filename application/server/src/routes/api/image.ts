@@ -32,7 +32,7 @@ imageRouter.post("/images", async (req, res) => {
     throw new httpErrors.BadRequest("Invalid file type");
   }
 
-  const alt = extractImageAlt(body);
+  const alt = await extractImageAlt(body);
   const converted = await optimizeImageToWebp(body);
   const imageId = uuidv4();
 

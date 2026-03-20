@@ -2,6 +2,8 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
 
+import sharp from "sharp";
+
 import { Image, ProfileImage } from "@web-speed-hackathon-2026/server/src/models";
 import { PUBLIC_PATH, UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import { OPTIMIZED_IMAGE_EXTENSION } from "@web-speed-hackathon-2026/server/src/utils/optimize_image";
@@ -9,9 +11,9 @@ import { OPTIMIZED_IMAGE_EXTENSION } from "@web-speed-hackathon-2026/server/src/
 const require = createRequire(import.meta.url);
 const { load, ImageIFD } = require("piexifjs") as typeof import("piexifjs");
 
-export function extractImageAlt(input: Buffer): string {
+function decodeImageDescription(binary: string): string {
   try {
-    const exif = load(input.toString("binary"));
+    const exif = load(binary);
     const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
     return raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
   } catch {
@@ -19,9 +21,27 @@ export function extractImageAlt(input: Buffer): string {
   }
 }
 
+export async function extractImageAlt(input: Buffer): Promise<string> {
+  const directAlt = decodeImageDescription(input.toString("binary"));
+  if (directAlt !== "") {
+    return directAlt;
+  }
+
+  try {
+    const metadata = await sharp(input, { failOn: "warning" }).metadata();
+    if (metadata.exif == null) {
+      return "";
+    }
+
+    return decodeImageDescription(`Exif\u0000\u0000${Buffer.from(metadata.exif).toString("binary")}`);
+  } catch {
+    return "";
+  }
+}
+
 async function readAltFromImageFile(filePath: string): Promise<string> {
   const data = await fs.readFile(filePath);
-  return extractImageAlt(data);
+  return await extractImageAlt(data);
 }
 
 async function findExistingPath(paths: string[]): Promise<string | null> {
