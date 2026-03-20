@@ -4,20 +4,48 @@ import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
-import { DirectMessageContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer";
-import { DirectMessageListContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer";
-import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
-import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
-import { PostContainer } from "@web-speed-hackathon-2026/client/src/containers/PostContainer";
-import { SearchContainer } from "@web-speed-hackathon-2026/client/src/containers/SearchContainer";
-import { TermContainer } from "@web-speed-hackathon-2026/client/src/containers/TermContainer";
 import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
-import { UserProfileContainer } from "@web-speed-hackathon-2026/client/src/containers/UserProfileContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 const LazyCrokContainer = lazy(async () => {
   const module = await import("@web-speed-hackathon-2026/client/src/containers/CrokContainer");
   return { default: module.CrokContainer };
+});
+const LazyDirectMessageContainer = lazy(async () => {
+  const module = await import(
+    "@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer"
+  );
+  return { default: module.DirectMessageContainer };
+});
+const LazyDirectMessageListContainer = lazy(async () => {
+  const module = await import(
+    "@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer"
+  );
+  return { default: module.DirectMessageListContainer };
+});
+const LazyNewPostModalContainer = lazy(async () => {
+  const module = await import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer");
+  return { default: module.NewPostModalContainer };
+});
+const LazyNotFoundContainer = lazy(async () => {
+  const module = await import("@web-speed-hackathon-2026/client/src/containers/NotFoundContainer");
+  return { default: module.NotFoundContainer };
+});
+const LazyPostContainer = lazy(async () => {
+  const module = await import("@web-speed-hackathon-2026/client/src/containers/PostContainer");
+  return { default: module.PostContainer };
+});
+const LazySearchContainer = lazy(async () => {
+  const module = await import("@web-speed-hackathon-2026/client/src/containers/SearchContainer");
+  return { default: module.SearchContainer };
+});
+const LazyTermContainer = lazy(async () => {
+  const module = await import("@web-speed-hackathon-2026/client/src/containers/TermContainer");
+  return { default: module.TermContainer };
+});
+const LazyUserProfileContainer = lazy(async () => {
+  const module = await import("@web-speed-hackathon-2026/client/src/containers/UserProfileContainer");
+  return { default: module.UserProfileContainer };
 });
 
 export const AppContainer = () => {
@@ -69,18 +97,52 @@ export const AppContainer = () => {
           <Route element={<TimelineContainer />} path="/" />
           <Route
             element={
-              <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
+              <Suspense fallback={<div className="text-cax-text-muted px-4 py-8 text-center">読み込み中...</div>}>
+                <LazyDirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
+              </Suspense>
             }
             path="/dm"
           />
           <Route
-            element={<DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />}
+            element={
+              <Suspense fallback={<div className="text-cax-text-muted px-4 py-8 text-center">読み込み中...</div>}>
+                <LazyDirectMessageContainer activeUser={activeUser} authModalId={authModalId} />
+              </Suspense>
+            }
             path="/dm/:conversationId"
           />
-          <Route element={<SearchContainer />} path="/search" />
-          <Route element={<UserProfileContainer />} path="/users/:username" />
-          <Route element={<PostContainer />} path="/posts/:postId" />
-          <Route element={<TermContainer />} path="/terms" />
+          <Route
+            element={
+              <Suspense fallback={<div className="text-cax-text-muted px-4 py-8 text-center">読み込み中...</div>}>
+                <LazySearchContainer />
+              </Suspense>
+            }
+            path="/search"
+          />
+          <Route
+            element={
+              <Suspense fallback={<div className="text-cax-text-muted px-4 py-8 text-center">読み込み中...</div>}>
+                <LazyUserProfileContainer />
+              </Suspense>
+            }
+            path="/users/:username"
+          />
+          <Route
+            element={
+              <Suspense fallback={<div className="text-cax-text-muted px-4 py-8 text-center">読み込み中...</div>}>
+                <LazyPostContainer />
+              </Suspense>
+            }
+            path="/posts/:postId"
+          />
+          <Route
+            element={
+              <Suspense fallback={<div className="text-cax-text-muted px-4 py-8 text-center">読み込み中...</div>}>
+                <LazyTermContainer />
+              </Suspense>
+            }
+            path="/terms"
+          />
           <Route
             element={
               <Suspense
@@ -91,12 +153,21 @@ export const AppContainer = () => {
             }
             path="/crok"
           />
-          <Route element={<NotFoundContainer />} path="*" />
+          <Route
+            element={
+              <Suspense fallback={<div className="text-cax-text-muted px-4 py-8 text-center">読み込み中...</div>}>
+                <LazyNotFoundContainer />
+              </Suspense>
+            }
+            path="*"
+          />
         </Routes>
       </AppPage>
 
       <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
-      <NewPostModalContainer id={newPostModalId} />
+      <Suspense fallback={null}>
+        <LazyNewPostModalContainer id={newPostModalId} />
+      </Suspense>
     </HelmetProvider>
   );
 };
