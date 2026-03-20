@@ -1,14 +1,13 @@
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
 
+import { getMeQueryOptions } from "@web-speed-hackathon-2026/client/src/auth/hooks";
 import { CrokGate } from "@web-speed-hackathon-2026/client/src/components/crok/CrokGate";
 import { CrokPage } from "@web-speed-hackathon-2026/client/src/components/crok/CrokPage";
 import { useSSE } from "@web-speed-hackathon-2026/client/src/hooks/use_sse";
 
-type Props = {
-  activeUser: Models.User | null;
-};
-
-export const CrokContainer = ({ activeUser }: Props) => {
+export const CrokContainer = () => {
+  const { data: activeUser } = useSuspenseQuery(getMeQueryOptions());
   const [messages, setMessages] = useState<Models.ChatMessage[]>([]);
 
   const sseOptions = useMemo(

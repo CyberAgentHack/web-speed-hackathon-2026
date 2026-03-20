@@ -12,8 +12,12 @@ import { AuthFormData } from "./types";
 const getMeQueryOptions = () =>
   queryOptions({
     queryKey: ["v1", "me"],
-    queryFn: async () => {
-      return await fetchJSON<Models.User>("/api/v1/me");
+    queryFn: async (): Promise<Models.User | null> => {
+      try {
+        return await fetchJSON<Models.User>("/api/v1/me");
+      } catch {
+        return null;
+      }
     },
   });
 

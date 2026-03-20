@@ -1,6 +1,8 @@
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 
+import { getMeQueryOptions } from "@web-speed-hackathon-2026/client/src/auth/hooks";
 import { DirectMessageGate } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageGate";
 import { DirectMessagePage } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessagePage";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
@@ -19,12 +21,9 @@ interface DmTypingEvent {
 
 const TYPING_INDICATOR_DURATION_MS = 10 * 1000;
 
-interface Props {
-  activeUser: Models.User | null;
-}
-
-export const DirectMessageContainer = ({ activeUser }: Props) => {
+export const DirectMessageContainer = () => {
   const { conversationId = "" } = useParams<{ conversationId: string }>();
+  const { data: activeUser } = useSuspenseQuery(getMeQueryOptions());
 
   const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(null);
   const [conversationError, setConversationError] = useState<Error | null>(null);

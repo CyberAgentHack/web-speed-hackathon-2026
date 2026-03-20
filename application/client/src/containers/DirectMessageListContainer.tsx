@@ -1,13 +1,13 @@
+import { useSuspenseQuery } from "@tanstack/react-query";
+
+import { getMeQueryOptions } from "@web-speed-hackathon-2026/client/src/auth/hooks";
 import { DirectMessageGate } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageGate";
 import { DirectMessageListPage } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageListPage";
 import { NewDirectMessageModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewDirectMessageModalContainer";
 import { MODAL_IDS } from "@web-speed-hackathon-2026/client/src/constants";
 
-interface Props {
-  activeUser: Models.User | null;
-}
-
-export const DirectMessageListContainer = ({ activeUser }: Props) => {
+export const DirectMessageListContainer = () => {
+  const { data: activeUser } = useSuspenseQuery(getMeQueryOptions());
 
   if (activeUser === null) {
     return (
