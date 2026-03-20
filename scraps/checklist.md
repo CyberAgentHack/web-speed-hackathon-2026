@@ -411,18 +411,8 @@ app.register(compress, { global: true, encodings: ['gzip', 'br'] });
 
 ### キャッシュヘッダー
 
-```ts
-// 静的ファイル (ハッシュ付きファイル名の場合)
-reply.header('Cache-Control', 'public, max-age=31536000, immutable');
-
-// API (認証不要・変更頻度低)
-reply.header('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
-
-// 認証必要 / 動的コンテンツ
-reply.header('Cache-Control', 'private, no-store');
-
-// デフォルトで no-store が設定されていれば削除する (2025 年に仕込まれていた)
-```
+> **⚠️ WSH では HTTP キャッシュはスコアに効果なし**
+> 採点ツールは Lighthouse を毎回 cold start (キャッシュなし) で実行するため、`Cache-Control` ヘッダーを設定してもスコアは改善しない。対応不要。
 
 - [ ] DB インデックスを追加 (テーブルのリレーションを確認)
 - [ ] N+1 クエリを一括クエリに変換
@@ -430,8 +420,6 @@ reply.header('Cache-Control', 'private, no-store');
 - [ ] API に `limit` を設定
 - [ ] **過剰な負荷対策コードを削除する** (WSH は並列アクセスなし → レート制限・キュー・スロットリングは全て不要)
 - [ ] gzip 圧縮を有効化 (`@fastify/compress`)
-- [ ] 静的ファイルに長期 Cache-Control を設定 (`immutable`)
-- [ ] API に適切な `stale-while-revalidate` キャッシュを設定
 - [ ] 不要な API 呼び出しを削除 (同データを複数回取得していないか)
 - [ ] `no-store` がデフォルト設定されていれば削除
 - [ ] `Promise.all` で独立した API 呼び出しを並列化 (2020 年でも仕込まれていた)
