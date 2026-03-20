@@ -9,11 +9,58 @@ import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
-import { extractMetadataFromSound } from "@web-speed-hackathon-2026/server/src/utils/extract_metadata_from_sound";
 
 const execFileAsync = promisify(execFile);
 
 const EXTENSION = "mp3";
+const UNKNOWN_ARTIST = "Unknown Artist";
+const UNKNOWN_TITLE = "Unknown Title";
+
+function decodeBuffer(buf: Buffer): string {
+  const utf8 = buf.toString("utf-8");
+  if (!utf8.includes("\ufffd")) {
+    return utf8;
+  }
+  const decoder = new TextDecoder("shift_jis");
+  return decoder.decode(buf);
+}
+
+interface SoundMetadata {
+  artist: string;
+  title: string;
+}
+
+function parseFfmetadata(raw: Buffer): SoundMetadata {
+  const text = decodeBuffer(raw);
+  const entries = Object.fromEntries(
+    text
+      .split("\n")
+      .filter((line) => !line.startsWith(";") && line.includes("="))
+      .map((line) => {
+        const idx = line.indexOf("=");
+        return [line.slice(0, idx).trim().toLowerCase(), line.slice(idx + 1).trim()];
+      }),
+  );
+  return {
+    artist: entries["artist"] ?? UNKNOWN_ARTIST,
+    title: entries["title"] ?? UNKNOWN_TITLE,
+  };
+}
+
+async function extractMetadataViaFfmpeg(inputPath: string, tmpDir: string): Promise<SoundMetadata> {
+  const metaPath = path.join(tmpDir, "meta.txt");
+  try {
+    await execFileAsync(
+      "ffmpeg",
+      ["-y", "-i", inputPath, "-f", "ffmetadata", metaPath],
+      { maxBuffer: 10 * 1024 * 1024 },
+    );
+    const raw = await fs.readFile(metaPath);
+    return parseFfmetadata(raw);
+  } catch {
+    return { artist: UNKNOWN_ARTIST, title: UNKNOWN_TITLE };
+  }
+}
 
 export const soundRouter = Router();
 
@@ -33,15 +80,22 @@ soundRouter.post("/sounds", async (req, res) => {
   try {
     await fs.writeFile(inputPath, req.body);
 
+    const { artist, title } = await extractMetadataViaFfmpeg(inputPath, tmpDir);
+
     await execFileAsync(
       "ffmpeg",
-      ["-y", "-i", inputPath, "-vn", outputPath],
+      [
+        "-y", "-i", inputPath,
+        "-vn",
+        "-map_metadata", "-1",
+        "-metadata", `artist=${artist}`,
+        "-metadata", `title=${title}`,
+        outputPath,
+      ],
       { maxBuffer: 10 * 1024 * 1024 },
     );
 
     const outputData = await fs.readFile(outputPath);
-
-    const { artist, title } = await extractMetadataFromSound(outputData);
 
     await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds"), { recursive: true });
     const filePath = path.resolve(UPLOAD_PATH, `./sounds/${soundId}.${EXTENSION}`);
