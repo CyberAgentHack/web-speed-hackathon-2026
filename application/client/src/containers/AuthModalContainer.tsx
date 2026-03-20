@@ -4,7 +4,11 @@ import { SubmissionError } from "redux-form";
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { AuthModalPage } from "@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
-import { sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import {
+  FetchError,
+  isAbortError,
+  sendJSON,
+} from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
   id: string;
@@ -16,8 +20,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   USERNAME_TAKEN: "ユーザー名が使われています",
 };
 
-function getErrorCode(err: JQuery.jqXHR<unknown>, type: "signin" | "signup"): string {
-  const responseJSON = err.responseJSON;
+function getErrorCode(err: unknown, type: "signin" | "signup"): string {
+  const responseJSON = err instanceof FetchError ? err.payload : null;
   if (
     typeof responseJSON !== "object" ||
     responseJSON === null ||
@@ -37,38 +41,52 @@ function getErrorCode(err: JQuery.jqXHR<unknown>, type: "signin" | "signup"): st
 
 export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const [resetKey, setResetKey] = useState(0);
   useEffect(() => {
     if (!ref.current) return;
     const element = ref.current;
 
     const handleToggle = () => {
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = null;
+
       // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
       setResetKey((key) => key + 1);
     };
     element.addEventListener("toggle", handleToggle);
     return () => {
       element.removeEventListener("toggle", handleToggle);
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = null;
     };
-  }, [ref, setResetKey]);
+  }, []);
 
   const handleRequestCloseModal = useCallback(() => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
     ref.current?.close();
-  }, [ref]);
+  }, []);
 
   const handleSubmit = useCallback(
     async (values: AuthFormData) => {
+      abortControllerRef.current?.abort();
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
+
       try {
-        if (values.type === "signup") {
-          const user = await sendJSON<Models.User>("/api/v1/signup", values);
-          onUpdateActiveUser(user);
-        } else {
-          const user = await sendJSON<Models.User>("/api/v1/signin", values);
-          onUpdateActiveUser(user);
-        }
+        const url = values.type === "signup" ? "/api/v1/signup" : "/api/v1/signin";
+        const user = await sendJSON<Models.User>(url, values, { signal: abortController.signal });
+        abortControllerRef.current = null;
+        onUpdateActiveUser(user);
         handleRequestCloseModal();
       } catch (err: unknown) {
-        const error = getErrorCode(err as JQuery.jqXHR<unknown>, values.type);
+        if (isAbortError(err)) {
+          return;
+        }
+
+        abortControllerRef.current = null;
+        const error = getErrorCode(err, values.type);
         throw new SubmissionError({
           _error: error,
         });
