@@ -28,7 +28,7 @@ export default defineConfig({
     },
   ],
   reporter: "list",
-  retries: 1,
+  retries: 0,
   testDir: "./src",
   timeout: 300_000,
   use: {
