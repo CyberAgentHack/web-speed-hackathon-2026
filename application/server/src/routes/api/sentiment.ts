@@ -9,10 +9,6 @@ import { PUBLIC_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 export const sentimentRouter = Router();
 
 sentimentRouter.post("/analyze", async (req, res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
-  }
-
   const { text } = req.body;
   if (typeof text !== "string") {
     throw new httpErrors.BadRequest();
