@@ -65,15 +65,30 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     async (params: DirectMessageFormData) => {
       setIsSubmitting(true);
       try {
+        // 楽観的更新: 送信したメッセージを即座にローカルstateに追加
+        if (activeUser && conversation) {
+          const optimisticMessage: Models.DirectMessage = {
+            id: `optimistic-${Date.now()}`,
+            body: params.body,
+            sender: activeUser,
+            createdAt: new Date().toISOString(),
+          };
+          setConversation({
+            ...conversation,
+            messages: [...conversation.messages, optimisticMessage],
+          });
+        }
+
         await sendJSON(`/api/v1/dm/${conversationId}/messages`, {
           body: params.body,
         });
-        loadConversation();
+        // バックグラウンドで会話を再取得（WebSocketからも来るので重複するが安全）
+        void loadConversation();
       } finally {
         setIsSubmitting(false);
       }
     },
-    [conversationId, loadConversation],
+    [conversationId, loadConversation, activeUser, conversation],
   );
 
   const handleTyping = useCallback(async () => {
