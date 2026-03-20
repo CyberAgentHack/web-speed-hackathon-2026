@@ -6,7 +6,8 @@ import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
-import sharp from "sharp";
+import { convertImage } from "../../utils/convert_image";
+import { MagickFormat } from "@imagemagick/magick-wasm";
 
 // 変換した画像の拡張子
 const OUT_EXTENSION = "jpg";
@@ -27,13 +28,13 @@ imageRouter.post("/images", async (req, res) => {
   await fs.mkdir(outDir, { recursive: true });
 
   try {
-    await sharp(req.body)
-      .jpeg({
-        quality: 80,
-        mozjpeg: true,
-      })
-      .withMetadata()
-      .toFile(filePath);
+    const buffer = Buffer.from(req.body);
+
+    const converted = await convertImage(buffer, {
+      extension: MagickFormat.Jpg,
+    });
+
+    await fs.writeFile(filePath, converted);
 
     return res.status(200).type("application/json").send({ id: imageId });
   } catch (e) {

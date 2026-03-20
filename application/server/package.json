@@ -13,6 +13,7 @@
     "seed:insert": "tsx ./scripts/insertSeeds.ts"
   },
   "dependencies": {
+    "@imagemagick/magick-wasm": "0.0.37",
     "@tsconfig/strictest": "2.0.8",
     "@web-speed-hackathon-2026/server": "workspace:*",
     "bcrypt": "6.0.0",
@@ -23,9 +24,9 @@
     "file-type": "21.1.1",
     "http-errors": "2.0.0",
     "music-metadata": "11.10.3",
+    "piexifjs": "1.0.6",
     "sequelize": "6.37.7",
     "serve-static": "2.2.0",
-    "sharp": "0.34.5",
     "sqlite3": "5.1.7",
     "tsx": "4.20.6",
     "uuid": "13.0.0",
@@ -40,6 +41,7 @@
     "@types/express-session": "1.18.2",
     "@types/http-errors": "2.0.5",
     "@types/node": "22.18.8",
+    "@types/piexifjs": "1.0.0",
     "@types/serve-static": "1.15.9",
     "@types/ws": "8.18.1",
     "typescript": "5.9.3"
