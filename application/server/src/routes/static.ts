@@ -33,3 +33,11 @@ staticRouter.use(
     // lastModified: false,
   }),
 );
+
+staticRouter.use((_req, res, next) => {
+  res.header({
+    // TODO: Do something
+    "Cache-Control": "max-age=120",
+  });
+  return next();
+});

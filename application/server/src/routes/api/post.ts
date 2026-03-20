@@ -6,6 +6,12 @@ import { Comment, Post } from "@web-speed-hackathon-2026/server/src/models";
 export const postRouter = Router();
 
 postRouter.get("/posts", async (req, res) => {
+  console.log(req.query);
+
+  if(req.query["limit"] == null || req.query["offset"] == null) {
+    console.error("GET /posts does not have no limit/offset", req.query);
+  }
+
   const posts = await Post.findAll({
     limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
     offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,

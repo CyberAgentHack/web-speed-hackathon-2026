@@ -45,3 +45,11 @@ apiRouter.use(async (err: Error, _req: Request, res: Response, _next: NextFuncti
       message: err.message,
     });
 });
+
+apiRouter.use((_req, res, next) => {
+  res.header({
+    // TODO: Do something
+    "Cache-Control": "max-age=0",
+  });
+  return next();
+});
