@@ -7,6 +7,7 @@ import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+import { Sound } from "@web-speed-hackathon-2026/server/src/models";
 import {
   convertSoundToMp3,
   MediaConversionError,
@@ -48,9 +49,17 @@ soundRouter.post("/sounds", async (req, res) => {
   const filePath = path.resolve(UPLOAD_PATH, `./sounds/${soundId}.${EXTENSION}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds"), { recursive: true });
   await fs.writeFile(filePath, converted);
+  const waveform = createSoundWaveform(converted);
+
+  await Sound.create({
+    artist,
+    id: soundId,
+    title,
+    waveform: JSON.stringify(waveform),
+  });
 
   return res
     .status(200)
     .type("application/json")
-    .send({ artist, id: soundId, title, waveform: createSoundWaveform(converted) });
+    .send({ artist, id: soundId, title, waveform });
 });

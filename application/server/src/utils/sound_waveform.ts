@@ -1,7 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
-import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+import { PUBLIC_PATH, UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
 const waveformCache = new Map<string, number[]>();
 
@@ -36,16 +36,33 @@ export function createSoundWaveform(data: Uint8Array<ArrayBufferLike>): number[]
   return calculateWaveform(data);
 }
 
+async function resolveSoundFilePath(soundId: string): Promise<string> {
+  const candidates = [
+    path.resolve(UPLOAD_PATH, `./sounds/${soundId}.mp3`),
+    path.resolve(PUBLIC_PATH, `./sounds/${soundId}.mp3`),
+  ];
+
+  for (const filePath of candidates) {
+    try {
+      await fs.access(filePath);
+      return filePath;
+    } catch {
+      continue;
+    }
+  }
+
+  throw new Error(`Sound file not found: ${soundId}`);
+}
+
 export async function getSoundWaveform(soundId: string): Promise<number[]> {
   const cached = waveformCache.get(soundId);
   if (cached != null) {
     return cached;
   }
 
-  const filePath = path.resolve(UPLOAD_PATH, `./sounds/${soundId}.mp3`);
+  const filePath = await resolveSoundFilePath(soundId);
   const data = await fs.readFile(filePath);
   const waveform = calculateWaveform(data);
   waveformCache.set(soundId, waveform);
   return waveform;
 }
-

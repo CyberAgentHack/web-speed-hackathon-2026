@@ -10,6 +10,7 @@ import { CrokLogo } from "@web-speed-hackathon-2026/client/src/components/founda
 
 interface Props {
   message: Models.ChatMessage;
+  renderAsPlainText?: boolean;
 }
 
 const UserMessage = ({ content }: { content: string }) => {
@@ -22,7 +23,13 @@ const UserMessage = ({ content }: { content: string }) => {
   );
 };
 
-const AssistantMessage = ({ content }: { content: string }) => {
+const AssistantMessage = ({
+  content,
+  renderAsPlainText = false,
+}: {
+  content: string;
+  renderAsPlainText?: boolean;
+}) => {
   return (
     <div className="mb-6 flex gap-4">
       <div className="h-8 w-8 shrink-0">
@@ -32,14 +39,17 @@ const AssistantMessage = ({ content }: { content: string }) => {
         <div className="text-cax-text mb-1 text-sm font-medium">Crok</div>
         <div className="markdown text-cax-text max-w-none">
           {content ? (
-            <Markdown
-              components={{ pre: CodeBlock }}
-              key={content}
-              rehypePlugins={[rehypeKatex]}
-              remarkPlugins={[remarkMath, remarkGfm]}
-            >
-              {content}
-            </Markdown>
+            renderAsPlainText ? (
+              <div className="whitespace-pre-wrap">{content}</div>
+            ) : (
+              <Markdown
+                components={{ pre: CodeBlock }}
+                rehypePlugins={[rehypeKatex]}
+                remarkPlugins={[remarkMath, remarkGfm]}
+              >
+                {content}
+              </Markdown>
+            )
           ) : (
             <TypingIndicator />
           )}
@@ -49,9 +59,9 @@ const AssistantMessage = ({ content }: { content: string }) => {
   );
 };
 
-export const ChatMessage = ({ message }: Props) => {
+export const ChatMessage = ({ message, renderAsPlainText = false }: Props) => {
   if (message.role === "user") {
     return <UserMessage content={message.content} />;
   }
-  return <AssistantMessage content={message.content} />;
+  return <AssistantMessage content={message.content} renderAsPlainText={renderAsPlainText} />;
 };

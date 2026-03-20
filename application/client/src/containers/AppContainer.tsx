@@ -6,15 +6,17 @@ import { AppPage } from "@web-speed-hackathon-2026/client/src/components/applica
 import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
 import { useAuthSession } from "@web-speed-hackathon-2026/client/src/hooks/use_auth_session";
 
+const loadAuthModalContainer = () =>
+  import("@web-speed-hackathon-2026/client/src/containers/AuthModalContainer");
 const LazyAuthModalContainer = lazy(async () => {
-  const module = await import("@web-speed-hackathon-2026/client/src/containers/AuthModalContainer");
+  const module = await loadAuthModalContainer();
   return { default: module.AuthModalContainer };
 });
 
+const loadNewPostModalContainer = () =>
+  import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer");
 const LazyNewPostModalContainer = lazy(async () => {
-  const module = await import(
-    "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer"
-  );
+  const module = await loadNewPostModalContainer();
   return { default: module.NewPostModalContainer };
 });
 
@@ -77,6 +79,22 @@ const RouteFallback = () => {
   );
 };
 
+function scheduleIdleTask(task: () => void): () => void {
+  if ("requestIdleCallback" in window) {
+    const callbackId = window.requestIdleCallback(() => {
+      task();
+    });
+    return () => {
+      window.cancelIdleCallback(callbackId);
+    };
+  }
+
+  const timeoutId = globalThis.setTimeout(task, 300);
+  return () => {
+    globalThis.clearTimeout(timeoutId);
+  };
+}
+
 export const AppContainer = () => {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -101,6 +119,18 @@ export const AppContainer = () => {
     setShouldLoadNewPostModal(true);
     setNewPostOpenRequestKey((key) => key + 1);
   }, []);
+
+  useEffect(() => {
+    if (activeUser == null) {
+      return scheduleIdleTask(() => {
+        void loadAuthModalContainer();
+      });
+    }
+
+    return scheduleIdleTask(() => {
+      void loadNewPostModalContainer();
+    });
+  }, [activeUser]);
 
   return (
     <HelmetProvider>

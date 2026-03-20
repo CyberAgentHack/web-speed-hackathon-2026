@@ -1,4 +1,4 @@
-import { ReactEventHandler, useCallback, useRef, useState } from "react";
+import { ReactEventHandler, useCallback, useEffect, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -6,11 +6,29 @@ import { SoundWaveSVG } from "@web-speed-hackathon-2026/client/src/components/fo
 import { getSoundPath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
+  deferWaveform?: boolean;
   sound: Models.Sound;
 }
 
-export const SoundPlayer = ({ sound }: Props) => {
+export const SoundPlayer = ({ deferWaveform = false, sound }: Props) => {
   const soundPath = getSoundPath(sound.id);
+  const [shouldRenderWaveform, setShouldRenderWaveform] = useState(!deferWaveform);
+
+  useEffect(() => {
+    if (!deferWaveform) {
+      setShouldRenderWaveform(true);
+      return;
+    }
+
+    setShouldRenderWaveform(false);
+    const timerId = window.setTimeout(() => {
+      setShouldRenderWaveform(true);
+    }, 1200);
+
+    return () => {
+      window.clearTimeout(timerId);
+    };
+  }, [deferWaveform, sound.id]);
 
   const [currentTimeRatio, setCurrentTimeRatio] = useState(0);
   const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>((ev) => {
@@ -54,7 +72,11 @@ export const SoundPlayer = ({ sound }: Props) => {
           <AspectRatioBox aspectHeight={1} aspectWidth={10}>
             <div className="relative h-full w-full">
               <div className="absolute inset-0 h-full w-full">
-                <SoundWaveSVG peaks={sound.waveform ?? []} />
+                {shouldRenderWaveform ? (
+                  <SoundWaveSVG peaks={sound.waveform ?? []} />
+                ) : (
+                  <div className="bg-cax-border/40 h-full w-full rounded-full" />
+                )}
               </div>
               <div
                 className="bg-cax-surface-subtle absolute inset-0 h-full w-full opacity-75"
