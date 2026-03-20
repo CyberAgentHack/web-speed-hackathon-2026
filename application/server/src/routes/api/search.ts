@@ -86,6 +86,10 @@ searchRouter.get("/search", async (req, res) => {
 
   mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
+  // TODO: フロントエンド(use_infinite_fetch.ts)がoffset/limitを送らず全件取得してクライアント側でスライスしている。
+  // サーバー側のoffset/limitは常にundefinedで下のsliceはno-op。
+  // 本来はサーバー側ページネーション(offset/limitをURLパラメータで受け取る)に変更し、
+  // フロントエンドのInfiniteScrollもAPIに offset/limit を渡すよう修正すべき。
   const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
 
   return res.status(200).type("application/json").send(result);
