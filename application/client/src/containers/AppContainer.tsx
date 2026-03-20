@@ -4,11 +4,10 @@ import { Route, Routes, useLocation, useNavigate } from "react-router";
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { useTitle } from "@web-speed-hackathon-2026/client/src/hooks/use_title";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
-import { injectFormReducer } from "@web-speed-hackathon-2026/client/src/store";
 
-const AuthModalContainer = lazy(() => injectFormReducer().then(() => import("@web-speed-hackathon-2026/client/src/containers/AuthModalContainer")).then(m => ({ default: m.AuthModalContainer })));
-const NewPostModalContainer = lazy(() => injectFormReducer().then(() => import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer")).then(m => ({ default: m.NewPostModalContainer })));
-const SearchContainer = lazy(() => injectFormReducer().then(() => import("@web-speed-hackathon-2026/client/src/containers/SearchContainer")).then(m => ({ default: m.SearchContainer })));
+const AuthModalContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/AuthModalContainer").then(m => ({ default: m.AuthModalContainer })));
+const NewPostModalContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer").then(m => ({ default: m.NewPostModalContainer })));
+const SearchContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/SearchContainer").then(m => ({ default: m.SearchContainer })));
 const CrokContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/CrokContainer").then(m => ({ default: m.CrokContainer })));
 const DirectMessageContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer").then(m => ({ default: m.DirectMessageContainer })));
 const DirectMessageListContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer").then(m => ({ default: m.DirectMessageListContainer })));

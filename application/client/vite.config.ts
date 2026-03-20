@@ -49,7 +49,6 @@ export default defineConfig({
         manualChunks: {
           "vendor-react": ["react", "react-dom", "react-dom/client"],
           "vendor-router": ["react-router"],
-          "vendor-redux": ["redux", "react-redux"],
         },
       },
     },

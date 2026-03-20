@@ -1,19 +1,27 @@
 import { ReactNode, useId } from "react";
-import { WrappedFieldProps } from "redux-form";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { Input } from "@web-speed-hackathon-2026/client/src/components/foundation/Input";
 
-interface Props extends WrappedFieldProps {
+interface Props {
   label: string;
+  name: string;
+  value: string;
+  error?: string;
+  touched?: boolean;
   leftItem?: ReactNode;
   rightItem?: ReactNode;
+  type?: string;
+  autoComplete?: string;
+  placeholder?: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: () => void;
 }
 
-export const FormInputField = ({ label, leftItem, rightItem, input, meta, ...props }: Props) => {
+export const FormInputField = ({ label, name, value, error, touched, leftItem, rightItem, type, autoComplete, placeholder, onChange, onBlur }: Props) => {
   const inputId = useId();
   const errorMessageId = useId();
-  const isInvalid = meta.touched && meta.error;
+  const isInvalid = touched && error;
 
   return (
     <div className="flex flex-col gap-y-1">
@@ -22,19 +30,24 @@ export const FormInputField = ({ label, leftItem, rightItem, input, meta, ...pro
       </label>
       <Input
         id={inputId}
+        name={name}
+        value={value}
         leftItem={leftItem}
         rightItem={rightItem}
-        aria-invalid={isInvalid || undefined}
+        type={type}
+        autoComplete={autoComplete}
+        placeholder={placeholder}
+        aria-invalid={isInvalid ? true : undefined}
         aria-describedby={isInvalid ? errorMessageId : undefined}
-        {...input}
-        {...props}
+        onChange={onChange}
+        onBlur={onBlur}
       />
       {isInvalid && (
         <span className="text-cax-danger text-xs" id={errorMessageId}>
           <span className="mr-1">
             <FontAwesomeIcon iconType="exclamation-circle" styleType="solid" />
           </span>
-          {meta.error}
+          {error}
         </span>
       )}
     </div>

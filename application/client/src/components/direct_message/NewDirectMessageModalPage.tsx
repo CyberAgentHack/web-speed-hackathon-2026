@@ -1,4 +1,4 @@
-import { Field, InjectedFormProps, reduxForm } from "redux-form";
+import { FormEvent, useCallback, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FormInputField } from "@web-speed-hackathon-2026/client/src/components/foundation/FormInputField";
@@ -9,32 +9,53 @@ import { validate } from "@web-speed-hackathon-2026/client/src/direct_message/va
 
 interface Props {
   id: string;
+  onSubmit: (values: NewDirectMessageFormData) => Promise<void>;
 }
 
-const NewDirectMessageModalPageComponent = ({
-  id,
-  invalid,
-  error,
-  submitting,
-  handleSubmit,
-}: Props & InjectedFormProps<NewDirectMessageFormData, Props>) => {
+export const NewDirectMessageModalPage = ({ id, onSubmit }: Props) => {
+  const [username, setUsername] = useState("");
+  const [touched, setTouched] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | undefined>();
+
+  const errors = validate({ username });
+  const hasErrors = Object.keys(errors).length > 0;
+
+  const handleSubmit = useCallback(async (e: FormEvent) => {
+    e.preventDefault();
+    setTouched(true);
+    if (hasErrors) return;
+
+    setSubmitting(true);
+    setSubmitError(undefined);
+    try {
+      await onSubmit({ username });
+    } catch (err: any) {
+      setSubmitError(err?.message || "ユーザーが見つかりませんでした");
+    } finally {
+      setSubmitting(false);
+    }
+  }, [username, hasErrors, onSubmit]);
+
   return (
     <div className="grid gap-y-6">
       <h2 className="text-center text-2xl font-bold">新しくDMを始める</h2>
 
       <form className="flex flex-col gap-y-6" onSubmit={handleSubmit}>
-        <Field
+        <FormInputField
           name="username"
-          component={FormInputField}
-          props={{
-            label: "ユーザー名",
-            placeholder: "username",
-            leftItem: <span className="text-cax-text-subtle leading-none">@</span>,
-          }}
+          label="ユーザー名"
+          value={username}
+          error={errors.username}
+          touched={touched}
+          placeholder="username"
+          leftItem={<span className="text-cax-text-subtle leading-none">@</span>}
+          onChange={(e) => setUsername(e.target.value)}
+          onBlur={() => setTouched(true)}
         />
 
         <div className="grid gap-y-2">
-          <ModalSubmitButton disabled={submitting || invalid} loading={submitting}>
+          <ModalSubmitButton disabled={submitting || hasErrors} loading={submitting}>
             DMを開始
           </ModalSubmitButton>
           <Button variant="secondary" command="close" commandfor={id}>
@@ -42,16 +63,8 @@ const NewDirectMessageModalPageComponent = ({
           </Button>
         </div>
 
-        <ModalErrorMessage>{error}</ModalErrorMessage>
+        <ModalErrorMessage>{submitError}</ModalErrorMessage>
       </form>
     </div>
   );
 };
-
-export const NewDirectMessageModalPage = reduxForm<NewDirectMessageFormData, Props>({
-  form: "newDirectMessage",
-  validate,
-  initialValues: {
-    username: "",
-  },
-})(NewDirectMessageModalPageComponent);
