@@ -44,7 +44,6 @@ const config = {
   devtool: isProd ? false : "inline-source-map",
   entry: {
     main: [
-      "core-js",
       "regenerator-runtime/runtime",
       "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
