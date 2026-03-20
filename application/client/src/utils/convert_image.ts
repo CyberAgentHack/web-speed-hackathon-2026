@@ -6,38 +6,40 @@ interface Options {
 }
 
 export async function convertImage(file: File, options: Options): Promise<Blob> {
-  const magickWasm = await import("@imagemagick/magick-wasm/magick.wasm?binary");
+  throw new Error("This function uses imagemagick that is inlined to the script and I am not going that to happen");
 
-  await initializeImageMagick(magickWasm);
+  // const magickWasm = await import("@imagemagick/magick-wasm/magick.wasm?binary");
 
-  const byteArray = new Uint8Array(await file.arrayBuffer());
+  // await initializeImageMagick(magickWasm);
 
-  return new Promise((resolve) => {
-    ImageMagick.read(byteArray, (img) => {
-      img.format = options.extension;
+  // const byteArray = new Uint8Array(await file.arrayBuffer());
 
-      const comment = img.comment;
+  // return new Promise((resolve) => {
+  //   ImageMagick.read(byteArray, (img) => {
+  //     img.format = options.extension;
 
-      img.write((output) => {
-        if (comment == null) {
-          resolve(new Blob([output as Uint8Array<ArrayBuffer>]));
-          return;
-        }
+  //     const comment = img.comment;
 
-        // ImageMagick では EXIF の ImageDescription フィールドに保存されているデータが
-        // 非標準の Comment フィールドに移されてしまうため
-        // piexifjs を使って ImageDescription フィールドに書き込む
-        const binary = Array.from(output as Uint8Array<ArrayBuffer>)
-          .map((b) => String.fromCharCode(b))
-          .join("");
-        const descriptionBinary = Array.from(new TextEncoder().encode(comment))
-          .map((b) => String.fromCharCode(b))
-          .join("");
-        const exifStr = dump({ "0th": { [ImageIFD.ImageDescription]: descriptionBinary } });
-        const outputWithExif = insert(exifStr, binary);
-        const bytes = Uint8Array.from(outputWithExif.split("").map((c) => c.charCodeAt(0)));
-        resolve(new Blob([bytes]));
-      });
-    });
-  });
+  //     img.write((output) => {
+  //       if (comment == null) {
+  //         resolve(new Blob([output as Uint8Array<ArrayBuffer>]));
+  //         return;
+  //       }
+
+  //       // ImageMagick では EXIF の ImageDescription フィールドに保存されているデータが
+  //       // 非標準の Comment フィールドに移されてしまうため
+  //       // piexifjs を使って ImageDescription フィールドに書き込む
+  //       const binary = Array.from(output as Uint8Array<ArrayBuffer>)
+  //         .map((b) => String.fromCharCode(b))
+  //         .join("");
+  //       const descriptionBinary = Array.from(new TextEncoder().encode(comment))
+  //         .map((b) => String.fromCharCode(b))
+  //         .join("");
+  //       const exifStr = dump({ "0th": { [ImageIFD.ImageDescription]: descriptionBinary } });
+  //       const outputWithExif = insert(exifStr, binary);
+  //       const bytes = Uint8Array.from(outputWithExif.split("").map((c) => c.charCodeAt(0)));
+  //       resolve(new Blob([bytes]));
+  //     });
+  //   });
+  // });
 }
