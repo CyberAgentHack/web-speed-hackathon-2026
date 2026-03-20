@@ -8,7 +8,7 @@ import { getTokenizer } from "@web-speed-hackathon-2026/server/src/utils/tokeniz
 interface DictEntry {
   surface: string;
   reading: string;
-  posi: string;
+  pos: string;
   rank: number;
 }
 
@@ -25,7 +25,7 @@ function analyzeSentiment(tokens: { surface_form: string; reading: string; pos: 
   let score = 0;
   for (const token of tokens) {
     const found = posiNegaDict.find(
-      (dict) => dict.surface === token.surface_form && dict.reading === token.reading && dict.posi === token.pos,
+      (dict) => dict.surface === token.surface_form && dict.reading === token.reading && dict.pos === token.pos,
     );
     if (found) {
       const rank = found.rank;
