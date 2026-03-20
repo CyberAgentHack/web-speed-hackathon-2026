@@ -26,7 +26,7 @@ RUN NODE_OPTIONS="--max-old-space-size=4096" pnpm build
 
 # Convert seed GIF movies to MP4 for native <video> playback
 RUN for gif in public/movies/*.gif; do \
-    ffmpeg -i "$gif" -c:v libx264 -crf 28 -preset fast -an -movflags +faststart -y "${gif%.gif}.mp4" 2>/dev/null && echo "Converted: $gif" || echo "Skipped: $gif"; \
+    ffmpeg -i "$gif" -c:v libx264 -crf 28 -preset fast -an -movflags +faststart -y "${gif%.gif}.mp4" && echo "Converted: $gif" || echo "Skipped: $gif"; \
   done
 
 RUN --mount=type=cache,target=/pnpm/store CI=true pnpm install --frozen-lockfile --prod --filter @web-speed-hackathon-2026/server
