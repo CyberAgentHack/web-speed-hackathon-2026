@@ -4,67 +4,31 @@ import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
+import { DirectMessageContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer";
+import { DirectMessageListContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer";
 import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
+import { PostContainer } from "@web-speed-hackathon-2026/client/src/containers/PostContainer";
+import { SearchContainer } from "@web-speed-hackathon-2026/client/src/containers/SearchContainer";
+import { TermContainer } from "@web-speed-hackathon-2026/client/src/containers/TermContainer";
+import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
 import { fetchJSON, HTTPError, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { lazyNamed } from "@web-speed-hackathon-2026/client/src/utils/lazy";
 
-const TimelineContainer = lazyNamed(
-  () =>
-    import(
-      /* webpackChunkName: "route-timeline" */ "@web-speed-hackathon-2026/client/src/containers/TimelineContainer"
-    ),
-  "TimelineContainer",
-);
-const DirectMessageListContainer = lazyNamed(
-  () =>
-    import(
-      /* webpackChunkName: "route-direct-message-list" */ "@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer"
-    ),
-  "DirectMessageListContainer",
-);
-const DirectMessageContainer = lazyNamed(
-  () =>
-    import(
-      /* webpackChunkName: "route-direct-message" */ "@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer"
-    ),
-  "DirectMessageContainer",
-);
-const SearchContainer = lazyNamed(
-  () =>
-    import(
-      /* webpackChunkName: "route-search" */ "@web-speed-hackathon-2026/client/src/containers/SearchContainer"
-    ),
-  "SearchContainer",
-);
-const UserProfileContainer = lazyNamed(
+const UserProfileContainerLazy = lazyNamed(
   () =>
     import(
       /* webpackChunkName: "route-user-profile" */ "@web-speed-hackathon-2026/client/src/containers/UserProfileContainer"
     ),
   "UserProfileContainer",
 );
-const PostContainer = lazyNamed(
-  () =>
-    import(
-      /* webpackChunkName: "route-post" */ "@web-speed-hackathon-2026/client/src/containers/PostContainer"
-    ),
-  "PostContainer",
-);
-const TermContainer = lazyNamed(
-  () =>
-    import(
-      /* webpackChunkName: "route-term" */ "@web-speed-hackathon-2026/client/src/containers/TermContainer"
-    ),
-  "TermContainer",
-);
-const CrokContainer = lazyNamed(
+const CrokContainerLazy = lazyNamed(
   () =>
     import(
       /* webpackChunkName: "route-crok" */ "@web-speed-hackathon-2026/client/src/containers/CrokContainer"
     ),
   "CrokContainer",
 );
-const NotFoundContainer = lazyNamed(
+const NotFoundContainerLazy = lazyNamed(
   () =>
     import(
       /* webpackChunkName: "route-not-found" */ "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer"
@@ -141,30 +105,44 @@ export const AppContainer = () => {
         newPostModalId={newPostModalId}
         onLogout={handleLogout}
       >
-        <Suspense fallback={null}>
-          <Routes>
-            <Route element={<TimelineContainer />} path="/" />
-            <Route
-              element={
-                <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
-              }
-              path="/dm"
-            />
-            <Route
-              element={<DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />}
-              path="/dm/:conversationId"
-            />
-            <Route element={<SearchContainer />} path="/search" />
-            <Route element={<UserProfileContainer />} path="/users/:username" />
-            <Route element={<PostContainer />} path="/posts/:postId" />
-            <Route element={<TermContainer />} path="/terms" />
-            <Route
-              element={<CrokContainer activeUser={activeUser} authModalId={authModalId} />}
-              path="/crok"
-            />
-            <Route element={<NotFoundContainer />} path="*" />
-          </Routes>
-        </Suspense>
+        <Routes>
+          <Route element={<TimelineContainer />} path="/" />
+          <Route
+            element={<DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />}
+            path="/dm"
+          />
+          <Route
+            element={<DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />}
+            path="/dm/:conversationId"
+          />
+          <Route element={<SearchContainer />} path="/search" />
+          <Route
+            element={
+              <Suspense fallback={null}>
+                <UserProfileContainerLazy />
+              </Suspense>
+            }
+            path="/users/:username"
+          />
+          <Route element={<PostContainer />} path="/posts/:postId" />
+          <Route element={<TermContainer />} path="/terms" />
+          <Route
+            element={
+              <Suspense fallback={null}>
+                <CrokContainerLazy activeUser={activeUser} authModalId={authModalId} />
+              </Suspense>
+            }
+            path="/crok"
+          />
+          <Route
+            element={
+              <Suspense fallback={null}>
+                <NotFoundContainerLazy />
+              </Suspense>
+            }
+            path="*"
+          />
+        </Routes>
       </AppPage>
 
       <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />

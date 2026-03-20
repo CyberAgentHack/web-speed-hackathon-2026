@@ -200,10 +200,12 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       </h2>
 
       <textarea
+        aria-label="いまなにしてる？"
         className="border-cax-border placeholder-cax-text-subtle focus:outline-cax-brand w-full resize-none rounded-xl border px-3 py-2 focus:outline-2 focus:outline-offset-2"
-        rows={4}
         onChange={handleChangeText}
         placeholder="いまなにしてる？"
+        rows={4}
+        value={params.text}
       />
 
       <div className="text-cax-text flex w-full items-center justify-evenly">

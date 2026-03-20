@@ -2,6 +2,7 @@ import { Router } from "express";
 import { Op } from "sequelize";
 
 import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
+import { createPostPayloadQuery } from "@web-speed-hackathon-2026/server/src/routes/api/post_payloads";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 
 export const searchRouter = Router();
@@ -53,14 +54,16 @@ searchRouter.get("/search", async (req, res) => {
     }
   }
 
-  const result = await Post.findAll({
-    limit,
-    offset,
-    where: {
-      ...dateWhere,
-      ...(keywordConditions.length > 0 ? { [Op.or]: keywordConditions } : {}),
-    },
-  });
+  const result = await Post.unscoped().findAll(
+    createPostPayloadQuery({
+      limit,
+      offset,
+      where: {
+        ...dateWhere,
+        ...(keywordConditions.length > 0 ? { [Op.or]: keywordConditions } : {}),
+      },
+    }),
+  );
 
   return res.status(200).type("application/json").send(result);
 });
