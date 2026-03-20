@@ -129,7 +129,7 @@ const config = {
     concatenateModules: true,
     usedExports: true,
     providedExports: true,
-    sideEffects: true,
+    sideEffects: false,
   },
   ignoreWarnings: [
     {
