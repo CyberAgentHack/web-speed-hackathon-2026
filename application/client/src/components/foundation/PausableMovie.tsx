@@ -53,7 +53,7 @@ export const PausableMovie = ({ src }: Props) => {
         {!isLoaded && (
           <img
             alt=""
-            className="absolute inset-0 h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover z-10"
             src={thumbSrc}
           />
         )}
