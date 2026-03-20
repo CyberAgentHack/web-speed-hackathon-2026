@@ -24,6 +24,8 @@ RUN --mount=type=cache,target=/root/.bun/install/cache CI=true bun install --fro
 
 FROM base
 
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /app /app
 
 EXPOSE 8080
