@@ -97,6 +97,7 @@ export const DirectMessagePage = ({
     <section className="bg-cax-surface flex min-h-[calc(100vh-(--spacing(12)))] flex-col lg:min-h-screen">
       <header className="border-cax-border bg-cax-surface sticky top-0 z-10 flex items-center gap-2 border-b px-4 py-3">
         <img
+          loading="lazy"
           alt={peer.profileImage.alt}
           className="h-12 w-12 rounded-full object-cover"
           src={getProfileImagePath(peer.profileImage.id)}

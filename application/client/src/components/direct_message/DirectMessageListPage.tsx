@@ -85,6 +85,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                 <Link className="hover:bg-cax-surface-subtle px-4" to={`/dm/${conversation.id}`}>
                   <div className="border-cax-border flex gap-4 border-b px-4 pt-2 pb-4">
                     <img
+                      loading="lazy"
                       alt={peer.profileImage.alt}
                       className="w-12 shrink-0 self-start rounded-full"
                       src={getProfileImagePath(peer.profileImage.id)}

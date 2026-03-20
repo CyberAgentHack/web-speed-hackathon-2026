@@ -38,6 +38,7 @@ export const AccountMenu = ({ user, onLogout }: Props) => {
         onClick={() => setOpen((prev) => !prev)}
       >
         <img
+          loading="lazy"
           alt={user.profileImage.alt}
           className="h-10 w-10 shrink-0 rounded-full object-cover"
           src={getProfileImagePath(user.profileImage.id)}
