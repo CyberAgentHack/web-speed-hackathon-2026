@@ -12,6 +12,6 @@ mkdir -p "$OUT"
 
 for img in "$FOLDER"/*.{jpg,jpeg,png}; do
     if [ -f "$img" ]; then
-        convert "$img" -resize 800x "$OUT/$(basename "$img")"
+        convert "$img" -resize 256x "$OUT/$(basename "$img")"
     fi
 done
