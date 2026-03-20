@@ -28,7 +28,7 @@ RUN --mount=type=cache,id=s/e6939569-67bb-458b-b20c-677ae811a138-/pnpm/store,tar
 FROM base
 
 RUN apt-get update
-RUN apt-get install -y libgtk-3.0 libgbm-dev libnss3 libatk-bridge2.0-0 libasound2 ffmpeg
+RUN apt-get install -y libgtk-3.0 libgbm-dev libnss3 libatk-bridge2.0-0 libasound2 ffmpeg libimage-exiftool-perl
 
 COPY --from=build /app /app
 
