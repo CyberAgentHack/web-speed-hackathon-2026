@@ -8,6 +8,8 @@ import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/
 
 const SoundArea = lazy(() => import("@web-speed-hackathon-2026/client/src/components/post/SoundArea").then(m => ({ default: m.SoundArea })));
 
+import { handleImageError } from "@web-speed-hackathon-2026/client/src/utils/error_handlers";
+
 interface Props {
   post: Models.Post;
 }
@@ -37,6 +39,7 @@ export const PostItem = memo(({ post }: Props) => {
                 height={64}
                 loading="lazy"
                 decoding="async"
+                onError={handleImageError}
               />
             </Link>
           </div>

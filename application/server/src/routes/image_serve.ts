@@ -7,11 +7,20 @@ import { PUBLIC_PATH, UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/p
 export const imageServeRouter = Router();
 
 const serveResizedImage = async (req: any, res: any, subDir: string = "") => {
-  const { filename } = req.params;
+  let { filename } = req.params;
   const widthStr = req.query.width as string | undefined;
-  const width = widthStr ? parseInt(widthStr, 10) : null;
+  let width = widthStr ? parseInt(widthStr, 10) : null;
   
-  // 検索対象のパス候補
+  // ファイル名から _w(\d+) を抽出して削除
+  const match = filename.match(/(.+)_w(\d+)\.avif$/);
+  if (match) {
+    filename = `${match[1]}.avif`;
+    if (!width) {
+      width = parseInt(match[2], 10);
+    }
+  }
+
+  // 検索対象のパス候補 (元のファイル名で探す)
   const paths = [
     path.resolve(UPLOAD_PATH, "images", subDir, filename),
     path.resolve(PUBLIC_PATH, "images", subDir, filename),

@@ -2,6 +2,7 @@ import { MouseEvent, useCallback, useId } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
+import { handleImageError } from "@web-speed-hackathon-2026/client/src/utils/error_handlers";
 
 interface Props {
   src: string;
@@ -30,6 +31,7 @@ export const CoveredImage = ({ src }: Props) => {
           loading="eager"
           fetchPriority="high"
           decoding="async"
+          onError={handleImageError}
         />
 
         <Button

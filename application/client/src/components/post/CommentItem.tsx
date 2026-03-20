@@ -4,6 +4,8 @@ import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
+import { handleImageError } from "@web-speed-hackathon-2026/client/src/utils/error_handlers";
+
 interface Props {
   comment: Models.Comment;
 }
@@ -32,6 +34,7 @@ export const CommentItem = memo(({ comment }: Props) => {
               height={48}
               loading="lazy"
               decoding="async"
+              onError={handleImageError}
             />
           </Link>
         </div>
