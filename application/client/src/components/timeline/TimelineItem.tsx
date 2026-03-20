@@ -1,4 +1,4 @@
-import { MouseEventHandler, memo, useCallback } from "react";
+import { MouseEventHandler, memo, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router";
 
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
@@ -31,6 +31,7 @@ interface Props {
 
 export const TimelineItem = memo(({ post }: Props) => {
   const navigate = useNavigate();
+  const createdAt = useMemo(() => new Date(post.createdAt), [post.createdAt]);
 
   /**
    * ボタンやリンク以外の箇所をクリックしたとき かつ 文字が選択されてないとき、投稿詳細ページに遷移する
@@ -77,8 +78,8 @@ export const TimelineItem = memo(({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={new Date(post.createdAt).toISOString()}>
-                {new Date(post.createdAt).toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" })}
+              <time dateTime={createdAt.toISOString()}>
+                {createdAt.toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" })}
               </time>
             </Link>
           </p>

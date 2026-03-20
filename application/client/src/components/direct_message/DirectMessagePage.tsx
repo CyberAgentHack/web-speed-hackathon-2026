@@ -42,7 +42,7 @@ export const DirectMessagePage = ({
   const [text, setText] = useState("");
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
-  const scrollHeightRef = useRef(0);
+  const messageListRef = useRef<HTMLDivElement>(null);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -73,21 +73,10 @@ export const DirectMessagePage = ({
   );
 
   useEffect(() => {
-    const observer = new MutationObserver(() => {
-      const height = document.body.scrollHeight;
-      if (height !== scrollHeightRef.current) {
-        scrollHeightRef.current = height;
-        window.scrollTo(0, height);
-      }
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-
-    // Initial scroll
-    window.scrollTo(0, document.body.scrollHeight);
-
-    return () => observer.disconnect();
-  }, []);
+    const container = messageListRef.current;
+    if (container == null) return;
+    container.scrollTop = container.scrollHeight;
+  }, [conversation.messages.length]);
 
   if (conversationError != null) {
     return (
@@ -115,7 +104,7 @@ export const DirectMessagePage = ({
         </div>
       </header>
 
-      <div className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8">
+      <div ref={messageListRef} className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8">
         {conversation.messages.length === 0 && (
           <p className="text-cax-text-muted text-center text-sm">
             まだメッセージはありません。最初のメッセージを送信してみましょう。
@@ -128,6 +117,7 @@ export const DirectMessagePage = ({
 
             return (
               <li
+                key={message.id}
                 className={classNames(
                   "flex flex-col w-full",
                   isActiveUserSend ? "items-end" : "items-start",
