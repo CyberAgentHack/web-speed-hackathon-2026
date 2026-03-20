@@ -36,7 +36,12 @@ crokRouter.get("/crok", async (req, res) => {
   // TTFT (Time to First Token)
   await sleep(3000);
 
-  for (const char of response) {
+  const chunkSize = 20
+  const result = [];
+for (let i = 0; i < response.length; i += chunkSize) {
+    result.push(response.slice(i, i + chunkSize));
+}
+  for (const char of result) {
     if (res.closed) break;
 
     const data = JSON.stringify({ text: char, done: false });
