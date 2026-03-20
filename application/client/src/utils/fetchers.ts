@@ -43,7 +43,8 @@ export async function sendJSON<T>(url: string, data: object): Promise<T> {
     method: "POST",
   });
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
+    const body = await response.json().catch(() => null);
+    throw Object.assign(new Error(`HTTP ${response.status}`), { responseJSON: body });
   }
   return response.json() as Promise<T>;
 }
