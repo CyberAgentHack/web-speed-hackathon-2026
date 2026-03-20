@@ -1,6 +1,23 @@
 import { ComponentProps, isValidElement, ReactElement, ReactNode } from "react";
-import SyntaxHighlighter from "react-syntax-highlighter";
+import SyntaxHighlighter from "react-syntax-highlighter/dist/esm/light";
 import { atomOneLight } from "react-syntax-highlighter/dist/esm/styles/hljs";
+
+import json from "react-syntax-highlighter/dist/esm/languages/hljs/json";
+import bash from "react-syntax-highlighter/dist/esm/languages/hljs/bash";
+import python from "react-syntax-highlighter/dist/esm/languages/hljs/python";
+import typescript from "react-syntax-highlighter/dist/esm/languages/hljs/typescript";
+import rust from "react-syntax-highlighter/dist/esm/languages/hljs/rust";
+import sql from "react-syntax-highlighter/dist/esm/languages/hljs/sql";
+import javascript from "react-syntax-highlighter/dist/esm/languages/hljs/javascript";
+
+SyntaxHighlighter.registerLanguage("json", json);
+SyntaxHighlighter.registerLanguage("bash", bash);
+SyntaxHighlighter.registerLanguage("python", python);
+SyntaxHighlighter.registerLanguage("typescript", typescript);
+SyntaxHighlighter.registerLanguage("ts", typescript);
+SyntaxHighlighter.registerLanguage("rust", rust);
+SyntaxHighlighter.registerLanguage("sql", sql);
+SyntaxHighlighter.registerLanguage("javascript", javascript);
 
 const getLanguage = (children: ReactElement<ComponentProps<"code">>) => {
   const className = children.props.className;
