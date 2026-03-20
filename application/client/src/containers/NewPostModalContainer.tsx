@@ -32,9 +32,10 @@ async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promis
 
 interface Props {
   id: string;
+  openRequestId: number;
 }
 
-export const NewPostModalContainer = ({ id }: Props) => {
+export const NewPostModalContainer = ({ id, openRequestId }: Props) => {
   const dialogId = useId();
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
@@ -57,6 +58,15 @@ export const NewPostModalContainer = ({ id }: Props) => {
       element.removeEventListener("toggle", handleToggle);
     };
   }, []);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (openRequestId === 0 || element == null || element.open) {
+      return;
+    }
+
+    element.showModal();
+  }, [openRequestId]);
 
   const navigate = useNavigate();
 

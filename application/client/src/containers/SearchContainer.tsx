@@ -6,6 +6,7 @@ import { SearchPage } from "@web-speed-hackathon-2026/client/src/components/appl
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/client/src/search/services";
+import { ReduxFormProvider } from "@web-speed-hackathon-2026/client/src/store/ReduxFormProvider";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 export const SearchContainer = () => {
@@ -61,12 +62,14 @@ export const SearchContainer = () => {
       <Helmet>
         <title>検索 - CaX</title>
       </Helmet>
-      <SearchPage
-        isNegative={isNegative}
-        query={query}
-        results={posts}
-        initialValues={{ searchText: query }}
-      />
+      <ReduxFormProvider>
+        <SearchPage
+          isNegative={isNegative}
+          query={query}
+          results={posts}
+          initialValues={{ searchText: query }}
+        />
+      </ReduxFormProvider>
     </InfiniteScroll>
   );
 };

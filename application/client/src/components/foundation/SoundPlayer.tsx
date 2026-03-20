@@ -1,9 +1,13 @@
-import { ReactEventHandler, useCallback, useRef, useState } from "react";
+import { lazy, ReactEventHandler, Suspense, useCallback, useEffect, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import { SoundWaveSVG } from "@web-speed-hackathon-2026/client/src/components/foundation/SoundWaveSVG";
 import { getSoundPath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+
+const SoundWaveSVG = lazy(async () => {
+  const module = await import("@web-speed-hackathon-2026/client/src/components/foundation/SoundWaveSVG");
+  return { default: module.SoundWaveSVG };
+});
 
 interface Props {
   sound: Models.Sound;
@@ -20,6 +24,36 @@ export const SoundPlayer = ({ sound }: Props) => {
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [shouldLoadWaveform, setShouldLoadWaveform] = useState(false);
+
+  useEffect(() => {
+    const idleWindow = window as Window & {
+      cancelIdleCallback?: (id: number) => void;
+      requestIdleCallback?: (callback: () => void) => number;
+    };
+    let idleId: number | null = null;
+    let timeoutId: number | null = null;
+
+    const scheduleWaveformLoad = () => {
+      setShouldLoadWaveform(true);
+    };
+
+    if (idleWindow.requestIdleCallback) {
+      idleId = idleWindow.requestIdleCallback(scheduleWaveformLoad);
+    } else {
+      timeoutId = window.setTimeout(scheduleWaveformLoad, 500);
+    }
+
+    return () => {
+      if (idleId !== null) {
+        idleWindow.cancelIdleCallback?.(idleId);
+      }
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, []);
+
   const handleTogglePlaying = useCallback(() => {
     setIsPlaying((isPlaying) => {
       if (isPlaying) {
@@ -54,7 +88,15 @@ export const SoundPlayer = ({ sound }: Props) => {
           <AspectRatioBox aspectHeight={1} aspectWidth={10}>
             <div className="relative h-full w-full">
               <div className="absolute inset-0 h-full w-full">
-                <SoundWaveSVG soundSrc={src} />
+                {shouldLoadWaveform ? (
+                  <Suspense
+                    fallback={<div aria-hidden="true" className="bg-cax-border/30 h-full w-full" />}
+                  >
+                    <SoundWaveSVG soundSrc={src} />
+                  </Suspense>
+                ) : (
+                  <div aria-hidden="true" className="bg-cax-border/30 h-full w-full" />
+                )}
               </div>
               <div
                 className="bg-cax-surface-subtle absolute inset-0 h-full w-full opacity-75"

@@ -26,4 +26,7 @@ export async function initializeSequelize() {
     storage: TEMP_PATH,
   });
   initModels(_sequelize);
+  await _sequelize.query(
+    "CREATE INDEX IF NOT EXISTS idx_comments_post_id_created_at ON Comments (postId, createdAt)",
+  );
 }

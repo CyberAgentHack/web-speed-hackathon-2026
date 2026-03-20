@@ -2,6 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const LIMIT = 30;
 
+interface Options {
+  enabled?: boolean;
+}
+
 interface ReturnValues<T> {
   data: Array<T>;
   error: Error | null;
@@ -20,9 +24,11 @@ function appendPaginationParams(apiPath: string, limit: number, offset: number):
 export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
+  options: Options = {},
 ): ReturnValues<T> {
+  const enabled = options.enabled ?? true;
   const internalRef = useRef({
-    hasMore: apiPath !== "",
+    hasMore: apiPath !== "" && enabled,
     isLoading: false,
     offset: 0,
     requestId: 0,
@@ -31,13 +37,13 @@ export function useInfiniteFetch<T>(
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
     data: [],
     error: null,
-    hasMore: apiPath !== "",
-    isLoading: apiPath !== "",
+    hasMore: apiPath !== "" && enabled,
+    isLoading: apiPath !== "" && enabled,
   });
 
   const fetchMore = useCallback(() => {
     const { hasMore, isLoading, offset } = internalRef.current;
-    if (!apiPath || !hasMore || isLoading) {
+    if (!enabled || !apiPath || !hasMore || isLoading) {
       return;
     }
 
@@ -92,11 +98,11 @@ export function useInfiniteFetch<T>(
         };
       },
     );
-  }, [apiPath, fetcher]);
+  }, [apiPath, enabled, fetcher]);
 
   useEffect(() => {
     internalRef.current = {
-      hasMore: apiPath !== "",
+      hasMore: apiPath !== "" && enabled,
       isLoading: false,
       offset: 0,
       requestId: internalRef.current.requestId + 1,
@@ -105,16 +111,16 @@ export function useInfiniteFetch<T>(
     setResult(() => ({
       data: [],
       error: null,
-      hasMore: apiPath !== "",
-      isLoading: apiPath !== "",
+      hasMore: apiPath !== "" && enabled,
+      isLoading: apiPath !== "" && enabled,
     }));
 
-    if (!apiPath) {
+    if (!enabled || !apiPath) {
       return;
     }
 
     fetchMore();
-  }, [fetchMore]);
+  }, [apiPath, enabled, fetchMore]);
 
   return {
     ...result,

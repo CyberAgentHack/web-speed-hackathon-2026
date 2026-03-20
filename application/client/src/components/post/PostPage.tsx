@@ -1,16 +1,13 @@
-import { CommentList } from "@web-speed-hackathon-2026/client/src/components/post/CommentList";
 import { PostItem } from "@web-speed-hackathon-2026/client/src/components/post/PostItem";
 
 interface Props {
-  comments: Models.Comment[];
   post: Models.Post;
 }
 
-export const PostPage = ({ comments, post }: Props) => {
+export const PostPage = ({ post }: Props) => {
   return (
     <>
       <PostItem post={post} prioritizeMedia />
-      <CommentList comments={comments} />
     </>
   );
 };

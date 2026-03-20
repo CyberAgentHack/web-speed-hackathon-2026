@@ -3,9 +3,18 @@ import { Helmet, HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
-import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
-import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+
+const AuthModalContainer = lazy(async () => {
+  const module = await import("@web-speed-hackathon-2026/client/src/containers/AuthModalContainer");
+  return { default: module.AuthModalContainer };
+});
+
+const NewPostModalContainer = lazy(async () => {
+  const module =
+    await import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer");
+  return { default: module.NewPostModalContainer };
+});
 
 const TimelineContainer = lazy(async () => {
   const module = await import("@web-speed-hackathon-2026/client/src/containers/TimelineContainer");
@@ -81,11 +90,23 @@ export const AppContainer = () => {
 
   const authModalId = useId();
   const newPostModalId = useId();
+  const [authModalOpenRequestId, setAuthModalOpenRequestId] = useState(0);
+  const [newPostModalOpenRequestId, setNewPostModalOpenRequestId] = useState(0);
+  const [shouldLoadAuthModal, setShouldLoadAuthModal] = useState(false);
+  const [shouldLoadNewPostModal, setShouldLoadNewPostModal] = useState(false);
   const routeFallback = (
     <div className="text-cax-text-muted flex min-h-screen items-center justify-center p-6">
       読み込み中...
     </div>
   );
+  const handleOpenAuthModal = useCallback(() => {
+    setShouldLoadAuthModal(true);
+    setAuthModalOpenRequestId((requestId) => requestId + 1);
+  }, []);
+  const handleOpenNewPostModal = useCallback(() => {
+    setShouldLoadNewPostModal(true);
+    setNewPostModalOpenRequestId((requestId) => requestId + 1);
+  }, []);
 
   if (isLoadingActiveUser) {
     return (
@@ -101,8 +122,8 @@ export const AppContainer = () => {
     <HelmetProvider>
       <AppPage
         activeUser={activeUser}
-        authModalId={authModalId}
-        newPostModalId={newPostModalId}
+        onOpenAuthModal={handleOpenAuthModal}
+        onOpenNewPostModal={handleOpenNewPostModal}
         onLogout={handleLogout}
       >
         <Suspense fallback={routeFallback}>
@@ -110,12 +131,20 @@ export const AppContainer = () => {
             <Route element={<TimelineContainer />} path="/" />
             <Route
               element={
-                <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
+                <DirectMessageListContainer
+                  activeUser={activeUser}
+                  onOpenAuthModal={handleOpenAuthModal}
+                />
               }
               path="/dm"
             />
             <Route
-              element={<DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />}
+              element={
+                <DirectMessageContainer
+                  activeUser={activeUser}
+                  onOpenAuthModal={handleOpenAuthModal}
+                />
+              }
               path="/dm/:conversationId"
             />
             <Route element={<SearchContainer />} path="/search" />
@@ -123,7 +152,7 @@ export const AppContainer = () => {
             <Route element={<PostContainer />} path="/posts/:postId" />
             <Route element={<TermContainer />} path="/terms" />
             <Route
-              element={<CrokContainer activeUser={activeUser} authModalId={authModalId} />}
+              element={<CrokContainer activeUser={activeUser} onOpenAuthModal={handleOpenAuthModal} />}
               path="/crok"
             />
             <Route element={<NotFoundContainer />} path="*" />
@@ -131,8 +160,20 @@ export const AppContainer = () => {
         </Suspense>
       </AppPage>
 
-      <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
-      <NewPostModalContainer id={newPostModalId} />
+      <Suspense fallback={null}>
+        {shouldLoadAuthModal ? (
+          <AuthModalContainer
+            id={authModalId}
+            openRequestId={authModalOpenRequestId}
+            onUpdateActiveUser={setActiveUser}
+          />
+        ) : null}
+      </Suspense>
+      <Suspense fallback={null}>
+        {shouldLoadNewPostModal ? (
+          <NewPostModalContainer id={newPostModalId} openRequestId={newPostModalOpenRequestId} />
+        ) : null}
+      </Suspense>
     </HelmetProvider>
   );
 };
