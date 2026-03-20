@@ -8,12 +8,13 @@ interface Props {
   src: string;
   srcSet?: string;
   sizes?: string;
+  isLCP?: boolean;
 }
 
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
-export const CoveredImage = ({ alt, src, srcSet, sizes }: Props) => {
+export const CoveredImage = ({ alt, src, srcSet, sizes, isLCP }: Props) => {
   const dialogId = useId();
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
@@ -25,8 +26,9 @@ export const CoveredImage = ({ alt, src, srcSet, sizes }: Props) => {
       <img
         alt={alt}
         className="h-full w-full object-cover"
-        decoding="async"
-        loading="lazy"
+        decoding={isLCP ? "sync" : "async"}
+        loading={isLCP ? "eager" : "lazy"}
+        fetchPriority={isLCP ? "high" : undefined}
         src={src}
         srcSet={srcSet}
         sizes={sizes}
