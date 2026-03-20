@@ -14,7 +14,8 @@
   },
   "devDependencies": {
     "oxfmt": "0.36.0",
-    "oxlint": "1.43.0"
+    "oxlint": "1.43.0",
+    "webpack-bundle-analyzer": "5.2.0"
   },
   "engines": {
     "node": "24.14.0"

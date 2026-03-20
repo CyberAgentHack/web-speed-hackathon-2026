@@ -1,12 +1,14 @@
+import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { extractMetadataFromSound } from "@web-speed-hackathon-2026/client/src/utils/extract_metadata_from_sound";
-import { loadFFmpeg } from "@web-speed-hackathon-2026/client/src/utils/load_ffmpeg";
+// import { loadFFmpeg } from "@web-speed-hackathon-2026/client/src/utils/load_ffmpeg";
 
 interface Options {
   extension: string;
 }
 
 export async function convertSound(file: File, options: Options): Promise<Blob> {
-  const ffmpeg = await loadFFmpeg();
+  const ffmpeg = new FFmpeg();
+  // const ffmpeg = await loadFFmpeg();
 
   const exportFile = `export.${options.extension}`;
 
