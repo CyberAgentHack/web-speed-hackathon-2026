@@ -5,15 +5,17 @@ interface ParsedData {
   peaks: number[];
 }
 
-async function calculate(data: ArrayBuffer): Promise<ParsedData> {
+async function calculate(url: string): Promise<ParsedData> {
+  const response = await fetch(url);
+  const data = await response.arrayBuffer();
   const audioCtx = new AudioContext();
 
   // 音声をデコードする
-  const buffer = await audioCtx.decodeAudioData(data.slice(0));
+  const buffer = await audioCtx.decodeAudioData(data);
   // 左の音声データの絶対値を取る
   const leftData = buffer.getChannelData(0);
   // 右の音声データの絶対値を取る
-  const rightData = buffer.getChannelData(1);
+  const rightData = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : leftData;
 
   // 左右の音声データの平均を取る
   const normalized = new Float32Array(leftData.length);
@@ -40,10 +42,10 @@ async function calculate(data: ArrayBuffer): Promise<ParsedData> {
 }
 
 interface Props {
-  soundData: ArrayBuffer;
+  soundUrl: string;
 }
 
-export const SoundWaveSVG = ({ soundData }: Props) => {
+export const SoundWaveSVG = ({ soundUrl }: Props) => {
   const uniqueIdRef = useRef(Math.random().toString(16));
   const [{ max, peaks }, setPeaks] = useState<ParsedData>({
     max: 0,
@@ -51,10 +53,10 @@ export const SoundWaveSVG = ({ soundData }: Props) => {
   });
 
   useEffect(() => {
-    calculate(soundData).then(({ max, peaks }) => {
+    calculate(soundUrl).then(({ max, peaks }) => {
       setPeaks({ max, peaks });
     });
-  }, [soundData]);
+  }, [soundUrl]);
 
   return (
     <svg className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1">
