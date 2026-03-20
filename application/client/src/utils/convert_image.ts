@@ -1,13 +1,38 @@
 import { initializeImageMagick, ImageMagick, MagickFormat } from "@imagemagick/magick-wasm";
-import magickWasm from "@imagemagick/magick-wasm/magick.wasm?binary";
 import { dump, insert, ImageIFD } from "piexifjs";
+
+const MAGICK_WASM_VERSION = "0.0.37";
+const MAGICK_WASM_URL = `https://unpkg.com/@imagemagick/magick-wasm@${MAGICK_WASM_VERSION}/dist/magick.wasm`;
+
+let initializePromise: Promise<void> | null = null;
+
+async function ensureImageMagickInitialized(): Promise<void> {
+  if (initializePromise == null) {
+    initializePromise = (async () => {
+      const response = await fetch(MAGICK_WASM_URL);
+      if (response.ok !== true) {
+        throw new Error(`Failed to fetch ImageMagick wasm: ${MAGICK_WASM_URL}`);
+      }
+
+      const wasm = new Uint8Array(await response.arrayBuffer());
+      await initializeImageMagick(wasm);
+    })();
+  }
+
+  try {
+    await initializePromise;
+  } catch (error) {
+    initializePromise = null;
+    throw error;
+  }
+}
 
 interface Options {
   extension: MagickFormat;
 }
 
 export async function convertImage(file: File, options: Options): Promise<Blob> {
-  await initializeImageMagick(magickWasm);
+  await ensureImageMagickInitialized();
 
   const byteArray = new Uint8Array(await file.arrayBuffer());
 
