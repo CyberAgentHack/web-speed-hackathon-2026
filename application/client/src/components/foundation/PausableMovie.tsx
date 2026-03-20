@@ -16,15 +16,31 @@ interface Props {
 export const PausableMovie = ({ src, width, height }: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
+    const handleCanPlay = () => {
+      setIsLoaded(true);
+      if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        video.play().then(() => setIsPlaying(true)).catch(() => {});
+      }
+    };
+
+    video.addEventListener("canplay", handleCanPlay);
+    return () => video.removeEventListener("canplay", handleCanPlay);
+  }, []);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !isLoaded) return;
+
     if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       video.play().then(() => setIsPlaying(true)).catch(() => {});
     }
-  }, [src]);
+  }, [src, isLoaded]);
 
   const handleClick = useCallback(() => {
     const video = videoRef.current;
@@ -40,12 +56,36 @@ export const PausableMovie = ({ src, width, height }: Props) => {
 
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
-      <button
-        aria-label="動画プレイヤー"
-        className="group relative block h-full w-full"
-        onClick={handleClick}
-        type="button"
-      >
+      {isLoaded ? (
+        <button
+          aria-label="動画プレイヤー"
+          className="group relative block h-full w-full"
+          onClick={handleClick}
+          type="button"
+        >
+          <video
+            ref={videoRef}
+            src={src}
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            className="h-full w-full object-cover"
+            width={width}
+            height={height}
+          />
+          <div
+            className={classNames(
+              "absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-cax-overlay/50 text-3xl text-cax-surface-raised",
+              {
+                "opacity-0 group-hover:opacity-100": isPlaying,
+              },
+            )}
+          >
+            <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
+          </div>
+        </button>
+      ) : (
         <video
           ref={videoRef}
           src={src}
@@ -57,17 +97,7 @@ export const PausableMovie = ({ src, width, height }: Props) => {
           width={width}
           height={height}
         />
-        <div
-          className={classNames(
-            "absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-cax-overlay/50 text-3xl text-cax-surface-raised",
-            {
-              "opacity-0 group-hover:opacity-100": isPlaying,
-            },
-          )}
-        >
-          <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
-        </div>
-      </button>
+      )}
     </AspectRatioBox>
   );
 };

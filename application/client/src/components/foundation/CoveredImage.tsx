@@ -35,18 +35,30 @@ export const CoveredImage = ({
   const dialogId = useId();
   const [alt, setAlt] = useState("");
   const [containerSize, setContainerSize] = useState({ height: 0, width: 0 });
-  const srcSet = [
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  const imgRef = useCallback<RefCallback<HTMLImageElement>>((el) => {
+    if (!el) return;
+    if (el.complete && el.naturalWidth > 0) {
+      setIsLoaded(true);
+    }
+  }, []);
+  const srcSet = width > 0 ? [
     ...RESPONSIVE_IMAGE_WIDTHS.filter((candidateWidth) => candidateWidth < width).map(
       (candidateWidth) =>
         `${src.replace(/\.webp$/, `-${candidateWidth}w.webp`)} ${candidateWidth}w`,
     ),
     `${src} ${width}w`,
-  ].join(", ");
+  ].join(", ") : "";
 
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
     ev.stopPropagation();
   }, []);
+
+  useEffect(() => {
+    setIsLoaded(false);
+  }, [src]);
 
   // EXIF 解析を非同期でバックグラウンド実施
   useEffect(() => {
@@ -73,16 +85,17 @@ export const CoveredImage = ({
     });
   }, []);
 
-  const containerRatio = containerSize.height / containerSize.width;
-  const imageRatio = height / width;
+  const containerRatio = containerSize.width > 0 ? containerSize.height / containerSize.width : 1;
+  const imageRatio = width > 0 && height > 0 ? height / width : 1;
 
   return (
     <div ref={callbackRef} className="relative h-full w-full overflow-hidden">
       <img
+        ref={imgRef}
         alt={alt}
         fetchPriority={fetchPriority}
         height={height}
-        loading={fetchPriority === "high" ? "eager" : "lazy"}
+        loading="eager"
         width={width}
         className={classNames(
           "absolute left-1/2 top-1/2 max-w-none -translate-x-1/2 -translate-y-1/2",
@@ -91,9 +104,16 @@ export const CoveredImage = ({
             "w-full h-auto": containerRatio <= imageRatio,
           },
         )}
+        style={{ visibility: isLoaded ? "visible" : "hidden" }}
         sizes={sizes}
         src={src}
         srcSet={srcSet}
+        onLoad={() => {
+          setIsLoaded(true);
+        }}
+        onError={() => {
+          setIsLoaded(false);
+        }}
       />
 
       <button

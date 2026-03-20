@@ -42,7 +42,8 @@ export function useInfiniteFetch<T>(
       limit: String(LIMIT),
       offset: String(offset),
     });
-    const urlWithParams = `${apiPath}?${params.toString()}`;
+    const separator = apiPath.includes("?") ? "&" : "?";
+    const urlWithParams = `${apiPath}${separator}${params.toString()}`;
 
     void fetcherRef.current(urlWithParams).then(
       (data) => {

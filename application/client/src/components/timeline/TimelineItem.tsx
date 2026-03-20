@@ -42,7 +42,11 @@ export const TimelineItem = ({ post, isFirstItem = false }: Props) => {
     (ev) => {
       const isSelectedText = document.getSelection()?.isCollapsed === false;
       if (!isClickedAnchorOrButton(ev.target, ev.currentTarget) && !isSelectedText) {
+        console.log("[TimelineItem] Before navigate:", window.location.pathname);
         navigate(`/posts/${post.id}`);
+        setTimeout(() => {
+          console.log("[TimelineItem] After navigate (100ms):", window.location.pathname);
+        }, 100);
       }
     },
     [post, navigate],

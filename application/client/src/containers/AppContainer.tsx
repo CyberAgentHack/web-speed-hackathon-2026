@@ -6,7 +6,6 @@ import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/contain
 import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
 import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
-import { setPageTitle } from "@web-speed-hackathon-2026/client/src/utils/set_page_title";
 
 // Lazy-loaded route containers (only heavy routes with large dependencies)
 const CrokContainer = lazy(async () => {
@@ -93,13 +92,6 @@ export const AppContainer = () => {
   const authModalId = useId();
   const newPostModalId = useId();
 
-  useEffect(() => {
-    if (isLoadingActiveUser) {
-      setPageTitle("読込中 - CaX");
-    } else {
-      setPageTitle("CaX");
-    }
-  }, [isLoadingActiveUser]);
 
   if (isLoadingActiveUser) {
     return null;

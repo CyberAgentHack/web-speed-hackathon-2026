@@ -19,6 +19,10 @@ export const ImageArea = ({ images, fetchPriority = "auto" }: Props) => {
               ? "(max-width: 640px) calc(100vw - 32px), 640px"
               : "(max-width: 640px) calc((100vw - 36px) / 2), 320px";
 
+          // Use default dimensions if width/height are 0
+          const width = image.width || 600;
+          const height = image.height || 400;
+
           return (
             <div
               key={image.id}
@@ -32,8 +36,8 @@ export const ImageArea = ({ images, fetchPriority = "auto" }: Props) => {
             >
               <CoveredImage
                 src={getImagePath(image.id)}
-                width={image.width}
-                height={image.height}
+                width={width}
+                height={height}
                 fetchPriority={idx === 0 ? fetchPriority : "auto"}
                 sizes={sizes}
               />
