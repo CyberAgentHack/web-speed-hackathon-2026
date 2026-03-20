@@ -33,7 +33,7 @@ export const AccountMenu = ({ user, onLogout }: Props) => {
         </div>
       )}
       <button
-        aria-label="アカウントメニュー"
+        aria-label="アカウントメニューaaa"
         className="hover:bg-cax-surface-subtle flex w-full items-center gap-3 rounded-full p-2 transition-colors"
         onClick={() => setOpen((prev) => !prev)}
       >
