@@ -53,13 +53,19 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   }, [activeUser, conversationId]);
 
   const sendRead = useCallback(async () => {
+    if (activeUser == null || conversationId === "") {
+      return;
+    }
     await sendJSON(`/api/v1/dm/${conversationId}/read`, {});
-  }, [conversationId]);
+  }, [activeUser, conversationId]);
 
   useEffect(() => {
+    if (activeUser == null || conversationId === "") {
+      return;
+    }
     void loadConversation();
     void sendRead();
-  }, [loadConversation, sendRead]);
+  }, [activeUser, conversationId, loadConversation, sendRead]);
 
   const handleSubmit = useCallback(
     async (params: DirectMessageFormData) => {
@@ -104,7 +110,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
         }, TYPING_INDICATOR_DURATION_MS);
       }
     },
-    { delayMs: 5000 },
+    { delayMs: 5000, enabled: activeUser != null && conversationId !== "" },
   );
 
   if (activeUser === null) {
