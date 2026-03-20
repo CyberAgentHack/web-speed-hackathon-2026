@@ -17,15 +17,6 @@ const { TermsStandaloneShell } = termsStandaloneShellModule as {
 
 globalThis.React = React;
 
-function resolveScriptPaths() {
-  const termsEntryPath = path.resolve(distRoot, "scripts/terms.js");
-
-  return fs
-    .access(termsEntryPath)
-    .then(() => ["/scripts/vendor.js", "/scripts/terms.js"])
-    .catch(() => ["/scripts/vendor.js", "/scripts/main.js"]);
-}
-
 async function resolveStylePaths() {
   const termsStylePath = path.resolve(distRoot, "styles/terms.css");
 
@@ -36,11 +27,10 @@ async function resolveStylePaths() {
 }
 
 async function main() {
-  const [scripts, styles] = await Promise.all([resolveScriptPaths(), resolveStylePaths()]);
+  const styles = await resolveStylePaths();
   const appMarkup = renderToStaticMarkup(
     createElement(TermsStandaloneShell, { authModalId: TERMS_AUTH_MODAL_ID }),
   );
-  const scriptTags = scripts.map((scriptPath) => `<script defer src="${scriptPath}"></script>`).join("");
   const styleTags = styles.map((stylePath) => `<link rel="stylesheet" href="${stylePath}" />`).join("");
 
   const document = [
@@ -51,7 +41,6 @@ async function main() {
     '<meta name="viewport" content="width=device-width, initial-scale=1.0" />',
     "<title>利用規約 - CaX</title>",
     styleTags,
-    scriptTags,
     "</head>",
     '<body class="bg-cax-canvas text-cax-text">',
     `<div id="app">${appMarkup}</div>`,
