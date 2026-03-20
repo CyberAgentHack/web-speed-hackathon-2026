@@ -15,21 +15,35 @@ staticRouter.use(history());
 
 staticRouter.use(
   serveStatic(UPLOAD_PATH, {
-    etag: false,
-    lastModified: false,
+    etag: true,
+    lastModified: true,
+    maxAge: "1d",
   }),
 );
 
 staticRouter.use(
   serveStatic(PUBLIC_PATH, {
-    etag: false,
-    lastModified: false,
+    etag: true,
+    lastModified: true,
+    maxAge: "1d",
   }),
 );
 
 staticRouter.use(
   serveStatic(CLIENT_DIST_PATH, {
-    etag: false,
-    lastModified: false,
+    etag: true,
+    lastModified: true,
+    setHeaders: (res, filePath) => {
+      const p = filePath.replace(/\\/g, "/");
+      // main.js / main.css / index.html 以外のscripts・fontsはコンテンツアドレッサブルなので長期キャッシュ
+      const isImmutable =
+        (/\/scripts\//.test(p) && !/\/scripts\/main\.js$/.test(p)) ||
+        /\/styles\/fonts\//.test(p);
+      if (isImmutable) {
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      } else {
+        res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+      }
+    },
   }),
 );
