@@ -27,6 +27,7 @@ export const CoveredImage = ({ src, alt, priority = false }: Props) => {
 
   const [resolvedAlt, setResolvedAlt] = useState(sanitizeAltText(alt));
   const [isLoadingAlt, setIsLoadingAlt] = useState(false);
+  const [isPriorityImageReady, setIsPriorityImageReady] = useState(!priority);
 
   const handleOpenDialog = useCallback((ev: MouseEvent<HTMLButtonElement>) => {
     ev.stopPropagation();
@@ -84,7 +85,10 @@ export const CoveredImage = ({ src, alt, priority = false }: Props) => {
         decoding="async"
         fetchPriority={priority ? "high" : "auto"}
         loading={priority ? "eager" : "lazy"}
+        onError={() => setIsPriorityImageReady(true)}
+        onLoad={() => setIsPriorityImageReady(true)}
         src={src}
+        style={priority && !isPriorityImageReady ? { visibility: "hidden" } : undefined}
       />
 
       <button

@@ -34,7 +34,6 @@ directMessageRouter.get("/dm", async (req, res) => {
     initiator_profileImageId: string;
     initiator_pi_id: string;
     initiator_pi_alt: string;
-    initiator_pi_src: string;
     // member
     member_id: string;
     member_username: string;
@@ -44,7 +43,6 @@ directMessageRouter.get("/dm", async (req, res) => {
     member_profileImageId: string;
     member_pi_id: string;
     member_pi_alt: string;
-    member_pi_src: string;
     // last message
     msg_id: string | null;
     msg_body: string | null;
@@ -60,7 +58,6 @@ directMessageRouter.get("/dm", async (req, res) => {
     sender_createdAt: string | null;
     sender_pi_id: string | null;
     sender_pi_alt: string | null;
-    sender_pi_src: string | null;
     // unread count (messages from peer that are unread)
     unreadCount: number;
     lastMsgAt: string | null;
@@ -77,7 +74,6 @@ directMessageRouter.get("/dm", async (req, res) => {
       ui.profileImageId AS initiator_profileImageId,
       pi_i.id        AS initiator_pi_id,
       pi_i.alt       AS initiator_pi_alt,
-      pi_i.src       AS initiator_pi_src,
       -- member
       um.id          AS member_id,
       um.username    AS member_username,
@@ -87,7 +83,6 @@ directMessageRouter.get("/dm", async (req, res) => {
       um.profileImageId AS member_profileImageId,
       pi_m.id        AS member_pi_id,
       pi_m.alt       AS member_pi_alt,
-      pi_m.src       AS member_pi_src,
       -- last message
       lm.id          AS msg_id,
       lm.body        AS msg_body,
@@ -103,7 +98,6 @@ directMessageRouter.get("/dm", async (req, res) => {
       us.createdAt   AS sender_createdAt,
       pi_s.id        AS sender_pi_id,
       pi_s.alt       AS sender_pi_alt,
-      pi_s.src       AS sender_pi_src,
       -- unread count
       (SELECT COUNT(*) FROM DirectMessages dm2
        WHERE dm2.conversationId = c.id
@@ -142,7 +136,7 @@ directMessageRouter.get("/dm", async (req, res) => {
       name: r.initiator_name,
       description: r.initiator_description,
       createdAt: r.initiator_createdAt,
-      profileImage: { id: r.initiator_pi_id, alt: r.initiator_pi_alt, src: r.initiator_pi_src },
+      profileImage: { id: r.initiator_pi_id, alt: r.initiator_pi_alt },
     },
     member: {
       id: r.member_id,
@@ -150,7 +144,7 @@ directMessageRouter.get("/dm", async (req, res) => {
       name: r.member_name,
       description: r.member_description,
       createdAt: r.member_createdAt,
-      profileImage: { id: r.member_pi_id, alt: r.member_pi_alt, src: r.member_pi_src },
+      profileImage: { id: r.member_pi_id, alt: r.member_pi_alt },
     },
     messages: r.msg_id === null ? [] : [
       {
@@ -167,7 +161,7 @@ directMessageRouter.get("/dm", async (req, res) => {
           name: r.sender_name,
           description: r.sender_description,
           createdAt: r.sender_createdAt,
-          profileImage: r.sender_pi_id === null ? null : { id: r.sender_pi_id, alt: r.sender_pi_alt, src: r.sender_pi_src },
+          profileImage: r.sender_pi_id === null ? null : { id: r.sender_pi_id, alt: r.sender_pi_alt },
         },
       },
     ],

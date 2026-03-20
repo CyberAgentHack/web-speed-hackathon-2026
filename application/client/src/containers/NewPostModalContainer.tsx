@@ -12,10 +12,45 @@ interface SubmitParams {
   text: string;
 }
 
+interface UploadedImage {
+  id: string;
+}
+
+const DISALLOWED_CONTROL_CHARACTERS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
+
+async function extractImageAlt(file: File): Promise<string> {
+  try {
+    const { load, ImageIFD } = await import("piexifjs");
+    const binary = Array.from(new Uint8Array(await file.arrayBuffer()))
+      .map((byte) => String.fromCharCode(byte))
+      .join("");
+    const exif = load(binary);
+    const rawDescription = exif?.["0th"]?.[ImageIFD.ImageDescription];
+    if (typeof rawDescription !== "string") {
+      return "";
+    }
+    const decoded = new TextDecoder().decode(
+      Uint8Array.from(rawDescription, (char) => char.charCodeAt(0)),
+    );
+    return decoded.replace(DISALLOWED_CONTROL_CHARACTERS, "");
+  } catch {
+    return "";
+  }
+}
+
 async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promise<Models.Post> {
   const payload = {
     images: images
-      ? await Promise.all(images.map((image) => sendFile("/api/v1/images", image)))
+      ? await Promise.all(
+          images.map(async (image) => {
+            const [uploadedImage, alt] = await Promise.all([
+              sendFile<UploadedImage>("/api/v1/images", image),
+              extractImageAlt(image),
+            ]);
+
+            return { id: uploadedImage.id, alt };
+          }),
+        )
       : [],
     movie: movie ? await sendFile("/api/v1/movies", movie) : undefined,
     sound: sound ? await sendFile("/api/v1/sounds", sound) : undefined,
