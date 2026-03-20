@@ -13,8 +13,8 @@ interface Props {
  */
 export const PausableMovie = ({ src, isPriority }: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [hasStarted, setHasStarted] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [hasStarted, setHasStarted] = useState(true);
 
   const handleClick = useCallback(() => {
     if (videoRef.current) {
@@ -44,6 +44,7 @@ export const PausableMovie = ({ src, isPriority }: Props) => {
           // LCPと通信最適化のための要件
           preload={isPriority ? "auto" : "none"}
           {...({ fetchPriority: isPriority ? "high" : "auto" } as any)}
+          autoPlay
           loop
           muted
           playsInline
