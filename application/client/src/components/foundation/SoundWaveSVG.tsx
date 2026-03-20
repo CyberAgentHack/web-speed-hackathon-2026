@@ -43,12 +43,15 @@ export const SoundWaveSVG = ({ soundUrl }: Props) => {
   });
 
   useEffect(() => {
-    fetch(soundUrl)
+    const controller = new AbortController();
+    fetch(soundUrl, { signal: controller.signal })
       .then((res) => res.arrayBuffer())
       .then((data) => calculate(data))
       .then(({ max, peaks }) => {
         setPeaks({ max, peaks });
-      });
+      })
+      .catch(() => {});
+    return () => controller.abort();
   }, [soundUrl]);
 
   return (
