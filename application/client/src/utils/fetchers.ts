@@ -42,7 +42,7 @@ async function requestArrayBuffer(url: string): Promise<ArrayBuffer> {
   return response.arrayBuffer();
 }
 
-function requestJSON<T>({
+async function requestJSON<T>({
   body,
   headers,
   method,
@@ -53,33 +53,21 @@ function requestJSON<T>({
   method: "GET" | "POST";
   url: string;
 }): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open(method, url, false);
-    for (const [key, value] of Object.entries(headers ?? {})) {
-      xhr.setRequestHeader(key, value);
-    }
-
-    try {
-      xhr.send(body ?? null);
-    } catch (error) {
-      reject(error);
-      return;
-    }
-
-    if (xhr.status < 200 || xhr.status >= 300) {
-      reject(
-        new RequestError({
-          responseText: xhr.responseText,
-          status: xhr.status,
-          statusText: xhr.statusText,
-        }),
-      );
-      return;
-    }
-
-    resolve(JSON.parse(xhr.responseText) as T);
+  const response = await fetch(url, {
+    body: body ?? null,
+    headers,
+    method,
   });
+
+  if (!response.ok) {
+    throw new RequestError({
+      responseText: await response.text(),
+      status: response.status,
+      statusText: response.statusText,
+    });
+  }
+
+  return (await response.json()) as T;
 }
 
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {

@@ -10,6 +10,9 @@ import {
 } from "@web-speed-hackathon-2026/server/src/models";
 
 export const directMessageRouter = Router();
+const TYPING_STATE_DURATION_MS = 10 * 1000;
+const typingStateMap = new Map<string, number>();
+const conversationCreationMap = new Map<string, Promise<string>>();
 
 directMessageRouter.get("/dm", async (req, res) => {
   if (req.session.userId === undefined) {
@@ -39,26 +42,60 @@ directMessageRouter.post("/dm", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const peer = await User.findByPk(req.body?.peerId);
+  const peer =
+    typeof req.body?.username === "string"
+      ? await User.findOne({
+          where: {
+            username: req.body.username,
+          },
+          attributes: ["id"],
+        })
+      : await User.findByPk(req.body?.peerId, {
+          attributes: ["id"],
+        });
   if (peer === null) {
     throw new httpErrors.NotFound();
   }
 
-  const [conversation] = await DirectMessageConversation.findOrCreate({
-    where: {
-      [Op.or]: [
-        { initiatorId: req.session.userId, memberId: peer.id },
-        { initiatorId: peer.id, memberId: req.session.userId },
-      ],
-    },
-    defaults: {
+  const conversationKey = [req.session.userId, peer.id].sort().join(":");
+  const existingPromise = conversationCreationMap.get(conversationKey);
+  if (existingPromise !== undefined) {
+    const conversationId = await existingPromise;
+    return res.status(200).type("application/json").send({ id: conversationId });
+  }
+
+  const createConversationPromise = (async () => {
+    const existingConversation = await DirectMessageConversation.unscoped().findOne({
+      where: {
+        [Op.or]: [
+          { initiatorId: req.session.userId, memberId: peer.id },
+          { initiatorId: peer.id, memberId: req.session.userId },
+        ],
+      },
+      attributes: ["id"],
+    });
+
+    if (existingConversation !== null) {
+      return existingConversation.id;
+    }
+
+    const newConversation = await DirectMessageConversation.unscoped().create({
       initiatorId: req.session.userId,
       memberId: peer.id,
-    },
-  });
-  await conversation.reload();
+    });
 
-  return res.status(200).type("application/json").send(conversation);
+    return newConversation.id;
+  })();
+
+  conversationCreationMap.set(conversationKey, createConversationPromise);
+
+  const conversationId = await createConversationPromise.finally(() => {
+    conversationCreationMap.delete(conversationKey);
+  });
+
+  return res.status(200).type("application/json").send({
+    id: conversationId,
+  });
 });
 
 directMessageRouter.ws("/dm/unread", async (req, _res) => {
@@ -148,6 +185,12 @@ directMessageRouter.ws("/dm/:conversationId", async (req, _res) => {
   req.ws.on("close", () => {
     eventhub.off(`dm:conversation/${conversation.id}:typing/${peerId}`, handleTyping);
   });
+
+  const typingStateKey = `${conversation.id}:${peerId}`;
+  const latestTypingAt = typingStateMap.get(typingStateKey);
+  if (latestTypingAt != null && Date.now() - latestTypingAt < TYPING_STATE_DURATION_MS) {
+    req.ws.send(JSON.stringify({ type: "dm:conversation:typing", payload: {} }));
+  }
 });
 
 directMessageRouter.post("/dm/:conversationId/messages", async (req, res) => {
@@ -221,6 +264,7 @@ directMessageRouter.post("/dm/:conversationId/typing", async (req, res) => {
     throw new httpErrors.NotFound();
   }
 
+  typingStateMap.set(`${conversation.id}:${req.session.userId}`, Date.now());
   eventhub.emit(`dm:conversation/${conversation.id}:typing/${req.session.userId}`, {});
 
   return res.status(200).type("application/json").send({});

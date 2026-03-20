@@ -5,9 +5,13 @@ import { SubmissionError } from "redux-form";
 import { NewDirectMessageModalPage } from "@web-speed-hackathon-2026/client/src/components/direct_message/NewDirectMessageModalPage";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { NewDirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
-import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
+  id: string;
+}
+
+interface CreateConversationResponse {
   id: string;
 }
 
@@ -34,9 +38,9 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
   const handleSubmit = useCallback(
     async (values: NewDirectMessageFormData) => {
       try {
-        const user = await fetchJSON<Models.User>(`/api/v1/users/${values.username}`);
-        const conversation = await sendJSON<Models.DirectMessageConversation>(`/api/v1/dm`, {
-          peerId: user.id,
+        const normalizedUsername = values.username.trim().replace(/^@/, "");
+        const conversation = await sendJSON<CreateConversationResponse>(`/api/v1/dm`, {
+          username: normalizedUsername,
         });
         navigate(`/dm/${conversation.id}`);
       } catch {

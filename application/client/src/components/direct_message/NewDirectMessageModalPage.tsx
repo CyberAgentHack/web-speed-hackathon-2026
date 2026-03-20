@@ -1,4 +1,5 @@
-import { Field, InjectedFormProps, reduxForm } from "redux-form";
+import { useSelector } from "react-redux";
+import { Field, formValueSelector, InjectedFormProps, reduxForm } from "redux-form";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FormInputField } from "@web-speed-hackathon-2026/client/src/components/foundation/FormInputField";
@@ -13,11 +14,17 @@ interface Props {
 
 const NewDirectMessageModalPageComponent = ({
   id,
-  invalid,
   error,
   submitting,
   handleSubmit,
 }: Props & InjectedFormProps<NewDirectMessageFormData, Props>) => {
+  const currentUsername: string =
+    useSelector((state) =>
+      // @ts-ignore: formValueSelectorの型付けが弱いため、型に嘘をつく
+      formValueSelector("newDirectMessage")(state, "username"),
+    ) ?? "";
+  const canSubmit = currentUsername.trim().replace(/^@/, "").length > 0;
+
   return (
     <div className="grid gap-y-6">
       <h2 className="text-center text-2xl font-bold">新しくDMを始める</h2>
@@ -34,7 +41,7 @@ const NewDirectMessageModalPageComponent = ({
         />
 
         <div className="grid gap-y-2">
-          <ModalSubmitButton disabled={submitting || invalid} loading={submitting}>
+          <ModalSubmitButton disabled={submitting || !canSubmit} loading={submitting}>
             DMを開始
           </ModalSubmitButton>
           <Button variant="secondary" command="close" commandfor={id}>
