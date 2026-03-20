@@ -1,8 +1,9 @@
 import { ReactEventHandler, useCallback, useState } from "react";
 
-import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 import { longYearMonthDay } from "../../utils/full_year_month_day";
+import { faCalendarAlt } from "@fortawesome/free-regular-svg-icons";
 
 interface Props {
   user: Models.User;
@@ -40,7 +41,7 @@ export const UserProfileHeader = ({ user }: Props) => {
         <p className="pt-2">{user.description}</p>
         <p className="text-cax-text-muted pt-2 text-sm">
           <span className="pr-1">
-            <FontAwesomeIcon iconType="calendar-alt" styleType="regular" />
+            <FontAwesomeIcon icon={faCalendarAlt} />
           </span>
           <span>
             <time dateTime={new Date(user.createdAt).toISOString()}>

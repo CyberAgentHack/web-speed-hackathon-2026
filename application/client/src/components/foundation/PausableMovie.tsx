@@ -1,7 +1,8 @@
 import classNames from "classnames";
 import { MouseEvent, useCallback, useEffect, useRef, useState } from "react";
 
-import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPause, faPlay } from "@fortawesome/free-solid-svg-icons";
 
 interface Props {
   src: string;
@@ -71,7 +72,7 @@ export const PausableMovie = ({ src }: Props) => {
             },
           )}
         >
-          <FontAwesomeIcon iconType={paused ? "pause" : "play"} styleType="solid" />
+          <FontAwesomeIcon icon={paused ? faPause : faPlay} />
         </div>
       </div>
     </div>

@@ -1,8 +1,9 @@
 import { ReactNode, useId } from "react";
 import { WrappedFieldProps } from "redux-form";
 
-import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Input } from "@web-speed-hackathon-2026/client/src/components/foundation/Input";
+import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 
 interface Props extends WrappedFieldProps {
   label: string;
@@ -32,7 +33,7 @@ export const FormInputField = ({ label, leftItem, rightItem, input, meta, ...pro
       {isInvalid && (
         <span className="text-cax-danger text-xs" id={errorMessageId}>
           <span className="mr-1">
-            <FontAwesomeIcon iconType="exclamation-circle" styleType="solid" />
+            <FontAwesomeIcon icon={faExclamationCircle} />
           </span>
           {meta.error}
         </span>

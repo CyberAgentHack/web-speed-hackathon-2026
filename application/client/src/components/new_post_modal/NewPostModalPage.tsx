@@ -1,13 +1,14 @@
 import { MagickFormat } from "@imagemagick/magick-wasm";
 import { ChangeEventHandler, FormEventHandler, useCallback, useState } from "react";
 
-import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/components/modal/ModalErrorMessage";
 import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/components/modal/ModalSubmitButton";
 import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/AttachFileInputButton";
 import { convertImage } from "@web-speed-hackathon-2026/client/src/utils/convert_image";
 import { convertMovie } from "@web-speed-hackathon-2026/client/src/utils/convert_movie";
 import { convertSound } from "@web-speed-hackathon-2026/client/src/utils/convert_sound";
+import { faImages, faMusic, faVideo } from "@fortawesome/free-solid-svg-icons";
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
@@ -146,21 +147,21 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
         <AttachFileInputButton
           accept="image/*"
           active={params.images.length !== 0}
-          icon={<FontAwesomeIcon iconType="images" styleType="solid" />}
+          icon={<FontAwesomeIcon icon={faImages} />}
           label="画像を添付"
           onChange={handleChangeImages}
         />
         <AttachFileInputButton
           accept="audio/*"
           active={params.sound !== undefined}
-          icon={<FontAwesomeIcon iconType="music" styleType="solid" />}
+          icon={<FontAwesomeIcon icon={faMusic} />}
           label="音声を添付"
           onChange={handleChangeSound}
         />
         <AttachFileInputButton
           accept="video/*"
           active={params.movie !== undefined}
-          icon={<FontAwesomeIcon iconType="video" styleType="solid" />}
+          icon={<FontAwesomeIcon icon={faVideo} />}
           label="動画を添付"
           onChange={handleChangeMovie}
         />

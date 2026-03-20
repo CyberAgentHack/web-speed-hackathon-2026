@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
-import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 import { Temporal } from "@js-temporal/polyfill";
+import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 
 function timeFromNow(temporalInstant: Temporal.Instant) {
   const now = Temporal.Now.instant();
@@ -86,7 +87,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
           <Button
             command="show-modal"
             commandfor={newDmModalId}
-            leftItem={<FontAwesomeIcon iconType="paper-plane" styleType="solid" />}
+            leftItem={<FontAwesomeIcon icon={faPaperPlane} />}
           >
             新しくDMを始める
           </Button>

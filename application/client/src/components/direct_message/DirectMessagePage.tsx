@@ -10,10 +10,11 @@ import {
   useEffect,
 } from "react";
 
-import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 import { Temporal } from "@js-temporal/polyfill";
+import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 
 interface Props {
   conversationError: Error | null;
@@ -186,7 +187,7 @@ export const DirectMessagePage = ({
             disabled={isInvalid || isSubmitting}
             type="submit"
           >
-            <FontAwesomeIcon iconType="arrow-right" styleType="solid" />
+            <FontAwesomeIcon icon={faArrowRight} />
           </button>
         </form>
       </div>

@@ -10,12 +10,13 @@ import {
   type KeyboardEvent,
 } from "react";
 
-import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   extractTokens,
   filterSuggestionsBM25,
 } from "@web-speed-hackathon-2026/client/src/utils/bm25_search";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 
 interface Props {
   isStreaming: boolean;
@@ -234,7 +235,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
               type="submit"
             >
               <span className="flex h-5 w-5 items-center justify-center">
-                <FontAwesomeIcon iconType="arrow-right" styleType="solid" />
+                <FontAwesomeIcon icon={faArrowRight} />
               </span>
             </button>
           </div>

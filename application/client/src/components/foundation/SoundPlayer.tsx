@@ -1,10 +1,11 @@
 import { ReactEventHandler, useCallback, useMemo, useRef, useState } from "react";
 
-import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { SoundWaveSVG } from "@web-speed-hackathon-2026/client/src/components/foundation/SoundWaveSVG";
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getSoundPath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { faPause, faPlay } from "@fortawesome/free-solid-svg-icons";
 
 interface Props {
   sound: Models.Sound;
@@ -49,7 +50,7 @@ export const SoundPlayer = ({ sound }: Props) => {
           onClick={handleTogglePlaying}
           type="button"
         >
-          <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
+          <FontAwesomeIcon icon={isPlaying ? faPause : faPlay} />
         </button>
       </div>
       <div className="flex h-full min-w-0 shrink grow flex-col pt-2">
