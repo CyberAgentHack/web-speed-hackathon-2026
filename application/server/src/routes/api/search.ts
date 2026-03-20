@@ -1,11 +1,32 @@
 import { Router } from "express";
-import { Op } from "sequelize";
+import { Op, type Includeable, type Order } from "sequelize";
 
 import { Post } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 import { serializePosts } from "@web-speed-hackathon-2026/server/src/utils/serialize_post";
 
 export const searchRouter = Router();
+
+const SEARCH_POST_INCLUDE: Includeable[] = [
+  {
+    association: "user",
+    attributes: { exclude: ["profileImageId"] },
+    include: [{ association: "profileImage" }],
+    required: true,
+  },
+  {
+    association: "images",
+    through: { attributes: [] },
+  },
+  { association: "movie" },
+  { association: "sound" },
+];
+
+const SEARCH_POST_ORDER: Order = [
+  ["createdAt", "DESC"],
+  ["id", "DESC"],
+  ["images", "createdAt", "ASC"],
+];
 
 searchRouter.get("/search", async (req, res) => {
   const query = req.query["q"];
@@ -48,13 +69,39 @@ searchRouter.get("/search", async (req, res) => {
         }
       : {};
 
-  const result = await Post.findAll({
+  const matchedPosts = await Post.unscoped().findAll({
+    attributes: ["id"],
+    include: [
+      {
+        association: "user",
+        attributes: [],
+        required: true,
+      },
+    ],
     limit,
     offset,
-    subQuery: false,
     where: {
       ...dateWhere,
       ...searchWhere,
+    },
+    order: [
+      ["createdAt", "DESC"],
+      ["id", "DESC"],
+    ],
+  });
+
+  const postIds = matchedPosts.map((post) => post.id);
+  if (postIds.length === 0) {
+    return res.status(200).type("application/json").send([]);
+  }
+
+  const result = await Post.unscoped().findAll({
+    include: SEARCH_POST_INCLUDE,
+    order: SEARCH_POST_ORDER,
+    where: {
+      id: {
+        [Op.in]: postIds,
+      },
     },
   });
 
