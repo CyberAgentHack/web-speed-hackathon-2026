@@ -63,7 +63,7 @@ export function initPost(sequelize: Sequelize) {
             { association: "movie" },
             { association: "sound" },
           ],
-          order: [["images", "createdAt", "ASC"]],
+          order: [["id", "DESC"], ["images", "createdAt", "ASC"]],
         },
       },
     },
