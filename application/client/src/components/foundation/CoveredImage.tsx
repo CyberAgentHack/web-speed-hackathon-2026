@@ -1,4 +1,5 @@
 import classNames from "classnames";
+import sizeOf from "image-size";
 import { load, ImageIFD } from "piexifjs";
 import { MouseEvent, RefCallback, useCallback, useId, useMemo, useState } from "react";
 
@@ -6,71 +7,6 @@ import { Button } from "@web-speed-hackathon-2026/client/src/components/foundati
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
-
-function getImageSize(data: ArrayBuffer): { width: number; height: number } {
-  const view = new DataView(data);
-  const uint8 = new Uint8Array(data);
-
-  // JPEG: find SOF0-SOF3 marker
-  if (uint8[0] === 0xFF && uint8[1] === 0xD8) {
-    let offset = 2;
-    while (offset < uint8.length - 1) {
-      if (uint8[offset] !== 0xFF) break;
-      const marker = uint8[offset + 1]!;
-      if (marker >= 0xC0 && marker <= 0xC3) {
-        const height = view.getUint16(offset + 5);
-        const width = view.getUint16(offset + 7);
-        return { width, height };
-      }
-      const segmentLength = view.getUint16(offset + 2);
-      offset += 2 + segmentLength;
-    }
-  }
-
-  // PNG
-  if (uint8[0] === 0x89 && uint8[1] === 0x50 && uint8[2] === 0x4E && uint8[3] === 0x47) {
-    const width = view.getUint32(16);
-    const height = view.getUint32(20);
-    return { width, height };
-  }
-
-  // GIF
-  if (uint8[0] === 0x47 && uint8[1] === 0x49 && uint8[2] === 0x46) {
-    const width = view.getUint16(6, true);
-    const height = view.getUint16(8, true);
-    return { width, height };
-  }
-
-  // WebP
-  if (uint8[0] === 0x52 && uint8[1] === 0x49 && uint8[2] === 0x46 && uint8[3] === 0x46 &&
-      uint8[8] === 0x57 && uint8[9] === 0x45 && uint8[10] === 0x42 && uint8[11] === 0x50) {
-    // Find VP8 chunk
-    let offset = 12;
-    while (offset < uint8.length - 8) {
-      const chunkId = String.fromCharCode(uint8[offset]!, uint8[offset + 1]!, uint8[offset + 2]!, uint8[offset + 3]!);
-      const chunkSize = view.getUint32(offset + 4, true);
-      if (chunkId === "VP8 ") {
-        const width = view.getUint16(offset + 14, true) & 0x3FFF;
-        const height = view.getUint16(offset + 16, true) & 0x3FFF;
-        return { width, height };
-      }
-      if (chunkId === "VP8L") {
-        const bits = view.getUint32(offset + 9, true);
-        const width = (bits & 0x3FFF) + 1;
-        const height = ((bits >> 14) & 0x3FFF) + 1;
-        return { width, height };
-      }
-      if (chunkId === "VP8X") {
-        const width = ((uint8[offset + 12]!) | (uint8[offset + 13]! << 8) | (uint8[offset + 14]! << 16)) + 1;
-        const height = ((uint8[offset + 15]!) | (uint8[offset + 16]! << 8) | (uint8[offset + 17]! << 16)) + 1;
-        return { width, height };
-      }
-      offset += 8 + chunkSize + (chunkSize % 2);
-    }
-  }
-
-  return { width: 0, height: 0 };
-}
 
 interface Props {
   src: string;
@@ -89,14 +25,13 @@ export const CoveredImage = ({ src }: Props) => {
   const { data, isLoading } = useFetch(src, fetchBinary);
 
   const imageSize = useMemo(() => {
-    return data != null ? getImageSize(data) : { height: 0, width: 0 };
+    return data != null ? sizeOf(Buffer.from(data)) : { height: 0, width: 0 };
   }, [data]);
 
   const alt = useMemo(() => {
-    const binaryStr = data != null ? Array.from(new Uint8Array(data)).map(b => String.fromCharCode(b)).join("") : null;
-    const exif = binaryStr != null ? load(binaryStr) : null;
+    const exif = data != null ? load(Buffer.from(data).toString("binary")) : null;
     const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-    return raw != null ? new TextDecoder().decode(Uint8Array.from(raw.split("").map((c: string) => c.charCodeAt(0)))) : "";
+    return raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
   }, [data]);
 
   const blobUrl = useMemo(() => {

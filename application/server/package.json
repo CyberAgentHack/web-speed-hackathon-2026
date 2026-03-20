@@ -8,7 +8,7 @@
   "main": "src/index.js",
   "scripts": {
     "dev": "tsx --watch src/index.ts",
-    "start": "NODE_ENV=production tsx src/index.ts",
+    "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
     "seed:generate": "tsx ./scripts/generateSeeds.ts",
     "seed:insert": "tsx ./scripts/insertSeeds.ts"

@@ -1,4 +1,4 @@
-declare module "*?url" {
-  const value: string;
+declare module "*?binary" {
+  const value: Uint8Array<ArrayBuffer>;
   export default value;
 }
