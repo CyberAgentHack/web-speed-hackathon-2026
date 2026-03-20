@@ -1,8 +1,7 @@
 import "katex/dist/katex.min.css";
+import { useEffect, useMemo, useState } from "react";
 import Markdown from "react-markdown";
-import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
 
 import { CodeBlock } from "@web-speed-hackathon-2026/client/src/components/crok/CodeBlock";
 import { TypingIndicator } from "@web-speed-hackathon-2026/client/src/components/crok/TypingIndicator";
@@ -23,6 +22,34 @@ const UserMessage = ({ content }: { content: string }) => {
 };
 
 const AssistantMessage = ({ content }: { content: string }) => {
+  const [mathPlugins, setMathPlugins] = useState<{
+    remarkMath: unknown;
+    rehypeKatex: unknown;
+  } | null>(null);
+
+  const hasMathSyntax = useMemo(() => {
+    return /\$[^$]+\$|\\\([\s\S]+?\\\)|\\\[[\s\S]+?\\\]/.test(content);
+  }, [content]);
+
+  useEffect(() => {
+    if (!hasMathSyntax) {
+      setMathPlugins(null);
+      return;
+    }
+
+    void Promise.all([import("remark-math"), import("rehype-katex")]).then(
+      ([remarkMathModule, rehypeKatexModule]) => {
+        setMathPlugins({
+          remarkMath: remarkMathModule.default,
+          rehypeKatex: rehypeKatexModule.default,
+        });
+      },
+    );
+  }, [hasMathSyntax]);
+
+  const remarkPlugins = mathPlugins ? [mathPlugins.remarkMath, remarkGfm] : [remarkGfm];
+  const rehypePlugins = mathPlugins ? [mathPlugins.rehypeKatex] : [];
+
   return (
     <div className="mb-6 flex gap-4">
       <div className="h-8 w-8 shrink-0">
@@ -35,8 +62,8 @@ const AssistantMessage = ({ content }: { content: string }) => {
             <Markdown
               components={{ pre: CodeBlock }}
               key={content}
-              rehypePlugins={[rehypeKatex]}
-              remarkPlugins={[remarkMath, remarkGfm]}
+              rehypePlugins={rehypePlugins as never[]}
+              remarkPlugins={remarkPlugins as never[]}
             >
               {content}
             </Markdown>

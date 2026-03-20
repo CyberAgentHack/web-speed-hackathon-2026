@@ -30,7 +30,6 @@ const config = {
   devtool: isProduction ? false : "inline-source-map",
   entry: {
     main: [
-      "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
@@ -62,15 +61,13 @@ const config = {
     chunkFilename: "scripts/chunk-[contenthash].js",
     filename: "scripts/[name].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     clean: true,
   },
   plugins: [
     new webpack.ProvidePlugin({
-      $: "jquery",
       AudioContext: ["standardized-audio-context", "AudioContext"],
       Buffer: ["buffer", "Buffer"],
-      "window.jQuery": "jquery",
     }),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
@@ -90,7 +87,7 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: true,
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
   ],
@@ -138,11 +135,13 @@ const config = {
         },
       }),
     ],
-    splitChunks: false,
+    splitChunks: {
+      chunks: "all",
+    },
+    runtimeChunk: "single",
     concatenateModules: isProduction,
-    providedExports: isProduction,
-    usedExports: false,
-    sideEffects: false,
+    providedExports: true,
+    usedExports: true,
   },
   cache: false,
   ignoreWarnings: [

@@ -1,4 +1,5 @@
-import { ReactEventHandler, useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
+import type { ReactEventHandler } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -38,12 +39,14 @@ export const SoundPlayer = ({ sound }: Props) => {
   }, []);
 
   if (isLoading || data === null || blobUrl === null) {
-    return null;
+    return <div className="bg-cax-surface-subtle h-full w-full" />;
   }
 
   return (
     <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
-      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} src={blobUrl} />
+      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} src={blobUrl}>
+        <track kind="captions" label="captions" srcLang="ja" />
+      </audio>
       <div className="p-2">
         <button
           className="bg-cax-accent text-cax-surface-raised flex h-8 w-8 items-center justify-center rounded-full text-sm hover:opacity-75"

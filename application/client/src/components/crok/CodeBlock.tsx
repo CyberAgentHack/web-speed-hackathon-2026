@@ -1,6 +1,8 @@
-import { ComponentProps, isValidElement, ReactElement, ReactNode } from "react";
-import SyntaxHighlighter from "react-syntax-highlighter";
-import { atomOneLight } from "react-syntax-highlighter/dist/esm/styles/hljs";
+import { isValidElement, useEffect, useState } from "react";
+import type { ComponentProps, ReactElement, ReactNode } from "react";
+
+type SyntaxHighlighterType = typeof import("react-syntax-highlighter").default;
+type SyntaxStyle = typeof import("react-syntax-highlighter/dist/esm/styles/hljs").atomOneLight;
 
 const getLanguage = (children: ReactElement<ComponentProps<"code">>) => {
   const className = children.props.className;
@@ -15,9 +17,33 @@ const isCodeElement = (children: ReactNode): children is ReactElement<ComponentP
   isValidElement(children) && children.type === "code";
 
 export const CodeBlock = ({ children }: ComponentProps<"pre">) => {
+  const [highlighter, setHighlighter] = useState<SyntaxHighlighterType | null>(null);
+  const [style, setStyle] = useState<SyntaxStyle | null>(null);
+
+  useEffect(() => {
+    void Promise.all([
+      import("react-syntax-highlighter"),
+      import("react-syntax-highlighter/dist/esm/styles/hljs"),
+    ]).then(([highlighterModule, stylesModule]) => {
+      setHighlighter(() => highlighterModule.default);
+      setStyle(stylesModule.atomOneLight);
+    });
+  }, []);
+
   if (!isCodeElement(children)) return <>{children}</>;
+
   const language = getLanguage(children);
   const code = children.props.children?.toString() ?? "";
+
+  if (highlighter === null || style === null) {
+    return (
+      <pre className="border-cax-border bg-cax-surface-subtle overflow-x-auto rounded-lg border px-4 py-6 text-sm">
+        <code>{code}</code>
+      </pre>
+    );
+  }
+
+  const SyntaxHighlighter = highlighter;
 
   return (
     <SyntaxHighlighter
@@ -28,7 +54,7 @@ export const CodeBlock = ({ children }: ComponentProps<"pre">) => {
         border: "1px solid var(--color-cax-border)",
       }}
       language={language}
-      style={atomOneLight}
+      style={style}
     >
       {code}
     </SyntaxHighlighter>
