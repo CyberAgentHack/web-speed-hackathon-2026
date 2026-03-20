@@ -6,12 +6,10 @@ import {
   InferCreationAttributes,
   Model,
   NonAttribute,
-  Op,
   Sequelize,
   UUIDV4,
 } from "sequelize";
 
-import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
 import { DirectMessageConversation } from "@web-speed-hackathon-2026/server/src/models/DirectMessageConversation";
 import { User } from "@web-speed-hackathon-2026/server/src/models/User";
 
@@ -76,37 +74,6 @@ export function initDirectMessage(sequelize: Sequelize) {
     },
   );
 
-  DirectMessage.addHook("afterSave", "onDmSaved", async (message) => {
-    const directMessage = await DirectMessage.scope("withSender").findByPk(message.get().id);
-    const conversation = await DirectMessageConversation.unscoped().findByPk(directMessage?.conversationId);
-
-    if (directMessage == null || conversation == null) {
-      return;
-    }
-
-    const receiverId =
-      conversation.initiatorId === directMessage.senderId
-        ? conversation.memberId
-        : conversation.initiatorId;
-
-    const unreadCount = await DirectMessage.count({
-      distinct: true,
-      where: {
-        senderId: { [Op.ne]: receiverId },
-        isRead: false,
-      },
-      include: [
-        {
-          association: "conversation",
-          where: {
-            [Op.or]: [{ initiatorId: receiverId }, { memberId: receiverId }],
-          },
-          required: true,
-        },
-      ],
-    });
-
-    eventhub.emit(`dm:conversation/${conversation.id}:message`, directMessage);
-    eventhub.emit(`dm:unread/${receiverId}`, { unreadCount });
-  });
+  // Hook removed: WebSocket emit and unread count are now handled directly in route handlers
+  // to avoid redundant queries and O(n²) behavior with individualHooks.
 }

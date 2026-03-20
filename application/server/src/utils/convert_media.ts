@@ -45,10 +45,10 @@ export async function convertMovieToWebm(inputBuffer: Buffer): Promise<Buffer> {
   }
 }
 
-export async function extractPosterFromWebm(inputBuffer: Buffer): Promise<Buffer> {
+export async function extractPosterFromVideo(inputBuffer: Buffer): Promise<Buffer> {
   const tmpDir = os.tmpdir();
   const id = uuidv4();
-  const inputPath = path.join(tmpDir, `${id}-input.webm`);
+  const inputPath = path.join(tmpDir, `${id}-poster-input`);
   const outputPath = path.join(tmpDir, `${id}-poster.webp`);
 
   try {

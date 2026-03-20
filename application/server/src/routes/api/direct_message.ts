@@ -9,6 +9,20 @@ import {
   User,
 } from "@web-speed-hackathon-2026/server/src/models";
 
+async function emitUnreadCount(userId: string): Promise<void> {
+  const sequelize = DirectMessage.sequelize!;
+  const rows = await sequelize.query<{ unreadCount: number }>(
+    `SELECT COUNT(*) as unreadCount FROM DirectMessages dm
+     INNER JOIN DirectMessageConversations c ON dm.conversationId = c.id
+     WHERE dm.senderId != :userId
+     AND dm.isRead = 0
+     AND (c.initiatorId = :userId OR c.memberId = :userId)`,
+    { replacements: { userId }, type: QueryTypes.SELECT },
+  );
+  const unreadCount = rows[0]?.unreadCount ?? 0;
+  eventhub.emit(`dm:unread/${userId}`, { unreadCount });
+}
+
 export const directMessageRouter = Router();
 
 directMessageRouter.get("/dm", async (req, res) => {
@@ -267,6 +281,14 @@ directMessageRouter.post("/dm/:conversationId/messages", async (req, res) => {
   });
   const fullMessage = await DirectMessage.scope("withSender").findByPk(message.id);
 
+  // Emit WebSocket events (previously in afterSave hook)
+  const receiverId =
+    conversation.initiatorId === req.session.userId
+      ? conversation.memberId
+      : conversation.initiatorId;
+  eventhub.emit(`dm:conversation/${conversation.id}:message`, fullMessage);
+  void emitUnreadCount(receiverId);
+
   return res.status(201).type("application/json").send(fullMessage);
 });
 
@@ -294,9 +316,11 @@ directMessageRouter.post("/dm/:conversationId/read", async (req, res) => {
     { isRead: true },
     {
       where: { conversationId: conversation.id, senderId: peerId, isRead: false },
-      individualHooks: true,
     },
   );
+
+  // Emit updated unread count for the current user (who just read the messages)
+  void emitUnreadCount(req.session.userId);
 
   return res.status(200).type("application/json").send({});
 });

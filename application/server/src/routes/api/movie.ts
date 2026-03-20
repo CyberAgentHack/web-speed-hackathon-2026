@@ -7,7 +7,7 @@ import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
-import { convertMovieToWebm, extractPosterFromWebm } from "@web-speed-hackathon-2026/server/src/utils/convert_media";
+import { convertMovieToWebm, extractPosterFromVideo } from "@web-speed-hackathon-2026/server/src/utils/convert_media";
 
 const EXTENSION = "webm";
 
@@ -28,17 +28,19 @@ movieRouter.post("/movies", async (req, res) => {
 
   const movieId = uuidv4();
 
-  const outputBuffer = await convertMovieToWebm(req.body);
-
   const moviesDir = path.resolve(UPLOAD_PATH, "movies");
   await fs.mkdir(moviesDir, { recursive: true });
 
-  const filePath = path.resolve(moviesDir, `${movieId}.${EXTENSION}`);
-  await fs.writeFile(filePath, outputBuffer);
+  // Run VP9 conversion and poster extraction in parallel from the original input
+  const [outputBuffer, posterBuffer] = await Promise.all([
+    convertMovieToWebm(req.body),
+    extractPosterFromVideo(req.body),
+  ]);
 
-  const posterBuffer = await extractPosterFromWebm(outputBuffer);
-  const posterPath = path.resolve(moviesDir, `${movieId}-poster.webp`);
-  await fs.writeFile(posterPath, posterBuffer);
+  await Promise.all([
+    fs.writeFile(path.resolve(moviesDir, `${movieId}.${EXTENSION}`), outputBuffer),
+    fs.writeFile(path.resolve(moviesDir, `${movieId}-poster.webp`), posterBuffer),
+  ]);
 
   return res.status(200).type("application/json").send({ id: movieId });
 });
