@@ -14,13 +14,22 @@ export const staticRouter = Router();
 staticRouter.use(history());
 
 staticRouter.use(
-  serveStatic(UPLOAD_PATH),
+  serveStatic(UPLOAD_PATH, {
+    cacheControl: true,
+    maxAge: 60,
+  }),
 );
 
 staticRouter.use(
-  serveStatic(PUBLIC_PATH),
+  serveStatic(PUBLIC_PATH, {
+    cacheControl: true,
+    maxAge: 60,
+  }),
 );
 
 staticRouter.use(
-  serveStatic(CLIENT_DIST_PATH),
+  serveStatic(CLIENT_DIST_PATH, {
+    cacheControl: true,
+    maxAge: 60,
+  }),
 );
