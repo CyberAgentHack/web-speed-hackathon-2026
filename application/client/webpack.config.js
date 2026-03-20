@@ -68,7 +68,6 @@ const config = {
   },
   plugins: [
     new webpack.ProvidePlugin({
-      AudioContext: ["standardized-audio-context", "AudioContext"],
       Buffer: ["buffer", "Buffer"],
     }),
     new webpack.EnvironmentPlugin({

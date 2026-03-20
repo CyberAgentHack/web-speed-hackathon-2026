@@ -99,9 +99,6 @@ importers:
       remark-math:
         specifier: 6.0.0
         version: 6.0.0
-      standardized-audio-context:
-        specifier: 25.3.77
-        version: 25.3.77
     devDependencies:
       '@babel/core':
         specifier: 7.28.4
@@ -2045,10 +2042,6 @@ packages:
 
   async@2.6.4:
     resolution: {integrity: sha512-mzo5dfJYwAn29PeiJ0zvwTo04zj8HDJj0Mn8TD7sno7q12prdbnasKJHhkm2c1LgrhlJ0teaea8860oxi51mGA==}
-
-  automation-events@7.1.13:
-    resolution: {integrity: sha512-1Hay5TQPzxsskSqPTH3YXyzE9Iirz82zZDse2vr3+kOR7Sc7om17qIEPsESchlNX0EgKxANwR40i2g/O3GM1Tw==}
-    engines: {node: '>=18.2.0'}
 
   autoprefixer@10.4.21:
     resolution: {integrity: sha512-O+A6LWV5LDHSJD3LjHYoNi4VLsj/Whi7k6zG12xTYaU4cQ8oxQGckXNX8cRHK5yOZ/ppVHe0ZBXGzSV9jXdVbQ==}
@@ -4484,9 +4477,6 @@ packages:
     resolution: {integrity: sha512-97qShzy1AiyxvPNIkLWoGua7xoQzzPjQ0HAH4B0rWKo7SZ6USuPcrUiAFrws0UH8RrbWmgq3LMTObhPIHbbBeQ==}
     engines: {node: '>= 8'}
 
-  standardized-audio-context@25.3.77:
-    resolution: {integrity: sha512-Ki9zNz6pKcC5Pi+QPjPyVsD9GwJIJWgryji0XL9cAJXMGyn+dPOf6Qik1AHei0+UNVcc4BOCa0hWLBzlwqsW/A==}
-
   statuses@1.5.0:
     resolution: {integrity: sha512-OpZ3zP+jT1PI7I8nemJX4AKmAX070ZkYPVWV/AaKTJl+tXCTGyVdC1a4SL8RUQYEwk/f34ZX8UTykN68FwrqAA==}
     engines: {node: '>= 0.6'}
@@ -6695,11 +6685,6 @@ snapshots:
   async@2.6.4:
     dependencies:
       lodash: 4.17.21
-
-  automation-events@7.1.13:
-    dependencies:
-      '@babel/runtime': 7.28.4
-      tslib: 2.8.1
 
   autoprefixer@10.4.21(postcss@8.5.6):
     dependencies:
@@ -9677,12 +9662,6 @@ snapshots:
     dependencies:
       minipass: 3.3.6
     optional: true
-
-  standardized-audio-context@25.3.77:
-    dependencies:
-      '@babel/runtime': 7.28.4
-      automation-events: 7.1.13
-      tslib: 2.8.1
 
   statuses@1.5.0: {}
 
