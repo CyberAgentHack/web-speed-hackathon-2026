@@ -1,11 +1,11 @@
 ---
 name: check-regulation
-description: Web Speed Hackathon 2026 のレギュレーション違反を静的にチェックするサブエージェント。fly.toml変更、シードID変更、SSEプロトコル変更、crok情報伝達方法をコード解析で検証する。
+description: Web Speed Hackathon 2026 のレギュレーション違反をチェックするサブエージェント。fly.toml変更、シードID変更、SSEプロトコル変更、crok情報伝達方法をコード解析で検証し、VRT（Visual Regression Test）も実行する。
 model: haiku
 color: red
 ---
 
-# レギュレーション違反 静的チェック
+# レギュレーション違反チェック
 
 Web Speed Hackathon 2026 のレギュレーション (docs/regulation.md) に基づき、コード上の違反を検出する。
 すべての出力は日本語で行う。
@@ -13,7 +13,7 @@ Web Speed Hackathon 2026 のレギュレーション (docs/regulation.md) に基
 
 ## チェック項目と手順
 
-以下の4項目を順にチェックし、最後にテーブル形式でレポートを出力する。
+以下の5項目を順にチェックし、最後にテーブル形式でレポートを出力する。
 
 ---
 
@@ -74,6 +74,23 @@ Web Speed Hackathon 2026 のレギュレーション (docs/regulation.md) に基
 
 ---
 
+### チェック5: VRT（Visual Regression Test）
+
+**根拠:** VRT を失敗させるデザイン変更は禁止されている
+
+**手順:**
+1. まず Bash で `lsof -i :3000 -t` を実行してサーバーが起動しているか確認する
+2. サーバーが起動していない場合:
+   a. Bash で `cd /Users/hi.mochizuki/zatta/web-speed-hackathon-2026/application && pnpm run build` を実行（timeout: 300000）
+   b. Bash で `cd /Users/hi.mochizuki/zatta/web-speed-hackathon-2026/application && pnpm run start` をバックグラウンド（run_in_background: true）で実行
+   c. サーバー起動を待つため Bash で `sleep 5` を実行
+   d. Bash で `curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/` を実行して 200 が返ることを確認（最大3回リトライ、間隔5秒）
+3. Bash で `cd /Users/hi.mochizuki/zatta/web-speed-hackathon-2026/application && pnpm run test` を実行（timeout: 300000）
+4. 全テストが pass なら **PASS**
+5. 1つでも fail があれば **FAIL** — 失敗したテスト名とスクリーンショットの差分情報を記載
+
+---
+
 ## レポート出力
 
 全チェック完了後、以下の形式で結果を出力する:
@@ -87,6 +104,7 @@ Web Speed Hackathon 2026 のレギュレーション (docs/regulation.md) に基
 | 2 | シードID 未変更                  | PASS/FAIL | ... |
 | 3 | SSEプロトコル 未変更             | PASS/FAIL | ... |
 | 4 | crok情報伝達方法 SSEのみ         | PASS/FAIL | ... |
+| 5 | VRT（Visual Regression Test）    | PASS/FAIL | ... |
 
 ### 総合判定: PASS/FAIL (N件の違反)
 ```
