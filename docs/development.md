@@ -4,6 +4,7 @@
 
 - mise-en-place (mise)
   - https://mise.jdx.dev/
+  - `mise install` で Node 24 と Bun（パッケージマネージャ）が入ります
 
 ### セットアップ
 

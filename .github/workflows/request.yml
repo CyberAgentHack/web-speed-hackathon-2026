@@ -52,10 +52,10 @@ jobs:
         env:
           MISE_VERSION: "2025.12.0"
       - run: |
-          pnpm install --frozen-lockfile
+          bun install --frozen-lockfile
         working-directory: scoring-tool
       - run: |
-          pnpm start \
+          bun run start \
             --applicationUrl ${TARGET_URL} \
             --participationKind ${PARTICIPATION_KIND} \
             --participationGitHubId ${PARTICIPATION_GITHUB_ID} \
