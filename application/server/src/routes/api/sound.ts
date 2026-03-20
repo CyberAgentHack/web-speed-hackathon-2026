@@ -6,14 +6,8 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 import ffmpeg from "fluent-ffmpeg";
-import ffmpegStatic from "ffmpeg-static";
-
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import { extractMetadataFromSound } from "@web-speed-hackathon-2026/server/src/utils/extract_metadata_from_sound";
-
-if (ffmpegStatic) {
-  ffmpeg.setFfmpegPath(ffmpegStatic);
-}
 
 // 変換した音声の拡張子
 const EXTENSION = "mp3";
