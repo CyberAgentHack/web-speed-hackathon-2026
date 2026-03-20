@@ -87,10 +87,21 @@ async function movieThumbnailHandler(req: Request, res: Response, next: NextFunc
     return next();
   }
 
-  const filePath = path.join(UPLOAD_PATH, reqPath);
-  try {
-    await fs.access(filePath);
-  } catch {
+  const candidateGifPaths = [
+    path.join(PUBLIC_PATH, reqPath),
+    path.join(UPLOAD_PATH, reqPath),
+  ];
+  let filePath: string | null = null;
+  for (const p of candidateGifPaths) {
+    try {
+      await fs.access(p);
+      filePath = p;
+      break;
+    } catch {
+      // not found, try next
+    }
+  }
+  if (!filePath) {
     return next();
   }
 
