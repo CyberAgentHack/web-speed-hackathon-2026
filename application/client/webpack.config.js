@@ -29,8 +29,6 @@ const config = {
   devtool: isProd ? false : "eval-source-map",
   entry: {
     main: [
-      "core-js",
-      "regenerator-runtime/runtime",
       "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
@@ -60,9 +58,9 @@ const config = {
     ],
   },
   output: {
-    chunkFilename: "scripts/chunk-[contenthash].js",
+    chunkFilename: isProd ? "scripts/chunk-[contenthash].js" : "scripts/chunk-[id].js",
     chunkFormat: false,
-    filename: "scripts/[name].js",
+    filename: isProd ? "scripts/[name]-[contenthash].js" : "scripts/[name].js",
     path: DIST_PATH,
     publicPath: "auto",
     clean: true,
@@ -81,7 +79,7 @@ const config = {
       NODE_ENV: isProd ? "production" : "development",
     }),
     new MiniCssExtractPlugin({
-      filename: "styles/[name].css",
+      filename: isProd ? "styles/[name]-[contenthash].css" : "styles/[name].css",
     }),
     new CopyWebpackPlugin({
       patterns: [
@@ -92,7 +90,8 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: "body",
+      scriptLoading: "defer",
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
   ],
@@ -136,7 +135,7 @@ const config = {
     providedExports: false,
     sideEffects: false,
   },
-  cache: false,
+  cache: !isProd,
   ignoreWarnings: [
     {
       module: /@ffmpeg/,
