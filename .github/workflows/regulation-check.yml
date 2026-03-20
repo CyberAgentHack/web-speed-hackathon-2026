@@ -143,7 +143,7 @@ jobs:
               working-directory: application/e2e
               env:
                   E2E_BASE_URL: http://localhost:18080
-              run: pnpm run test -- --update-snapshots --workers=1 --retries=2
+              run: pnpm exec playwright test --update-snapshots --workers=2 --retries=2
 
             - name: Upload init snapshots artifact
               if: steps.baseline-snapshots.outputs.ready != 'true'
@@ -187,7 +187,7 @@ jobs:
               working-directory: application/e2e
               env:
                   E2E_BASE_URL: http://localhost:28080
-              run: pnpm run test -- --workers=1 --retries=2
+              run: pnpm exec playwright test --workers=2 --retries=2
 
             - name: Upload regulation debug artifacts
               if: failure()
