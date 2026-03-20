@@ -41,8 +41,8 @@ export const TimelineItem = ({ post }: Props) => {
         <div className="shrink-0 grow-0 pr-2 sm:pr-4">
           <Link className="block h-12 w-12 overflow-hidden rounded-full border" to={`/users/${post.user.username}`}>
             <img
-              alt={post.user.profileImage.alt}
-              src={getProfileImagePath(post.user.profileImage.id)}
+              alt={post.user.profileImage?.alt ?? ""}
+              src={post.user.profileImage ? getProfileImagePath(post.user.profileImage.id) : ""}
               loading="lazy"
               width={64}
               height={64}

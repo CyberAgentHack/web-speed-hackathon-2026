@@ -1,4 +1,3 @@
-import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -85,9 +84,9 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                 <Link className="hover:bg-cax-surface-subtle px-4" to={`/dm/${conversation.id}`}>
                   <div className="border-cax-border flex gap-4 border-b px-4 pt-2 pb-4">
                     <img
-                      alt={peer.profileImage.alt}
+                      alt={peer.profileImage?.alt ?? ""}
                       className="w-12 shrink-0 self-start rounded-full"
-                      src={getProfileImagePath(peer.profileImage.id)}
+                      src={peer.profileImage ? getProfileImagePath(peer.profileImage.id) : ""}
                     />
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-center justify-between">
@@ -100,7 +99,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {formatRelativeTime(new Date(lastMessage.createdAt))}
                           </time>
                         )}
                       </div>
@@ -121,3 +120,15 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     </section>
   );
 };
+
+function formatRelativeTime(date: Date): string {
+  const diff = Date.now() - date.getTime();
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  
+  if (minutes < 1) return "たった今";
+  if (minutes < 60) return `${minutes}分前`;
+  if (hours < 24) return `${hours}時間前`;
+  return `${days}日前`;
+}

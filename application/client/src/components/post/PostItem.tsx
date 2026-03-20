@@ -1,5 +1,3 @@
-import moment from "moment";
-
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
 import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
@@ -22,8 +20,8 @@ export const PostItem = ({ post }: Props) => {
               to={`/users/${post.user.username}`}
             >
               <img
-                alt={post.user.profileImage.alt}
-                src={getProfileImagePath(post.user.profileImage.id)}
+                    alt={post.user.profileImage?.alt ?? ""}
+                    src={post.user.profileImage ? getProfileImagePath(post.user.profileImage.id) : ""}
               />
             </Link>
           </div>
@@ -67,8 +65,8 @@ export const PostItem = ({ post }: Props) => {
           ) : null}
           <p className="mt-2 text-sm sm:mt-4">
             <Link className="text-cax-text-muted hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={new Date(post.createdAt).toISOString()}>
+                {new Intl.DateTimeFormat("ja-JP", { year: "numeric", month: "long", day: "numeric" }).format(new Date(post.createdAt))}
               </time>
             </Link>
           </p>

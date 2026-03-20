@@ -15,7 +15,7 @@ app.use(bodyParser.raw({ limit: "10mb" }));
 
 app.use((_req, res, next) => {
   res.header({
-    "Cache-Control": "max-age=0, no-transform",
+    "Cache-Control": "max-age=0, no-transform", // ← これは維持（HTMLのみ）
     Connection: "close",
   });
   return next();
@@ -23,3 +23,5 @@ app.use((_req, res, next) => {
 
 app.use("/api/v1", apiRouter);
 app.use(staticRouter);
+
+app.get("/favicon.ico", (_req, res) => res.status(204).end());
