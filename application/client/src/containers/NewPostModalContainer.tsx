@@ -1,9 +1,14 @@
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useId, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
-import { NewPostModalPage } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage";
 import { sendFile, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+
+const NewPostModalPage = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage").then(
+    (m) => ({ default: m.NewPostModalPage }),
+  ),
+);
 
 interface PreparedImage {
   alt: string;
@@ -42,6 +47,7 @@ interface Props {
 export const NewPostModalContainer = ({ id }: Props) => {
   const dialogId = useId();
   const ref = useRef<HTMLDialogElement>(null);
+  const [hasLoadedPage, setHasLoadedPage] = useState(false);
   const [resetKey, setResetKey] = useState(0);
   useEffect(() => {
     const element = ref.current;
@@ -50,6 +56,9 @@ export const NewPostModalContainer = ({ id }: Props) => {
     }
 
     const handleToggle = () => {
+      if (element.open) {
+        setHasLoadedPage(true);
+      }
       // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
       setResetKey((key) => key + 1);
     };
@@ -86,14 +95,26 @@ export const NewPostModalContainer = ({ id }: Props) => {
 
   return (
     <Modal aria-labelledby={dialogId} id={id} ref={ref} closedby="any">
-      <NewPostModalPage
-        key={resetKey}
-        id={dialogId}
-        hasError={hasError}
-        isLoading={isLoading}
-        onResetError={handleResetError}
-        onSubmit={handleSubmit}
-      />
+      {hasLoadedPage ? (
+        <Suspense
+          fallback={
+            <div className="animate-pulse space-y-4 p-2">
+              <div className="bg-cax-border mx-auto h-8 w-32 rounded" />
+              <div className="bg-cax-border h-24 w-full rounded-xl" />
+              <div className="bg-cax-border h-10 w-full rounded-full" />
+            </div>
+          }
+        >
+          <NewPostModalPage
+            key={resetKey}
+            id={dialogId}
+            hasError={hasError}
+            isLoading={isLoading}
+            onResetError={handleResetError}
+            onSubmit={handleSubmit}
+          />
+        </Suspense>
+      ) : null}
     </Modal>
   );
 };

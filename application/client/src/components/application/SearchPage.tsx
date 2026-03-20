@@ -7,7 +7,6 @@ import {
   sanitizeSearchText,
 } from "@web-speed-hackathon-2026/client/src/search/services";
 import { validate } from "@web-speed-hackathon-2026/client/src/search/validation";
-import { analyzeSentiment } from "@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer";
 
 import { Button } from "../foundation/Button";
 
@@ -56,17 +55,19 @@ export const SearchPage = ({ query, results }: Props) => {
   }, [query]);
 
   const parsed = parseSearchQuery(query);
+  const keywords = parsed.keywords;
   const errors = useMemo(() => validate({ searchText }), [searchText]);
   const error = errors.searchText;
 
   useEffect(() => {
-    if (!parsed.keywords) {
+    if (!keywords) {
       setIsNegative(false);
       return;
     }
 
     let isMounted = true;
-    analyzeSentiment(parsed.keywords)
+    void import("@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer")
+      .then(({ analyzeSentiment }) => analyzeSentiment(keywords))
       .then((result) => {
         if (isMounted) {
           setIsNegative(result.label === "negative");
@@ -81,7 +82,7 @@ export const SearchPage = ({ query, results }: Props) => {
     return () => {
       isMounted = false;
     };
-  }, [parsed.keywords]);
+  }, [keywords]);
 
   const searchConditionText = useMemo(() => {
     const parts: string[] = [];

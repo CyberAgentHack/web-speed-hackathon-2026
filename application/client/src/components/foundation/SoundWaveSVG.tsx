@@ -5,18 +5,6 @@ interface ParsedData {
   peaks: number[];
 }
 
-function mean(arr: (number | undefined)[]): number {
-  let sum = 0;
-  let count = 0;
-  for (const v of arr) {
-    if (v != null) {
-      sum += v;
-      count++;
-    }
-  }
-  return count === 0 ? 0 : sum / count;
-}
-
 async function calculate(data: ArrayBuffer): Promise<ParsedData> {
   const AudioContextClass = window.AudioContext;
   if (!AudioContextClass) {

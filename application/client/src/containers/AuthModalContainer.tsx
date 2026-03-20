@@ -15,7 +15,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   USERNAME_TAKEN: "ユーザー名が使われています",
 };
 
-function getErrorCode(err: JQuery.jqXHR<unknown>, type: "signin" | "signup"): string {
+function getErrorCode(err: { responseJSON?: unknown }, type: "signin" | "signup"): string {
   const responseJSON = err.responseJSON;
   if (
     typeof responseJSON !== "object" ||
@@ -70,7 +70,7 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
         handleRequestCloseModal();
         return null;
       } catch (err: unknown) {
-        return getErrorCode(err as JQuery.jqXHR<unknown>, values.type);
+        return getErrorCode(err as { responseJSON?: unknown }, values.type);
       }
     },
     [handleRequestCloseModal, onUpdateActiveUser],

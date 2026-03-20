@@ -23,7 +23,6 @@ export const PausableMovie = ({ src }: Props) => {
   const animatorRef = useRef<{
     start: () => void;
     stop: () => void;
-    onFrame: (frame: unknown) => void;
   } | null>(null);
   const canvasCallbackRef = useCallback<RefCallback<HTMLCanvasElement>>(
     (el) => {
