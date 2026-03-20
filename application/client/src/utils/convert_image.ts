@@ -1,53 +1,37 @@
-import { initializeImageMagick, ImageMagick, MagickFormat } from "@imagemagick/magick-wasm";
-import { dump, insert, ImageIFD } from "piexifjs";
+import { MagickFormat } from "@imagemagick/magick-wasm";
 
 interface Options {
   extension: MagickFormat;
 }
 
-let magickInitPromise: Promise<void> | null = null;
+export async function convertImage(file: File, _options: Options): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
 
-function ensureMagickInitialized(): Promise<void> {
-  if (!magickInitPromise) {
-    magickInitPromise = (async () => {
-      const magickWasm = (await import("@imagemagick/magick-wasm/magick.wasm?binary")).default;
-      await initializeImageMagick(new URL(magickWasm, location.href));
-    })();
-  }
-  return magickInitPromise;
-}
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(img, 0, 0);
 
-export async function convertImage(file: File, options: Options): Promise<Blob> {
-  await ensureMagickInitialized();
+      canvas.toBlob(
+        (blob) => {
+          URL.revokeObjectURL(url);
+          if (blob) resolve(blob);
+          else reject(new Error("Failed to convert image"));
+        },
+        "image/jpeg",
+        0.9,
+      );
+    };
 
-  const byteArray = new Uint8Array(await file.arrayBuffer());
+    img.onerror = (e) => {
+      URL.revokeObjectURL(url);
+      reject(e);
+    };
 
-  return new Promise((resolve) => {
-    ImageMagick.read(byteArray, (img) => {
-      img.format = options.extension;
-
-      const comment = img.comment;
-
-      img.write((output) => {
-        if (comment == null) {
-          resolve(new Blob([output as Uint8Array<ArrayBuffer>]));
-          return;
-        }
-
-        // ImageMagick では EXIF の ImageDescription フィールドに保存されているデータが
-        // 非標準の Comment フィールドに移されてしまうため
-        // piexifjs を使って ImageDescription フィールドに書き込む
-        const binary = Array.from(output as Uint8Array<ArrayBuffer>)
-          .map((b) => String.fromCharCode(b))
-          .join("");
-        const descriptionBinary = Array.from(new TextEncoder().encode(comment))
-          .map((b) => String.fromCharCode(b))
-          .join("");
-        const exifStr = dump({ "0th": { [ImageIFD.ImageDescription]: descriptionBinary } });
-        const outputWithExif = insert(exifStr, binary);
-        const bytes = Uint8Array.from(outputWithExif.split("").map((c) => c.charCodeAt(0)));
-        resolve(new Blob([bytes]));
-      });
-    });
+    img.src = url;
   });
 }
