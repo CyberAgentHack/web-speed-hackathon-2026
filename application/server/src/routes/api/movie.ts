@@ -10,7 +10,7 @@ import { Movie } from "@web-speed-hackathon-2026/server/src/models";
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
 // 変換した動画の拡張子
-const EXTENSION = "gif";
+const EXTENSION = "mp4";
 
 export const movieRouter = Router();
 
@@ -23,7 +23,8 @@ movieRouter.post("/movies", async (req, res) => {
   }
 
   const type = await fileTypeFromBuffer(req.body);
-  if (type === undefined || type.ext !== EXTENSION) {
+  const ALLOWED_TYPES = ["mp4", "gif"];
+  if (type === undefined || !ALLOWED_TYPES.includes(type.ext)) {
     throw new httpErrors.BadRequest("Invalid file type");
   }
 
