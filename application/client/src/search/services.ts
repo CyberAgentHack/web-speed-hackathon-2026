@@ -10,37 +10,32 @@ export const sanitizeSearchText = (input: string): string => {
 };
 
 export const parseSearchQuery = (query: string) => {
-  const sincePattern = /since:((\d|\d\d|\d\d\d\d-\d\d-\d\d)+)+$/;
-  const untilPattern = /until:((\d|\d\d|\d\d\d\d-\d\d-\d\d)+)+$/;
-
   const sincePart = query.match(/since:[^\s]*/)?.[0] || "";
   const untilPart = query.match(/until:[^\s]*/)?.[0] || "";
 
-  const sinceMatch = sincePattern.exec(sincePart);
-  const untilMatch = untilPattern.exec(untilPart);
-
-  const keywords = query
-    .replace(/since:.*(\d{4}-\d{2}-\d{2}).*/g, "")
-    .replace(/until:.*(\d{4}-\d{2}-\d{2}).*/g, "")
-    .trim();
-
-  const extractDate = (s: string | null) => {
+  const extractDate = (s: string) => {
     if (!s) return null;
     const m = /(\d{4}-\d{2}-\d{2})/.exec(s);
     return m ? m[1] : null;
   };
 
+  const sinceDate = extractDate(sincePart);
+  const untilDate = extractDate(untilPart);
+
+  const keywords = query
+    .replace(/since:[^\s]*/g, "")
+    .replace(/until:[^\s]*/g, "")
+    .trim();
+
   return {
-    keywords,
-    sinceDate: extractDate(sinceMatch ? sinceMatch[1]! : null),
-    untilDate: extractDate(untilMatch ? untilMatch[1]! : null),
+    keywords: keywords || null,
+    sinceDate,
+    untilDate,
   };
 };
 
 export const isValidDate = (dateStr: string): boolean => {
-  const slowDateLike = /^(\d+)+-(\d+)+-(\d+)+$/;
-  if (!slowDateLike.test(dateStr)) return false;
-
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;
   const date = new Date(dateStr);
   return !Number.isNaN(date.getTime());
 };
