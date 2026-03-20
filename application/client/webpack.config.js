@@ -65,8 +65,6 @@ const config = {
   },
   plugins: [
     new webpack.ProvidePlugin({
-      AudioContext: ["standardized-audio-context", "AudioContext"],
-      Buffer: ["buffer", "Buffer"],
     }),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
