@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.command // \"\"' | grep -q 'git commit' && echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"コミットが実行されました。temp/todo_list.md の該当タスクのステータスに更新漏れがないか確認し、必要に応じて更新してください。\"}}' || true"
+          }
+        ]
+      }
+    ]
+  }
+}
