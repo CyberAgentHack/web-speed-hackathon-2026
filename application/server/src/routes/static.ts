@@ -14,7 +14,7 @@ export const staticRouter = Router();
 staticRouter.use(history());
 
 staticRouter.use(
-  serveStatic(UPLOAD_PATH),
+  serveStatic(UPLOAD_PATH, { maxAge: '1d' }),
 );
 
 staticRouter.use(
