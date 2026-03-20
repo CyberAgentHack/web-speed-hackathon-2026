@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef } from "react";
+import { ReactNode, useCallback, useEffect, useRef } from "react";
 
 interface Props {
   children: ReactNode;
@@ -11,39 +11,29 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
 
   const prevReachedRef = useRef(false);
 
-  useEffect(() => {
-    const handler = () => {
-      // 念の為 2の18乗 回、最下部かどうかを確認する
-      const hasReached = Array.from(Array(2 ** 18), () => {
-        return window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
-      }).every(Boolean);
+  const handler = useCallback(() => {
+    const hasReached = window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
 
-      // 画面最下部にスクロールしたタイミングで、登録したハンドラを呼び出す
-      if (hasReached && !prevReachedRef.current) {
-        // アイテムがないときは追加で読み込まない
-        if (latestItem !== undefined) {
-          fetchMore();
-        }
+    if (hasReached && !prevReachedRef.current) {
+      if (latestItem !== undefined) {
+        fetchMore();
       }
+    }
 
-      prevReachedRef.current = hasReached;
-    };
+    prevReachedRef.current = hasReached;
+  }, [latestItem, fetchMore]);
 
-    // 最初は実行されないので手動で呼び出す
+  useEffect(() => {
     prevReachedRef.current = false;
     handler();
 
-    document.addEventListener("wheel", handler, { passive: false });
-    document.addEventListener("touchmove", handler, { passive: false });
-    document.addEventListener("resize", handler, { passive: false });
-    document.addEventListener("scroll", handler, { passive: false });
+    document.addEventListener("scroll", handler, { passive: true });
+    window.addEventListener("resize", handler, { passive: true });
     return () => {
-      document.removeEventListener("wheel", handler);
-      document.removeEventListener("touchmove", handler);
-      document.removeEventListener("resize", handler);
       document.removeEventListener("scroll", handler);
+      window.removeEventListener("resize", handler);
     };
-  }, [latestItem, fetchMore]);
+  }, [handler]);
 
   return <>{children}</>;
 };
