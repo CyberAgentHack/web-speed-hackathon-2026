@@ -28,13 +28,7 @@ const config = {
   },
   devtool: isProduction ? false : "inline-source-map",
   entry: {
-    main: [
-      "core-js",
-      "regenerator-runtime/runtime",
-      path.resolve(SRC_PATH, "./index.css"),
-      path.resolve(SRC_PATH, "./buildinfo.ts"),
-      path.resolve(SRC_PATH, "./index.tsx"),
-    ],
+    main: [path.resolve(SRC_PATH, "./index.css"), path.resolve(SRC_PATH, "./buildinfo.ts"), path.resolve(SRC_PATH, "./index.tsx")],
   },
   mode: isProduction ? "production" : "development",
   module: {
@@ -74,7 +68,7 @@ const config = {
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
+      NODE_ENV: process.env.NODE_ENV || "development",
     }),
     new MiniCssExtractPlugin({
       filename: isProduction ? "styles/[name]-[contenthash].css" : "styles/[name].css",
@@ -126,7 +120,6 @@ const config = {
     },
   },
   optimization: {
-    minimize: false,
     runtimeChunk: "single",
     splitChunks: {
       chunks: "all",
@@ -134,7 +127,7 @@ const config = {
         vendors: {
           test: /[\\/]node_modules[\\/]/,
           name: "vendors",
-          chunks: "all",
+          chunks: "initial",
         },
       },
     },
