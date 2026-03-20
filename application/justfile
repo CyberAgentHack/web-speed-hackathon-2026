@@ -1,0 +1,36 @@
+# 引数なしで `just` を実行したとき、利用可能な recipe 一覧を表示する。
+[group('ヘルプ')]
+default:
+  @just --list
+
+pid_dir := ".just/pids"
+log_dir := ".just/logs"
+frontend_pid_file := "{{pid_dir}}/frontend.pid"
+backend_pid_file := "{{pid_dir}}/backend.pid"
+
+# バックエンド（`pnpm --filter @web-speed-hackathon-2026/server start`）と
+# フロントエンド監視ビルド（`pnpm --filter @web-speed-hackathon-2026/client exec rspack build --watch`）を同時にバックグラウンド起動する。
+[group('起動')]
+start:
+  @mkdir -p "{{pid_dir}}" "{{log_dir}}"
+  @if [ -f "{{frontend_pid_file}}" ] && kill -0 "$$(cat "{{frontend_pid_file}}")" 2>/dev/null; then echo "frontend は既に起動中です (pid: $$(cat "{{frontend_pid_file}}"))"; else nohup pnpm --filter @web-speed-hackathon-2026/client exec rspack build --watch > "{{log_dir}}/frontend.log" 2>&1 & echo $$! > "{{frontend_pid_file}}"; echo "frontend を起動しました (pid: $$(cat "{{frontend_pid_file}}"))"; fi
+  @if [ -f "{{backend_pid_file}}" ] && kill -0 "$$(cat "{{backend_pid_file}}")" 2>/dev/null; then echo "backend は既に起動中です (pid: $$(cat "{{backend_pid_file}}"))"; else nohup pnpm --filter @web-speed-hackathon-2026/server start > "{{log_dir}}/backend.log" 2>&1 & echo $$! > "{{backend_pid_file}}"; echo "backend を起動しました (pid: $$(cat "{{backend_pid_file}}"))"; fi
+  @echo "ログ: {{log_dir}}/frontend.log, {{log_dir}}/backend.log"
+
+# pid ファイルを見て frontend/backend を停止する。起動していない場合はスキップする。
+[group('起動')]
+stop:
+  @if [ -f "{{frontend_pid_file}}" ] && kill -0 "$$(cat "{{frontend_pid_file}}")" 2>/dev/null; then kill "$$(cat "{{frontend_pid_file}}")" && echo "frontend を停止しました"; else echo "frontend は停止済みです"; fi
+  @rm -f "{{frontend_pid_file}}"
+  @if [ -f "{{backend_pid_file}}" ] && kill -0 "$$(cat "{{backend_pid_file}}")" 2>/dev/null; then kill "$$(cat "{{backend_pid_file}}")" && echo "backend を停止しました"; else echo "backend は停止済みです"; fi
+  @rm -f "{{backend_pid_file}}"
+
+# backend/frontend をまとめて停止してから再起動する。
+[group('起動')]
+restart: stop start
+
+# 現在の起動状態（pid の有効性）を確認する。
+[group('起動')]
+status:
+  @if [ -f "{{frontend_pid_file}}" ] && kill -0 "$$(cat "{{frontend_pid_file}}")" 2>/dev/null; then echo "frontend: running (pid: $$(cat "{{frontend_pid_file}}"))"; else echo "frontend: stopped"; fi
+  @if [ -f "{{backend_pid_file}}" ] && kill -0 "$$(cat "{{backend_pid_file}}")" 2>/dev/null; then echo "backend: running (pid: $$(cat "{{backend_pid_file}}"))"; else echo "backend: stopped"; fi

@@ -1,0 +1,25 @@
+name: Force Sync To Dev Repository
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  force_sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+
+      - name: Force push main to dev repository
+        env:
+          TARGET_REPO: shimaf4979/web-speed-hackathon-2026-dev
+        run: |
+          git remote add dev "https://x-access-token:${{ secrets.PAT }}@github.com/${TARGET_REPO}.git"
+          git push --force dev main:main
