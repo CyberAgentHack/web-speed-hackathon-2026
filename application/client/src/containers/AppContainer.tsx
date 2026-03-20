@@ -5,7 +5,7 @@ import { Route, Routes, useLocation, useNavigate } from "react-router";
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
 import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
-import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { fetchJSON, HTTPError, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { lazyNamed } from "@web-speed-hackathon-2026/client/src/utils/lazy";
 
 const TimelineContainer = lazyNamed(
@@ -72,6 +72,10 @@ const NotFoundContainer = lazyNamed(
   "NotFoundContainer",
 );
 
+function requiresResolvedActiveUser(pathname: string) {
+  return pathname === "/crok" || pathname.startsWith("/dm");
+}
+
 export const AppContainer = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -80,16 +84,36 @@ export const AppContainer = () => {
   }, [pathname]);
 
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
-  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
+  const [hasResolvedActiveUser, setHasResolvedActiveUser] = useState(false);
   useEffect(() => {
+    let isDisposed = false;
+
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {
-        setActiveUser(user);
+        if (!isDisposed) {
+          setActiveUser(user);
+        }
+      })
+      .catch((error: unknown) => {
+        if (isDisposed) {
+          return;
+        }
+        if (error instanceof HTTPError && error.status === 401) {
+          setActiveUser(null);
+          return;
+        }
+        console.error(error);
       })
       .finally(() => {
-        setIsLoadingActiveUser(false);
+        if (!isDisposed) {
+          setHasResolvedActiveUser(true);
+        }
       });
-  }, [setActiveUser, setIsLoadingActiveUser]);
+
+    return () => {
+      isDisposed = true;
+    };
+  }, []);
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
     setActiveUser(null);
@@ -99,7 +123,7 @@ export const AppContainer = () => {
   const authModalId = useId();
   const newPostModalId = useId();
 
-  if (isLoadingActiveUser) {
+  if (!hasResolvedActiveUser && requiresResolvedActiveUser(pathname)) {
     return (
       <HelmetProvider>
         <Helmet>

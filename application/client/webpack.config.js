@@ -58,9 +58,9 @@ const config = {
   },
   output: {
     chunkFilename: "scripts/[name]-[contenthash].js",
-    filename: "scripts/[name].js",
+    filename: "scripts/[name]-[contenthash].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     clean: true,
   },
   plugins: [
@@ -70,7 +70,7 @@ const config = {
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
     }),
     new MiniCssExtractPlugin({
-      filename: "styles/[name].css",
+      filename: "styles/[name]-[contenthash].css",
     }),
     new CopyWebpackPlugin({
       patterns: [

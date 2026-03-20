@@ -31,6 +31,10 @@ function loadImageTools() {
       convertImage: imageModule.convertImage,
       MagickFormat: magickModule.MagickFormat,
     }));
+    imageToolsPromise = imageToolsPromise.catch((error) => {
+      imageToolsPromise = null;
+      throw error;
+    });
   }
   return imageToolsPromise;
 }
@@ -42,6 +46,10 @@ function loadMovieTools() {
     ).then((movieModule) => ({
       convertMovie: movieModule.convertMovie,
     }));
+    movieToolsPromise = movieToolsPromise.catch((error) => {
+      movieToolsPromise = null;
+      throw error;
+    });
   }
   return movieToolsPromise;
 }
@@ -53,6 +61,10 @@ function loadSoundTools() {
     ).then((soundModule) => ({
       convertSound: soundModule.convertSound,
     }));
+    soundToolsPromise = soundToolsPromise.catch((error) => {
+      soundToolsPromise = null;
+      throw error;
+    });
   }
   return soundToolsPromise;
 }
