@@ -14,7 +14,10 @@ import { SearchContainer } from "@web-speed-hackathon-2026/client/src/containers
 import { TermContainer } from "@web-speed-hackathon-2026/client/src/containers/TermContainer";
 import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
 import { UserProfileContainer } from "@web-speed-hackathon-2026/client/src/containers/UserProfileContainer";
-import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import {
+  fetchJSON,
+  sendJSON,
+} from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 export const AppContainer = () => {
   const { pathname } = useLocation();
@@ -43,20 +46,11 @@ export const AppContainer = () => {
   const authModalId = useId();
   const newPostModalId = useId();
 
-  if (isLoadingActiveUser) {
-    return (
-      <HelmetProvider>
-        <Helmet>
-          <title>読込中 - CaX</title>
-        </Helmet>
-      </HelmetProvider>
-    );
-  }
-
   return (
     <HelmetProvider>
       <AppPage
         activeUser={activeUser}
+        isLoadingActiveUser={isLoadingActiveUser}
         authModalId={authModalId}
         newPostModalId={newPostModalId}
         onLogout={handleLogout}
@@ -65,12 +59,20 @@ export const AppContainer = () => {
           <Route element={<TimelineContainer />} path="/" />
           <Route
             element={
-              <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
+              <DirectMessageListContainer
+                activeUser={activeUser}
+                authModalId={authModalId}
+              />
             }
             path="/dm"
           />
           <Route
-            element={<DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />}
+            element={
+              <DirectMessageContainer
+                activeUser={activeUser}
+                authModalId={authModalId}
+              />
+            }
             path="/dm/:conversationId"
           />
           <Route element={<SearchContainer />} path="/search" />
@@ -78,15 +80,27 @@ export const AppContainer = () => {
           <Route element={<PostContainer />} path="/posts/:postId" />
           <Route element={<TermContainer />} path="/terms" />
           <Route
-            element={<CrokContainer activeUser={activeUser} authModalId={authModalId} />}
+            element={
+              <CrokContainer
+                activeUser={activeUser}
+                authModalId={authModalId}
+              />
+            }
             path="/crok"
           />
           <Route element={<NotFoundContainer />} path="*" />
         </Routes>
       </AppPage>
 
-      <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
-      <NewPostModalContainer id={newPostModalId} />
+      {!isLoadingActiveUser && (
+        <>
+          <AuthModalContainer
+            id={authModalId}
+            onUpdateActiveUser={setActiveUser}
+          />
+          <NewPostModalContainer id={newPostModalId} />
+        </>
+      )}
     </HelmetProvider>
   );
 };
