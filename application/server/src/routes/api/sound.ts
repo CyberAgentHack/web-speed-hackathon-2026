@@ -14,7 +14,7 @@ import { extractMetadataFromSound } from "@web-speed-hackathon-2026/server/src/u
 const execFileAsync = promisify(execFile);
 
 // 変換した音声の拡張子
-const EXTENSION = "mp3";
+const EXTENSION = "opus";
 
 export const soundRouter = Router();
 
@@ -35,7 +35,7 @@ soundRouter.post("/sounds", async (req, res) => {
   await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds"), { recursive: true });
   await fs.writeFile(inputPath, req.body);
 
-  const args = ["-i", inputPath, "-vn"];
+  const args = ["-i", inputPath, "-vn", "-c:a", "libopus", "-b:a", "96k"];
   if (artist) args.push("-metadata", `artist=${artist}`);
   if (title) args.push("-metadata", `title=${title}`);
   args.push(outputPath);

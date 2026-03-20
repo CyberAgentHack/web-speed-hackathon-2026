@@ -39,12 +39,12 @@
 - [x] **Phase 4 ②** `AppContainer.tsx` のルートレベル `React.lazy()` + `<Suspense>` 化
   - Route コンテナ 9 個を `lazy()` に変更 (AuthModal・NewPostModal は常時 DOM なので静的のまま)
   - main.js: **896 KiB → 346 KiB** (61% 削減)
-- [ ] **Phase 4 ③** MP3 → WebM/Opus 変換 ← **次にやること**
-  - `public/sounds/*.mp3` を ffmpeg で WebM/Opus に変換 (`-c:a libopus -b:a 96k`)
-  - `server/src/routes/api/sound.ts` も `.webm` 出力に変更
-  - `get_path.ts`: `getSoundPath` の拡張子 `.mp3` → `.webm`
-  - `SoundPlayer.tsx`: `<audio>` タグは WebM/Opus を Chrome でそのまま再生可能 → 変更不要
-- [ ] **Phase 4 ④** JPEG 圧縮最適化
+- [x] **Phase 4 ③** MP3 → Opus 変換 (WebM コンテナではなく `.opus` = Ogg/Opus)
+  - `public/sounds/*.mp3` (15 本・67 MB) を ffmpeg Opus で変換 → **約 27 MB** (60% 削減)
+  - `server/src/routes/api/sound.ts`: `EXTENSION = "opus"`、ffmpeg に `-c:a libopus -b:a 96k` 追加
+  - `get_path.ts`: `getSoundPath` の拡張子 `.mp3` → `.opus`
+  - `SoundWaveSVG.tsx`: `AudioContext.decodeAudioData` はフォーマット非依存 → 変更不要
+- [ ] **Phase 4 ④** JPEG 圧縮最適化 ← **次にやること**
   - `public/images/*.jpg` を sharp で quality 75 に再圧縮 (WebP/AVIF は `piexifjs` が JPEG-only のため非推奨)
   - `server/src/routes/api/image.ts` で quality パラメータ追加
 - [ ] **Phase 5** gzip 圧縮・N+1 改善 (キャッシュは採点ツールが毎回 cold start で実行するため WSH スコアに効果なし → 対象外)
