@@ -162,7 +162,7 @@
 @font-face {
   /* Source Han Serif JP Regular の Y 軸を 1/1.43 に縮小した改変フォント */
   font-family: "Rei no Are Mincho";
-  font-display: block;
+  font-display: swap;
   src: url(/fonts/ReiNoAreMincho-Regular-Subset.woff2) format("woff2"),
        url(/fonts/ReiNoAreMincho-Regular.otf) format("opentype");
   font-weight: normal;
@@ -171,7 +171,7 @@
 @font-face {
   /* Source Han Serif JP Heavy の Y 軸を 1/1.43 に縮小した改変フォント */
   font-family: "Rei no Are Mincho";
-  font-display: block;
+  font-display: swap;
   src: url(/fonts/ReiNoAreMincho-Heavy-Subset.woff2) format("woff2"),
        url(/fonts/ReiNoAreMincho-Heavy.otf) format("opentype");
   font-weight: bold;
