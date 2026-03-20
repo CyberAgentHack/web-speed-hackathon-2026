@@ -45,27 +45,15 @@ importers:
       bluebird:
         specifier: 3.7.2
         version: 3.7.2
-      buffer:
-        specifier: 6.0.3
-        version: 6.0.3
       classnames:
         specifier: 2.5.1
         version: 2.5.1
       common-tags:
         specifier: 1.8.2
         version: 1.8.2
-      core-js:
-        specifier: 3.45.1
-        version: 3.45.1
-      encoding-japanese:
-        specifier: 2.2.0
-        version: 2.2.0
       fast-average-color:
         specifier: 9.5.0
         version: 9.5.0
-      image-size:
-        specifier: 2.0.2
-        version: 2.0.2
       jquery:
         specifier: 3.7.1
         version: 3.7.1
@@ -160,9 +148,6 @@ importers:
       '@types/common-tags':
         specifier: 1.8.4
         version: 1.8.4
-      '@types/encoding-japanese':
-        specifier: 2.2.1
-        version: 2.2.1
       '@types/jquery':
         specifier: 3.5.33
         version: 3.5.33
@@ -1731,9 +1716,6 @@ packages:
   '@types/doublearray@0.0.32':
     resolution: {integrity: sha512-HloTru3I3a55runIVqZX1YBQi2L5A4peNQPh33yshzB4ttt1qHCnHPkuhy9Djy/cTx7i5xJvxItKRPCmvnfpGw==}
 
-  '@types/encoding-japanese@2.2.1':
-    resolution: {integrity: sha512-6jjepuTusvySxMLP7W6usamlbgf0F4sIDvm7EzYePjLHY7zWUv4yz2PLUnu0vuNVtXOTLu2cRdFcDg40J5Owsw==}
-
   '@types/eslint-scope@3.7.7':
     resolution: {integrity: sha512-MzMFlSLBqNF2gcHWO0G1vP/YQyfvrxZ0bF+u7mzUdZ1/xK4A4sru+nraZz5i3iEIk1l1uyicaDVTB4QbbEkAYg==}
 
@@ -2172,9 +2154,6 @@ packages:
   buffer@5.7.1:
     resolution: {integrity: sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==}
 
-  buffer@6.0.3:
-    resolution: {integrity: sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==}
-
   bundle-name@4.1.0:
     resolution: {integrity: sha512-tjwM5exMg6BGRI+kNmTntNsvdZS1X8BFYS6tnJ2hdH0kVxM6/eVZ2xy+FqStSWvYmtfFMDLIxurorHwDKfDz5Q==}
     engines: {node: '>=18'}
@@ -2369,9 +2348,6 @@ packages:
 
   core-js-compat@3.45.1:
     resolution: {integrity: sha512-tqTt5T4PzsMIZ430XGviK4vzYSoeNJ6CXODi6c/voxOT6IZqBht5/EKaSNnYiEjjRYxjVz7DQIsOsY0XNi8PIA==}
-
-  core-js@3.45.1:
-    resolution: {integrity: sha512-L4NPsJlCfZsPeXukyzHFlg/i7IIVwHSItR0wg0FLNqYClJ4MQYTYLbC7EkjKYRLZF2iof2MUgN0EGy7MdQFChg==}
 
   core-util-is@1.0.2:
     resolution: {integrity: sha512-3lqz5YjWTYnW6dlDa5TLaTCcShfar1e40rmcJVwCBJC6mWlFuj0eCHIElmG1g5kyuJ/GD+8Wn4FFCcz4gJPfaQ==}
@@ -2587,10 +2563,6 @@ packages:
   encodeurl@2.0.0:
     resolution: {integrity: sha512-Q0n9HRi4m6JuGIV1eFlmvJB7ZEVxu93IrMyiMsGC0lrMJMWzRgx6WGquyfQgZVb31vhGgXnfmPNNXmxnOkRBrg==}
     engines: {node: '>= 0.8'}
-
-  encoding-japanese@2.2.0:
-    resolution: {integrity: sha512-EuJWwlHPZ1LbADuKTClvHtwbaFn4rOD+dRAbWysqEOXRc2Uui0hJInNJrsdH0c+OhJA4nrCBdSkW4DD5YxAo6A==}
-    engines: {node: '>=8.10.0'}
 
   encoding@0.1.13:
     resolution: {integrity: sha512-ETBauow1T35Y/WZMkio9jiM0Z5xjHHmJ4XmjZOq1l/dXz3lr2sRn87nJy20RupqSh1F2m3HHPSp8ShIPQJrJ3A==}
@@ -3079,11 +3051,6 @@ packages:
   iltorb@2.4.5:
     resolution: {integrity: sha512-EMCMl3LnnNSZJS5QrxyZmMTaAC4+TJkM5woD+xbpm9RB+mFYCr7C05GFE3TEGCsVQSVHmjX+3sf5AiwsylNInQ==}
     deprecated: The zlib module provides APIs for brotli compression/decompression starting with Node.js v10.16.0, please use it over iltorb
-
-  image-size@2.0.2:
-    resolution: {integrity: sha512-IRqXKlaXwgSMAMtpNzZa1ZAe8m+Sa1770Dhk8VkSsP9LS+iHD62Zd8FQKs8fbPiagBE7BzoFX23cxFnwshpV6w==}
-    engines: {node: '>=16.x'}
-    hasBin: true
 
   import-fresh@3.3.1:
     resolution: {integrity: sha512-TR3KfrTZTYLPB6jUjfx6MF9WcWrHL9su5TObK4ZkYgBdWKPOFoSoQIdEuTuR82pmtxH2spWG9h6etwfr1pLBqQ==}
@@ -6623,8 +6590,6 @@ snapshots:
 
   '@types/doublearray@0.0.32': {}
 
-  '@types/encoding-japanese@2.2.1': {}
-
   '@types/eslint-scope@3.7.7':
     dependencies:
       '@types/eslint': 9.6.1
@@ -7134,11 +7099,6 @@ snapshots:
       base64-js: 1.5.1
       ieee754: 1.2.1
 
-  buffer@6.0.3:
-    dependencies:
-      base64-js: 1.5.1
-      ieee754: 1.2.1
-
   bundle-name@4.1.0:
     dependencies:
       run-applescript: 7.1.0
@@ -7333,8 +7293,6 @@ snapshots:
     dependencies:
       browserslist: 4.26.3
 
-  core-js@3.45.1: {}
-
   core-util-is@1.0.2: {}
 
   core-util-is@1.0.3: {}
@@ -7519,8 +7477,6 @@ snapshots:
   encodeurl@1.0.2: {}
 
   encodeurl@2.0.0: {}
-
-  encoding-japanese@2.2.0: {}
 
   encoding@0.1.13:
     dependencies:
@@ -8148,8 +8104,6 @@ snapshots:
       npmlog: 4.1.2
       prebuild-install: 5.3.6
       which-pm-runs: 1.1.0
-
-  image-size@2.0.2: {}
 
   import-fresh@3.3.1:
     dependencies:
