@@ -19,11 +19,22 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
   const [isStreaming, setIsStreaming] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const contentRef = useRef("");
+  const rafIdRef = useRef<number | null>(null);
+  const pendingUpdateRef = useRef(false);
 
   const stop = useCallback(() => {
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
+    }
+    if (rafIdRef.current !== null) {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+    }
+    // 最終状態を反映
+    if (pendingUpdateRef.current) {
+      setContent(contentRef.current);
+      pendingUpdateRef.current = false;
     }
     setIsStreaming(false);
   }, []);
@@ -56,7 +67,18 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
 
         const newContent = options.onMessage(data, contentRef.current);
         contentRef.current = newContent;
-        setContent(newContent);
+        pendingUpdateRef.current = true;
+
+        // rAFでバッチ処理: 複数のSSEメッセージを1フレームにまとめる
+        if (rafIdRef.current === null) {
+          rafIdRef.current = requestAnimationFrame(() => {
+            rafIdRef.current = null;
+            if (pendingUpdateRef.current) {
+              setContent(contentRef.current);
+              pendingUpdateRef.current = false;
+            }
+          });
+        }
       };
 
       eventSource.onerror = (error) => {
