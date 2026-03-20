@@ -26,6 +26,8 @@
     "ffmpeg-static": "5.3.0",
     "file-type": "21.1.1",
     "http-errors": "2.0.0",
+    "kuromoji": "0.1.2",
+    "negaposi-analyzer-ja": "1.0.1",
     "music-metadata": "11.10.3",
     "sequelize": "6.37.7",
     "serve-static": "2.2.0",

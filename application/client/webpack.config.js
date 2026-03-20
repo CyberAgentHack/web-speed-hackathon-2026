@@ -31,8 +31,8 @@ const config = {
   devtool: isDevelopment ? 'eval-cheap-module-source-map' : false,
   entry: {
     main: [
-      "regenerator-runtime/runtime",
       "jquery-binarytransport",
+      path.resolve(SRC_PATH, "./tailwind.css"),
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
@@ -92,7 +92,7 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: 'body',
+      inject: false,
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
     ...(useAnalyzer
@@ -131,7 +131,7 @@ const config = {
           enforce: true,
         },
         heavy: {
-          test: /[\\/]node_modules[\\/](kuromoji|bayesian-bm25|negaposi-analyzer-ja)[\\/]/,
+          test: /[\\/]node_modules[\\/](kuromoji|bayesian-bm25)[\\/]/,
           name: 'vendor-heavy',
           chunks: 'async',
           priority: 20,
@@ -148,10 +148,10 @@ const config = {
     },
     concatenateModules: true,
     usedExports: true,
-    providedExports: false,
+    providedExports: true,
     sideEffects: false,
   },
-  cache: false,
+  // cache: false,
   ignoreWarnings: [],
 };
 
