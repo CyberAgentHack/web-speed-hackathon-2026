@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const LIMIT = 30;
+const DEFAULT_LIMIT = 30;
 
 interface ReturnValues<T> {
   data: Array<T>;
@@ -10,10 +10,30 @@ interface ReturnValues<T> {
   fetchMore: () => void;
 }
 
+interface UseInfiniteFetchOptions {
+  limit?: number;
+}
+
+function normalizeLimit(limit: number | undefined): number {
+  if (limit == null || !Number.isFinite(limit) || limit <= 0) {
+    return DEFAULT_LIMIT;
+  }
+  return Math.floor(limit);
+}
+
+function buildPaginatedApiPath(apiPath: string, limit: number, offset: number): string {
+  const url = new URL(apiPath, window.location.origin);
+  url.searchParams.set("limit", String(limit));
+  url.searchParams.set("offset", String(offset));
+  return `${url.pathname}${url.search}`;
+}
+
 export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
+  options: UseInfiniteFetchOptions = {},
 ): ReturnValues<T> {
+  const limit = normalizeLimit(options.limit);
   const internalRef = useRef({ hasMore: true, isLoading: false, offset: 0 });
 
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
@@ -39,15 +59,18 @@ export function useInfiniteFetch<T>(
       offset,
     };
 
-    void fetcher(apiPath).then(
-      (allData) => {
-        const nextItems = allData.slice(offset, offset + LIMIT);
-        const nextOffset = offset + LIMIT;
-        const hasMoreAfterFetch = nextOffset < allData.length;
+    const paginatedApiPath = buildPaginatedApiPath(apiPath, limit, offset);
+
+    void fetcher(paginatedApiPath).then(
+      (nextItems) => {
+        const fetchedCount = nextItems.length;
+        const nextOffset = offset + fetchedCount;
+        const hasMoreAfterFetch = fetchedCount >= limit;
 
         setResult((cur) => ({
           ...cur,
           data: [...cur.data, ...nextItems],
+          error: null,
           hasMore: hasMoreAfterFetch,
           isLoading: false,
         }));
@@ -71,7 +94,7 @@ export function useInfiniteFetch<T>(
         };
       },
     );
-  }, [apiPath, fetcher]);
+  }, [apiPath, fetcher, limit]);
 
   useEffect(() => {
     if (apiPath === "") {
@@ -93,7 +116,7 @@ export function useInfiniteFetch<T>(
       data: [],
       error: null,
       hasMore: true,
-      isLoading: true,
+      isLoading: false,
     }));
     internalRef.current = {
       hasMore: true,

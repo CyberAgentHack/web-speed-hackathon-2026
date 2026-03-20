@@ -21,6 +21,7 @@ import { Button } from "../foundation/Button";
 interface Props {
   query: string;
   results: Models.Post[];
+  isLoading: boolean;
 }
 
 const SearchInput = ({ input, meta }: WrappedFieldProps) => {
@@ -46,6 +47,7 @@ const SearchInput = ({ input, meta }: WrappedFieldProps) => {
 const SearchPageComponent = ({
   query,
   results,
+  isLoading,
   handleSubmit,
 }: Props & InjectedFormProps<SearchFormData, Props>) => {
   const navigate = useNavigate();
@@ -142,7 +144,11 @@ const SearchPageComponent = ({
         </article>
       )}
 
-      {query && results.length === 0 ? (
+      {query && isLoading && results.length === 0 ? (
+        <div className="text-cax-text-muted flex items-center justify-center p-8">
+          検索結果を読み込み中...
+        </div>
+      ) : query && !isLoading && results.length === 0 ? (
         <div className="text-cax-text-muted flex items-center justify-center p-8">
           検索結果が見つかりませんでした
         </div>
