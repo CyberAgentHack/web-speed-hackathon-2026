@@ -20,7 +20,8 @@ export async function convertImage(file: File, options: Options): Promise<Blob> 
       const comment = img.comment;
 
       img.write((output) => {
-        if (comment == null) {
+        // piexifjs は JPEG のみ対応のため、JPEG 以外のフォーマットでは exif 埋め込みをスキップする
+        if (comment == null || format !== MagickFormat.Jpg) {
           resolve(new Blob([output as Uint8Array<ArrayBuffer>]));
           return;
         }
