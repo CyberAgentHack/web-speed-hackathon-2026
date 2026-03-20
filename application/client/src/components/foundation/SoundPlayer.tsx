@@ -3,8 +3,6 @@ import { ReactEventHandler, useCallback, useRef, useState } from "react";
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { SoundWaveSVG } from "@web-speed-hackathon-2026/client/src/components/foundation/SoundWaveSVG";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
-import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getSoundPath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
@@ -13,12 +11,11 @@ interface Props {
 
 export const SoundPlayer = ({ sound }: Props) => {
   const src = getSoundPath(sound.id);
-  const { data, isLoading } = useFetch(src, fetchBinary);
 
   const [currentTimeRatio, setCurrentTimeRatio] = useState(0);
   const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>((ev) => {
     const el = ev.currentTarget;
-    setCurrentTimeRatio(el.currentTime / el.duration);
+    setCurrentTimeRatio(el.duration > 0 ? el.currentTime / el.duration : 0);
   }, []);
 
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -28,19 +25,15 @@ export const SoundPlayer = ({ sound }: Props) => {
       if (isPlaying) {
         audioRef.current?.pause();
       } else {
-        audioRef.current?.play();
+        void audioRef.current?.play();
       }
       return !isPlaying;
     });
   }, []);
 
-  if (isLoading || data === null) {
-    return null;
-  }
-
   return (
     <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
-      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} src={src} />
+      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} preload="none" src={src} />
       <div className="p-2">
         <button
           className="bg-cax-accent text-cax-surface-raised flex h-8 w-8 items-center justify-center rounded-full text-sm hover:opacity-75"
@@ -61,7 +54,7 @@ export const SoundPlayer = ({ sound }: Props) => {
           <AspectRatioBox aspectHeight={1} aspectWidth={10}>
             <div className="relative h-full w-full">
               <div className="absolute inset-0 h-full w-full">
-                <SoundWaveSVG soundData={data} />
+                <SoundWaveSVG soundSrc={src} />
               </div>
               <div
                 className="bg-cax-surface-subtle absolute inset-0 h-full w-full opacity-75"

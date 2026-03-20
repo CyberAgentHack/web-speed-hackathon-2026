@@ -9,9 +9,10 @@ import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/
 
 interface Props {
   post: Models.Post;
+  prioritizeMedia?: boolean;
 }
 
-export const PostItem = ({ post }: Props) => {
+export const PostItem = ({ post, prioritizeMedia = false }: Props) => {
   return (
     <article className="px-1 sm:px-4">
       <div className="border-cax-border border-b px-4 pt-4 pb-4">
@@ -23,6 +24,9 @@ export const PostItem = ({ post }: Props) => {
             >
               <img
                 alt={post.user.profileImage.alt}
+                decoding="async"
+                fetchPriority={prioritizeMedia ? "high" : "auto"}
+                loading="eager"
                 src={getProfileImagePath(post.user.profileImage.id)}
               />
             </Link>
@@ -52,12 +56,12 @@ export const PostItem = ({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea images={post.images} priority={prioritizeMedia} />
             </div>
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
+              <MovieArea movie={post.movie} priority={prioritizeMedia} />
             </div>
           ) : null}
           {post.sound ? (

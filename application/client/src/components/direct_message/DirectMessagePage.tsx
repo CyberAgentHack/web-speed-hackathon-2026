@@ -99,6 +99,9 @@ export const DirectMessagePage = ({
         <img
           alt={peer.profileImage.alt}
           className="h-12 w-12 rounded-full object-cover"
+          decoding="async"
+          fetchPriority="auto"
+          loading="eager"
           src={getProfileImagePath(peer.profileImage.id)}
         />
         <div className="min-w-0">

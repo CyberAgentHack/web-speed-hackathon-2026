@@ -2,7 +2,6 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import tailwindcss from "@tailwindcss/vite";
-import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 const CLIENT_ROOT = fileURLToPath(new URL(".", import.meta.url));
@@ -12,7 +11,7 @@ const BUILD_DATE = new Date().toISOString();
 const COMMIT_HASH = process.env["SOURCE_VERSION"] ?? "";
 
 export default defineConfig({
-  plugins: [tailwindcss(), react()],
+  plugins: [tailwindcss()],
   publicDir: path.resolve(PROJECT_ROOT, "public"),
   resolve: {
     alias: [
