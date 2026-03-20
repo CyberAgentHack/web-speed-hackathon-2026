@@ -228,3 +228,7 @@ LCP_OPTIMIZATION.md
 
 CODE_ANALYSIS.md
 analysis2.md
+
+# Font subsetting backups
+*.woff2.bak
+subset-chars.txt
