@@ -4,6 +4,7 @@ const path = require("path");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
 const webpack = require("webpack");
 
 const SRC_PATH = path.resolve(__dirname, "./src");
@@ -124,7 +125,17 @@ const config = {
       url: false,
     },
   },
-  cache: false,
+  cache: env === "production" ? false : { type: "filesystem" },
+  optimization: env === "production" ? {
+    minimizer: [
+      new TerserPlugin({
+        exclude: /node_modules/,
+        parallel: true,
+      }),
+    ],
+  } : {
+    minimize: false,
+  },
   ignoreWarnings: [
     {
       module: /@ffmpeg/,
