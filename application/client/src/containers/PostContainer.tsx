@@ -8,15 +8,23 @@ import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
-const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
+interface PostContainerContentProps {
+  postId: string | undefined;
+  ssrPost?: Models.Post | null;
+  ssrComments?: Models.Comment[];
+}
+
+const PostContainerContent = ({ postId, ssrPost, ssrComments }: PostContainerContentProps) => {
   const { data: post, isLoading: isLoadingPost } = useFetch<Models.Post>(
     `/api/v1/posts/${postId}`,
     fetchJSON,
+    ssrPost,
   );
 
   const { data: comments, fetchMore } = useInfiniteFetch<Models.Comment>(
     `/api/v1/posts/${postId}/comments`,
     fetchJSON,
+    ssrComments,
   );
 
   if (isLoadingPost) {
@@ -41,7 +49,19 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
   );
 };
 
-export const PostContainer = () => {
+interface PostContainerProps {
+  ssrPost?: Models.Post | null;
+  ssrComments?: Models.Comment[];
+}
+
+export const PostContainer = ({ ssrPost, ssrComments }: PostContainerProps) => {
   const { postId } = useParams();
-  return <PostContainerContent key={postId} postId={postId} />;
+  return (
+    <PostContainerContent
+      key={postId}
+      postId={postId}
+      ssrPost={ssrPost}
+      ssrComments={ssrComments}
+    />
+  );
 };

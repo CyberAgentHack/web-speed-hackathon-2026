@@ -9,7 +9,7 @@ const NM = resolve(ROOT, "node_modules");
 
 export default defineConfig({
   root: resolve(ROOT, "src"),
-  publicDir: resolve(ROOT, "../public"),
+  publicDir: false,
 
   plugins: [react(), tailwindcss()],
 
@@ -28,29 +28,19 @@ export default defineConfig({
     "process.env.NODE_ENV": JSON.stringify("production"),
   },
 
-  server: {
-    host: "0.0.0.0",
-    port: 8080,
-    proxy: {
-      "/api": "http://localhost:3000",
-    },
+  ssr: {
+    // react-dom/server 等をバンドルに含める（dist-ssr のパス解決問題を回避）
+    noExternal: true,
   },
 
   build: {
-    outDir: resolve(ROOT, "../dist"),
+    ssr: resolve(ROOT, "src/entry-server.tsx"),
+    outDir: resolve(ROOT, "../dist-ssr"),
     emptyOutDir: true,
-    copyPublicDir: true,
-    ssrManifest: true,
     rolldownOptions: {
       output: {
-        chunkFileNames: "scripts/chunk-[hash].js",
-        entryFileNames: "scripts/[name].[hash].js",
-        assetFileNames: "assets/[name].[hash].[ext]",
+        entryFileNames: "[name].js",
       },
     },
-  },
-
-  optimizeDeps: {
-    include: ["negaposi-analyzer-ja"],
   },
 });

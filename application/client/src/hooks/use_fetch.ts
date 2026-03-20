@@ -9,14 +9,18 @@ interface ReturnValues<T> {
 export function useFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T>,
+  initialData?: T | null,
 ): ReturnValues<T> {
+  const hasInitial = initialData != null;
   const [result, setResult] = useState<ReturnValues<T>>({
-    data: null,
+    data: initialData ?? null,
     error: null,
-    isLoading: true,
+    isLoading: !hasInitial,
   });
 
   useEffect(() => {
+    if (hasInitial) return;
+
     setResult(() => ({
       data: null,
       error: null,
@@ -39,7 +43,7 @@ export function useFetch<T>(
         }));
       },
     );
-  }, [apiPath, fetcher]);
+  }, [apiPath, fetcher, hasInitial]);
 
   return result;
 }

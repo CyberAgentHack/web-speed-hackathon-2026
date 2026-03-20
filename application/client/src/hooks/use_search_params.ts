@@ -1,10 +1,15 @@
 import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router";
 
 export function useSearchParams(): [URLSearchParams] {
+  const location = useLocation();
   const [searchParams, setSearchParams] = useState(
-    () => new URLSearchParams(window.location.search),
+    () =>
+      new URLSearchParams(typeof window !== "undefined" ? window.location.search : location.search),
   );
-  const lastSearchRef = useRef(window.location.search);
+  const lastSearchRef = useRef(
+    typeof window !== "undefined" ? window.location.search : location.search,
+  );
 
   useEffect(() => {
     let active = true;

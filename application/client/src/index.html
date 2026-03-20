@@ -20,7 +20,8 @@
     />
   </head>
   <body class="bg-cax-canvas text-cax-text">
-    <div id="app"></div>
-    <script type="module" src="./index.tsx"></script>
+    <div id="app"><!--ssr-outlet--></div>
+    <!--ssr-head-->
+    <script type="module" src="./entry-client.tsx"></script>
   </body>
 </html>

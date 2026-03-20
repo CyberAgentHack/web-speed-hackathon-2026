@@ -62,16 +62,33 @@ const NotFoundContainer = lazy(() =>
   })),
 );
 
-export const AppContainer = () => {
+export interface SSRData {
+  activeUser?: Models.User | null;
+  posts?: Models.Post[];
+  post?: Models.Post | null;
+  comments?: Models.Comment[];
+  user?: Models.User | null;
+  userPosts?: Models.Post[];
+}
+
+interface AppContainerProps {
+  ssrData?: SSRData;
+}
+
+export const AppContainer = ({ ssrData }: AppContainerProps) => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
-  const [activeUser, setActiveUser] = useState<Models.User | null>(null);
-  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
+  const hasSSRActiveUser = ssrData != null && "activeUser" in ssrData;
+  const [activeUser, setActiveUser] = useState<Models.User | null>(
+    hasSSRActiveUser ? (ssrData.activeUser ?? null) : null,
+  );
+  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(!hasSSRActiveUser);
   useEffect(() => {
+    if (hasSSRActiveUser) return;
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {
         setActiveUser(user);
@@ -79,7 +96,7 @@ export const AppContainer = () => {
       .finally(() => {
         setIsLoadingActiveUser(false);
       });
-  }, [setActiveUser, setIsLoadingActiveUser]);
+  }, [hasSSRActiveUser]);
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
     setActiveUser(null);
@@ -109,7 +126,7 @@ export const AppContainer = () => {
       >
         <Suspense fallback={null}>
           <Routes>
-            <Route element={<TimelineContainer />} path="/" />
+            <Route element={<TimelineContainer ssrPosts={ssrData?.posts} />} path="/" />
             <Route
               element={
                 <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
@@ -120,9 +137,15 @@ export const AppContainer = () => {
               element={<DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />}
               path="/dm/:conversationId"
             />
-            <Route element={<SearchContainer />} path="/search" />
-            <Route element={<UserProfileContainer />} path="/users/:username" />
-            <Route element={<PostContainer />} path="/posts/:postId" />
+            <Route element={<SearchContainer ssrPosts={ssrData?.posts} />} path="/search" />
+            <Route
+              element={<UserProfileContainer ssrUser={ssrData?.user} ssrPosts={ssrData?.userPosts} />}
+              path="/users/:username"
+            />
+            <Route
+              element={<PostContainer ssrPost={ssrData?.post} ssrComments={ssrData?.comments} />}
+              path="/posts/:postId"
+            />
             <Route element={<TermContainer />} path="/terms" />
             <Route
               element={<CrokContainer activeUser={activeUser} authModalId={authModalId} />}

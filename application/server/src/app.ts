@@ -4,6 +4,7 @@ import Express from "express";
 
 import { apiRouter } from "@web-speed-hackathon-2026/server/src/routes/api";
 import { imageOptimizationRouter } from "@web-speed-hackathon-2026/server/src/routes/image_optimization";
+import { ssrRouter } from "@web-speed-hackathon-2026/server/src/routes/ssr";
 import { staticRouter } from "@web-speed-hackathon-2026/server/src/routes/static";
 import { sessionMiddleware } from "@web-speed-hackathon-2026/server/src/session";
 
@@ -20,3 +21,5 @@ app.use(bodyParser.raw({ limit: "10mb" }));
 app.use("/api/v1", apiRouter);
 app.use(imageOptimizationRouter);
 app.use(staticRouter);
+// SSR は静的ファイルにマッチしなかったリクエストを処理（history fallback の代替）
+app.use(ssrRouter);

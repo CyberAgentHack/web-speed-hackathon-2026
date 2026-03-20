@@ -8,16 +8,23 @@ import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
-export const UserProfileContainer = () => {
+interface UserProfileContainerProps {
+  ssrUser?: Models.User | null;
+  ssrPosts?: Models.Post[];
+}
+
+export const UserProfileContainer = ({ ssrUser, ssrPosts }: UserProfileContainerProps) => {
   const { username } = useParams();
 
   const { data: user, isLoading: isLoadingUser } = useFetch<Models.User>(
     `/api/v1/users/${username}`,
     fetchJSON,
+    ssrUser,
   );
   const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>(
     `/api/v1/users/${username}/posts`,
     fetchJSON,
+    ssrPosts,
   );
 
   if (isLoadingUser) {

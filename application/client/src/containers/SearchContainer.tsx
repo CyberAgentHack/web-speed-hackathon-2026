@@ -6,13 +6,18 @@ import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use
 import { useSearchParams } from "@web-speed-hackathon-2026/client/src/hooks/use_search_params";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
-export const SearchContainer = () => {
+interface SearchContainerProps {
+  ssrPosts?: Models.Post[];
+}
+
+export const SearchContainer = ({ ssrPosts }: SearchContainerProps) => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
 
   const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>(
     query ? `/api/v1/search?q=${encodeURIComponent(query)}` : "",
     fetchJSON,
+    ssrPosts,
   );
 
   return (

@@ -1,4 +1,3 @@
-import history from "connect-history-api-fallback";
 import { Router } from "express";
 import serveStatic from "serve-static";
 
@@ -9,9 +8,6 @@ import {
 } from "@web-speed-hackathon-2026/server/src/paths";
 
 export const staticRouter = Router();
-
-// SPA 対応のため、ファイルが存在しないときに index.html を返す
-staticRouter.use(history());
 
 // Uploaded content (images etc.) - cache for 1 day
 staticRouter.use(
@@ -42,12 +38,14 @@ staticRouter.use(
 );
 
 // Client dist (JS/CSS with content hashes) - cache immutably for 1 year
+// index: false で index.html の自動返却を無効化（SSR ルーターで処理する）
 staticRouter.use(
   serveStatic(CLIENT_DIST_PATH, {
     etag: true,
     lastModified: true,
     maxAge: "1y",
     immutable: true,
+    index: false,
     setHeaders(res, path) {
       if (path.endsWith(".html")) {
         res.setHeader("Cache-Control", "no-cache");
