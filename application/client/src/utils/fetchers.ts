@@ -8,11 +8,6 @@ export class FetchError extends Error {
   }
 }
 
-export async function fetchBinary(url: string): Promise<ArrayBuffer> {
-  const response = await fetch(url);
-  return response.arrayBuffer();
-}
-
 export async function fetchJSON<T>(url: string): Promise<T> {
   const response = await fetch(url);
   if (!response.ok) {
