@@ -41,6 +41,7 @@ searchRouter.get("/search", async (req, res) => {
   const postsByText = await Post.findAll({
     limit,
     offset,
+    subQuery: false,
     where: {
       ...textWhere,
       ...dateWhere,
@@ -54,7 +55,6 @@ searchRouter.get("/search", async (req, res) => {
       include: [
         {
           association: "user",
-          attributes: { exclude: ["profileImageId"] },
           include: [{ association: "profileImage" }],
           required: true,
           where: {
@@ -70,6 +70,7 @@ searchRouter.get("/search", async (req, res) => {
       ],
       limit,
       offset,
+      subQuery: false,
       where: dateWhere,
     });
   }
