@@ -60,49 +60,50 @@ export function initDirectMessage(sequelize: Sequelize) {
     },
     {
       sequelize,
-      defaultScope: {
-        include: [
-          {
-            association: "sender",
-            include: [{ association: "profileImage" }],
-          },
-        ],
-        order: [["createdAt", "ASC"]],
-      },
     },
   );
 
   DirectMessage.addHook("afterSave", "onDmSaved", async (message) => {
-    const directMessage = await DirectMessage.findByPk(message.get().id);
-    const conversation = await DirectMessageConversation.findByPk(directMessage?.conversationId);
+    const directMessage = await DirectMessage.findByPk(message.get().id, {
+      include: [{ association: "sender", include: [{ association: "profileImage" }] }],
+    });
+    const conversation = await DirectMessageConversation.findByPk(directMessage?.conversationId, {
+      attributes: ["id", "initiatorId", "memberId"],
+    });
 
     if (directMessage == null || conversation == null) {
       return;
     }
+
+    eventhub.emit(`dm:conversation/${conversation.id}:message`, directMessage);
 
     const receiverId =
       conversation.initiatorId === directMessage.senderId
         ? conversation.memberId
         : conversation.initiatorId;
 
-    const unreadCount = await DirectMessage.count({
-      distinct: true,
-      where: {
-        senderId: { [Op.ne]: receiverId },
-        isRead: false,
-      },
-      include: [
-        {
-          association: "conversation",
+    setImmediate(async () => {
+      try {
+        const unreadCount = await DirectMessage.count({
+          distinct: true,
           where: {
-            [Op.or]: [{ initiatorId: receiverId }, { memberId: receiverId }],
+            senderId: { [Op.ne]: receiverId },
+            isRead: false,
           },
-          required: true,
-        },
-      ],
+          include: [
+            {
+              association: "conversation",
+              where: {
+                [Op.or]: [{ initiatorId: receiverId }, { memberId: receiverId }],
+              },
+              required: true,
+            },
+          ],
+        });
+        eventhub.emit(`dm:unread/${receiverId}`, { unreadCount });
+      } catch {
+        // ignore
+      }
     });
-
-    eventhub.emit(`dm:conversation/${conversation.id}:message`, directMessage);
-    eventhub.emit(`dm:unread/${receiverId}`, { unreadCount });
   });
 }

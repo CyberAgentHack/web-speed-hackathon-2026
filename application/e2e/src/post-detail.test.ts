@@ -11,7 +11,8 @@ test.describe("投稿詳細", () => {
     await page.goto("/");
     const firstArticle = page.locator("article").first();
     await expect(firstArticle).toBeVisible({ timeout: 30_000 });
-    await firstArticle.click();
+    // 記事中央をクリックすると動画プレイヤーのボタンに当たるため、日時リンクをクリックする
+    await firstArticle.locator("a time").first().click({ timeout: 30_000 });
     await page.waitForURL("**/posts/*", { timeout: 30_000 });
 
     const article = page.locator("article").first();
@@ -29,7 +30,7 @@ test.describe("投稿詳細", () => {
     await page.goto("/");
     const firstArticle = page.locator("article").first();
     await expect(firstArticle).toBeVisible({ timeout: 30_000 });
-    await firstArticle.click();
+    await firstArticle.locator("a time").first().click({ timeout: 30_000 });
     await page.waitForURL("**/posts/*", { timeout: 30_000 });
 
     await expect(page).toHaveTitle(/さんのつぶやき - CaX/, { timeout: 30_000 });
@@ -107,7 +108,7 @@ test.describe("投稿詳細 - 写真", () => {
     await page.goto("/");
     const imageArticle = page.locator("article:has(.grid img)").first();
     await expect(imageArticle).toBeVisible({ timeout: 30_000 });
-    await imageArticle.click();
+    await imageArticle.locator("a time").first().click({ timeout: 30_000 });
     await page.waitForURL("**/posts/*", { timeout: 30_000 });
 
     const coveredImage = page.locator(".grid img").first();

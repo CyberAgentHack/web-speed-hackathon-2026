@@ -70,3 +70,4 @@ jobs:
               with:
                   name: ${{ steps.generate-app-name.outputs.app_name }}
                   image: ${{ steps.create-image-name.outputs.image }}
+                  memory: "2048"

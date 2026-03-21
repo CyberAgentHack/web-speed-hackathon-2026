@@ -1,8 +1,8 @@
-import moment from "moment";
+import { dayjs } from "@web-speed-hackathon-2026/client/src/utils/dayjs";
 
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { getOptimizedProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   comment: Models.Comment;
@@ -18,8 +18,11 @@ export const CommentItem = ({ comment }: Props) => {
             to={`/users/${comment.user.username}`}
           >
             <img
-              alt={comment.user.profileImage.alt}
-              src={getProfileImagePath(comment.user.profileImage.id)}
+              alt={comment.user.profileImage?.alt}
+              height={32}
+              loading="lazy"
+              src={getOptimizedProfileImagePath(comment.user.profileImage?.id, 96)}
+              width={32}
             />
           </Link>
         </div>
@@ -42,8 +45,8 @@ export const CommentItem = ({ comment }: Props) => {
             <TranslatableText text={comment.text} />
           </div>
           <p className="text-cax-text-muted pt-1 text-xs">
-            <time dateTime={moment(comment.createdAt).toISOString()}>
-              {moment(comment.createdAt).locale("ja").format("LL")}
+            <time dateTime={dayjs(comment.createdAt).toISOString()}>
+              {dayjs(comment.createdAt).format("LL")}
             </time>
           </p>
         </div>

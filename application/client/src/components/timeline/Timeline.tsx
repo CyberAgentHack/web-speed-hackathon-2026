@@ -5,10 +5,12 @@ interface Props {
 }
 
 export const Timeline = ({ timeline }: Props) => {
+  const firstImagePostIndex = timeline.findIndex((post) => post.images?.length > 0);
+
   return (
     <section>
-      {timeline.map((post) => {
-        return <TimelineItem key={post.id} post={post} />;
+      {timeline.map((post, index) => {
+        return <TimelineItem key={post.id} post={post} isLCP={index === firstImagePostIndex} />;
       })}
     </section>
   );

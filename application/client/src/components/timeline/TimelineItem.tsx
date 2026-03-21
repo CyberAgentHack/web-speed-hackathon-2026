@@ -1,4 +1,4 @@
-import moment from "moment";
+import { dayjs } from "@web-speed-hackathon-2026/client/src/utils/dayjs";
 import { MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
@@ -6,7 +6,7 @@ import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/
 import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
 import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { getOptimizedProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Element): boolean => {
   while (target !== null && target instanceof Element) {
@@ -28,9 +28,10 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
  */
 interface Props {
   post: Models.Post;
+  isLCP?: boolean;
 }
 
-export const TimelineItem = ({ post }: Props) => {
+export const TimelineItem = ({ post, isLCP }: Props) => {
   const navigate = useNavigate();
 
   /**
@@ -55,8 +56,11 @@ export const TimelineItem = ({ post }: Props) => {
             to={`/users/${post.user.username}`}
           >
             <img
-              alt={post.user.profileImage.alt}
-              src={getProfileImagePath(post.user.profileImage.id)}
+              alt={post.user.profileImage?.alt}
+              height={48}
+              loading="lazy"
+              src={getOptimizedProfileImagePath(post.user.profileImage?.id, 128)}
+              width={48}
             />
           </Link>
         </div>
@@ -76,8 +80,8 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={dayjs(post.createdAt).toISOString()}>
+                {dayjs(post.createdAt).format("LL")}
               </time>
             </Link>
           </p>
@@ -86,7 +90,7 @@ export const TimelineItem = ({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea images={post.images} isLCP={isLCP} />
             </div>
           ) : null}
           {post.movie ? (

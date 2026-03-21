@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import moment from "moment";
+import { dayjs } from "@web-speed-hackathon-2026/client/src/utils/dayjs";
 import {
   ChangeEvent,
   useCallback,
@@ -13,7 +13,7 @@ import {
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { getOptimizedProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   conversationError: Error | null;
@@ -66,23 +66,31 @@ export const DirectMessagePage = ({
   const handleSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      void onSubmit({ body: text.trim() }).then(() => {
-        setText("");
-      });
+      const body = text.trim();
+      if (body.length === 0) return;
+      setText("");
+      void onSubmit({ body });
     },
     [onSubmit, text],
   );
 
-  useEffect(() => {
-    const id = setInterval(() => {
-      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
-      if (height !== scrollHeightRef.current) {
-        scrollHeightRef.current = height;
-        window.scrollTo(0, height);
-      }
-    }, 1);
+  const messageListRef = useRef<HTMLUListElement>(null);
 
-    return () => clearInterval(id);
+  useEffect(() => {
+    const scrollToBottom = () => {
+      window.scrollTo(0, document.body.scrollHeight);
+    };
+    scrollToBottom();
+
+    const el = messageListRef.current;
+    if (!el) return;
+
+    const observer = new MutationObserver(() => {
+      scrollToBottom();
+    });
+    observer.observe(el, { childList: true });
+
+    return () => observer.disconnect();
   }, []);
 
   if (conversationError != null) {
@@ -97,9 +105,12 @@ export const DirectMessagePage = ({
     <section className="bg-cax-surface flex min-h-[calc(100vh-(--spacing(12)))] flex-col lg:min-h-screen">
       <header className="border-cax-border bg-cax-surface sticky top-0 z-10 flex items-center gap-2 border-b px-4 py-3">
         <img
-          alt={peer.profileImage.alt}
+          alt={peer.profileImage?.alt}
           className="h-12 w-12 rounded-full object-cover"
-          src={getProfileImagePath(peer.profileImage.id)}
+          height={48}
+          loading="lazy"
+          src={getOptimizedProfileImagePath(peer.profileImage?.id, 96)}
+          width={48}
         />
         <div className="min-w-0">
           <h1 className="overflow-hidden text-xl font-bold text-ellipsis whitespace-nowrap">
@@ -118,7 +129,7 @@ export const DirectMessagePage = ({
           </p>
         )}
 
-        <ul className="grid gap-3" data-testid="dm-message-list">
+        <ul className="grid gap-3" data-testid="dm-message-list" ref={messageListRef}>
           {conversation.messages.map((message) => {
             const isActiveUserSend = message.sender.id === activeUser.id;
 
@@ -141,7 +152,7 @@ export const DirectMessagePage = ({
                 </p>
                 <div className="flex gap-1 text-xs">
                   <time dateTime={message.createdAt}>
-                    {moment(message.createdAt).locale("ja").format("HH:mm")}
+                    {dayjs(message.createdAt).format("HH:mm")}
                   </time>
                   {isActiveUserSend && message.isRead && (
                     <span className="text-cax-text-muted">既読</span>

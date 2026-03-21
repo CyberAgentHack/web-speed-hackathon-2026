@@ -1,4 +1,4 @@
-import moment from "moment";
+import { dayjs } from "@web-speed-hackathon-2026/client/src/utils/dayjs";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { getOptimizedProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   activeUser: Models.User;
@@ -85,9 +85,12 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                 <Link className="hover:bg-cax-surface-subtle px-4" to={`/dm/${conversation.id}`}>
                   <div className="border-cax-border flex gap-4 border-b px-4 pt-2 pb-4">
                     <img
-                      alt={peer.profileImage.alt}
+                      alt={peer.profileImage?.alt}
                       className="w-12 shrink-0 self-start rounded-full"
-                      src={getProfileImagePath(peer.profileImage.id)}
+                      height={48}
+                      loading="lazy"
+                      src={getOptimizedProfileImagePath(peer.profileImage?.id, 96)}
+                      width={48}
                     />
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-center justify-between">
@@ -100,7 +103,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {dayjs(lastMessage.createdAt).fromNow()}
                           </time>
                         )}
                       </div>

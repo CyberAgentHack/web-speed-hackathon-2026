@@ -2,13 +2,14 @@ import classNames from "classnames";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { CoveredImage } from "@web-speed-hackathon-2026/client/src/components/foundation/CoveredImage";
-import { getImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { getOptimizedImagePath, getOptimizedImageSrcSet } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   images: Models.Image[];
+  isLCP?: boolean;
 }
 
-export const ImageArea = ({ images }: Props) => {
+export const ImageArea = ({ images, isLCP }: Props) => {
   return (
     <AspectRatioBox aspectHeight={9} aspectWidth={16}>
       <div className="border-cax-border grid h-full w-full grid-cols-2 grid-rows-2 gap-1 overflow-hidden rounded-lg border">
@@ -24,7 +25,14 @@ export const ImageArea = ({ images }: Props) => {
                 "row-span-2": images.length <= 2 || (images.length === 3 && idx === 0),
               })}
             >
-              <CoveredImage src={getImagePath(image.id)} />
+              <CoveredImage
+                alt={image.alt}
+                fetchPriority={isLCP && idx === 0 ? "high" : undefined}
+                loading={isLCP ? undefined : "lazy"}
+                sizes="(max-width: 640px) calc(100vw - 80px), 600px"
+                src={getOptimizedImagePath(image.id, 800)}
+                srcSet={getOptimizedImageSrcSet(image.id, [256, 512, 800, 1024])}
+              />
             </div>
           );
         })}

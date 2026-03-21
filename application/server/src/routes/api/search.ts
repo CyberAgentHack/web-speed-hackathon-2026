@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { Op } from "sequelize";
 
-import { Post } from "@web-speed-hackathon-2026/server/src/models";
+import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 
 export const searchRouter = Router();
@@ -38,7 +38,7 @@ searchRouter.get("/search", async (req, res) => {
   // テキスト検索条件
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
-  const postsByText = await Post.findAll({
+  const postsByText = await Post.scope("withFullRelations").findAll({
     limit,
     offset,
     where: {
@@ -50,11 +50,11 @@ searchRouter.get("/search", async (req, res) => {
   // ユーザー名/名前での検索（キーワードがある場合のみ）
   let postsByUser: typeof postsByText = [];
   if (searchTerm) {
-    postsByUser = await Post.findAll({
+    postsByUser = await Post.unscoped().findAll({
       include: [
         {
-          association: "user",
-          attributes: { exclude: ["profileImageId"] },
+          model: User.unscoped(),
+          as: "user",
           include: [{ association: "profileImage" }],
           required: true,
           where: {
@@ -67,6 +67,11 @@ searchRouter.get("/search", async (req, res) => {
         },
         { association: "movie" },
         { association: "sound" },
+      ],
+      attributes: { exclude: ["userId", "movieId", "soundId"] },
+      order: [
+        ["id", "DESC"],
+        ["images", "createdAt", "ASC"],
       ],
       limit,
       offset,
@@ -86,7 +91,8 @@ searchRouter.get("/search", async (req, res) => {
 
   mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-  const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
+  // offset/limit は既に各DBクエリで適用済みなので、mergedではlimitのみ適用
+  const result = limit ? mergedPosts.slice(0, limit) : mergedPosts;
 
   return res.status(200).type("application/json").send(result);
 });

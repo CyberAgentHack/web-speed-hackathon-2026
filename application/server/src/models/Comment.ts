@@ -40,19 +40,6 @@ export function initComment(sequelize: Sequelize) {
     },
     {
       sequelize,
-      defaultScope: {
-        attributes: {
-          exclude: ["userId", "postId"],
-        },
-        include: [
-          {
-            association: "user",
-            attributes: { exclude: ["profileImageId"] },
-            include: [{ association: "profileImage" }],
-          },
-        ],
-        order: [["createdAt", "ASC"]],
-      },
     },
   );
 }

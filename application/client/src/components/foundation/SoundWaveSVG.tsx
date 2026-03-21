@@ -1,54 +1,34 @@
-import _ from "lodash";
 import { useEffect, useRef, useState } from "react";
 
-interface ParsedData {
+import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+
+interface PeaksData {
   max: number;
   peaks: number[];
 }
 
-async function calculate(data: ArrayBuffer): Promise<ParsedData> {
-  const audioCtx = new AudioContext();
-
-  // 音声をデコードする
-  const buffer = await audioCtx.decodeAudioData(data.slice(0));
-  // 左の音声データの絶対値を取る
-  const leftData = _.map(buffer.getChannelData(0), Math.abs);
-  // 右の音声データの絶対値を取る
-  const rightData = _.map(buffer.getChannelData(1), Math.abs);
-
-  // 左右の音声データの平均を取る
-  const normalized = _.map(_.zip(leftData, rightData), _.mean);
-  // 100 個の chunk に分ける
-  const chunks = _.chunk(normalized, Math.ceil(normalized.length / 100));
-  // chunk ごとに平均を取る
-  const peaks = _.map(chunks, _.mean);
-  // chunk の平均の中から最大値を取る
-  const max = _.max(peaks) ?? 0;
-
-  return { max, peaks };
-}
-
 interface Props {
-  soundData: ArrayBuffer;
+  soundId: string;
 }
 
-export const SoundWaveSVG = ({ soundData }: Props) => {
+export const SoundWaveSVG = ({ soundId }: Props) => {
   const uniqueIdRef = useRef(Math.random().toString(16));
-  const [{ max, peaks }, setPeaks] = useState<ParsedData>({
-    max: 0,
-    peaks: [],
-  });
+  const [data, setData] = useState<PeaksData | null>(null);
 
   useEffect(() => {
-    calculate(soundData).then(({ max, peaks }) => {
-      setPeaks({ max, peaks });
-    });
-  }, [soundData]);
+    fetchJSON<PeaksData>(`/api/v1/sounds/${soundId}/peaks`).then(setData).catch(() => {});
+  }, [soundId]);
+
+  if (data === null) {
+    return <svg className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1" />;
+  }
+
+  const { max, peaks } = data;
 
   return (
     <svg className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1">
       {peaks.map((peak, idx) => {
-        const ratio = peak / max;
+        const ratio = max > 0 ? peak / max : 0;
         return (
           <rect
             key={`${uniqueIdRef.current}#${idx}`}
