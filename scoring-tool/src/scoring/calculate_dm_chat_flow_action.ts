@@ -13,6 +13,40 @@ type Params = {
   puppeteerPage: puppeteer.Page;
 };
 
+async function waitForMessageInputReady(playwrightPage: playwright.Page) {
+  const messageInput = playwrightPage.getByRole("textbox", { name: "内容" });
+  await messageInput.waitFor({ state: "visible", timeout: 30 * 1000 });
+  await playwrightPage.waitForFunction(
+    () => {
+      const textareas = Array.from(document.querySelectorAll("textarea"));
+      return textareas.some((textarea) => {
+        if (!(textarea instanceof HTMLTextAreaElement)) {
+          return false;
+        }
+
+        if (textarea.disabled) {
+          return false;
+        }
+
+        const ariaLabel = textarea.getAttribute("aria-label");
+        if (ariaLabel === "内容") {
+          return true;
+        }
+
+        const id = textarea.getAttribute("id");
+        if (id == null) {
+          return false;
+        }
+
+        const label = document.querySelector(`label[for="${id}"]`);
+        return label?.textContent?.trim() === "内容";
+      });
+    },
+    { timeout: 30 * 1000 },
+  );
+  return messageInput;
+}
+
 export async function calculateDmChatFlowAction({
   baseUrl,
   playwrightPage,
@@ -118,7 +152,7 @@ export async function calculateDmChatFlowAction({
 
     // メッセージを入力（複数行）
     try {
-      const messageInput = playwrightPage.getByRole("textbox", { name: "内容" });
+      const messageInput = await waitForMessageInputReady(playwrightPage);
       await messageInput.pressSequentially("こんにちは！", { delay: 10 });
       await playwrightPage.keyboard.press("Shift+Enter");
       await messageInput.pressSequentially("Web Speed Hackathon 2026に参加しています。", {
@@ -151,7 +185,7 @@ export async function calculateDmChatFlowAction({
 
     // 追加のメッセージを入力
     try {
-      const messageInput = playwrightPage.getByRole("textbox", { name: "内容" });
+      const messageInput = await waitForMessageInputReady(playwrightPage);
       await messageInput.pressSequentially("追加の質問です。", { delay: 10 });
       await playwrightPage.keyboard.press("Shift+Enter");
       await messageInput.pressSequentially("LCPの改善方法を具体的に教えてください。", {
