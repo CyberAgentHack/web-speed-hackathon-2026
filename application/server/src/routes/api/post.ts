@@ -2,6 +2,7 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 
 import { Comment, Post } from "@web-speed-hackathon-2026/server/src/models";
+import { clearHomeCache } from "@web-speed-hackathon-2026/server/src/routes/static";
 
 export const postRouter = Router();
 
@@ -61,5 +62,6 @@ postRouter.post("/posts", async (req, res) => {
     },
   );
 
+  clearHomeCache();
   return res.status(200).type("application/json").send(post);
 });

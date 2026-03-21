@@ -18,6 +18,15 @@ async function main() {
     console.warn("Failed to pre-compute waveforms:", err);
   }
 
+  // Pre-build home HTML cache
+  try {
+    const { warmHomeCache } = await import("@web-speed-hackathon-2026/server/src/routes/static");
+    await warmHomeCache();
+    console.log("Pre-built home HTML cache");
+  } catch (err) {
+    console.warn("Failed to pre-build home HTML cache:", err);
+  }
+
   const server = app.listen(Number(process.env["PORT"] || 3000), "0.0.0.0", () => {
     const address = server.address();
     if (typeof address === "object") {
