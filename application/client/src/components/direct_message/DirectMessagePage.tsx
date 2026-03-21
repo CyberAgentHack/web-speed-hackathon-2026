@@ -21,7 +21,6 @@ interface Props {
   conversation: Models.DirectMessageConversation;
   activeUser: Models.User;
   isPeerTyping: boolean;
-  isSubmitting: boolean;
   onTyping: () => void;
   onSubmit: (params: DirectMessageFormData) => Promise<void>;
 }
@@ -83,7 +82,6 @@ export const DirectMessagePage = ({
   conversation,
   activeUser,
   isPeerTyping,
-  isSubmitting,
   onTyping,
   onSubmit,
 }: Props) => {
@@ -120,8 +118,18 @@ export const DirectMessagePage = ({
   const handleSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      void onSubmit({ body: text.trim() }).then(() => {
-        setText("");
+
+      const submittedText = text;
+      const body = submittedText.trim();
+      if (body.length === 0) {
+        return;
+      }
+
+      setText("");
+      void onSubmit({ body }).catch(() => {
+        setText((currentText) => {
+          return currentText === "" ? submittedText : currentText;
+        });
       });
     },
     [onSubmit, text],
@@ -153,7 +161,7 @@ export const DirectMessagePage = ({
   }
 
   return (
-    <section className="bg-cax-surface flex min-h-[calc(100vh-(--spacing(12)))] flex-col lg:min-h-screen">
+    <section className="bg-cax-surface flex h-[calc(100vh-(--spacing(12)))] min-h-0 flex-col lg:h-screen">
       <header className="border-cax-border bg-cax-surface sticky top-0 z-10 flex items-center gap-2 border-b px-4 py-3">
         <img
           alt={peer.profileImage.alt}
@@ -174,7 +182,8 @@ export const DirectMessagePage = ({
       </header>
 
       <div
-        className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8"
+        className="bg-cax-surface-subtle min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8"
+        data-testid="dm-message-scroller"
         ref={messagesContainerRef}
       >
         <DirectMessageMessageList
@@ -206,12 +215,11 @@ export const DirectMessagePage = ({
               onChange={handleChange}
               onKeyDown={handleKeyDown}
               rows={textAreaRows}
-              disabled={isSubmitting}
             />
           </div>
           <button
             className="bg-cax-brand text-cax-surface-raised hover:bg-cax-brand-strong rounded-full px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={isInvalid || isSubmitting}
+            disabled={isInvalid}
             type="submit"
           >
             <FontAwesomeIcon iconType="arrow-right" styleType="solid" />

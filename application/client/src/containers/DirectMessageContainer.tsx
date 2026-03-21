@@ -62,7 +62,6 @@ export const DirectMessageContainer = ({
 
   const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(null);
   const [conversationError, setConversationError] = useState<Error | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -117,15 +116,10 @@ export const DirectMessageContainer = ({
 
   const handleSubmit = useCallback(
     async (params: DirectMessageFormData) => {
-      setIsSubmitting(true);
-      try {
-        const message = await sendJSON<Models.DirectMessage>(`/api/v1/dm/${conversationId}/messages`, {
-          body: params.body,
-        });
-        applyMessage(message);
-      } finally {
-        setIsSubmitting(false);
-      }
+      const message = await sendJSON<Models.DirectMessage>(`/api/v1/dm/${conversationId}/messages`, {
+        body: params.body,
+      });
+      applyMessage(message);
     },
     [applyMessage, conversationId],
   );
@@ -235,7 +229,6 @@ export const DirectMessageContainer = ({
         activeUser={activeUser}
         onTyping={handleTyping}
         isPeerTyping={isPeerTyping}
-        isSubmitting={isSubmitting}
         onSubmit={handleSubmit}
       />
     </>
