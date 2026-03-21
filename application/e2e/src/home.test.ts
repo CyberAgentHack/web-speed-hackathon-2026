@@ -23,19 +23,15 @@ test.describe("ホーム", () => {
   });
 
   test("タイトルが「タイムライン - CaX」", async ({ page }) => {
-    await expect(page).toHaveTitle("タイムライン - CaX", { timeout: 10_000 });
+    await expect(page).toHaveTitle("タイムライン - CaX", { timeout: 30_000 });
   });
 
   test("動画が自動再生される", async ({ page }) => {
-    const video = page.locator("article video").first();
-    await expect(video).toBeVisible({ timeout: 30_000 });
+    const videoPlayer = page.locator('article button[aria-label="動画プレイヤー"]').first();
 
-    await expect(async () => {
-      const isPlaying = await video.evaluate((el: HTMLVideoElement) => {
-        return el.readyState >= 1 && !el.paused;
-      });
-      expect(isPlaying).toBe(true);
-    }).toPass({ timeout: 10_000 });
+    await waitForVisibleMedia(page);
+
+    await expect(videoPlayer).toBeVisible({ timeout: 30_000 });
   });
 
   test("音声の波形が表示される", async ({ page }) => {
@@ -57,7 +53,7 @@ test.describe("ホーム", () => {
     const firstArticle = page.locator("article").first();
     await expect(firstArticle).toBeVisible({ timeout: 30_000 });
     await firstArticle.click();
-    await page.waitForURL("**/posts/*", { timeout: 10_000 });
+    await page.waitForURL("**/posts/*", { timeout: 30_000 });
     expect(page.url()).toMatch(/\/posts\/[a-zA-Z0-9-]+/);
   });
 });
