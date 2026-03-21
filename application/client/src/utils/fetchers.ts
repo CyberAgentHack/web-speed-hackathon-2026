@@ -1,4 +1,10 @@
-import { gzip } from "pako";
+async function compressGzip(data: Uint8Array): Promise<ArrayBuffer> {
+  const cs = new CompressionStream("gzip");
+  const writer = cs.writable.getWriter();
+  void writer.write(new Uint8Array(data.buffer as ArrayBuffer, data.byteOffset, data.byteLength));
+  void writer.close();
+  return new Response(cs.readable).arrayBuffer();
+}
 
 async function ensureOk(res: Response): Promise<Response> {
   if (!res.ok) {
@@ -37,7 +43,7 @@ export async function sendFile<T>(url: string, file: File): Promise<T> {
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
   const jsonString = JSON.stringify(data);
   const uint8Array = new TextEncoder().encode(jsonString);
-  const compressed = gzip(uint8Array);
+  const compressed = await compressGzip(uint8Array);
 
   const res = await fetch(url, {
     method: "POST",
