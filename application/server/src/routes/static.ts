@@ -69,5 +69,35 @@ staticApp.get("/", async (c) => {
   return c.html(injected, 200);
 });
 
+// Post detail page: inject post data + preload LCP image to eliminate API round-trip
+staticApp.get("/posts/:postId", async (c) => {
+  const postId = c.req.param("postId");
+  const [html, post] = await Promise.all([
+    readFile(indexHtmlPath, "utf8"),
+    Post.findByPk(postId),
+  ]);
+
+  if (!post) {
+    return c.html(html, 200);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const postData = post.toJSON() as any;
+  const postJson = JSON.stringify(postData);
+
+  let preloadTag = "";
+  if (postData.images?.length > 0) {
+    preloadTag = `<link rel="preload" as="image" href="/images/${postData.images[0].id}.jpg">`;
+  } else if (postData.movie) {
+    preloadTag = `<link rel="preload" as="image" href="/movies/${postData.movie.id}.gif">`;
+  }
+
+  const injected = html.replace(
+    "</head>",
+    `${preloadTag}<script>window.__INITIAL_POST__=${postJson}</script></head>`,
+  );
+  return c.html(injected, 200);
+});
+
 // SPA fallback: serve index.html for all non-file routes
 staticApp.use("*", serveStatic({ path: "index.html", root: distRoot }));
