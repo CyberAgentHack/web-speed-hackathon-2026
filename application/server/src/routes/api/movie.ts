@@ -65,3 +65,19 @@ movieRouter.post("/movies", async (req, res) => {
     console.error("Movie conversion failed:", err);
   });
 });
+
+movieRouter.put("/movies/:id/file", async (req, res) => {
+  if (req.session.userId === undefined) {
+    throw new httpErrors.Unauthorized();
+  }
+  if (Buffer.isBuffer(req.body) === false) {
+    throw new httpErrors.BadRequest();
+  }
+
+  const inputBuffer = req.body as Buffer;
+  res.status(204).send();
+
+  convertAndSaveMovie(inputBuffer, req.params.id).catch((err) => {
+    console.error("Movie conversion failed:", err);
+  });
+});

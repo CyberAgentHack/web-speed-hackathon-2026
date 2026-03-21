@@ -123,3 +123,33 @@ soundRouter.post("/sounds", async (req, res) => {
     console.error("Sound save failed:", err);
   });
 });
+
+soundRouter.put("/sounds/:id/peaks", async (req, res) => {
+  if (req.session.userId === undefined) {
+    throw new httpErrors.Unauthorized();
+  }
+
+  const peaksData = req.body as { max: number; peaks: number[] };
+  const soundsDir = path.resolve(UPLOAD_PATH, "sounds");
+  await fs.mkdir(soundsDir, { recursive: true });
+  const peaksPath = path.resolve(soundsDir, `${req.params.id}.peaks.json`);
+  await fs.writeFile(peaksPath, JSON.stringify(peaksData));
+
+  return res.status(204).send();
+});
+
+soundRouter.put("/sounds/:id/file", async (req, res) => {
+  if (req.session.userId === undefined) {
+    throw new httpErrors.Unauthorized();
+  }
+  if (Buffer.isBuffer(req.body) === false) {
+    throw new httpErrors.BadRequest();
+  }
+
+  const inputBuffer = req.body as Buffer;
+  res.status(204).send();
+
+  saveSound(inputBuffer, req.params.id).catch((err) => {
+    console.error("Sound save failed:", err);
+  });
+});

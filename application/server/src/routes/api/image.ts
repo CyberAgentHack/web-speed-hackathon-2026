@@ -112,3 +112,28 @@ imageRouter.post("/images", async (req, res) => {
 
   return res.status(200).type("application/json").send({ id: imageId, alt });
 });
+
+imageRouter.put("/images/:id/file", async (req, res) => {
+  if (req.session.userId === undefined) {
+    throw new httpErrors.Unauthorized();
+  }
+  if (Buffer.isBuffer(req.body) === false) {
+    throw new httpErrors.BadRequest();
+  }
+
+  const inputBuffer = req.body as Buffer;
+  const imageId = req.params.id;
+
+  res.status(204).send();
+
+  (async () => {
+    try {
+      const jpegBuffer = await sharp(inputBuffer).jpeg({ quality: 80 }).toBuffer();
+      await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
+      const filePath = path.resolve(UPLOAD_PATH, `./images/${imageId}.${EXTENSION}`);
+      await fs.writeFile(filePath, jpegBuffer);
+    } catch (err) {
+      console.error("Image save failed:", err);
+    }
+  })();
+});

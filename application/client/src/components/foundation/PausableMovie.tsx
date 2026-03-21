@@ -10,37 +10,11 @@ interface Props {
 
 export const PausableMovie = ({ src }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const rafRef = useRef<number>(0);
   const isVisibleRef = useRef(false);
   const userPausedRef = useRef(false);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isReady, setIsReady] = useState(false);
-
-  const startDrawLoop = useCallback(() => {
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    if (!video || !canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const drawFrame = () => {
-      if (video.videoWidth > 0 && video.videoHeight > 0) {
-        if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-        }
-        ctx.drawImage(video, 0, 0);
-      }
-      rafRef.current = requestAnimationFrame(drawFrame);
-    };
-    rafRef.current = requestAnimationFrame(drawFrame);
-  }, []);
-
-  const stopDrawLoop = useCallback(() => {
-    cancelAnimationFrame(rafRef.current);
-  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -57,10 +31,8 @@ export const PausableMovie = ({ src }: Props) => {
         if (visible && !userPausedRef.current) {
           video.play();
           setIsPlaying(true);
-          startDrawLoop();
         } else {
           video.pause();
-          stopDrawLoop();
           if (!visible) setIsPlaying(false);
         }
       },
@@ -69,7 +41,7 @@ export const PausableMovie = ({ src }: Props) => {
 
     observer.observe(container);
     return () => observer.disconnect();
-  }, [isReady, startDrawLoop, stopDrawLoop]);
+  }, [isReady]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -79,19 +51,10 @@ export const PausableMovie = ({ src }: Props) => {
       userPausedRef.current = true;
       setIsPlaying(false);
       video.pause();
-      const canvas = canvasRef.current;
-      const ctx = canvas?.getContext("2d");
-      if (canvas && ctx && video.videoWidth > 0) {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0);
-      }
     } else if (isVisibleRef.current) {
-      startDrawLoop();
+      video.play();
     }
-
-    return () => stopDrawLoop();
-  }, [isReady, startDrawLoop, stopDrawLoop]);
+  }, [isReady]);
 
   const handleClick = useCallback(() => {
     const video = videoRef.current;
@@ -99,16 +62,14 @@ export const PausableMovie = ({ src }: Props) => {
 
     if (isPlaying) {
       video.pause();
-      stopDrawLoop();
       userPausedRef.current = true;
       setIsPlaying(false);
     } else {
       video.play();
       userPausedRef.current = false;
       setIsPlaying(true);
-      startDrawLoop();
     }
-  }, [isPlaying, startDrawLoop, stopDrawLoop]);
+  }, [isPlaying]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -133,39 +94,36 @@ export const PausableMovie = ({ src }: Props) => {
 
   return (
     <div ref={containerRef}>
-      <video
-        ref={videoRef}
-        autoPlay
-        loop
-        muted
-        playsInline
-        preload="none"
-        className="sr-only"
-        src={src}
-        onLoadedData={handleLoadedData}
-        onError={handleError}
-      />
       <AspectRatioBox aspectHeight={1} aspectWidth={1}>
-        {isReady ? (
-          <button
-            aria-label="動画プレイヤー"
-            className="group relative block h-full w-full"
-            onClick={handleClick}
-            type="button"
+        <button
+          aria-label="動画プレイヤー"
+          className="group relative block h-full w-full"
+          onClick={handleClick}
+          type="button"
+        >
+          <video
+            ref={videoRef}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="none"
+            className="h-full w-full object-cover"
+            src={src}
+            onLoadedData={handleLoadedData}
+            onError={handleError}
+          />
+          <div
+            className={classNames(
+              "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
+              {
+                "opacity-0 group-hover:opacity-100": isPlaying,
+              },
+            )}
           >
-            <canvas ref={canvasRef} className="w-full" />
-            <div
-              className={classNames(
-                "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
-                {
-                  "opacity-0 group-hover:opacity-100": isPlaying,
-                },
-              )}
-            >
-              <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
-            </div>
-          </button>
-        ) : null}
+            <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
+          </div>
+        </button>
       </AspectRatioBox>
     </div>
   );
