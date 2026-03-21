@@ -1,4 +1,8 @@
-export function getImagePath(imageId: string): string {
+export function getImagePath(imageId: string, width?: 300 | 600): string {
+  if (width === 300) {
+    return `/images/${imageId}-300.webp`;
+  }
+
   return `/images/${imageId}.webp`;
 }
 

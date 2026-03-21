@@ -67,7 +67,7 @@ export const PostItem = ({ post, prioritizeMedia = false }: Props) => {
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} preload={prioritizeMedia ? "auto" : "metadata"} />
+              <MovieArea movie={post.movie} preload={prioritizeMedia ? "auto" : "none"} />
             </div>
           ) : null}
           {post.sound ? (

@@ -35,7 +35,7 @@ export const SoundPlayer = ({ sound, prioritizeMedia = false }: Props) => {
         ref={audioRef}
         loop={true}
         onTimeUpdate={handleTimeUpdate}
-        preload={prioritizeMedia ? "auto" : "metadata"}
+        preload={prioritizeMedia ? "auto" : "none"}
         src={getSoundPath(sound.id)}
       />
       <div className="p-2">

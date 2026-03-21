@@ -11,7 +11,7 @@ interface Props {
 /**
  * 標準の video 要素を使った再生コンポーネント。
  */
-export const PausableMovie = ({ src, preload = "metadata" }: Props) => {
+export const PausableMovie = ({ src, preload = "none" }: Props) => {
   const prefersReducedMotion =
     typeof window !== "undefined" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;

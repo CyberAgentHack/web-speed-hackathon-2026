@@ -265,14 +265,33 @@ async function ensureWebpImageAsset(
     quality = 85,
   } = options ?? {};
   const webpPath = `${filePathWithoutExtension}.webp`;
+  const sourceImagePath = await resolveImageFilePath(filePathWithoutExtension);
+  if (sourceImagePath == null) {
+    return;
+  }
 
-  const jpgPath = `${filePathWithoutExtension}.jpg`;
-
-  const converted = await sharp(jpgPath)
+  const converted = await sharp(sourceImagePath)
     .resize({ width, height, fit })
-    .webp({ quality })
+    .webp({ quality, effort: 6 })
     .toBuffer();
   await fs.writeFile(webpPath, converted);
+}
+
+async function ensureHalfWebpImageAsset(
+  filePathWithoutExtension: string,
+): Promise<void> {
+  const sourceImagePath = await resolveImageFilePath(filePathWithoutExtension);
+  if (sourceImagePath == null) {
+    return;
+  }
+
+  const halfWebpPath = `${filePathWithoutExtension}-300.webp`;
+  const converted = await sharp(sourceImagePath)
+    .resize({ width: 300, fit: "cover" })
+    .webp({ quality: 85, effort: 6 })
+    .toBuffer();
+
+  await fs.writeFile(halfWebpPath, converted);
 }
 
 async function ensureWebpImageAssets(): Promise<void> {
@@ -283,6 +302,9 @@ async function ensureWebpImageAssets(): Promise<void> {
         quality: 85,
         width: 600,
       })
+    ),
+    ...EXISTING_IMAGE_IDS.map((id) =>
+      ensureHalfWebpImageAsset(path.resolve(publicDir, `./images/${id}`))
     ),
     ...EXISTING_PROFILE_IMAGE_IDS.map((id) =>
       ensureWebpImageAsset(path.resolve(publicDir, `./images/profiles/${id}`), {
