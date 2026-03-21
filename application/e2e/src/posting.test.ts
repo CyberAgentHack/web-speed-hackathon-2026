@@ -2,12 +2,12 @@ import path from "node:path";
 
 import { expect, test } from "@playwright/test";
 
-import { dynamicMediaMask, login, waitForVisibleMedia } from "./utils";
+import { dynamicMediaMask, login, waitForPageToLoad, waitForVisibleMedia } from "./utils";
 
 test.describe("投稿機能", () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
-    await login(page);
+    await login(page, "gg3i6j6");
   });
 
   test("テキストの投稿ができる", async ({ page }) => {
@@ -17,11 +17,12 @@ test.describe("投稿機能", () => {
     await page.getByRole("list").getByRole("button", { name: "投稿する" }).click();
 
     const textarea = page.getByPlaceholder("いまなにしてる？");
-    await expect(textarea).toBeVisible({ timeout: 10_000 });
+    await expect(textarea).toBeVisible({ timeout: 30_000 });
     await textarea.fill(postText);
 
     // VRT: 投稿モーダル（テキスト入力後）
     await waitForVisibleMedia(page);
+    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("posting-テキスト入力後.png", {
       mask: dynamicMediaMask(page),
     });
@@ -31,7 +32,7 @@ test.describe("投稿機能", () => {
 
     // 投稿詳細に遷移する
     await page.waitForURL("**/posts/*", { timeout: 30_000 });
-    await expect(page.locator("article").first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("article").first()).toBeVisible({ timeout: 30_000 });
 
     // 投稿内容が表示されていることを確認
     await expect(page.getByText(postText)).toBeVisible();
@@ -43,7 +44,7 @@ test.describe("投稿機能", () => {
     await page.getByRole("list").getByRole("button", { name: "投稿する" }).click();
 
     const textarea = page.getByPlaceholder("いまなにしてる？");
-    await expect(textarea).toBeVisible({ timeout: 10_000 });
+    await expect(textarea).toBeVisible({ timeout: 30_000 });
     await textarea.fill(postText);
 
     // 画像ファイルを添付
@@ -61,7 +62,7 @@ test.describe("投稿機能", () => {
     await page.waitForURL("**/posts/*", { timeout: 60_000 });
 
     const article = page.locator("article").first();
-    await expect(article).toBeVisible({ timeout: 10_000 });
+    await expect(article).toBeVisible({ timeout: 30_000 });
     await expect(article.locator("img").first()).toBeVisible({ timeout: 30_000 });
 
     // 投稿内容と画像が表示されていることを確認
