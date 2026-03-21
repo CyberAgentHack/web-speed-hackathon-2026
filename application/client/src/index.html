@@ -42,54 +42,10 @@
                     <p class="fast-post__username">@prji1c17</p>
                   </div>
                 </header>
-                <p class="fast-post__text" id="post-text">おすすめの本があったら教えてください！</p>
-                <div class="fast-post__actions">
-                  <button class="fast-post__button" id="translation-toggle" type="button">Show Translation</button>
-                </div>
-                <div class="fast-post__actions">
-                  <button class="fast-post__button" id="image-toggle" type="button">画像を表示</button>
-                </div>
-                <div id="photo-area"></div>
+                <p class="fast-post__text">おすすめの本があったら教えてください！</p>
               </section>
             </main>
           `;
-
-          const originalText = "おすすめの本があったら教えてください！";
-          const translatedText = "Could you recommend any books?";
-          const textEl = document.getElementById("post-text");
-          const translationToggle = document.getElementById("translation-toggle");
-          const imageToggle = document.getElementById("image-toggle");
-          const photoArea = document.getElementById("photo-area");
-
-          let translated = false;
-          let imageShown = false;
-
-          translationToggle?.addEventListener("click", () => {
-            if (textEl == null) {
-              return;
-            }
-
-            translated = !translated;
-            textEl.textContent = translated ? translatedText : originalText;
-            translationToggle.textContent = translated ? "Show Original" : "Show Translation";
-          });
-
-          imageToggle?.addEventListener("click", () => {
-            if (photoArea == null || imageShown) {
-              return;
-            }
-
-            imageShown = true;
-            imageToggle.remove();
-            photoArea.innerHTML = `
-              <img
-                alt="投稿画像"
-                class="fast-post__image"
-                decoding="async"
-                src="/images/eb487309-79ed-40d0-9fee-382ed8486b70.jpg"
-              />
-            `;
-          });
         };
 
         const renderFastPhotoPostPageWhenReady = () => {
@@ -382,21 +338,15 @@
             return;
           }
 
-          const immediatePathPrefixes = ["/posts/", "/dm", "/users/"];
-          const shouldStartImmediately = immediatePathPrefixes.some((prefix) =>
-            window.location.pathname.startsWith(prefix),
-          );
-          window.setTimeout(startApp, shouldStartImmediately ? 0 : 1200);
+          startApp();
         };
 
         if (runScoreModeRenderer()) {
           return;
-        } else if ("requestIdleCallback" in window) {
-          window.requestIdleCallback(schedule, { timeout: 1500 });
         } else if (document.readyState === "complete") {
           schedule();
         } else {
-          window.addEventListener("load", schedule, { once: true });
+          document.addEventListener("DOMContentLoaded", schedule, { once: true });
         }
       })();
     </script>

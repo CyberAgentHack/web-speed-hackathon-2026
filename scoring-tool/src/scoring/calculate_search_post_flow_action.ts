@@ -23,7 +23,7 @@ export async function calculateSearchPostFlowAction({
       playwrightPage,
       puppeteerPage,
       timeout: 120 * 1000,
-      url: new URL("/search?score=1", baseUrl).href,
+      url: new URL("/search", baseUrl).href,
     });
   } catch (err) {
     throw new Error("ページの読み込みに失敗したか、タイムアウトしました", { cause: err });
@@ -36,18 +36,18 @@ export async function calculateSearchPostFlowAction({
   await flow.startTimespan();
   {
     try {
-      const searchInput = playwrightPage.locator("#fast-search-input");
-      await searchInput.click();
-      await searchInput.pressSequentially("abc", { delay: 0 });
+      const searchInput = playwrightPage.getByPlaceholder(
+        "検索 (例: キーワード since:2025-01-01 until:2025-12-31)",
+      );
+      await searchInput.fill("写真 since:2026-01-01");
     } catch (err) {
       throw new Error("検索クエリの入力に失敗しました", { cause: err });
     }
     try {
-      const searchButton = playwrightPage.locator("#fast-search-button");
+      const searchButton = playwrightPage.getByRole("button", { name: "検索" });
       await searchButton.click();
-      await playwrightPage.locator("#fast-search-result", { hasText: "検索結果" }).waitFor({
-        timeout: 30 * 1000,
-      });
+      await playwrightPage.waitForURL(/\/search\?q=/, { timeout: 30 * 1000 });
+      await playwrightPage.locator("main h2").waitFor({ timeout: 30 * 1000 });
     } catch (err) {
       throw new Error("検索結果の表示に失敗しました", { cause: err });
     }

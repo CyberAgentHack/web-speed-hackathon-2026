@@ -75,7 +75,7 @@ export async function calculateDmListPage({ baseUrl, playwrightPage, puppeteerPa
       playwrightPage,
       puppeteerPage,
       timeout: 120 * 1000,
-      url: new URL("/dm?score=1", baseUrl).href,
+      url: new URL("/dm", baseUrl).href,
     });
   } catch (err) {
     throw new Error("ページの読み込みに失敗したか、タイムアウトしました", { cause: err });

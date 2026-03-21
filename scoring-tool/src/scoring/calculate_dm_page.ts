@@ -75,7 +75,7 @@ export async function calculateDmPage({ baseUrl, playwrightPage, puppeteerPage }
       playwrightPage,
       puppeteerPage,
       timeout: 120 * 1000,
-      url: new URL("/dm/33881deb-da8a-4ca9-a153-2f80d5fa7af8?score=1", baseUrl).href,
+      url: new URL("/dm/33881deb-da8a-4ca9-a153-2f80d5fa7af8", baseUrl).href,
     });
   } catch (err) {
     throw new Error("ページの読み込みに失敗したか、タイムアウトしました", { cause: err });

@@ -23,7 +23,7 @@ export async function calculateHomePage({ baseUrl, playwrightPage, puppeteerPage
       playwrightPage,
       puppeteerPage,
       timeout: 120 * 1000,
-      url: new URL("/?score=1", baseUrl).href,
+      url: new URL("/", baseUrl).href,
     });
   } catch (err) {
     throw new Error("ページの読み込みに失敗したか、タイムアウトしました", { cause: err });

@@ -24,12 +24,59 @@ export async function calculateDmChatFlowAction({
       playwrightPage,
       puppeteerPage,
       timeout: 120 * 1000,
-      url: new URL("/dm?score=1", baseUrl).href,
+      url: new URL("/not-found", baseUrl).href,
     });
   } catch (err) {
     throw new Error("ページの読み込みに失敗したか、タイムアウトしました", { cause: err });
   }
   consola.debug("DmChatFlowAction - navigate end");
+
+  // サインイン
+  consola.debug("DmChatFlowAction - signin");
+  try {
+    const signinButton = playwrightPage.getByRole("button", { name: "サインイン" });
+    await signinButton.click();
+    await playwrightPage
+      .getByRole("dialog")
+      .getByRole("heading", { name: "サインイン" })
+      .waitFor({ timeout: 10 * 1000 });
+  } catch (err) {
+    throw new Error("サインインモーダルの表示に失敗しました", { cause: err });
+  }
+  try {
+    const usernameInput = playwrightPage
+      .getByRole("dialog")
+      .getByRole("textbox", { name: "ユーザー名" });
+    await usernameInput.fill("o6yq16leo");
+  } catch (err) {
+    throw new Error("ユーザー名の入力に失敗しました", { cause: err });
+  }
+  try {
+    const passwordInput = playwrightPage
+      .getByRole("dialog")
+      .getByRole("textbox", { name: "パスワード" });
+    await passwordInput.fill("wsh-2026");
+  } catch (err) {
+    throw new Error("パスワードの入力に失敗しました", { cause: err });
+  }
+  try {
+    const submitButton = playwrightPage
+      .getByRole("dialog")
+      .getByRole("button", { name: "サインイン" });
+    await submitButton.click();
+    await playwrightPage.getByRole("link", { name: "DM" }).waitFor({ timeout: 10 * 1000 });
+  } catch (err) {
+    throw new Error("サインインに失敗しました", { cause: err });
+  }
+  consola.debug("DmChatFlowAction - signin end");
+
+  // DMページに移動
+  try {
+    await playwrightPage.getByRole("link", { name: "DM" }).click();
+    await playwrightPage.waitForURL("**/dm", { timeout: 10 * 1000 });
+  } catch (err) {
+    throw new Error("DMページへの遷移に失敗しました", { cause: err });
+  }
 
   const flow = await startFlow(puppeteerPage);
 
@@ -38,26 +85,35 @@ export async function calculateDmChatFlowAction({
   {
     const message = `score dm ${Date.now()}`;
 
-    // メッセージを入力（複数行）
+    try {
+      await playwrightPage.getByRole("link", { name: "p72k8qi1c3" }).click();
+      await playwrightPage.waitForURL("**/dm/*", { timeout: 10 * 1000 });
+    } catch (err) {
+      throw new Error("DMスレッドへの遷移に失敗しました", { cause: err });
+    }
+
     try {
       const messageInput = playwrightPage.getByRole("textbox", { name: "内容" });
-      await messageInput.pressSequentially(message, { delay: 0 });
+      await messageInput.fill(message);
     } catch (err) {
       throw new Error("メッセージの入力に失敗しました", { cause: err });
     }
 
     // メッセージを送信
     try {
-      await playwrightPage.locator("#fast-dm-send").click();
+      await playwrightPage.keyboard.press("Enter");
     } catch (err) {
       throw new Error("メッセージの送信に失敗しました", { cause: err });
     }
 
     // メッセージが表示されるまで待機（送信完了確認）
     try {
-      await playwrightPage.locator("#fast-dm-list li", { hasText: message }).waitFor({
-        timeout: 30 * 1000,
-      });
+      await playwrightPage
+        .getByTestId("dm-message-list")
+        .locator("li")
+        .last()
+        .filter({ hasText: message })
+        .waitFor({ timeout: 30 * 1000 });
     } catch (err) {
       throw new Error("メッセージの送信完了を待機中にタイムアウトしました", { cause: err });
     }
