@@ -1,7 +1,6 @@
 import classNames from "classnames";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
-import { CoveredImage } from "@web-speed-hackathon-2026/client/src/components/foundation/CoveredImage";
 import { getImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
@@ -16,7 +15,6 @@ export const ImageArea = ({ images }: Props) => {
           return (
             <div
               key={image.id}
-              // CSS Grid で表示領域を指定する
               className={classNames("bg-cax-surface-subtle", {
                 "col-span-1": images.length !== 1,
                 "col-span-2": images.length === 1,
@@ -24,7 +22,13 @@ export const ImageArea = ({ images }: Props) => {
                 "row-span-2": images.length <= 2 || (images.length === 3 && idx === 0),
               })}
             >
-              <CoveredImage src={getImagePath(image.id)} />
+              <img
+                alt={image.alt ?? ""}
+                className="h-full w-full object-cover"
+                decoding="async"
+                loading="lazy"
+                src={getImagePath(image.id, "thumb")}
+              />
             </div>
           );
         })}

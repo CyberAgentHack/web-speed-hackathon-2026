@@ -1,5 +1,5 @@
 import moment from "moment";
-import { MouseEventHandler, useCallback } from "react";
+import { MouseEventHandler, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router";
 
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
@@ -11,21 +11,21 @@ import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/
 const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Element): boolean => {
   while (target !== null && target instanceof Element) {
     const tagName = target.tagName.toLowerCase();
-    if (["button", "a"].includes(tagName)) {
+
+    if (tagName === "button" || tagName === "a") {
       return true;
     }
+
     if (currentTarget === target) {
       return false;
     }
+
     target = target.parentNode;
   }
+
   return false;
 };
 
-/**
- * @typedef {object} Props
- * @property {Models.Post} post
- */
 interface Props {
   post: Models.Post;
 }
@@ -33,18 +33,24 @@ interface Props {
 export const TimelineItem = ({ post }: Props) => {
   const navigate = useNavigate();
 
-  /**
-   * ボタンやリンク以外の箇所をクリックしたとき かつ 文字が選択されてないとき、投稿詳細ページに遷移する
-   */
   const handleClick = useCallback<MouseEventHandler>(
     (ev) => {
       const isSelectedText = document.getSelection()?.isCollapsed === false;
+
       if (!isClickedAnchorOrButton(ev.target, ev.currentTarget) && !isSelectedText) {
         navigate(`/posts/${post.id}`);
       }
     },
-    [post, navigate],
+    [navigate, post.id],
   );
+
+  const createdAt = useMemo(() => {
+    const date = moment(post.createdAt);
+    return {
+      iso: date.toISOString(),
+      label: date.locale("ja").format("LL"),
+    };
+  }, [post.createdAt]);
 
   return (
     <article className="hover:bg-cax-surface-subtle px-1 sm:px-4" onClick={handleClick}>
@@ -56,10 +62,16 @@ export const TimelineItem = ({ post }: Props) => {
           >
             <img
               alt={post.user.profileImage.alt}
-              src={getProfileImagePath(post.user.profileImage.id)}
+              className="h-full w-full object-cover"
+              decoding="async"
+              height={64}
+              loading="lazy"
+              src={getProfileImagePath(post.user.profileImage.id, "thumb")}
+              width={64}
             />
           </Link>
         </div>
+
         <div className="min-w-0 shrink grow">
           <p className="overflow-hidden text-sm text-ellipsis whitespace-nowrap">
             <Link
@@ -68,32 +80,37 @@ export const TimelineItem = ({ post }: Props) => {
             >
               {post.user.name}
             </Link>
+
             <Link
               className="text-cax-text-muted pr-1 hover:underline"
               to={`/users/${post.user.username}`}
             >
               @{post.user.username}
             </Link>
+
             <span className="text-cax-text-muted pr-1">-</span>
+
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
-              </time>
+              <time dateTime={createdAt.iso}>{createdAt.label}</time>
             </Link>
           </p>
+
           <div className="text-cax-text leading-relaxed">
             <TranslatableText text={post.text} />
           </div>
+
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
               <ImageArea images={post.images} />
             </div>
           ) : null}
+
           {post.movie ? (
             <div className="relative mt-2 w-full">
               <MovieArea movie={post.movie} />
             </div>
           ) : null}
+
           {post.sound ? (
             <div className="relative mt-2 w-full">
               <SoundArea sound={post.sound} />
