@@ -4,11 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CaX</title>
-    <% for (const css of htmlWebpackPlugin.files.css) { %>
-    <link rel="stylesheet" href="<%= css %>" />
+    <% for (const tag of htmlWebpackPlugin.tags.headTags) { %>
+    <% if (tag.tagName === 'link') { %>
+    <link rel="stylesheet" href="<%= tag.attributes.href %>" />
+    <% } else if (tag.tagName === 'script') { %>
+    <script src="<%= tag.attributes.src %>" defer></script>
     <% } %>
-    <% for (const js of htmlWebpackPlugin.files.js) { %>
-    <script src="<%= js %>" defer></script>
     <% } %>
   </head>
   <body class="bg-cax-canvas text-cax-text">
