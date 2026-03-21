@@ -1,6 +1,5 @@
 import { Router, NextFunction, Request, Response } from "express";
 import httpErrors from "http-errors";
-import { ValidationError } from "sequelize";
 
 import { authRouter } from "@web-speed-hackathon-2026/server/src/routes/api/auth";
 import { crokRouter } from "@web-speed-hackathon-2026/server/src/routes/api/crok";
@@ -27,13 +26,6 @@ apiRouter.use(soundRouter);
 apiRouter.use(authRouter);
 apiRouter.use(crokRouter);
 apiRouter.use(translateRouter);
-
-apiRouter.use(async (err: Error, _req: Request, _res: Response, _next: NextFunction) => {
-  if (err instanceof ValidationError) {
-    throw new httpErrors.BadRequest();
-  }
-  throw err;
-});
 
 apiRouter.use(async (err: Error, _req: Request, res: Response, _next: NextFunction) => {
   if (!httpErrors.isHttpError(err) || err.status === 500) {

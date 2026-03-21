@@ -5,7 +5,8 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
-import { Sound } from "@web-speed-hackathon-2026/server/src/models";
+import { getDb } from "@web-speed-hackathon-2026/server/src/db/client";
+import * as schema from "@web-speed-hackathon-2026/server/src/db/schema";
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import { calculateSoundWave } from "@web-speed-hackathon-2026/server/src/utils/calculate_sound_wave";
 import { convertSoundToMp3 } from "@web-speed-hackathon-2026/server/src/utils/convert_sound_to_mp3";
@@ -46,7 +47,16 @@ soundRouter.post("/sounds", async (req, res) => {
   await fs.writeFile(filePath, mp3Buffer);
 
   // Soundレコード作成
-  await Sound.create({ id: soundId, artist: artist ?? "Unknown", title: title ?? "Unknown", max, peaks });
+  const now = new Date().toISOString();
+  await getDb().insert(schema.sounds).values({
+    id: soundId,
+    artist: artist ?? "Unknown",
+    title: title ?? "Unknown",
+    max,
+    peaks,
+    createdAt: now,
+    updatedAt: now,
+  });
 
   return res.status(200).type("application/json").send({ id: soundId });
 });

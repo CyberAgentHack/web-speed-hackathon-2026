@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { Router } from "express";
 import httpErrors from "http-errors";
 
-import { QaSuggestion } from "@web-speed-hackathon-2026/server/src/models";
+import { getDb } from "@web-speed-hackathon-2026/server/src/db/client";
 import { filterSuggestionsBM25 } from "@web-speed-hackathon-2026/server/src/utils/bm25_search";
 
 const response = readFileSync(resolve(process.cwd(), "src/routes/api/crok-response.md"), "utf-8");
@@ -11,7 +11,7 @@ const response = readFileSync(resolve(process.cwd(), "src/routes/api/crok-respon
 export const crokRouter = Router();
 
 crokRouter.get("/crok/suggestions", async (req, res) => {
-  const allSuggestions = await QaSuggestion.findAll({ logging: false });
+  const allSuggestions = await getDb().query.qaSuggestions.findMany();
   const candidates = allSuggestions.map((s) => s.question);
 
   const query = req.query["q"];

@@ -18,13 +18,15 @@ FROM base AS build
 COPY ./application/package.json ./application/pnpm-lock.yaml ./application/pnpm-workspace.yaml ./
 COPY ./application/client/package.json ./client/package.json
 COPY ./application/server/package.json ./server/package.json
-RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 COPY ./application .
 
 RUN NODE_OPTIONS="--max-old-space-size=4096" pnpm build
 
-RUN --mount=type=cache,target=/pnpm/store CI=true pnpm install --frozen-lockfile --prod --filter @web-speed-hackathon-2026/server
+RUN cd server && pnpm seed:insert
+
+RUN CI=true pnpm install --frozen-lockfile --prod --filter @web-speed-hackathon-2026/server
 
 FROM base
 

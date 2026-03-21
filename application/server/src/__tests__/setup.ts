@@ -4,9 +4,11 @@ import * as path from "node:path";
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 
-import { Sequelize } from "sequelize";
+import { createClient } from "@libsql/client";
+import { drizzle } from "drizzle-orm/libsql";
+import { pushSQLiteSchema } from "drizzle-kit/api";
 
-import { initModels } from "@web-speed-hackathon-2026/server/src/models";
+import * as schema from "../db/schema";
 import { insertSeeds } from "@web-speed-hackathon-2026/server/src/seeds";
 
 let testDbPath: string;
@@ -15,15 +17,14 @@ export async function createTestDatabase(): Promise<string> {
   const tmpDir = await fs.mkdtemp(path.resolve(os.tmpdir(), "./wsh-test-"));
   testDbPath = path.resolve(tmpDir, "database.sqlite");
 
-  const sequelize = new Sequelize({
-    dialect: "sqlite",
-    logging: false,
-    storage: testDbPath,
-  });
-  initModels(sequelize);
-  await sequelize.sync({ force: true });
-  await insertSeeds(sequelize);
-  await sequelize.close();
+  const client = createClient({ url: `file:${testDbPath}` });
+  const db = drizzle(client, { schema });
+
+  const { apply } = await pushSQLiteSchema(schema, db as any);
+  await apply();
+
+  await insertSeeds(db);
+  client.close();
 
   return testDbPath;
 }
@@ -35,9 +36,9 @@ export async function startServer(): Promise<{ server: Server; baseUrl: string }
   // Dynamic import to pick up env var
   await import("@web-speed-hackathon-2026/server/src/utils/express_websocket_support");
   const { app } = await import("@web-speed-hackathon-2026/server/src/app");
-  const { initializeSequelize } = await import("../../src/sequelize");
+  const { initializeDatabase } = await import("../../src/db/client");
 
-  await initializeSequelize();
+  await initializeDatabase();
 
   return new Promise((resolve) => {
     const server = app.listen(0, "127.0.0.1", () => {

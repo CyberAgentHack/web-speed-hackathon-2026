@@ -1,7 +1,9 @@
 import { Router } from "express";
-import { Op } from "sequelize";
+import { and, eq, gte, like, lte, or } from "drizzle-orm";
 
-import { Post } from "@web-speed-hackathon-2026/server/src/models";
+import { getDb } from "@web-speed-hackathon-2026/server/src/db/client";
+import * as schema from "@web-speed-hackathon-2026/server/src/db/schema";
+import { findPosts } from "@web-speed-hackathon-2026/server/src/db/queries";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 import { analyzeSentiment } from "@web-speed-hackathon-2026/server/src/utils/sentiment_analyzer";
 
@@ -16,63 +18,55 @@ searchRouter.get("/search", async (req, res) => {
 
   const { keywords, sinceDate, untilDate } = parseSearchQuery(query);
 
-  // キーワードも日付フィルターもない場合は空を返す
   if (!keywords && !sinceDate && !untilDate) {
     return res.status(200).type("application/json").send({ posts: [], isNegative: false });
   }
 
+  const db = getDb();
   const searchTerm = keywords ? `%${keywords}%` : null;
   const limit = req.query["limit"] != null ? Number(req.query["limit"]) : undefined;
   const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
 
-  // 日付条件を構築
-  const dateConditions: Record<symbol, Date>[] = [];
+  // Build date conditions
+  const dateConditions: any[] = [];
   if (sinceDate) {
-    dateConditions.push({ [Op.gte]: sinceDate });
+    dateConditions.push(gte(schema.posts.createdAt, sinceDate.toISOString()));
   }
   if (untilDate) {
-    dateConditions.push({ [Op.lte]: untilDate });
+    dateConditions.push(lte(schema.posts.createdAt, untilDate.toISOString()));
   }
-  const dateWhere =
-    dateConditions.length > 0 ? { createdAt: Object.assign({}, ...dateConditions) } : {};
+  const dateWhere = dateConditions.length > 0 ? and(...dateConditions) : undefined;
 
-  // テキスト検索条件
-  const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
+  // Text search
+  const textWhere = searchTerm
+    ? and(like(schema.posts.text, searchTerm), dateWhere)
+    : dateWhere;
 
-  const postsByText = await Post.findAll({
-    limit,
-    offset,
-    where: {
-      ...textWhere,
-      ...dateWhere,
-    },
-  });
+  const postsByText = await findPosts(db, { limit, offset, where: textWhere });
 
-  // ユーザー名/名前での検索（キーワードがある場合のみ）
+  // User name/username search
   let postsByUser: typeof postsByText = [];
   if (searchTerm) {
-    postsByUser = await Post.findAll({
-      include: [
-        {
-          association: "user",
-          attributes: { exclude: ["profileImageId"] },
-          include: [{ association: "profileImage" }],
-          required: true,
-          where: {
-            [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
-          },
-        },
-        {
-          association: "images",
-          through: { attributes: [] },
-        },
-        { association: "movie" },
-        { association: "sound" },
-      ],
-      limit,
-      offset,
-      where: dateWhere,
+    // Find user IDs matching the search term
+    const matchingUsers = await db.query.users.findMany({
+      where: or(
+        like(schema.users.username, searchTerm),
+        like(schema.users.name, searchTerm),
+      ),
+      columns: { id: true as const },
     });
+
+    if (matchingUsers.length > 0) {
+      const userIds = matchingUsers.map((u) => u.id);
+      // Fetch posts for each matching user
+      for (const userId of userIds) {
+        const userPosts = await findPosts(db, {
+          where: and(eq(schema.posts.userId, userId), dateWhere),
+          limit,
+        });
+        postsByUser.push(...userPosts);
+      }
+    }
   }
 
   const postIdSet = new Set<string>();
@@ -85,7 +79,7 @@ searchRouter.get("/search", async (req, res) => {
     }
   }
 
-  mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  mergedPosts.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
   const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
 

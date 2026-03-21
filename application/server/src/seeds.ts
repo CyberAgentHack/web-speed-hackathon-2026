@@ -4,19 +4,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { createInterface } from "node:readline";
 
-import {
-  Comment,
-  DirectMessage,
-  DirectMessageConversation,
-  Image,
-  Movie,
-  Post,
-  PostsImagesRelation,
-  ProfileImage,
-  QaSuggestion,
-  Sound,
-  User,
-} from "@web-speed-hackathon-2026/server/src/models";
+import { SEEDS_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import type {
   CommentSeed,
   DirectMessageConversationSeed,
@@ -31,11 +19,14 @@ import type {
   UserSeed,
 } from "@web-speed-hackathon-2026/server/src/types/seed";
 
-import { SEEDS_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+import bcrypt from "bcrypt";
+
+import type { Database } from "./db/client";
+import * as schema from "./db/schema";
 
 const seedsDir = SEEDS_PATH;
 
-const DEFAULT_BATCH_SIZE = 1000;
+const DEFAULT_BATCH_SIZE = 100;
 
 async function readJsonlFileBatched<T>(
   filename: string,
@@ -83,46 +74,69 @@ async function readJsonlFileBatched<T>(
   }
 }
 
-export async function insertSeeds(sequelize: Sequelize) {
-  await sequelize.transaction(async (transaction) => {
-    await readJsonlFileBatched<ProfileImageSeed>("profileImages.jsonl", async (batch) => {
-      await ProfileImage.bulkCreate(batch, { transaction });
-    });
-    await readJsonlFileBatched<ImageSeed>("images.jsonl", async (batch) => {
-      await Image.bulkCreate(batch, { transaction });
-    });
-    await readJsonlFileBatched<MovieSeed>("movies.jsonl", async (batch) => {
-      await Movie.bulkCreate(batch, { transaction });
-    });
-    await readJsonlFileBatched<SoundSeed>("sounds.jsonl", async (batch) => {
-      await Sound.bulkCreate(batch, { transaction });
-    });
-    await readJsonlFileBatched<UserSeed>("users.jsonl", async (batch) => {
-      await User.bulkCreate(batch, { transaction });
-    });
-    await readJsonlFileBatched<PostSeed>("posts.jsonl", async (batch) => {
-      await Post.bulkCreate(batch, { transaction });
-    });
-    await readJsonlFileBatched<PostsImagesRelationSeed>(
-      "postsImagesRelation.jsonl",
-      async (batch) => {
-        await PostsImagesRelation.bulkCreate(batch, { transaction });
-      },
+function now() {
+  return new Date().toISOString();
+}
+
+export async function insertSeeds(db: Database) {
+  await readJsonlFileBatched<ProfileImageSeed>("profileImages.jsonl", async (batch) => {
+    const ts = now();
+    await db.insert(schema.profileImages).values(batch.map((b) => ({ ...b, createdAt: ts, updatedAt: ts })));
+  });
+  await readJsonlFileBatched<ImageSeed>("images.jsonl", async (batch) => {
+    const ts = now();
+    await db.insert(schema.images).values(batch.map((b) => ({ ...b, updatedAt: ts })));
+  });
+  await readJsonlFileBatched<MovieSeed>("movies.jsonl", async (batch) => {
+    const ts = now();
+    await db.insert(schema.movies).values(batch.map((b) => ({ ...b, createdAt: ts, updatedAt: ts })));
+  });
+  await readJsonlFileBatched<SoundSeed>("sounds.jsonl", async (batch) => {
+    const ts = now();
+    await db.insert(schema.sounds).values(batch.map((b) => ({ ...b, createdAt: ts, updatedAt: ts })));
+  });
+  await readJsonlFileBatched<UserSeed>("users.jsonl", async (batch) => {
+    const ts = now();
+    await db.insert(schema.users).values(
+      batch.map((b) => ({
+        ...b,
+        password: bcrypt.hashSync(b.password, bcrypt.genSaltSync(8)),
+        updatedAt: ts,
+      })),
     );
-    await readJsonlFileBatched<CommentSeed>("comments.jsonl", async (batch) => {
-      await Comment.bulkCreate(batch, { transaction });
-    });
-    await readJsonlFileBatched<DirectMessageConversationSeed>(
-      "directMessageConversations.jsonl",
-      async (batch) => {
-        await DirectMessageConversation.bulkCreate(batch, { transaction });
-      },
+  });
+  await readJsonlFileBatched<PostSeed>("posts.jsonl", async (batch) => {
+    const ts = now();
+    await db.insert(schema.posts).values(batch.map((b) => ({ ...b, updatedAt: ts })));
+  });
+  await readJsonlFileBatched<PostsImagesRelationSeed>("postsImagesRelation.jsonl", async (batch) => {
+    const ts = now();
+    await db
+      .insert(schema.postsImagesRelations)
+      .values(batch.map((b) => ({ ...b, createdAt: ts, updatedAt: ts })));
+  });
+  await readJsonlFileBatched<CommentSeed>("comments.jsonl", async (batch) => {
+    const ts = now();
+    await db.insert(schema.comments).values(batch.map((b) => ({ ...b, updatedAt: ts })));
+  });
+  await readJsonlFileBatched<DirectMessageConversationSeed>(
+    "directMessageConversations.jsonl",
+    async (batch) => {
+      const ts = now();
+      await db
+        .insert(schema.directMessageConversations)
+        .values(batch.map((b) => ({ ...b, createdAt: ts, updatedAt: ts })));
+    },
+  );
+  await readJsonlFileBatched<DirectMessageSeed>("directMessages.jsonl", async (batch) => {
+    await db.insert(schema.directMessages).values(
+      batch.map((b) => ({
+        ...b,
+        isRead: typeof b.isRead === "boolean" ? (b.isRead ? 1 : 0) : Number(b.isRead),
+      })),
     );
-    await readJsonlFileBatched<DirectMessageSeed>("directMessages.jsonl", async (batch) => {
-      await DirectMessage.bulkCreate(batch, { transaction });
-    });
-    await readJsonlFileBatched<QaSuggestionSeed>("qaSuggestions.jsonl", async (batch) => {
-      await QaSuggestion.bulkCreate(batch, { transaction });
-    });
+  });
+  await readJsonlFileBatched<QaSuggestionSeed>("qaSuggestions.jsonl", async (batch) => {
+    await db.insert(schema.qaSuggestions).values(batch);
   });
 }

@@ -6,7 +6,8 @@ import { fileTypeFromBuffer } from "file-type";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
-import { Image } from "@web-speed-hackathon-2026/server/src/models";
+import { getDb } from "@web-speed-hackathon-2026/server/src/db/client";
+import * as schema from "@web-speed-hackathon-2026/server/src/db/schema";
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import { extractImageMetadata } from "@web-speed-hackathon-2026/server/src/utils/extract_image_metadata";
 
@@ -34,8 +35,9 @@ imageRouter.post("/images", async (req, res) => {
   await fs.writeFile(filePath, req.body);
 
   const { alt, width, height } = await extractImageMetadata(req.body);
+  const now = new Date().toISOString();
 
-  await Image.create({ id: imageId, alt, width, height });
+  await getDb().insert(schema.images).values({ id: imageId, alt, width, height, createdAt: now, updatedAt: now });
 
   return res.status(200).type("application/json").send({ id: imageId, alt, width, height });
 });
