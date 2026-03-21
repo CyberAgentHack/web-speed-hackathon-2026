@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Helmet } from "@web-speed-hackathon-2026/client/src/components/foundation/Helmet";
 
 import { CrokGate } from "@web-speed-hackathon-2026/client/src/components/crok/CrokGate";
@@ -13,6 +13,10 @@ type Props = {
 
 export const CrokContainer = ({ activeUser, authModalId }: Props) => {
   const [messages, setMessages] = useState<Models.ChatMessage[]>([]);
+
+  useEffect(() => {
+    preloadChatMarkdown();
+  }, []);
 
   const sseOptions = useMemo(
     () => ({
@@ -65,7 +69,6 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
 
       setMessages((prev) => [...prev, userMessage, assistantMessage]);
 
-      preloadChatMarkdown();
       const encodedPrompt = encodeURIComponent(userInput);
       start(`/api/v1/crok?prompt=${encodedPrompt}`);
     },

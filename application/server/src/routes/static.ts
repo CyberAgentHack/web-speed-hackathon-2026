@@ -102,6 +102,50 @@ function buildHomePreloadTags(posts: Models.Post[]) {
   return Array.from(preloadLinks).join("");
 }
 
+function buildPostPreloadTags(post: Models.Post) {
+  const preloadLinks = new Set<string>();
+
+  if (post.user.profileImage.id != null) {
+    preloadLinks.add(
+      createPreloadLink({
+        as: "image",
+        href: `/images/profiles/${post.user.profileImage.id}`,
+      }),
+    );
+  }
+
+  const firstImage = post.images?.[0];
+  const movie = post.movie;
+  const sound = post.sound;
+
+  if (firstImage != null) {
+    preloadLinks.add(
+      createPreloadLink({
+        as: "image",
+        href: `/images/${firstImage.id}`,
+      }),
+    );
+  } else if (movie != null) {
+    preloadLinks.add(
+      createPreloadLink({
+        as: "image",
+        href: `/movies/${movie.id}.jpg`,
+        type: "image/jpeg",
+      }),
+    );
+  } else if (sound != null) {
+    preloadLinks.add(
+      createPreloadLink({
+        as: "fetch",
+        href: `/waveforms/${sound.id}.json`,
+        type: "application/json",
+      }),
+    );
+  }
+
+  return Array.from(preloadLinks).join("");
+}
+
 async function buildTermsDocument() {
   return await renderIndexDocument({
     appHtml: await renderTermsAppHtml(),
@@ -260,6 +304,40 @@ staticRouter.get("/", async (_req, res, next) => {
       bootstrap,
       headTags: buildHomePreloadTags(initialTimelinePosts),
       title: "タイムライン - CaX",
+    });
+
+    res.setHeader("Cache-Control", "no-cache");
+    res.status(200).type("text/html").send(html);
+  } catch (error) {
+    next(error);
+  }
+});
+
+staticRouter.get("/posts/:postId", async (req, res, next) => {
+  try {
+    const post = await Post.unscoped().findOne(
+      createPostPayloadQuery({
+        where: {
+          id: req.params.postId,
+        },
+      }),
+    );
+
+    if (post == null) {
+      next();
+      return;
+    }
+
+    const initialPost = JSON.parse(JSON.stringify(post)) as NonNullable<AppBootstrapData["initialPost"]>;
+    const bootstrap = { initialPost } satisfies AppBootstrapData;
+    const html = await renderIndexDocument({
+      appHtml: await renderAppHtml({
+        bootstrap,
+        pathname: req.path,
+      }),
+      bootstrap,
+      headTags: buildPostPreloadTags(initialPost),
+      title: `${initialPost.user.name} さんのつぶやき - CaX`,
     });
 
     res.setHeader("Cache-Control", "no-cache");

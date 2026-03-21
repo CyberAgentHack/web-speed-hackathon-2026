@@ -1,3 +1,5 @@
+import React from "react";
+void React;
 import { CommentItem } from "@web-speed-hackathon-2026/client/src/components/post/CommentItem";
 
 interface Props {

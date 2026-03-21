@@ -196,7 +196,7 @@ export const AppContainer = ({ bootstrap = null }: Props) => {
             }
             path="/users/:username"
           />
-          <Route element={<PostContainer />} path="/posts/:postId" />
+          <Route element={<PostContainer initialPost={bootstrap?.initialPost} />} path="/posts/:postId" />
           <Route element={<TermContainer />} path="/terms" />
           <Route
             element={

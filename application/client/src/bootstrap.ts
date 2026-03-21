@@ -1,5 +1,6 @@
 export interface AppBootstrapData {
   initialTimelinePosts?: Models.Post[];
+  initialPost?: Models.Post;
 }
 
 declare global {
