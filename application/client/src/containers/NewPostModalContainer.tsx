@@ -28,7 +28,18 @@ async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promis
 function prefetchPost(post: Models.Post) {
   const apiPath = `/api/v1/posts/${post.id}`;
   window.__PREFETCH_JSON__ = window.__PREFETCH_JSON__ ?? {};
-  window.__PREFETCH_JSON__[apiPath] = Promise.resolve(post);
+  window.__PREFETCH_JSON__[apiPath] = {
+    data: post,
+    promise: fetch(apiPath, {
+      credentials: "same-origin",
+    }).then(async (response) => {
+      if (!response.ok) {
+        throw new Error((await response.text()) || `Request failed with status ${response.status}`);
+      }
+
+      return (await response.json()) as Models.Post;
+    }),
+  };
 }
 
 interface Props {

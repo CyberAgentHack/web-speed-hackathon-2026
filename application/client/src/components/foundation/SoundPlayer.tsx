@@ -1,21 +1,57 @@
-import { ReactEventHandler, useCallback, useRef, useState } from "react";
+import { ReactEventHandler, useCallback, useEffect, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { SoundWaveSVG } from "@web-speed-hackathon-2026/client/src/components/foundation/SoundWaveSVG";
-import { getSoundPath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { getSoundPath, getSoundWaveformPath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   sound: Models.Sound;
 }
 
+const PLACEHOLDER_WAVEFORM_PEAKS = Array.from({ length: 100 }, (_, index) => {
+  const normalized = (index % 10) / 10;
+  return 0.18 + Math.abs(0.5 - normalized) * 0.32;
+});
+
 export const SoundPlayer = ({ sound }: Props) => {
   const soundUrl = getSoundPath(sound.id);
+  const waveformUrl = getSoundWaveformPath(sound.id);
+  const [waveformPeaks, setWaveformPeaks] = useState(
+    sound.waveformPeaks.length > 0 ? sound.waveformPeaks : PLACEHOLDER_WAVEFORM_PEAKS,
+  );
+
+  useEffect(() => {
+    setWaveformPeaks(sound.waveformPeaks.length > 0 ? sound.waveformPeaks : PLACEHOLDER_WAVEFORM_PEAKS);
+  }, [sound.waveformPeaks]);
+
+  useEffect(() => {
+    if (sound.waveformPeaks.length > 0) {
+      return;
+    }
+
+    let active = true;
+    const timerId = window.setTimeout(() => {
+      void fetchJSON<number[]>(waveformUrl)
+        .then((peaks) => {
+          if (active && peaks.length > 0) {
+            setWaveformPeaks(peaks);
+          }
+        })
+        .catch(() => {});
+    }, 100);
+
+    return () => {
+      active = false;
+      window.clearTimeout(timerId);
+    };
+  }, [sound.waveformPeaks.length, waveformUrl]);
 
   const [currentTimeRatio, setCurrentTimeRatio] = useState(0);
   const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>((ev) => {
     const el = ev.currentTarget;
-    setCurrentTimeRatio(el.currentTime / el.duration);
+    setCurrentTimeRatio(el.duration > 0 ? el.currentTime / el.duration : 0);
   }, []);
 
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -54,7 +90,7 @@ export const SoundPlayer = ({ sound }: Props) => {
           <AspectRatioBox aspectHeight={1} aspectWidth={10}>
             <div className="relative h-full w-full">
               <div className="absolute inset-0 h-full w-full">
-                <SoundWaveSVG peaks={sound.waveformPeaks} />
+                <SoundWaveSVG peaks={waveformPeaks} />
               </div>
               <div
                 className="bg-cax-surface-subtle absolute inset-0 h-full w-full opacity-75"

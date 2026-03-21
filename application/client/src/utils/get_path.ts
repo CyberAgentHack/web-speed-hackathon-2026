@@ -30,7 +30,11 @@ export function getMoviePath(movieId: string): string {
 }
 
 export function getSoundPath(soundId: string): string {
-  return `/sounds/${soundId}.mp3`;
+  return `/api/v1/sounds/${soundId}/file`;
+}
+
+export function getSoundWaveformPath(soundId: string): string {
+  return `/api/v1/sounds/${soundId}/waveform`;
 }
 
 export function getProfileImagePath(
