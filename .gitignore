@@ -221,9 +221,11 @@ application/upload/**
 !application/upload/**/
 !application/upload/**/.gitkeep
 
+# Database files
+application/server/database.sqlite
+
 # 競技戦略・作業ログ（非公開）
 .claude/
 performance-issues/
 worklog/
 docs/architecture.md
-application/server/database.sqlite
