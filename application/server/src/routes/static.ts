@@ -177,6 +177,32 @@ async function buildSsrFallback(
     }
   }
 
+  if (pathname === "/dm" && activeUser != null) {
+    const dmListApiPath = "/api/v1/dm";
+    const conversations = await fetchSsrJson<
+      Models.DirectMessageConversation[]
+    >(
+      req,
+      dmListApiPath,
+    );
+    if (conversations !== undefined) {
+      fallback[dmListApiPath] = conversations;
+    }
+  }
+
+  const dmDetailMatch = pathname.match(/^\/dm\/([^/]+)$/);
+  if (dmDetailMatch?.[1] != null && activeUser != null) {
+    const conversationId = dmDetailMatch[1];
+    const dmDetailApiPath = `/api/v1/dm/${conversationId}`;
+    const conversation = await fetchSsrJson<Models.DirectMessageConversation>(
+      req,
+      dmDetailApiPath,
+    );
+    if (conversation !== undefined) {
+      fallback[dmDetailApiPath] = conversation;
+    }
+  }
+
   return fallback;
 }
 
@@ -204,11 +230,21 @@ staticRouter.use(async (req: Request, res: Response, next) => {
   }
 
   const location = req.originalUrl || req.url;
-  const activeUser = (req as any).user ?? null;
-  const activeUserId = activeUser?.id ?? null;
+  const url = new URL(location, "http://localhost");
+  const pathname = url.pathname;
+  const isDmRoute = pathname === "/dm" || /^\/dm\/[^/]+$/.test(pathname);
+
+  if (isDmRoute) {
+    res.setHeader("Cache-Control", "private, no-store");
+  }
+
+  const activeUser = req.session.userId == null
+    ? null
+    : (await fetchSsrJson<Models.User>(req, "/api/v1/me")) ?? null;
+  const activeUserId = activeUser?.id ?? req.session.userId ?? null;
   const cacheKey = buildSsrCacheKey({ location, activeUserId });
 
-  const cachedHtml = getCachedSsrHtml(cacheKey);
+  const cachedHtml = isDmRoute ? null : getCachedSsrHtml(cacheKey);
   if (cachedHtml != null) {
     res.setHeader("X-SSR-Cache", "HIT");
     return res.status(200).type("text/html").send(cachedHtml);
@@ -231,13 +267,15 @@ staticRouter.use(async (req: Request, res: Response, next) => {
 
     const html = replaceAppRoot(indexHtml, appHtml, swrCacheScript);
 
-    setCachedSsrHtml({
-      cacheKey,
-      html,
-      tags: getSsrCacheTags({ location, activeUserId }),
-    });
+    if (!isDmRoute) {
+      setCachedSsrHtml({
+        cacheKey,
+        html,
+        tags: getSsrCacheTags({ location, activeUserId }),
+      });
+    }
 
-    res.setHeader("X-SSR-Cache", "MISS");
+    res.setHeader("X-SSR-Cache", isDmRoute ? "BYPASS" : "MISS");
 
     res.status(200).type("text/html").send(html);
   } catch (err) {

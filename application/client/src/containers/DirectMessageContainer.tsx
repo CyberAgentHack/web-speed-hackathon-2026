@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useParams } from "react-router";
+import { useSWRConfig } from "swr";
 
 import { DirectMessageGate } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageGate";
 import { DirectMessagePage } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessagePage";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
+import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
@@ -27,39 +29,34 @@ interface Props {
 
 export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   const { conversationId = "" } = useParams<{ conversationId: string }>();
+  const conversationApiPath = `/api/v1/dm/${conversationId}`;
+  const { mutate } = useSWRConfig();
 
-  const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(null);
-  const [conversationError, setConversationError] = useState<Error | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const loadConversation = useCallback(async () => {
-    if (activeUser == null) {
-      return;
-    }
-
-    try {
-      const data = await fetchJSON<Models.DirectMessageConversation>(
-        `/api/v1/dm/${conversationId}`,
-      );
-      setConversation(data);
-      setConversationError(null);
-    } catch (error) {
-      setConversation(null);
-      setConversationError(error as Error);
-    }
-  }, [activeUser, conversationId]);
+  const {
+    data: conversation,
+    error: conversationError,
+    isLoading,
+  } = useFetch<Models.DirectMessageConversation>(
+    activeUser == null ? "" : conversationApiPath,
+    fetchJSON,
+  );
 
   const sendRead = useCallback(async () => {
     await sendJSON(`/api/v1/dm/${conversationId}/read`, {});
   }, [conversationId]);
 
   useEffect(() => {
-    void loadConversation();
+    if (activeUser == null) {
+      return;
+    }
+
     void sendRead();
-  }, [loadConversation, sendRead]);
+  }, [activeUser, sendRead]);
 
   const handleSubmit = useCallback(
     async (params: DirectMessageFormData) => {
@@ -68,12 +65,12 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
         await sendJSON(`/api/v1/dm/${conversationId}/messages`, {
           body: params.body,
         });
-        loadConversation();
+        await mutate(conversationApiPath);
       } finally {
         setIsSubmitting(false);
       }
     },
-    [conversationId, loadConversation],
+    [conversationApiPath, conversationId, mutate],
   );
 
   const handleTyping = useCallback(async () => {
@@ -82,7 +79,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {
     if (event.type === "dm:conversation:message") {
-      void loadConversation().then(() => {
+      void mutate(conversationApiPath).then(() => {
         if (event.payload.sender.id !== activeUser?.id) {
           setIsPeerTyping(false);
           if (peerTypingTimeoutRef.current !== null) {
@@ -112,7 +109,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     );
   }
 
-  if (conversation == null) {
+  if (isLoading || conversation == null) {
     if (conversationError != null) {
       return <NotFoundContainer />;
     }

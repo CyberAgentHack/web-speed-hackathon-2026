@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useSWRConfig } from "swr";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
+import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
@@ -14,34 +15,23 @@ interface Props {
 }
 
 export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
-  const [conversations, setConversations] =
-    useState<Array<Models.DirectMessageConversation> | null>(null);
-  const [error, setError] = useState<Error | null>(null);
+  const dmListApiPath = "/api/v1/dm";
+  const { mutate } = useSWRConfig();
 
-  const loadConversations = useCallback(async () => {
-    if (activeUser == null) {
-      return;
-    }
-
-    try {
-      const conversations = await fetchJSON<Array<Models.DirectMessageConversation>>("/api/v1/dm");
-      setConversations(conversations);
-      setError(null);
-    } catch (error) {
-      setConversations(null);
-      setError(error as Error);
-    }
-  }, [activeUser]);
-
-  useEffect(() => {
-    void loadConversations();
-  }, [loadConversations]);
+  const {
+    data: conversations,
+    error,
+    isLoading,
+  } = useFetch<Array<Models.DirectMessageConversation>>(
+    dmListApiPath,
+    fetchJSON,
+  );
 
   useWs("/api/v1/dm/unread", () => {
-    void loadConversations();
+    void mutate(dmListApiPath);
   });
 
-  if (conversations == null) {
+  if (isLoading || conversations == null) {
     return null;
   }
 
@@ -76,9 +66,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                 : conversation.member;
 
             const lastMessage = messages.at(-1);
-            const hasUnread = messages
-              .filter((m) => m.sender.id === peer.id)
-              .some((m) => !m.isRead);
+            const hasUnread = conversation.hasUnread === true;
 
             return (
               <li className="grid" key={conversation.id}>
