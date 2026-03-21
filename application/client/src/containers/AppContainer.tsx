@@ -13,7 +13,7 @@ import { SearchContainer } from "@web-speed-hackathon-2026/client/src/containers
 import { TermContainer } from "@web-speed-hackathon-2026/client/src/containers/TermContainer";
 import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
 import { UserProfileContainer } from "@web-speed-hackathon-2026/client/src/containers/UserProfileContainer";
-import { consumeBootstrapData } from "@web-speed-hackathon-2026/client/src/utils/bootstrap_data";
+import { consumeBootstrapData, peekBootstrapData } from "@web-speed-hackathon-2026/client/src/utils/bootstrap_data";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 const LazyCrokContainer = lazy(async () => {
@@ -28,8 +28,10 @@ export const AppContainer = () => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
-  const [activeUser, setActiveUser] = useState<Models.User | null>(null);
-  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
+  const initialBootstrapUser =
+    (pathname.startsWith("/dm") || pathname === "/crok") ? peekBootstrapData<Models.User>("/api/v1/me") : null;
+  const [activeUser, setActiveUser] = useState<Models.User | null>(initialBootstrapUser);
+  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(initialBootstrapUser === null);
   const activeUserRequestIdRef = useRef(0);
 
   const applyActiveUser = useCallback((user: Models.User | null) => {

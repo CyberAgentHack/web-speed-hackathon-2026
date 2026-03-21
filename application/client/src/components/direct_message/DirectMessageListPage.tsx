@@ -4,6 +4,7 @@ import { Button } from "@web-speed-hackathon-2026/client/src/components/foundati
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
+import { consumeBootstrapData, peekBootstrapData } from "@web-speed-hackathon-2026/client/src/utils/bootstrap_data";
 import { formatRelativeFromNowJa } from "@web-speed-hackathon-2026/client/src/utils/date_format";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
@@ -14,8 +15,9 @@ interface Props {
 }
 
 export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
-  const [conversations, setConversations] =
-    useState<Array<Models.DirectMessageConversation> | null>(null);
+  const [conversations, setConversations] = useState<Array<Models.DirectMessageConversation> | null>(
+    () => peekBootstrapData<Array<Models.DirectMessageConversation>>("/api/v1/dm"),
+  );
   const [error, setError] = useState<Error | null>(null);
 
   const loadConversations = useCallback(async () => {
@@ -34,6 +36,15 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
   }, [activeUser]);
 
   useEffect(() => {
+    const bootstrapConversations = consumeBootstrapData<Array<Models.DirectMessageConversation>>(
+      "/api/v1/dm",
+    );
+    if (bootstrapConversations !== null) {
+      setConversations(bootstrapConversations);
+      setError(null);
+      return;
+    }
+
     void loadConversations();
   }, [loadConversations]);
 

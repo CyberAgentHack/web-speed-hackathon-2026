@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { consumeBootstrapData } from "@web-speed-hackathon-2026/client/src/utils/bootstrap_data";
+import { consumeBootstrapData, peekBootstrapData } from "@web-speed-hackathon-2026/client/src/utils/bootstrap_data";
 
 interface ReturnValues<T> {
   data: T | null;
@@ -12,11 +12,12 @@ export function useFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T>,
 ): ReturnValues<T> {
-  const [result, setResult] = useState<ReturnValues<T>>({
-    data: null,
+  const initialBootstrapData = apiPath ? peekBootstrapData<T>(apiPath) : null;
+  const [result, setResult] = useState<ReturnValues<T>>(() => ({
+    data: initialBootstrapData,
     error: null,
-    isLoading: true,
-  });
+    isLoading: apiPath !== "" && initialBootstrapData === null,
+  }));
 
   useEffect(() => {
     if (!apiPath) {

@@ -1,12 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { consumeBootstrapData } from "@web-speed-hackathon-2026/client/src/utils/bootstrap_data";
+import { consumeBootstrapData, peekBootstrapData } from "@web-speed-hackathon-2026/client/src/utils/bootstrap_data";
 
 const DEFAULT_LIMIT = 12;
 
 interface Options {
   enabled?: boolean;
   limit?: number;
+}
+
+function createRequestPath(apiPath: string, limit: number, offset: number) {
+  const requestUrl = new URL(apiPath, window.location.origin);
+  requestUrl.searchParams.set("limit", String(limit));
+  requestUrl.searchParams.set("offset", String(offset));
+  return `${requestUrl.pathname}${requestUrl.search}`;
 }
 
 interface ReturnValues<T> {
@@ -22,21 +29,26 @@ export function useInfiniteFetch<T>(
   fetcher: (apiPath: string) => Promise<T[]>,
   { enabled = true, limit = DEFAULT_LIMIT }: Options = {},
 ): ReturnValues<T> {
-  const internalRef = useRef({ hasMore: true, isLoading: false, offset: 0 });
-
-  const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
-    data: [],
-    error: null,
-    hasMore: true,
-    isLoading: true,
+  const initialRequestPath = apiPath && enabled ? createRequestPath(apiPath, limit, 0) : "";
+  const initialBootstrapData =
+    initialRequestPath !== "" ? peekBootstrapData<T[]>(initialRequestPath) : null;
+  const initialHasMore = initialBootstrapData !== null ? initialBootstrapData.length === limit : true;
+  const internalRef = useRef({
+    hasMore: initialBootstrapData !== null ? initialHasMore : true,
+    isLoading: false,
+    offset: initialBootstrapData?.length ?? 0,
   });
+
+  const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>(() => ({
+    data: initialBootstrapData ?? [],
+    error: null,
+    hasMore: initialBootstrapData !== null ? initialHasMore : true,
+    isLoading: apiPath !== "" && enabled && initialBootstrapData === null,
+  }));
 
   const buildRequestPath = useCallback(
     (offset: number) => {
-      const requestUrl = new URL(apiPath, window.location.origin);
-      requestUrl.searchParams.set("limit", String(limit));
-      requestUrl.searchParams.set("offset", String(offset));
-      return `${requestUrl.pathname}${requestUrl.search}`;
+      return createRequestPath(apiPath, limit, offset);
     },
     [apiPath, limit],
   );
@@ -120,12 +132,25 @@ export function useInfiniteFetch<T>(
     const bootstrapData = consumeBootstrapData<T[]>(buildRequestPath(0));
     if (bootstrapData !== null) {
       const nextHasMore = bootstrapData.length === limit;
-      setResult(() => ({
-        data: bootstrapData,
-        error: null,
-        hasMore: nextHasMore,
-        isLoading: false,
-      }));
+      setResult((current) => {
+        if (
+          current.data === bootstrapData ||
+          (current.data.length === bootstrapData.length && current.error === null && !current.isLoading)
+        ) {
+          return {
+            ...current,
+            hasMore: nextHasMore,
+            isLoading: false,
+          };
+        }
+
+        return {
+          data: bootstrapData,
+          error: null,
+          hasMore: nextHasMore,
+          isLoading: false,
+        };
+      });
       internalRef.current = {
         hasMore: nextHasMore,
         isLoading: false,
