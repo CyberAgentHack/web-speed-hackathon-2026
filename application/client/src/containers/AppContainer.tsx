@@ -2,7 +2,6 @@ import { lazy, Suspense, useCallback, useEffect, useId, useState } from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
-import { RouteLoadingPage } from "@web-speed-hackathon-2026/client/src/components/application/RouteLoadingPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
 import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
 import { SearchContainer } from "@web-speed-hackathon-2026/client/src/containers/SearchContainer";
@@ -51,62 +50,6 @@ const UserProfileContainer = lazy(() =>
   })),
 );
 
-const getRouteLoadingState = (pathname: string) => {
-  if (pathname === "/") {
-    return {
-      title: "タイムライン - CaX",
-      headline: "タイムライン",
-      description: "タイムラインを表示しています。",
-    };
-  }
-
-  if (pathname === "/dm" || pathname.startsWith("/dm/")) {
-    return {
-      title: "ダイレクトメッセージ - CaX",
-      headline: "ダイレクトメッセージ",
-      description: "ダイレクトメッセージを表示しています。",
-    };
-  }
-
-  if (pathname.startsWith("/users/")) {
-    return {
-      title: "読込中 - CaX",
-      headline: "ユーザーページ",
-      description: "プロフィールを表示しています。",
-    };
-  }
-
-  if (pathname.startsWith("/posts/")) {
-    return {
-      title: "読込中 - CaX",
-      headline: "投稿詳細",
-      description: "投稿の内容を表示しています。",
-    };
-  }
-
-  if (pathname === "/terms") {
-    return {
-      title: "利用規約 - CaX",
-      headline: "利用規約",
-      description: "利用規約を表示しています。",
-    };
-  }
-
-  if (pathname === "/crok") {
-    return {
-      title: "Crok - CaX",
-      headline: "Crok",
-      description: "Crok を表示しています。",
-    };
-  }
-
-  return {
-    title: "読込中 - CaX",
-    headline: "読込中",
-    description: "ページを表示しています。",
-  };
-};
-
 export const AppContainer = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -136,8 +79,6 @@ export const AppContainer = () => {
 
   const authModalId = useId();
   const newPostModalId = useId();
-  const routeLoadingState = getRouteLoadingState(pathname);
-  const routeFallback = <RouteLoadingPage {...routeLoadingState} />;
 
   return (
     <>
@@ -151,7 +92,7 @@ export const AppContainer = () => {
         <Routes>
           <Route
             element={
-              <Suspense fallback={routeFallback}>
+              <Suspense fallback={null}>
                 <TimelineContainer />
               </Suspense>
             }
@@ -159,7 +100,7 @@ export const AppContainer = () => {
           />
           <Route
             element={
-              <Suspense fallback={routeFallback}>
+              <Suspense fallback={null}>
                 <DirectMessageListContainer
                   activeUser={activeUser}
                   authModalId={authModalId}
@@ -171,7 +112,7 @@ export const AppContainer = () => {
           />
           <Route
             element={
-              <Suspense fallback={routeFallback}>
+              <Suspense fallback={null}>
                 <DirectMessageContainer
                   activeUser={activeUser}
                   authModalId={authModalId}
@@ -184,7 +125,7 @@ export const AppContainer = () => {
           <Route element={<SearchContainer />} path="/search" />
           <Route
             element={
-              <Suspense fallback={routeFallback}>
+              <Suspense fallback={null}>
                 <UserProfileContainer />
               </Suspense>
             }
@@ -192,7 +133,7 @@ export const AppContainer = () => {
           />
           <Route
             element={
-              <Suspense fallback={routeFallback}>
+              <Suspense fallback={null}>
                 <PostContainer />
               </Suspense>
             }
@@ -200,7 +141,7 @@ export const AppContainer = () => {
           />
           <Route
             element={
-              <Suspense fallback={routeFallback}>
+              <Suspense fallback={null}>
                 <TermContainer />
               </Suspense>
             }
@@ -208,7 +149,7 @@ export const AppContainer = () => {
           />
           <Route
             element={
-              <Suspense fallback={routeFallback}>
+              <Suspense fallback={null}>
                 <CrokContainer
                   activeUser={activeUser}
                   authModalId={authModalId}
@@ -220,7 +161,7 @@ export const AppContainer = () => {
           />
           <Route
             element={
-              <Suspense fallback={routeFallback}>
+              <Suspense fallback={null}>
                 <NotFoundContainer />
               </Suspense>
             }
