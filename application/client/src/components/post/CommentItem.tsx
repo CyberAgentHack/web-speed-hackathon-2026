@@ -17,14 +17,12 @@ export const CommentItem = ({ comment }: Props) => {
             className="border-cax-border bg-cax-surface-subtle block h-8 w-8 overflow-hidden rounded-full border hover:opacity-75 sm:h-12 sm:w-12"
             to={`/users/${comment.user.username}`}
           >
-            {/* --- ここを修正しました（width と height を追加） --- */}
             <img
               alt={comment.user.profileImage.alt}
               src={getProfileImagePath(comment.user.profileImage.id)}
-              width={48} // ← これを追加
-              height={48} // ← これを追加
+              width={48}
+              height={48}
             />
-            {/* ----------------------------------------------- */}
           </Link>
         </div>
         <div className="min-w-0 shrink grow">
