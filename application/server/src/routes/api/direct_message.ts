@@ -26,10 +26,19 @@ directMessageRouter.get("/dm", async (req, res) => {
     order: [[col("messages.createdAt"), "DESC"]],
   });
 
-  const sorted = conversations.map((c) => ({
-    ...c.toJSON(),
-    messages: c.messages?.reverse(),
-  }));
+  const sorted = conversations.map((c) => {
+    const json = c.toJSON() as any;
+    const messages = json.messages ?? [];
+    const lastMessage = messages[messages.length - 1] ?? null;
+    const hasUnread = messages.some(
+      (m: any) => m.sender?.id !== req.session.userId && !m.isRead,
+    );
+    return {
+      ...json,
+      messages: lastMessage ? [lastMessage] : [],
+      hasUnread,
+    };
+  });
 
   return res.status(200).type("application/json").send(sorted);
 });
