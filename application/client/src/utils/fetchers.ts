@@ -1,9 +1,9 @@
 import $ from "jquery";
+import "jquery-binarytransport";
 import { gzip } from "pako";
 
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {
   const result = await $.ajax({
-    async: false,
     dataType: "binary",
     method: "GET",
     responseType: "arraybuffer",
@@ -14,7 +14,6 @@ export async function fetchBinary(url: string): Promise<ArrayBuffer> {
 
 export async function fetchJSON<T>(url: string): Promise<T> {
   const result = await $.ajax({
-    async: false,
     dataType: "json",
     method: "GET",
     url,
@@ -24,7 +23,6 @@ export async function fetchJSON<T>(url: string): Promise<T> {
 
 export async function sendFile<T>(url: string, file: File): Promise<T> {
   const result = await $.ajax({
-    async: false,
     data: file,
     dataType: "json",
     headers: {
@@ -43,7 +41,6 @@ export async function sendJSON<T>(url: string, data: object): Promise<T> {
   const compressed = gzip(uint8Array);
 
   const result = await $.ajax({
-    async: false,
     data: compressed,
     dataType: "json",
     headers: {

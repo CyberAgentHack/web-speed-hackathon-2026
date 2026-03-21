@@ -4,12 +4,60 @@ const path = require("path");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 const webpack = require("webpack");
 
 const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
+
+const isProd = process.env.NODE_ENV === "production";
+
+class NonBlockingCssPlugin {
+  apply(compiler) {
+    compiler.hooks.compilation.tap("NonBlockingCssPlugin", (compilation) => {
+      const hooks = HtmlWebpackPlugin.getHooks(compilation);
+      hooks.alterAssetTagGroups.tap("NonBlockingCssPlugin", (data) => {
+        const stylesheetHrefs = [];
+        data.headTags = data.headTags.map((tag) => {
+          if (
+            tag.tagName !== "link" ||
+            tag.attributes === undefined ||
+            tag.attributes.rel !== "stylesheet"
+          ) {
+            return tag;
+          }
+
+          if (typeof tag.attributes.href === "string") {
+            stylesheetHrefs.push(tag.attributes.href);
+          }
+
+          return {
+            ...tag,
+            attributes: {
+              ...tag.attributes,
+              rel: "preload",
+              as: "style",
+              onload: "this.onload=null;this.rel='stylesheet'",
+            },
+          };
+        });
+
+        for (const href of stylesheetHrefs) {
+          data.headTags.push({
+            tagName: "noscript",
+            voidTag: false,
+            attributes: {},
+            innerHTML: `<link rel="stylesheet" href="${href}">`,
+          });
+        }
+
+        return data;
+      });
+    });
+  }
+}
 
 /** @type {import('webpack').Configuration} */
 const config = {
@@ -25,18 +73,19 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+
+  devtool: isProd ? "source-map" : "inline-source-map",
+
   entry: {
     main: [
-      "core-js",
-      "regenerator-runtime/runtime",
-      "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+
+  mode: isProd ? "production" : "development",
+
   module: {
     rules: [
       {
@@ -58,14 +107,15 @@ const config = {
       },
     ],
   },
+
   output: {
-    chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
-    filename: "scripts/[name].js",
+    chunkFilename: "scripts/[name].[contenthash].js",
+    filename: "scripts/[name].[contenthash].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     clean: true,
   },
+
   plugins: [
     new webpack.ProvidePlugin({
       $: "jquery",
@@ -75,12 +125,11 @@ const config = {
     }),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
-      // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
+      NODE_ENV: process.env.NODE_ENV || "development",
     }),
     new MiniCssExtractPlugin({
-      filename: "styles/[name].css",
+      filename: "styles/[name].[contenthash].css",
     }),
     new CopyWebpackPlugin({
       patterns: [
@@ -91,29 +140,38 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: "body",
       template: path.resolve(SRC_PATH, "./index.html"),
+      minify: isProd
+        ? {
+            collapseWhitespace: true,
+            removeComments: true,
+            removeRedundantAttributes: true,
+            useShortDoctype: true,
+          }
+        : false,
     }),
+    ...(isProd ? [new NonBlockingCssPlugin()] : []),
+    ...(process.env.ANALYZE === "true" ? [new BundleAnalyzerPlugin()] : []),
   ],
+
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
     alias: {
-      "bayesian-bm25$": path.resolve(__dirname, "node_modules", "bayesian-bm25/dist/index.js"),
-      ["kuromoji$"]: path.resolve(__dirname, "node_modules", "kuromoji/build/kuromoji.js"),
+      "bayesian-bm25$": path.resolve(
+        __dirname,
+        "node_modules",
+        "bayesian-bm25/dist/index.js",
+      ),
+      kuromoji$: path.resolve(
+        __dirname,
+        "node_modules",
+        "kuromoji/build/kuromoji.js",
+      ),
       "@ffmpeg/ffmpeg$": path.resolve(
         __dirname,
         "node_modules",
         "@ffmpeg/ffmpeg/dist/esm/index.js",
-      ),
-      "@ffmpeg/core$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/core/dist/umd/ffmpeg-core.js",
-      ),
-      "@ffmpeg/core/wasm$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/core/dist/umd/ffmpeg-core.wasm",
       ),
       "@imagemagick/magick-wasm/magick.wasm$": path.resolve(
         __dirname,
@@ -127,19 +185,26 @@ const config = {
       url: false,
     },
   },
+
   optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
+    minimize: isProd,
+    splitChunks: isProd
+      ? {
+          chunks: "all",
+        }
+      : false,
+    runtimeChunk: isProd ? "single" : false,
   },
-  cache: false,
+
+  cache: {
+    type: "filesystem",
+  },
+
   ignoreWarnings: [
     {
       module: /@ffmpeg/,
-      message: /Critical dependency: the request of a dependency is an expression/,
+      message:
+        /Critical dependency: the request of a dependency is an expression/,
     },
   ],
 };

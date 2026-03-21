@@ -1,6 +1,8 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { createTranslator } from "@web-speed-hackathon-2026/client/src/utils/create_translator";
+
+type Translator = Awaited<ReturnType<typeof createTranslator>>;
 
 type State =
   | { type: "idle"; text: string }
@@ -13,6 +15,30 @@ interface Props {
 
 export const TranslatableText = ({ text }: Props) => {
   const [state, updateState] = useState<State>({ type: "idle", text });
+  const translatorRef = useRef<Promise<Translator> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      translatorRef.current
+        ?.then((translator) => {
+          translator[Symbol.dispose]();
+        })
+        .catch(() => {
+          // no-op
+        });
+    };
+  }, []);
+
+  const getTranslator = useCallback(async (): Promise<Translator> => {
+    if (translatorRef.current == null) {
+      translatorRef.current = createTranslator({
+        sourceLanguage: "ja",
+        targetLanguage: "en",
+      });
+    }
+
+    return await translatorRef.current;
+  }, []);
 
   const handleClick = useCallback(() => {
     switch (state.type) {
@@ -20,10 +46,7 @@ export const TranslatableText = ({ text }: Props) => {
         (async () => {
           updateState({ type: "loading" });
           try {
-            using translator = await createTranslator({
-              sourceLanguage: "ja",
-              targetLanguage: "en",
-            });
+            const translator = await getTranslator();
             const result = await translator.translate(state.text);
 
             updateState({
@@ -50,7 +73,7 @@ export const TranslatableText = ({ text }: Props) => {
         break;
       }
     }
-  }, [state]);
+  }, [getTranslator, state]);
 
   return (
     <>

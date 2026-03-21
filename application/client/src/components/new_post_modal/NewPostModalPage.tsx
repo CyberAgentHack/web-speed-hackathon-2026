@@ -103,17 +103,32 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     if (isValid) {
       setIsConverting(true);
 
-      convertMovie(file, { extension: "gif", size: undefined })
+      convertMovie(file, { extension: "webm", fps: 12, size: 360 })
         .then((converted) => {
           setParams((params) => ({
             ...params,
             images: [],
-            movie: new File([converted], "converted.gif", {
+            movie: new File([converted], "converted.webm", {
+              type: "video/webm",
+            }),
+            sound: undefined,
+          }));
+        })
+        .catch(() => convertMovie(file, { extension: "gif", fps: 6, size: 360 }))
+        .then((fallbackConverted) => {
+          if (fallbackConverted === undefined) {
+            return;
+          }
+          setParams((params) => ({
+            ...params,
+            images: [],
+            movie: new File([fallbackConverted], "converted.gif", {
               type: "image/gif",
             }),
             sound: undefined,
           }));
-
+        })
+        .finally(() => {
           setIsConverting(false);
         })
         .catch(console.error);

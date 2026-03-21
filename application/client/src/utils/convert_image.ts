@@ -1,13 +1,29 @@
-import { initializeImageMagick, ImageMagick, MagickFormat } from "@imagemagick/magick-wasm";
-import magickWasm from "@imagemagick/magick-wasm/magick.wasm?binary";
+import type { MagickFormat } from "@imagemagick/magick-wasm";
+import { initializeImageMagick, ImageMagick } from "@imagemagick/magick-wasm";
 import { dump, insert, ImageIFD } from "piexifjs";
 
 interface Options {
   extension: MagickFormat;
 }
 
-export async function convertImage(file: File, options: Options): Promise<Blob> {
-  await initializeImageMagick(magickWasm);
+let magickInitialized = false;
+
+async function ensureImageMagickInitialized(): Promise<void> {
+  if (magickInitialized) return;
+
+  const wasmUrl = new URL(
+    "https://cdn.jsdelivr.net/npm/@imagemagick/magick-wasm@0.0.37/dist/magick.wasm",
+  );
+
+  await initializeImageMagick(wasmUrl);
+  magickInitialized = true;
+}
+
+export async function convertImage(
+  file: File,
+  options: Options,
+): Promise<Blob> {
+  await ensureImageMagickInitialized();
 
   const byteArray = new Uint8Array(await file.arrayBuffer());
 
@@ -32,9 +48,13 @@ export async function convertImage(file: File, options: Options): Promise<Blob> 
         const descriptionBinary = Array.from(new TextEncoder().encode(comment))
           .map((b) => String.fromCharCode(b))
           .join("");
-        const exifStr = dump({ "0th": { [ImageIFD.ImageDescription]: descriptionBinary } });
+        const exifStr = dump({
+          "0th": { [ImageIFD.ImageDescription]: descriptionBinary },
+        });
         const outputWithExif = insert(exifStr, binary);
-        const bytes = Uint8Array.from(outputWithExif.split("").map((c) => c.charCodeAt(0)));
+        const bytes = Uint8Array.from(
+          outputWithExif.split("").map((c) => c.charCodeAt(0)),
+        );
         resolve(new Blob([bytes]));
       });
     });

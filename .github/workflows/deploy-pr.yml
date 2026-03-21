@@ -31,8 +31,12 @@ jobs:
                   repository: ${{ github.event.pull_request.head.repo.full_name }}
             - name: Setup flyctl
               uses: superfly/flyctl-actions/setup-flyctl@fc53c09e1bc3be6f54706524e3b82c4f462f77be # v1
-            - name: Setup fly.io docker registry
-              run: flyctl auth docker
+            - name: Login to fly.io docker registry
+              uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.5.0
+              with:
+                  registry: registry.fly.io
+                  username: x
+                  password: ${{ secrets.FLY_API_TOKEN }}
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
