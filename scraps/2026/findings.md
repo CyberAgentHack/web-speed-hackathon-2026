@@ -157,13 +157,23 @@ progress.md では除去済みとしているが `client/package.json` に依然
 
 ---
 
-## ホーム LCP=0 の未解決原因
+## ホーム CLS・LCP 問題（対応済み）
 
-WebM 化 + native `<video>` 化を実施済みだが LCP=0 のまま。考えられる原因：
+### AspectRatioBox の CSS aspect-ratio 化による副作用（発見・修正済み）
 
-- `<video>` の最初のフレームは Lighthouse の LCP 計測対象だが、`autoplay` / `muted` / `preload` 属性の組み合わせによってはフレーム表示が遅延する
-- タイムアウト（採点ツールが計測前に諦めている）の可能性もあり → ローカルで要確認
-- ホーム TBT=0, FCP=1.0 なのに LCP=0 → JS は動いているが画像・動画が LCP 候補になっていない構造の可能性
+`AspectRatioBox` を CSS `aspect-ratio` に置き換えた際、以下の E2E テスト失敗が発生したが修正済み。
+
+| 問題 | 原因 | 修正 |
+| --- | --- | --- |
+| `CoveredImage` の `<img>` に `position: static` | `absolute inset-0` が抜けていた | `CoveredImage` の img に `absolute inset-0` を追加 |
+| 「投稿クリック → 投稿詳細に遷移する」タイムアウト | CSS aspect-ratio 適用により `PausableMovie` の `<button>` がビューポートを占有し、`isClickedAnchorOrButton` がブロック | `data-navigable` 属性 + `stopPropagation` 除去 + `isClickedAnchorOrButton` の例外処理 |
+| ユーザープロフィールバナー色消失 | Tailwind v4 静的ビルドが `bg-[${averageColor}]` 動的クラスを出力しない | `style={{ backgroundColor: averageColor }}` に変更 |
+| 検索バリデーションエラーが 2 要素 (strict mode 違反) | `SearchInput` の `meta.error` 表示と `submitError` state が重複 | `SearchInput` からエラー表示を削除し `submitError` に一本化 |
+
+### ホーム LCP=0（旧状況、AspectRatioBox CSS 化で解消見込み）
+
+- `<video>` の最初のフレームは Lighthouse の LCP 計測対象だが、`AspectRatioBox` が JS 計算で初期 height=0 → video が LCP 候補にならなかった
+- CSS `aspect-ratio` 化で height が即時確定 → LCP 候補として認識される見込み
 
 ---
 
@@ -342,6 +352,46 @@ import { TimelineContainer } from "...";
 
 クライアント側のパス生成関数も変更が必要:
 - `get_path.ts`: `getMoviePath` `.gif`→`.webm`、`getSoundPath` `.mp3`→`.webm`
+
+---
+
+## リモート計測スコア (2026-03-21, Phase 4 ⑧ 読み込み順調整後 / フォント最適化前)
+
+**合計: 675.40 / 1150.00 (暫定 39 位)**
+
+| ページ | CLS | FCP | LCP | SI | TBT | 合計 |
+| --- | --- | --- | --- | --- | --- | --- |
+| ホーム | 9.75 | 2.10 | 0.00 | 3.00 | 0.00 | 14.85 |
+| 投稿詳細 | 25.00 | 4.20 | 9.50 | 7.40 | 30.00 | 76.10 |
+| 写真つき投稿詳細 | 25.00 | 4.20 | 7.50 | 6.80 | 30.00 | 73.50 |
+| 動画つき投稿詳細 | 23.50 | 4.10 | 9.25 | 7.30 | 30.00 | 74.15 |
+| 音声つき投稿詳細 | 25.00 | 4.10 | 9.50 | 7.30 | 0.00 | 45.90 |
+| 検索 | 25.00 | 4.20 | 9.50 | 7.40 | 30.00 | 76.10 |
+| DM一覧 | 25.00 | 4.20 | 9.75 | 6.10 | 29.70 | 74.75 |
+| DM詳細 | 25.00 | 4.10 | 7.25 | 2.60 | 0.00 | 38.95 |
+| 利用規約 | 25.00 | 4.20 | 9.50 | 7.40 | 30.00 | 76.10 |
+
+| ユーザーフロー | INP | TBT | 合計 |
+| --- | --- | --- | --- |
+| ユーザー登録 → サインアウト → サインイン | 25.00 | 25.00 | 50.00 |
+| DM送信 | 計測不能 | - | - |
+| 検索 → 結果表示 | 25.00 | 25.00 | 50.00 |
+| Crok AIチャット | 25.00 | 0.00 | 25.00 |
+| 投稿 | 計測不能 | - | - |
+
+**計測不能の原因:**
+
+| 項目 | 原因 |
+| --- | --- |
+| DM送信 | DMスレッドへの遷移に失敗 |
+| 投稿 | 動画投稿の完了を確認できず |
+
+**考察:**
+- ホーム CLS=9.75 が顕著 → `AspectRatioBox` JS 計算による CLS（CSS `aspect-ratio` で対応済み）
+- ホーム LCP=0 → `AspectRatioBox` で初期高さ 0 のため video が DOM に存在せず LCP 候補なし（同上）
+- 音声つき投稿詳細 TBT=0 (45.90 点) — 音声の binary fetch がメインスレッドをブロックしている可能性
+- DM詳細 TBT=0 (38.95 点) — 要調査
+- Crok AIチャット TBT=0 — `sleep(3000)` 削除後も TBT が 0 点のまま → INP はとれている
 
 ---
 

@@ -25,7 +25,6 @@ export const PausableMovie = ({ preload = "none", src }: Props) => {
 
 const handleClick = useCallback(
     (ev: MouseEvent) => {
-      ev.stopPropagation();
       const video = videoRef.current;
       if (!video) return;
       if (isPlaying) {
@@ -45,6 +44,7 @@ const handleClick = useCallback(
       <button
         aria-label="動画プレイヤー"
         className="group relative block h-full w-full"
+        data-navigable
         onClick={handleClick}
         type="button"
       >

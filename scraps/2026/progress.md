@@ -152,6 +152,12 @@
   - 対策: CSS `aspect-ratio: {w} / {h}` に置き換え (useState/useEffect/useRef を完全除去)
   - 影響範囲: `PausableMovie` (1:1)・`ImageArea` (16:9)・`SoundPlayer` 内 `SoundWaveSVG` (10:1)
   - 期待効果: ホーム CLS 9.75 → ほぼ 0、LCP=0 → 改善
+- [x] AspectRatioBox CSS 化に伴う E2E テスト修正
+  - `CoveredImage` の `<img>` に `absolute inset-0` を追加 (position: static → absolute、テスト要件)
+  - `PausableMovie` の `<button>` に `data-navigable` 属性を追加し `stopPropagation` を除去 → CSS aspect-ratio で button が全高を占有してもタイムライン記事クリックで遷移できるよう修正
+  - `TimelineItem.isClickedAnchorOrButton`: `data-navigable` 属性の button はスキップ
+  - `UserProfileHeader` のバナー色: Tailwind v4 静的ビルドで動的クラス `bg-[${averageColor}]` が無効化されていたため `style={{ backgroundColor }}` に変更 + VRT スナップショット更新
+  - `SearchInput` から `meta.error` 表示を削除し `submitError` に一本化 (strict mode 重複解消)
 - [ ] **Phase 5** サーバー最適化
   - brotli 圧縮を有効化（express `compression` ミドルウェア）
   - DB インデックスを追加（テーブルのリレーションを確認）

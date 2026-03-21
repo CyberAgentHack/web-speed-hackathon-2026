@@ -11,7 +11,7 @@ import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/
 const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Element): boolean => {
   while (target !== null && target instanceof Element) {
     const tagName = target.tagName.toLowerCase();
-    if (["button", "a"].includes(tagName)) {
+    if (["button", "a"].includes(tagName) && !target.hasAttribute("data-navigable")) {
       return true;
     }
     if (currentTarget === target) {
