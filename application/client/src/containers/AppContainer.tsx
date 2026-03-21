@@ -116,7 +116,7 @@ export const AppContainer = () => {
         </Suspense>
       </AppPage>
 
-      <Suspense fallback={null}>
+      <Suspense fallback={<><dialog id={authModalId} /><dialog id={newPostModalId} /></>}>
         <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
         <NewPostModalContainer id={newPostModalId} />
       </Suspense>
