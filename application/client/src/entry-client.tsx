@@ -23,7 +23,7 @@ if (ssrData) {
     <SSRDataProvider value={ssrData}>
       <Provider store={store}>
         <SWRConfig value={swrConfig}>
-          <BrowserRouter unstable_useTransitions={false}>
+          <BrowserRouter unstable_useTransitions={true}>
             <Document cssHref={cssHref}>
               <AppContainer />
             </Document>
@@ -42,7 +42,7 @@ if (ssrData) {
     <SSRDataProvider value={null}>
       <Provider store={store}>
         <SWRConfig value={swrConfig}>
-          <BrowserRouter unstable_useTransitions={false}>
+          <BrowserRouter unstable_useTransitions={true}>
             <AppContainer />
           </BrowserRouter>
         </SWRConfig>

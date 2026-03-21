@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { useHydrated } from "@web-speed-hackathon-2026/client/src/hooks/use_hydrated";
+
 interface DocumentProps {
   children: ReactNode;
   cssHref?: string | undefined;
@@ -8,6 +10,8 @@ interface DocumentProps {
 }
 
 export function Document({ children, cssHref, title, modulePreloads }: DocumentProps) {
+  const hydrated = useHydrated();
+
   return (
     <html lang="ja">
       <head>
@@ -27,7 +31,9 @@ export function Document({ children, cssHref, title, modulePreloads }: DocumentP
         />
       </head>
       <body className="bg-cax-canvas text-cax-text">
-        <div id="app">{children}</div>
+        <fieldset disabled={!hydrated} style={{ border: "none", padding: 0, margin: 0 }}>
+          <div id="app">{children}</div>
+        </fieldset>
       </body>
     </html>
   );

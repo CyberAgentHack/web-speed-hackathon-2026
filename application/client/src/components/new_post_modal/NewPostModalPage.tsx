@@ -34,11 +34,17 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
   const [hasFileError, setHasFileError] = useState(false);
   const [activeAttach, setActiveAttach] = useState<"none" | "images" | "sound" | "movie">("none");
 
-  const handleChangeText = useCallback<ChangeEventHandler<HTMLTextAreaElement>>((ev) => {
-    const value = ev.currentTarget.value;
-    textRef.current = value;
-    setHasText(value !== "");
-  }, []);
+  const handleChangeText = useCallback<ChangeEventHandler<HTMLTextAreaElement>>(
+    (ev) => {
+      const value = ev.currentTarget.value;
+      const newHasText = value !== "";
+      textRef.current = value;
+      if (newHasText !== hasText) {
+        setHasText(newHasText);
+      }
+    },
+    [hasText],
+  );
 
   const handleChangeImages = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
     const files = Array.from(ev.currentTarget.files ?? []).slice(0, 4);
