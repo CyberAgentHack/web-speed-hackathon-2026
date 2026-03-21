@@ -49,37 +49,12 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
     setHasFileError(isValid !== true);
     if (isValid) {
-      setIsConverting(true);
-
-      Promise.all([
-        import(/* webpackChunkName: "ImageMagick" */ "@imagemagick/magick-wasm"),
-        import(
-          /* webpackChunkName: "ImageMagick" */ "@web-speed-hackathon-2026/client/src/utils/convert_image"
-        ),
-      ])
-        .then(([{ MagickFormat }, { convertImage }]) =>
-          Promise.all(
-            files.map((file) =>
-              convertImage(file, { extension: MagickFormat.WebP, maxWidth: 800, maxHeight: 800, quality: 80 }).then(
-                (blob) => new File([blob], "converted.webp", { type: "image/webp" }),
-              ),
-            ),
-          ),
-        )
-        .then((convertedFiles) => {
-          setParams((params) => ({
-            ...params,
-            images: convertedFiles,
-            movie: undefined,
-            sound: undefined,
-          }));
-
-          setIsConverting(false);
-        })
-        .catch((err) => {
-          console.error(err);
-          setIsConverting(false);
-        });
+      setParams((params) => ({
+        ...params,
+        images: files,
+        movie: undefined,
+        sound: undefined,
+      }));
     }
   }, []);
 
