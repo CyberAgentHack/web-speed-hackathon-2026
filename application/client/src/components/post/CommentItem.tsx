@@ -18,8 +18,11 @@ export const CommentItem = ({ comment }: Props) => {
           >
             <img
               alt={comment.user.profileImage.alt}
+              className="h-full w-full object-cover"
+              height={128}
               loading="lazy"
               src={getProfileImageThumbnailPath(comment.user.profileImage.id)}
+              width={128}
             />
           </Link>
         </div>

@@ -7,10 +7,20 @@ interface Props {
 export const MovieArea = ({ movie }: Props) => {
   return (
     <div
-      className="border-cax-border bg-cax-surface-subtle relative h-full w-full overflow-hidden rounded-lg border"
+      className="border-cax-border bg-cax-surface-subtle relative aspect-square w-full overflow-hidden rounded-lg border"
       data-movie-area
     >
-      <video src={getMoviePath(movie.id)} controls autoPlay={false} loop={false} muted={false} playsInline  style={{ width: '100%', height: 'auto' }} />
+      <video
+        autoPlay={false}
+        className="h-full w-full object-contain"
+        controls
+        height={1080}
+        loop={false}
+        muted={false}
+        playsInline
+        src={getMoviePath(movie.id)}
+        width={1080}
+      />
     </div>
   );
 };
