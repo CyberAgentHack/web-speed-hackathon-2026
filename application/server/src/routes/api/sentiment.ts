@@ -1,28 +1,7 @@
-import path from "path";
-
-import Bluebird from "bluebird";
 import { Router } from "express";
-import kuromoji from "kuromoji";
-import type { Tokenizer, IpadicFeatures } from "kuromoji";
 import analyze from "negaposi-analyzer-ja";
 
-const DICT_PATH = path.resolve(
-  import.meta.dirname,
-  "../../../node_modules/kuromoji/dict",
-);
-
-let tokenizerPromise: Promise<Tokenizer<IpadicFeatures>> | null = null;
-
-function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
-  if (!tokenizerPromise) {
-    tokenizerPromise = new Promise((resolve, reject) => {
-      const builder = kuromoji.builder({ dicPath: DICT_PATH }) as any;
-      Bluebird.promisifyAll(builder);
-      builder.buildAsync().then(resolve, reject);
-    });
-  }
-  return tokenizerPromise;
-}
+import { getTokenizer } from "@web-speed-hackathon-2026/server/src/routes/api/tokenizer";
 
 export const sentimentRouter = Router();
 
