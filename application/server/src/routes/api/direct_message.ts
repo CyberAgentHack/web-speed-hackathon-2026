@@ -91,7 +91,6 @@ directMessageRouter.post("/dm", async (req, res) => {
       memberId: peer.id,
     },
   });
-  await conversation.reload();
 
   return res.status(200).type("application/json").send(conversation);
 });
