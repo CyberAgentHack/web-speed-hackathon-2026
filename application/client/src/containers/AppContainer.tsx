@@ -3,7 +3,7 @@ import { HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
-import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
+
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
@@ -50,6 +50,11 @@ const CrokContainer = lazy(() =>
 const NewPostModalContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer").then((m) => ({
     default: m.NewPostModalContainer,
+  })),
+);
+const AuthModalContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/AuthModalContainer").then((m) => ({
+    default: m.AuthModalContainer,
   })),
 );
 
@@ -109,7 +114,9 @@ export const AppContainer = () => {
         </Suspense>
       </AppPage>
 
-      <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
+      <Suspense fallback={null}>
+        <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
+      </Suspense>
       {activeUser && (
         <Suspense fallback={null}>
           <NewPostModalContainer id={newPostModalId} />

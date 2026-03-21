@@ -20,9 +20,14 @@ async function getResponse(): Promise<string> {
   return cachedResponse;
 }
 
+let cachedSuggestions: string[] | null = null;
+
 crokRouter.get("/crok/suggestions", async (_req, res) => {
-  const suggestions = await QaSuggestion.findAll({ logging: false });
-  res.json({ suggestions: suggestions.map((s) => s.question) });
+  if (!cachedSuggestions) {
+    const suggestions = await QaSuggestion.findAll({ logging: false });
+    cachedSuggestions = suggestions.map((s) => s.question);
+  }
+  res.json({ suggestions: cachedSuggestions });
 });
 
 crokRouter.get("/crok", async (req, res) => {

@@ -10,7 +10,7 @@ interface ReturnValues<T> {
 }
 
 export function useInfiniteFetch<T>(
-  apiPath: string,
+  apiPath: string | null,
   fetcher: (apiPath: string) => Promise<T[]>,
 ): ReturnValues<T> {
   const internalRef = useRef({ isLoading: false, offset: 0 });
@@ -18,10 +18,11 @@ export function useInfiniteFetch<T>(
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
     data: [],
     error: null,
-    isLoading: true,
+    isLoading: apiPath !== null,
   });
 
   const fetchMore = useCallback(() => {
+    if (apiPath === null) return;
     const { isLoading, offset } = internalRef.current;
     if (isLoading) {
       return;
@@ -67,15 +68,17 @@ export function useInfiniteFetch<T>(
     setResult(() => ({
       data: [],
       error: null,
-      isLoading: true,
+      isLoading: apiPath !== null,
     }));
     internalRef.current = {
       isLoading: false,
       offset: 0,
     };
 
-    fetchMore();
-  }, [fetchMore]);
+    if (apiPath !== null) {
+      fetchMore();
+    }
+  }, [apiPath, fetchMore]);
 
   return {
     ...result,

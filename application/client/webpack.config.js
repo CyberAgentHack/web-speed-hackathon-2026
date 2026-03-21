@@ -143,7 +143,7 @@ const config = {
   optimization: {
     minimize: true,
     splitChunks: {
-      chunks: "initial",
+      chunks: "all",
       maxInitialRequests: 10,
       cacheGroups: {
         // react-dom を単独チャンクに (最大のライブラリ)
@@ -159,6 +159,13 @@ const config = {
           name: "router",
           priority: 15,
           chunks: "initial",
+        },
+        // redux 系を async chunk に分割 (AuthModal が lazy のため)
+        redux: {
+          test: /[\\/]node_modules[\\/](redux|react-redux|redux-form)[\\/]/,
+          name: "redux",
+          priority: 10,
+          chunks: "async",
         },
       },
     },
