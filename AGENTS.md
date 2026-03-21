@@ -95,6 +95,7 @@ pnpm ワークスペースによるモノレポ（`application/` 配下）。
 パフォーマンス改善の詳細な攻略知見は [.claude/skills/wsh-tuning/](.claude/skills/wsh-tuning/) を参照。
 - `React.memo` を API フェッチ由来のリスト行に使うときは、再 fetch のたびに新規オブジェクトになるモデル全体を props で渡さず、文字列・真偽値などの安定した表示用 props に落としてからメモ化すると効果が出やすい
 - `react-syntax-highlighter` はパッケージ直下のデフォルト import を避け、`dist/esm/prism-light` + 必要言語だけの明示登録に切り替えると、Crok のコードブロック用チャンクを production build で `1.262 MiB` から `482.412 KiB` まで削減できた
+- Crok の `react-markdown` / `rehype-katex` / `remark-gfm` / `remark-math` は `ChatMessage` から直接 import せず、`React.lazy` で分離した描画コンポーネント側へ閉じ込めると、`/crok` 初回表示時の entrypoint から外せる。production build では `main.js` / `vendor-*.js` / `658.js` にこれらの文字列が現れず、専用チャンク側のみに残ることを `rg` で確認できる
 
 ## テストアカウント
 

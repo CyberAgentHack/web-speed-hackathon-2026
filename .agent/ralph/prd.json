@@ -185,7 +185,7 @@
         "Typecheck passes"
       ],
       "priority": 11,
-      "passes": false,
+      "passes": true,
       "notes": "すべて client/src/components/crok/ChatMessage.tsx のみで使用。Crok ページは全ユーザーがアクセスするわけではないため、遅延読み込みの効果が高い。"
     },
     {

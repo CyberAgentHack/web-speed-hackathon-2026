@@ -81,3 +81,46 @@ Quality Checks:
 Commit:
 - Hash: pending post-commit
 - Message: `feat: [US-010] - react-syntax-highlighter を軽量代替に置換`
+
+## 2026-03-21 - US-011 Crok 関連ライブラリの dynamic import 化
+
+Implementation:
+- `application/client/src/components/crok/ChatMessage.tsx` から `react-markdown` / `rehype-katex` / `remark-gfm` / `remark-math` の直接 import を除去し、`React.lazy` + `Suspense` で遅延ロードされる `ChatMessageMarkdown` 境界を追加
+- `application/client/src/components/crok/ChatMessageMarkdown.tsx` を新規追加し、Markdown・KaTeX・GFM・コードブロック描画の依存をこのコンポーネント内へ閉じ込めた
+- lazy chunk の解決中でもストリーミング体験が崩れないよう、`Suspense` fallback ではプレーンテキストを表示し、空文字時の `TypingIndicator` 分岐は維持
+- `AGENTS.md` のチューニング知見に、Crok Markdown 系ライブラリを lazy 境界へ隔離すると entrypoint から除外できる知見を追記
+- 別 Codex エージェント (`Poincare`) にレビューを依頼し、`no findings` を確認
+
+Acceptance Criteria Verification:
+- AC: react-markdown, rehype-katex, remark-gfm, remark-math が dynamic import（React.lazy または手動 import()）で読み込まれている
+  Test case: `sed -n '1,220p' application/client/src/components/crok/ChatMessage.tsx`; `sed -n '1,220p' application/client/src/components/crok/ChatMessageMarkdown.tsx`
+  Result: `ChatMessage.tsx` では `React.lazy(() => import(...ChatMessageMarkdown))` のみを使用し、Markdown 系ライブラリは新設の `ChatMessageMarkdown.tsx` 側へ移動していることを確認
+- AC: 初期バンドル（main chunk）にこれらのライブラリが含まれていない
+  Test case: `cd application && mise exec -- pnpm build`; `cd application/dist && rg -n -l "react-markdown|remark-gfm|remark-math|rehype-katex" scripts`; `cd application/dist && for f in scripts/main.js scripts/vendor-*.js scripts/658.js; do echo "--- $f"; rg -n "react-markdown|remark-gfm|remark-math|rehype-katex" "$f" || true; done`
+  Result: 文字列マッチは `scripts/chunk-3960f91b52bcf149.js` のみで検出され、`scripts/main.js` / `scripts/vendor-c073fecad33980a6.js` / `scripts/658.js` にはヒットしなかった。Markdown 系依存が遅延チャンクへ分離され、entrypoint から除外されていることを確認
+- AC: Crok チャットページでマークダウン・数式・GFM が正しくレンダリングされる
+  Test case: `curl -s -o /dev/null -w '%{http_code}\n' -X POST http://127.0.0.1:3001/api/v1/initialize`; `cd application/e2e && CI=1 E2E_BASE_URL=http://127.0.0.1:3001 mise exec -- pnpm test src/crok-chat.test.ts`; `agent-browser open http://127.0.0.1:3001/not-found && agent-browser wait --load networkidle && agent-browser snapshot -i`; `agent-browser click @e3 && agent-browser wait 1000 && agent-browser snapshot -i`; `agent-browser fill @e6 "o6yq16leo" && agent-browser fill @e7 "wsh-2026" && agent-browser click @e8 && agent-browser wait --url "**/not-found" && agent-browser snapshot -i`; `agent-browser click @e6 && agent-browser wait --url "**/crok" && agent-browser wait --load networkidle && agent-browser snapshot -i`; `agent-browser fill @e9 "メロスの話を要約して" && agent-browser click @e10 && agent-browser wait 4000 && agent-browser screenshot --full`; `agent-browser snapshot -i && agent-browser get text body`
+  Result: Playwright の Crok VRT を含む 8 テストが production build + start サーバー上で通過し、`agent-browser` でも `/crok` ログイン後に固定レスポンス、コードブロック、表、数式を含む本文表示とフルページスクリーンショット（`/Users/yuito_watanabe/.agent-browser/tmp/screenshots/screenshot-2026-03-21T04-45-14-274Z-bpcob4.png`）を確認
+- AC: 該当箇所のE2Eテストが通っていること
+  Test case: `cd application/e2e && CI=1 E2E_BASE_URL=http://127.0.0.1:3001 mise exec -- pnpm test src/crok-chat.test.ts`
+  Result: `8 passed (47.9s)`
+- AC: Typecheck passes
+  Test case: `cd application && mise exec -- pnpm typecheck`
+  Result: passed
+
+Quality Checks:
+- `mise trust` -> passed (`No untrusted config files found.`)
+- `mise install` -> passed (`mise all tools are installed`)
+- `cd application && mise exec -- pnpm typecheck` -> passed
+- `cd application && mise exec -- pnpm build` -> passed (asset size warning のみ)
+- `cd application/dist && rg -n -l "react-markdown|remark-gfm|remark-math|rehype-katex" scripts` -> passed (`scripts/chunk-3960f91b52bcf149.js` のみヒット)
+- `cd application/dist && for f in scripts/main.js scripts/vendor-*.js scripts/658.js; do echo "--- $f"; rg -n "react-markdown|remark-gfm|remark-math|rehype-katex" "$f" || true; done` -> passed (entrypoint 側は no matches)
+- `curl -s -o /dev/null -w '%{http_code}\n' -X POST http://127.0.0.1:3001/api/v1/initialize` -> passed (`200`)
+- `cd application/e2e && CI=1 E2E_BASE_URL=http://127.0.0.1:3001 mise exec -- pnpm test src/crok-chat.test.ts` -> passed (`8 passed (47.9s)`)
+- `cd application/client && npx -y react-doctor@latest . --verbose --diff` -> passed (`100 / 100 Great`)
+- `agent-browser ... screenshot --full` -> passed (production server で `/crok` の実画面確認)
+- Review by spawned Codex agent `Poincare` -> no findings
+
+Commit:
+- Hash: pending post-commit
+- Message: `feat: [US-011] - Crok 関連ライブラリの dynamic import 化`
