@@ -6,9 +6,13 @@ import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/
 
 interface Props {
   comment: Models.Comment;
+  index: number;
 }
 
-export const CommentItem = ({ comment }: Props) => {
+const EAGER_LOAD_MAX_COUNT = 3;
+
+export const CommentItem = ({ comment, index }: Props) => {
+  const loading = index < EAGER_LOAD_MAX_COUNT ? "eager" : "lazy";
   return (
     <article className="hover:bg-cax-surface-subtle px-1 sm:px-4">
       <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
@@ -19,7 +23,7 @@ export const CommentItem = ({ comment }: Props) => {
           >
             <img
               alt={comment.user.profileImage.alt}
-              loading="lazy"
+              loading={loading}
               src={getProfileImagePath(comment.user.profileImage.id)}
             />
           </Link>

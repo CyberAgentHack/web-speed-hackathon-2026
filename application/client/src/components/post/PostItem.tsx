@@ -23,7 +23,7 @@ export const PostItem = ({ post }: Props) => {
             >
               <img
                 alt={post.user.profileImage.alt}
-                loading="lazy"
+                loading="eager"
                 src={getProfileImagePath(post.user.profileImage.id)}
               />
             </Link>
@@ -53,7 +53,7 @@ export const PostItem = ({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea images={post.images} loading="eager" />
             </div>
           ) : null}
           {post.movie ? (

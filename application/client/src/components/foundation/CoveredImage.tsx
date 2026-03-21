@@ -6,12 +6,13 @@ import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Mod
 interface Props {
   alt: string;
   src: string;
+  loading?: "lazy" | "eager";
 }
 
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
-export const CoveredImage = ({ alt, src }: Props) => {
+export const CoveredImage = ({ alt, src, loading = "lazy" }: Props) => {
   const dialogId = useId();
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
@@ -23,6 +24,7 @@ export const CoveredImage = ({ alt, src }: Props) => {
       <img
         alt={alt}
         className="absolute left-1/2 top-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 object-cover"
+        loading={loading}
         src={src}
       />
 
@@ -49,4 +51,3 @@ export const CoveredImage = ({ alt, src }: Props) => {
     </div>
   );
 };
-

@@ -1,8 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { SubmissionError } from "redux-form";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 
-import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
-import { AuthModalPage } from "@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage";
+import type { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
@@ -10,6 +8,12 @@ interface Props {
   id: string;
   onUpdateActiveUser: (user: Models.User) => void;
 }
+
+const AuthModalPage = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage").then((m) => ({
+    default: m.AuthModalPage,
+  })),
+);
 
 const ERROR_MESSAGES: Record<string, string> = {
   INVALID_USERNAME: "ユーザー名に使用できない文字が含まれています",
@@ -36,12 +40,14 @@ function getErrorCode(err: unknown, type: "signin" | "signup"): string {
 
 export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
+  const [isOpen, setIsOpen] = useState(false);
   const [resetKey, setResetKey] = useState(0);
   useEffect(() => {
     if (!ref.current) return;
     const element = ref.current;
 
     const handleToggle = () => {
+      setIsOpen(element.open);
       // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
       setResetKey((key) => key + 1);
     };
@@ -68,6 +74,7 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
         handleRequestCloseModal();
       } catch (err: unknown) {
         const error = getErrorCode(err, values.type);
+        const { SubmissionError } = await import("redux-form");
         throw new SubmissionError({
           _error: error,
         });
@@ -78,11 +85,15 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
 
   return (
     <Modal id={id} ref={ref} closedby="any">
-      <AuthModalPage
-        key={resetKey}
-        onRequestCloseModal={handleRequestCloseModal}
-        onSubmit={handleSubmit}
-      />
+      {isOpen ? (
+        <Suspense fallback={<p className="text-cax-text-muted py-4 text-center">読み込み中...</p>}>
+          <AuthModalPage
+            key={resetKey}
+            onRequestCloseModal={handleRequestCloseModal}
+            onSubmit={handleSubmit}
+          />
+        </Suspense>
+      ) : null}
     </Modal>
   );
 };
