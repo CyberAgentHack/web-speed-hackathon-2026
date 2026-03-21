@@ -75,6 +75,15 @@ function serializeForInlineScript(value: unknown): string {
   return JSON.stringify(value).replace(/</g, "\\u003c");
 }
 
+function escapeHtml(text: string): string {
+  return text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 function addPostPreloads(
   preloads: Set<string>,
   post: HydratedPost | null | undefined,
@@ -128,9 +137,139 @@ async function getDmConversations(userId: string) {
     });
 }
 
+function renderAppShell(content: string): string {
+  return [
+    '<div class="relative z-0 flex justify-center font-sans">',
+    '<div class="bg-cax-surface text-cax-text flex min-h-screen max-w-full">',
+    '<aside class="relative z-10">',
+    '<nav class="border-cax-border bg-cax-surface fixed right-0 bottom-0 left-0 z-10 h-12 border-t lg:relative lg:h-full lg:w-48 lg:border-t-0 lg:border-r"></nav>',
+    "</aside>",
+    '<main class="relative z-0 w-screen max-w-screen-sm min-w-0 shrink pb-12 lg:pb-0">',
+    content,
+    "</main>",
+    "</div>",
+    "</div>",
+  ].join("");
+}
+
+function renderTimelineShell(posts: Array<any>): string {
+  return posts
+    .slice(0, 2)
+    .map((post, index) => {
+      const profileImage = post.user?.profileImage?.id
+        ? `<img alt="${escapeHtml(post.user.profileImage.alt ?? "")}" class="h-full w-full object-cover" decoding="${index === 0 ? "sync" : "async"}" fetchpriority="${index === 0 ? "high" : "auto"}" height="64" loading="${index === 0 ? "eager" : "lazy"}" src="${getProfileImagePath(post.user.profileImage.id)}" width="64" />`
+        : "";
+      const heroImage = post.images?.[0]?.id
+        ? `<div class="relative mt-2 w-full"><div class="border-cax-border grid h-full w-full grid-cols-2 grid-rows-2 gap-1 overflow-hidden rounded-lg border" style="aspect-ratio:16 / 9"><div class="${post.images.length === 1 ? "col-span-2 row-span-2" : "col-span-1 row-span-2"} bg-cax-surface-subtle"><img alt="${escapeHtml(post.images[0].alt ?? "")}" class="h-full w-full object-cover" decoding="${index === 0 ? "sync" : "async"}" fetchpriority="${index === 0 ? "high" : "auto"}" loading="${index === 0 ? "eager" : "lazy"}" src="${getImagePath(post.images[0].id)}" /></div></div></div>`
+        : "";
+
+      return [
+        '<article class="hover:bg-cax-surface-subtle px-1 sm:px-4">',
+        '<div class="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">',
+        '<div class="shrink-0 grow-0 pr-2 sm:pr-4">',
+        `<a class="border-cax-border bg-cax-surface-subtle block h-12 w-12 overflow-hidden rounded-full border sm:h-16 sm:w-16" href="/users/${escapeHtml(post.user.username)}">${profileImage}</a>`,
+        "</div>",
+        '<div class="min-w-0 shrink grow">',
+        '<p class="overflow-hidden text-sm text-ellipsis whitespace-nowrap">',
+        `<a class="text-cax-text pr-1 font-bold" href="/users/${escapeHtml(post.user.username)}">${escapeHtml(post.user.name)}</a>`,
+        `<a class="text-cax-text-muted pr-1" href="/users/${escapeHtml(post.user.username)}">@${escapeHtml(post.user.username)}</a>`,
+        "</p>",
+        `<div class="text-cax-text leading-relaxed">${escapeHtml(post.text ?? "")}</div>`,
+        heroImage,
+        "</div>",
+        "</div>",
+        "</article>",
+      ].join("");
+    })
+    .join("");
+}
+
+function renderPostShell(post: any): string {
+  const profileImage = post.user?.profileImage?.id
+    ? `<img alt="${escapeHtml(post.user.profileImage.alt ?? "")}" class="h-full w-full object-cover" decoding="sync" fetchpriority="high" height="64" loading="eager" src="${getProfileImagePath(post.user.profileImage.id)}" width="64" />`
+    : "";
+  const heroImage = post.images?.[0]?.id
+    ? `<div class="relative mt-2 w-full"><div class="border-cax-border grid h-full w-full grid-cols-2 grid-rows-2 gap-1 overflow-hidden rounded-lg border" style="aspect-ratio:16 / 9"><div class="${post.images.length === 1 ? "col-span-2 row-span-2" : "col-span-1 row-span-2"} bg-cax-surface-subtle"><img alt="${escapeHtml(post.images[0].alt ?? "")}" class="h-full w-full object-cover" decoding="sync" fetchpriority="high" loading="eager" src="${getImagePath(post.images[0].id)}" /></div></div></div>`
+    : "";
+
+  return [
+    '<article class="px-1 sm:px-4">',
+    '<div class="border-cax-border border-b px-4 pt-4 pb-4">',
+    '<div class="flex items-center justify-center">',
+    '<div class="shrink-0 grow-0 pr-2">',
+    `<a class="border-cax-border bg-cax-surface-subtle block h-14 w-14 overflow-hidden rounded-full border sm:h-16 sm:w-16" href="/users/${escapeHtml(post.user.username)}">${profileImage}</a>`,
+    "</div>",
+    '<div class="min-w-0 shrink grow overflow-hidden text-ellipsis whitespace-nowrap">',
+    `<p><a class="text-cax-text font-bold" href="/users/${escapeHtml(post.user.username)}">${escapeHtml(post.user.name)}</a></p>`,
+    `<p><a class="text-cax-text-muted" href="/users/${escapeHtml(post.user.username)}">@${escapeHtml(post.user.username)}</a></p>`,
+    "</div>",
+    "</div>",
+    '<div class="pt-2 sm:pt-4">',
+    `<div class="text-cax-text text-xl leading-relaxed">${escapeHtml(post.text ?? "")}</div>`,
+    heroImage,
+    "</div>",
+    "</div>",
+    "</article>",
+  ].join("");
+}
+
+function renderDmListShell(conversations: Array<any>, activeUserId: string): string {
+  const items = conversations
+    .slice(0, 4)
+    .map((conversation) => {
+      const peer =
+        conversation.initiator.id !== activeUserId ? conversation.initiator : conversation.member;
+      const lastMessage = conversation.messages?.at(-1);
+      return [
+        '<li class="grid" style="contain-intrinsic-size:120px;content-visibility:auto">',
+        `<a class="hover:bg-cax-surface-subtle px-4" href="/dm/${escapeHtml(conversation.id)}">`,
+        '<div class="border-cax-border flex gap-4 border-b px-4 pt-2 pb-4">',
+        `<img alt="${escapeHtml(peer.profileImage?.alt ?? "")}" class="w-12 shrink-0 self-start rounded-full object-cover" decoding="sync" fetchpriority="high" height="48" loading="eager" src="${getProfileImagePath(peer.profileImage.id)}" width="48" />`,
+        '<div class="flex flex-1 flex-col">',
+        `<div><p class="font-bold">${escapeHtml(peer.name)}</p><p class="text-cax-text-muted text-xs">@${escapeHtml(peer.username)}</p></div>`,
+        `<p class="mt-1 line-clamp-2 text-sm wrap-anywhere">${escapeHtml(lastMessage?.body ?? "")}</p>`,
+        "</div></div></a></li>",
+      ].join("");
+    })
+    .join("");
+
+  return [
+    '<section><header class="border-cax-border flex flex-col gap-4 border-b px-4 pt-6 pb-4">',
+    '<h1 class="text-2xl font-bold">ダイレクトメッセージ</h1>',
+    '<div class="flex flex-wrap items-center gap-4"><button class="flex items-center justify-center gap-2 rounded-full px-4 py-2 border bg-cax-brand text-cax-surface-raised border-transparent" type="button"><span>新しくDMを始める</span></button></div>',
+    "</header>",
+    `<ul data-testid="dm-list">${items}</ul>`,
+    "</section>",
+  ].join("");
+}
+
+function renderDmDetailShell(conversation: any, activeUserId: string): string {
+  const peer = conversation.initiator.id !== activeUserId ? conversation.initiator : conversation.member;
+  const messages = (conversation.messages ?? []).slice(-6);
+
+  return [
+    '<section class="bg-cax-surface flex min-h-[calc(100vh-(--spacing(12)))] flex-col lg:min-h-screen">',
+    '<header class="border-cax-border bg-cax-surface sticky top-0 z-10 flex items-center gap-2 border-b px-4 py-3">',
+    `<img alt="${escapeHtml(peer.profileImage?.alt ?? "")}" class="h-12 w-12 rounded-full object-cover" decoding="sync" fetchpriority="high" height="48" loading="eager" src="${getProfileImagePath(peer.profileImage.id)}" width="48" />`,
+    `<div class="min-w-0"><h1 class="overflow-hidden text-xl font-bold text-ellipsis whitespace-nowrap">${escapeHtml(peer.name)}</h1><p class="text-cax-text-muted overflow-hidden text-xs text-ellipsis whitespace-nowrap">@${escapeHtml(peer.username)}</p></div>`,
+    "</header>",
+    '<div class="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8"><ul class="grid gap-3" data-testid="dm-message-list">',
+    ...messages.map((message: any) => {
+      const isMine = message.sender.id === activeUserId;
+      return [
+        `<li class="flex flex-col w-full ${isMine ? "items-end" : "items-start"}">`,
+        `<p class="max-w-3/4 rounded-xl border px-4 py-2 text-sm whitespace-pre-wrap leading-relaxed wrap-anywhere ${isMine ? "rounded-br-sm border-transparent bg-cax-brand text-cax-surface-raised" : "rounded-bl-sm border-cax-border bg-cax-surface text-cax-text"}">${escapeHtml(message.body)}</p>`,
+        "</li>",
+      ].join("");
+    }).join(""),
+    "</ul></div></section>",
+  ].join("");
+}
+
 async function buildBootstrapData(req: Request) {
   const bootstrapData: Record<string, unknown> = {};
   const preloads = new Set<string>();
+  let shellMarkup = "";
   const url = new URL(req.originalUrl, "http://localhost");
   const pathname = url.pathname;
 
@@ -148,12 +287,14 @@ async function buildBootstrapData(req: Request) {
     const posts = await Post.findAll({ limit: TIMELINE_LIMIT, offset: 0 });
     bootstrapData[`/api/v1/posts?limit=${TIMELINE_LIMIT}&offset=0`] = posts;
     addPostPreloads(preloads, posts[0]?.toJSON() as unknown as HydratedPost | undefined);
+    shellMarkup = renderAppShell(renderTimelineShell(posts.map((post) => post.toJSON())));
   } else if (pathname.startsWith("/posts/")) {
     const postId = decodeURIComponent(pathname.slice("/posts/".length));
-      const post = await Post.findByPk(postId);
+    const post = await Post.findByPk(postId);
     if (post != null) {
       bootstrapData[`/api/v1/posts/${postId}`] = post;
       addPostPreloads(preloads, post.toJSON() as unknown as HydratedPost);
+      shellMarkup = renderAppShell(renderPostShell(post.toJSON()));
     }
   } else if (pathname.startsWith("/users/")) {
     const username = decodeURIComponent(pathname.slice("/users/".length));
@@ -167,6 +308,7 @@ async function buildBootstrapData(req: Request) {
       });
       bootstrapData[`/api/v1/users/${username}/posts?limit=${USER_POSTS_LIMIT}&offset=0`] = posts;
       addPostPreloads(preloads, posts[0]?.toJSON() as unknown as HydratedPost | undefined);
+      shellMarkup = renderAppShell(renderTimelineShell(posts.map((post) => post.toJSON())));
     }
   } else if (pathname === "/search") {
     const query = url.searchParams.get("q")?.trim() ?? "";
@@ -252,6 +394,7 @@ async function buildBootstrapData(req: Request) {
     if (peer?.profileImage?.id) {
       preloads.add(getProfileImagePath(peer.profileImage.id));
     }
+    shellMarkup = renderAppShell(renderDmListShell(conversations, req.session.userId));
   } else if (pathname.startsWith("/dm/") && req.session.userId !== undefined) {
     const conversationId = decodeURIComponent(pathname.slice("/dm/".length));
     const conversation = await DirectMessageConversation.unscoped().findOne({
@@ -278,14 +421,23 @@ async function buildBootstrapData(req: Request) {
       if (peer.profileImage?.id) {
         preloads.add(getProfileImagePath(peer.profileImage.id));
       }
+      shellMarkup = renderAppShell(
+        renderDmDetailShell(
+          {
+            ...json,
+            messages,
+          },
+          req.session.userId,
+        ),
+      );
     }
   }
 
-  return { bootstrapData, preloads };
+  return { bootstrapData, preloads, shellMarkup };
 }
 
 export async function renderAppHtml(req: Request) {
-  const [template, { bootstrapData, preloads }] = await Promise.all([
+  const [template, { bootstrapData, preloads, shellMarkup }] = await Promise.all([
     getIndexHtmlTemplate(),
     buildBootstrapData(req),
   ]);
@@ -297,6 +449,9 @@ export async function renderAppHtml(req: Request) {
     Object.keys(bootstrapData).length > 0
       ? `<script>window.__BOOTSTRAP_DATA__=${serializeForInlineScript(bootstrapData)};</script>`
       : "";
+  const appShell = shellMarkup !== "" ? `<div id="app">${shellMarkup}</div>` : '<div id="app"></div>';
 
-  return template.replace("</head>", `${preloadTags}${bootstrapScript}</head>`);
+  return template
+    .replace('<div id="app"></div>', appShell)
+    .replace("</head>", `${preloadTags}${bootstrapScript}</head>`);
 }
