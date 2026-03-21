@@ -119,7 +119,7 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
         include: [{ association: "sender", include: [{ association: "profileImage" }] }],
         order: [["createdAt", "DESC"]],
         required: false,
-        limit: 50,
+        limit: 20,
         separate: true,
       },
     ],
