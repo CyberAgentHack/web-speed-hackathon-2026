@@ -83,7 +83,7 @@ export const DirectMessagePage = ({
         cancelAnimationFrame(rafId);
       }
       rafId = requestAnimationFrame(() => {
-        window.scrollTo(0, document.body.scrollHeight);
+        el.scrollTop = el.scrollHeight;
         rafId = null;
       });
     });
