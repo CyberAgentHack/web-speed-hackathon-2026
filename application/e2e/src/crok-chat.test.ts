@@ -43,6 +43,15 @@ test.describe("Crok AIチャット", () => {
   });
 
   test("質問を送信するとAIの応答が表示される", async ({ page }) => {
+    await page.route("**/api/v1/crok?**", async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 1_000));
+      await route.fulfill({
+        contentType: "text/event-stream",
+        body: `data: {"text":"結論から言うね"}\n\ndata: {"done":true}\n\n`,
+        status: 200,
+      });
+    });
+
     const chatInput = page.getByPlaceholder("メッセージを入力...");
     const prompt =
       "『走れメロス』って、冷笑系の“どうせ人なんか信じても無駄”に対する話なんだと思うんだけどどう？";
@@ -57,7 +66,7 @@ test.describe("Crok AIチャット", () => {
     });
 
     // ストリーミング中の表示を確認
-    await expect(page.getByText("AIが応答を生成中...")).toBeVisible({
+    await expect(page.getByRole("status", { name: "応答中" })).toBeVisible({
       timeout: 10_000,
     });
 

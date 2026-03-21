@@ -1,4 +1,4 @@
-import { useEffect, useRef, type RefObject } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 
 import "katex/dist/katex.min.css";
 import Markdown from "react-markdown";
@@ -36,23 +36,28 @@ const AssistantMessage = ({
   streamingContentRef: RefObject<string>;
 }) => {
   const streamingTextRef = useRef<HTMLPreElement>(null);
+  const [hasStreamingContent, setHasStreamingContent] = useState(false);
 
   useEffect(() => {
     if (!streaming) return;
+    setHasStreamingContent(Boolean(content || streamingContentRef.current));
 
     const interval = window.setInterval(() => {
+      const streamingContent = streamingContentRef.current;
+      setHasStreamingContent(Boolean(streamingContent || content));
       if (streamingTextRef.current) {
-        streamingTextRef.current.textContent = streamingContentRef.current;
+        streamingTextRef.current.textContent = streamingContent;
       }
-    }, 500);
+    }, 200);
 
     return () => {
       window.clearInterval(interval);
     };
-  }, [streaming, streamingContentRef]);
+  }, [content, streaming, streamingContentRef]);
 
   useEffect(() => {
     if (streaming) return;
+    setHasStreamingContent(Boolean(content));
     if (streamingTextRef.current) {
       streamingTextRef.current.textContent = content;
     }
@@ -67,9 +72,15 @@ const AssistantMessage = ({
         <div className="text-cax-text mb-1 text-sm font-medium">Crok</div>
         <div className="markdown text-cax-text max-w-none">
           {streaming ? (
-            <pre ref={streamingTextRef} className="whitespace-pre-wrap">
-              {content}
-            </pre>
+            <>
+              {!hasStreamingContent && <TypingIndicator />}
+              <pre
+                ref={streamingTextRef}
+                className={!hasStreamingContent ? "whitespace-pre-wrap hidden" : "whitespace-pre-wrap"}
+              >
+                {content}
+              </pre>
+            </>
           ) : content ? (
             <Markdown
               components={{ pre: CodeBlock }}
