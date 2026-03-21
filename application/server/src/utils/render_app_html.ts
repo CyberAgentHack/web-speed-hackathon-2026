@@ -12,7 +12,7 @@ import {
 import { CLIENT_DIST_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query";
 
-const TIMELINE_LIMIT = 6;
+const TIMELINE_LIMIT = 4;
 const SEARCH_LIMIT = 8;
 const USER_POSTS_LIMIT = 8;
 type HydratedPost = {
