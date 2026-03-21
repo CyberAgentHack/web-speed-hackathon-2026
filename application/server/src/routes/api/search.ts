@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { Op, type WhereOptions } from "sequelize";
 
-import { Post } from "@web-speed-hackathon-2026/server/src/models";
+import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
 import { resolvePagination } from "@web-speed-hackathon-2026/server/src/utils/pagination";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 
@@ -59,7 +59,8 @@ searchRouter.get("/search", async (req, res) => {
     attributes: ["id"],
     include: [
       {
-        association: "user",
+        model: User.unscoped(),
+        as: "user",
         attributes: [],
         required: true,
       },
@@ -85,12 +86,16 @@ searchRouter.get("/search", async (req, res) => {
         [Op.in]: postIds,
       },
     },
-    order: [
-      ["createdAt", "DESC"],
-      ["id", "DESC"],
-      ["images", "createdAt", "ASC"],
-    ],
   });
 
-  return res.status(200).type("application/json").send(posts);
+  const postIdToIndex = new Map(postIds.map((postId, index) => [postId, index]));
+  const orderedPosts = posts
+    .slice()
+    .sort(
+      (a, b) =>
+        (postIdToIndex.get(a.id) ?? Number.MAX_SAFE_INTEGER) -
+        (postIdToIndex.get(b.id) ?? Number.MAX_SAFE_INTEGER),
+    );
+
+  return res.status(200).type("application/json").send(orderedPosts);
 });
