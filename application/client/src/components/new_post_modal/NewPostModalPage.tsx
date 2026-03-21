@@ -60,7 +60,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
         .then(([{ MagickFormat }, { convertImage }]) =>
           Promise.all(
             files.map((file) =>
-              convertImage(file, { extension: MagickFormat.WebP }).then(
+              convertImage(file, { extension: MagickFormat.WebP, maxWidth: 800, maxHeight: 800, quality: 80 }).then(
                 (blob) => new File([blob], "converted.webp", { type: "image/webp" }),
               ),
             ),
