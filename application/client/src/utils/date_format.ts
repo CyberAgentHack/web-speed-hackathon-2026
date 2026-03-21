@@ -1,16 +1,26 @@
-const llFormatter = new Intl.DateTimeFormat("ja-JP", {
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-});
+let llFormatter: Intl.DateTimeFormat;
+let hmFormatter: Intl.DateTimeFormat;
+let rtf: Intl.RelativeTimeFormat;
 
-const hmFormatter = new Intl.DateTimeFormat("ja-JP", {
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: false,
-});
+function getLLFormatter() {
+  return (llFormatter ??= new Intl.DateTimeFormat("ja-JP", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }));
+}
 
-const rtf = new Intl.RelativeTimeFormat("ja", { numeric: "always" });
+function getHMFormatter() {
+  return (hmFormatter ??= new Intl.DateTimeFormat("ja-JP", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }));
+}
+
+function getRTF() {
+  return (rtf ??= new Intl.RelativeTimeFormat("ja", { numeric: "always" }));
+}
 
 const DIVISIONS: { amount: number; unit: Intl.RelativeTimeFormatUnit }[] = [
   { amount: 60, unit: "second" },
@@ -22,11 +32,11 @@ const DIVISIONS: { amount: number; unit: Intl.RelativeTimeFormatUnit }[] = [
 ];
 
 export const formatLL = (date: string | Date): string => {
-  return llFormatter.format(new Date(date));
+  return getLLFormatter().format(new Date(date));
 };
 
 export const formatHM = (date: string | Date): string => {
-  return hmFormatter.format(new Date(date));
+  return getHMFormatter().format(new Date(date));
 };
 
 export const formatFromNow = (date: string | Date): string => {
@@ -34,10 +44,10 @@ export const formatFromNow = (date: string | Date): string => {
 
   for (const { amount, unit } of DIVISIONS) {
     if (Math.abs(diff) < amount) {
-      return rtf.format(Math.round(diff), unit);
+      return getRTF().format(Math.round(diff), unit);
     }
     diff /= amount;
   }
 
-  return rtf.format(Math.round(diff), "year");
+  return getRTF().format(Math.round(diff), "year");
 };
