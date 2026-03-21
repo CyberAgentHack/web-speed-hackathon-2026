@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -72,6 +73,9 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const requestSeqRef = useRef(0);
+  const activeRequestSeqRef = useRef(0);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
@@ -84,7 +88,17 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   }, [suggestions, showSuggestions]);
 
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current !== null) {
+        window.clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
   const updateSuggestions = async (value: string) => {
+    const requestSeq = ++requestSeqRef.current;
+    activeRequestSeqRef.current = requestSeq;
     const query = value.trim();
     if (!query) {
       setSuggestions([]);
@@ -96,6 +110,9 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
       `/api/v1/crok/suggestions?q=${encodeURIComponent(query)}`,
     );
+    if (activeRequestSeqRef.current !== requestSeq) {
+      return;
+    }
     const tokens = query
       .toLowerCase()
       .split(/\s+/)
@@ -124,7 +141,12 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     const value = e.target.value;
     setInputValue(value);
     adjustTextareaHeight();
-    void updateSuggestions(value);
+    if (debounceTimerRef.current !== null) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      void updateSuggestions(value);
+    }, 300);
   };
 
   const handleSuggestionClick = (suggestion: string) => {

@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, type RefObject } from "react";
 
 import { ChatInput } from "@web-speed-hackathon-2026/client/src/components/crok/ChatInput";
 import { ChatMessage } from "@web-speed-hackathon-2026/client/src/components/crok/ChatMessage";
@@ -10,9 +10,10 @@ interface Props {
   messages: Models.ChatMessage[];
   isStreaming: boolean;
   onSendMessage: (message: string) => void;
+  streamingContentRef: RefObject<string>;
 }
 
-export const CrokPage = ({ messages, isStreaming, onSendMessage }: Props) => {
+export const CrokPage = ({ messages, isStreaming, onSendMessage, streamingContentRef }: Props) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const stickyBarRef = useRef<HTMLDivElement>(null);
   const showScrollButton = useHasContentBelow(messagesEndRef, stickyBarRef);
@@ -34,6 +35,7 @@ export const CrokPage = ({ messages, isStreaming, onSendMessage }: Props) => {
               streaming={
                 isStreaming && message.role === "assistant" && index === messages.length - 1
               }
+              streamingContentRef={streamingContentRef}
             />
           ))}
           <div ref={messagesEndRef} />
