@@ -6,7 +6,9 @@ const ChatMessage = lazy(() =>
     default: m.ChatMessage,
   })),
 );
+import { TypingIndicator } from "@web-speed-hackathon-2026/client/src/components/crok/TypingIndicator";
 import { WelcomeScreen } from "@web-speed-hackathon-2026/client/src/components/crok/WelcomeScreen";
+import { CrokLogo } from "@web-speed-hackathon-2026/client/src/components/foundation/CrokLogo";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { useHasContentBelow } from "@web-speed-hackathon-2026/client/src/hooks/use_has_content_below";
 
@@ -31,7 +33,15 @@ export const CrokPage = ({ messages, isStreaming, onSendMessage }: Props) => {
         <div className="mx-auto max-w-2xl px-4 py-8">
           {messages.length === 0 && <WelcomeScreen />}
 
-          <Suspense fallback={null}>
+          <Suspense fallback={
+            <div className="mb-6 flex gap-4">
+              <div className="h-8 w-8 shrink-0"><CrokLogo className="h-full w-full" /></div>
+              <div className="min-w-0 flex-1">
+                <div className="text-cax-text mb-1 text-sm font-medium">Crok</div>
+                <div className="markdown text-cax-text max-w-none"><TypingIndicator /></div>
+              </div>
+            </div>
+          }>
             {messages.map((message, index) => (
               <ChatMessage key={index} message={message} />
             ))}

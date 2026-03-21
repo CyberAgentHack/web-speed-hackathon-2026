@@ -10,7 +10,14 @@ export const app = Express();
 
 app.set("trust proxy", true);
 
-app.use(compression());
+const compressionMiddleware = compression();
+app.use((req, res, next) => {
+  // SSE エンドポイントは圧縮バッファリングすると一括送信になるためスキップ
+  if (req.url.startsWith("/api/v1/crok") && !req.url.includes("suggestions")) {
+    return next();
+  }
+  compressionMiddleware(req, res, next);
+});
 app.use(sessionMiddleware);
 app.use(bodyParser.json());
 app.use(bodyParser.raw({ limit: "50mb" }));
