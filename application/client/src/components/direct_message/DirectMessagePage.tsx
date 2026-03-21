@@ -2,8 +2,8 @@ import classNames from "classnames";
 import {
   ChangeEvent,
   useCallback,
-  useId,
   useRef,
+  useId,
   useState,
   KeyboardEvent,
   FormEvent,
@@ -33,7 +33,7 @@ export const DirectMessagePage = ({
   onTyping,
   onSubmit,
 }: Props) => {
-  const formRef = useRef<HTMLFormElement>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textAreaId = useId();
 
   const peer =
@@ -45,29 +45,46 @@ export const DirectMessagePage = ({
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
       setText(event.target.value);
-      onTyping();
+      if (typingTimeoutRef.current !== null) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      typingTimeoutRef.current = setTimeout(() => {
+        onTyping();
+      }, 300);
     },
     [onTyping],
+  );
+
+  const submitMessage = useCallback(async () => {
+    const body = text.trim();
+    if (body.length === 0 || isSubmitting) {
+      return;
+    }
+
+    try {
+      await onSubmit({ body });
+      setText("");
+    } catch (error) {
+      console.error(error);
+    }
+  }, [isSubmitting, onSubmit, text]);
+
+  const handleSubmit = useCallback(
+    (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      void submitMessage();
+    },
+    [submitMessage],
   );
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLTextAreaElement>) => {
       if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
         event.preventDefault();
-        formRef.current?.requestSubmit();
+        void submitMessage();
       }
     },
-    [formRef],
-  );
-
-  const handleSubmit = useCallback(
-    (event: FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
-      void onSubmit({ body: text.trim() }).then(() => {
-        setText("");
-      });
-    },
-    [onSubmit, text],
+    [submitMessage],
   );
 
   useEffect(() => {
@@ -75,7 +92,12 @@ export const DirectMessagePage = ({
       window.scrollTo(0, document.body.scrollHeight);
     });
     observer.observe(document.body);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (typingTimeoutRef.current !== null) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
   }, []);
 
   if (conversationError != null) {
@@ -134,7 +156,11 @@ export const DirectMessagePage = ({
                 </p>
                 <div className="flex gap-1 text-xs">
                   <time dateTime={message.createdAt}>
-                    {new Intl.DateTimeFormat("ja-JP", { hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(message.createdAt))}
+                    {new Intl.DateTimeFormat("ja-JP", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                    }).format(new Date(message.createdAt))}
                   </time>
                   {isActiveUserSend && message.isRead && (
                     <span className="text-cax-text-muted">既読</span>
@@ -156,7 +182,6 @@ export const DirectMessagePage = ({
         <form
           className="border-cax-border bg-cax-surface flex items-end gap-2 border-t p-4"
           onSubmit={handleSubmit}
-          ref={formRef}
         >
           <div className="flex grow">
             <label className="sr-only" htmlFor={textAreaId}>
