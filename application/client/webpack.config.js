@@ -30,6 +30,8 @@ const config = {
   devtool: isProduction ? "source-map" : "inline-source-map",
   entry: {
     main: [
+      "core-js",
+      "regenerator-runtime/runtime",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
@@ -58,7 +60,7 @@ const config = {
     ],
   },
   output: {
-    chunkFilename: "scripts/chunk-[contenthash].js",
+    chunkFilename: "scripts/[name].[contenthash].js",
     filename: "scripts/[name].js",
     path: DIST_PATH,
     publicPath: "/",
@@ -125,7 +127,13 @@ const config = {
   optimization: {
     minimize: isProduction,
     splitChunks: {
-      chunks: "all",
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: "vendor",
+          chunks: "all",
+        },
+      },
     },
     usedExports: true,
   },
