@@ -15,6 +15,38 @@ interface MarkdownState {
   remarkMath: unknown;
 }
 
+const renderPlainMarkdownLike = (content: string) => {
+  return content.split("\n").map((line, index) => {
+    if (line.startsWith("### ")) {
+      return (
+        <h3 key={index} className="text-xl font-bold">
+          {line.slice(4)}
+        </h3>
+      );
+    }
+    if (line.startsWith("## ")) {
+      return (
+        <h2 key={index} className="text-2xl font-bold">
+          {line.slice(3)}
+        </h2>
+      );
+    }
+    if (line.startsWith("# ")) {
+      return (
+        <h1 key={index} className="text-3xl font-bold">
+          {line.slice(2)}
+        </h1>
+      );
+    }
+
+    return (
+      <p key={index} className="whitespace-pre-wrap">
+        {line}
+      </p>
+    );
+  });
+};
+
 const MarkdownRenderer = ({ content }: { content: string }) => {
   const [{ Markdown, rehypeKatex, remarkGfm, remarkMath }, setMarkdown] = useState<MarkdownState>({
     Markdown: null,
@@ -51,7 +83,7 @@ const MarkdownRenderer = ({ content }: { content: string }) => {
   }, []);
 
   if (Markdown == null) {
-    return <p className="whitespace-pre-wrap">{content}</p>;
+    return <>{renderPlainMarkdownLike(content)}</>;
   }
 
   return (

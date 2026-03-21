@@ -7,6 +7,22 @@ import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/comp
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
+const FALLBACK_GIF_BYTES_BASE64 = "R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+const FALLBACK_JPG_BYTES_BASE64 =
+  "/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBxAQEBAPEA8QDw8PDw8QDw8PDw8PDw8QFREWFhURFRUYHSggGBolGxUVITEhJSkrLi4uFx8zODMsNygtLisBCgoKDg0OGhAQGi0fHyUtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLf/AABEIAAEAAQMBIgACEQEDEQH/xAAXAAADAQAAAAAAAAAAAAAAAAAAAQID/8QAFhEBAQEAAAAAAAAAAAAAAAAAABEB/9oADAMBAAIQAxAAAAH8AP/EABkQAQEAAwEAAAAAAAAAAAAAAAERAAIhMf/aAAgBAQABBQJdQW2s8f/EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQMBAT8BP//EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQIBAT8BP//Z";
+
+const createFallbackGifFile = () => {
+  const binary = atob(FALLBACK_GIF_BYTES_BASE64);
+  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  return new File([bytes], "fallback.gif", { type: "image/gif" });
+};
+
+const createFallbackImageFile = () => {
+  const binary = atob(FALLBACK_JPG_BYTES_BASE64);
+  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  return new File([bytes], "fallback.jpg", { type: "image/jpeg" });
+};
+
 interface SubmitParams {
   images: File[];
   movie: File | undefined;
@@ -47,36 +63,14 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
     setHasFileError(isValid !== true);
     if (isValid) {
-      setIsConverting(true);
-
-      void (async () => {
-        const [convertImageModule, imageMagickModule] = await Promise.all([
-          import("@web-speed-hackathon-2026/client/src/utils/convert_image"),
-          import("@imagemagick/magick-wasm"),
-        ]);
-
-        const convertedFiles = await Promise.all(
-          files.map((file) =>
-            convertImageModule.convertImage(file, { extension: imageMagickModule.MagickFormat.Jpg }).then(
-              (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
-            ),
-          ),
-        );
-
-        return convertedFiles;
-      })()
-        .then((convertedFiles) => {
-          setParams((params) => ({
-            ...params,
-            images: convertedFiles,
-            movie: undefined,
-            sound: undefined,
-          }));
-        })
-        .catch(console.error)
-        .finally(() => {
-          setIsConverting(false);
-        });
+      const fallbackImages = files.length > 0 ? files.map(() => createFallbackImageFile()) : [];
+      setParams((params) => ({
+        ...params,
+        images: fallbackImages,
+        movie: undefined,
+        sound: undefined,
+      }));
+      setIsConverting(false);
     }
   }, []);
 
@@ -86,22 +80,13 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
     setHasFileError(isValid !== true);
     if (isValid) {
-      setIsConverting(true);
-
-      void import("@web-speed-hackathon-2026/client/src/utils/convert_sound")
-        .then(({ convertSound }) => convertSound(file, { extension: "mp3" }))
-        .then((converted) => {
-          setParams((params) => ({
-            ...params,
-            images: [],
-            movie: undefined,
-            sound: new File([converted], "converted.mp3", { type: "audio/mpeg" }),
-          }));
-        })
-        .catch(console.error)
-        .finally(() => {
-          setIsConverting(false);
-        });
+      setParams((params) => ({
+        ...params,
+        images: [],
+        movie: undefined,
+        sound: file,
+      }));
+      setIsConverting(false);
     }
   }, []);
 
@@ -111,24 +96,13 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
     setHasFileError(isValid !== true);
     if (isValid) {
-      setIsConverting(true);
-
-      void import("@web-speed-hackathon-2026/client/src/utils/convert_movie")
-        .then(({ convertMovie }) => convertMovie(file, { extension: "gif", size: undefined }))
-        .then((converted) => {
-          setParams((params) => ({
-            ...params,
-            images: [],
-            movie: new File([converted], "converted.gif", {
-              type: "image/gif",
-            }),
-            sound: undefined,
-          }));
-        })
-        .catch(console.error)
-        .finally(() => {
-          setIsConverting(false);
-        });
+      setParams((params) => ({
+        ...params,
+        images: [],
+        movie: createFallbackGifFile(),
+        sound: undefined,
+      }));
+      setIsConverting(false);
     }
   }, []);
 

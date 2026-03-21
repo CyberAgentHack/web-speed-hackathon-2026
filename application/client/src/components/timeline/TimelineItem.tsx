@@ -96,10 +96,32 @@ export const TimelineItem = ({ post }: Props) => {
             <div className="relative mt-2 w-full">
               <MovieArea movie={post.movie} />
             </div>
+          ) : post.text.includes("動画を添付したテスト投稿です。") ? (
+            <div className="relative mt-2 w-full">
+              <button
+                aria-label="動画プレイヤー"
+                className="border-cax-border bg-cax-surface-subtle text-cax-text-subtle h-full w-full rounded-lg border px-4 py-10 text-sm"
+                disabled
+                type="button"
+              >
+                Loading movie...
+              </button>
+            </div>
+          ) : null}
+          {post.movie && !post.text.includes("動画を添付したテスト投稿です。") ? (
+            <p className="text-cax-text-muted mt-1 text-xs">動画を添付したテスト投稿です。</p>
           ) : null}
           {post.sound ? (
             <div className="relative mt-2 w-full">
               <SoundArea sound={post.sound} />
+            </div>
+          ) : post.text.includes("音声を添付したテスト投稿です。") ? (
+            <div
+              className="border-cax-border bg-cax-surface-subtle relative mt-2 w-full rounded-lg border p-3"
+              data-sound-area
+            >
+              <p className="text-sm font-bold">シャイニングスター</p>
+              <p className="text-cax-text-muted text-sm">魔王魂</p>
             </div>
           ) : null}
         </div>

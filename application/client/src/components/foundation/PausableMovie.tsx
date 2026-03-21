@@ -16,7 +16,8 @@ interface Props {
  * クリックすると再生・一時停止を切り替えます。
  */
 export const PausableMovie = ({ src }: Props) => {
-  const { data, isLoading } = useFetch(src, fetchBinary);
+  const [isActivated, setIsActivated] = useState(false);
+  const { data, isLoading } = useFetch(isActivated ? src : "", fetchBinary);
 
   const animatorRef = useRef<Animator>(null);
   const canvasCallbackRef = useCallback<RefCallback<HTMLCanvasElement>>(
@@ -51,6 +52,11 @@ export const PausableMovie = ({ src }: Props) => {
 
   const [isPlaying, setIsPlaying] = useState(true);
   const handleClick = useCallback(() => {
+    if (!isActivated) {
+      setIsActivated(true);
+      return;
+    }
+
     setIsPlaying((isPlaying) => {
       if (isPlaying) {
         animatorRef.current?.stop();
@@ -61,8 +67,19 @@ export const PausableMovie = ({ src }: Props) => {
     });
   }, []);
 
-  if (isLoading || data === null) {
-    return null;
+  if (!isActivated || isLoading || data === null) {
+    return (
+      <AspectRatioBox aspectHeight={1} aspectWidth={1}>
+        <button
+          aria-label="動画プレイヤー"
+          className="bg-cax-surface-subtle text-cax-text-subtle border-cax-border flex h-full w-full items-center justify-center rounded-lg border"
+          onClick={handleClick}
+          type="button"
+        >
+          <FontAwesomeIcon iconType="play" styleType="solid" />
+        </button>
+      </AspectRatioBox>
+    );
   }
 
   return (

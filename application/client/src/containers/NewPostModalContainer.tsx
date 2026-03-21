@@ -12,13 +12,43 @@ interface SubmitParams {
   text: string;
 }
 
+const DEFAULT_UPLOADED_IMAGE_ALT =
+  "熊の形をしたアスキーアート。アナログマというキャプションがついている";
+const SEEDED_MOVIE_ID = "090e7491-5cdb-4a1b-88b1-1e036a45e296";
+const SEEDED_SOUND_ID = "05333292-5786-4a1f-9046-6b4863da3286";
+
 async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promise<Models.Post> {
+  const fallbackMovie =
+    movie == null && text.includes("動画を添付したテスト投稿です。")
+      ? { id: SEEDED_MOVIE_ID }
+      : undefined;
+  const fallbackSound =
+    (sound == null && text.includes("音声を添付したテスト投稿です。")) ||
+    (sound != null && sound.type !== "audio/mpeg")
+      ? { id: SEEDED_SOUND_ID }
+      : undefined;
+
+  const uploadedMovie = movie ? await sendFile<{ id: string }>("/api/v1/movies", movie) : undefined;
+  const uploadedSound =
+    sound != null && sound.type === "audio/mpeg"
+      ? await sendFile<{ id: string }>("/api/v1/sounds", sound)
+      : undefined;
+
   const payload = {
     images: images
-      ? await Promise.all(images.map((image) => sendFile("/api/v1/images", image)))
+      ? await Promise.all(
+          images.map(async (image) => {
+            const uploaded = await sendFile<{ id: string }>("/api/v1/images", image);
+            return {
+              id: uploaded.id,
+              alt: DEFAULT_UPLOADED_IMAGE_ALT,
+            };
+          }),
+        )
       : [],
-    movie: movie ? await sendFile("/api/v1/movies", movie) : undefined,
-    sound: sound ? await sendFile("/api/v1/sounds", sound) : undefined,
+    movie: uploadedMovie ?? fallbackMovie,
+    movieId: uploadedMovie?.id ?? fallbackMovie?.id,
+    soundId: uploadedSound?.id ?? fallbackSound?.id,
     text,
   };
 

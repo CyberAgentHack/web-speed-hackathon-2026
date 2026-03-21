@@ -54,6 +54,10 @@ const UserProfileContainer = lazy(async () => {
   return { default: module.UserProfileContainer };
 });
 
+const RouteLoadingFallback = () => {
+  return <p className="text-cax-text-subtle px-4 py-6 text-sm">Loading...</p>;
+};
+
 export const AppContainer = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -85,7 +89,7 @@ export const AppContainer = () => {
         newPostModalId={newPostModalId}
         onLogout={handleLogout}
       >
-        <Suspense fallback={null}>
+        <Suspense fallback={<RouteLoadingFallback />}>
           <Routes>
             <Route element={<TimelineContainer />} path="/" />
             <Route
