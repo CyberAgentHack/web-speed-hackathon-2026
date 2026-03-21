@@ -1,19 +1,30 @@
 import { useEffect, useState } from "react";
 
-export const useFetch = (url: string) => {
+export const useFetch = (path: string) => {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let ignore = false; //  アンマウント対策
+    let ignore = false;
 
     const fetchData = async () => {
-      const res = await fetch(url);
-      const json = await res.json();
+      try {
+        // 🔥 相対パスでAPIを叩く（Fly対応）
+        const res = await fetch(path);
 
-      if (!ignore) {
-        setData(json);
-        setLoading(false);
+        if (!res.ok) {
+          console.error("Fetch error:", res.status);
+          return;
+        }
+
+        const json = await res.json();
+
+        if (!ignore) {
+          setData(json);
+          setLoading(false);
+        }
+      } catch (e) {
+        console.error("Fetch failed:", e);
       }
     };
 
@@ -22,7 +33,7 @@ export const useFetch = (url: string) => {
     return () => {
       ignore = true;
     };
-  }, [url]); //  urlだけ依存
+  }, [path]);
 
   return { data, loading };
 };
