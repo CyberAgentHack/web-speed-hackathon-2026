@@ -1,28 +1,10 @@
 import { Router } from "express";
-import { Op, Order } from "sequelize";
+import { Op } from "sequelize";
 
-import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
+import { Post } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 
 export const searchRouter = Router();
-
-const postAttributes = {
-  exclude: ["userId", "movieId", "soundId"],
-};
-
-const commonPostIncludes = [
-  {
-    association: "images",
-    through: { attributes: [] },
-  },
-  { association: "movie" },
-  { association: "sound" },
-];
-
-const defaultPostOrder: Order = [
-  ["id", "DESC"],
-  ["images", "createdAt", "ASC"],
-];
 
 searchRouter.get("/search", async (req, res) => {
   const query = req.query["q"];
@@ -41,7 +23,6 @@ searchRouter.get("/search", async (req, res) => {
   const searchTerm = keywords ? `%${keywords}%` : null;
   const limit = req.query["limit"] != null ? Number(req.query["limit"]) : undefined;
   const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
-  const sourceLimit = limit != null ? limit + (offset || 0) : undefined;
 
   // 日付条件を構築
   const dateConditions: Record<symbol, Date>[] = [];
@@ -57,18 +38,9 @@ searchRouter.get("/search", async (req, res) => {
   // テキスト検索条件
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
-  const postsByText = await Post.unscoped().findAll({
-    attributes: postAttributes,
-    include: [
-      {
-        as: "user",
-        model: User.unscoped(),
-        include: [{ association: "profileImage" }],
-      },
-      ...commonPostIncludes,
-    ],
-    limit: sourceLimit,
-    order: defaultPostOrder,
+  const postsByText = await Post.findAll({
+    limit,
+    offset,
     where: {
       ...textWhere,
       ...dateWhere,
@@ -78,22 +50,26 @@ searchRouter.get("/search", async (req, res) => {
   // ユーザー名/名前での検索（キーワードがある場合のみ）
   let postsByUser: typeof postsByText = [];
   if (searchTerm) {
-    postsByUser = await Post.unscoped().findAll({
-      attributes: postAttributes,
+    postsByUser = await Post.findAll({
       include: [
         {
-          as: "user",
-          model: User.unscoped(),
+          association: "user",
+          attributes: { exclude: ["profileImageId"] },
           include: [{ association: "profileImage" }],
           required: true,
           where: {
             [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
           },
         },
-        ...commonPostIncludes,
+        {
+          association: "images",
+          through: { attributes: [] },
+        },
+        { association: "movie" },
+        { association: "sound" },
       ],
-      limit: sourceLimit,
-      order: defaultPostOrder,
+      limit,
+      offset,
       where: dateWhere,
     });
   }
@@ -110,21 +86,7 @@ searchRouter.get("/search", async (req, res) => {
 
   mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-  const result =
-    limit != null
-      ? mergedPosts.slice(offset || 0, (offset || 0) + limit)
-      : mergedPosts;
+  const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
 
-  const sanitizedResult = result.map((post) => {
-    const postJson = post.toJSON() as Record<string, unknown>;
-    const user = postJson["user"];
-
-    if (user && typeof user === "object" && !Array.isArray(user)) {
-      delete (user as Record<string, unknown>)["profileImageId"];
-    }
-
-    return postJson;
-  });
-
-  return res.status(200).type("application/json").send(sanitizedResult);
+  return res.status(200).type("application/json").send(result);
 });
