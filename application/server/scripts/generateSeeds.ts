@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { faker } from "@faker-js/faker/locale/ja";
+import * as exifr from "exifr";
 import sizeOf from "image-size";
 
 // Set seed for reproducible results
@@ -218,35 +219,51 @@ function generateUsers(count: number, profileImages: ProfileImageSeed[]): UserSe
   return users;
 }
 
-function generateImages(): ImageSeed[] {
+async function generateImages(): Promise<ImageSeed[]> {
   // Use existing image IDs from public/images/
   const baseTime = now - ONE_WEEK_MS;
   const publicPath = path.resolve(__dirname, "../../public/images");
 
-  return EXISTING_IMAGE_IDS.map((id, i) => {
+  const images: ImageSeed[] = [];
+
+  for (let i = 0; i < EXISTING_IMAGE_IDS.length; i++) {
+    const id = EXISTING_IMAGE_IDS[i];
     // Try to get dimensions from the actual image file
     let width = 0;
     let height = 0;
+    let alt = "";
     try {
       const imagePath = path.resolve(publicPath, `${id}.webp`);
       const imageBuffer = readFileSync(imagePath);
       const dimensions = sizeOf(imageBuffer);
       width = dimensions?.width ?? 0;
       height = dimensions?.height ?? 0;
+
+      // Try to extract EXIF alt text
+      try {
+        const exifData = await exifr.parse(imageBuffer);
+        if (exifData?.ImageDescription) {
+          alt = String(exifData.ImageDescription);
+        }
+      } catch {
+        // EXIF parsing failed or not present, keep alt as empty string
+      }
     } catch {
       // Use default dimensions if file not found
       width = 0;
       height = 0;
     }
 
-    return {
+    images.push({
       id,
-      alt: "",
+      alt,
       width,
       height,
       createdAt: new Date(baseTime + i * 60 * 1000).toISOString(),
-    };
-  });
+    });
+  }
+
+  return images;
 }
 
 function generateMovies(): MovieSeed[] {
@@ -723,7 +740,7 @@ async function main() {
   const users = generateUsers(CONFIG.USER_COUNT, profileImages);
 
   console.log("3. Generating Images (using existing assets)...");
-  const images = generateImages();
+  const images = await generateImages();
 
   console.log("4. Generating Movies (using existing assets)...");
   const movies = generateMovies();

@@ -1,5 +1,4 @@
 import classNames from "classnames";
-import { load, ImageIFD } from "piexifjs";
 import { MouseEvent, RefCallback, useCallback, useEffect, useId, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -7,19 +6,14 @@ import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Mod
 import {
   RESPONSIVE_IMAGE_WIDTHS,
 } from "@web-speed-hackathon-2026/client/src/utils/get_path";
-import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
   src: string;
   width: number;
   height: number;
+  alt?: string;
   fetchPriority?: "high" | "low" | "auto";
   sizes?: string;
-}
-
-function isJpeg(data: ArrayBuffer): boolean {
-  const bytes = new Uint8Array(data);
-  return bytes.length >= 2 && bytes[0] === 0xff && bytes[1] === 0xd8;
 }
 
 /**
@@ -29,11 +23,11 @@ export const CoveredImage = ({
   src,
   width,
   height,
+  alt = "",
   fetchPriority = "auto",
   sizes,
 }: Props) => {
   const dialogId = useId();
-  const [alt, setAlt] = useState("");
   const [containerSize, setContainerSize] = useState({ height: 0, width: 0 });
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -58,24 +52,6 @@ export const CoveredImage = ({
 
   useEffect(() => {
     setIsLoaded(false);
-  }, [src]);
-
-  // EXIF 解析を非同期でバックグラウンド実施
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await fetchBinary(src);
-        if (isJpeg(data)) {
-          const exif = load(Buffer.from(data).toString("binary"));
-          const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-          if (raw != null) {
-            setAlt(new TextDecoder().decode(Buffer.from(raw, "binary")));
-          }
-        }
-      } catch {
-        // Ignore EXIF parsing errors
-      }
-    })();
   }, [src]);
 
   const callbackRef = useCallback<RefCallback<HTMLDivElement>>((el) => {

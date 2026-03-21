@@ -38,6 +38,7 @@ export const ImageArea = ({ images, fetchPriority = "auto" }: Props) => {
                 src={getImagePath(image.id)}
                 width={width}
                 height={height}
+                alt={image.alt}
                 fetchPriority={idx === 0 ? fetchPriority : "auto"}
                 sizes={sizes}
               />
