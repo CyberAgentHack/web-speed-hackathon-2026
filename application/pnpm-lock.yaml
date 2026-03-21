@@ -64,8 +64,8 @@ importers:
         specifier: 9.2.0
         version: 9.2.0(@types/react@19.2.2)(react@19.2.0)(redux@5.0.1)
       react-router:
-        specifier: 7.9.4
-        version: 7.9.4(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        specifier: 7.13.1
+        version: 7.13.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       react-syntax-highlighter:
         specifier: 16.1.0
         version: 16.1.0(react@19.2.0)
@@ -2482,8 +2482,8 @@ packages:
       redux:
         optional: true
 
-  react-router@7.9.4:
-    resolution: {integrity: sha512-SD3G8HKviFHg9xj7dNODUKDFgpG4xqD5nhyd0mYoB5iISepuZAvzSr8ywxgxKJ52yRzf/HWtVHc9AWwoTbljvA==}
+  react-router@7.13.1:
+    resolution: {integrity: sha512-td+xP4X2/6BJvZoX6xw++A2DdEi++YypA69bJUV5oVvqf6/9/9nNlD70YO1e9d3MyamJEBQFEzk6mbfDYbqrSA==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       react: '>=18'
@@ -5341,7 +5341,7 @@ snapshots:
       '@types/react': 19.2.2
       redux: 5.0.1
 
-  react-router@7.9.4(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
+  react-router@7.13.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
     dependencies:
       cookie: 1.0.2
       react: 19.2.0

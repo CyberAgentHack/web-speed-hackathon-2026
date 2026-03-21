@@ -19,7 +19,7 @@ if (ssrData) {
     document,
     <Provider store={store}>
       <SWRConfig value={swrConfig}>
-        <BrowserRouter>
+        <BrowserRouter unstable_useTransitions={false}>
           <Document cssHref={cssHref}>
             <AppContainer />
           </Document>
@@ -34,7 +34,7 @@ if (ssrData) {
   createRoot(appEl).render(
     <Provider store={store}>
       <SWRConfig value={swrConfig}>
-        <BrowserRouter>
+        <BrowserRouter unstable_useTransitions={false}>
           <AppContainer />
         </BrowserRouter>
       </SWRConfig>
