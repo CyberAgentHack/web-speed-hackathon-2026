@@ -56,9 +56,8 @@ directMessageRouter.post("/dm", async (req, res) => {
       memberId: peer.id,
     },
   });
-  await conversation.reload();
 
-  return res.status(200).type("application/json").send(conversation);
+  return res.status(200).type("application/json").send({ id: conversation.id });
 });
 
 directMessageRouter.ws("/dm/unread", async (req, _res) => {
