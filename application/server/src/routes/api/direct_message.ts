@@ -211,7 +211,7 @@ directMessageRouter.post("/dm/:conversationId/messages", async (req, res) => {
     conversationId: conversation.id,
     senderId: req.session.userId,
   });
-  await message.reload();
+  await message.reload({ include: [{ association: "sender", attributes: ["id"] }] });
 
   return res.status(201).type("application/json").send(message);
 });
