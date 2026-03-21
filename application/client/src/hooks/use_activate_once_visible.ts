@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
-const ROOT_MARGIN_PX = 800;
+const ROOT_MARGIN_PX = 200;
 
 export const useActivateOnceVisible = <T extends Element>() => {
   const targetRef = useRef<T | null>(null);
