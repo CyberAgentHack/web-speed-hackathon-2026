@@ -18,18 +18,54 @@ directMessageRouter.get("/dm", async (req, res) => {
 
   const conversations = await DirectMessageConversation.findAll({
     where: {
-      [Op.and]: [
-        { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
-        where(col("messages.id"), { [Op.not]: null }),
-      ],
+      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
-    order: [[col("messages.createdAt"), "DESC"]],
+    include: [
+      { association: "initiator", include: [{ association: "profileImage" }] },
+      { association: "member", include: [{ association: "profileImage" }] },
+      {
+        association: "messages",
+        include: [{ association: "sender", include: [{ association: "profileImage" }] }],
+        order: [["createdAt", "DESC"]],
+        limit: 1,
+        separate: true,
+        required: false,
+      },
+    ],
   });
 
-  const sorted = conversations.map((c) => ({
-    ...c.toJSON(),
-    messages: c.messages?.reverse(),
-  }));
+  // Compute hasUnread per conversation
+  const unreadByConversation = await DirectMessage.findAll({
+    attributes: ["conversationId"],
+    where: {
+      senderId: { [Op.ne]: req.session.userId },
+      isRead: false,
+    },
+    include: [
+      {
+        association: "conversation",
+        attributes: [],
+        where: {
+          [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
+        },
+        required: true,
+      },
+    ],
+    group: ["DirectMessage.conversationId"],
+  });
+  const unreadConversationIds = new Set(unreadByConversation.map((m) => m.conversationId));
+
+  const sorted = conversations
+    .filter((c) => c.messages && c.messages.length > 0)
+    .sort((a, b) => {
+      const aTime = new Date(a.messages![0]!.createdAt).getTime();
+      const bTime = new Date(b.messages![0]!.createdAt).getTime();
+      return bTime - aTime;
+    })
+    .map((c) => ({
+      ...c.toJSON(),
+      hasUnread: unreadConversationIds.has(c.id),
+    }));
 
   return res.status(200).type("application/json").send(sorted);
 });

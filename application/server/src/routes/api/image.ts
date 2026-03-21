@@ -33,7 +33,7 @@ imageRouter.post("/images", async (req, res) => {
   const publishingImageFile = path.resolve(UPLOAD_PATH, `./images/${imageId}.webp`);
   await tinifyTheImage(originalImageFile, publishingImageFile);
 
-  const alt = await extractAltFromMedia(publishingImageFile);
+  const alt = await extractAltFromMedia(originalImageFile);
 
   return res.status(200).type("application/json").send({ id: imageId, alt });
 });

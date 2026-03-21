@@ -81,7 +81,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     useCallback(async () => {
       void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
     }, [conversationId]),
-    10000
+    5000
   );
 
   useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {
