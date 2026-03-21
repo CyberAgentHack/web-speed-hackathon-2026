@@ -16,7 +16,7 @@ async function calculate(data: ArrayBuffer): Promise<ParsedData> {
 
   const buffer = await audioCtx.decodeAudioData(data.slice(0));
   const leftData = buffer.getChannelData(0);
-  const rightData = buffer.getChannelData(1);
+  const rightData = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : null;
 
   const length = leftData.length;
   const chunkSize = Math.ceil(length / 100);
@@ -26,7 +26,7 @@ async function calculate(data: ArrayBuffer): Promise<ParsedData> {
     let sum = 0;
     const end = Math.min(i + chunkSize, length);
     for (let j = i; j < end; j++) {
-      sum += (Math.abs(leftData[j]!) + Math.abs(rightData[j]!)) / 2;
+      sum += rightData !== null ? (Math.abs(leftData[j]!) + Math.abs(rightData[j]!)) / 2 : Math.abs(leftData[j]!);
     }
     peaks.push(sum / (end - i));
     await yieldToMain();
