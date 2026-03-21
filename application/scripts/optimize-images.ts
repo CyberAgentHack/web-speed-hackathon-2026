@@ -8,7 +8,7 @@ const PROFILES_DIR = path.join(IMAGES_DIR, "profiles");
 
 const HD_MAX = 640;
 const PROFILE_SIZE = 128;
-const MOZJPEG_QUALITY = 80;
+const AVIF_QUALITY = 40;
 
 function fmt(bytes: number): string {
   if (bytes < 1024) return `${bytes}B`;
@@ -24,11 +24,14 @@ async function optimizeImage(
   const buf = await fs.readFile(filePath);
   const optimized = await sharp(buf)
     .resize(maxWidth, maxHeight, { fit: "inside", withoutEnlargement: true })
-    .withMetadata()
-    .jpeg({ quality: MOZJPEG_QUALITY, mozjpeg: true })
+    .avif({ quality: AVIF_QUALITY, effort: 6 })
     .toBuffer();
 
-  await fs.writeFile(filePath, optimized);
+  const newPath = filePath.replace(/\.jpe?g$/i, ".avif");
+  await fs.writeFile(newPath, optimized);
+  if (newPath !== filePath) {
+    await fs.unlink(filePath);
+  }
   return { oldSize: buf.byteLength, newSize: optimized.byteLength };
 }
 
