@@ -41,8 +41,7 @@ crokRouter.get("/crok", async (req, res) => {
     }
   };
 
-  // TTFT (Time to First Token)
-  await sleep(3000);
+  // TTFT (Time to First Token) を削除して即座に返答開始
 
   for (const char of response) {
     if (res.closed) break;

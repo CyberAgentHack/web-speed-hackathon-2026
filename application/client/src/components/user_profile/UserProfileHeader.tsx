@@ -1,9 +1,6 @@
 import { FastAverageColor } from "fast-average-color";
 import dayjs from "dayjs";
-import "dayjs/locale/ja";
 import { ReactEventHandler, useCallback, useState } from "react";
-
-dayjs.locale("ja");
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";

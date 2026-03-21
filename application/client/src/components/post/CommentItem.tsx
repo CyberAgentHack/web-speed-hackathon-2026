@@ -1,7 +1,4 @@
 import dayjs from "dayjs";
-import "dayjs/locale/ja";
-
-dayjs.locale("ja");
 
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";

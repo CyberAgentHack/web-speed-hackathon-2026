@@ -1,8 +1,6 @@
 import dayjs from "dayjs";
-import "dayjs/locale/ja";
 import { MouseEventHandler, useCallback } from "react";
 
-dayjs.locale("ja");
 import { Link, useNavigate } from "react-router";
 
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";

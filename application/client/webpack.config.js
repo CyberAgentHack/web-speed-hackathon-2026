@@ -4,6 +4,7 @@ const path = require("path");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const CompressionPlugin = require("compression-webpack-plugin");
 const webpack = require("webpack");
 
 const SRC_PATH = path.resolve(__dirname, "./src");
@@ -85,11 +86,20 @@ const config = {
           from: path.resolve(__dirname, "node_modules/katex/dist/fonts"),
           to: path.resolve(DIST_PATH, "styles/fonts"),
         },
+        {
+          from: path.resolve(SRC_PATH, "sw.js"),
+          to: DIST_PATH,
+        },
       ],
     }),
     new HtmlWebpackPlugin({
       inject: true,
       template: path.resolve(SRC_PATH, "./index.html"),
+    }),
+    new CompressionPlugin({
+      test: /\.(js|css|html|svg|ttf|woff|woff2)$/,
+      threshold: 10240,
+      minRatio: 0.8,
     }),
   ],
   resolve: {

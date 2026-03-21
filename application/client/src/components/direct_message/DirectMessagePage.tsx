@@ -1,6 +1,5 @@
 import classNames from "classnames";
 import dayjs from "dayjs";
-import "dayjs/locale/ja";
 import {
   ChangeEvent,
   useCallback,
@@ -11,8 +10,6 @@ import {
   FormEvent,
   useEffect,
 } from "react";
-
-dayjs.locale("ja");
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
