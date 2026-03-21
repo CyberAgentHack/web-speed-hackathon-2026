@@ -17,6 +17,7 @@ FROM base AS build
 COPY ./application/package.json ./application/pnpm-lock.yaml ./application/pnpm-workspace.yaml ./
 COPY ./application/client/package.json ./client/package.json
 COPY ./application/server/package.json ./server/package.json
+COPY ./application/patches ./patches
 RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile
 
 COPY ./application .
