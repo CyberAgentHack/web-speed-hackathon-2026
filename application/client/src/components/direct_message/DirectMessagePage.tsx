@@ -77,12 +77,24 @@ export const DirectMessagePage = ({
     const el = messageListRef.current;
     if (!el) return;
 
+    let rafId: number | null = null;
     const observer = new MutationObserver(() => {
-      window.scrollTo(0, document.body.scrollHeight);
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+      rafId = requestAnimationFrame(() => {
+        window.scrollTo(0, document.body.scrollHeight);
+        rafId = null;
+      });
     });
 
     observer.observe(el, { childList: true });
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+    };
   }, []);
 
   if (conversationError != null) {
@@ -125,6 +137,7 @@ export const DirectMessagePage = ({
 
             return (
               <li
+                key={message.id}
                 className={classNames(
                   "flex flex-col w-full",
                   isActiveUserSend ? "items-end" : "items-start",
