@@ -55,6 +55,9 @@ soundRouter.post("/sounds", async (req, res) => {
       const args = [
         "-i", inputPath,
         "-vn",
+        "-q:a", "5",
+        "-ar", "22050",
+        "-ac", "1",
       ];
 
       // Re-attach metadata if available
