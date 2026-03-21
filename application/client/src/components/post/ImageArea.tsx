@@ -8,23 +8,33 @@ interface Props {
 }
 
 export const ImageArea = ({ images }: Props) => {
+  const length = images.length;
+
   return (
     <AspectRatioBox aspectHeight={9} aspectWidth={16}>
       <div className="border-cax-border grid h-full w-full grid-cols-2 grid-rows-2 gap-1 overflow-hidden rounded-lg border">
-        {images.map((image, idx) => (
-          <div
-            key={image.id}
-            style={{ willChange: 'transform' }}
-            className={classNames("bg-cax-surface-subtle", {
-              "col-span-1": images.length !== 1,
-              "col-span-2": images.length === 1,
-              "row-span-1": images.length > 2 && (images.length !== 3 || idx !== 0),
-              "row-span-2": images.length <= 2 || (images.length === 3 && idx === 0),
-            })}
-          >
-            <CoveredImage src={getImagePath(image.id)} />
-          </div>
-        ))}
+        {images.map((image, idx) => {
+          const isSingle = length === 1;
+          const isDoubleOrLess = length <= 2;
+          const isThreeMain = length === 3 && idx === 0;
+
+          return (
+            <div
+              key={image.id}
+              className={classNames("bg-cax-surface-subtle", {
+                "col-span-2": isSingle,
+                "col-span-1": !isSingle,
+                "row-span-2": isDoubleOrLess || isThreeMain,
+                "row-span-1": !isDoubleOrLess && !isThreeMain,
+              })}
+            >
+              <CoveredImage
+                src={getImagePath(image.id)}
+                loading="lazy"
+              />
+            </div>
+          );
+        })}
       </div>
     </AspectRatioBox>
   );
