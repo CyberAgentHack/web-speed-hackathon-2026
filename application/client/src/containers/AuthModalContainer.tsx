@@ -67,25 +67,18 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser, openRequestKey = 0 
 
   const handleSubmit = useCallback(
     async (values: AuthFormData) => {
-      const normalizedValues: AuthFormData = {
-        ...values,
-        name: values.name?.trim() ?? "",
-        password: values.password?.trim() ?? "",
-        username: values.username?.trim() ?? "",
-      };
-
       try {
-        if (normalizedValues.type === "signup") {
-          const user = await sendJSON<Models.User>("/api/v1/signup", normalizedValues);
+        if (values.type === "signup") {
+          const user = await sendJSON<Models.User>("/api/v1/signup", values);
           onUpdateActiveUser(user);
         } else {
-          const user = await sendJSON<Models.User>("/api/v1/signin", normalizedValues);
+          const user = await sendJSON<Models.User>("/api/v1/signin", values);
           onUpdateActiveUser(user);
         }
         handleRequestCloseModal();
       } catch (err: unknown) {
         const error =
-          err instanceof FetchError ? getErrorCode(err, normalizedValues.type) : "認証に失敗しました";
+          err instanceof FetchError ? getErrorCode(err, values.type) : "認証に失敗しました";
         throw new SubmissionError({
           _error: error,
         });

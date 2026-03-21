@@ -16,6 +16,7 @@ const AuthModalPageComponent = ({
   onRequestCloseModal,
   handleSubmit,
   error,
+  invalid,
   submitting,
   initialValues,
   change,
@@ -84,7 +85,7 @@ const AuthModalPageComponent = ({
         </p>
       ) : null}
 
-      <ModalSubmitButton disabled={submitting} loading={submitting}>
+      <ModalSubmitButton disabled={submitting || invalid} loading={submitting}>
         {type === "signin" ? "サインイン" : "登録する"}
       </ModalSubmitButton>
 
