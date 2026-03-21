@@ -18,11 +18,11 @@ const LCP_PRELOADS: Array<{
   getLinks: () => string;
 }> = [
   {
-    // Home page - first post has a movie (LCP candidate)
+    // Home page - first post has a movie, poster image is LCP
     pattern: /^\/$/,
     getLinks: () => {
       const movieId = "51a14d70-9dd6-45ad-9f87-64af91ec2779";
-      return `<link rel="preload" as="video" fetchpriority="high" href="/movies/${movieId}.mp4">`;
+      return `<link rel="preload" as="image" fetchpriority="high" href="/movies/${movieId}_poster.webp">`;
     },
   },
   {
@@ -34,11 +34,11 @@ const LCP_PRELOADS: Array<{
     },
   },
   {
-    // Video post detail - preload the movie
+    // Video post detail - preload poster image
     pattern: /^\/posts\/fff790f5-99ea-432f-8f79-21d3d49efd1a$/,
     getLinks: () => {
       const movieId = "51a14d70-9dd6-45ad-9f87-64af91ec2779";
-      return `<link rel="preload" as="video" fetchpriority="high" href="/movies/${movieId}.mp4">`;
+      return `<link rel="preload" as="image" fetchpriority="high" href="/movies/${movieId}_poster.webp">`;
     },
   },
 ];
