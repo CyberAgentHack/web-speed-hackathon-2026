@@ -1,9 +1,8 @@
 import { ImageIFD, load } from "piexifjs";
-import { MouseEvent, useCallback, useId, useMemo } from "react";
+import { MouseEvent, useCallback, useEffect, useId, useMemo, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
@@ -23,22 +22,24 @@ export const CoveredImage = ({ src, loading = "lazy" }: Props) => {
     ev.stopPropagation();
   }, []);
 
-  // EXIF から alt テキストを取得（画像表示はブロックしない）
-  const { data } = useFetch(src, fetchBinary);
-  const alt = useMemo(() => {
-    if (data == null) return "";
-    try {
-      const binary = latin1Decoder.decode(new Uint8Array(data));
-      const exif = load(binary);
-      const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-      if (raw == null) return "";
-      const bytes = new Uint8Array(raw.length);
-      for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
-      return new TextDecoder().decode(bytes);
-    } catch {
-      return "";
-    }
-  }, [data, latin1Decoder]);
+  // EXIF から alt テキストを取得（画像表示後に遅延で取得）
+  const [alt, setAlt] = useState("");
+  useEffect(() => {
+    const id = requestIdleCallback(() => {
+      fetchBinary(src).then((data) => {
+        try {
+          const binary = latin1Decoder.decode(new Uint8Array(data));
+          const exif = load(binary);
+          const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
+          if (raw == null) return;
+          const bytes = new Uint8Array(raw.length);
+          for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+          setAlt(new TextDecoder().decode(bytes));
+        } catch {}
+      }).catch(() => {});
+    });
+    return () => cancelIdleCallback(id);
+  }, [src, latin1Decoder]);
 
   return (
     <div className="relative h-full w-full overflow-hidden">

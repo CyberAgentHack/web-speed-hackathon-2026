@@ -83,7 +83,9 @@ export const PausableMovie = ({ src, loading = "lazy", disableClick = false }: P
         />
         <canvas
           ref={canvasRef}
-          className="absolute inset-0 h-full w-full object-cover"
+          className={classNames("absolute inset-0 h-full w-full object-cover", {
+            hidden: isPlaying,
+          })}
         />
         <div
           className={classNames(

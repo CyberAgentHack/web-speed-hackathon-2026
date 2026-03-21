@@ -85,47 +85,7 @@ const config = {
       inject: true,
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
-    {
-      apply: (compiler) => {
-        compiler.hooks.compilation.tap("DeferAllCssPlugin", (compilation) => {
-          HtmlWebpackPlugin.getHooks(compilation).alterAssetTagGroups.tap(
-            "DeferAllCssPlugin",
-            (data) => {
-              const noscriptTags = [];
 
-              data.headTags = data.headTags.map((tag) => {
-                if (
-                  tag.tagName === "link" &&
-                  tag.attributes?.rel === "stylesheet"
-                ) {
-                  noscriptTags.push({
-                    tagName: "noscript",
-                    voidTag: false,
-                    meta: { plugin: "html-webpack-plugin" },
-                    innerHTML: `<link rel=\"stylesheet\" href=\"${tag.attributes.href}\">`,
-                  });
-
-                  return {
-                    ...tag,
-                    attributes: {
-                      ...tag.attributes,
-                      rel: "preload",
-                      as: "style",
-                      onload: "this.onload=null;this.rel='stylesheet'",
-                    },
-                  };
-                }
-
-                return tag;
-              });
-
-              data.headTags.push(...noscriptTags);
-              return data;
-            },
-          );
-        });
-      },
-    },
     ...(SHOULD_ANALYZE
       ? [
           new BundleAnalyzerPlugin({
