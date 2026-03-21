@@ -95,6 +95,7 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
           touched={touched.username}
           leftItem={<span className="text-cax-text-subtle leading-none">@</span>}
           autoComplete="username"
+          autoFocus
           onChange={handleChange}
           onBlur={() => handleBlur("username")}
         />

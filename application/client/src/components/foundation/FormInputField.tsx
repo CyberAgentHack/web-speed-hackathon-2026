@@ -13,12 +13,13 @@ interface Props {
   rightItem?: ReactNode;
   type?: string;
   autoComplete?: string;
+  autoFocus?: boolean;
   onChange: ChangeEventHandler<HTMLInputElement>;
   onBlur: () => void;
 }
 
 /** フォーム入力フィールド（バリデーションエラー表示付き） */
-export const FormInputField = ({ label, name, value, error, touched, leftItem, rightItem, type, autoComplete, onChange, onBlur }: Props) => {
+export const FormInputField = ({ label, name, value, error, touched, leftItem, rightItem, type, autoComplete, autoFocus, onChange, onBlur }: Props) => {
   const inputId = useId();
   const errorMessageId = useId();
   const isInvalid = touched && error;
@@ -34,6 +35,7 @@ export const FormInputField = ({ label, name, value, error, touched, leftItem, r
         value={value}
         type={type}
         autoComplete={autoComplete}
+        autoFocus={autoFocus}
         leftItem={leftItem}
         rightItem={rightItem}
         aria-invalid={isInvalid ? true : undefined}

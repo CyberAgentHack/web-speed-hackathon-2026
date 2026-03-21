@@ -63,6 +63,7 @@ export const NewDirectMessageModalPage = ({ id, onSubmit }: Props) => {
           error={errors.username}
           touched={touched.username}
           leftItem={<span className="text-cax-text-subtle leading-none">@</span>}
+          autoFocus
           onChange={handleChange}
           onBlur={() => handleBlur("username")}
         />
