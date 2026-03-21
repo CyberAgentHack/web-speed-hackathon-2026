@@ -16,6 +16,7 @@ export const PausableMovie = ({ src, poster }: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -41,6 +42,10 @@ export const PausableMovie = ({ src, poster }: Props) => {
     }
   }, [isVisible]);
 
+  const handlePlaying = useCallback(() => {
+    setVideoReady(true);
+  }, []);
+
   const handleClick = useCallback(() => {
     setIsPlaying((isPlaying) => {
       if (isPlaying) {
@@ -61,14 +66,23 @@ export const PausableMovie = ({ src, poster }: Props) => {
           onClick={handleClick}
           type="button"
         >
+          {poster && (
+            <img
+              src={poster}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover"
+              style={{ opacity: videoReady ? 0 : 1 }}
+            />
+          )}
           <video
             ref={videoRef}
             src={isVisible ? src : undefined}
-            poster={isVisible ? poster : undefined}
             loop
             muted
             playsInline
+            onPlaying={handlePlaying}
             className="w-full"
+            style={{ opacity: videoReady ? 1 : 0 }}
           />
           <div
             className={classNames(
