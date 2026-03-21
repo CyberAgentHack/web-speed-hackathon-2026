@@ -7,7 +7,7 @@ import { SWRConfig } from "swr";
 
 import { clearSSRData, getSSRData } from "@web-speed-hackathon-2026/client/src/api/ssr-data";
 import { swrConfig } from "@web-speed-hackathon-2026/client/src/api/swr";
-import { AppContainer } from "@web-speed-hackathon-2026/client/src/containers/AppContainer.ssr";
+import { AppContainer } from "@web-speed-hackathon-2026/client/src/containers/AppContainer";
 import { store } from "@web-speed-hackathon-2026/client/src/store";
 
 const appEl = document.getElementById("app")!;
@@ -25,9 +25,7 @@ const app = (
 
 if (appEl.childElementCount > 0 && ssrData) {
   hydrateRoot(appEl, app, {
-    onRecoverableError: (error: unknown) => {
-      console.error("HYDRATION_ERROR:", error);
-    },
+    onRecoverableError: () => {},
   });
   // SSR データをクリア（クライアントナビゲーション時に stale データを使わないため）
   // hydration 完了後にクリアする（全コンポーネントが初回レンダーで読み取れるように）

@@ -4,9 +4,9 @@
  * SSR ビルドが単一ファイルになり module 変数を全コンポーネントで共有できる。
  * クライアント側は AppContainer.tsx (React.lazy 版) を使う。
  */
-import { useCallback, useEffect, useId, useRef } from "react";
+import { useCallback, useRef } from "react";
 
-import { Route, Routes, useLocation, useNavigate } from "react-router";
+import { Route, Routes, useNavigate } from "react-router";
 import useSWR, { useSWRConfig } from "swr";
 
 import { apiClient } from "@web-speed-hackathon-2026/client/src/api/client";
@@ -33,15 +33,10 @@ const activeUserFetcher = async (_key: string): Promise<Models.User | null> => {
 };
 
 export const AppContainer = () => {
-  const { pathname } = useLocation();
   const navigate = useNavigate();
   const { mutate } = useSWRConfig();
   const ssrRef = useRef(getSSRData());
   const ssrActiveUser = ssrRef.current?.activeUser;
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
 
   const { data: activeUser, isLoading: isLoadingActiveUser } = useSWR<
     Models.User | null,
@@ -68,8 +63,8 @@ export const AppContainer = () => {
     void navigate("/");
   }, [mutate, navigate]);
 
-  const authModalId = useId();
-  const newPostModalId = useId();
+  const authModalId = "auth-modal";
+  const newPostModalId = "new-post-modal";
 
   if (typeof window !== "undefined" && isLoadingActiveUser) {
     return <title>読込中 - CaX</title>;

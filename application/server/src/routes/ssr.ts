@@ -68,14 +68,11 @@ function csrFallbackHtml(): string {
 
 function buildPreloadHints(ssrData: SSRData): string {
   const hints: string[] = [];
-
-  // Collect posts to scan for preloadable media
   type PostLike = { images?: Array<{ id: string }>; movie?: { id: string } | null };
   const posts: PostLike[] = [];
   if (ssrData.post) posts.push(ssrData.post as PostLike);
   if (ssrData.posts) posts.push(...(ssrData.posts as PostLike[]));
   if (ssrData.userPosts) posts.push(...(ssrData.userPosts as PostLike[]));
-
   for (const post of posts.slice(0, 5)) {
     if (post.movie) {
       hints.push(`<link rel="preload" as="video" href="/movies/${post.movie.id}.mp4">`);
@@ -202,7 +199,6 @@ function buildSSRStream(reactStream: ReadableStream, ssrData: SSRData): Readable
   const encoder = new TextEncoder();
   const preloadHints = buildPreloadHints(ssrData);
   const ssrDataScript = `<script>window.__SSR_DATA__=${JSON.stringify(ssrData).replace(/</g, "\\u003c")}</script>`;
-  // Preload hints go in <head> so browser discovers them early
   const before = htmlBefore.replace("</head>", preloadHints + "\n</head>");
   const after = htmlAfter.replace("<!--ssr-head-->", ssrDataScript);
 
