@@ -1,5 +1,5 @@
 import moment from "moment";
-import { MouseEventHandler, useCallback } from "react";
+import { CSSProperties, MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
@@ -34,6 +34,13 @@ interface Props {
 export const TimelineItem = ({ index, post }: Props) => {
   const navigate = useNavigate();
   const prioritizeImage = index < 3;
+  const deferredArticleStyle: CSSProperties | undefined =
+    index >= 3
+      ? {
+        containIntrinsicSize: "640px",
+        contentVisibility: "auto",
+      }
+      : undefined;
 
   /**
    * ボタンやリンク以外の箇所をクリックしたとき かつ 文字が選択されてないとき、投稿詳細ページに遷移する
@@ -49,7 +56,11 @@ export const TimelineItem = ({ index, post }: Props) => {
   );
 
   return (
-    <article className="hover:bg-cax-surface-subtle px-1 sm:px-4" onClick={handleClick}>
+    <article
+      className="hover:bg-cax-surface-subtle px-1 sm:px-4"
+      onClick={handleClick}
+      style={deferredArticleStyle}
+    >
       <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
         <div className="shrink-0 grow-0 pr-2 sm:pr-4">
           <Link
@@ -97,7 +108,7 @@ export const TimelineItem = ({ index, post }: Props) => {
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
+              <MovieArea movie={post.movie} deferUntilVisible={index >= 2} />
             </div>
           ) : null}
           {post.sound ? (
