@@ -7,10 +7,24 @@ import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
+function getInlineInitialPost(): Models.Post | null {
+  const el = document.getElementById("initial-post");
+  if (!el || !el.textContent) return null;
+  try {
+    return JSON.parse(el.textContent);
+  } catch {
+    return null;
+  }
+}
+
 const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
+  const inlinePost = getInlineInitialPost();
+  const useInline = inlinePost != null && inlinePost.id === postId;
+
   const { data: post, isLoading: isLoadingPost } = useFetch<Models.Post>(
     `/api/v1/posts/${postId}`,
     fetchJSON,
+    useInline ? inlinePost : undefined,
   );
 
   const { data: comments, fetchMore } = useInfiniteFetch<Models.Comment>(
