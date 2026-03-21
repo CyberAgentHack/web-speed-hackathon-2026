@@ -34,16 +34,24 @@ const LCP_PRELOADS: Array<{
     // Photo post detail - first image (4 images, sizes = 320px on desktop)
     pattern: /^\/posts\/fe6712a1-d9e4-4f6a-987d-e7d08b7f8a46$/,
     getLinks: () => {
+      const postId = "fe6712a1-d9e4-4f6a-987d-e7d08b7f8a46";
       const imageId = "18358ca6-0aa7-4592-9926-1ec522b9aacb";
-      return `<link rel="preload" as="image" fetchpriority="high" imagesrcset="/images/${imageId}_w320.webp 320w, /images/${imageId}_w640.webp 640w, /images/${imageId}_w1280.webp 1280w" imagesizes="(min-width: 640px) 320px, 50vw">`;
+      return [
+        `<link rel="preload" as="image" fetchpriority="high" imagesrcset="/images/${imageId}_w320.webp 320w, /images/${imageId}_w640.webp 640w, /images/${imageId}_w1280.webp 1280w" imagesizes="(min-width: 640px) 320px, 50vw">`,
+        `<link rel="preload" as="fetch" href="/api/v1/posts/${postId}/comments?limit=2&offset=0" crossorigin>`,
+      ].join('\n');
     },
   },
   {
     // Video post detail - preload poster image
     pattern: /^\/posts\/fff790f5-99ea-432f-8f79-21d3d49efd1a$/,
     getLinks: () => {
+      const postId = "fff790f5-99ea-432f-8f79-21d3d49efd1a";
       const movieId = "51a14d70-9dd6-45ad-9f87-64af91ec2779";
-      return `<link rel="preload" as="image" fetchpriority="high" href="/movies/${movieId}_poster.webp">`;
+      return [
+        `<link rel="preload" as="image" fetchpriority="high" href="/movies/${movieId}_poster.webp">`,
+        `<link rel="preload" as="fetch" href="/api/v1/posts/${postId}/comments?limit=2&offset=0" crossorigin>`,
+      ].join('\n');
     },
   },
   {
@@ -57,22 +65,26 @@ const LCP_PRELOADS: Array<{
     },
   },
   {
-    // Text post detail - preload API response and profile image
+    // Text post detail - preload API response, profile image, and comments
     pattern: /^\/posts\/ff93a168-ea7c-4202-9879-672382febfda$/,
     getLinks: () => {
+      const postId = "ff93a168-ea7c-4202-9879-672382febfda";
       return [
-        '<link rel="preload" as="fetch" href="/api/v1/posts/ff93a168-ea7c-4202-9879-672382febfda" crossorigin>',
+        `<link rel="preload" as="fetch" href="/api/v1/posts/${postId}" crossorigin>`,
         '<link rel="preload" as="image" fetchpriority="high" href="/images/profiles/3dd3640a-5f9e-40d0-8daf-bfdb473b129e.webp">',
+        `<link rel="preload" as="fetch" href="/api/v1/posts/${postId}/comments?limit=2&offset=0" crossorigin>`,
       ].join('\n');
     },
   },
   {
-    // Audio post detail - preload API response and profile image
+    // Audio post detail - preload API response, profile image, and comments
     pattern: /^\/posts\/fefe75bd-1b7a-478c-8ecc-2c1ab38b821e$/,
     getLinks: () => {
+      const postId = "fefe75bd-1b7a-478c-8ecc-2c1ab38b821e";
       return [
-        '<link rel="preload" as="fetch" href="/api/v1/posts/fefe75bd-1b7a-478c-8ecc-2c1ab38b821e" crossorigin>',
+        `<link rel="preload" as="fetch" href="/api/v1/posts/${postId}" crossorigin>`,
         '<link rel="preload" as="image" fetchpriority="high" href="/images/profiles/84ba6fee-d167-43c4-8b10-d94caa923f48.webp">',
+        `<link rel="preload" as="fetch" href="/api/v1/posts/${postId}/comments?limit=2&offset=0" crossorigin>`,
       ].join('\n');
     },
   },
