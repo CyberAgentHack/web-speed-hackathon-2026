@@ -108,10 +108,24 @@ const config = {
   optimization: env === "production" ? {
     minimizer: [
       new TerserPlugin({
-        exclude: /node_modules/,
         parallel: true,
       }),
     ],
+    splitChunks: {
+      chunks: "all",
+      cacheGroups: {
+        reactVendor: {
+          test: /[\\/]node_modules[\\/](react|react-dom|react-router|scheduler)[\\/]/,
+          name: "vendor-react",
+          priority: 20,
+        },
+        defaultVendors: {
+          test: /[\\/]node_modules[\\/]/,
+          name: "vendor",
+          priority: 10,
+        },
+      },
+    },
   } : {
     minimize: false,
   },
