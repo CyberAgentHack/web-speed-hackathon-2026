@@ -96,10 +96,12 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     let mounted = true;
 
     const init = async () => {
-      const Bluebird = (await import("bluebird")).default;
       const kuromoji = (await import("kuromoji")).default;
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
+      const nextTokenizer = await new Promise<Tokenizer<IpadicFeatures>>((resolve, reject) => {
+        kuromoji.builder({ dicPath: "/dicts" }).build((err, tokenizer) => {
+          err ? reject(err) : resolve(tokenizer);
+        });
+      });
       if (mounted) {
         setTokenizer(nextTokenizer);
       }
