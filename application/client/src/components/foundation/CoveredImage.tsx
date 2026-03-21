@@ -7,15 +7,17 @@ import { useIntersectionObserver } from "@web-speed-hackathon-2026/client/src/ho
 interface Props {
   src: string;
   alt: string;
+  priority?: boolean;
 }
 
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
-export const CoveredImage = ({ src, alt }: Props) => {
+export const CoveredImage = ({ src, alt, priority = false }: Props) => {
   const dialogId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
-  const isVisible = useIntersectionObserver(containerRef, { rootMargin: "200px" });
+  const isVisibleByObserver = useIntersectionObserver(priority ? { current: null } : containerRef, { rootMargin: "200px" });
+  const isVisible = priority || isVisibleByObserver;
 
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
@@ -24,7 +26,15 @@ export const CoveredImage = ({ src, alt }: Props) => {
 
   return (
     <div ref={containerRef} className="relative h-full w-full overflow-hidden">
-      {isVisible && <img alt={alt} className="absolute inset-0 h-full w-full object-cover" src={src} />}
+      {isVisible && (
+        <img
+          alt={alt}
+          className="absolute inset-0 h-full w-full object-cover"
+          src={src}
+          fetchPriority={priority ? "high" : "auto"}
+          loading={priority ? "eager" : "lazy"}
+        />
+      )}
 
       <button
         className="border-cax-border bg-cax-surface-raised/90 text-cax-text-muted hover:bg-cax-surface absolute right-1 bottom-1 rounded-full border px-2 py-1 text-center text-xs"
