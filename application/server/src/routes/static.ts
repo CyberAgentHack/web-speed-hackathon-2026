@@ -80,6 +80,52 @@ staticRouter.use(async (req, res, next) => {
   }
 });
 
+// GIF最適化: GIFをWebPアニメーションに変換して配信
+const gifCache = new Map<string, Buffer>();
+
+staticRouter.use(async (req, res, next) => {
+  if (!req.path.startsWith("/movies/") || !req.path.endsWith(".gif")) {
+    return next();
+  }
+
+  const accept = req.headers.accept || "";
+  const supportsWebP = accept.includes("image/webp");
+  if (!supportsWebP) {
+    return next();
+  }
+
+  const relativePath = req.path.slice(1);
+  const gifPath = path.join(PUBLIC_PATH, relativePath);
+
+  if (!fs.existsSync(gifPath)) {
+    return next();
+  }
+
+  const cacheKey = `${relativePath}:webp`;
+  if (gifCache.has(cacheKey)) {
+    const cached = gifCache.get(cacheKey)!;
+    res.set("Content-Type", "image/webp");
+    res.set("Cache-Control", "public, max-age=604800, immutable");
+    res.set("Vary", "Accept");
+    return res.send(cached);
+  }
+
+  try {
+    const buffer = await sharp(gifPath, { animated: true })
+      .webp({ quality: 50 })
+      .toBuffer();
+
+    gifCache.set(cacheKey, buffer);
+
+    res.set("Content-Type", "image/webp");
+    res.set("Cache-Control", "public, max-age=604800, immutable");
+    res.set("Vary", "Accept");
+    return res.send(buffer);
+  } catch {
+    return next();
+  }
+});
+
 // SPA 対応のため、ファイルが存在しないときに index.html を返す
 staticRouter.use(history());
 
