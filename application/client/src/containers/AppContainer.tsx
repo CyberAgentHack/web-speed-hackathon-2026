@@ -1,14 +1,8 @@
-import { lazy, Suspense, useCallback, useEffect, useId, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useId, useRef, useState } from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
-import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
-const NewPostModalContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer").then((m) => ({
-    default: m.NewPostModalContainer,
-  })),
-);
 
 const TimelineContainer = lazy(
   () => import("@web-speed-hackathon-2026/client/src/containers/TimelineContainer"),
@@ -37,6 +31,67 @@ const CrokContainer = lazy(
 const NotFoundContainer = lazy(
   () => import("@web-speed-hackathon-2026/client/src/containers/NotFoundContainer"),
 );
+
+function DeferredModal({
+  id,
+  factory,
+  componentProps,
+}: {
+  id: string;
+  factory: () => Promise<{ default: React.ComponentType<any> }>;
+  componentProps: Record<string, unknown>;
+}) {
+  const [Component, setComponent] = useState<React.ComponentType<any> | null>(null);
+  const needsReopen = useRef(false);
+  const placeholderRef = useRef<HTMLDialogElement>(null);
+  const factoryRef = useRef(factory);
+
+  useEffect(() => {
+    const idleId = requestIdleCallback(() => {
+      factoryRef.current().then((mod) => setComponent(() => mod.default));
+    });
+    return () => cancelIdleCallback(idleId);
+  }, []);
+
+  useEffect(() => {
+    const el = placeholderRef.current;
+    if (!el || Component) return;
+    const onToggle = (e: Event) => {
+      if ((e as ToggleEvent).newState === "open") {
+        needsReopen.current = true;
+        el.close();
+        factoryRef.current().then((mod) => setComponent(() => mod.default));
+      }
+    };
+    el.addEventListener("toggle", onToggle);
+    return () => el.removeEventListener("toggle", onToggle);
+  }, [Component]);
+
+  useEffect(() => {
+    if (Component && needsReopen.current) {
+      needsReopen.current = false;
+      requestAnimationFrame(() => {
+        const dialog = document.getElementById(id) as HTMLDialogElement | null;
+        if (dialog && !dialog.open) {
+          dialog.showModal();
+        }
+      });
+    }
+  }, [Component, id]);
+
+  if (!Component) {
+    return (
+      <dialog
+        id={id}
+        ref={placeholderRef}
+        closedby={"any" as never}
+        className="backdrop:bg-cax-overlay/50 bg-cax-surface fixed inset-0 m-auto w-full max-w-[calc(min(var(--container-md),100%)-var(--spacing)*4)] rounded-lg p-4"
+      />
+    );
+  }
+
+  return <Component {...componentProps} id={id} />;
+}
 
 export const AppContainer = () => {
   const { pathname } = useLocation();
@@ -102,10 +157,24 @@ export const AppContainer = () => {
         </Suspense>
       </AppPage>
 
-      <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
-      <Suspense fallback={null}>
-        <NewPostModalContainer id={newPostModalId} />
-      </Suspense>
+      <DeferredModal
+        id={authModalId}
+        factory={() =>
+          import("@web-speed-hackathon-2026/client/src/containers/AuthModalContainer").then(
+            (m) => ({
+              default: m.AuthModalContainer,
+            }),
+          )
+        }
+        componentProps={{ onUpdateActiveUser: setActiveUser }}
+      />
+      <DeferredModal
+        id={newPostModalId}
+        factory={() =>
+          import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer")
+        }
+        componentProps={{}}
+      />
     </>
   );
 };
