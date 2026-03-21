@@ -20,7 +20,7 @@ export const TranslatableText = ({ text }: Props) => {
         (async () => {
           updateState({ type: "loading" });
           try {
-            using translator = await createTranslator({
+            const translator = await createTranslator({
               sourceLanguage: "ja",
               targetLanguage: "en",
             });
