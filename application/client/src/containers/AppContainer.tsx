@@ -2,19 +2,10 @@ import { Suspense, lazy, useCallback, useEffect, useId, useState } from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
+import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
+import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
-
-const AuthModalContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/AuthModalContainer").then((m) => ({
-    default: m.AuthModalContainer,
-  })),
-);
-const NewPostModalContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer").then((m) => ({
-    default: m.NewPostModalContainer,
-  })),
-);
 
 const CrokContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/CrokContainer").then((m) => ({
@@ -84,6 +75,10 @@ export const AppContainer = () => {
   const authModalId = useId();
   const newPostModalId = useId();
 
+  if (isLoadingActiveUser) {
+    return null;
+  }
+
   return (
     <>
       <AppPage
@@ -97,17 +92,13 @@ export const AppContainer = () => {
             <Route element={<TimelineContainer />} path="/" />
             <Route
               element={
-                isLoadingActiveUser ? null : (
-                  <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
-                )
+                <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
               }
               path="/dm"
             />
             <Route
               element={
-                isLoadingActiveUser ? null : (
-                  <DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />
-                )
+                <DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />
               }
               path="/dm/:conversationId"
             />
@@ -117,9 +108,7 @@ export const AppContainer = () => {
             <Route element={<TermContainer />} path="/terms" />
             <Route
               element={
-                isLoadingActiveUser ? null : (
-                  <CrokContainer activeUser={activeUser} authModalId={authModalId} />
-                )
+                <CrokContainer activeUser={activeUser} authModalId={authModalId} />
               }
               path="/crok"
             />
@@ -128,12 +117,8 @@ export const AppContainer = () => {
         </Suspense>
       </AppPage>
 
-      {!isLoadingActiveUser && (
-        <Suspense>
-          <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
-          <NewPostModalContainer id={newPostModalId} />
-        </Suspense>
-      )}
+      <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
+      <NewPostModalContainer id={newPostModalId} />
     </>
   );
 };
