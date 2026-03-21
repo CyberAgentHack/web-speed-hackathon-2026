@@ -51,9 +51,10 @@ const PausableMovieInner = ({ src }: Props) => {
           playsInline
           src={src}
         />
+        <canvas className="absolute inset-0 h-full w-full" />
         <div
           className={classNames(
-            "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
+            "pointer-events-none absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
             {
               "opacity-0 group-hover:opacity-100": isPlaying,
             },
