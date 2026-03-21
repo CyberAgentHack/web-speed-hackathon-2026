@@ -9,7 +9,7 @@ module.exports = (api) => {
         {
           modules: false,
           targets: {
-            chrome: "123",
+            chrome: "133",
           },
         },
       ],

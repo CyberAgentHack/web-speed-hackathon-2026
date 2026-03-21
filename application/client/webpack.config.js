@@ -3,7 +3,9 @@ const path = require("path");
 
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const HTMLInlineCSSWebpackPlugin = require("html-inline-css-webpack-plugin").default;
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
 const webpack = require("webpack");
 
 const SRC_PATH = path.resolve(__dirname, "./src");
@@ -60,7 +62,7 @@ const config = {
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    filename: "scripts/[name].js",
+    filename: "scripts/[name]-[contenthash].js",
     path: DIST_PATH,
     publicPath: "/",
     clean: true,
@@ -72,7 +74,8 @@ const config = {
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
     }),
     new MiniCssExtractPlugin({
-      filename: "styles/[name].css",
+      filename: "styles/[name]-[contenthash].css",
+      runtime: false,
     }),
     new CopyWebpackPlugin({
       patterns: [
@@ -83,9 +86,11 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: "head",
+      scriptLoading: "defer",
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
+    new HTMLInlineCSSWebpackPlugin(),
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
@@ -118,9 +123,36 @@ const config = {
     chunkIds: "deterministic",
     moduleIds: "deterministic",
     minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          compress: {
+            passes: 2,
+            drop_console: true,
+          },
+        },
+      }),
+    ],
+    runtimeChunk: "single",
     splitChunks: {
-      chunks: "async",
+      chunks: "all",
       maxSize: 500000,
+      cacheGroups: {
+        react: {
+          test: /[\\/]node_modules[\\/](react|react-dom|react-router|react-redux|redux)[\\/]/,
+          name: "framework",
+          chunks: "all",
+          priority: 20,
+          enforce: true,
+        },
+        vendors: {
+          test: /[\\/]node_modules[\\/]/,
+          chunks: "all",
+          priority: 10,
+          reuseExistingChunk: true,
+          minChunks: 2,
+        },
+      },
     },
     usedExports: true,
     sideEffects: true,
