@@ -6,15 +6,33 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 
 import { QaSuggestion } from "@web-speed-hackathon-2026/server/src/models";
+import { getTokenizer } from "@web-speed-hackathon-2026/server/src/utils/analyze_sentiment";
+import {
+  extractTokens,
+  filterSuggestionsBM25,
+} from "@web-speed-hackathon-2026/server/src/utils/bm25_search";
 
 export const crokRouter = Router();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-8");
 
-crokRouter.get("/crok/suggestions", async (_req, res) => {
+crokRouter.get("/crok/suggestions", async (req, res) => {
+  const query = (req.query["q"] as string) ?? "";
+
+  if (!query.trim()) {
+    res.json({ suggestions: [], queryTokens: [] });
+    return;
+  }
+
   const suggestions = await QaSuggestion.findAll({ logging: false });
-  res.json({ suggestions: suggestions.map((s) => s.question) });
+  const candidates = suggestions.map((s) => s.question);
+
+  const tokenizer = await getTokenizer();
+  const queryTokens = extractTokens(tokenizer.tokenize(query));
+  const results = filterSuggestionsBM25(tokenizer, candidates, queryTokens);
+
+  res.json({ suggestions: results, queryTokens });
 });
 
 function sleep(ms: number): Promise<void> {

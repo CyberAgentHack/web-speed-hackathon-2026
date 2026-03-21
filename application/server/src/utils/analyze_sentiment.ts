@@ -5,7 +5,7 @@ import analyze from "negaposi-analyzer-ja";
 
 let cachedTokenizer: Tokenizer<IpadicFeatures> | null = null;
 
-function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
+export function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
   if (cachedTokenizer) {
     return Promise.resolve(cachedTokenizer);
   }

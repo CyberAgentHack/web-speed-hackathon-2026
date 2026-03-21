@@ -16,6 +16,7 @@
     "@tsconfig/strictest": "2.0.8",
     "@web-speed-hackathon-2026/server": "workspace:*",
     "audio-decode": "^3.3.0",
+    "bayesian-bm25": "0.4.0",
     "bcrypt": "6.0.0",
     "body-parser": "2.2.0",
     "connect-history-api-fallback": "2.0.0",

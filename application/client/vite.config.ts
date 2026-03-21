@@ -25,8 +25,6 @@ export default defineConfig({
   resolve: {
     alias: {
       "@web-speed-hackathon-2026/client": path.resolve(__dirname, "."),
-      "bayesian-bm25": path.resolve(__dirname, "node_modules/bayesian-bm25/dist/index.js"),
-      kuromoji: path.resolve(__dirname, "node_modules/kuromoji/build/kuromoji.js"),
     },
   },
   build: {
