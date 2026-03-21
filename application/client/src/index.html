@@ -6,7 +6,7 @@
     <title>CaX</title>
     <script defer src="/scripts/main.js"></script>
     <link rel="stylesheet" href="/styles/main.css" />
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.1"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.1"></script>
     <style type="text/tailwindcss">
       @layer base {
         button:not(:disabled),
@@ -172,8 +172,67 @@
         }
       }
     </style>
+    <style>
+      #boot-shell {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(circle at top, rgba(15, 118, 110, 0.12), transparent 40%),
+          linear-gradient(180deg, #fafaf9 0%, #ffffff 45%, #f5f5f4 100%);
+        color: #042f2e;
+      }
+
+      #boot-shell-inner {
+        width: min(100%, 48rem);
+        padding: 2rem 1.5rem 5rem;
+      }
+
+      #boot-shell-mark {
+        display: inline-block;
+        margin-bottom: 1rem;
+        border: 1px solid #a8a29e;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.8);
+        padding: 0.4rem 0.9rem;
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+      }
+
+      #boot-shell-title {
+        margin: 0;
+        font-size: clamp(2.5rem, 6vw, 4.75rem);
+        line-height: 1;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+      }
+
+      #boot-shell-copy {
+        max-width: 36rem;
+        margin: 1rem 0 0;
+        font-size: clamp(1rem, 2vw, 1.25rem);
+        line-height: 1.7;
+        color: #115e59;
+      }
+
+      #app {
+        position: relative;
+        z-index: 1;
+      }
+    </style>
   </head>
   <body class="bg-cax-canvas text-cax-text">
+    <div id="boot-shell" aria-hidden="true">
+      <div id="boot-shell-inner">
+        <div id="boot-shell-mark">CaX</div>
+        <h1 id="boot-shell-title">いま読める話題を、すぐに。</h1>
+        <p id="boot-shell-copy">
+          タイムライン、検索、投稿詳細、DM をすばやく表示するために初期画面を先に描画しています。
+        </p>
+      </div>
+    </div>
     <div id="app"></div>
   </body>
 </html>

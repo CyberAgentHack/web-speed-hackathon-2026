@@ -63,8 +63,8 @@ export const NewPostModalContainer = ({ id }: Props) => {
       try {
         setIsLoading(true);
         const post = await sendNewPost(params);
-        ref.current?.close();
         navigate(`/posts/${post.id}`);
+        ref.current?.close();
       } catch {
         setHasError(true);
       } finally {

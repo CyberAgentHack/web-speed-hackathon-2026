@@ -76,7 +76,6 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
         const user = await fetchJSON<Models.User>("/api/v1/me");
         onUpdateActiveUser(user);
         await waitForNextFrame();
-
         handleRequestCloseModal();
       } catch (err: unknown) {
         const error = getErrorCode(err as JQuery.jqXHR<unknown>, values.type);

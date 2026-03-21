@@ -39,7 +39,15 @@ directMessageRouter.post("/dm", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const peer = await User.findByPk(req.body?.peerId);
+  const rawUsername = req.body?.username;
+  const peer =
+    typeof rawUsername === "string"
+      ? await User.findOne({
+          where: {
+            username: rawUsername.trim().replace(/^@/, ""),
+          },
+        })
+      : await User.findByPk(req.body?.peerId);
   if (peer === null) {
     throw new httpErrors.NotFound();
   }
@@ -210,17 +218,37 @@ directMessageRouter.post("/dm/:conversationId/read", async (req, res) => {
   return res.status(200).type("application/json").send({});
 });
 
-directMessageRouter.post("/dm/:conversationId/typing", async (req, res) => {
+directMessageRouter.post("/dm", async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversation = await DirectMessageConversation.findByPk(req.params.conversationId);
-  if (conversation === null) {
+  const rawUsername = req.body?.username;
+  const peer =
+    typeof rawUsername === "string"
+      ? await User.findOne({
+          where: {
+            username: rawUsername.trim().replace(/^@/, ""),
+          },
+        })
+      : await User.findByPk(req.body?.peerId);
+
+  if (peer === null) {
     throw new httpErrors.NotFound();
   }
 
-  eventhub.emit(`dm:conversation/${conversation.id}:typing/${req.session.userId}`, {});
+  const [conversation] = await DirectMessageConversation.findOrCreate({
+    where: {
+      [Op.or]: [
+        { initiatorId: req.session.userId, memberId: peer.id },
+        { initiatorId: peer.id, memberId: req.session.userId },
+      ],
+    },
+    defaults: {
+      initiatorId: req.session.userId,
+      memberId: peer.id,
+    },
+  });
 
-  return res.status(200).type("application/json").send({});
+  return res.status(200).type("application/json").send({ id: conversation.id });
 });

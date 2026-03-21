@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useId, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { Helmet, HelmetProvider } from "react-helmet";
+import { HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
@@ -67,7 +67,21 @@ const UserProfileContainer = lazy(async () =>
 );
 
 const RouteLoadingFallback = () => {
-  return <div className="p-4 text-sm">読み込み中...</div>;
+  return (
+    <section className="min-h-[60vh] px-4 py-8 sm:px-6 sm:py-12">
+      <div className="mx-auto max-w-3xl rounded-[2rem] border border-cax-border bg-cax-surface-subtle/80 px-6 py-8 shadow-sm">
+        <p className="mb-3 inline-flex rounded-full border border-cax-border bg-cax-surface px-3 py-1 text-xs tracking-[0.2em] text-cax-text-muted uppercase">
+          CaX
+        </p>
+        <h1 className="text-cax-text text-4xl leading-tight font-bold text-balance sm:text-5xl">
+          画面を準備しています
+        </h1>
+        <p className="text-cax-text-muted mt-4 max-w-2xl text-base leading-8 sm:text-lg">
+          タイムライン、検索、投稿詳細、DM をすばやく表示できるように、必要な画面データを読み込んでいます。
+        </p>
+      </div>
+    </section>
+  );
 };
 
 export const AppContainer = () => {
@@ -78,14 +92,12 @@ export const AppContainer = () => {
   }, [pathname]);
 
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
-  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
   const authStateVersionRef = useRef(0);
 
   const handleUpdateActiveUser = useCallback((user: Models.User) => {
     authStateVersionRef.current += 1;
     flushSync(() => {
       setActiveUser(user);
-      setIsLoadingActiveUser(false);
     });
   }, []);
 
@@ -116,38 +128,19 @@ export const AppContainer = () => {
         if (requestVersion !== authStateVersionRef.current) {
           return;
         }
-        flushSync(() => {
-          setIsLoadingActiveUser(false);
-        });
       });
-  }, [setActiveUser, setIsLoadingActiveUser]);
+  }, [setActiveUser]);
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
     authStateVersionRef.current += 1;
     flushSync(() => {
       setActiveUser(null);
-      setIsLoadingActiveUser(false);
     });
     navigate("/");
   }, [navigate]);
 
   const authModalId = useId();
   const newPostModalId = useId();
-
-  if (isLoadingActiveUser) {
-    return (
-      <HelmetProvider>
-        <Helmet>
-          <title>読込中 - CaX</title>
-        </Helmet>
-        <div className="bg-cax-surface text-cax-text flex min-h-screen items-center justify-center">
-          <div className="border-cax-border bg-cax-surface-subtle rounded-2xl border px-6 py-4 text-sm">
-            読み込み中...
-          </div>
-        </div>
-      </HelmetProvider>
-    );
-  }
 
   return (
     <HelmetProvider>
