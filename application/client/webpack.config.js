@@ -129,6 +129,24 @@ const config = {
           enforce: true,
           priority: 30,
         },
+        kuromoji: {
+          test: /kuromoji/,
+          name: "kuromoji",
+          chunks: "async",
+          priority: 25,
+        },
+        katex: {
+          test: /katex/,
+          name: "katex",
+          chunks: "async",
+          priority: 25,
+        },
+        imagemagick: {
+          test: /imagemagick|magick-wasm/,
+          name: "imagemagick",
+          chunks: "async",
+          priority: 25,
+        },
         vendor: {
           test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
           name: "vendor-react",
