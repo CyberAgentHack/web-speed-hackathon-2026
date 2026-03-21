@@ -31,7 +31,7 @@ const config = {
   devtool: "eval",
   entry: {
     main: [
-      "core-js",
+      // "core-js",
       "regenerator-runtime/runtime",
       "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),

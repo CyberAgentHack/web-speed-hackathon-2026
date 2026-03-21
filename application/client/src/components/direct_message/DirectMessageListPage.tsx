@@ -1,5 +1,7 @@
-import moment from "moment";
-import { useCallback, useEffect, useState } from "react";
+// import moment from "moment";
+import 'dayjs/locale/ja';
+import dayjs, { locale, extend } from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -44,6 +46,9 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
   if (conversations == null) {
     return null;
   }
+
+  locale('ja');
+  extend(relativeTime);
 
   return (
     <section>
@@ -100,7 +105,8 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {/* {moment(lastMessage.createdAt).locale("ja").fromNow()} */}
+                            {dayjs(lastMessage.createdAt).locale("ja").fromNow()}
                           </time>
                         )}
                       </div>
