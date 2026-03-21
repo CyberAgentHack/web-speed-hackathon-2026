@@ -13,18 +13,52 @@ type Translator = {
   translate(text: string): Promise<string>;
 };
 
+type TranslatorAvailability =
+  | "unavailable"
+  | "downloadable"
+  | "downloading"
+  | "available";
+
+type TranslatorAPI = {
+  availability(params: {
+    sourceLanguage: string;
+    targetLanguage: string;
+  }): Promise<TranslatorAvailability | string>;
+  create(params: {
+    sourceLanguage: string;
+    targetLanguage: string;
+  }): Promise<Translator>;
+};
+
 let translatorPromise: Promise<Translator> | undefined;
+
+function getTranslatorAPI(): TranslatorAPI {
+  const api = globalThis.Translator;
+  if (!api) {
+    throw new Error("Translator API is not available in this browser");
+  }
+
+  return api;
+}
 
 function getTranslator(): Promise<Translator> {
   if (!translatorPromise) {
-    translatorPromise = import(
-      "@web-speed-hackathon-2026/client/src/utils/create_translator"
-    ).then(({ createTranslator }) =>
-      createTranslator({
+    const translatorApi = getTranslatorAPI();
+    translatorPromise = (async () => {
+      const availability = await translatorApi.availability({
         sourceLanguage: "ja",
         targetLanguage: "en",
-      }),
-    );
+      });
+
+      if (availability === "unavailable") {
+        throw new Error("Japanese to English translation is unavailable");
+      }
+
+      return translatorApi.create({
+        sourceLanguage: "ja",
+        targetLanguage: "en",
+      });
+    })();
   }
 
   return translatorPromise;
