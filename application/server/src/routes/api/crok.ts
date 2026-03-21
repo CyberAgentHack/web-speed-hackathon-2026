@@ -10,6 +10,7 @@ import Bluebird from "bluebird";
 import kuromoji from "kuromoji";
 import { extractTokens, filterSuggestionsBM25 } from "../../utils/bm25_search";
 import { DICTS_PATH } from "../../paths";
+import chunk from "lodash.chunk";
 
 export const crokRouter = Router();
 
@@ -57,16 +58,17 @@ crokRouter.get("/crok", async (req, res) => {
 
   let messageId = 0;
 
-  // TTFT (Time to First Token)
-  await sleep(3000);
+  const chunks = chunk(response, 200);
 
-  for (const char of response) {
+  console.log("Streaming the token:", response.length);
+  for (const chunk of chunks) {
     if (res.closed) break;
 
-    const data = JSON.stringify({ text: char, done: false });
+    const data = JSON.stringify({ text: chunk.join(""), done: false });
     res.write(`event: message\nid: ${messageId++}\ndata: ${data}\n\n`);
+    console.log("Streamed", messageId)
 
-    await sleep(10);
+    await sleep(100);
   }
 
   if (!res.closed) {
