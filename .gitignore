@@ -223,5 +223,3 @@ application/upload/**
 
 .qodo
 memo.md
-scripts/*
-target_list.txt
