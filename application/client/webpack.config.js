@@ -86,7 +86,7 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: "body",
+      inject: "head",
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
     new BundleAnalyzerPlugin({

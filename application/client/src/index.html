@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CaX</title>
     <link rel="stylesheet" href="/styles/main.css" />
+    <script defer src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.1"></script>
     <style type="text/tailwindcss">
       @layer base {
         button:not(:disabled),
@@ -173,7 +174,5 @@
   </head>
   <body class="bg-cax-canvas text-cax-text">
     <div id="app"></div>
-    <%= htmlWebpackPlugin.tags.bodyTags %>
-    <script defer src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.1"></script>
   </body>
 </html>
