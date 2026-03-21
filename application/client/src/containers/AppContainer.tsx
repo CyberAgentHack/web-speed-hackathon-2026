@@ -11,6 +11,7 @@ import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containe
 import { PostLoadingPlaceholder } from "@web-speed-hackathon-2026/client/src/containers/PostContainer";
 import { SearchContainer } from "@web-speed-hackathon-2026/client/src/containers/SearchContainer";
 import { TermContainer } from "@web-speed-hackathon-2026/client/src/containers/TermContainer";
+import { TimelineLoadingPlaceholder } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 const CrokContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/CrokContainer").then((module) => ({
@@ -76,7 +77,7 @@ export const AppContainer = () => {
         <Routes>
           <Route
             element={
-              <Suspense fallback={null}>
+              <Suspense fallback={<TimelineLoadingPlaceholder />}>
                 <TimelineContainer />
               </Suspense>
             }
