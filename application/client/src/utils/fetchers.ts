@@ -62,12 +62,33 @@ export async function sendFile<T>(url: string, file: File): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+export class ApiError extends Error {
+  status: number;
+  code?: string;
+  constructor(status: number, code?: string) {
+    super(`HTTP ${status}`);
+    this.status = status;
+    this.code = code;
+  }
+}
+
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
   const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  if (!response.ok) {
+    let code: string | undefined;
+    try {
+      const body = await response.json();
+      if (body && typeof body.code === "string") {
+        code = body.code;
+      }
+    } catch {
+      // ignore parse errors
+    }
+    throw new ApiError(response.status, code);
+  }
   return response.json() as Promise<T>;
 }

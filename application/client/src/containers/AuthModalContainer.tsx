@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
-import { sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { ApiError, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 import type { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 
@@ -21,23 +21,14 @@ const ERROR_MESSAGES: Record<string, string> = {
   USERNAME_TAKEN: "ユーザー名が使われています",
 };
 
-function getErrorCode(err: JQuery.jqXHR<unknown>, type: "signin" | "signup"): string {
-  const responseJSON = err.responseJSON;
-  if (
-    typeof responseJSON !== "object" ||
-    responseJSON === null ||
-    !("code" in responseJSON) ||
-    typeof responseJSON.code !== "string" ||
-    !Object.keys(ERROR_MESSAGES).includes(responseJSON.code)
-  ) {
-    if (type === "signup") {
-      return "登録に失敗しました";
-    } else {
-      return "パスワードが異なります";
-    }
+function getErrorMessage(err: unknown, type: "signin" | "signup"): string {
+  if (err instanceof ApiError && err.code && err.code in ERROR_MESSAGES) {
+    return ERROR_MESSAGES[err.code]!;
   }
-
-  return ERROR_MESSAGES[responseJSON.code]!;
+  if (type === "signup") {
+    return "登録に失敗しました";
+  }
+  return "パスワードが異なります";
 }
 
 export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
@@ -88,8 +79,7 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
           handleCompleteAuth(user);
           return;
         } catch (err: unknown) {
-          const error = getErrorCode(err as JQuery.jqXHR<unknown>, values.type);
-          throw new Error(error);
+          throw new Error(getErrorMessage(err, values.type));
         }
       }
 
@@ -97,8 +87,7 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
         const user = await sendJSON<Models.User>("/api/v1/signin", values);
         handleCompleteAuth(user);
       } catch (err: unknown) {
-        const error = getErrorCode(err as JQuery.jqXHR<unknown>, values.type);
-        throw new Error(error);
+        throw new Error(getErrorMessage(err, values.type));
       }
     },
     [handleCompleteAuth],
