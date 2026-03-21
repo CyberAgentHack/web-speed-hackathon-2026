@@ -154,7 +154,7 @@ function attachWaveform(postJson: any): any {
 
 async function getInitialPostsJson(): Promise<string> {
   if (inlineDataCache["posts"]) return inlineDataCache["posts"];
-  const posts = await Post.findAll({ limit: 2, offset: 0 });
+  const posts = await Post.findAll({ limit: 5, offset: 0 });
   const postsJson = posts.map((p) => attachWaveform(p.toJSON()));
   const json = JSON.stringify(postsJson);
   inlineDataCache["posts"] = json;

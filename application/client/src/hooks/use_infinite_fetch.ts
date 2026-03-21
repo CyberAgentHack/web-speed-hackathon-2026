@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const INITIAL_LIMIT = 2;
+const INITIAL_LIMIT = 5;
 const LIMIT = 5;
 
 interface ReturnValues<T> {
