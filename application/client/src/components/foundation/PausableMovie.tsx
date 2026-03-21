@@ -40,6 +40,7 @@ export const PausableMovie = ({ src }: Props) => {
           ref={videoRef}
           autoPlay
           className="h-full w-full object-cover"
+          fetchPriority="high"
           loop
           muted
           playsInline

@@ -20,7 +20,7 @@ export const UserProfileHeader = ({ user }: Props) => {
   /** @type {React.ReactEventHandler<HTMLImageElement>} */
   const handleLoadImage = useCallback<ReactEventHandler<HTMLImageElement>>((ev) => {
     const fac = new FastAverageColor();
-    const { rgb } = fac.getColor(ev.currentTarget, { mode: "precision" });
+    const { rgb } = fac.getColor(ev.currentTarget, { mode: "speed" });
     setAverageColor(rgb);
     fac.destroy();
   }, []);
