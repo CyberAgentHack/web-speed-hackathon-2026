@@ -45,7 +45,7 @@ test.describe("投稿機能", () => {
 
     const textarea = page.getByPlaceholder("いまなにしてる？");
     await expect(textarea).toBeVisible({ timeout: 30_000 });
-    await textarea.fill(postText);
+    await textarea.pressSequentially(postText, { delay: 10 });
 
     // 画像ファイルを添付
     const fileInput = page.locator('input[type="file"][accept="image/*"]');
@@ -55,8 +55,10 @@ test.describe("投稿機能", () => {
     );
     await fileInput.setInputFiles(imagePath);
 
-    // モーダル内の投稿ボタンをクリック
-    await page.locator("dialog").getByRole("button", { name: "投稿する" }).click();
+    // 画像処理完了を待ってからモーダル内の投稿ボタンをクリック
+    const submitButton = page.locator("dialog").getByRole("button", { name: "投稿する" });
+    await expect(submitButton).toBeEnabled({ timeout: 60_000 });
+    await submitButton.click();
 
     // 投稿詳細に遷移する
     await page.waitForURL("**/posts/*", { timeout: 60_000 });
