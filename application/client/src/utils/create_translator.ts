@@ -14,12 +14,10 @@ interface Params {
 export async function createTranslator(params: Params): Promise<Translator> {
   return {
     async translate(text: string): Promise<string> {
-      const urlParams = new URLSearchParams([
-        ["q", text],
-        ["langpair", `${params.sourceLanguage}|${params.targetLanguage}`],
-      ]);
-
-      const reply = await fetchJSON<{ responseData?: { translatedText?: string } }>(`https://api.mymemory.translated.net/get?${urlParams.toString()}`);
+      const reply = await fetchJSON<{ responseData?: { translatedText?: string } }>("https://api.mymemory.translated.net/get", {
+        q: text,
+        langpair: `${params.sourceLanguage}|${params.targetLanguage}`,
+      });
 
       invariant(
         reply != null && reply.responseData?.translatedText !== undefined,
