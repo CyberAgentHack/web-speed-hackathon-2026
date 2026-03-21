@@ -17,7 +17,16 @@ const EXTENSION = "jpg";
 
 // 許可される拡張子
 const ALLOWED_EXTENSIONS = new Set([
-  "jpg", "jpeg", "png", "tiff", "tif", "gif", "webp", "avif", "heic", "heif"
+  "jpg",
+  "jpeg",
+  "png",
+  "tiff",
+  "tif",
+  "gif",
+  "webp",
+  "avif",
+  "heic",
+  "heif",
 ]);
 
 export const imageRouter = Router();
@@ -31,7 +40,8 @@ imageRouter.post("/images", async (req, res) => {
   }
 
   const type = await fileTypeFromBuffer(req.body);
-  if (type === undefined || !ALLOWED_EXTENSIONS.has(type.ext)) {
+  console.log("[POST /images] detected type:", type);
+  if (type === undefined || !ALLOWED_EXTENSIONS.has(type?.ext ?? "")) {
     throw new httpErrors.BadRequest("Invalid file type");
   }
 
@@ -49,14 +59,24 @@ imageRouter.post("/images", async (req, res) => {
   }
 
   // Convert to JPEG using sharp
-  const converted = await sharp(req.body).jpeg({ quality: 85 }).toBuffer();
+  let converted: Buffer;
+  try {
+    converted = await sharp(req.body).jpeg({ quality: 85 }).toBuffer();
+    console.log("[POST /images] converted bytes:", converted.length);
+  } catch (err) {
+    console.error("[imageRouter] Sharp conversion error:", err);
+    throw new httpErrors.BadRequest("Failed to process image");
+  }
 
   // Get image dimensions from converted image
   const dimensions = sizeOf(converted);
   const width = dimensions?.width ?? 0;
   const height = dimensions?.height ?? 0;
 
-  const filePath = path.resolve(UPLOAD_PATH, `./images/${imageId}.${EXTENSION}`);
+  const filePath = path.resolve(
+    UPLOAD_PATH,
+    `./images/${imageId}.${EXTENSION}`,
+  );
   await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
   await fs.writeFile(filePath, converted);
 
