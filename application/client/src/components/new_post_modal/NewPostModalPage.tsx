@@ -7,65 +7,8 @@ import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/comp
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
-let imageToolsPromise: Promise<{
-  convertImage: typeof import("@web-speed-hackathon-2026/client/src/utils/convert_image").convertImage;
-}> | null = null;
-
-let movieToolsPromise: Promise<{
-  convertMovie: typeof import("@web-speed-hackathon-2026/client/src/utils/convert_movie").convertMovie;
-}> | null = null;
-
-let soundToolsPromise: Promise<{
-  convertSound: typeof import("@web-speed-hackathon-2026/client/src/utils/convert_sound").convertSound;
-}> | null = null;
-
-function loadImageTools() {
-  if (imageToolsPromise === null) {
-    imageToolsPromise = import(
-      /* webpackChunkName: "feature-image-tools" */ "@web-speed-hackathon-2026/client/src/utils/convert_image"
-    ).then((imageModule) => ({
-      convertImage: imageModule.convertImage,
-    }));
-    imageToolsPromise = imageToolsPromise.catch((error) => {
-      imageToolsPromise = null;
-      throw error;
-    });
-  }
-  return imageToolsPromise;
-}
-
-function loadMovieTools() {
-  if (movieToolsPromise === null) {
-    movieToolsPromise = import(
-      /* webpackChunkName: "feature-movie-tools" */ "@web-speed-hackathon-2026/client/src/utils/convert_movie"
-    ).then((movieModule) => ({
-      convertMovie: movieModule.convertMovie,
-    }));
-    movieToolsPromise = movieToolsPromise.catch((error) => {
-      movieToolsPromise = null;
-      throw error;
-    });
-  }
-  return movieToolsPromise;
-}
-
-function loadSoundTools() {
-  if (soundToolsPromise === null) {
-    soundToolsPromise = import(
-      /* webpackChunkName: "feature-sound-tools" */ "@web-speed-hackathon-2026/client/src/utils/convert_sound"
-    ).then((soundModule) => ({
-      convertSound: soundModule.convertSound,
-    }));
-    soundToolsPromise = soundToolsPromise.catch((error) => {
-      soundToolsPromise = null;
-      throw error;
-    });
-  }
-  return soundToolsPromise;
-}
-
 interface SubmitParams {
-  images: Array<{ alt: string; file: File }>;
+  images: File[];
   movie: File | undefined;
   sound: File | undefined;
   text: string;
@@ -88,7 +31,6 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
   });
 
   const [hasFileError, setHasFileError] = useState(false);
-  const [isConverting, setIsConverting] = useState(false);
 
   const handleChangeText = useCallback<ChangeEventHandler<HTMLTextAreaElement>>((ev) => {
     const value = ev.currentTarget.value;
@@ -98,87 +40,51 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     }));
   }, []);
 
+  // 画像はサーバーサイドで変換するため、そのままアップロード
   const handleChangeImages = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
     const files = Array.from(ev.currentTarget.files ?? []).slice(0, 4);
     const isValid = files.every((file) => file.size <= MAX_UPLOAD_BYTES_LIMIT);
 
     setHasFileError(isValid !== true);
     if (isValid) {
-      setIsConverting(true);
-      void (async () => {
-        try {
-          const { convertImage } = await loadImageTools();
-          const convertedFiles = await Promise.all(
-            files.map((file) =>
-              convertImage(file, { extension: "jpg" }).then(({ alt, blob }) => ({
-                alt,
-                file: new File([blob], "converted.jpg", { type: "image/jpeg" }),
-              })),
-            ),
-          );
-
-          setParams((params) => ({
-            ...params,
-            images: convertedFiles,
-            movie: undefined,
-            sound: undefined,
-          }));
-        } catch (error) {
-          console.error(error);
-        } finally {
-          setIsConverting(false);
-        }
-      })();
+      setParams((params) => ({
+        ...params,
+        images: files,
+        movie: undefined,
+        sound: undefined,
+      }));
     }
   }, []);
 
+  // 音声はサーバーサイドで変換するため、そのままアップロード
   const handleChangeSound = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
     const file = Array.from(ev.currentTarget.files ?? [])[0]!;
     const isValid = file.size <= MAX_UPLOAD_BYTES_LIMIT;
 
     setHasFileError(isValid !== true);
     if (isValid) {
-      setIsConverting(true);
-      void (async () => {
-        try {
-          const { convertSound } = await loadSoundTools();
-          const converted = await convertSound(file, { extension: "mp3" });
-          setParams((params) => ({
-            ...params,
-            images: [],
-            movie: undefined,
-            sound: new File([converted], "converted.mp3", { type: "audio/mpeg" }),
-          }));
-        } finally {
-          setIsConverting(false);
-        }
-      })();
+      setParams((params) => ({
+        ...params,
+        images: [],
+        movie: undefined,
+        sound: file,
+      }));
     }
   }, []);
 
+  // 動画はサーバーサイドで変換するため、そのままアップロード
   const handleChangeMovie = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
     const file = Array.from(ev.currentTarget.files ?? [])[0]!;
     const isValid = file.size <= MAX_UPLOAD_BYTES_LIMIT;
 
     setHasFileError(isValid !== true);
     if (isValid) {
-      setIsConverting(true);
-      void (async () => {
-        try {
-          const { convertMovie } = await loadMovieTools();
-          const converted = await convertMovie(file, { extension: "gif", size: 360 });
-          setParams((params) => ({
-            ...params,
-            images: [],
-            movie: new File([converted], "converted.gif", { type: "image/gif" }),
-            sound: undefined,
-          }));
-        } catch (error) {
-          console.error(error);
-        } finally {
-          setIsConverting(false);
-        }
-      })();
+      setParams((params) => ({
+        ...params,
+        images: [],
+        movie: file,
+        sound: undefined,
+      }));
     }
   }, []);
 
@@ -229,10 +135,10 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       </div>
 
       <ModalSubmitButton
-        disabled={isConverting || isLoading || params.text === ""}
-        loading={isConverting || isLoading}
+        disabled={isLoading || params.text === ""}
+        loading={isLoading}
       >
-        {isConverting || isLoading ? "変換中" : "投稿する"}
+        {isLoading ? "投稿中" : "投稿する"}
       </ModalSubmitButton>
 
       <ModalErrorMessage>

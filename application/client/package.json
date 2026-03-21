@@ -9,15 +9,10 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@ffmpeg/core": "0.12.10",
-    "@ffmpeg/ffmpeg": "0.12.15",
-    "@imagemagick/magick-wasm": "0.0.37",
     "@web-speed-hackathon-2026/client": "workspace:*",
     "classnames": "2.5.1",
-    "encoding-japanese": "2.2.0",
     "katex": "0.16.25",
     "normalize.css": "8.0.1",
-    "piexifjs": "1.0.6",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-router": "7.9.4",
@@ -34,7 +29,6 @@
     "@tailwindcss/postcss": "4.2.2",
     "@tsconfig/strictest": "2.0.8",
     "@types/node": "22.18.8",
-    "@types/piexifjs": "1.0.0",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.1",
     "@types/react-syntax-highlighter": "15.5.13",
