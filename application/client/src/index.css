@@ -27,8 +27,7 @@
   /* Source Han Serif JP Regular の Y 軸を 1/1.43 に縮小した改変フォント */
   font-family: "Rei no Are Mincho";
   font-display: swap;
-  src: url(/fonts/ReiNoAreMincho-Regular.woff2) format("woff2"),
-       url(/fonts/ReiNoAreMincho-Regular.otf) format("opentype");
+  src: url(/fonts/ReiNoAreMincho-Regular.subset.woff2) format("woff2");
   font-weight: normal;
 }
 
@@ -36,8 +35,7 @@
   /* Source Han Serif JP Heavy の Y 軸を 1/1.43 に縮小した改変フォント */
   font-family: "Rei no Are Mincho";
   font-display: swap;
-  src: url(/fonts/ReiNoAreMincho-Heavy.woff2) format("woff2"),
-       url(/fonts/ReiNoAreMincho-Heavy.otf) format("opentype");
+  src: url(/fonts/ReiNoAreMincho-Heavy.subset.woff2) format("woff2");
   font-weight: bold;
 }
 
