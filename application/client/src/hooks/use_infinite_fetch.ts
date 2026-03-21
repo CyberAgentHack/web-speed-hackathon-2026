@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const LIMIT = 30;
+const DEFAULT_LIMIT = 30;
 
 interface Options {
   enabled?: boolean;
+  initialLimit?: number;
+  limit?: number;
 }
 
 interface ReturnValues<T> {
@@ -27,6 +29,8 @@ export function useInfiniteFetch<T>(
   options: Options = {},
 ): ReturnValues<T> {
   const enabled = options.enabled ?? true;
+  const initialLimit = options.initialLimit ?? options.limit ?? DEFAULT_LIMIT;
+  const limit = options.limit ?? DEFAULT_LIMIT;
   const internalRef = useRef({
     hasMore: apiPath !== "" && enabled,
     isLoading: false,
@@ -46,6 +50,7 @@ export function useInfiniteFetch<T>(
     if (!enabled || !apiPath || !hasMore || isLoading) {
       return;
     }
+    const pageLimit = offset === 0 ? initialLimit : limit;
 
     const requestId = internalRef.current.requestId + 1;
     setResult((cur) => ({
@@ -60,13 +65,13 @@ export function useInfiniteFetch<T>(
       requestId,
     };
 
-    void fetcher(appendPaginationParams(apiPath, LIMIT, offset)).then(
+    void fetcher(appendPaginationParams(apiPath, pageLimit, offset)).then(
       (pageData) => {
         if (internalRef.current.requestId !== requestId) {
           return;
         }
 
-        const nextHasMore = pageData.length === LIMIT;
+        const nextHasMore = pageData.length === pageLimit;
         setResult((cur) => ({
           ...cur,
           data: [...cur.data, ...pageData],
@@ -98,7 +103,7 @@ export function useInfiniteFetch<T>(
         };
       },
     );
-  }, [apiPath, enabled, fetcher]);
+  }, [apiPath, enabled, fetcher, initialLimit, limit]);
 
   useEffect(() => {
     internalRef.current = {

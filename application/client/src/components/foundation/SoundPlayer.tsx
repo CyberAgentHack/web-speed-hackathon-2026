@@ -14,6 +14,8 @@ interface Props {
   sound: Models.Sound;
 }
 
+const WAVEFORM_DEFERRED_LOAD_MS = 250;
+
 export const SoundPlayer = ({ sound }: Props) => {
   const src = getSoundPath(sound.id);
   const waveformSrc = getSoundWaveformPath(sound.id);
@@ -25,46 +27,27 @@ export const SoundPlayer = ({ sound }: Props) => {
   }, []);
 
   const audioRef = useRef<HTMLAudioElement>(null);
-  const waveformRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasRequestedWaveform, setHasRequestedWaveform] = useState(false);
-  const [isNearViewport, setIsNearViewport] = useState(false);
+  const [canFetchDeferredWaveform, setCanFetchDeferredWaveform] = useState(false);
   const { allowNow: loadWaveformNow, canLoad: shouldLoadWaveform } = useAfterLcp();
-  const shouldFetchWaveform = hasRequestedWaveform || (shouldLoadWaveform && isNearViewport);
+  const shouldFetchWaveform = hasRequestedWaveform || canFetchDeferredWaveform;
   const waveform = useSoundWaveform(waveformSrc, shouldFetchWaveform);
 
   useEffect(() => {
-    if (isNearViewport) {
+    if (hasRequestedWaveform || canFetchDeferredWaveform || !shouldLoadWaveform) {
       return;
     }
 
-    if (typeof IntersectionObserver === "undefined") {
-      setIsNearViewport(true);
-      return;
-    }
+    // 投稿描画後に波形を後段ロードして、初期表示の競合を避ける。
+    const timeoutId = window.setTimeout(() => {
+      setCanFetchDeferredWaveform(true);
+    }, WAVEFORM_DEFERRED_LOAD_MS);
 
-    const element = waveformRef.current;
-    if (element == null) {
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          setIsNearViewport(true);
-          observer.disconnect();
-        }
-      },
-      {
-        rootMargin: "300px 0px",
-      },
-    );
-
-    observer.observe(element);
     return () => {
-      observer.disconnect();
+      window.clearTimeout(timeoutId);
     };
-  }, [isNearViewport]);
+  }, [canFetchDeferredWaveform, hasRequestedWaveform, shouldLoadWaveform]);
 
   const handleTogglePlaying = useCallback(() => {
     setHasRequestedWaveform(true);
@@ -102,7 +85,7 @@ export const SoundPlayer = ({ sound }: Props) => {
         <div className="pt-2">
           <AspectRatioBox aspectHeight={1} aspectWidth={10}>
             <div className="relative h-full w-full">
-              <div ref={waveformRef} className="absolute inset-0 h-full w-full">
+              <div className="absolute inset-0 h-full w-full">
                 {waveform.status === "loaded" ? (
                   <SoundWaveSVG max={waveform.max} peaks={waveform.peaks} />
                 ) : (

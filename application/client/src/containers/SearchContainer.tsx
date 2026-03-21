@@ -23,6 +23,9 @@ export const SearchContainer = () => {
   } = useInfiniteFetch<Models.Post>(
     query ? `/api/v1/search?q=${encodeURIComponent(query)}` : "",
     fetchJSON,
+    {
+      initialLimit: 10,
+    },
   );
 
   useEffect(() => {

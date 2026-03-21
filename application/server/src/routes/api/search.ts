@@ -1,3 +1,4 @@
+import type { Request, Response } from "express";
 import { Router } from "express";
 import { Op, WhereOptions, col, where } from "sequelize";
 
@@ -6,6 +7,19 @@ import { analyzeSearchSentiment } from "@web-speed-hackathon-2026/server/src/uti
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 
 export const searchRouter = Router();
+
+function parsePaginationParam(value: unknown): number | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    return undefined;
+  }
+
+  return parsed;
+}
 
 searchRouter.get("/search/sentiment", async (req, res) => {
   const query = req.query["q"];
@@ -24,7 +38,7 @@ searchRouter.get("/search/sentiment", async (req, res) => {
   return res.status(200).type("application/json").send(sentiment);
 });
 
-searchRouter.get("/search", async (req, res) => {
+export async function handleSearchRequest(req: Request, res: Response) {
   const query = req.query["q"];
 
   if (typeof query !== "string" || query.trim() === "") {
@@ -39,8 +53,8 @@ searchRouter.get("/search", async (req, res) => {
   }
 
   const searchTerm = keywords ? `%${keywords}%` : null;
-  const limit = req.query["limit"] != null ? Number(req.query["limit"]) : undefined;
-  const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
+  const limit = parsePaginationParam(req.query["limit"]);
+  const offset = parsePaginationParam(req.query["offset"]);
 
   // 日付条件を構築
   const dateConditions: Record<symbol, Date>[] = [];
@@ -63,7 +77,7 @@ searchRouter.get("/search", async (req, res) => {
       }
     : {};
 
-  const matchingPostRows = await Post.findAll({
+  const matchingPostRows = await Post.unscoped().findAll({
     attributes: ["id"],
     include: searchTerm
       ? [
@@ -106,4 +120,6 @@ searchRouter.get("/search", async (req, res) => {
   });
 
   return res.status(200).type("application/json").send(orderedPosts);
-});
+}
+
+searchRouter.get("/search", handleSearchRequest);
