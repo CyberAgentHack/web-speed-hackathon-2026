@@ -34,8 +34,8 @@ export const TimelineItem = ({ post, index }: Props) => {
     <article
       className="hover:bg-cax-surface-subtle px-1 sm:px-4 cursor-pointer"
       onClick={handleClick}
-      // LCP要素を含む最初のアイテムではcontent-visibilityを無効化
-      style={index === 0 ? undefined : {
+      // content-visibilityで描画最適化（LCPには影響しない）
+      style={{
           contentVisibility: 'auto',
           containIntrinsicSize: '0 350px'
       }}
