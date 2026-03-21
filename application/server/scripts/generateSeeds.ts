@@ -268,7 +268,7 @@ function generateUsers(count: number, profileImages: ProfileImageSeed[]): UserSe
     } while (usedUsernames.has(username) || username.length < 3);
     usedUsernames.add(username);
 
-    const profileImage = profileImages[i % profileImages.length];
+    const profileImage = profileImages[i % profileImages.length]!;
     const createdAt = randomDateWithinWeek();
 
     users.push({
@@ -487,7 +487,7 @@ function generateConversationPairs(
     // まだペアが必要な候補を探す
     const candidates = users.filter((userB) => {
       if (userA.id === userB.id) return false;
-      const pairKey = [userA.id, userB.id].sort().join(":");
+      const pairKey = [userA.id, userB.id].sort((a, b) => a.localeCompare(b)).join(":");
       if (usedPairs.has(pairKey)) return false;
 
       const userBCurrent = userPairCounts.get(userB.id) || 0;
@@ -500,7 +500,7 @@ function generateConversationPairs(
     const selected = faker.helpers.arrayElements(candidates, Math.min(needed, candidates.length));
 
     for (const userB of selected) {
-      const pairKey = [userA.id, userB.id].sort().join(":");
+      const pairKey = [userA.id, userB.id].sort((a, b) => a.localeCompare(b)).join(":");
       usedPairs.add(pairKey);
       pairs.push([userA, userB]);
 
@@ -657,7 +657,7 @@ function determineLastReadAtForUser(
     return null;
   }
 
-  const latestReceivedMessage = receivedMessages[receivedMessages.length - 1];
+  const latestReceivedMessage = receivedMessages[receivedMessages.length - 1]!;
   const latestSentMessage = sentMessages[sentMessages.length - 1];
   // 自分が返信しているなら、その時点までに届いていた相手メッセージは既読にしておく。
   const requiredReadMessage =
@@ -710,11 +710,11 @@ function generateDirectMessages(users: UserSeed[]): DirectMessageGenerationResul
   const allMessages: DirectMessageSeed[] = [];
 
   for (let i = 0; i < pairs.length; i++) {
-    const [userA, userB] = pairs[i];
+    const [userA, userB] = pairs[i]!;
     const conversationId = faker.string.uuid();
     allConversations.push({ id: conversationId, initiatorId: userA.id, memberId: userB.id });
 
-    const messageCount = messagesPerPair[i];
+    const messageCount = messagesPerPair[i]!;
     const conversation = sortMessagesByCreatedAt(
       generateConversationForPair(userA, userB, conversationId, messageCount),
     );
