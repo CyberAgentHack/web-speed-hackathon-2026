@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { dynamicMediaMask, scrollEntire, waitForVisibleMedia } from "./utils";
+import { dynamicMediaMask, scrollEntire, waitForPageToLoad, waitForVisibleMedia } from "./utils";
 
 test.describe("ホーム", () => {
   test.beforeEach(async ({ page }) => {
@@ -16,6 +16,7 @@ test.describe("ホーム", () => {
 
     // VRT: タイムライン（サインイン前）
     await waitForVisibleMedia(page);
+    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("home-タイムライン（サインイン前）.png", {
       fullPage: false,
       mask: dynamicMediaMask(page),
@@ -66,6 +67,7 @@ test.describe("404ページ", () => {
 
     // VRT: 404
     await waitForVisibleMedia(page);
+    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("home-404.png", {
       fullPage: true,
       mask: dynamicMediaMask(page),
