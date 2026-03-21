@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { SubmissionError } from "redux-form";
 
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { AuthModalPage } from "@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage";
@@ -43,23 +42,28 @@ function getErrorCode(err: FetchError, type: "signin" | "signup"): string {
 export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
+
   useEffect(() => {
-    if (!ref.current) return;
     const element = ref.current;
+    if (element == null) {
+      return;
+    }
 
     const handleToggle = () => {
-      // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
-      setResetKey((key) => key + 1);
+      if (!element.open) {
+        setResetKey((current) => current + 1);
+      }
     };
+
     element.addEventListener("toggle", handleToggle);
     return () => {
       element.removeEventListener("toggle", handleToggle);
     };
-  }, [ref, setResetKey]);
+  }, []);
 
   const handleRequestCloseModal = useCallback(() => {
     ref.current?.close();
-  }, [ref]);
+  }, []);
 
   const handleSubmit = useCallback(
     async (values: AuthFormData) => {
@@ -74,9 +78,7 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
         handleRequestCloseModal();
       } catch (err: unknown) {
         const error = getErrorCode(err as FetchError, values.type);
-        throw new SubmissionError({
-          _error: error,
-        });
+        throw new Error(error);
       }
     },
     [handleRequestCloseModal, onUpdateActiveUser],
