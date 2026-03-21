@@ -14,6 +14,7 @@ export const ImageArea = ({ images, priority = false }: Props) => {
     <AspectRatioBox aspectHeight={9} aspectWidth={16}>
       <div className="border-cax-border grid h-full w-full grid-cols-2 grid-rows-2 gap-1 overflow-hidden rounded-lg border">
         {images.map((image, idx) => {
+          const isLeadImage = idx === 0;
           return (
             <div
               key={image.id}
@@ -27,8 +28,8 @@ export const ImageArea = ({ images, priority = false }: Props) => {
             >
               <CoveredImage
                 alt={image.alt}
-                fetchPriority={idx === 0 ? (priority ? "high" : "low") : "auto"}
-                loading={priority ? "eager" : "lazy"}
+                fetchPriority={isLeadImage ? (priority ? "high" : "low") : "low"}
+                loading={isLeadImage && priority ? "eager" : "lazy"}
                 src={getImagePath(image.id)}
               />
             </div>

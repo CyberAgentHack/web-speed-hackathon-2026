@@ -108,7 +108,7 @@ export const PausableMovie = ({ priority = false, src }: Props) => {
             loop
             muted
             playsInline
-            preload="metadata"
+            preload={priority ? "auto" : "metadata"}
             src={src}
           />
         ) : (

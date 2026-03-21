@@ -24,7 +24,7 @@ export const PostItem = ({ post, prioritizeMedia = false }: Props) => {
               <img
                 alt={post.user.profileImage.alt}
                 decoding="async"
-                fetchPriority={prioritizeMedia ? "high" : "auto"}
+                fetchPriority={prioritizeMedia ? "auto" : "low"}
                 loading="eager"
                 src={getProfileImagePath(post.user.profileImage.id)}
               />

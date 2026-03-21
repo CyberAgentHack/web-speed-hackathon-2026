@@ -7,7 +7,7 @@ import { PostPage } from "@web-speed-hackathon-2026/client/src/components/post/P
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
-import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { fetchJSON, fetchPreloadedJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 type IdleWindow = Window & {
   cancelIdleCallback?: (handle: number) => void;
@@ -20,7 +20,7 @@ type IdleWindow = Window & {
 const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
   const { data: post, isLoading: isLoadingPost } = useFetch<Models.Post>(
     `/api/v1/posts/${postId}`,
-    fetchJSON,
+    fetchPreloadedJSON,
   );
   const [shouldLoadComments, setShouldLoadComments] = useState(false);
 

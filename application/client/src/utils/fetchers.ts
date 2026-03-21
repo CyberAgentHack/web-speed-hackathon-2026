@@ -3,6 +3,8 @@ interface ParsedResponseBody {
   responseText: string | null;
 }
 
+const preloadedJSONResponses = new Map<string, Promise<unknown>>();
+
 interface HttpErrorOptions<T> {
   responseJSON: T | null;
   responseText: string | null;
@@ -68,9 +70,37 @@ export async function fetchBinary(url: string): Promise<ArrayBuffer> {
   return response.arrayBuffer();
 }
 
-export async function fetchJSON<T>(url: string): Promise<T> {
+async function requestJSON<T>(url: string): Promise<T> {
   const response = await request(url);
   return (await response.json()) as T;
+}
+
+export async function fetchJSON<T>(url: string): Promise<T> {
+  return requestJSON<T>(url);
+}
+
+export function preloadJSON<T>(url: string): Promise<T> {
+  const preloadedResponse = preloadedJSONResponses.get(url);
+  if (preloadedResponse != null) {
+    return preloadedResponse as Promise<T>;
+  }
+
+  const requestPromise = requestJSON<T>(url).catch((error: unknown) => {
+    preloadedJSONResponses.delete(url);
+    throw error;
+  });
+  preloadedJSONResponses.set(url, requestPromise);
+  return requestPromise;
+}
+
+export async function fetchPreloadedJSON<T>(url: string): Promise<T> {
+  const preloadedResponse = preloadedJSONResponses.get(url);
+  if (preloadedResponse != null) {
+    preloadedJSONResponses.delete(url);
+    return preloadedResponse as Promise<T>;
+  }
+
+  return requestJSON<T>(url);
 }
 
 export async function sendFile<T>(url: string, file: File): Promise<T> {
