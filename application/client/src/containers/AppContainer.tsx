@@ -49,6 +49,9 @@ export const AppContainer = () => {
         <Helmet>
           <title>読込中 - CaX</title>
         </Helmet>
+        <div className="px-4 py-6">
+          <p className="text-cax-text">アプリを読み込み中です...</p>
+        </div>
       </HelmetProvider>
     );
   }
