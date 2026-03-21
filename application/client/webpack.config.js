@@ -11,6 +11,8 @@ const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
 
+const isProduction = process.env.NODE_ENV === "production";
+
 /** @type {import('webpack').Configuration} */
 const config = {
   devServer: {
@@ -25,18 +27,15 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: isProduction ? "source-map" : "inline-source-map",
   entry: {
     main: [
-      "core-js",
-      "regenerator-runtime/runtime",
-      "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: isProduction ? "production" : "development",
   module: {
     rules: [
       {
@@ -60,24 +59,20 @@ const config = {
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
     filename: "scripts/[name].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     clean: true,
   },
   plugins: [
     new webpack.ProvidePlugin({
-      $: "jquery",
       AudioContext: ["standardized-audio-context", "AudioContext"],
       Buffer: ["buffer", "Buffer"],
-      "window.jQuery": "jquery",
     }),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
-      // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
+      NODE_ENV: isProduction ? "production" : "development",
     }),
     new MiniCssExtractPlugin({
       filename: "styles/[name].css",
@@ -91,7 +86,7 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: true,
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
   ],
@@ -99,26 +94,26 @@ const config = {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
     alias: {
       "bayesian-bm25$": path.resolve(__dirname, "node_modules", "bayesian-bm25/dist/index.js"),
-      ["kuromoji$"]: path.resolve(__dirname, "node_modules", "kuromoji/build/kuromoji.js"),
+      "kuromoji$": path.resolve(__dirname, "node_modules", "kuromoji/build/kuromoji.js"),
       "@ffmpeg/ffmpeg$": path.resolve(
         __dirname,
         "node_modules",
-        "@ffmpeg/ffmpeg/dist/esm/index.js",
+        "@ffmpeg/ffmpeg/dist/esm/index.js"
       ),
       "@ffmpeg/core$": path.resolve(
         __dirname,
         "node_modules",
-        "@ffmpeg/core/dist/umd/ffmpeg-core.js",
+        "@ffmpeg/core/dist/umd/ffmpeg-core.js"
       ),
       "@ffmpeg/core/wasm$": path.resolve(
         __dirname,
         "node_modules",
-        "@ffmpeg/core/dist/umd/ffmpeg-core.wasm",
+        "@ffmpeg/core/dist/umd/ffmpeg-core.wasm"
       ),
       "@imagemagick/magick-wasm/magick.wasm$": path.resolve(
         __dirname,
         "node_modules",
-        "@imagemagick/magick-wasm/dist/magick.wasm",
+        "@imagemagick/magick-wasm/dist/magick.wasm"
       ),
     },
     fallback: {
@@ -128,14 +123,25 @@ const config = {
     },
   },
   optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
+    minimize: isProduction,
+    splitChunks: {
+      chunks: "all",
+      maxInitialRequests: Infinity,
+      minSize: 0,
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name(module) {
+            const packageName =
+              module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1];
+            return `vendor.${packageName.replace("@", "")}`;
+          },
+        },
+      },
+    },
+    usedExports: true,
   },
-  cache: false,
+  cache: true,
   ignoreWarnings: [
     {
       module: /@ffmpeg/,
