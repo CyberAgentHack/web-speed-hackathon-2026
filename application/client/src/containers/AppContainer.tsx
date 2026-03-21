@@ -1,5 +1,5 @@
-import { lazy, Suspense, useCallback, useEffect, useId, useState } from "react";
-import { Helmet, HelmetProvider } from "react-helmet";
+import { lazy, Suspense, useCallback, useEffect, useId, useRef, useState } from "react";
+import { HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
@@ -25,16 +25,18 @@ export const AppContainer = () => {
   }, [pathname]);
 
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
-  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
+  const meRequestedRef = useRef(false);
   useEffect(() => {
+    if (meRequestedRef.current) return;
+    meRequestedRef.current = true;
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {
         setActiveUser(user);
       })
-      .finally(() => {
-        setIsLoadingActiveUser(false);
+      .catch(() => {
+        // Not logged in
       });
-  }, [setActiveUser, setIsLoadingActiveUser]);
+  }, []);
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
     setActiveUser(null);
@@ -43,16 +45,6 @@ export const AppContainer = () => {
 
   const authModalId = useId();
   const newPostModalId = useId();
-
-  if (isLoadingActiveUser) {
-    return (
-      <HelmetProvider>
-        <Helmet>
-          <title>読込中 - CaX</title>
-        </Helmet>
-      </HelmetProvider>
-    );
-  }
 
   return (
     <HelmetProvider>

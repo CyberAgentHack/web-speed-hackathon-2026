@@ -13,6 +13,8 @@ export class ProfileImage extends Model<
 > {
   declare id: string;
   declare alt: string;
+  declare width: number;
+  declare height: number;
 }
 
 export function initProfileImage(sequelize: Sequelize) {
@@ -28,6 +30,16 @@ export function initProfileImage(sequelize: Sequelize) {
         defaultValue: UUIDV4,
         primaryKey: true,
         type: DataTypes.UUID,
+      },
+      width: {
+        allowNull: false,
+        defaultValue: 0,
+        type: DataTypes.INTEGER,
+      },
+      height: {
+        allowNull: false,
+        defaultValue: 0,
+        type: DataTypes.INTEGER,
       },
     },
     {

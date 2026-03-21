@@ -5,11 +5,17 @@ import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/componen
 import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/components/modal/ModalSubmitButton";
 import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/AttachFileInputButton";
 import { convertImage } from "@web-speed-hackathon-2026/client/src/utils/convert_image";
+import { extractImageDescription } from "@web-speed-hackathon-2026/client/src/utils/extract_image_description";
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
+interface ImageWithAlt {
+  file: File;
+  alt: string;
+}
+
 interface SubmitParams {
-  images: File[];
+  images: ImageWithAlt[];
   movie: File | undefined;
   sound: File | undefined;
   text: string;
@@ -51,23 +57,25 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       setIsConverting(true);
 
       Promise.all(
-        files.map((file) =>
-          convertImage(file).then(
-            (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
-          ),
-        ),
+        files.map(async (file) => {
+          const [blob, alt] = await Promise.all([convertImage(file), extractImageDescription(file)]);
+          return { file: new File([blob], "converted.jpg", { type: "image/jpeg" }), alt };
+        }),
       )
-        .then((convertedFiles) => {
+        .then((convertedImages) => {
           setParams((params) => ({
             ...params,
-            images: convertedFiles,
+            images: convertedImages,
             movie: undefined,
             sound: undefined,
           }));
 
           setIsConverting(false);
         })
-        .catch(console.error);
+        .catch((err) => {
+          console.error(err);
+          setIsConverting(false);
+        });
     }
   }, []);
 

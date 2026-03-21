@@ -1,4 +1,5 @@
-export function getImagePath(imageId: string): string {
+export function getImagePath(imageId: string, width?: number): string {
+  if (width) return `/images/optimized/${imageId}-${width}w.webp`;
   return `/images/${imageId}.jpg`;
 }
 
@@ -10,6 +11,7 @@ export function getSoundPath(soundId: string): string {
   return `/sounds/${soundId}.mp3`;
 }
 
-export function getProfileImagePath(profileImageId: string): string {
+export function getProfileImagePath(profileImageId: string, size?: number): string {
+  if (size) return `/images/profiles/optimized/${profileImageId}-${size}.webp`;
   return `/images/profiles/${profileImageId}.jpg`;
 }

@@ -1,18 +1,36 @@
 import { gzip } from "pako";
 
+class HttpError extends Error {
+  status: number;
+  responseJSON: unknown;
+  constructor(status: number, responseJSON: unknown) {
+    super(`HTTP ${status}`);
+    this.status = status;
+    this.responseJSON = responseJSON;
+  }
+}
+
+async function throwIfNotOk(response: Response): Promise<void> {
+  if (!response.ok) {
+    let responseJSON: unknown = null;
+    try {
+      responseJSON = await response.json();
+    } catch {
+      // ignore parse errors
+    }
+    throw new HttpError(response.status, responseJSON);
+  }
+}
+
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {
   const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
+  await throwIfNotOk(response);
   return response.arrayBuffer();
 }
 
 export async function fetchJSON<T>(url: string): Promise<T> {
   const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
+  await throwIfNotOk(response);
   return response.json() as Promise<T>;
 }
 
@@ -24,9 +42,7 @@ export async function sendFile<T>(url: string, file: File): Promise<T> {
       "Content-Type": "application/octet-stream",
     },
   });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
+  await throwIfNotOk(response);
   return response.json() as Promise<T>;
 }
 
@@ -43,8 +59,6 @@ export async function sendJSON<T>(url: string, data: object): Promise<T> {
       "Content-Type": "application/json",
     },
   });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
+  await throwIfNotOk(response);
   return response.json() as Promise<T>;
 }

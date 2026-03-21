@@ -25,7 +25,14 @@ export const ImageArea = ({ images, priority }: Props) => {
                 "row-span-2": images.length <= 2 || (images.length === 3 && idx === 0),
               })}
             >
-              <CoveredImage src={getImagePath(image.id)} alt={image.alt} fetchPriority={priority && idx === 0 ? "high" : undefined} />
+              <CoveredImage
+                src={getImagePath(image.id, 1280)}
+                srcSet={`${getImagePath(image.id, 640)} 640w, ${getImagePath(image.id, 1280)} 1280w`}
+                sizes="(max-width: 640px) 640px, 1280px"
+                alt={image.alt}
+                loading={priority ? undefined : "lazy"}
+                fetchPriority={priority && idx === 0 ? "high" : undefined}
+              />
             </div>
           );
         })}

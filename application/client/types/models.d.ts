@@ -13,6 +13,8 @@ declare namespace Models {
   interface ProfileImage {
     alt: string;
     id: string;
+    width: number;
+    height: number;
   }
 
   interface Post {
@@ -28,6 +30,8 @@ declare namespace Models {
   interface Image {
     alt: string;
     id: string;
+    width: number;
+    height: number;
   }
 
   interface Sound {
