@@ -30,6 +30,21 @@ interface Props {
   authModalId: string;
 }
 
+function mergeMessage(
+  messages: Models.DirectMessage[],
+  incomingMessage: Models.DirectMessage,
+): Models.DirectMessage[] {
+  const existingIndex = messages.findIndex((message) => message.id === incomingMessage.id);
+
+  if (existingIndex === -1) {
+    return [...messages, incomingMessage];
+  }
+
+  return messages.map((message, idx) => {
+    return idx === existingIndex ? incomingMessage : message;
+  });
+}
+
 export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   const { conversationId = "" } = useParams<{ conversationId: string }>();
 
@@ -146,13 +161,13 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   useWs(activeUser == null ? null : `/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {
     if (event.type === "dm:conversation:message") {
       setConversation((current) => {
-        if (current == null || current.messages.some((message) => message.id === event.payload.id)) {
+        if (current == null) {
           return current;
         }
 
         return {
           ...current,
-          messages: [...current.messages, event.payload],
+          messages: mergeMessage(current.messages, event.payload),
         };
       });
       if (event.payload.sender.id !== activeUser?.id) {
