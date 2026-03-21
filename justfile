@@ -1,3 +1,5 @@
+local_log := "application/.local/cax-server.log"
+local_pid := "application/.local/cax-server.pid"
 # 引数なしで `just` を実行したとき、`just --list` と同様に recipe 一覧を表示する。
 [group('ヘルプ')]
 default:
@@ -157,3 +159,95 @@ score-targets application_url:
 [group('ヘルパー')]
 score-target application_url target_name:
   pnpm --dir {{score_dir}} start --applicationUrl {{application_url}} --targetName {{target_name}}
+
+# `application/server` を起動する前に `db:prepare` を実行し、標準出力・標準エラーを `{{local_log}}` に追記しながらバックグラウンド起動する。
+[group('ローカル')]
+start-server-logged:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  mkdir -p application/.local
+  if [[ -f {{local_pid}} ]]; then
+    pid="$(cat {{local_pid}})"
+    if kill -0 "$pid" 2>/dev/null; then
+      echo "サーバーはすでに起動しています (PID: $pid)。停止するには \`just stop\` を実行してください。"
+      exit 1
+    fi
+    rm -f {{local_pid}}
+  fi
+  : > {{local_log}}
+  if ! pnpm --dir application --filter @web-speed-hackathon-2026/server db:prepare >> {{local_log}} 2>&1; then
+    echo "db:prepare に失敗しました。ログを確認します。"
+    tail -n 80 {{local_log}} || true
+    exit 1
+  fi
+  nohup pnpm --dir application/server exec tsx src/index.ts >> {{local_log}} 2>&1 &
+  server_pid=$!
+  echo "$server_pid" > {{local_pid}}
+  for _ in {1..100}; do
+    if ! kill -0 "$server_pid" 2>/dev/null; then
+      echo "サーバーの起動に失敗しました。ログを確認します。"
+      tail -n 80 {{local_log}} || true
+      if pnpm --dir application exec node -e "require('node:http').get('http://127.0.0.1:3000/', (res) => { process.exit(res.statusCode ? 0 : 1); }).on('error', () => process.exit(1));"; then
+        echo "localhost:3000 は応答しているため、just 管理外のサーバーが残っている可能性があります。"
+      fi
+      rm -f {{local_pid}}
+      exit 1
+    fi
+    if grep -q "Listening on " {{local_log}}; then
+      echo "サーバーを起動しました (PID: $server_pid)"
+      echo "ログ: {{local_log}}"
+      exit 0
+    fi
+    sleep 0.1
+  done
+  echo "サーバーは起動中です (PID: $server_pid)"
+  echo "ログ: {{local_log}}"
+
+# `start-server-logged` で起動したサーバーを停止し、PID ファイルを片付ける。起動していない場合は何もしない。
+[group('ローカル')]
+stop:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  if [[ ! -f {{local_pid}} ]]; then
+    if pnpm --dir application exec node -e "require('node:http').get('http://127.0.0.1:3000/', (res) => { process.exit(res.statusCode ? 0 : 1); }).on('error', () => process.exit(1));"; then
+      echo "PID ファイルはありませんが、localhost:3000 は応答しています。just 管理外のサーバーが残っています。"
+    else
+      echo "サーバーは起動していません。"
+    fi
+    exit 0
+  fi
+  pid="$(cat {{local_pid}})"
+  if kill -0 "$pid" 2>/dev/null; then
+    echo "サーバーを停止します (PID: $pid)"
+    kill "$pid"
+    for _ in {1..50}; do
+      if ! kill -0 "$pid" 2>/dev/null; then
+        break
+      fi
+      sleep 0.1
+    done
+  else
+    echo "PID ファイルはありましたが、対象プロセスはすでに終了しています (PID: $pid)"
+  fi
+  rm -f {{local_pid}}
+
+# `start-server-logged` で管理しているサーバーを再起動する。再起動後はログをそのまま表示し続ける。
+[group('ローカル')]
+restart:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  just stop
+  just start-server-logged
+  exec just logs-recent
+
+# `tail -F` で application/.local/cax-server.log をリアルタイム表示する。無いときは作成を待つ（Ctrl+C で終了）。
+[group('ローカル')]
+logs:
+  @test -f {{local_log}} || echo "ログファイルがまだありません。別ターミナルで \`just start-server-logged\` を実行してください。"
+  tail -F {{local_log}}
+
+# application/.local/cax-server.log の末尾 200 行だけ表示して終了する。
+[group('ローカル')]
+logs-recent:
+  @test -f {{local_log}} || (echo "ログがありません。先に \`just start-server-logged\` でサーバーを起動してください。" && exit 1)
+  tail -n 200 {{local_log}}

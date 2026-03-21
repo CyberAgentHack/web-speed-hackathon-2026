@@ -9,28 +9,7 @@
       window.__PREFETCH_JSON__ = window.__PREFETCH_JSON__ || {};
       window.__HOME_TIMELINE_PREFETCH__ = window.__HOME_TIMELINE_PREFETCH__ || null;
       (function () {
-        var avifThumbImageIds = {
-          "029b4b75-bbcc-4aa5-8bd7-e4bb12a33cd3": true,
-          "078c4d42-12e3-4c1d-823c-9ba552f6b066": true,
-          "18358ca6-0aa7-4592-9926-1ec522b9aacb": true,
-          "19b3516f-ccfc-4d76-a45c-fc2aade43afe": true,
-          "26117ade-f330-46a2-8c48-767b6f472613": true,
-          "3a5915dc-6ef0-4c66-ad4b-bba9c724cfbc": true,
-          "4685b32a-43d2-4478-bb79-2cdb56f8ecf0": true,
-          "49b8af97-9536-4a23-86f6-21526ff2715b": true,
-          "5e7212da-6b4c-4eb2-b828-b0bc35bfbc1c": true,
-          "6d532fa5-daff-4876-a26f-b5c8669d1176": true,
-          "824ddc65-8afc-4cd5-8176-1a8053758e72": true,
-          "85946f86-c0bd-4d6b-83b7-94eb32dcbcf4": true,
-          "af15685e-2e43-4453-bc8f-55e386bd5963": true,
-          "da2bfcde-14fd-473c-ae79-572d95152b61": true,
-          "ddc7053e-0f2f-49b1-9c07-e1060e2fa4aa": true,
-          "eb487309-79ed-40d0-9fee-382ed8486b70": true,
-          "f046441d-b837-4dc7-b0ae-5cf2604eab4c": true,
-          "f478a152-02f8-46a3-91ce-d1d7944d303a": true,
-        };
-
-        function preloadImage(href, type) {
+        function preloadImage(href) {
           if (!href) {
             return;
           }
@@ -42,9 +21,6 @@
           link.as = "image";
           link.href = href;
           link.fetchPriority = "high";
-          if (type) {
-            link.type = type;
-          }
           document.head.appendChild(link);
         }
 
@@ -126,11 +102,7 @@
           .then(function (post) {
             var firstImage = post && post.images && post.images[0];
             if (firstImage && firstImage.id) {
-              var hasAvif = avifThumbImageIds[firstImage.id] === true;
-              preloadImage(
-                hasAvif ? "/images/" + firstImage.id + ".thumb.avif" : "/images/" + firstImage.id + ".thumb.webp",
-                hasAvif ? "image/avif" : null,
-              );
+              preloadImage("/images/" + firstImage.id + ".thumb.webp");
             }
             return post;
           });

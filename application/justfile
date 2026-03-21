@@ -8,13 +8,13 @@ log_dir := ".just/logs"
 frontend_pid_file := "{{pid_dir}}/frontend.pid"
 backend_pid_file := "{{pid_dir}}/backend.pid"
 
-# バックエンド（`pnpm --filter @web-speed-hackathon-2026/server start`）と
+# バックエンド（`pnpm --filter @web-speed-hackathon-2026/server db:prepare && pnpm --filter @web-speed-hackathon-2026/server start`）と
 # フロントエンド監視ビルド（`pnpm --filter @web-speed-hackathon-2026/client exec rspack build --watch`）を同時にバックグラウンド起動する。
 [group('起動')]
 start:
   @mkdir -p "{{pid_dir}}" "{{log_dir}}"
   @if [ -f "{{frontend_pid_file}}" ] && kill -0 "$$(cat "{{frontend_pid_file}}")" 2>/dev/null; then echo "frontend は既に起動中です (pid: $$(cat "{{frontend_pid_file}}"))"; else nohup pnpm --filter @web-speed-hackathon-2026/client exec rspack build --watch > "{{log_dir}}/frontend.log" 2>&1 & echo $$! > "{{frontend_pid_file}}"; echo "frontend を起動しました (pid: $$(cat "{{frontend_pid_file}}"))"; fi
-  @if [ -f "{{backend_pid_file}}" ] && kill -0 "$$(cat "{{backend_pid_file}}")" 2>/dev/null; then echo "backend は既に起動中です (pid: $$(cat "{{backend_pid_file}}"))"; else nohup pnpm --filter @web-speed-hackathon-2026/server start > "{{log_dir}}/backend.log" 2>&1 & echo $$! > "{{backend_pid_file}}"; echo "backend を起動しました (pid: $$(cat "{{backend_pid_file}}"))"; fi
+  @if [ -f "{{backend_pid_file}}" ] && kill -0 "$$(cat "{{backend_pid_file}}")" 2>/dev/null; then echo "backend は既に起動中です (pid: $$(cat "{{backend_pid_file}}"))"; else nohup sh -c 'pnpm --filter @web-speed-hackathon-2026/server db:prepare && pnpm --filter @web-speed-hackathon-2026/server start' > "{{log_dir}}/backend.log" 2>&1 & echo $$! > "{{backend_pid_file}}"; echo "backend を起動しました (pid: $$(cat "{{backend_pid_file}}"))"; fi
   @echo "ログ: {{log_dir}}/frontend.log, {{log_dir}}/backend.log"
 
 # pid ファイルを見て frontend/backend を停止する。起動していない場合はスキップする。
