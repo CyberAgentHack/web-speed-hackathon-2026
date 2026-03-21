@@ -3,15 +3,13 @@ import { HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
-import { ensureFormReducer } from "@web-speed-hackathon-2026/client/src/store";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
-const AuthModalContainer = lazy(async () => {
-  await ensureFormReducer();
-  return import("@web-speed-hackathon-2026/client/src/containers/AuthModalContainer").then((m) => ({
+const AuthModalContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/AuthModalContainer").then((m) => ({
     default: m.AuthModalContainer,
-  }));
-});
+  })),
+);
 
 import { TermContainer } from "@web-speed-hackathon-2026/client/src/containers/TermContainer";
 
@@ -31,12 +29,11 @@ const DirectMessageContainer = lazy(() =>
     "@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer"
   ).then((m) => ({ default: m.DirectMessageContainer })),
 );
-const DirectMessageListContainer = lazy(async () => {
-  await ensureFormReducer();
-  return import(
+const DirectMessageListContainer = lazy(() =>
+  import(
     "@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer"
-  ).then((m) => ({ default: m.DirectMessageListContainer }));
-});
+  ).then((m) => ({ default: m.DirectMessageListContainer })),
+);
 const NotFoundContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/NotFoundContainer").then((m) => ({
     default: m.NotFoundContainer,

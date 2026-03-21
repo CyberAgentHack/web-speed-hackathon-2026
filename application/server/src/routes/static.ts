@@ -142,22 +142,22 @@ staticRouter.use(history());
 
 staticRouter.use(
   serveStatic(UPLOAD_PATH, {
-    etag: true,
-    lastModified: true,
+    etag: false,
+    lastModified: false,
   }),
 );
 
 staticRouter.use(
   serveStatic(PUBLIC_PATH, {
-    etag: true,
-    lastModified: true,
+    etag: false,
+    lastModified: false,
   }),
 );
 
 staticRouter.use(precompressedMiddleware(CLIENT_DIST_PATH));
 staticRouter.use(
   serveStatic(CLIENT_DIST_PATH, {
-    etag: true,
-    lastModified: true,
+    etag: false,
+    lastModified: false,
   }),
 );

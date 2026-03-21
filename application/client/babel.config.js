@@ -6,8 +6,7 @@ module.exports = {
       {
         targets: "last 1 chrome version",
         modules: false,
-        useBuiltIns: "entry",
-        corejs: 3,
+        useBuiltIns: false,
       },
     ],
     [

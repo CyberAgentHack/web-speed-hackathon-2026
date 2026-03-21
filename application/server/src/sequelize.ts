@@ -38,4 +38,9 @@ export async function initializeSequelize() {
   await _sequelize.query(`CREATE INDEX IF NOT EXISTS idx_users_username ON Users(username)`);
   await _sequelize.query(`CREATE INDEX IF NOT EXISTS idx_postimg_postId ON PostsImagesRelations(postId)`);
   await _sequelize.query(`CREATE INDEX IF NOT EXISTS idx_postimg_imageId ON PostsImagesRelations(imageId)`);
+
+  await _sequelize.query("PRAGMA journal_mode=WAL");
+  await _sequelize.query("PRAGMA synchronous=NORMAL");
+  await _sequelize.query("PRAGMA cache_size=-20000");
+  await _sequelize.query("PRAGMA temp_store=MEMORY");
 }

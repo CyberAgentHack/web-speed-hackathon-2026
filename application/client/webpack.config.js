@@ -5,6 +5,7 @@ const CompressionPlugin = require("compression-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const Critters = require("critters-webpack-plugin");
 const webpack = require("webpack");
 const zlib = require("zlib");
 
@@ -69,9 +70,6 @@ const config = {
     clean: true,
   },
   plugins: [
-    new webpack.ProvidePlugin({
-      Buffer: ["buffer", "Buffer"],
-    }),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
@@ -93,6 +91,11 @@ const config = {
       inject: true,
       scriptLoading: "defer",
       template: path.resolve(SRC_PATH, "./index.html"),
+    }),
+    new Critters({
+      preload: "swap",
+      inlineFonts: false,
+      pruneSource: false,
     }),
     new CompressionPlugin({
       filename: "[path][base].gz",
@@ -142,13 +145,6 @@ const config = {
           name: "vendor-router",
           chunks: "all",
           priority: 20,
-          enforce: true,
-        },
-        redux: {
-          test: /[\\/]node_modules[\\/](redux|react-redux)[\\/]/,
-          name: "vendor-redux",
-          chunks: "all",
-          priority: 10,
           enforce: true,
         },
       },

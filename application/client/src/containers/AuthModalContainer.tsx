@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { SubmissionError } from "redux-form";
 
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { AuthModalPage } from "@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage";
@@ -43,7 +42,6 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
     const element = ref.current;
 
     const handleToggle = () => {
-      // 閉じた時だけキーを更新してフォームをリセットする（開く時は更新しない）
       if (!element.open) {
         setResetKey((key) => key + 1);
       }
@@ -59,7 +57,7 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   }, [ref]);
 
   const handleSubmit = useCallback(
-    async (values: AuthFormData) => {
+    async (values: AuthFormData): Promise<string | undefined> => {
       try {
         if (values.type === "signup") {
           const user = await sendJSON<Models.User>("/api/v1/signup", values);
@@ -69,11 +67,9 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
           onUpdateActiveUser(user);
         }
         handleRequestCloseModal();
+        return undefined;
       } catch (err: unknown) {
-        const error = getErrorCode(err as { responseJSON?: unknown }, values.type);
-        throw new SubmissionError({
-          _error: error,
-        });
+        return getErrorCode(err as { responseJSON?: unknown }, values.type);
       }
     },
     [handleRequestCloseModal, onUpdateActiveUser],
