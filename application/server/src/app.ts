@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { compress } from "hono/compress";
 import { HTTPException } from "hono/http-exception";
 import { ValidationError } from "sequelize";
 
@@ -9,6 +10,7 @@ import type { AppEnv } from "@web-speed-hackathon-2026/server/src/types";
 
 export const app = new Hono<AppEnv>();
 
+app.use("*", compress());
 app.use("*", sessionMiddleware);
 
 app.route("/api/v1", apiRouter);
