@@ -1,4 +1,3 @@
-import { type Tokenizer, type IpadicFeatures } from "kuromoji";
 import {
   useEffect,
   useLayoutEffect,
@@ -10,12 +9,7 @@ import {
 } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import {
-  extractTokens,
-  filterSuggestionsBM25,
-} from "@web-speed-hackathon-2026/client/src/utils/bm25_search";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
-import { buildTokenizer } from "@web-speed-hackathon-2026/client/src/utils/kuromoji_loader";
 
 interface Props {
   isStreaming: boolean;
@@ -79,7 +73,6 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
@@ -92,27 +85,10 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   }, [suggestions, showSuggestions]);
 
-  // 初回にkuromojiトークナイザーを構築
-  useEffect(() => {
-    let mounted = true;
-
-    const init = async () => {
-      const nextTokenizer = await buildTokenizer();
-      if (mounted) {
-        setTokenizer(nextTokenizer);
-      }
-    };
-    init();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
   useEffect(() => {
     let cancelled = false;
 
-    if (!tokenizer || !inputValue.trim()) {
+    if (!inputValue.trim()) {
       setSuggestions([]);
       setQueryTokens([]);
       setShowSuggestions(false);
@@ -121,18 +97,14 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
 
     const timerId = setTimeout(() => {
       const updateSuggestions = async () => {
-        const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-          "/api/v1/crok/suggestions",
+        const result = await fetchJSON<{ suggestions: string[]; tokens: string[] }>(
+          `/api/v1/crok/suggestions?q=${encodeURIComponent(inputValue)}`,
         );
         if (cancelled) return;
 
-        const tokens = extractTokens(tokenizer.tokenize(inputValue));
-        const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
-        if (cancelled) return;
-
-        setQueryTokens(tokens);
-        setSuggestions(results);
-        setShowSuggestions(results.length > 0);
+        setQueryTokens(result.tokens);
+        setSuggestions(result.suggestions);
+        setShowSuggestions(result.suggestions.length > 0);
       };
       void updateSuggestions();
     }, 200);
@@ -141,7 +113,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
       cancelled = true;
       clearTimeout(timerId);
     };
-  }, [inputValue, tokenizer]);
+  }, [inputValue]);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
