@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 interface ParsedData {
   max: number;
@@ -42,11 +42,14 @@ export const SoundWaveSVG = ({ soundData }: Props) => {
     peaks: [],
   });
 
+  // soundData の参照が変わらない限り calculate() を再実行しない
+  const calculationPromise = useMemo(() => calculate(soundData), [soundData]);
+
   useEffect(() => {
-    calculate(soundData).then(({ max, peaks }) => {
+    calculationPromise.then(({ max, peaks }) => {
       setPeaks({ max, peaks });
     });
-  }, [soundData]);
+  }, [calculationPromise]);
 
   return (
     <svg className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1">
