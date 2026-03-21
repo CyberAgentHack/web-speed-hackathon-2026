@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { login, scrollEntire } from "./utils";
+import { login, scrollEntire, waitForPageToLoad } from "./utils";
 
 test.describe("DM一覧", () => {
   test.beforeEach(async ({ page }) => {
@@ -8,10 +8,16 @@ test.describe("DM一覧", () => {
   });
 
   test("DM一覧が表示される", async ({ page }) => {
+    await login(page);
     await page.goto("/dm");
+
+    await expect(page.getByRole("heading", { name: "ダイレクトメッセージ" })).toBeVisible({
+      timeout: 30_000,
+    });
 
     // VRT: DM一覧
     await scrollEntire(page);
+    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("dm-DM一覧.png", {
       fullPage: true,
     });
@@ -57,6 +63,7 @@ test.describe("DM一覧", () => {
     await expect(submitButton).toBeDisabled();
 
     // VRT: 新規DM開始モーダル（バリデーションエラー）
+    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("dm-新規DM開始モーダル（バリデーションエラー）.png");
 
     await cancelButton.click();
@@ -77,6 +84,7 @@ test.describe("DM一覧", () => {
     });
 
     // VRT: 新規DM開始モーダル（存在しないユーザー名）
+    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("dm-新規DM開始モーダル（存在しないユーザー名）.png");
   });
 
@@ -105,6 +113,7 @@ test.describe("DM一覧", () => {
     });
 
     // VRT: DM詳細
+    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("dm-DM詳細.png");
   });
 

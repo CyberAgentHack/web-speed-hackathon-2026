@@ -95,6 +95,7 @@ export async function handleTranslationRequest(req: Request, res: Response): Pro
 
   try {
     const result = await getTranslationService().translate({
+      requesterIp: req.ip ?? undefined,
       sourceLanguage: sourceLanguage.toLowerCase(),
       targetLanguage: targetLanguage.toLowerCase(),
       text: text.trim(),

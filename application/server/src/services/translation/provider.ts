@@ -2,6 +2,7 @@ export interface TranslateParams {
   text: string;
   sourceLanguage: string;
   targetLanguage: string;
+  requesterIp?: string;
 }
 
 export interface TranslationProvider {

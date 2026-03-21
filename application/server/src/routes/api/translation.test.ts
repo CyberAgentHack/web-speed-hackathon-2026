@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { Request, Response } from "express";
+import type { Request as ExpressRequest, Response as ExpressResponse } from "express";
 import httpErrors from "http-errors";
 
 import {
@@ -10,6 +10,8 @@ import {
 } from "@web-speed-hackathon-2026/server/src/routes/api/translation";
 
 const originalEnv = {
+  MYMEMORY_API_BASE_URL: process.env["MYMEMORY_API_BASE_URL"],
+  TRANSLATION_CONTACT_EMAIL: process.env["TRANSLATION_CONTACT_EMAIL"],
   TRANSLATION_PROVIDER: process.env["TRANSLATION_PROVIDER"],
   TRANSLATION_RATE_LIMIT_PER_MINUTE: process.env["TRANSLATION_RATE_LIMIT_PER_MINUTE"],
 };
@@ -57,11 +59,11 @@ function createRequest(body: {
   sourceLanguage: string;
   targetLanguage: string;
   text: string;
-}): Request {
+}): ExpressRequest {
   return {
     body,
     ip: "127.0.0.1",
-  } as Request;
+  } as ExpressRequest;
 }
 
 async function assertHttpError(
@@ -90,12 +92,54 @@ test("handleTranslationRequest returns a translated result", async () => {
       targetLanguage: "en",
       text: "こんにちは",
     }),
-    response as Response,
+    response as unknown as ExpressResponse,
   );
 
   assert.equal(state.statusCode, 200);
   assert.equal(state.contentType, "application/json");
   assert.deepEqual(state.body, { result: "[en] こんにちは" });
+});
+
+test("handleTranslationRequest defaults to MyMemory when TRANSLATION_PROVIDER is unset", async () => {
+  delete process.env["TRANSLATION_PROVIDER"];
+  process.env["MYMEMORY_API_BASE_URL"] = "https://example.com";
+  resetTranslationRouteStateForTests();
+
+  const { response, state } = createMockResponse();
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (input) => {
+    assert.equal(String(input), "https://example.com/get?langpair=ja%7Cen&mt=1&q=%E3%81%93%E3%82%93%E3%81%AB%E3%81%A1%E3%81%AF&ip=127.0.0.1");
+    return new Response(
+      JSON.stringify({
+        responseData: {
+          translatedText: "Hello",
+        },
+        responseStatus: 200,
+      }),
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        status: 200,
+      },
+    );
+  };
+
+  try {
+    await handleTranslationRequest(
+      createRequest({
+        sourceLanguage: "ja",
+        targetLanguage: "en",
+        text: "こんにちは",
+      }),
+      response as unknown as ExpressResponse,
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  assert.equal(state.statusCode, 200);
+  assert.deepEqual(state.body, { result: "Hello" });
 });
 
 test("handleTranslationRequest rejects empty text", async () => {
@@ -111,7 +155,7 @@ test("handleTranslationRequest rejects empty text", async () => {
         targetLanguage: "en",
         text: "   ",
       }),
-      response as Response,
+      response as unknown as ExpressResponse,
     ),
     400,
   );
@@ -130,7 +174,7 @@ test("handleTranslationRequest rejects invalid language codes", async () => {
         targetLanguage: "en",
         text: "こんにちは",
       }),
-      response as Response,
+      response as unknown as ExpressResponse,
     ),
     400,
   );
@@ -150,7 +194,7 @@ test("handleTranslationRequest enforces a per-IP rate limit", async () => {
       targetLanguage: "en",
       text: "こんにちは",
     }),
-    firstResponse.response as Response,
+    firstResponse.response as unknown as ExpressResponse,
   );
 
   assert.equal(firstResponse.state.statusCode, 200);
@@ -162,7 +206,7 @@ test("handleTranslationRequest enforces a per-IP rate limit", async () => {
         targetLanguage: "en",
         text: "こんばんは",
       }),
-      secondResponse.response as Response,
+      secondResponse.response as unknown as ExpressResponse,
     ),
     429,
   );
@@ -181,7 +225,7 @@ test("handleTranslationRequest returns 503 when the provider is misconfigured", 
         targetLanguage: "en",
         text: "こんにちは",
       }),
-      response as Response,
+      response as unknown as ExpressResponse,
     ),
     503,
   );

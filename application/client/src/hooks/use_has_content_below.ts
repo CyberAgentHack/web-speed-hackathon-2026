@@ -14,21 +14,44 @@ export function useHasContentBelow(
   const [hasContentBelow, setHasContentBelow] = useState(false);
 
   useEffect(() => {
-    let active = true;
-    const check = () => {
-      if (!active) return;
-      const endEl = contentEndRef.current;
-      const barEl = boundaryRef.current;
-      if (endEl && barEl) {
+    const endEl = contentEndRef.current;
+    const barEl = boundaryRef.current;
+
+    if (!endEl || !barEl) {
+      return;
+    }
+
+    let frameId = 0;
+    const scheduleCheck = () => {
+      if (frameId !== 0) return;
+
+      frameId = window.requestAnimationFrame(() => {
+        frameId = 0;
         const endRect = endEl.getBoundingClientRect();
         const barRect = barEl.getBoundingClientRect();
         setHasContentBelow(endRect.top > barRect.top);
-      }
-      scheduler.postTask(check, { priority: "user-blocking", delay: 1 });
+      });
     };
-    scheduler.postTask(check, { priority: "user-blocking", delay: 1 });
+
+    const resizeObserver = new ResizeObserver(scheduleCheck);
+    resizeObserver.observe(barEl);
+
+    const contentContainer = endEl.parentElement;
+    if (contentContainer) {
+      resizeObserver.observe(contentContainer);
+    }
+
+    window.addEventListener("scroll", scheduleCheck, { passive: true });
+    window.addEventListener("resize", scheduleCheck);
+    scheduleCheck();
+
     return () => {
-      active = false;
+      if (frameId !== 0) {
+        window.cancelAnimationFrame(frameId);
+      }
+      resizeObserver.disconnect();
+      window.removeEventListener("scroll", scheduleCheck);
+      window.removeEventListener("resize", scheduleCheck);
     };
   }, [contentEndRef, boundaryRef]);
 

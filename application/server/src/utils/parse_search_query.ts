@@ -6,9 +6,15 @@ interface ParsedSearchQuery {
 
 const SEARCH_FILTER_PATTERN = /(^|\s)(since|until):([^\s]+)/g;
 const STRICT_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+const DATE_FRAGMENT_PATTERN = /(\d{4}-\d{2}-\d{2})/;
 
 function parseStrictDate(value: string): Date | null {
-  const match = STRICT_DATE_PATTERN.exec(value);
+  const dateFragment = DATE_FRAGMENT_PATTERN.exec(value)?.[1];
+  if (dateFragment == null) {
+    return null;
+  }
+
+  const match = STRICT_DATE_PATTERN.exec(dateFragment);
   if (match === null) {
     return null;
   }

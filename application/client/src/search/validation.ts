@@ -1,6 +1,7 @@
 import { FormErrors } from "redux-form";
 
 import {
+  extractDateFragment,
   parseSearchQuery,
   isValidDate,
 } from "@web-speed-hackathon-2026/client/src/search/services";
@@ -9,8 +10,12 @@ import { SearchFormData } from "@web-speed-hackathon-2026/client/src/search/type
 export const validate = (values: SearchFormData): FormErrors<SearchFormData> => {
   const errors: FormErrors<SearchFormData> = {};
   const raw = values.searchText?.trim() || "";
-  const sinceToken = raw.match(/(?:^|\s)since:([^\s]+)/)?.[1] || null;
-  const untilToken = raw.match(/(?:^|\s)until:([^\s]+)/)?.[1] || null;
+  const rawSinceToken = raw.match(/(?:^|\s)since:([^\s]+)/)?.[1] || null;
+  const rawUntilToken = raw.match(/(?:^|\s)until:([^\s]+)/)?.[1] || null;
+  const sinceToken =
+    rawSinceToken == null ? null : (extractDateFragment(rawSinceToken) ?? rawSinceToken);
+  const untilToken =
+    rawUntilToken == null ? null : (extractDateFragment(rawUntilToken) ?? rawUntilToken);
 
   if (!raw) {
     errors.searchText = "検索キーワードを入力してください";

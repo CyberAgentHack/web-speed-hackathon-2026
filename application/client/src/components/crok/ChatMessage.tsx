@@ -1,10 +1,5 @@
-import "katex/dist/katex.min.css";
-import Markdown from "react-markdown";
-import rehypeKatex from "rehype-katex";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
+import { lazy, memo, Suspense } from "react";
 
-import { CodeBlock } from "@web-speed-hackathon-2026/client/src/components/crok/CodeBlock";
 import { TypingIndicator } from "@web-speed-hackathon-2026/client/src/components/crok/TypingIndicator";
 import { CrokLogo } from "@web-speed-hackathon-2026/client/src/components/foundation/CrokLogo";
 
@@ -12,7 +7,12 @@ interface Props {
   message: Models.ChatMessage;
 }
 
-const UserMessage = ({ content }: { content: string }) => {
+const AssistantMarkdown = lazy(async () => {
+  const module = await import("@web-speed-hackathon-2026/client/src/components/crok/AssistantMarkdown");
+  return { default: module.AssistantMarkdown };
+});
+
+const UserMessage = memo(({ content }: { content: string }) => {
   return (
     <div className="mb-6 flex justify-end">
       <div className="bg-cax-surface-subtle text-cax-text max-w-[80%] rounded-3xl px-4 py-2">
@@ -20,9 +20,9 @@ const UserMessage = ({ content }: { content: string }) => {
       </div>
     </div>
   );
-};
+});
 
-const AssistantMessage = ({ content }: { content: string }) => {
+const AssistantMessage = memo(({ content }: { content: string }) => {
   return (
     <div className="mb-6 flex gap-4">
       <div className="h-8 w-8 shrink-0">
@@ -32,14 +32,9 @@ const AssistantMessage = ({ content }: { content: string }) => {
         <div className="text-cax-text mb-1 text-sm font-medium">Crok</div>
         <div className="markdown text-cax-text max-w-none">
           {content ? (
-            <Markdown
-              components={{ pre: CodeBlock }}
-              key={content}
-              rehypePlugins={[rehypeKatex]}
-              remarkPlugins={[remarkMath, remarkGfm]}
-            >
-              {content}
-            </Markdown>
+            <Suspense fallback={<p className="whitespace-pre-wrap">{content}</p>}>
+              <AssistantMarkdown content={content} />
+            </Suspense>
           ) : (
             <TypingIndicator />
           )}
@@ -47,11 +42,11 @@ const AssistantMessage = ({ content }: { content: string }) => {
       </div>
     </div>
   );
-};
+});
 
-export const ChatMessage = ({ message }: Props) => {
+export const ChatMessage = memo(({ message }: Props) => {
   if (message.role === "user") {
     return <UserMessage content={message.content} />;
   }
   return <AssistantMessage content={message.content} />;
-};
+});

@@ -14,6 +14,7 @@ import { Button } from "../foundation/Button";
 
 interface Props {
   isNegative: boolean;
+  isLoading: boolean;
   query: string;
   results: Models.Post[];
 }
@@ -54,6 +55,7 @@ const SearchInput = ({ input, meta, externalError, onClearExternalError }: Searc
 
 const SearchPageComponent = ({
   isNegative,
+  isLoading,
   query,
   results,
   handleSubmit,
@@ -115,7 +117,7 @@ const SearchPageComponent = ({
       {query && (
         <div className="px-4">
           <h2 className="text-lg font-bold">
-            {searchConditionText} の検索結果 ({results.length} 件)
+            {searchConditionText} の検索結果 {!isLoading && `(${results.length} 件)`}
           </h2>
         </div>
       )}
@@ -131,7 +133,7 @@ const SearchPageComponent = ({
         </article>
       )}
 
-      {query && results.length === 0 ? (
+      {query && !isLoading && results.length === 0 ? (
         <div className="text-cax-text-muted flex items-center justify-center p-8">
           検索結果が見つかりませんでした
         </div>

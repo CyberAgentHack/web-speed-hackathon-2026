@@ -40,7 +40,9 @@ API ドキュメントを Open API YAML [./server/openapi.yaml](./server/openapi
 
 翻訳 API はサーバー側で動作します。現在サポートしている環境変数は次の通りです。
 
-- `TRANSLATION_PROVIDER=fake`
+- `TRANSLATION_PROVIDER=mymemory|fake` 省略時は `mymemory`
+- `MYMEMORY_API_BASE_URL` 省略時は `https://api.mymemory.translated.net`
+- `TRANSLATION_CONTACT_EMAIL` 任意。MyMemory の無料枠を増やしたい場合に設定
 - `TRANSLATION_RATE_LIMIT_PER_MINUTE` 省略時は `20`
 - `TRANSLATION_CACHE_MAX_ENTRIES` 省略時は `500`
 - `TRANSLATION_CACHE_TTL_MS` 省略時は `86400000`

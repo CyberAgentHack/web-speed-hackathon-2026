@@ -1,4 +1,5 @@
 import { ChangeEventHandler, FormEventHandler, useCallback, useState } from "react";
+import { flushSync } from "react-dom";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/components/modal/ModalErrorMessage";
@@ -6,6 +7,11 @@ import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/componen
 import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/AttachFileInputButton";
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
+
+function readCurrentText(input: HTMLInputElement): string | undefined {
+  const textarea = input.form?.querySelector("textarea");
+  return textarea instanceof HTMLTextAreaElement ? textarea.value : undefined;
+}
 
 interface SubmitParams {
   images: File[];
@@ -34,15 +40,18 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
   const handleChangeText = useCallback<ChangeEventHandler<HTMLTextAreaElement>>((ev) => {
     const value = ev.currentTarget.value;
-    setParams((params) => ({
-      ...params,
-      text: value,
-    }));
+    flushSync(() => {
+      setParams((params) => ({
+        ...params,
+        text: value,
+      }));
+    });
   }, []);
 
   const handleChangeImages = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
     const files = Array.from(ev.currentTarget.files ?? []).slice(0, 4);
     const isValid = files.every((file) => file.size <= MAX_UPLOAD_BYTES_LIMIT);
+    const text = readCurrentText(ev.currentTarget);
 
     setHasFileError(isValid !== true);
     if (isValid) {
@@ -51,6 +60,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
         images: files,
         movie: undefined,
         sound: undefined,
+        text: text ?? params.text,
       }));
     }
   }, []);
@@ -58,6 +68,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
   const handleChangeSound = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
     const file = Array.from(ev.currentTarget.files ?? [])[0]!;
     const isValid = file.size <= MAX_UPLOAD_BYTES_LIMIT;
+    const text = readCurrentText(ev.currentTarget);
 
     setHasFileError(isValid !== true);
     if (isValid) {
@@ -66,6 +77,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
         images: [],
         movie: undefined,
         sound: file,
+        text: text ?? params.text,
       }));
     }
   }, []);
@@ -73,6 +85,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
   const handleChangeMovie = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
     const file = Array.from(ev.currentTarget.files ?? [])[0]!;
     const isValid = file.size <= MAX_UPLOAD_BYTES_LIMIT;
+    const text = readCurrentText(ev.currentTarget);
 
     setHasFileError(isValid !== true);
     if (isValid) {
@@ -81,6 +94,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
         images: [],
         movie: file,
         sound: undefined,
+        text: text ?? params.text,
       }));
     }
   }, []);
@@ -105,6 +119,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
         rows={4}
         onChange={handleChangeText}
         placeholder="いまなにしてる？"
+        value={params.text}
       />
 
       <div className="text-cax-text flex w-full items-center justify-evenly">

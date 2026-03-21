@@ -17,6 +17,14 @@ export async function login(
   await page.getByRole("link", { name: "Crok" }).waitFor({ timeout: 30_000 });
 }
 
+/** ページの読み込みを安定させるための関数 */
+export async function waitForPageToLoad(page: Page): Promise<void> {
+  // ネットワークがidleになるまで待つ
+  await page.waitForLoadState("networkidle", { timeout: 30_000 });
+  // ページの表示を安定させるため、10秒待つ
+  await page.waitForTimeout(10_000);
+}
+
 /** ビューポート内の全メディア（img/movie/sound）が読み込み完了するまで待つ */
 export async function waitForVisibleMedia(page: Page): Promise<void> {
   await expect(async () => {

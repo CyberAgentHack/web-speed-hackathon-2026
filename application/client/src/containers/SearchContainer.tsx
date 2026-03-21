@@ -65,6 +65,7 @@ export const SearchContainer = () => {
       <ReduxFormProvider>
         <SearchPage
           isNegative={isNegative}
+          isLoading={isLoading}
           query={query}
           results={posts}
           initialValues={{ searchText: query }}

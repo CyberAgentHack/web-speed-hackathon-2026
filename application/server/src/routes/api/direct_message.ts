@@ -20,7 +20,12 @@ const conversationMessagesInclude = [
   {
     association: "messages",
     include: [{ association: "sender", include: [{ association: "profileImage" }] }],
+    order: [
+      ["createdAt", "ASC"],
+      ["id", "ASC"],
+    ],
     required: false,
+    separate: true,
   },
 ];
 

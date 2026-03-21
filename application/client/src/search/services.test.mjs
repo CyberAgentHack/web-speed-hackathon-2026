@@ -19,6 +19,14 @@ test("parseSearchQuery captures invalid raw filter values for validation", () =>
   });
 });
 
+test("parseSearchQuery keeps the leading date even when extra characters follow it", () => {
+  assert.deepEqual(parseSearchQuery("anime since:2026-01-060000000000x until:2026-01-0600x"), {
+    keywords: "anime",
+    sinceDate: "2026-01-06",
+    untilDate: "2026-01-06",
+  });
+});
+
 test("isValidDate rejects rollover dates", () => {
   assert.equal(isValidDate("2025-02-28"), true);
   assert.equal(isValidDate("2025-02-30"), false);

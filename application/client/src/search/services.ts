@@ -1,5 +1,10 @@
 const SEARCH_FILTER_PATTERN = /(^|\s)(since|until):([^\s]+)/g;
 const STRICT_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+const DATE_FRAGMENT_PATTERN = /(\d{4}-\d{2}-\d{2})/;
+
+export const extractDateFragment = (value: string): string | null => {
+  return DATE_FRAGMENT_PATTERN.exec(value)?.[1] ?? null;
+};
 
 export const sanitizeSearchText = (input: string): string => {
   let text = input;
@@ -19,11 +24,12 @@ export const parseSearchQuery = (query: string) => {
   for (const match of query.matchAll(SEARCH_FILTER_PATTERN)) {
     const key = match[2];
     const value = match[3];
+    const extractedDate = value == null ? null : extractDateFragment(value);
     if (key === "since" && sinceDate === null) {
-      sinceDate = value ?? null;
+      sinceDate = extractedDate;
     }
     if (key === "until" && untilDate === null) {
-      untilDate = value ?? null;
+      untilDate = extractedDate;
     }
   }
 

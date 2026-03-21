@@ -1,4 +1,5 @@
 import { FakeTranslationProvider } from "@web-speed-hackathon-2026/server/src/services/translation/fake_provider";
+import { MyMemoryTranslationProvider } from "@web-speed-hackathon-2026/server/src/services/translation/mymemory_provider";
 import {
   TranslateParams,
   TranslationProvider,
@@ -16,7 +17,7 @@ interface Params {
   provider: TranslationProvider;
 }
 
-type TranslationProviderName = "fake";
+type TranslationProviderName = "fake" | "mymemory";
 
 export class TranslationService {
   #cache = new Map<string, CacheEntry>();
@@ -79,14 +80,19 @@ function parsePositiveInteger(value: string | undefined, defaultValue: number): 
 export function createTranslationServiceFromEnv(
   env: NodeJS.ProcessEnv = process.env,
 ): TranslationService {
-  const providerName = env["TRANSLATION_PROVIDER"] as TranslationProviderName | undefined;
-
-  if (providerName == null) {
-    throw new TranslationServiceUnavailableError("TRANSLATION_PROVIDER is not configured.");
-  }
+  const providerName = (env["TRANSLATION_PROVIDER"] ?? "mymemory") as
+    | TranslationProviderName
+    | undefined;
 
   const provider =
-    providerName === "fake" ? new FakeTranslationProvider() : null;
+    providerName === "mymemory"
+      ? new MyMemoryTranslationProvider({
+          apiBaseUrl: env["MYMEMORY_API_BASE_URL"],
+          contactEmail: env["TRANSLATION_CONTACT_EMAIL"],
+        })
+      : providerName === "fake"
+        ? new FakeTranslationProvider()
+        : null;
 
   if (provider == null) {
     throw new TranslationServiceUnavailableError(
