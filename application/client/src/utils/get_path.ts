@@ -13,7 +13,7 @@ export function getOptimizedImageSrcSet(imageId: string, widths: number[]): stri
 }
 
 export function getMoviePath(movieId: string): string {
-  return `/movies/${movieId}.gif`;
+  return `/movies/${movieId}.mp4`;
 }
 
 export function getSoundPath(soundId: string): string {
