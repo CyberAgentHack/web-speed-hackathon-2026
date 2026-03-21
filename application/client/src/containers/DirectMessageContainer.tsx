@@ -27,6 +27,8 @@ interface Props {
 
 export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   const { conversationId = "" } = useParams<{ conversationId: string }>();
+  const optimisticMessagesRef = useRef<Models.DirectMessage[]>([]);
+  const optimisticRequestSeqRef = useRef(0);
 
   const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(null);
   const [conversationError, setConversationError] = useState<Error | null>(null);
@@ -34,6 +36,18 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const mergeConversationMessages = useCallback(
+    (messages: Models.DirectMessage[]) => {
+      const seen = new Set(messages.map((message) => message.id));
+      const pending = optimisticMessagesRef.current.filter((message) => !seen.has(message.id));
+
+      return [...messages, ...pending].sort((a, b) => {
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      });
+    },
+    [],
+  );
 
   const loadConversation = useCallback(async () => {
     if (activeUser == null) {
@@ -44,13 +58,16 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
       const data = await fetchJSON<Models.DirectMessageConversation>(
         `/api/v1/dm/${conversationId}`,
       );
-      setConversation(data);
+      setConversation({
+        ...data,
+        messages: mergeConversationMessages(data.messages),
+      });
       setConversationError(null);
     } catch (error) {
       setConversation(null);
       setConversationError(error as Error);
     }
-  }, [activeUser, conversationId]);
+  }, [activeUser, conversationId, mergeConversationMessages]);
 
   const sendRead = useCallback(async () => {
     if (activeUser == null || conversationId === "") {
@@ -74,11 +91,55 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
       }
 
       setIsSubmitting(true);
+      const requestSeq = optimisticRequestSeqRef.current + 1;
+      optimisticRequestSeqRef.current = requestSeq;
+      const createdAt = new Date().toISOString();
+      const optimisticMessage = {
+        body: params.body,
+        createdAt,
+        id: `optimistic-${requestSeq}`,
+        isRead: false,
+        sender: {
+          id: activeUser.id,
+        },
+      } as Models.DirectMessage;
+      optimisticMessagesRef.current = [...optimisticMessagesRef.current, optimisticMessage];
+      setConversation((current) => {
+        if (current == null) {
+          return current;
+        }
+
+        return {
+          ...current,
+          messages: mergeConversationMessages([...current.messages, optimisticMessage]),
+        };
+      });
+
       try {
-        await sendJSON(`/api/v1/dm/${conversationId}/messages`, {
+        const sentMessage = await sendJSON<Models.DirectMessage>(`/api/v1/dm/${conversationId}/messages`, {
           body: params.body,
         });
-        const createdAt = new Date().toISOString();
+        optimisticMessagesRef.current = optimisticMessagesRef.current.filter(
+          (message) => message.id !== optimisticMessage.id,
+        );
+        setConversation((current) => {
+          if (current == null) {
+            return current;
+          }
+
+          const nextMessages = current.messages
+            .filter((message) => message.id !== optimisticMessage.id)
+            .concat(sentMessage);
+          return {
+            ...current,
+            messages: mergeConversationMessages(nextMessages),
+          };
+        });
+        void loadConversation();
+      } catch (error) {
+        optimisticMessagesRef.current = optimisticMessagesRef.current.filter(
+          (message) => message.id !== optimisticMessage.id,
+        );
         setConversation((current) => {
           if (current == null) {
             return current;
@@ -86,26 +147,15 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
           return {
             ...current,
-            messages: [
-              ...current.messages,
-              {
-                body: params.body,
-                createdAt,
-                id: `optimistic-${createdAt}`,
-                isRead: false,
-                sender: {
-                  id: activeUser.id,
-                },
-              } as Models.DirectMessage,
-            ],
+            messages: current.messages.filter((message) => message.id !== optimisticMessage.id),
           };
         });
-        void loadConversation();
+        throw error;
       } finally {
         setIsSubmitting(false);
       }
     },
-    [activeUser, conversationId, loadConversation],
+    [activeUser, conversationId, loadConversation, mergeConversationMessages],
   );
 
   const handleTyping = useCallback(async () => {
