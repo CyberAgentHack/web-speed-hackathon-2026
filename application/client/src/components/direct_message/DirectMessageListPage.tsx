@@ -1,5 +1,5 @@
-import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
+import { fromNow } from "@web-speed-hackathon-2026/client/src/utils/format_date";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -68,7 +68,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
         </p>
       ) : (
         <ul data-testid="dm-list">
-          {conversations.map((conversation) => {
+          {conversations.map((conversation, idx) => {
             const { messages } = conversation;
             const peer =
               conversation.initiator.id !== activeUser.id
@@ -88,6 +88,8 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                       alt={peer.profileImage.alt}
                       className="w-12 shrink-0 self-start rounded-full"
                       src={getProfileImagePath(peer.profileImage.id)}
+                      loading={idx === 0 ? "eager" : "lazy"}
+                      fetchPriority={idx === 0 ? "high" : "auto"}
                     />
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-center justify-between">
@@ -100,7 +102,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {fromNow(lastMessage.createdAt)}
                           </time>
                         )}
                       </div>
