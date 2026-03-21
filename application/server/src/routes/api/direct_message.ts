@@ -173,16 +173,14 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
     }
   }
 
-  const messages = await DirectMessage.findAll({
+  const allMessages = await DirectMessage.findAll({
     where: whereClause,
     include: [{ association: "sender", include: [{ association: "profileImage" }] }],
-    order: [["createdAt", "DESC"]],
-    limit: MESSAGE_LIMIT + 1,
+    order: [["createdAt", "ASC"]],
   });
 
-  const hasMore = messages.length > MESSAGE_LIMIT;
-  const sliced = hasMore ? messages.slice(0, MESSAGE_LIMIT) : messages;
-  sliced.reverse();
+  const hasMore = allMessages.length > MESSAGE_LIMIT;
+  const messages = hasMore ? allMessages.slice(allMessages.length - MESSAGE_LIMIT) : allMessages;
 
   const json = conversation.toJSON();
   return res
@@ -190,7 +188,7 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
     .type("application/json")
     .send({
       ...json,
-      messages: sliced.map((m) => m.toJSON()),
+      messages,
       hasMore,
     });
 });
