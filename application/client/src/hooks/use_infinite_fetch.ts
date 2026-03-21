@@ -1,6 +1,8 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
 
+import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+
 const LIMIT = 10;
 
 interface ReturnValues<T> {
@@ -12,7 +14,6 @@ interface ReturnValues<T> {
 
 export function useInfiniteFetch<T>(
   apiPath: string,
-  fetcher: (apiPath: string) => Promise<T[]>,
 ): ReturnValues<T> {
   const { data, error, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteQuery<T[]>({
@@ -20,7 +21,7 @@ export function useInfiniteFetch<T>(
       queryFn: async ({ pageParam }) => {
         const separator = apiPath.includes("?") ? "&" : "?";
         const url = `${apiPath}${separator}limit=${LIMIT}&offset=${pageParam}`;
-        return fetcher(url);
+        return fetchJSON<T[]>(url);
       },
       initialPageParam: 0,
       getNextPageParam: (lastPage, _allPages, lastPageParam) => {
