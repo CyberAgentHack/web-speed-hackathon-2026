@@ -141,8 +141,8 @@
 | 認証               | 不要                                                                                                                                             |
 | 責務               | 投稿をテキスト・ユーザー名・日付で検索する                                                                                                       |
 | クエリパラメーター | `q: string` — 検索クエリ (特殊構文: `since:YYYY-MM-DD`, `until:YYYY-MM-DD`)<br>`limit?: number` — 取得件数上限<br>`offset?: number` — オフセット |
-| レスポンス (200)   | Post オブジェクトの配列 (createdAt 降順、テキスト一致とユーザー名/名前一致をマージ・重複排除)                                                    |
-| 4xx エラー         | なし (クエリが空の場合は空配列 `[]` を返す)                                                                                                      |
+| レスポンス (200)   | `{ posts: Post[], isNegative: boolean }` — posts は createdAt 降順、テキスト一致とユーザー名/名前一致をマージ・重複排除。isNegative は検索キーワードの感情分析結果 |
+| 4xx エラー         | なし (クエリが空の場合は `{ posts: [], isNegative: false }` を返す)                                                                               |
 
 **検索クエリ構文:**
 

@@ -3,6 +3,7 @@ import { Op } from "sequelize";
 
 import { Post } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
+import { analyzeSentiment } from "@web-speed-hackathon-2026/server/src/utils/sentiment_analyzer";
 
 export const searchRouter = Router();
 
@@ -10,14 +11,14 @@ searchRouter.get("/search", async (req, res) => {
   const query = req.query["q"];
 
   if (typeof query !== "string" || query.trim() === "") {
-    return res.status(200).type("application/json").send([]);
+    return res.status(200).type("application/json").send({ posts: [], isNegative: false });
   }
 
   const { keywords, sinceDate, untilDate } = parseSearchQuery(query);
 
-  // キーワードも日付フィルターもない場合は空配列を返す
+  // キーワードも日付フィルターもない場合は空を返す
   if (!keywords && !sinceDate && !untilDate) {
-    return res.status(200).type("application/json").send([]);
+    return res.status(200).type("application/json").send({ posts: [], isNegative: false });
   }
 
   const searchTerm = keywords ? `%${keywords}%` : null;
@@ -88,5 +89,7 @@ searchRouter.get("/search", async (req, res) => {
 
   const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
 
-  return res.status(200).type("application/json").send(result);
+  const isNegative = keywords ? analyzeSentiment(keywords).label === "negative" : false;
+
+  return res.status(200).type("application/json").send({ posts: result, isNegative });
 });

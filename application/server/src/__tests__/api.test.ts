@@ -328,10 +328,11 @@ describe("Posts", () => {
 // 5. Search
 // ============================================================
 describe("Search", () => {
-  it("GET /search — should return empty array for empty query", async () => {
+  it("GET /search — should return empty result for empty query", async () => {
     const res = await fetch(`${baseUrl}/api/v1/search?q=`);
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual([]);
+    const body = await res.json();
+    expect(body).toEqual({ posts: [], isNegative: false });
   });
 
   // BUG: search with keywords triggers a user-name fallback query that has a known bug
@@ -341,7 +342,8 @@ describe("Search", () => {
     const res = await fetch(`${baseUrl}/api/v1/search?q=${encodeURIComponent("カメラ")}&limit=5`);
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(Array.isArray(body)).toBe(true);
+    expect(Array.isArray(body.posts)).toBe(true);
+    expect(typeof body.isNegative).toBe("boolean");
   });
 
   it("GET /search — should support date-only filter without keywords", async () => {
@@ -350,7 +352,8 @@ describe("Search", () => {
     );
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(Array.isArray(body)).toBe(true);
+    expect(Array.isArray(body.posts)).toBe(true);
+    expect(body.isNegative).toBe(false);
   });
 });
 
