@@ -37,3 +37,23 @@ soundRouter.post("/sounds", async (req, res) => {
 
   return res.status(200).type("application/json").send({ artist, id: soundId, title });
 });
+
+soundRouter.post("/sounds/:soundId/waveform", async (req, res) => {
+  if (req.session.userId === undefined) {
+    throw new httpErrors.Unauthorized();
+  }
+  if (Buffer.isBuffer(req.body) === false) {
+    throw new httpErrors.BadRequest();
+  }
+
+  const svgText = req.body.toString("utf-8");
+  if (!svgText.includes("<svg")) {
+    throw new httpErrors.BadRequest("Invalid svg content");
+  }
+
+  const waveformPath = path.resolve(UPLOAD_PATH, `./sounds/waveforms/${req.params.soundId}.svg`);
+  await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds/waveforms"), { recursive: true });
+  await fs.writeFile(waveformPath, svgText, "utf-8");
+
+  return res.status(200).type("application/json").send({ id: req.params.soundId });
+});
