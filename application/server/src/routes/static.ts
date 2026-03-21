@@ -133,7 +133,7 @@ function getTermsHtml(): string {
   let html = baseHtml.replace("<title>CaX</title>", "<title>利用規約 - CaX</title>");
 
   // Inject inline font-face + minimal heading for immediate FCP paint
-  const fontFaceCSS = `<style>@font-face{font-family:"Rei no Are Mincho";src:url(/fonts/ReiNoAreMincho-Heavy.woff2) format("woff2");font-weight:bold;font-display:swap}@font-face{font-family:"Rei no Are Mincho";src:url(/fonts/ReiNoAreMincho-Regular.woff2) format("woff2");font-weight:normal;font-display:swap}</style>`;
+  const fontFaceCSS = `<style>@font-face{font-family:"Rei no Are Mincho";src:url(/fonts/ReiNoAreMincho-Heavy.woff2) format("woff2");font-weight:bold;font-display:block}@font-face{font-family:"Rei no Are Mincho";src:url(/fonts/ReiNoAreMincho-Regular.woff2) format("woff2");font-weight:normal;font-display:block}</style>`;
   html = html.replace("</head>", `${fontFaceCSS}\n</head>`);
 
   return html;
