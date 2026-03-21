@@ -11,8 +11,6 @@ let _sequelize: Sequelize | null = null;
 
 export async function initializeSequelize() {
   const prevSequelize = _sequelize;
-  _sequelize = null;
-  await prevSequelize?.close();
 
   const TEMP_PATH = path.resolve(
     await fs.mkdtemp(path.resolve(os.tmpdir(), "./wsh-")),
@@ -26,4 +24,7 @@ export async function initializeSequelize() {
     storage: TEMP_PATH,
   });
   initModels(_sequelize);
+
+  // 新しいコネクションが準備できてから古いものを閉じる
+  await prevSequelize?.close();
 }
