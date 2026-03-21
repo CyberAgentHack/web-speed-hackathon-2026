@@ -134,7 +134,15 @@ export async function calculateDmChatFlowAction({
 
     // メッセージを送信
     try {
-      await playwrightPage.keyboard.press("Enter");
+      const messageInput = playwrightPage.getByRole("textbox", { name: "内容" });
+      await Promise.all([
+        playwrightPage.waitForResponse(
+          (response) =>
+            /\/api\/v1\/dm\/[^/]+\/messages$/.test(response.url()) && response.status() === 201,
+          { timeout: 30 * 1000 },
+        ),
+        messageInput.press("Enter"),
+      ]);
     } catch (err) {
       throw new Error("メッセージの送信に失敗しました", { cause: err });
     }
@@ -142,6 +150,7 @@ export async function calculateDmChatFlowAction({
     // メッセージが表示されるまで待機（送信完了確認）
     try {
       await playwrightPage
+        .getByTestId("dm-message-list")
         .locator("li")
         .filter({ hasText: "パフォーマンス改善のアドバイスをお願いします！" })
         .waitFor({ timeout: 30 * 1000 });
@@ -163,7 +172,15 @@ export async function calculateDmChatFlowAction({
 
     // 2通目のメッセージを送信
     try {
-      await playwrightPage.keyboard.press("Enter");
+      const messageInput = playwrightPage.getByRole("textbox", { name: "内容" });
+      await Promise.all([
+        playwrightPage.waitForResponse(
+          (response) =>
+            /\/api\/v1\/dm\/[^/]+\/messages$/.test(response.url()) && response.status() === 201,
+          { timeout: 30 * 1000 },
+        ),
+        messageInput.press("Enter"),
+      ]);
     } catch (err) {
       throw new Error("2通目のメッセージの送信に失敗しました", { cause: err });
     }
@@ -171,6 +188,7 @@ export async function calculateDmChatFlowAction({
     // 2通目のメッセージが表示されるまで待機
     try {
       await playwrightPage
+        .getByTestId("dm-message-list")
         .locator("li")
         .filter({ hasText: "LCPの改善方法を具体的に教えてください。" })
         .waitFor({ timeout: 30 * 1000 });
