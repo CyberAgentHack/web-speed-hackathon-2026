@@ -31,6 +31,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(null);
   const [conversationError, setConversationError] = useState<Error | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingOlderMessages, setIsLoadingOlderMessages] = useState(false);
 
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -82,6 +83,38 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     },
     [conversationId],
   );
+
+  const handleLoadOlderMessages = useCallback(async () => {
+    setIsLoadingOlderMessages(true);
+    try {
+      const oldestMessageId = conversation?.messages[0]?.id;
+      if (oldestMessageId == null) {
+        return;
+      }
+
+      const olderConversation = await fetchJSON<Models.DirectMessageConversation>(
+        `/api/v1/dm/${conversationId}?beforeMessageId=${encodeURIComponent(oldestMessageId)}`,
+      );
+      setConversation((prev) => {
+        if (prev == null) {
+          return prev;
+        }
+
+        const existingMessageIds = new Set(prev.messages.map((message) => message.id));
+        const olderMessages = olderConversation.messages.filter(
+          (message) => !existingMessageIds.has(message.id),
+        );
+
+        return {
+          ...prev,
+          hasOlderMessages: olderConversation.hasOlderMessages,
+          messages: [...olderMessages, ...prev.messages],
+        };
+      });
+    } finally {
+      setIsLoadingOlderMessages(false);
+    }
+  }, [conversation, conversationId]);
 
   const lastTypingSentRef = useRef(0);
   const handleTyping = useCallback(() => {
@@ -161,7 +194,9 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
         activeUser={activeUser}
         onTyping={handleTyping}
         isPeerTyping={isPeerTyping}
+        isLoadingOlderMessages={isLoadingOlderMessages}
         isSubmitting={isSubmitting}
+        onLoadOlderMessages={handleLoadOlderMessages}
         onSubmit={handleSubmit}
       />
     </>

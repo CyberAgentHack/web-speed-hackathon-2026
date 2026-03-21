@@ -32,11 +32,87 @@ interface DirectMessageConversationListItem {
 
 type UnreadConversationRow = Pick<DirectMessage, "conversationId">;
 
+const DIRECT_MESSAGE_PAGE_SIZE = 50;
+const DIRECT_MESSAGE_PAGE_FETCH_SIZE = DIRECT_MESSAGE_PAGE_SIZE + 1;
+
 const userSummaryInclude = (association: "initiator" | "member") => ({
   association,
   attributes: ["id", "name", "username"],
   include: [{ association: "profileImage", attributes: ["id", "alt"] }],
 });
+
+function createOlderMessagesWhereCondition(beforeMessage: Pick<DirectMessage, "createdAt" | "id">) {
+  return {
+    [Op.or]: [
+      {
+        createdAt: {
+          [Op.lt]: beforeMessage.createdAt,
+        },
+      },
+      {
+        [Op.and]: [{ createdAt: beforeMessage.createdAt }, { id: { [Op.lt]: beforeMessage.id } }],
+      },
+    ],
+  };
+}
+
+async function getDirectMessageConversationResponse({
+  conversationId,
+  userId,
+  beforeMessageId,
+}: {
+  conversationId: string;
+  userId: string;
+  beforeMessageId?: string;
+}) {
+  const conversation = await DirectMessageConversation.findOne({
+    where: {
+      id: conversationId,
+      [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
+    },
+  });
+  if (conversation === null) {
+    throw new httpErrors.NotFound();
+  }
+
+  let messageCursorWhere = {};
+  if (beforeMessageId !== undefined) {
+    const beforeMessage = await DirectMessage.findOne({
+      attributes: ["id", "createdAt"],
+      where: {
+        conversationId: conversation.id,
+        id: beforeMessageId,
+      },
+    });
+
+    if (beforeMessage === null) {
+      throw new httpErrors.BadRequest();
+    }
+
+    messageCursorWhere = createOlderMessagesWhereCondition(beforeMessage);
+  }
+
+  const rawMessages = await DirectMessage.scope("withSender").findAll({
+    where: {
+      conversationId: conversation.id,
+      ...messageCursorWhere,
+    },
+    order: [
+      ["createdAt", "DESC"],
+      ["id", "DESC"],
+    ],
+    limit: DIRECT_MESSAGE_PAGE_FETCH_SIZE,
+  });
+
+  const hasOlderMessages = rawMessages.length > DIRECT_MESSAGE_PAGE_SIZE;
+  const messages = rawMessages.slice(0, DIRECT_MESSAGE_PAGE_SIZE).reverse();
+
+  return {
+    ...conversation.toJSON(),
+    hasOlderMessages,
+    messages,
+  };
+}
 
 directMessageRouter.get("/dm", async (req, res) => {
   if (req.session.userId === undefined) {
@@ -152,13 +228,10 @@ directMessageRouter.post("/dm", async (req, res) => {
       memberId: peer.id,
     },
   });
-  const hydratedConversation = await DirectMessageConversation.scope("withMessages").findByPk(
-    conversation.id,
-  );
-
-  if (hydratedConversation === null) {
-    throw new httpErrors.NotFound();
-  }
+  const hydratedConversation = await getDirectMessageConversationResponse({
+    conversationId: conversation.id,
+    userId: req.session.userId,
+  });
 
   return res.status(200).type("application/json").send(hydratedConversation);
 });
@@ -202,15 +275,16 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversation = await DirectMessageConversation.scope("withMessages").findOne({
-    where: {
-      id: req.params.conversationId,
-      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
-    },
-  });
-  if (conversation === null) {
-    throw new httpErrors.NotFound();
+  const beforeMessageId = req.query["beforeMessageId"];
+  if (beforeMessageId !== undefined && typeof beforeMessageId !== "string") {
+    throw new httpErrors.BadRequest();
   }
+
+  const conversation = await getDirectMessageConversationResponse({
+    conversationId: req.params.conversationId,
+    userId: req.session.userId,
+    beforeMessageId,
+  });
 
   return res.status(200).type("application/json").send(conversation);
 });

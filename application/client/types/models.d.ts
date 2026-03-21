@@ -61,6 +61,7 @@ declare namespace Models {
     id: string;
     initiator: Models.User;
     member: Models.User;
+    hasOlderMessages: boolean;
     messages: Array<Models.DirectMessage>;
   }
 

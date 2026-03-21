@@ -11,6 +11,7 @@ import {
   useState,
 } from "react";
 
+import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
 import { formatHM } from "@web-speed-hackathon-2026/client/src/utils/date_format";
@@ -21,7 +22,9 @@ interface Props {
   conversation: Models.DirectMessageConversation;
   activeUser: Models.User;
   isPeerTyping: boolean;
+  isLoadingOlderMessages: boolean;
   isSubmitting: boolean;
+  onLoadOlderMessages: () => Promise<void>;
   onTyping: () => void;
   onSubmit: (params: DirectMessageFormData) => Promise<void>;
 }
@@ -31,11 +34,14 @@ export const DirectMessagePage = ({
   conversation,
   activeUser,
   isPeerTyping,
+  isLoadingOlderMessages,
   isSubmitting,
+  onLoadOlderMessages,
   onTyping,
   onSubmit,
 }: Props) => {
   const formRef = useRef<HTMLFormElement>(null);
+  const messageListContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const stickyBarRef = useRef<HTMLDivElement>(null);
   const shouldAutoScrollRef = useRef(true);
@@ -87,6 +93,28 @@ export const DirectMessagePage = ({
     },
     [onSubmit, text],
   );
+
+  const handleLoadOlderMessages = useCallback(async () => {
+    const container = messageListContainerRef.current;
+    if (container == null || isLoadingOlderMessages) {
+      return;
+    }
+
+    const previousScrollHeight = container.scrollHeight;
+    const previousScrollTop = container.scrollTop;
+
+    await onLoadOlderMessages();
+
+    requestAnimationFrame(() => {
+      const nextContainer = messageListContainerRef.current;
+      if (nextContainer == null) {
+        return;
+      }
+
+      nextContainer.scrollTop =
+        previousScrollTop + (nextContainer.scrollHeight - previousScrollHeight);
+    });
+  }, [isLoadingOlderMessages, onLoadOlderMessages]);
 
   useLayoutEffect(() => {
     lastMessageIdRef.current = null;
@@ -186,7 +214,25 @@ export const DirectMessagePage = ({
         </div>
       </header>
 
-      <div className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8">
+      <div
+        className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8"
+        ref={messageListContainerRef}
+      >
+        {conversation.hasOlderMessages && (
+          <div className="flex justify-center">
+            <Button
+              className="text-sm"
+              disabled={isLoadingOlderMessages}
+              onClick={() => {
+                void handleLoadOlderMessages();
+              }}
+              variant="secondary"
+            >
+              {isLoadingOlderMessages ? "読み込み中..." : "以前のメッセージを読み込む"}
+            </Button>
+          </div>
+        )}
+
         {conversation.messages.length === 0 && (
           <p className="text-cax-text-muted text-center text-sm">
             まだメッセージはありません。最初のメッセージを送信してみましょう。

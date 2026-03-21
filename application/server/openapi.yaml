@@ -507,6 +507,11 @@ paths:
           required: true
           schema:
             type: string
+        - name: beforeMessageId
+          in: query
+          required: false
+          schema:
+            type: string
       responses:
         "200":
           description: OK
@@ -884,7 +889,7 @@ components:
 
     DirectMessageConversation:
       type: object
-      required: [id, initiator, member]
+      required: [id, initiator, member, hasOlderMessages, messages]
       properties:
         id:
           type: string
@@ -892,6 +897,8 @@ components:
           $ref: "#/components/schemas/User"
         member:
           $ref: "#/components/schemas/User"
+        hasOlderMessages:
+          type: boolean
         messages:
           type: array
           items:

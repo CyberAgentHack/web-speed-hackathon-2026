@@ -103,6 +103,11 @@ const config = {
         "node_modules",
         "@ffmpeg/ffmpeg/dist/esm/index.js",
       ),
+      "@ffmpeg/ffmpeg/worker$": path.resolve(
+        __dirname,
+        "node_modules",
+        "@ffmpeg/ffmpeg/dist/esm/worker.js",
+      ),
       "@ffmpeg/core$": path.resolve(
         __dirname,
         "node_modules",

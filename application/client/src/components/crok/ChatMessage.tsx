@@ -1,4 +1,5 @@
 import "katex/dist/katex.min.css";
+import { useDeferredValue } from "react";
 import Markdown from "react-markdown";
 import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
@@ -13,7 +14,7 @@ const rehypePlugins = [rehypeKatex];
 
 interface Props {
   message: Models.ChatMessage;
-  /** 最後のアシスタントメッセージのストリーミング中のみ true（Markdown は完了後にのみ実行） */
+  /** 最後のアシスタントのストリーミング中は useDeferredValue で重い Markdown 更新を遅延 */
   assistantStreaming?: boolean;
 }
 
@@ -28,6 +29,9 @@ const UserMessage = ({ content }: { content: string }) => {
 };
 
 const AssistantMessage = ({ content, streaming }: { content: string; streaming: boolean }) => {
+  const deferredContent = useDeferredValue(content);
+  const markdownSource = streaming ? deferredContent : content;
+
   return (
     <div className="mb-6 flex gap-4">
       <div className="h-8 w-8 shrink-0">
@@ -38,15 +42,13 @@ const AssistantMessage = ({ content, streaming }: { content: string; streaming: 
         <div className="markdown text-cax-text max-w-none">
           {!content ? (
             <TypingIndicator />
-          ) : streaming ? (
-            <p className="whitespace-pre-wrap">{content}</p>
           ) : (
             <Markdown
               components={{ pre: CodeBlock }}
               rehypePlugins={rehypePlugins}
               remarkPlugins={remarkPlugins}
             >
-              {content}
+              {markdownSource}
             </Markdown>
           )}
         </div>
