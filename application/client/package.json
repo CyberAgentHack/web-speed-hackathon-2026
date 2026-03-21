@@ -12,8 +12,6 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@ffmpeg/core": "0.12.10",
-    "@ffmpeg/ffmpeg": "0.12.15",
     "@mlc-ai/web-llm": "0.2.80",
     "@web-speed-hackathon-2026/client": "workspace:*",
     "bayesian-bm25": "0.4.0",
@@ -21,7 +19,6 @@
     "classnames": "2.5.1",
     "common-tags": "1.8.2",
     "core-js": "3.45.1",
-    "encoding-japanese": "2.2.0",
     "fast-average-color": "9.5.0",
     "gifler": "github:themadcreator/gifler#v0.3.0",
     "jquery": "3.7.1",
@@ -57,7 +54,6 @@
     "@tailwindcss/postcss": "4.2.1",
     "@tsconfig/strictest": "2.0.8",
     "@types/common-tags": "1.8.4",
-    "@types/encoding-japanese": "2.2.1",
     "@types/jquery": "3.5.33",
     "@types/langs": "2.0.5",
     "@types/lodash": "4.17.20",
