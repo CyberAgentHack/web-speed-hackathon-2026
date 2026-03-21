@@ -12,7 +12,12 @@ app.set("trust proxy", true);
 
 app.use(compression());
 app.use(sessionMiddleware);
-app.use(bodyParser.raw({ limit: "10mb", type: "application/octet-stream" }));
+app.use(
+  bodyParser.raw({
+    limit: "10mb",
+    type: ["application/octet-stream", "image/*", "video/*", "audio/*"],
+  }),
+);
 app.use(bodyParser.json());
 
 app.use((_req, res, next) => {

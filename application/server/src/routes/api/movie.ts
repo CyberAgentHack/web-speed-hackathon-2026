@@ -87,7 +87,10 @@ movieRouter.post("/movies", async (req, res) => {
   // 動画をサーバー側で MP4 に変換
   const mp4Buffer = await convertToMp4(req.body);
 
-  const filePath = path.resolve(UPLOAD_PATH, `./movies/${movieId}.${EXTENSION}`);
+  const filePath = path.resolve(
+    UPLOAD_PATH,
+    `./movies/${movieId}.${EXTENSION}`,
+  );
   await fs.mkdir(path.resolve(UPLOAD_PATH, "movies"), { recursive: true });
   await fs.writeFile(filePath, mp4Buffer);
   await Movie.create({ id: movieId });
