@@ -1,10 +1,10 @@
-import { Mp3Encoder } from "lamejs";
-
 interface Options {
   extension: string;
 }
 
 export async function convertSound(file: File, _options: Options): Promise<Blob> {
+  const { Mp3Encoder } = await import("lamejs");
+
   const audioContext = new AudioContext();
   const arrayBuffer = await file.arrayBuffer();
   const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);

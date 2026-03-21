@@ -1,5 +1,3 @@
-import { GifWriter } from "omggif";
-
 import { buildColorMap, buildPalette, mapPixels } from "@web-speed-hackathon-2026/client/src/utils/quantize";
 
 interface Options {
@@ -11,6 +9,8 @@ interface Options {
  * 先頭 5 秒のみ、正方形にくり抜かれた無音動画を作成します
  */
 export async function convertMovie(file: File, _options: Options): Promise<Blob> {
+  const { GifWriter } = await import("omggif");
+
   const video = document.createElement("video");
   video.muted = true;
   video.playsInline = true;

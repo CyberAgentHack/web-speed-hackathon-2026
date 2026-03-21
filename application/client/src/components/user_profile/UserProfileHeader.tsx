@@ -1,4 +1,3 @@
-import { FastAverageColor } from "fast-average-color";
 import { ReactEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -15,10 +14,14 @@ export const UserProfileHeader = ({ user }: Props) => {
   // 画像の平均色を取得します
   /** @type {React.ReactEventHandler<HTMLImageElement>} */
   const handleLoadImage = useCallback<ReactEventHandler<HTMLImageElement>>((ev) => {
-    const fac = new FastAverageColor();
-    const { rgb } = fac.getColor(ev.currentTarget, { mode: "precision" });
-    setAverageColor(rgb);
-    fac.destroy();
+    const img = ev.currentTarget;
+    void (async () => {
+      const { FastAverageColor } = await import("fast-average-color");
+      const fac = new FastAverageColor();
+      const { rgb } = fac.getColor(img, { mode: "precision" });
+      setAverageColor(rgb);
+      fac.destroy();
+    })();
   }, []);
 
   return (
