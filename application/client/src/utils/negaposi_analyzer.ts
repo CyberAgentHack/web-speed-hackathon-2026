@@ -1,14 +1,6 @@
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
 import analyze from "negaposi-analyzer-ja";
 
-function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
-  return new Promise((resolve, reject) => {
-    kuromoji.builder({ dicPath: "/dicts" }).build((err, tokenizer) => {
-      if (err) reject(err);
-      else resolve(tokenizer);
-    });
-  });
-}
+import { getTokenizer } from "@web-speed-hackathon-2026/client/src/utils/kuromoji_tokenizer";
 
 type SentimentResult = {
   score: number;
