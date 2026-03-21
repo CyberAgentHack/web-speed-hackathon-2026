@@ -1,5 +1,5 @@
 ---
-status: ready
+status: done
 priority: p1
 issue_id: "017"
 tags: [scoring, perf, fcp, lcp, ssr, css, streaming]
@@ -99,3 +99,13 @@ Option 3（画像優先度）→ Option 2（SSR ストリーミング）→ Opti
 - CSS 配信戦略の確認
 - 画像の priority 設定状況の確認
 - Vite ビルド出力サイズの確認
+
+### 2026-03-21 - Option 3 + Option 2 実装
+
+**By:** Claude Code
+
+**Actions:**
+- **Option 3 (画像優先度):** `TimelineItem.tsx` のプロフィール画像を `priority` prop に連動させ、上位3件は `fetchPriority="high"` + `loading="eager"` に変更（以前は常に `loading="lazy"` 固定）
+- **Option 2 (SSR ストリーミング):** `entry-server.tsx` から `await stream.allReady` を削除。React が shell を即座にストリーミング送信するようになり、FCP/SI が改善される
+- CoveredImage.tsx は既に `priority` prop で `fetchPriority="high"` をサポートしていたため変更不要
+- ssr.ts も変更不要（既にストリームをそのまま `c.body()` に渡している）
