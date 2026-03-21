@@ -13,8 +13,9 @@ interface Props {
  * Uses a deterministic pattern based on the sound ID to produce a consistent waveform shape.
  */
 const StaticWaveform = ({ soundId }: { soundId: string }) => {
-  // Generate a deterministic waveform from the sound ID (rounded to 3 decimals to reduce SSR HTML)
+  // Generate a deterministic waveform from the sound ID
   const bars = Array.from({ length: 100 }, (_, i) => {
+    // Simple hash-like function from soundId + index
     let hash = 0;
     const str = soundId + String(i);
     for (let j = 0; j < str.length; j++) {
@@ -25,6 +26,7 @@ const StaticWaveform = ({ soundId }: { soundId: string }) => {
 
   return (
     <svg className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1">
+      {/* Using index as key is safe here: bars is a static-length computed array of primitives with no stable ID */}
       {bars.map((ratio, idx) => (
         <rect
           key={idx}
