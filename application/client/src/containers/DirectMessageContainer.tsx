@@ -124,7 +124,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   return (
     <>
-      <title>{peer.name} さんとのダイレクトメッセージ - CaX</title>
+      <title>{`${peer.name} さんとのダイレクトメッセージ - CaX`}</title>
       <DirectMessagePage
         conversationError={conversationError}
         conversation={conversation}
