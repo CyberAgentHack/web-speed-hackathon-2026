@@ -25,10 +25,17 @@ interface Props {
   authModalId: string;
 }
 
+declare const window: Window & { __INITIAL_DM_CONVERSATION__?: Models.DirectMessageConversation };
+
 export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   const { conversationId = "" } = useParams<{ conversationId: string }>();
 
-  const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(null);
+  const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(() => {
+    const data = window.__INITIAL_DM_CONVERSATION__;
+    delete window.__INITIAL_DM_CONVERSATION__;
+    return data ?? null;
+  });
+  const skipInitialLoad = useRef(conversation != null);
   const [conversationError, setConversationError] = useState<Error | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -57,8 +64,12 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   }, [conversationId]);
 
   useEffect(() => {
-    void loadConversation();
     void sendRead();
+    if (skipInitialLoad.current) {
+      skipInitialLoad.current = false;
+      return;
+    }
+    void loadConversation();
   }, [loadConversation, sendRead]);
 
   const handleSubmit = useCallback(

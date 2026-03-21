@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useId, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useId, useRef, useState } from "react";
 import { HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
@@ -49,6 +49,8 @@ const UserProfileContainer = lazy(() =>
   })),
 );
 
+declare const window: Window & { __INITIAL_ME__?: Models.User };
+
 export const AppContainer = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -56,8 +58,17 @@ export const AppContainer = () => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
-  const [activeUser, setActiveUser] = useState<Models.User | null>(null);
+  const [activeUser, setActiveUser] = useState<Models.User | null>(() => {
+    const user = window.__INITIAL_ME__;
+    delete window.__INITIAL_ME__;
+    return user ?? null;
+  });
+  const hasInitialUser = useRef(activeUser != null);
   useEffect(() => {
+    if (hasInitialUser.current) {
+      hasInitialUser.current = false;
+      return;
+    }
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {
         setActiveUser(user);

@@ -4,7 +4,10 @@ import path from "path";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
 
-import { Post } from "@web-speed-hackathon-2026/server/src/models";
+import { Op } from "sequelize";
+
+import { DirectMessageConversation, Post, User } from "@web-speed-hackathon-2026/server/src/models";
+import { getSession } from "@web-speed-hackathon-2026/server/src/session";
 import {
   CLIENT_DIST_PATH,
   PUBLIC_PATH,
@@ -95,6 +98,47 @@ staticApp.get("/posts/:postId", async (c) => {
   const injected = html.replace(
     "</head>",
     `${preloadTag}<script>window.__INITIAL_POST__=${postJson}</script></head>`,
+  );
+  return c.html(injected, 200);
+});
+
+// DM detail page: inject user + conversation data + preload peer profile image
+staticApp.get("/dm/:conversationId", async (c) => {
+  const conversationId = c.req.param("conversationId");
+  const html = await readFile(indexHtmlPath, "utf8");
+
+  const userId = getSession(c);
+  if (!userId) return c.html(html, 200);
+
+  const [user, conversation] = await Promise.all([
+    User.findByPk(userId),
+    DirectMessageConversation.findOne({
+      where: { id: conversationId, [Op.or]: [{ initiatorId: userId }, { memberId: userId }] },
+      include: [
+        { association: "initiator", include: [{ association: "profileImage" }] },
+        { association: "member", include: [{ association: "profileImage" }] },
+        {
+          association: "messages",
+          include: [{ association: "sender", include: [{ association: "profileImage" }] }],
+          order: [["createdAt", "ASC"]],
+          separate: true,
+        },
+      ],
+    }),
+  ]);
+
+  if (!user || !conversation) return c.html(html, 200);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const convData = conversation.toJSON() as any;
+  const peer = convData.initiatorId !== userId ? convData.initiator : convData.member;
+  const preloadTag = peer
+    ? `<link rel="preload" as="image" href="/images/profiles/${peer.profileImage.id}.jpg">`
+    : "";
+
+  const injected = html.replace(
+    "</head>",
+    `${preloadTag}<script>window.__INITIAL_ME__=${JSON.stringify(user.toJSON())};window.__INITIAL_DM_CONVERSATION__=${JSON.stringify(convData)}</script></head>`,
   );
   return c.html(injected, 200);
 });
