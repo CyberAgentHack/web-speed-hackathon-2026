@@ -1,5 +1,5 @@
 import "katex/dist/katex.min.css";
-import { memo, useDeferredValue } from "react";
+import { memo, useDeferredValue, useMemo } from "react";
 import Markdown from "react-markdown";
 import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
@@ -11,6 +11,30 @@ import { CrokLogo } from "@web-speed-hackathon-2026/client/src/components/founda
 
 const remarkPlugins = [remarkMath, remarkGfm];
 const rehypePlugins = [rehypeKatex];
+const markdownComponents = { pre: CodeBlock };
+
+function splitContentIntoChunks(content: string): string[] {
+  if (!content) return [];
+  const lines = content.split("\n");
+  const chunks: string[] = [];
+  let chunkStart = 0;
+  let inCodeFence = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i]!.trimStart().startsWith("```")) {
+      inCodeFence = !inCodeFence;
+    }
+    if (!inCodeFence && lines[i] === "" && i > chunkStart) {
+      const chunk = lines.slice(chunkStart, i).join("\n");
+      if (chunk.trim()) chunks.push(chunk);
+      chunkStart = i + 1;
+    }
+  }
+
+  const remaining = lines.slice(chunkStart).join("\n");
+  if (remaining.trim()) chunks.push(remaining);
+  return chunks;
+}
 
 interface Props {
   message: Models.ChatMessage;
@@ -28,9 +52,20 @@ const UserMessage = memo(({ content }: { content: string }) => {
   );
 });
 
+const MemoizedMarkdownChunk = memo(({ content }: { content: string }) => (
+  <Markdown
+    components={markdownComponents}
+    rehypePlugins={rehypePlugins}
+    remarkPlugins={remarkPlugins}
+  >
+    {content}
+  </Markdown>
+));
+
 const AssistantMessage = memo(({ content, streaming }: { content: string; streaming: boolean }) => {
   const deferredContent = useDeferredValue(content);
   const markdownSource = streaming ? deferredContent : content;
+  const chunks = useMemo(() => splitContentIntoChunks(markdownSource), [markdownSource]);
 
   return (
     <div className="mb-6 flex gap-4">
@@ -43,13 +78,7 @@ const AssistantMessage = memo(({ content, streaming }: { content: string; stream
           {!content ? (
             <TypingIndicator />
           ) : (
-            <Markdown
-              components={{ pre: CodeBlock }}
-              rehypePlugins={rehypePlugins}
-              remarkPlugins={remarkPlugins}
-            >
-              {markdownSource}
-            </Markdown>
+            chunks.map((chunk, i) => <MemoizedMarkdownChunk key={i} content={chunk} />)
           )}
         </div>
       </div>
