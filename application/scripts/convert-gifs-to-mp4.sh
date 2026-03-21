@@ -16,7 +16,11 @@ echo "Converting ${#gifs[@]} GIF files to MP4..."
 for f in "${gifs[@]}"; do
   base="$(basename "$f" .gif)"
   out="$MOVIES_DIR/$base.mp4"
-  ffmpeg -y -i "$f" -movflags +faststart -pix_fmt yuv420p -an "$out" 2>/dev/null
+  ffmpeg -y -i "$f" \
+    -c:v libx265 -crf 32 -preset veryslow -tag:v hvc1 \
+    -r 15 \
+    -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" \
+    -movflags +faststart -pix_fmt yuv420p -an "$out" 2>/dev/null
   echo "  $base.gif -> $base.mp4"
 done
 
