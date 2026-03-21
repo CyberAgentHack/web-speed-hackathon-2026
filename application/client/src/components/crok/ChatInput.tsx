@@ -124,14 +124,14 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   useEffect(() => {
     let cancelled = false;
 
-    const updateSuggestions = async () => {
-      if (!tokenizer || !inputValue.trim()) {
-        setSuggestions([]);
-        setQueryTokens([]);
-        setShowSuggestions(false);
-        return;
-      }
+    if (!tokenizer || !inputValue.trim()) {
+      setSuggestions([]);
+      setQueryTokens([]);
+      setShowSuggestions(false);
+      return;
+    }
 
+    const timerId = setTimeout(async () => {
       const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
         "/api/v1/crok/suggestions",
       );
@@ -149,12 +149,11 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
       setQueryTokens(tokens);
       setSuggestions(results);
       setShowSuggestions(results.length > 0);
-    };
-
-    void updateSuggestions();
+    }, 300);
 
     return () => {
       cancelled = true;
+      clearTimeout(timerId);
     };
   }, [inputValue, tokenizer]);
 

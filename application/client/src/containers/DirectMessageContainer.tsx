@@ -20,6 +20,7 @@ interface DmTypingEvent {
 }
 
 const TYPING_INDICATOR_DURATION_MS = 10 * 1000;
+const TYPING_NOTIFY_DEBOUNCE_MS = 3000;
 
 interface Props {
   activeUser: Models.User | null;
@@ -88,8 +89,22 @@ export const DirectMessageContainer = ({
     [conversationId, loadConversation],
   );
 
-  const handleTyping = useCallback(async () => {
-    void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
+  const typingNotifyRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastTypingNotifyRef = useRef(0);
+
+  const handleTyping = useCallback(() => {
+    const now = Date.now();
+    if (now - lastTypingNotifyRef.current >= TYPING_NOTIFY_DEBOUNCE_MS) {
+      lastTypingNotifyRef.current = now;
+      void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
+      return;
+    }
+    if (typingNotifyRef.current !== null) return;
+    typingNotifyRef.current = setTimeout(() => {
+      typingNotifyRef.current = null;
+      lastTypingNotifyRef.current = Date.now();
+      void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
+    }, TYPING_NOTIFY_DEBOUNCE_MS - (now - lastTypingNotifyRef.current));
   }, [conversationId]);
 
   useWs(activeUser !== null && !isLoadingActiveUser ? `/api/v1/dm/${conversationId}` : "", (event: DmUpdateEvent | DmTypingEvent) => {
