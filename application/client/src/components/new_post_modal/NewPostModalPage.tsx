@@ -7,8 +7,13 @@ import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/comp
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
+interface ImageWithAlt {
+  file: File;
+  alt: string;
+}
+
 interface SubmitParams {
-  images: File[];
+  images: ImageWithAlt[];
   movie: File | undefined;
   sound: File | undefined;
   text: string;
@@ -55,8 +60,8 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       ]).then(([{ MagickFormat }, { convertImage }]) =>
         Promise.all(
           files.map((file) =>
-            convertImage(file, { extension: MagickFormat.Jpg }).then(
-              (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
+            convertImage(file, { extension: MagickFormat.Webp }).then(
+              ({ blob, alt }) => ({ file: new File([blob], "converted.webp", { type: "image/webp" }), alt }),
             ),
           ),
         ),
@@ -104,13 +109,13 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     if (isValid) {
       setIsConverting(true);
 
-      import("@web-speed-hackathon-2026/client/src/utils/convert_movie").then(({ convertMovie }) => convertMovie(file, { extension: "gif", size: undefined }))
+      import("@web-speed-hackathon-2026/client/src/utils/convert_movie").then(({ convertMovie }) => convertMovie(file, { extension: "mp4", size: undefined }))
         .then((converted) => {
           setParams((params) => ({
             ...params,
             images: [],
-            movie: new File([converted], "converted.gif", {
-              type: "image/gif",
+            movie: new File([converted], "converted.mp4", {
+              type: "video/mp4",
             }),
             sound: undefined,
           }));
@@ -137,6 +142,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       </h2>
 
       <textarea
+        aria-label="いまなにしてる？"
         className="border-cax-border placeholder-cax-text-subtle focus:outline-cax-brand w-full resize-none rounded-xl border px-3 py-2 focus:outline-2 focus:outline-offset-2"
         rows={4}
         onChange={handleChangeText}
