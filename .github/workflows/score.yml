@@ -152,7 +152,7 @@ jobs:
         timeout-minutes: 15
 
         permissions:
-            contents: read
+            contents: write
             issues: write
             pull-requests: write
             actions: read
@@ -310,7 +310,35 @@ jobs:
                   if-no-files-found: warn
 
             # ------------------------------------------------------------------ #
-            # 8. Upload all raw score files as artifact (for debugging)
+            # 8. Tag the commit with the median score (main branch only)
+            # ------------------------------------------------------------------ #
+            - name: Tag commit with score
+              if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  if [ ! -f /tmp/scores.json ]; then
+                    echo "scores.json not found, skipping tag"
+                    exit 0
+                  fi
+                  SCORE=$(node -e "
+                    const s = JSON.parse(require('fs').readFileSync('/tmp/scores.json','utf8'));
+                    const med = s.grandTotal && s.grandTotal.med;
+                    if (med == null) process.exit(1);
+                    process.stdout.write(String(Math.round(med * 100) / 100));
+                  " 2>/dev/null) || { echo "Could not read score from scores.json"; exit 0; }
+
+                  TIMESTAMP=$(date -u +"%Y%m%d-%H%M%S")
+                  TAG="score/${TIMESTAMP}-${SCORE}"
+                  echo "Creating tag: ${TAG}"
+
+                  git config user.name  "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+                  git tag -a "${TAG}" "${{ github.sha }}" -m "Score: ${SCORE} / 1150 at ${TIMESTAMP} (commit ${{ github.sha }})"
+                  git push origin "${TAG}"
+
+            # ------------------------------------------------------------------ #
+            # 9. Upload all raw score files as artifact (for debugging)
             # ------------------------------------------------------------------ #
             - name: Upload raw score logs
               if: always()
