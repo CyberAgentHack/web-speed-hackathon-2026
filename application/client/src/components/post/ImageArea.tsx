@@ -1,6 +1,5 @@
 import classNames from "classnames";
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
-import { CoveredImage } from "@web-speed-hackathon-2026/client/src/components/foundation/CoveredImage";
 import { getImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
@@ -21,17 +20,28 @@ export const ImageArea = ({ images }: Props) => {
           return (
             <div
               key={image.id}
-              className={classNames("bg-cax-surface-subtle", {
+              className={classNames("bg-cax-surface-subtle relative", {
                 "col-span-2": isSingle,
                 "col-span-1": !isSingle,
                 "row-span-2": isDoubleOrLess || isThreeMain,
                 "row-span-1": !isDoubleOrLess && !isThreeMain,
               })}
             >
-              <CoveredImage
+              {/* --- 修正ポイント：img タグに直接 width/height を指定 --- */}
+              <img
                 src={getImagePath(image.id)}
+                alt=""
+                // レイアウトシフトを防ぐためにアスペクト比に基づいたサイズを明示
+                width={1600}
+                height={900}
+                // CSSで親要素の枠いっぱいに広げる（object-cover で切り抜き）
+                className="h-full w-full object-cover"
+                // 1枚目だけ即時読み込み（LCP対策）、それ以外は遅延読み込み
                 loading={idx === 0 ? "eager" : "lazy"}
+                // 画像展開を非同期にしてメインスレッドの負荷を軽減
+                decoding="async"
               />
+              {/* ---------------------------------------------------- --- */}
             </div>
           );
         })}
