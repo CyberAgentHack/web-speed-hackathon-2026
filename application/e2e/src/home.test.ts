@@ -63,6 +63,7 @@ test.describe("404ページ", () => {
   test("存在しないページで404が表示される", async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto("/this-page-does-not-exist");
+    await expect(page).toHaveTitle("ページが見つかりません - CaX", { timeout: 30_000 });
     await scrollEntire(page);
 
     // VRT: 404

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Helmet } from "react-helmet";
 import { useParams } from "react-router";
 
+import { PageTitle } from "@web-speed-hackathon-2026/client/src/components/application/PageTitle";
 import { DirectMessageGate } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageGate";
 import { DirectMessagePage } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessagePage";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
@@ -124,9 +124,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   return (
     <>
-      <Helmet>
-        <title>{peer.name} さんとのダイレクトメッセージ - CaX</title>
-      </Helmet>
+      <PageTitle>{peer.name} さんとのダイレクトメッセージ - CaX</PageTitle>
       <DirectMessagePage
         conversationError={conversationError}
         conversation={conversation}

@@ -216,7 +216,7 @@
         "Typecheck passes"
       ],
       "priority": 13,
-      "passes": false,
+      "passes": true,
       "notes": "12ファイルで使用。React 19 では JSX 内で直接 <title>, <meta>, <link> を返すことでドキュメントヘッドを管理できる。HelmetProvider も不要になる。リファクタ範囲は広いが各ファイルの変更は小さい。"
     }
   ]

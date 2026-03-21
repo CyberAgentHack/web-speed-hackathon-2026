@@ -29,6 +29,8 @@ test.describe("Crok AIチャット", () => {
   test("初回表示時にウェルカム画面「AIアシスタントに質問してみましょう」が表示される", async ({
     page,
   }) => {
+    await expect(page).toHaveTitle("Crok - CaX", { timeout: 30_000 });
+
     // ウェルカム画面のテキストが表示されること
     await expect(page.getByText("AIアシスタントに質問してみましょう")).toBeVisible({
       timeout: 30_000,

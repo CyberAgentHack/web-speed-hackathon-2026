@@ -171,3 +171,55 @@ Quality Checks:
 Commit:
 - Hash: pending post-commit
 - Message: `feat: [US-012] - classnames を軽量ユーティリティ関数に置換`
+
+## 2026-03-21 - US-013 react-helmet を React 19 ネイティブに移行
+
+Implementation:
+- `application/client/package.json` から `react-helmet` を削除し、`mise exec -- pnpm install` で `application/pnpm-lock.yaml` からも解決を除去
+- `application/client/src/containers/AppContainer.tsx` から `HelmetProvider` を除去し、loading state を含めて React 19 ネイティブの title 管理へ移行
+- `application/client/src/components/application/PageTitle.tsx` を新規追加し、ネイティブ `<title>` を返しつつ `document.title` も同期する薄い wrapper を実装して、async fetch 後に title が空になる回帰を防止
+- `application/client/src/containers/CrokContainer.tsx`、`application/client/src/components/crok/CrokGate.tsx`、`application/client/src/containers/DirectMessageContainer.tsx`、`application/client/src/components/direct_message/DirectMessageGate.tsx`、`application/client/src/containers/DirectMessageListContainer.tsx`、`application/client/src/containers/NotFoundContainer.tsx`、`application/client/src/containers/PostContainer.tsx`、`application/client/src/containers/SearchContainer.tsx`、`application/client/src/containers/TimelineContainer.tsx`、`application/client/src/containers/TermContainer.tsx`、`application/client/src/containers/UserProfileContainer.tsx` の title 管理を `react-helmet` から `PageTitle` へ置換
+- `application/e2e/src/home.test.ts`、`application/e2e/src/crok-chat.test.ts`、`application/e2e/src/dm.test.ts` に、404/Crok/DM の title regression を捕まえる assertion を追加
+- `AGENTS.md` に、React 19 `<title>` 置換時は async fetch 後の dynamic title に `document.title` 同期 fallback が有効だった知見を追記
+- 別 Codex エージェント (`Parfit`) にレビューを依頼し、`no findings` を確認
+
+Acceptance Criteria Verification:
+- AC: react-helmet パッケージが package.json から削除されている
+  Test case: `cd application && rg -n "\\breact-helmet\\b|@dr\\.pogodin/react-helmet" client/package.json pnpm-lock.yaml -S`
+  Result: no matches。`application/client/package.json` と `application/pnpm-lock.yaml` の双方から `react-helmet` の依存解決が消えていることを確認
+- AC: HelmetProvider が AppContainer から削除されている
+  Test case: `rg -n "HelmetProvider" application/client/src/containers/AppContainer.tsx -S`
+  Result: no matches。`AppContainer.tsx` から `HelmetProvider` import / JSX の両方が除去されていることを確認
+- AC: 全12ファイルの Helmet 使用箇所が React 19 の <title>, <meta>, <link> コンポーネントに置換されている
+  Test case: `rg -n "Helmet|react-helmet|HelmetProvider" application/client -S`; `sed -n '1,200p' application/client/src/components/application/PageTitle.tsx`
+  Result: `application/client` 配下で `Helmet` / `react-helmet` / `HelmetProvider` は no matches。全置換先がネイティブ `<title>` を返す `PageTitle` へ統一されていることを確認
+- AC: 各ページのタイトルが正しく設定される
+  Test case: `curl -s -o /dev/null -w '%{http_code}\n' -X POST http://127.0.0.1:3011/api/v1/initialize`; `CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/home.test.ts --grep 'タイトルが「タイムライン - CaX」|存在しないページで404が表示される'`; `curl -s -o /dev/null -w '%{http_code}\n' -X POST http://127.0.0.1:3011/api/v1/initialize`; `CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/search.test.ts --grep 'タイトルが「検索 - CaX」となること'`; `curl -s -o /dev/null -w '%{http_code}\n' -X POST http://127.0.0.1:3011/api/v1/initialize`; `CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/terms.test.ts --grep 'タイトルが「利用規約 - CaX」'`; `curl -s -o /dev/null -w '%{http_code}\n' -X POST http://127.0.0.1:3011/api/v1/initialize`; `CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/user-profile.test.ts --grep 'タイトルが'`; `curl -s -o /dev/null -w '%{http_code}\n' -X POST http://127.0.0.1:3011/api/v1/initialize`; `CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/post-detail.test.ts --grep 'タイトルが'`; `curl -s -o /dev/null -w '%{http_code}\n' -X POST http://127.0.0.1:3011/api/v1/initialize`; `CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/dm.test.ts --grep 'DM一覧が表示される|送信ボタンをクリックすると、DM詳細画面に遷移すること'`; `curl -s -o /dev/null -w '%{http_code}\n' -X POST http://127.0.0.1:3011/api/v1/initialize`; `CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/crok-chat.test.ts --grep '初回表示時にウェルカム画面'`
+  Result: すべて passed。ホーム title + 404 は `2 passed (16.4s)`、検索 title は `1 passed (3.3s)`、利用規約 title は `1 passed (4.3s)`、ユーザー詳細 title は `1 passed (4.5s)`、投稿詳細 title は `1 passed (3.0s)`、DM 一覧/詳細 title は `2 passed (30.5s)`、Crok title は `1 passed (6.0s)`。production build + start サーバー上で、静的 title と async fetch 後の dynamic title の双方が正しく更新されることを確認
+- AC: 該当箇所のE2Eテストが通っていること
+  Test case: 上記 7 コマンド
+  Result: 全件 passed。加えて `curl -s -o /dev/null -w '%{http_code}\n' -X POST http://127.0.0.1:3011/api/v1/initialize`; `CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/home.test.ts src/search.test.ts src/terms.test.ts src/user-profile.test.ts src/post-detail.test.ts src/dm.test.ts src/crok-chat.test.ts` の実行ログでも、64 テストすべてが passed することを確認
+- AC: Typecheck passes
+  Test case: `cd application && mise exec -- pnpm typecheck`
+  Result: passed
+
+Quality Checks:
+- `cd application && mise trust` -> passed (`No untrusted config files found.`)
+- `cd application && mise install` -> passed (`mise all tools are installed`)
+- `cd application && mise exec -- pnpm install` -> passed (`Packages: -1`; peer dependency warning のみ)
+- `cd application && rg -n "\\breact-helmet\\b|@dr\\.pogodin/react-helmet" client/package.json pnpm-lock.yaml -S` -> passed (no matches)
+- `cd application && mise exec -- pnpm typecheck` -> passed
+- `cd application && mise exec -- pnpm build` -> passed (Rspack asset size warning のみ)
+- `cd application/client && npx -y react-doctor@latest . --verbose --diff` -> passed with warnings (`99 / 100 Great`; `SearchPage.tsx` の既存 multi-setState 警告と `CrokGate.tsx` / `DirectMessageGate.tsx` の既存 `command` / `commandfor` 属性 warning のみ)
+- `cd application && CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/home.test.ts --grep 'タイトルが「タイムライン - CaX」|存在しないページで404が表示される'` -> passed (`2 passed (16.4s)`)
+- `cd application && CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/search.test.ts --grep 'タイトルが「検索 - CaX」となること'` -> passed (`1 passed (3.3s)`)
+- `cd application && CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/terms.test.ts --grep 'タイトルが「利用規約 - CaX」'` -> passed (`1 passed (4.3s)`)
+- `cd application && CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/user-profile.test.ts --grep 'タイトルが'` -> passed (`1 passed (4.5s)`)
+- `cd application && CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/post-detail.test.ts --grep 'タイトルが'` -> passed (`1 passed (3.0s)`)
+- `cd application && CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/dm.test.ts --grep 'DM一覧が表示される|送信ボタンをクリックすると、DM詳細画面に遷移すること'` -> passed (`2 passed (30.5s)`)
+- `cd application && CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/crok-chat.test.ts --grep '初回表示時にウェルカム画面'` -> passed (`1 passed (6.0s)`)
+- Review by spawned Codex agent `Parfit` -> no findings
+
+Commit:
+- Hash: pending post-commit
+- Message: `feat: [US-013] - react-helmet を React 19 ネイティブに移行`

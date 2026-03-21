@@ -1,6 +1,5 @@
-import { Helmet } from "react-helmet";
-
 import { SearchPage } from "@web-speed-hackathon-2026/client/src/components/application/SearchPage";
+import { PageTitle } from "@web-speed-hackathon-2026/client/src/components/application/PageTitle";
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
 import { useSearchParams } from "@web-speed-hackathon-2026/client/src/hooks/use_search_params";
@@ -17,9 +16,7 @@ export const SearchContainer = () => {
 
   return (
     <InfiniteScroll fetchMore={fetchMore} items={posts}>
-      <Helmet>
-        <title>検索 - CaX</title>
-      </Helmet>
+      <PageTitle>検索 - CaX</PageTitle>
       <SearchPage query={query} results={posts} initialValues={{ searchText: query }} />
     </InfiniteScroll>
   );

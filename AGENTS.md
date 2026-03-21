@@ -97,6 +97,7 @@ pnpm ワークスペースによるモノレポ（`application/` 配下）。
 - `react-syntax-highlighter` はパッケージ直下のデフォルト import を避け、`dist/esm/prism-light` + 必要言語だけの明示登録に切り替えると、Crok のコードブロック用チャンクを production build で `1.262 MiB` から `482.412 KiB` まで削減できた
 - Crok の `react-markdown` / `rehype-katex` / `remark-gfm` / `remark-math` は `ChatMessage` から直接 import せず、`React.lazy` で分離した描画コンポーネント側へ閉じ込めると、`/crok` 初回表示時の entrypoint から外せる。production build では `main.js` / `vendor-*.js` / `658.js` にこれらの文字列が現れず、専用チャンク側のみに残ることを `rg` で確認できる
 - `classnames` は 9 箇所程度の利用ならローカル utility へ置換しやすい。文字列・配列・object syntax（`{ className: boolean }`）だけ互換を持たせれば、挙動を維持したまま依存を 1 つ削減できる
+- React 19 の SPA では `react-helmet` を外してネイティブ `<title>` へ寄せられるが、このリポジトリでは async fetch 後に確定する title が空になるケースがあった。`PageTitle` のような薄い wrapper で `<title>` を返しつつ `document.title` も同期すると、静的 route も動的 route も安定して置換できる
 
 ## テストアカウント
 

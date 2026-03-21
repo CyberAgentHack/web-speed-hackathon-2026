@@ -26,6 +26,7 @@ test.describe("DM一覧", () => {
   test("DM一覧が表示される", async ({ page }) => {
     await login(page);
     await page.goto("/dm");
+    await expect(page).toHaveTitle("ダイレクトメッセージ - CaX", { timeout: 30_000 });
 
     await expect(page.getByRole("heading", { name: "ダイレクトメッセージ" })).toBeVisible({
       timeout: 30_000,
@@ -123,6 +124,7 @@ test.describe("DM一覧", () => {
     await submitButton.click();
 
     await expect(page).toHaveURL(/\/dm\//, { timeout: 30_000 });
+    await expect(page).toHaveTitle(/さんとのダイレクトメッセージ - CaX/, { timeout: 30_000 });
 
     await expect(page.getByRole("heading", { name: "滝沢 裕美" })).toBeVisible({
       timeout: 30 * 1000,

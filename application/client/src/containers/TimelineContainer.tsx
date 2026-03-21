@@ -1,5 +1,4 @@
-import { Helmet } from "react-helmet";
-
+import { PageTitle } from "@web-speed-hackathon-2026/client/src/components/application/PageTitle";
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
 import { TimelinePage } from "@web-speed-hackathon-2026/client/src/components/timeline/TimelinePage";
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
@@ -10,9 +9,7 @@ export const TimelineContainer = () => {
 
   return (
     <InfiniteScroll fetchMore={fetchMore} items={posts}>
-      <Helmet>
-        <title>タイムライン - CaX</title>
-      </Helmet>
+      <PageTitle>タイムライン - CaX</PageTitle>
       <TimelinePage timeline={posts} />
     </InfiniteScroll>
   );
