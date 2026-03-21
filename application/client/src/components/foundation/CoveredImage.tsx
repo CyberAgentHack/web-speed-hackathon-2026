@@ -1,50 +1,27 @@
-import { ImageIFD, load } from "piexifjs";
-import { MouseEvent, useCallback, useId, useState } from "react";
+import { MouseEvent, useCallback, useId } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
-import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
+  alt: string;
   src: string;
-}
-
-async function fetchAlt(src: string): Promise<string> {
-  try {
-    const data = await fetchBinary(src);
-    const exif = load(Buffer.from(data).toString("binary"));
-    const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-    return raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
-  } catch {
-    return "";
-  }
 }
 
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
-export const CoveredImage = ({ src }: Props) => {
+export const CoveredImage = ({ alt, src }: Props) => {
   const dialogId = useId();
-  const [alt, setAlt] = useState("");
-  const [altLoaded, setAltLoaded] = useState(false);
 
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
     ev.stopPropagation();
   }, []);
 
-  const handleShowAlt = useCallback(() => {
-    if (!altLoaded) {
-      fetchAlt(src).then((text) => {
-        setAlt(text);
-        setAltLoaded(true);
-      });
-    }
-  }, [src, altLoaded]);
-
   return (
     <div className="relative h-full w-full overflow-hidden">
       <img
-        alt=""
+        alt={alt}
         className="absolute inset-0 h-full w-full object-cover"
         loading="lazy"
         src={src}
@@ -55,7 +32,6 @@ export const CoveredImage = ({ src }: Props) => {
         type="button"
         command="show-modal"
         commandfor={dialogId}
-        onClick={handleShowAlt}
       >
         ALT を表示する
       </button>
@@ -64,7 +40,7 @@ export const CoveredImage = ({ src }: Props) => {
         <div className="grid gap-y-6">
           <h1 className="text-center text-2xl font-bold">画像の説明</h1>
 
-          <p className="text-sm">{altLoaded ? alt || "（説明なし）" : "読み込み中..."}</p>
+          <p className="text-sm">{alt || "（説明なし）"}</p>
 
           <Button variant="secondary" command="close" commandfor={dialogId}>
             閉じる

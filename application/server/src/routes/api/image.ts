@@ -4,6 +4,7 @@ import path from "path";
 import { Router } from "express";
 import { fileTypeFromBuffer } from "file-type";
 import httpErrors from "http-errors";
+import { ImageIFD, load } from "piexifjs";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
@@ -32,5 +33,16 @@ imageRouter.post("/images", async (req, res) => {
   await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
   await fs.writeFile(filePath, req.body);
 
-  return res.status(200).type("application/json").send({ id: imageId });
+  let alt = "";
+  try {
+    const exif = load((req.body as Buffer).toString("binary"));
+    const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
+    if (raw != null) {
+      alt = new TextDecoder().decode(Buffer.from(raw as string, "binary"));
+    }
+  } catch {
+    // EXIF が存在しない場合は無視
+  }
+
+  return res.status(200).type("application/json").send({ id: imageId, alt });
 });
