@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASE_URL=${1:-http://127.0.0.1:3000}
+BASE_URL=${1:-https://pr-34-web-speed-hackathon-2026.fly.dev}
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 OUTPUT_DIR="lighthouse-reports/${TIMESTAMP}"
 NPX="/Users/mitsunagahiroka/.nvm/versions/node/v22.12.0/bin/npx"
