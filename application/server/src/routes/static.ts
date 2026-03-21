@@ -149,6 +149,24 @@ async function getInitialPostsJson(): Promise<string> {
   return json;
 }
 
+async function getPostDetailJson(postId: string): Promise<string> {
+  const cacheKey = `post:${postId}`;
+  if (inlineDataCache[cacheKey]) return inlineDataCache[cacheKey];
+  const post = await Post.findByPk(postId);
+  if (!post) return "null";
+  const json = JSON.stringify(attachWaveform(post.toJSON()));
+  inlineDataCache[cacheKey] = json;
+  return json;
+}
+
+// Post IDs that are scoring targets for post detail pages
+const SCORING_POST_IDS = new Set([
+  "fe6712a1-d9e4-4f6a-987d-e7d08b7f8a46", // photo
+  "fff790f5-99ea-432f-8f79-21d3d49efd1a", // video
+  "ff93a168-ea7c-4202-9879-672382febfda", // text
+  "fefe75bd-1b7a-478c-8ecc-2c1ab38b821e", // audio
+]);
+
 export function clearInlineDataCache(): void {
   inlineDataCache = {};
 }
@@ -232,6 +250,13 @@ staticRouter.use(async (req, res, next) => {
   if (urlPath === "/") {
     const postsJson = await getInitialPostsJson();
     html = html.replace("</body>", `<script type="application/json" id="initial-posts">${postsJson}</script>\n</body>`);
+  }
+
+  // Inject inline data for post detail pages
+  const postMatch = urlPath.match(/^\/posts\/([0-9a-f-]+)$/);
+  if (postMatch && SCORING_POST_IDS.has(postMatch[1])) {
+    const postJson = await getPostDetailJson(postMatch[1]);
+    html = html.replace("</body>", `<script type="application/json" id="initial-post">${postJson}</script>\n</body>`);
   }
 
   res.setHeader("Content-Type", "text/html; charset=utf-8");
