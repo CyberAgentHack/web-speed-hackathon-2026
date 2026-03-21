@@ -56,4 +56,4 @@ export const UserProfileHeader = ({ user }: Props) => {
       </div>
     </header>
   );
-};　　　　　　
+};　　　　
