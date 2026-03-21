@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 
 interface Props {
   children: ReactNode;
@@ -9,28 +9,9 @@ interface Props {
 export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
   const latestItem = items[items.length - 1];
   const sentinelRef = useRef<HTMLDivElement | null>(null);
-  const [isEnabled, setIsEnabled] = useState(false);
 
   useEffect(() => {
-    if (isEnabled) {
-      return;
-    }
-
-    const enable = () => {
-      setIsEnabled(true);
-    };
-
-    const timeoutId = window.setTimeout(enable, 1500);
-    window.addEventListener("scroll", enable, { once: true, passive: true });
-
-    return () => {
-      window.clearTimeout(timeoutId);
-      window.removeEventListener("scroll", enable);
-    };
-  }, [isEnabled]);
-
-  useEffect(() => {
-    if (!isEnabled || latestItem === undefined) {
+    if (latestItem === undefined) {
       return;
     }
 
@@ -54,7 +35,7 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
     return () => {
       observer.disconnect();
     };
-  }, [isEnabled, latestItem, fetchMore]);
+  }, [latestItem, fetchMore]);
 
   return (
     <>

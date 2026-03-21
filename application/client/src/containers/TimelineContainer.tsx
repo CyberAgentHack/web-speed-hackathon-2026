@@ -7,7 +7,7 @@ import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 export const TimelineContainer = () => {
   const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>("/api/v1/posts", fetchJSON, {
-    limit: 4,
+    limit: 8,
   });
 
   return (
@@ -15,7 +15,7 @@ export const TimelineContainer = () => {
       <Helmet>
         <title>タイムライン - CaX</title>
       </Helmet>
-      <TimelinePage timeline={posts} />
+      <TimelinePage prioritizeFirstMedia timeline={posts} />
     </InfiniteScroll>
   );
 };
