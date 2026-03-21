@@ -26,6 +26,74 @@ const seedsDir = path.resolve(__dirname, "../seeds");
 // ========== Existing Asset IDs from public directory ==========
 // These IDs correspond to actual files in the public directory
 
+// Hardcoded alt texts for images (one per EXISTING_IMAGE_IDS, no faker calls)
+const IMAGE_ALT_TEXTS = [
+  "青い空と白い雲が広がる風景",
+  "街角のカフェで撮影したコーヒーカップ",
+  "夕焼けに染まる海岸線",
+  "公園のベンチに座る猫",
+  "雪に覆われた山々の遠景",
+  "桜が咲く春の公園",
+  "夜の街並みとネオンサイン",
+  "森の中の小道と木漏れ日",
+  "湖に映る紅葉の木々",
+  "古い石畳の路地裏",
+  "朝露に濡れた花びら",
+  "窓辺に置かれた観葉植物",
+  "波打ち際を歩く人々",
+  "曇り空の下の都市風景",
+  "田園風景と遠くの山",
+  "橋の上から見た川の流れ",
+  "雨上がりの虹がかかる空",
+  "日差しを浴びる向日葵畑",
+  "夜空に浮かぶ満月",
+  "テーブルの上の焼きたてパン",
+  "路面電車が走る街並み",
+  "砂浜に打ち寄せる波",
+  "霧に包まれた早朝の森",
+  "石段を登る神社の参道",
+  "色とりどりの秋の紅葉",
+  "雪景色の中の温泉宿",
+  "港に停泊する漁船",
+  "草原を駆ける犬",
+  "ビルの隙間から見える青空",
+  "木製のテラスと庭の花壇",
+];
+
+// Hardcoded alt texts for profile images (one per EXISTING_PROFILE_IMAGE_IDS)
+const PROFILE_IMAGE_ALT_TEXTS = [
+  "ユーザーのプロフィール画像",
+  "笑顔のプロフィール写真",
+  "アイコン用の自撮り写真",
+  "プロフィール用のポートレート",
+  "カジュアルなプロフィール画像",
+  "屋外で撮影したプロフィール写真",
+  "お気に入りのプロフィール画像",
+  "趣味の写真をプロフィールに設定",
+  "友人と撮ったプロフィール写真",
+  "旅先で撮影したプロフィール画像",
+  "ペットと一緒のプロフィール写真",
+  "季節感のあるプロフィール画像",
+  "仕事用のプロフィール写真",
+  "イベントで撮ったプロフィール画像",
+  "自然の中でのプロフィール写真",
+  "カフェで撮影したプロフィール画像",
+  "夕暮れ時のプロフィール写真",
+  "スタジオ撮影のプロフィール画像",
+  "散歩中に撮ったプロフィール写真",
+  "海辺でのプロフィール画像",
+  "公園で撮影したプロフィール写真",
+  "休日のプロフィール画像",
+  "お出かけ先でのプロフィール写真",
+  "記念日に撮ったプロフィール画像",
+  "山で撮影したプロフィール写真",
+  "街中でのプロフィール画像",
+  "花と一緒のプロフィール写真",
+  "朝日を背景にしたプロフィール画像",
+  "お祭りでのプロフィール写真",
+  "冬のプロフィール画像",
+];
+
 // public/images/*.jpg (30 files)
 const EXISTING_IMAGE_IDS = [
   "029b4b75-bbcc-4aa5-8bd7-e4bb12a33cd3",
@@ -180,9 +248,9 @@ function pickRandomN<T>(arr: T[], n: number): T[] {
 
 function generateProfileImages(): ProfileImageSeed[] {
   // Use existing profile image IDs from public/images/profiles/
-  return EXISTING_PROFILE_IMAGE_IDS.map((id) => ({
+  return EXISTING_PROFILE_IMAGE_IDS.map((id, i) => ({
     id,
-    alt: "",
+    alt: PROFILE_IMAGE_ALT_TEXTS[i] ?? "",
   }));
 }
 
@@ -222,7 +290,7 @@ function generateImages(): ImageSeed[] {
   const baseTime = now - ONE_WEEK_MS;
   return EXISTING_IMAGE_IDS.map((id, i) => ({
     id,
-    alt: "",
+    alt: IMAGE_ALT_TEXTS[i] ?? "",
     createdAt: new Date(baseTime + i * 60 * 1000).toISOString(),
   }));
 }
