@@ -38,6 +38,7 @@ export async function sendFile<T>(url: string, file: File): Promise<T> {
     body: file,
   });
   if (!response.ok) {
+    await response.body?.cancel();
     throw new FetchError(response);
   }
   return response.json() as Promise<T>;
