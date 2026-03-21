@@ -3,7 +3,6 @@ import { createReadStream } from "node:fs";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { createInterface } from "node:readline";
-import { fileURLToPath } from "node:url";
 
 import {
   Comment,
@@ -32,8 +31,9 @@ import type {
   UserSeed,
 } from "@web-speed-hackathon-2026/server/src/types/seed";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const seedsDir = path.resolve(__dirname, "../seeds");
+import { SEEDS_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+
+const seedsDir = SEEDS_PATH;
 
 const DEFAULT_BATCH_SIZE = 1000;
 

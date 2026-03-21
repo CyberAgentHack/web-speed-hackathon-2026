@@ -1,17 +1,12 @@
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
 import { Router } from "express";
 import httpErrors from "http-errors";
 
 import { QaSuggestion } from "@web-speed-hackathon-2026/server/src/models";
 import { filterSuggestionsBM25 } from "@web-speed-hackathon-2026/server/src/utils/bm25_search";
 
-export const crokRouter = Router();
+import response from "./crok-response.md";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-8");
+export const crokRouter = Router();
 
 crokRouter.get("/crok/suggestions", async (req, res) => {
   const allSuggestions = await QaSuggestion.findAll({ logging: false });
