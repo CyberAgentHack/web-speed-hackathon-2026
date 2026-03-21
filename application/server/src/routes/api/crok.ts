@@ -6,15 +6,39 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 
 import { QaSuggestion } from "@web-speed-hackathon-2026/server/src/models";
+import Bluebird from "bluebird";
+import kuromoji from "kuromoji";
+import { extractTokens, filterSuggestionsBM25 } from "../../utils/bm25_search";
+import { DICTS_PATH } from "../../paths";
 
 export const crokRouter = Router();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-8");
 
-crokRouter.get("/crok/suggestions", async (_req, res) => {
+crokRouter.get("/crok/suggestions", async (req, res) => {
+  const query = req.query["q"] && decodeURI(req.query["q"] as string);
+
+  if(typeof query !== "string" || query === undefined) {
+    throw new httpErrors.BadRequest();
+  }
+
   const suggestions = await QaSuggestion.findAll({ logging: false });
-  res.json({ suggestions: suggestions.map((s) => s.question) });
+  const questions = suggestions.map((sug) => sug.question);
+
+  const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: DICTS_PATH }));
+  const tokenizer = await builder.buildAsync();
+
+  const tokens = extractTokens(tokenizer.tokenize(query));
+  const filtered = filterSuggestionsBM25(tokenizer, questions, tokens);
+
+  return res
+    .status(200)
+    .type("application/json")
+    .json({
+      tokens,
+      suggestions: filtered,
+    });
 });
 
 function sleep(ms: number): Promise<void> {

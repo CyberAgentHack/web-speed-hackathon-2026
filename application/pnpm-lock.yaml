@@ -235,6 +235,9 @@ importers:
       '@web-speed-hackathon-2026/server':
         specifier: workspace:*
         version: 'link:'
+      bayesian-bm25:
+        specifier: 0.4.0
+        version: 0.4.0
       bcrypt:
         specifier: 6.0.0
         version: 6.0.0
@@ -266,6 +269,9 @@ importers:
         specifier: 0.1.2
         version: 0.1.2
       lodash.chunk:
+        specifier: 4.2.0
+        version: 4.2.0
+      lodash.zipwith:
         specifier: 4.2.0
         version: 4.2.0
       music-metadata:
@@ -318,6 +324,9 @@ importers:
         specifier: 2.0.5
         version: 2.0.5
       '@types/lodash.chunk':
+        specifier: 4.2.9
+        version: 4.2.9
+      '@types/lodash.zipwith':
         specifier: 4.2.9
         version: 4.2.9
       '@types/node':
@@ -1369,6 +1378,9 @@ packages:
 
   '@types/lodash.chunk@4.2.9':
     resolution: {integrity: sha512-Z9VtFUSnmT0No/QymqfG9AGbfOA4O5qB/uyP89xeZBqDAsKsB4gQFTqt7d0pHjbsTwtQ4yZObQVHuKlSOhIJ5Q==}
+
+  '@types/lodash.zipwith@4.2.9':
+    resolution: {integrity: sha512-Y+nuuAkkYVKSnId2X/aiuuZN8lGmrc8ykPW8A3zFx8v9rXJRysbcNSVIe/1lqGoDZGz6SjEi+9UNRp+bYgQSFw==}
 
   '@types/lodash@4.17.20':
     resolution: {integrity: sha512-H3MHACvFUEiujabxhaI/ImO6gUrd8oOurg7LQtS7mbwIXA/cUqWrvBsaeJ23aZEPk1TAYkurjfMbSELfoCXlGA==}
@@ -2689,6 +2701,9 @@ packages:
 
   lodash.chunk@4.2.0:
     resolution: {integrity: sha512-ZzydJKfUHJwHa+hF5X66zLFCBrWn5GeF28OHEr4WVWtNDXlQ/IjWKPBiikqKo2ne0+v6JgCgJ0GzJp8k8bHC7w==}
+
+  lodash.zipwith@4.2.0:
+    resolution: {integrity: sha512-CbmO4780a7/p1XUHiIL/v0JoxBMZfvq5+qAjK9PDdVnKnsEJN0i88bPZ9dXr72l108K/EWdJFtk/5HBAby4R5Q==}
 
   lodash@4.17.21:
     resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
@@ -5204,6 +5219,10 @@ snapshots:
     dependencies:
       '@types/lodash': 4.17.20
 
+  '@types/lodash.zipwith@4.2.9':
+    dependencies:
+      '@types/lodash': 4.17.20
+
   '@types/lodash@4.17.20': {}
 
   '@types/mdast@4.0.4':
@@ -6680,6 +6699,8 @@ snapshots:
     optional: true
 
   lodash.chunk@4.2.0: {}
+
+  lodash.zipwith@4.2.0: {}
 
   lodash@4.17.21: {}
 

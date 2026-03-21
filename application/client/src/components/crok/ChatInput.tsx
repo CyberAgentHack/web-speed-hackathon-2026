@@ -1,7 +1,5 @@
-import Bluebird from "bluebird";
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
 import {
-  useEffect,
+  useCallback,
   useLayoutEffect,
   useRef,
   useState,
@@ -11,11 +9,10 @@ import {
 } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import {
-  extractTokens,
-  filterSuggestionsBM25,
-} from "@web-speed-hackathon-2026/client/src/utils/bm25_search";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { useDebounceAfter } from "../../utils/use_debounced";
+
+class EffectDismounting {}
 
 interface Props {
   isStreaming: boolean;
@@ -76,10 +73,11 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
   return <>{parts}</>;
 }
 
+const aborter = new AbortController();
+
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
@@ -92,60 +90,33 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   }, [suggestions, showSuggestions]);
 
-  // 初回にkuromojiトークナイザーを構築
-  useEffect(() => {
-    let mounted = true;
-
-    const init = async () => {
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
-      if (mounted) {
-        setTokenizer(nextTokenizer);
+  const retrieveSuggestion = useDebounceAfter(
+    useCallback((suggestion: string) => (async () => {
+      let response;
+      try {
+        response = await fetchJSON<{ tokens: string[], suggestions: string[] }>(
+          "/api/v1/crok/suggestions",
+          { q: suggestion },
+          aborter.signal,
+        );
+        if (aborter.signal.aborted) {
+          return;
+        }
+      } catch (e) {
+        if(e instanceof EffectDismounting) {
+          return;
+        }
+        
+        throw e;
       }
-    };
-    init();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const updateSuggestions = async () => {
-      if (!tokenizer || !inputValue.trim()) {
-        setSuggestions([]);
-        setQueryTokens([]);
-        setShowSuggestions(false);
-        return;
-      }
-
-      const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-        "/api/v1/crok/suggestions",
-      );
-      if (cancelled) {
-        return;
-      }
-
-      const tokens = extractTokens(tokenizer.tokenize(inputValue));
-      const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
-
-      if (cancelled) {
-        return;
-      }
+      const { tokens, suggestions } = response; 
 
       setQueryTokens(tokens);
-      setSuggestions(results);
-      setShowSuggestions(results.length > 0);
-    };
-
-    void updateSuggestions();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [inputValue, tokenizer]);
+      setSuggestions(suggestions);
+      setShowSuggestions(suggestions.length > 0);
+    })(), []),
+    500
+  );
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
@@ -165,6 +136,15 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     const value = e.target.value;
     setInputValue(value);
     adjustTextareaHeight();
+
+    if (!inputValue.trim()) {
+      setSuggestions([]);
+      setQueryTokens([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    retrieveSuggestion(value);
   };
 
   const handleSuggestionClick = (suggestion: string) => {
