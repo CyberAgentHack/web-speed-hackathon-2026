@@ -10,14 +10,15 @@ const SoundPlayer = lazy(async () => {
 
 interface Props {
   sound: Models.Sound;
+  interactive?: boolean;
 }
 
-export const SoundArea = ({ sound }: Props) => {
+export const SoundArea = ({ sound, interactive = true }: Props) => {
   const { isNearScreen, ref } = useNearScreen<HTMLDivElement>({ rootMargin: "400px 0px" });
 
   return (
     <div
-      className="border-cax-border relative h-full w-full overflow-hidden rounded-lg border"
+      className={`border-cax-border relative h-full w-full overflow-hidden rounded-lg border ${interactive ? "" : "pointer-events-none"}`.trim()}
       data-sound-area
       ref={ref}
     >

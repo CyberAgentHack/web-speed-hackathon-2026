@@ -5,6 +5,7 @@ import { RefCallback, useCallback, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
+import { MediaPlaceholder } from "@web-speed-hackathon-2026/client/src/components/foundation/MediaPlaceholder";
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
@@ -61,10 +62,6 @@ export const PausableMovie = ({ src }: Props) => {
     });
   }, []);
 
-  if (isLoading || data === null) {
-    return null;
-  }
-
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
       <button
@@ -73,7 +70,11 @@ export const PausableMovie = ({ src }: Props) => {
         onClick={handleClick}
         type="button"
       >
-        <canvas ref={canvasCallbackRef} className="w-full" />
+        {isLoading || data === null ? (
+          <MediaPlaceholder />
+        ) : (
+          <canvas ref={canvasCallbackRef} className="w-full" />
+        )}
         <div
           className={classNames(
             "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",

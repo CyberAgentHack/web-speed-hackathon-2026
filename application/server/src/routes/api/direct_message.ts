@@ -109,7 +109,16 @@ directMessageRouter.post("/dm", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const peer = await User.findByPk(req.body?.peerId);
+  const peerId = typeof req.body?.peerId === "string" ? req.body.peerId : null;
+  const username =
+    typeof req.body?.username === "string" ? req.body.username.trim().replace(/^@/, "") : null;
+
+  const peer =
+    peerId !== null
+      ? await User.findByPk(peerId)
+      : username !== null && username.length > 0
+        ? await User.findOne({ where: { username } })
+        : null;
   if (peer === null) {
     throw new httpErrors.NotFound();
   }
@@ -127,7 +136,12 @@ directMessageRouter.post("/dm", async (req, res) => {
     },
   });
 
-  return res.status(200).type("application/json").send({ id: conversation.id });
+  const hydratedConversation = await DirectMessageConversation.findByPk(conversation.id);
+  if (hydratedConversation === null) {
+    throw new httpErrors.InternalServerError();
+  }
+
+  return res.status(200).type("application/json").send(hydratedConversation);
 });
 
 directMessageRouter.ws("/dm/unread", async (req, _res) => {

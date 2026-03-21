@@ -50,6 +50,14 @@ export const NewPostModalContainer = ({ id, openOnMount = false }: Props) => {
     };
   }, []);
 
+  useEffect(() => {
+    void import("@web-speed-hackathon-2026/client/src/utils/load_ffmpeg")
+      .then(({ preloadFFmpeg }) => preloadFFmpeg())
+      .catch((error) => {
+        console.error(error);
+      });
+  }, []);
+
   const navigate = useNavigate();
 
   const [hasError, setHasError] = useState(false);

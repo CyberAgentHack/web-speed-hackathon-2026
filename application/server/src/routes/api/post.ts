@@ -1,7 +1,8 @@
+import { v4 as uuidv4 } from "uuid";
 import { Router } from "express";
 import httpErrors from "http-errors";
 
-import { Comment, Post } from "@web-speed-hackathon-2026/server/src/models";
+import { Comment, Image, Post, PostsImagesRelation } from "@web-speed-hackathon-2026/server/src/models";
 
 export const postRouter = Router();
 
@@ -41,22 +42,61 @@ postRouter.post("/posts", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const post = await Post.create(
-    {
-      ...req.body,
-      userId: req.session.userId,
-    },
-    {
-      include: [
-        {
-          association: "images",
-          through: { attributes: [] },
-        },
-        { association: "movie" },
-        { association: "sound" },
-      ],
-    },
-  );
+  const text = typeof req.body.text === "string" ? req.body.text : undefined;
+  if (text === undefined) {
+    throw new httpErrors.BadRequest("Invalid post text");
+  }
 
-  return res.status(200).type("application/json").send(post);
+  const images: Array<{ id: string }> = Array.isArray(req.body.images)
+    ? req.body.images.filter(
+        (image: unknown): image is { id: string } =>
+          typeof image === "object" &&
+          image !== null &&
+          "id" in image &&
+          typeof image.id === "string",
+      )
+    : [];
+
+  const movieId =
+    typeof req.body.movie === "object" &&
+    req.body.movie !== null &&
+    "id" in req.body.movie &&
+    typeof req.body.movie.id === "string"
+      ? req.body.movie.id
+      : undefined;
+  const soundId =
+    typeof req.body.sound === "object" &&
+    req.body.sound !== null &&
+    "id" in req.body.sound &&
+    typeof req.body.sound.id === "string"
+      ? req.body.sound.id
+      : undefined;
+
+  const post = await Post.create({
+    id: uuidv4(),
+    movieId,
+    soundId,
+    text,
+    userId: req.session.userId,
+  });
+
+  if (images.length > 0) {
+    const existingImages = await Image.findAll({
+      where: {
+        id: images.map((image) => image.id),
+      },
+    });
+    if (existingImages.length !== images.length) {
+      throw new httpErrors.BadRequest("Invalid image ids");
+    }
+    await PostsImagesRelation.bulkCreate(
+      images.map((image) => ({
+        imageId: image.id,
+        postId: post.id,
+      })),
+    );
+  }
+
+  const createdPost = await Post.findByPk(post.id);
+  return res.status(200).type("application/json").send(createdPost);
 });

@@ -109,7 +109,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       setIsConverting(true);
 
       import("@web-speed-hackathon-2026/client/src/utils/convert_movie")
-        .then(({ convertMovie }) => convertMovie(file, { extension: "gif", size: undefined }))
+        .then(({ convertMovie }) => convertMovie(file, { extension: "gif", size: 128 }))
         .then((converted) => {
           setParams((params) => ({
             ...params,
@@ -143,6 +143,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       </h2>
 
       <textarea
+        aria-label="いまなにしてる？"
         className="border-cax-border placeholder-cax-text-subtle focus:outline-cax-brand w-full resize-none rounded-xl border px-3 py-2 focus:outline-2 focus:outline-offset-2"
         rows={4}
         onChange={handleChangeText}
@@ -174,6 +175,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       </div>
 
       <ModalSubmitButton
+        aria-label="投稿する"
         disabled={isConverting || isLoading || params.text === ""}
         loading={isConverting || isLoading}
       >

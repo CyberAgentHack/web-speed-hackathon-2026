@@ -96,12 +96,12 @@ const TimelineItemComponent = ({ post, prioritizeMedia = false }: Props) => {
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
+              <MovieArea interactive={false} movie={post.movie} />
             </div>
           ) : null}
           {post.sound ? (
             <div className="relative mt-2 w-full">
-              <SoundArea sound={post.sound} />
+              <SoundArea interactive={false} sound={post.sound} />
             </div>
           ) : null}
         </div>

@@ -12,14 +12,15 @@ const PausableMovie = lazy(async () => {
 
 interface Props {
   movie: Models.Movie;
+  interactive?: boolean;
 }
 
-export const MovieArea = ({ movie }: Props) => {
+export const MovieArea = ({ movie, interactive = true }: Props) => {
   const { isNearScreen, ref } = useNearScreen<HTMLDivElement>({ rootMargin: "400px 0px" });
 
   return (
     <div
-      className="border-cax-border bg-cax-surface-subtle relative h-full w-full overflow-hidden rounded-lg border"
+      className={`border-cax-border bg-cax-surface-subtle relative h-full w-full overflow-hidden rounded-lg border ${interactive ? "" : "pointer-events-none"}`.trim()}
       data-movie-area
       ref={ref}
     >

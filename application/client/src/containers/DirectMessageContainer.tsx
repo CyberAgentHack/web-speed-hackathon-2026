@@ -25,10 +25,34 @@ interface Props {
   onOpenAuthModal: () => void;
 }
 
+function consumeInitialConversation(
+  conversationId: string,
+): Models.DirectMessageConversation | null {
+  if (conversationId === "") {
+    return null;
+  }
+
+  const key = `dm:conversation:${conversationId}`;
+  const raw = sessionStorage.getItem(key);
+  if (raw === null) {
+    return null;
+  }
+
+  sessionStorage.removeItem(key);
+
+  try {
+    return JSON.parse(raw) as Models.DirectMessageConversation;
+  } catch {
+    return null;
+  }
+}
+
 export const DirectMessageContainer = ({ activeUser, onOpenAuthModal }: Props) => {
   const { conversationId = "" } = useParams<{ conversationId: string }>();
 
-  const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(null);
+  const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(() =>
+    consumeInitialConversation(conversationId),
+  );
   const [conversationError, setConversationError] = useState<Error | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -65,10 +89,24 @@ export const DirectMessageContainer = ({ activeUser, onOpenAuthModal }: Props) =
     async (params: DirectMessageFormData) => {
       setIsSubmitting(true);
       try {
-        await sendJSON(`/api/v1/dm/${conversationId}/messages`, {
+        const message = await sendJSON<Models.DirectMessage>(`/api/v1/dm/${conversationId}/messages`, {
           body: params.body,
         });
-        loadConversation();
+        setConversation((currentConversation) => {
+          if (currentConversation === null) {
+            return currentConversation;
+          }
+
+          if (currentConversation.messages.some(({ id }) => id === message.id)) {
+            return currentConversation;
+          }
+
+          return {
+            ...currentConversation,
+            messages: [...currentConversation.messages, message],
+          };
+        });
+        void loadConversation();
       } finally {
         setIsSubmitting(false);
       }

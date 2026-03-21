@@ -1,9 +1,11 @@
 import { lazy, Suspense, useCallback, useEffect, useId, useState } from "react";
 import { Helmet, HelmetProvider } from "react-helmet";
-import { Route, Routes, useLocation, useNavigate } from "react-router";
+import { Route, Routes, useLocation } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { RouteLoadingPage } from "@web-speed-hackathon-2026/client/src/components/application/RouteLoadingPage";
+import { DirectMessageContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer";
+import { DirectMessageListContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
 import { FetchError, fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
@@ -15,16 +17,6 @@ const AuthModalContainer = lazy(async () => {
 const CrokContainer = lazy(async () => {
   const mod = await import("@web-speed-hackathon-2026/client/src/containers/CrokContainer");
   return { default: mod.CrokContainer };
-});
-const DirectMessageContainer = lazy(async () => {
-  const mod = await import("@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer");
-  return { default: mod.DirectMessageContainer };
-});
-const DirectMessageListContainer = lazy(async () => {
-  const mod = await import(
-    "@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer"
-  );
-  return { default: mod.DirectMessageListContainer };
 });
 const NewPostModalContainer = lazy(async () => {
   const mod = await import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer");
@@ -48,7 +40,6 @@ const UserProfileContainer = lazy(async () => {
 });
 export const AppContainer = () => {
   const { pathname } = useLocation();
-  const navigate = useNavigate();
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
@@ -76,8 +67,27 @@ export const AppContainer = () => {
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
     setActiveUser(null);
-    navigate("/");
-  }, [navigate]);
+  }, []);
+
+  useEffect(() => {
+    if (activeUser == null || pathname === "/not-found") {
+      return;
+    }
+
+    void Promise.all([
+      import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer"),
+      import("@web-speed-hackathon-2026/client/src/utils/convert_image"),
+      import("@web-speed-hackathon-2026/client/src/utils/convert_movie"),
+      import("@web-speed-hackathon-2026/client/src/utils/load_image_magick").then(
+        ({ preloadImageMagick }) => preloadImageMagick(),
+      ),
+      import("@web-speed-hackathon-2026/client/src/utils/load_ffmpeg").then(({ preloadFFmpeg }) =>
+        preloadFFmpeg(),
+      ),
+    ]).catch((error) => {
+      console.error(error);
+    });
+  }, [activeUser, pathname]);
 
   const authModalId = useId();
   const newPostModalId = useId();
@@ -120,23 +130,19 @@ export const AppContainer = () => {
           <Route element={<TimelineContainer />} path="/" />
           <Route
             element={
-              <Suspense fallback={<RouteLoadingPage />}>
-                <DirectMessageListContainer
-                  activeUser={activeUser}
-                  onOpenAuthModal={handleOpenAuthModal}
-                />
-              </Suspense>
+              <DirectMessageListContainer
+                activeUser={activeUser}
+                onOpenAuthModal={handleOpenAuthModal}
+              />
             }
             path="/dm"
           />
           <Route
             element={
-              <Suspense fallback={<RouteLoadingPage />}>
-                <DirectMessageContainer
-                  activeUser={activeUser}
-                  onOpenAuthModal={handleOpenAuthModal}
-                />
-              </Suspense>
+              <DirectMessageContainer
+                activeUser={activeUser}
+                onOpenAuthModal={handleOpenAuthModal}
+              />
             }
             path="/dm/:conversationId"
           />

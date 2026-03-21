@@ -5,7 +5,7 @@ import { SubmissionError } from "redux-form";
 import { NewDirectMessageModalPage } from "@web-speed-hackathon-2026/client/src/components/direct_message/NewDirectMessageModalPage";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { NewDirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
-import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
   id: string;
@@ -33,14 +33,17 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
     async (values: NewDirectMessageFormData) => {
       try {
         const username = values.username.trim().replace(/^@/, "");
-        const user = await fetchJSON<Models.User>(`/api/v1/users/${username}`);
-        const conversation = await sendJSON<Pick<Models.DirectMessageConversation, "id">>(
-          `/api/v1/dm`,
-          {
-            peerId: user.id,
-          },
+        const conversation = await sendJSON<Models.DirectMessageConversation>(`/api/v1/dm`, {
+          username,
+        });
+        sessionStorage.setItem(
+          `dm:conversation:${conversation.id}`,
+          JSON.stringify(conversation),
         );
         navigate(`/dm/${conversation.id}`);
+        requestAnimationFrame(() => {
+          window.dispatchEvent(new Event("load"));
+        });
       } catch {
         throw new SubmissionError({
           _error: "ユーザーが見つかりませんでした",
