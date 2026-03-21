@@ -9,7 +9,7 @@ import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import { convertMovie } from "@web-speed-hackathon-2026/server/src/utils/convert_movie";
 
 // 変換した動画の拡張子
-const EXTENSION = "gif";
+const EXTENSION = "mp4";
 
 export const movieRouter = Router();
 
