@@ -44,13 +44,8 @@ const AppContainer = () => {
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
   useEffect(() => {
     fetchJSON<Models.User>("/api/v1/me")
-      .then((user) => {
-        setActiveUser(user);
-      })
-      .catch((err) => {
-        console.warn("Auth check failed:", err.message);
-        setActiveUser(null);
-      });
+      .then(setActiveUser)
+      .catch(() => setActiveUser(null));
   }, []);
 
   const handleLogout = useCallback(async () => {
