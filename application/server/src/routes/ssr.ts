@@ -102,6 +102,30 @@ function resolveRoutePreloads(pathname: string): string[] {
   return [...chunks];
 }
 
+// --- 起動時: Redux チャンクの特定（ホーム等で modulepreload から除外用） ---
+
+const reduxChunks = new Set<string>();
+for (const [mod, assets] of Object.entries(ssrManifest)) {
+  if (/node_modules\/(redux|react-redux|redux-form)\//.test(mod)) {
+    for (const asset of assets) {
+      if (asset.endsWith(".js")) reduxChunks.add(asset);
+    }
+  }
+}
+if (reduxChunks.size > 0) {
+  console.log("SSR: redux chunks identified for selective preload:", [...reduxChunks]);
+}
+
+// Redux 不要なルート（フォームを使わないページ）
+const REDUX_FREE_ROUTES = [/^\/$/, /^\/search$/, /^\/users\//, /^\/terms$/];
+
+function filterPreloadsForRoute(pathname: string, preloads: string[]): string[] {
+  if (reduxChunks.size === 0) return preloads;
+  const isReduxFree = REDUX_FREE_ROUTES.some((r) => r.test(pathname));
+  if (!isReduxFree) return preloads;
+  return preloads.filter((p) => !reduxChunks.has(p));
+}
+
 // --- 起動時: SSR バンドル読み込み ---
 
 type RenderFn = (options: {
@@ -144,7 +168,7 @@ function planSSRFetches(urlPath: string): Record<string, string> | null {
   const pathname = parsed.pathname;
 
   if (pathname === "/") {
-    return { posts: "/api/v1/posts?limit=30&offset=0" };
+    return { posts: "/api/v1/posts?limit=10&offset=0" };
   }
 
   const postMatch = pathname.match(/^\/posts\/([^/]+)$/);
@@ -213,6 +237,53 @@ async function fetchSSRData(urlPath: string, cookie?: string): Promise<SSRData |
   return ssrData;
 }
 
+// --- SSR データ最小化 ---
+
+function stripPostForSSR(post: Record<string, unknown>): Record<string, unknown> {
+  const user = post["user"] as Record<string, unknown> | undefined;
+  const images = post["images"] as Array<Record<string, unknown>> | undefined;
+  const movie = post["movie"] as Record<string, unknown> | undefined;
+  const sound = post["sound"] as Record<string, unknown> | undefined;
+
+  return {
+    id: post["id"],
+    text: post["text"],
+    createdAt: post["createdAt"],
+    user: user
+      ? {
+          id: user["id"],
+          username: user["username"],
+          name: user["name"],
+          profileImage: user["profileImage"]
+            ? { id: (user["profileImage"] as Record<string, unknown>)["id"] }
+            : null,
+        }
+      : null,
+    images: images?.map((img) => ({ id: img["id"], alt: img["alt"] })),
+    movie: movie ? { id: movie["id"] } : null,
+    sound: sound ? { id: sound["id"], title: sound["title"], artist: sound["artist"] } : null,
+  };
+}
+
+function minimizeSSRData(data: SSRData): SSRData {
+  const result: SSRData = { ...data };
+
+  if (Array.isArray(result.posts)) {
+    result.posts = result.posts.map((p) => stripPostForSSR(p as Record<string, unknown>));
+  }
+  if (Array.isArray(result.userPosts)) {
+    result.userPosts = result.userPosts.map((p) => stripPostForSSR(p as Record<string, unknown>));
+  }
+  if (result.post) {
+    result.post = stripPostForSSR(result.post as Record<string, unknown>);
+  }
+
+  // comments は SWR で再取得されるので SSR データから除外
+  delete result.comments;
+
+  return result;
+}
+
 // --- SSR ルーター ---
 
 export const ssrRouter = new Hono<SessionEnv>();
@@ -239,14 +310,18 @@ ssrRouter.get("*", async (c) => {
       return c.html(csrFallbackHtml);
     }
 
+    // SSR データを最小化（不要フィールド除去）
+    const minimizedData = minimizeSSRData(ssrData);
+
     // Route-specific lazy chunk preloads + entry static dependency preloads
     const routePreloads = resolveRoutePreloads(url.pathname);
-    const modulePreloads = [...baseModulePreloads, ...routePreloads];
+    const allPreloads = [...baseModulePreloads, ...routePreloads];
+    const modulePreloads = filterPreloadsForRoute(url.pathname, allPreloads);
 
     // React がフルドキュメントをストリーム出力
     const reactStream = await ssrRender!({
       url: fullPath,
-      ssrData,
+      ssrData: minimizedData,
       bootstrapModules: [entryScript],
       cssHref,
       modulePreloads,
