@@ -21,5 +21,9 @@ app.use((_req, res, next) => {
   return next();
 });
 
+app.use((req, _res, next) => {
+  console.log(`[req] ${req.method} ${req.url} content-type=${req.headers["content-type"]} content-encoding=${req.headers["content-encoding"]}`);
+  next();
+});
 app.use("/api/v1", apiRouter);
 app.use(staticRouter);

@@ -81,11 +81,7 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
 
   return (
     <Modal id={id} ref={ref} closedby="any">
-      <AuthModalPage
-        key={resetKey}
-        onRequestCloseModal={handleRequestCloseModal}
-        onSubmit={handleSubmit}
-      />
+      <AuthModalPage key={resetKey} onRequestCloseModal={handleRequestCloseModal} onSubmit={handleSubmit} />
     </Modal>
   );
 };

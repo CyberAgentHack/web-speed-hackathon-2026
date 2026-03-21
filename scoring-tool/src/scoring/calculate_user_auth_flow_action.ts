@@ -126,13 +126,21 @@ export async function calculateUserAuthFlowAction({
     } catch (err) {
       throw new Error("パスワードの入力に失敗しました", { cause: err });
     }
+    const signinRequests: string[] = [];
+    playwrightPage.on("request", (req) => {
+      if (req.url().includes("/api/")) signinRequests.push(`${req.method()} ${req.url()}`);
+    });
     try {
       const button = playwrightPage.getByRole("dialog").getByRole("button", { name: "サインイン" });
+      const isDisabled = await button.isDisabled();
+      console.log("[debug] signin button disabled:", isDisabled);
       await button.click();
       await playwrightPage
         .getByRole("link", { name: "マイページ" })
         .waitFor({ timeout: 10 * 1000 });
     } catch (err) {
+      console.log("[debug] requests made:", signinRequests);
+      await playwrightPage.screenshot({ path: "signin-failure.png" });
       throw new Error("サインインに失敗しました", { cause: err });
     }
   }
