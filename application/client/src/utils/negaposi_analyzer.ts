@@ -1,5 +1,3 @@
-import analyze from "negaposi-analyzer-ja";
-
 import { buildTokenizer } from "@web-speed-hackathon-2026/client/src/utils/kuromoji_loader";
 
 type SentimentResult = {
@@ -8,6 +6,7 @@ type SentimentResult = {
 };
 
 export async function analyzeSentiment(text: string): Promise<SentimentResult> {
+  const { default: analyze } = await import("negaposi-analyzer-ja");
   const tokenizer = await buildTokenizer();
   const tokens = tokenizer.tokenize(text);
 
