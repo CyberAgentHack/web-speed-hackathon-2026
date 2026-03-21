@@ -15,6 +15,44 @@ const htmlTemplate = rawTemplate.replace(
   `<div id="app">${shellHtml}</div>`,
 );
 
+function escapeHtml(text: string): string {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function buildTimelineHtml(posts: any[]): string {
+  const items = posts.map((p) => {
+    const post = p.toJSON ? p.toJSON() : p;
+    const userName = escapeHtml(post.user?.name || "");
+    const userUsername = escapeHtml(post.user?.username || "");
+    const text = escapeHtml(post.text || "");
+    const profileImageId = post.user?.profileImage?.id || "";
+
+    return `<article style="padding:4px 16px">
+<div style="display:flex;border-bottom:1px solid #d6d3d1;padding:8px 0 16px">
+<div style="flex-shrink:0;padding-right:12px">
+<div style="width:48px;height:48px;border-radius:50%;overflow:hidden;border:1px solid #d6d3d1;background:#f5f5f4">
+<img src="/images/profiles/${profileImageId}.jpg" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover" />
+</div>
+</div>
+<div style="min-width:0;flex:1">
+<p style="font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+<span style="font-weight:bold;color:#042f2e">${userName}</span>
+<span style="color:#64748b;padding-left:4px">@${userUsername}</span>
+</p>
+<p style="font-size:14px;color:#042f2e;line-height:1.6">${text}</p>
+</div>
+</div>
+</article>`;
+  }).join("");
+
+  return `<div style="display:flex;justify-content:center;font-family:sans-serif">
+<div style="display:flex;min-height:100vh;max-width:100%">
+<nav style="width:72px;min-height:100vh;border-right:1px solid #d6d3d1;padding:16px 8px"></nav>
+<main style="width:100%;max-width:640px">${items}</main>
+</div>
+</div>`;
+}
+
 export const ssrRouter = Router();
 
 ssrRouter.use("{*path}", async (req: Request, res: Response) => {
@@ -23,8 +61,11 @@ ssrRouter.use("{*path}", async (req: Request, res: Response) => {
     if (depth === 0) {
       const posts = await Post.findAll({ limit: 10, offset: 0 });
       const postsJson = JSON.stringify(posts);
+      const timelineHtml = buildTimelineHtml(posts);
       const script = `<script>window.__INITIAL_POSTS__=${postsJson};</script>`;
-      const html = htmlTemplate.replace('</head>', `${script}</head>`);
+      const html = rawTemplate
+        .replace('<div id="app"></div>', `<div id="app">${timelineHtml}</div>`)
+        .replace('</head>', `${script}</head>`);
       return res.status(200).type("text/html").send(html);
     }
   } catch {
