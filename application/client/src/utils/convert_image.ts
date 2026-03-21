@@ -1,35 +1,65 @@
-import { initializeImageMagick, ImageMagick, MagickFormat } from "@imagemagick/magick-wasm";
-import magickWasmUrl from "@imagemagick/magick-wasm/magick.wasm?url";
-
-interface Options {
-  extension: MagickFormat;
-}
-
 interface ConvertResult {
   blob: Blob;
   alt: string;
 }
 
-export async function convertImage(file: File, options: Options): Promise<ConvertResult> {
-  const wasmResponse = await fetch(magickWasmUrl);
-  const wasmBinary = new Uint8Array(await wasmResponse.arrayBuffer());
-  await initializeImageMagick(wasmBinary);
+function extractJpegComment(data: Uint8Array): string {
+  // JPEG COM marker (0xFFFE) からコメントを抽出
+  if (data[0] !== 0xff || data[1] !== 0xd8) return "";
 
-  const byteArray = new Uint8Array(await file.arrayBuffer());
+  let offset = 2;
+  while (offset < data.length - 1) {
+    if (data[offset] !== 0xff) break;
+    const marker = data[offset + 1]!;
 
-  return new Promise((resolve, reject) => {
-    try {
-      ImageMagick.read(byteArray, (img) => {
-        const comment = img.comment ?? "";
-
-        img.format = options.extension;
-
-        img.write((output) => {
-          resolve({ blob: new Blob([output as Uint8Array<ArrayBuffer>]), alt: comment });
-        });
-      });
-    } catch (err) {
-      reject(err);
+    // COM marker
+    if (marker === 0xfe) {
+      const length = (data[offset + 2]! << 8) | data[offset + 3]!;
+      const commentBytes = data.slice(offset + 4, offset + 2 + length);
+      return new TextDecoder().decode(commentBytes);
     }
-  });
+
+    // EOI or SOS - stop searching
+    if (marker === 0xd9 || marker === 0xda) break;
+
+    const length = (data[offset + 2]! << 8) | data[offset + 3]!;
+    offset += 2 + length;
+  }
+
+  return "";
+}
+
+export async function convertImage(file: File): Promise<ConvertResult> {
+  const arrayBuffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(arrayBuffer);
+  const alt = extractJpegComment(bytes);
+
+  const img = new Image();
+  const url = URL.createObjectURL(file);
+
+  try {
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = reject;
+      img.src = url;
+    });
+
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(img, 0, 0);
+
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (b) => (b ? resolve(b) : reject(new Error("Failed to convert to WebP"))),
+        "image/webp",
+        0.8,
+      );
+    });
+
+    return { blob, alt };
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }
