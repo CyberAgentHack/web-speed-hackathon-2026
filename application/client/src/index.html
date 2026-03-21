@@ -9,7 +9,7 @@
     <link rel="preload" href="/fonts/ReiNoAreMincho-Heavy-subset.woff2" as="font" type="font/woff2" crossorigin />
     <script>
       // APIプリフェッチ: JSロード前にデータ取得を開始
-      (function(){var p=location.pathname;var c={};if(p==="/"||p===""){c["/api/v1/posts?limit=30&offset=0"]=fetch("/api/v1/posts?limit=30&offset=0").then(function(r){return r.json()})}else if(p.startsWith("/posts/")){var id=p.split("/")[2];if(id){c["/api/v1/posts/"+id]=fetch("/api/v1/posts/"+id).then(function(r){return r.json()});c["/api/v1/posts/"+id+"/comments?limit=30&offset=0"]=fetch("/api/v1/posts/"+id+"/comments?limit=30&offset=0").then(function(r){return r.json()})}}window.__PREFETCH__=c})();
+      (function(){var p=location.pathname;var c={};var j=function(r){if(!r.ok)throw new Error(r.statusText);return r.json()};c["/api/v1/me"]=fetch("/api/v1/me").then(j).catch(function(){return null});if(p==="/"||p===""){c["/api/v1/posts?limit=30&offset=0"]=fetch("/api/v1/posts?limit=30&offset=0").then(j)}else if(p.startsWith("/posts/")){var id=p.split("/")[2];if(id){c["/api/v1/posts/"+id]=fetch("/api/v1/posts/"+id).then(j);c["/api/v1/posts/"+id+"/comments?limit=30&offset=0"]=fetch("/api/v1/posts/"+id+"/comments?limit=30&offset=0").then(j)}}else if(p==="/dm"){c["/api/v1/dm"]=fetch("/api/v1/dm").then(j).catch(function(){return null})}else if(p.startsWith("/dm/")){var did=p.split("/")[2];if(did){c["/api/v1/dm/"+did]=fetch("/api/v1/dm/"+did).then(j).catch(function(){return null})}}window.__PREFETCH__=c})();
     </script>
   </head>
   <body class="bg-cax-canvas text-cax-text">

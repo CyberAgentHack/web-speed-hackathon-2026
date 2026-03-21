@@ -26,13 +26,22 @@ export const AppContainer = () => {
 
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
   useEffect(() => {
-    void fetchJSON<Models.User>("/api/v1/me")
-      .then((user) => {
-        setActiveUser(user);
-      })
-      .catch(() => {
-        // Not logged in
+    // プリフェッチ済みなら即座に使用、なければfetch
+    const prefetched = window.__PREFETCH__?.["/api/v1/me"];
+    if (prefetched) {
+      delete window.__PREFETCH__!["/api/v1/me"];
+      void (prefetched as Promise<Models.User | null>).then((user) => {
+        if (user) setActiveUser(user);
       });
+    } else {
+      void fetchJSON<Models.User>("/api/v1/me")
+        .then((user) => {
+          setActiveUser(user);
+        })
+        .catch(() => {
+          // Not logged in
+        });
+    }
   }, []);
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
