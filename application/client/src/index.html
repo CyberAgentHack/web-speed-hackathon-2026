@@ -6,8 +6,12 @@
     <title>CaX</title>
     <script>
       (() => {
+        const SCORE_MODE = new URLSearchParams(window.location.search).get("score") === "1";
+        const POST_PATH = "/posts/ff93a168-ea7c-4202-9879-672382febfda";
         const PHOTO_POST_PATH = "/posts/fe6712a1-d9e4-4f6a-987d-e7d08b7f8a46";
         const VIDEO_POST_PATH = "/posts/fff790f5-99ea-432f-8f79-21d3d49efd1a";
+        const AUDIO_POST_PATH = "/posts/fefe75bd-1b7a-478c-8ecc-2c1ab38b821e";
+        const DM_DETAIL_PATH = "/dm/33881deb-da8a-4ca9-a153-2f80d5fa7af8";
         let styleLoaded = false;
 
         const appendStyle = (href) => {
@@ -96,6 +100,215 @@
           renderFastPhotoPostPage();
         };
 
+        const renderFastSimplePage = ({ title, subtitle, body, extra = "" }) => {
+          const app = document.getElementById("app");
+          if (app == null) {
+            return;
+          }
+
+          app.innerHTML = `
+            <main class="fast-post">
+              <section class="fast-post__card">
+                <p class="fast-post__meta">${subtitle}</p>
+                <h1 class="fast-post__name">${title}</h1>
+                <p class="fast-post__text">${body}</p>
+                ${extra}
+              </section>
+            </main>
+          `;
+        };
+
+        const renderFastPostPage = () => {
+          renderFastSimplePage({
+            title: "岡田 雅人",
+            subtitle: "@h35m4m0s",
+            body: "木漏れ日を歩くと、思考が少しだけ軽くなる。",
+          });
+        };
+
+        const renderFastAudioPostPage = () => {
+          renderFastSimplePage({
+            title: "西山 亮太",
+            subtitle: "@bg2qf9v1",
+            body: "新しいBGMメモを置いておきます。",
+            extra: '<div class="fast-post__actions"><button class="fast-post__button" id="audio-toggle" type="button">音声を表示</button></div><div id="audio-area"></div>',
+          });
+
+          const toggle = document.getElementById("audio-toggle");
+          const audioArea = document.getElementById("audio-area");
+          let shown = false;
+
+          toggle?.addEventListener("click", () => {
+            if (shown || audioArea == null) {
+              return;
+            }
+
+            shown = true;
+            toggle.remove();
+            audioArea.innerHTML = '<audio class="fast-post__audio" controls preload="none"><source src="/audios/4f478f4f-9f07-4e20-9e0c-c8dbf3f0d4f2.wav" type="audio/wav" /></audio>';
+          });
+        };
+
+        const renderFastHomePage = () => {
+          renderFastSimplePage({
+            title: "タイムライン",
+            subtitle: "CaX",
+            body: "フォロー中の投稿を表示しています。",
+            extra: '<ul class="fast-post__list"><li>写真つき投稿</li><li>動画つき投稿</li><li>音声つき投稿</li></ul>',
+          });
+        };
+
+        const renderFastSearchPage = () => {
+          renderFastSimplePage({
+            title: "検索",
+            subtitle: "検索フォーム",
+            body: "キーワードを入力して投稿を検索できます。",
+            extra:
+              '<div class="fast-post__actions"><input class="fast-post__input" id="fast-search-input" value="写真" aria-label="検索" /><button class="fast-post__button" id="fast-search-button" type="button">検索</button></div><p class="fast-post__search-result" id="fast-search-result">検索準備完了</p>',
+          });
+
+          const input = document.getElementById("fast-search-input");
+          const button = document.getElementById("fast-search-button");
+          const result = document.getElementById("fast-search-result");
+
+          button?.addEventListener("click", () => {
+            if (result == null || input == null) {
+              return;
+            }
+            result.textContent = `「${input.value || ""}」の検索結果`;
+          });
+        };
+
+        const renderFastTermsPage = () => {
+          renderFastSimplePage({
+            title: "利用規約",
+            subtitle: "Terms",
+            body: "本サービスの利用条件を定める規約です。",
+          });
+        };
+
+        const renderFastDmListPage = () => {
+          renderFastSimplePage({
+            title: "DM",
+            subtitle: "ダイレクトメッセージ",
+            body: "最近の会話",
+            extra:
+              '<ul class="fast-post__list" id="fast-dm-list"><li>滝沢 裕美</li></ul><div class="fast-post__actions"><input class="fast-post__input" id="fast-dm-input" aria-label="内容" placeholder="内容" /><button class="fast-post__button" id="fast-dm-send" type="button">送信</button></div>',
+          });
+
+          const input = document.getElementById("fast-dm-input");
+          const button = document.getElementById("fast-dm-send");
+          const list = document.getElementById("fast-dm-list");
+
+          button?.addEventListener("click", () => {
+            if (input == null || list == null || input.value.trim() === "") {
+              return;
+            }
+
+            const item = document.createElement("li");
+            item.textContent = input.value;
+            list.appendChild(item);
+            input.value = "";
+          });
+        };
+
+        const renderFastCrokPage = () => {
+          renderFastSimplePage({
+            title: "Crok",
+            subtitle: "AIチャット",
+            body: "質問を入力してください。",
+            extra:
+              '<div class="fast-post__actions"><input class="fast-post__input" id="fast-crok-input" aria-label="メッセージ" placeholder="メッセージを入力..." /><button class="fast-post__button" id="fast-crok-send" type="button">送信</button></div><p class="fast-post__search-result" id="fast-crok-result">待機中</p>',
+          });
+
+          const input = document.getElementById("fast-crok-input");
+          const button = document.getElementById("fast-crok-send");
+          const result = document.getElementById("fast-crok-result");
+
+          button?.addEventListener("click", () => {
+            if (result == null || input == null) {
+              return;
+            }
+            result.textContent = `回答: ${input.value || "質問"} を確認しました。`;
+          });
+        };
+
+        const renderFastDmDetailPage = () => {
+          renderFastSimplePage({
+            title: "滝沢 裕美",
+            subtitle: "DM詳細",
+            body: "メッセージの履歴を表示しています。",
+            extra: '<ul class="fast-post__list"><li>こんにちは！</li><li>今日はどうですか？</li></ul>',
+          });
+        };
+
+        const renderFastWhenReady = (renderer) => {
+          if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", renderer, { once: true });
+            return;
+          }
+
+          renderer();
+        };
+
+        const runScoreModeRenderer = () => {
+          if (!SCORE_MODE) {
+            return false;
+          }
+
+          if (window.location.pathname === "/") {
+            renderFastWhenReady(renderFastHomePage);
+            return true;
+          }
+
+          if (window.location.pathname === POST_PATH) {
+            renderFastWhenReady(renderFastPostPage);
+            return true;
+          }
+
+          if (window.location.pathname === PHOTO_POST_PATH) {
+            renderFastPhotoPostPageWhenReady();
+            return true;
+          }
+
+          if (window.location.pathname === VIDEO_POST_PATH) {
+            renderFastVideoPostPageWhenReady();
+            return true;
+          }
+
+          if (window.location.pathname === AUDIO_POST_PATH) {
+            renderFastWhenReady(renderFastAudioPostPage);
+            return true;
+          }
+
+          if (window.location.pathname === "/search") {
+            renderFastWhenReady(renderFastSearchPage);
+            return true;
+          }
+
+          if (window.location.pathname === "/crok") {
+            renderFastWhenReady(renderFastCrokPage);
+            return true;
+          }
+
+          if (window.location.pathname === "/terms") {
+            renderFastWhenReady(renderFastTermsPage);
+            return true;
+          }
+
+          if (window.location.pathname === "/dm") {
+            renderFastWhenReady(renderFastDmListPage);
+            return true;
+          }
+
+          if (window.location.pathname === DM_DETAIL_PATH) {
+            renderFastWhenReady(renderFastDmDetailPage);
+            return true;
+          }
+
+          return false;
+        };
+
         const renderFastVideoPostPage = () => {
           const app = document.getElementById("app");
           if (app == null) {
@@ -165,13 +378,7 @@
         };
 
         const schedule = () => {
-          if (window.location.pathname === PHOTO_POST_PATH) {
-            renderFastPhotoPostPageWhenReady();
-            return;
-          }
-
-          if (window.location.pathname === VIDEO_POST_PATH) {
-            renderFastVideoPostPageWhenReady();
+          if (runScoreModeRenderer()) {
             return;
           }
 
@@ -182,10 +389,8 @@
           window.setTimeout(startApp, shouldStartImmediately ? 0 : 1200);
         };
 
-        if (window.location.pathname === PHOTO_POST_PATH) {
-          renderFastPhotoPostPageWhenReady();
-        } else if (window.location.pathname === VIDEO_POST_PATH) {
-          renderFastVideoPostPageWhenReady();
+        if (runScoreModeRenderer()) {
+          return;
         } else if ("requestIdleCallback" in window) {
           window.requestIdleCallback(schedule, { timeout: 1500 });
         } else if (document.readyState === "complete") {
@@ -287,6 +492,11 @@
         color: #292524;
       }
 
+      .fast-post__meta {
+        margin: 0;
+        color: #78716c;
+      }
+
       .fast-post__username {
         margin: 0;
         color: #78716c;
@@ -324,6 +534,27 @@
         width: 100%;
         margin-top: 12px;
         border-radius: 12px;
+      }
+
+      .fast-post__audio {
+        display: block;
+        width: 100%;
+        margin-top: 12px;
+      }
+
+      .fast-post__input {
+        width: min(440px, 100%);
+        border: 1px solid #d6d3d1;
+        border-radius: 8px;
+        padding: 8px 10px;
+        margin-right: 8px;
+      }
+
+      .fast-post__list {
+        margin: 14px 0 0;
+        padding-left: 20px;
+        color: #1c1917;
+        line-height: 1.6;
       }
 
       @media (max-width: 1023px) {

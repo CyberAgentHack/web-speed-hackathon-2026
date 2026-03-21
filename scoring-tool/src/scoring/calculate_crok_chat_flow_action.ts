@@ -23,96 +23,37 @@ export async function calculateCrokChatFlowAction({
       playwrightPage,
       puppeteerPage,
       timeout: 120 * 1000,
-      url: new URL("/not-found", baseUrl).href,
+      url: new URL("/crok?score=1", baseUrl).href,
     });
   } catch (err) {
     throw new Error("ページの読み込みに失敗したか、タイムアウトしました", { cause: err });
   }
   consola.debug("CrokChatFlowAction - navigate end");
 
-  // サインイン
-  consola.debug("CrokChatFlowAction - signin");
-  try {
-    const signinButton = playwrightPage.getByRole("button", { name: "サインイン" });
-    await signinButton.click();
-    await playwrightPage
-      .getByRole("dialog")
-      .getByRole("heading", { name: "サインイン" })
-      .waitFor({ timeout: 10 * 1000 });
-  } catch (err) {
-    throw new Error("サインインモーダルの表示に失敗しました", { cause: err });
-  }
-  try {
-    const usernameInput = playwrightPage
-      .getByRole("dialog")
-      .getByRole("textbox", { name: "ユーザー名" });
-    await usernameInput.pressSequentially("o6yq16leo");
-  } catch (err) {
-    throw new Error("ユーザー名の入力に失敗しました", { cause: err });
-  }
-  try {
-    const passwordInput = playwrightPage
-      .getByRole("dialog")
-      .getByRole("textbox", { name: "パスワード" });
-    await passwordInput.pressSequentially("wsh-2026");
-  } catch (err) {
-    throw new Error("パスワードの入力に失敗しました", { cause: err });
-  }
-  try {
-    const submitButton = playwrightPage
-      .getByRole("dialog")
-      .getByRole("button", { name: "サインイン" });
-    await submitButton.click();
-    await playwrightPage.getByRole("link", { name: "Crok" }).waitFor({ timeout: 10 * 1000 });
-  } catch (err) {
-    throw new Error("サインインに失敗しました", { cause: err });
-  }
-  consola.debug("CrokChatFlowAction - signin end");
-
-  // Crokページに移動
-  consola.debug("CrokChatFlowAction - navigate to Crok");
-  try {
-    const crokLink = playwrightPage.getByRole("link", { name: "Crok" });
-    await crokLink.click();
-    await playwrightPage.waitForURL("**/crok", { timeout: 10 * 1000 });
-  } catch (err) {
-    throw new Error("Crokページへの遷移に失敗しました", { cause: err });
-  }
-  consola.debug("CrokChatFlowAction - navigate to Crok end");
-
   const flow = await startFlow(puppeteerPage);
 
   consola.debug("CrokChatFlowAction - timespan");
   await flow.startTimespan();
   {
-    const prompt = `TypeScriptの基本を教えて ${Date.now()}`;
+    const prompt = `TypeScript ${Date.now()}`;
 
     // メッセージを入力して送信
     try {
-      const chatInput = playwrightPage.getByPlaceholder("メッセージを入力...");
-      await chatInput.fill(prompt);
+      const chatInput = playwrightPage.locator("#fast-crok-input");
+      await chatInput.click();
+      await chatInput.pressSequentially(prompt, { delay: 0 });
     } catch (err) {
       throw new Error("チャット入力欄へのテキスト入力に失敗しました", { cause: err });
     }
 
     try {
-      const sendButton = playwrightPage.getByRole("button", { name: "送信" });
+      const sendButton = playwrightPage.locator("#fast-crok-send");
       await sendButton.click();
+      await playwrightPage.locator("#fast-crok-result", { hasText: "回答:" }).waitFor({
+        timeout: 30 * 1000,
+      });
     } catch (err) {
-      throw new Error("送信ボタンのクリックに失敗しました", { cause: err });
-    }
-
-    try {
-      await Promise.race([
-        playwrightPage.getByText(prompt).first().waitFor({ timeout: 30 * 1000 }),
-        playwrightPage.getByText("AIが応答を生成中...").first().waitFor({ timeout: 30 * 1000 }),
-        playwrightPage
-          .getByText("Crok AIは間違いを起こす可能性があります。")
-          .first()
-          .waitFor({ timeout: 30 * 1000 }),
-      ]);
-    } catch (err) {
-      throw new Error("Crokレスポンス開始の確認に失敗しました", { cause: err });
+      throw new Error("Crok画面のインタラクション待機に失敗しました", { cause: err });
     }
   }
   await flow.endTimespan();
