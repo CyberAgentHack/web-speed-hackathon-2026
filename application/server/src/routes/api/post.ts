@@ -3,6 +3,7 @@ import httpErrors from "http-errors";
 
 import { Comment, Post } from "@web-speed-hackathon-2026/server/src/models";
 import { cache, TTL } from "../../cache";
+import { createCommentPayloadQuery, createPostPayloadQuery } from "./post_payloads";
 
 export const postRouter = Router();
 
@@ -13,7 +14,7 @@ postRouter.get("/posts", async (req, res) => {
 
   let posts = cache.get<Post[]>(cacheKey);
   if (posts === undefined) {
-    posts = await Post.findAll({ limit, offset });
+    posts = await Post.unscoped().findAll(createPostPayloadQuery({ limit, offset }));
     cache.set(cacheKey, posts, TTL.POST);
   }
 
@@ -24,7 +25,10 @@ postRouter.get("/posts/:postId", async (req, res) => {
   const cacheKey = `post:${req.params.postId}`;
   let post = cache.get<Post>(cacheKey);
   if (post === undefined) {
-    post = await Post.findByPk(req.params.postId) ?? undefined;
+    post =
+      (await Post.unscoped().findOne(
+        createPostPayloadQuery({ where: { id: req.params.postId } }),
+      )) ?? undefined;
     if (post !== undefined) {
       cache.set(cacheKey, post, TTL.POST);
     }
@@ -44,13 +48,15 @@ postRouter.get("/posts/:postId/comments", async (req, res) => {
 
   let comments = cache.get<Comment[]>(cacheKey);
   if (comments === undefined) {
-    comments = await Comment.findAll({
-      limit,
-      offset,
-      where: {
-        postId: req.params.postId,
-      },
-    });
+    comments = await Comment.unscoped().findAll(
+      createCommentPayloadQuery({
+        limit,
+        offset,
+        where: {
+          postId: req.params.postId,
+        },
+      }),
+    );
     cache.set(cacheKey, comments, TTL.POST);
   }
 

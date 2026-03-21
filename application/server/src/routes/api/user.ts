@@ -4,6 +4,7 @@ import httpErrors from "http-errors";
 import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
 
 import { cache, TTL } from "../../cache";
+import { createPostPayloadQuery } from "./post_payloads";
 
 export const userRouter = Router();
 
@@ -85,13 +86,15 @@ userRouter.get("/users/:username/posts", async (req, res) => {
 
   let posts = cache.get<Post[]>(userPostsCacheKey);
   if (posts === undefined) {
-    posts = await Post.findAll({
-      limit,
-      offset,
-      where: {
-        userId: user.id,
-      },
-    });
+    posts = await Post.unscoped().findAll(
+      createPostPayloadQuery({
+        limit,
+        offset,
+        where: {
+          userId: user.id,
+        },
+      }),
+    );
     cache.set(userPostsCacheKey, posts, TTL.POST);
   }
 

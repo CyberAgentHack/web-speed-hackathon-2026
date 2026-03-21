@@ -4,6 +4,7 @@ import { Op } from "sequelize";
 import { Post } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 import { cache, TTL } from "../../cache";
+import { createPostPayloadQuery } from "./post_payloads";
 
 export const searchRouter = Router();
 
@@ -46,22 +47,25 @@ searchRouter.get("/search", async (req, res) => {
   // テキスト検索条件
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
-  const postsByText = await Post.findAll({
-    where: {
-      ...textWhere,
-      ...dateWhere,
-    },
-  });
+  const postsByText = await Post.unscoped().findAll(
+    createPostPayloadQuery({
+      where: {
+        ...textWhere,
+        ...dateWhere,
+      },
+    }),
+  );
 
   // ユーザー名/名前での検索（キーワードがある場合のみ）
   let postsByUser: typeof postsByText = [];
   if (searchTerm) {
-    postsByUser = await Post.findAll({
+    postsByUser = await Post.unscoped().findAll({
+      ...createPostPayloadQuery({ where: dateWhere }),
       include: [
         {
           association: "user",
-          attributes: { exclude: ["profileImageId"] },
-          include: [{ association: "profileImage" }],
+          attributes: ["id", "name", "username"],
+          include: [{ association: "profileImage", attributes: ["id", "alt"] }],
           required: true,
           where: {
             [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
@@ -69,12 +73,13 @@ searchRouter.get("/search", async (req, res) => {
         },
         {
           association: "images",
+          attributes: ["id", "alt", "createdAt"],
+          required: false,
           through: { attributes: [] },
         },
-        { association: "movie" },
-        { association: "sound" },
+        { association: "movie", attributes: ["id"], required: false },
+        { association: "sound", attributes: ["artist", "id", "title"], required: false },
       ],
-      where: dateWhere,
     });
   }
 
