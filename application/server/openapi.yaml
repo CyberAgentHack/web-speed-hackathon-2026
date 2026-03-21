@@ -671,6 +671,13 @@ paths:
         - Crok
       summary: チャット候補取得
       operationId: getCrokSuggestions
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: 入力中のテキスト
       responses:
         "200":
           description: OK
