@@ -45,10 +45,10 @@ staticRouter.use(
   }),
 );
 
-// Read the HTML template once (lazy)
+// Read the HTML template — cache in production, reload every request in development
 let htmlTemplate: string | null = null;
 function getHtmlTemplate(): string | null {
-  if (htmlTemplate != null) {
+  if (process.env["NODE_ENV"] === "production" && htmlTemplate != null) {
     return htmlTemplate;
   }
   try {
