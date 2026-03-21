@@ -22,7 +22,8 @@ export async function initializeSequelize() {
 
   _sequelize = new Sequelize({
     dialect: "sqlite",
-    logging: (msg) => console.log("[Sequelize]", msg),
+    // logging: (msg) => console.log("[Sequelize]", msg),
+    logging: false,
     storage: TEMP_PATH,
   });
   initModels(_sequelize);
