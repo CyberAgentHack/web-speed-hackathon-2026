@@ -35,6 +35,7 @@ userRouter.put("/me", async (req, res) => {
 });
 
 userRouter.get("/users/:username", async (req, res) => {
+  res.setHeader("Cache-Control", "public, max-age=300");
   const user = await User.findOne({
     where: {
       username: req.params.username,
@@ -49,6 +50,7 @@ userRouter.get("/users/:username", async (req, res) => {
 });
 
 userRouter.get("/users/:username/posts", async (req, res) => {
+  res.setHeader("Cache-Control", "public, max-age=30");
   const user = await User.findOne({
     where: {
       username: req.params.username,

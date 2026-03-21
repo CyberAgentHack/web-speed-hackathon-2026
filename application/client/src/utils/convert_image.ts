@@ -1,10 +1,4 @@
-import { MagickFormat } from "@imagemagick/magick-wasm";
-
-interface Options {
-  extension: MagickFormat;
-}
-
-export async function convertImage(file: File, _options: Options): Promise<Blob> {
+export async function convertImage(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);

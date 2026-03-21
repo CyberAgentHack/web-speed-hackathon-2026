@@ -43,7 +43,7 @@ export const PausableMovie = ({ src }: Props) => {
           loop
           muted
           playsInline
-          preload="auto"
+          preload="metadata"
           src={src}
         />
         <div
