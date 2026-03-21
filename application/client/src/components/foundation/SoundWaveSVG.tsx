@@ -8,27 +8,30 @@ interface ParsedData {
 async function calculate(data: ArrayBuffer): Promise<ParsedData> {
   const audioCtx = new AudioContext();
 
-  // 音声をデコードする
+  // 音声をデコードする（AudioContext はワーカー内では使えないためメインスレッドで実行）
   const buffer = await audioCtx.decodeAudioData(data.slice(0));
-  // 左の音声データの絶対値を取る
-  const leftData = Array.from(buffer.getChannelData(0), Math.abs);
-  // 右の音声データの絶対値を取る
-  const rightData = Array.from(buffer.getChannelData(1), Math.abs);
 
-  // 左右の音声データの平均を取る
-  const normalized = leftData.map((v, i) => (v + (rightData[i] ?? 0)) / 2);
-  // 100 個の chunk に分ける
-  const chunkSize = Math.ceil(normalized.length / 100);
-  const chunks: number[][] = [];
-  for (let i = 0; i < normalized.length; i += chunkSize) {
-    chunks.push(normalized.slice(i, i + chunkSize));
-  }
-  // chunk ごとに平均を取る
-  const peaks = chunks.map((c) => c.reduce((a, b) => a + b, 0) / c.length);
-  // chunk の平均の中から最大値を取る
-  const max = peaks.length > 0 ? Math.max(...peaks) : 0;
+  // デコード済みの Float32Array をワーカーに転送してピーク計算をオフロードする
+  const left = new Float32Array(buffer.getChannelData(0));
+  const right = new Float32Array(
+    buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : buffer.getChannelData(0),
+  );
 
-  return { max, peaks };
+  return new Promise<ParsedData>((resolve, reject) => {
+    const worker = new Worker(
+      new URL("../../workers/sound_wave_worker.ts", import.meta.url),
+    );
+    worker.onmessage = (e: MessageEvent<ParsedData>) => {
+      resolve(e.data);
+      worker.terminate();
+    };
+    worker.onerror = (err) => {
+      reject(err);
+      worker.terminate();
+    };
+    // transferable として渡してコピーを省く
+    worker.postMessage({ left, right }, [left.buffer, right.buffer]);
+  });
 }
 
 interface Props {

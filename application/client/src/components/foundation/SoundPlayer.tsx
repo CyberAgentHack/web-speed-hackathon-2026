@@ -1,4 +1,4 @@
-import { ReactEventHandler, useCallback, useRef, useState } from "react";
+import { ReactEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -14,8 +14,20 @@ interface Props {
 
 const SoundPlayerInner = ({ sound }: Props) => {
   const soundPath = getSoundPath(sound.id);
-  // 波形表示のためにのみバイナリ取得（再生はブロックしない）
+  // バイナリを1回だけ取得し、波形表示と audio 再生の両方に使い回す
   const { data } = useFetch(soundPath, fetchBinary);
+
+  // 取得したバイナリから Blob URL を生成して audio 要素に渡す（二重ダウンロード防止）
+  const blobUrl = useMemo(() => {
+    if (!data) return null;
+    return URL.createObjectURL(new Blob([data], { type: "audio/mpeg" }));
+  }, [data]);
+
+  useEffect(() => {
+    return () => {
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+    };
+  }, [blobUrl]);
 
   const [currentTimeRatio, setCurrentTimeRatio] = useState(0);
   const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>((ev) => {
@@ -30,7 +42,7 @@ const SoundPlayerInner = ({ sound }: Props) => {
       if (isPlaying) {
         audioRef.current?.pause();
       } else {
-        audioRef.current?.play();
+        void audioRef.current?.play();
       }
       return !isPlaying;
     });
@@ -38,10 +50,11 @@ const SoundPlayerInner = ({ sound }: Props) => {
 
   return (
     <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
-      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} src={soundPath} />
+      {blobUrl && <audio ref={audioRef} loop onTimeUpdate={handleTimeUpdate} src={blobUrl} />}
       <div className="p-2">
         <button
-          className="bg-cax-accent text-cax-surface-raised flex h-8 w-8 items-center justify-center rounded-full text-sm hover:opacity-75"
+          className="bg-cax-accent text-cax-surface-raised flex h-8 w-8 items-center justify-center rounded-full text-sm hover:opacity-75 disabled:opacity-50"
+          disabled={!blobUrl}
           onClick={handleTogglePlaying}
           type="button"
         >
