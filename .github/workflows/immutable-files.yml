@@ -1,0 +1,40 @@
+name: Immutable Files
+
+on:
+  push:
+
+jobs:
+  verify-immutable-files:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+
+      - name: Verify protected files are unchanged
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if ! git remote get-url upstream >/dev/null 2>&1; then
+            git remote add upstream https://github.com/CyberAgentHack/web-speed-hackathon-2026.git
+          fi
+
+          git fetch upstream main
+          BASE_REF="upstream/main"
+
+          mapfile -t CHANGED_FILES < <(
+            git diff --name-only "${BASE_REF}...HEAD" -- \
+              fly.toml \
+              application/e2e/src
+          )
+
+          if [[ ${#CHANGED_FILES[@]} -gt 0 ]]; then
+            echo "以下の変更は禁止です:"
+            printf ' - %s\n' "${CHANGED_FILES[@]}"
+            exit 1
+          fi
+
+          echo "Protected files are unchanged."
