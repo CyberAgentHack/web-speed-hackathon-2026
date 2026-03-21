@@ -6,11 +6,6 @@ export const TermPage = () => {
     type: "font/woff2",
     crossOrigin: "anonymous",
   });
-  preload("/fonts/ReiNoAreMincho-Heavy.woff2", {
-    as: "font",
-    type: "font/woff2",
-    crossOrigin: "anonymous",
-  });
 
   return (
     <article className="px-2 pb-16 leading-relaxed md:px-4 md:pt-2">
