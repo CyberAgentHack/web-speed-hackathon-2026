@@ -5,11 +5,13 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
-import { PUBLIC_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+import {
+    PUBLIC_PATH,
+    UPLOAD_PATH,
+} from "@web-speed-hackathon-2026/server/src/paths";
 import { copyMetadataWithExiftool } from "@web-speed-hackathon-2026/server/src/utils/exiftool";
 import { extractAltFromImage } from "@web-speed-hackathon-2026/server/src/utils/extract_metadata_from_image";
 import { runFfmpeg } from "@web-speed-hackathon-2026/server/src/utils/ffmpeg";
-import { uploadFileToS3 } from "@web-speed-hackathon-2026/server/src/utils/s3";
 
 // 変換した画像の拡張子
 const EXTENSION = "avif";
@@ -81,17 +83,20 @@ imageRouter.post("/images", async (req, res) => {
         await copyMetadataWithExiftool(inputPath, outputPath);
 
         output = await fs.readFile(outputPath);
+
+        const filePath = path.resolve(
+            UPLOAD_PATH,
+            `./images/${imageId}.${EXTENSION}`,
+        );
+        await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), {
+            recursive: true,
+        });
+        await fs.writeFile(filePath, output);
     } catch {
         throw new httpErrors.BadRequest("Invalid file type");
     } finally {
         await fs.rm(tempDir, { recursive: true, force: true });
     }
-
-    await uploadFileToS3(
-        `images/${imageId}.${EXTENSION}`,
-        output,
-        "image/avif",
-    );
 
     return res.status(200).type("application/json").send({ id: imageId });
 });

@@ -1,12 +1,15 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { promises as fs } from "fs";
+import path from "path";
+
 import { Router } from "express";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
 import { copyMetadataWithExiftool } from "@web-speed-hackathon-2026/server/src/utils/exiftool";
-import { uploadFileToS3 } from "@web-speed-hackathon-2026/server/src/utils/s3";
+import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import { runFfmpeg } from "@web-speed-hackathon-2026/server/src/utils/ffmpeg";
 
 // 変換した動画の拡張子
@@ -50,7 +53,9 @@ movieRouter.post("/movies", async (req, res) => {
 
         const output = await fs.readFile(outputPath);
 
-        await uploadFileToS3(`movies/${id}.${EXTENSION}`, output, "video/webm");
+        const filePath = path.resolve(UPLOAD_PATH, `./movies/${id}.${EXTENSION}`);
+        await fs.mkdir(path.resolve(UPLOAD_PATH, "movies"), { recursive: true });
+        await fs.writeFile(filePath, req.body);
     } finally {
         await fs.rm(tempDir, { recursive: true, force: true });
     }

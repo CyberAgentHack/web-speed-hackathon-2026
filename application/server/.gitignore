@@ -1,3 +1,2 @@
 upload/
-*.sqlite
-*.sql
+*sqlite

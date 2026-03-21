@@ -6,8 +6,6 @@ import { fileURLToPath } from "node:url";
 import { OfflineAudioContext } from "node-web-audio-api";
 import { faker } from "@faker-js/faker/locale/ja";
 
-import { getFileFromS3 } from "../src/utils/s3";
-
 // Set seed for reproducible results
 faker.seed(123);
 
@@ -26,6 +24,7 @@ import type {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const seedsDir = path.resolve(__dirname, "../seeds");
+const publicDir = path.resolve(__dirname, "../../public");
 
 // ========== Existing Asset IDs from public directory ==========
 // These IDs correspond to actual files in the public directory
@@ -294,9 +293,9 @@ async function generateSounds(): Promise<SoundSeed[]> {
     const sounds: SoundSeed[] = [];
 
     for (const { id, title, artist } of EXISTING_SOUNDS) {
-        const s3Key = `sounds/${id}.mp3`;
+        const soundFilePath = path.join(publicDir, "sounds", `${id}.mp3`);
         try {
-            const audioData = await getFileFromS3(s3Key);
+            const audioData = await readFile(soundFilePath);
             const buffer = await audioCtx.decodeAudioData(
                 audioData.buffer.slice(
                     audioData.byteOffset,

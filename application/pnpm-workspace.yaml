@@ -5,6 +5,7 @@ packages:
 allowBuilds:
   bcrypt: true
   esbuild: true
+  sqlite3: true
   negaposi-analyzer-ja: true
 overrides:
   gifler>bluebird: 3.7.2

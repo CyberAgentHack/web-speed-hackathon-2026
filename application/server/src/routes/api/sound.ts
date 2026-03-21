@@ -94,11 +94,12 @@ soundRouter.post("/sounds", async (req, res) => {
         peaks.push(count > 0 ? sum / count : 0);
     }
 
-    await uploadFileToS3(
-        `sounds/${soundId}.${EXTENSION}`,
-        output,
-        "audio/mpeg",
+    const filePath = path.resolve(
+        UPLOAD_PATH,
+        `./sounds/${soundId}.${EXTENSION}`,
     );
+    await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds"), { recursive: true });
+    await fs.writeFile(filePath, req.body);
 
     return res
         .status(200)
