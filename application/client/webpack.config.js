@@ -127,14 +127,8 @@ const config = {
       url: false,
     },
   },
-  optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
-  },
+  //デフォルトの optimization が適応されるように、空のオブジェクトを設定
+  optimization: {},
   cache: false,
   ignoreWarnings: [
     {
