@@ -18,7 +18,8 @@ export const CommentItem = ({ comment }: Props) => {
             <img
               alt={comment.user.profileImage?.alt ?? ""}
               src={comment.user.profileImage ? getProfileImagePath(comment.user.profileImage.id) : ""}
-              loading="lazy"
+              loading="eager"
+              fetchPriority="high"
               width={48}
               height={48}
               decoding="async"

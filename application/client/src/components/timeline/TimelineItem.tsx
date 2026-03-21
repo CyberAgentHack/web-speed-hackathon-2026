@@ -5,6 +5,7 @@ import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/
 
 interface Props {
   post: Models.Post;
+  index: number;
 }
 
 // 日付処理はこれが世界最速です（ライブラリ不要）
@@ -13,8 +14,11 @@ const dateFormatter = new Intl.DateTimeFormat("ja-JP", {
   day: "numeric",
 });
 
-export const TimelineItem = ({ post }: Props) => {
+export const TimelineItem = ({ post, index }: Props) => {
   const navigate = useNavigate();
+
+  // Above-the-fold判定: 最初の3個は即座に読み込む（LCP対策）
+  const isAboveFold = index < 3;
 
   // クリック判定もシンプルに（余計なループを回さない）
   const handleClick = useCallback<MouseEventHandler>((ev) => {
@@ -43,10 +47,11 @@ export const TimelineItem = ({ post }: Props) => {
             <img
               alt={post.user.profileImage?.alt ?? ""}
               src={post.user.profileImage ? getProfileImagePath(post.user.profileImage.id) : ""}
-              loading="lazy"
+              loading={isAboveFold ? "eager" : "lazy"}
+              fetchPriority={isAboveFold ? "high" : undefined}
               width={64}
               height={64}
-              decoding="async" // ★ ブラウザのデコードを非同期にしてカクつき防止
+              decoding="async"
               className="object-cover bg-gray-100"
             />
           </Link>
@@ -66,7 +71,7 @@ export const TimelineItem = ({ post }: Props) => {
           */}
           {post.images?.length > 0 && (
             <div className="mt-2">
-              <ImageArea images={post.images} />
+              <ImageArea images={post.images} priority={isAboveFold} />
             </div>
           )}
         </div>
