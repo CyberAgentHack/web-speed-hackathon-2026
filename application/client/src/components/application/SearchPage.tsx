@@ -40,6 +40,7 @@ const SearchInput = (
       <input
         {...input}
         onChange={handleChange}
+        aria-label="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
         className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
           showError
             ? "border-cax-danger focus:border-cax-danger"
