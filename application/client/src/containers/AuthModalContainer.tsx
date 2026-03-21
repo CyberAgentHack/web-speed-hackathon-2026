@@ -17,14 +17,11 @@ const ERROR_MESSAGES: Record<string, string> = {
 };
 
 function getErrorCode(err: unknown, type: "signin" | "signup"): string {
-  if (
-    typeof err === "object" &&
-    err !== null &&
-    "code" in err &&
-    typeof (err as Record<string, unknown>).code === "string" &&
-    Object.keys(ERROR_MESSAGES).includes((err as Record<string, unknown>).code as string)
-  ) {
-    return ERROR_MESSAGES[(err as Record<string, unknown>).code as string]!;
+  if (typeof err === "object" && err !== null && "code" in err) {
+    const code = (err as { code: unknown })["code"];
+    if (typeof code === "string" && Object.keys(ERROR_MESSAGES).includes(code)) {
+      return ERROR_MESSAGES[code]!;
+    }
   }
   return type === "signup" ? "登録に失敗しました" : "パスワードが異なります";
 }
