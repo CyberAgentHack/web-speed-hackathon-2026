@@ -1,12 +1,10 @@
-import { memo } from "react";
-
 import { TimelineItem } from "@web-speed-hackathon-2026/client/src/components/timeline/TimelineItem";
 
 interface Props {
   timeline: Models.Post[];
 }
 
-export const Timeline = memo(({ timeline }: Props) => {
+export const Timeline = ({ timeline }: Props) => {
   return (
     <section>
       {timeline.map((post) => {
@@ -14,4 +12,4 @@ export const Timeline = memo(({ timeline }: Props) => {
       })}
     </section>
   );
-});
+};
