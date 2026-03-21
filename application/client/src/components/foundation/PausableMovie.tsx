@@ -42,6 +42,7 @@ export const PausableMovie = ({ src }: Props) => {
           onPause={() => setIsPlaying(false)}
           onPlay={() => setIsPlaying(true)}
           playsInline
+          preload="metadata"
           src={src}
         />
         <div
