@@ -105,7 +105,8 @@ const config = {
     },
   },
   cache: env === "production" ? false : { type: "filesystem" },
-  optimization: env === "production" ? {
+  optimization: {
+    minimize: true,
     minimizer: [
       new TerserPlugin({
         parallel: true,
@@ -126,8 +127,6 @@ const config = {
         },
       },
     },
-  } : {
-    minimize: false,
   },
   ignoreWarnings: [],
 };
