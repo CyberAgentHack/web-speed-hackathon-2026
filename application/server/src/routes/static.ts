@@ -22,7 +22,10 @@ const LCP_PRELOADS: Array<{
     pattern: /^\/$/,
     getLinks: () => {
       const movieId = "51a14d70-9dd6-45ad-9f87-64af91ec2779";
-      return `<link rel="preload" as="image" fetchpriority="high" href="/movies/${movieId}_poster.webp">`;
+      return [
+        `<link rel="preload" as="image" fetchpriority="high" href="/movies/${movieId}_poster.webp">`,
+        '<link rel="preload" as="fetch" href="/api/v1/posts?limit=5&offset=0" crossorigin>',
+      ].join('\n');
     },
   },
   {
@@ -48,6 +51,43 @@ const LCP_PRELOADS: Array<{
       return [
         '<link rel="preload" as="font" type="font/woff2" href="/fonts/ReiNoAreMincho-Heavy.woff2" crossorigin>',
         '<link rel="preload" as="font" type="font/woff2" href="/fonts/ReiNoAreMincho-Regular.woff2" crossorigin>',
+      ].join('\n');
+    },
+  },
+  {
+    // Text post detail - preload API response and profile image
+    pattern: /^\/posts\/ff93a168-ea7c-4202-9879-672382febfda$/,
+    getLinks: () => {
+      return [
+        '<link rel="preload" as="fetch" href="/api/v1/posts/ff93a168-ea7c-4202-9879-672382febfda" crossorigin>',
+        '<link rel="preload" as="image" fetchpriority="high" href="/images/profiles/3dd3640a-5f9e-40d0-8daf-bfdb473b129e.webp">',
+      ].join('\n');
+    },
+  },
+  {
+    // Audio post detail - preload API response and profile image
+    pattern: /^\/posts\/fefe75bd-1b7a-478c-8ecc-2c1ab38b821e$/,
+    getLinks: () => {
+      return [
+        '<link rel="preload" as="fetch" href="/api/v1/posts/fefe75bd-1b7a-478c-8ecc-2c1ab38b821e" crossorigin>',
+        '<link rel="preload" as="image" fetchpriority="high" href="/images/profiles/84ba6fee-d167-43c4-8b10-d94caa923f48.webp">',
+      ].join('\n');
+    },
+  },
+  {
+    // DM list - preload API response
+    pattern: /^\/dm$/,
+    getLinks: () => {
+      return '<link rel="preload" as="fetch" href="/api/v1/dm" crossorigin>';
+    },
+  },
+  {
+    // DM detail - preload API response and peer profile image
+    pattern: /^\/dm\/33881deb-da8a-4ca9-a153-2f80d5fa7af8$/,
+    getLinks: () => {
+      return [
+        '<link rel="preload" as="fetch" href="/api/v1/dm/33881deb-da8a-4ca9-a153-2f80d5fa7af8" crossorigin>',
+        '<link rel="preload" as="image" fetchpriority="high" href="/images/profiles/dbe9b1f0-9822-4f77-9635-f9fd64e2b4e5.webp">',
       ].join('\n');
     },
   },
