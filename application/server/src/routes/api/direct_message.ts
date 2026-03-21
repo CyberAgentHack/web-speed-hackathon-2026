@@ -33,7 +33,7 @@ directMessageRouter.get("/dm", async (req, res) => {
     },
   });
 
-  // Filter out conversations with no messages and sort messages chronologically
+  // Filter out conversations with no messages, sort messages chronologically, then sort conversations by latest message
   const sorted = conversations
     .filter((c) => (c.messages ?? []).length > 0)
     .map((c) => ({
@@ -41,7 +41,12 @@ directMessageRouter.get("/dm", async (req, res) => {
       messages: (c.messages ?? []).sort(
         (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
       ),
-    }));
+    }))
+    .sort((a, b) => {
+      const aLast = a.messages.at(-1);
+      const bLast = b.messages.at(-1);
+      return new Date(bLast?.createdAt ?? 0).getTime() - new Date(aLast?.createdAt ?? 0).getTime();
+    });
 
   return res.status(200).type("application/json").send(sorted);
 });
