@@ -5,6 +5,7 @@ import { UserProfilePage } from "@web-speed-hackathon-2026/client/src/components
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
+import { useTitle } from "@web-speed-hackathon-2026/client/src/hooks/use_title";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 export const UserProfileContainer = () => {
@@ -19,8 +20,10 @@ export const UserProfileContainer = () => {
     fetchJSON,
   );
 
+  useTitle(user ? `${user.name} さんのタイムライン - CaX` : "読込中 - CaX");
+
   if (isLoadingUser) {
-    return <title>読込中 - CaX</title>;
+    return null;
   }
 
   if (user === null) {
@@ -29,7 +32,6 @@ export const UserProfileContainer = () => {
 
   return (
     <InfiniteScroll fetchMore={fetchMore} items={posts}>
-      <title>{user.name} さんのタイムライン - CaX</title>
       <UserProfilePage timeline={posts} user={user} />
     </InfiniteScroll>
   );

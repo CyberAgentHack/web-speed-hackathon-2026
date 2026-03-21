@@ -5,6 +5,7 @@ import { DirectMessageGate } from "@web-speed-hackathon-2026/client/src/componen
 import { DirectMessagePage } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessagePage";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
+import { useTitle } from "@web-speed-hackathon-2026/client/src/hooks/use_title";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
@@ -151,9 +152,10 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   const peer =
     conversation.initiator.id !== activeUser?.id ? conversation.initiator : conversation.member;
 
+  useTitle(`${peer.name} さんとのダイレクトメッセージ - CaX`);
+
   return (
     <>
-      <title>{peer.name} さんとのダイレクトメッセージ - CaX</title>
       <DirectMessagePage
         conversationError={conversationError}
         conversation={conversation}

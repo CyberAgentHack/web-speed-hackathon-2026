@@ -2,6 +2,7 @@ import { SearchPage } from "@web-speed-hackathon-2026/client/src/components/appl
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
 import { useSearchParams } from "@web-speed-hackathon-2026/client/src/hooks/use_search_params";
+import { useTitle } from "@web-speed-hackathon-2026/client/src/hooks/use_title";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 export const SearchContainer = () => {
@@ -13,9 +14,10 @@ export const SearchContainer = () => {
     fetchJSON,
   );
 
+  useTitle("検索 - CaX");
+
   return (
     <InfiniteScroll fetchMore={fetchMore} items={posts}>
-      <title>検索 - CaX</title>
       <SearchPage query={query} results={posts} />
     </InfiniteScroll>
   );
