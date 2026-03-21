@@ -126,8 +126,11 @@ const config = {
       url: false,
     },
   },
-  //デフォルトの optimization が適応されるように、空のオブジェクトを設定
-  optimization: {},
+  optimization: {
+    splitChunks: {
+      chunks: "all",
+    },
+  },
   cache: false,
   ignoreWarnings: [
     {
