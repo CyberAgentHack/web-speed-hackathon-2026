@@ -26,7 +26,6 @@ export const SearchPage = ({ query, results, defaultValues }: Props) => {
   const {
     register,
     handleSubmit,
-    setError,
     reset,
     formState: { errors, touchedFields, isSubmitted },
   } = useForm<SearchFormData>({
