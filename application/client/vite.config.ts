@@ -20,14 +20,6 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			"@web-speed-hackathon-2026/client": path.resolve(__dirname, "."),
-			"bayesian-bm25$": path.resolve(
-				__dirname,
-				"node_modules/bayesian-bm25/dist/index.js",
-			),
-			kuromoji$: path.resolve(
-				__dirname,
-				"node_modules/kuromoji/build/kuromoji.js",
-			),
 		},
 	},
 	define: {
@@ -37,19 +29,7 @@ export default defineConfig({
 			process.env.NODE_ENV || "production",
 		),
 	},
-	build: {
-		rollupOptions: {
-			output: {
-				manualChunks(id) {
-					if (id.includes("node_modules")) {
-						if (/kuromoji|negaposi|bayesian-bm25/.test(id)) {
-							return "nlp";
-						}
-					}
-				},
-			},
-		},
-	},
+	build: {},
 	ssr: {
 		noExternal: true,
 	},

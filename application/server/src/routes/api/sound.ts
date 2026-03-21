@@ -1,8 +1,5 @@
-import { execFile } from "child_process";
 import { promises as fs } from "fs";
-import os from "os";
 import path from "path";
-import { promisify } from "util";
 
 import { Router } from "express";
 import httpErrors from "http-errors";
@@ -10,8 +7,6 @@ import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import { extractMetadataFromSound } from "@web-speed-hackathon-2026/server/src/utils/extract_metadata_from_sound";
-
-const execFileAsync = promisify(execFile);
 
 const EXTENSION = "mp3";
 const PEAK_COUNT = 100;
@@ -92,72 +87,19 @@ function computePeaksFromWav(buf: Buffer): PeaksData | null {
   return { max, peaks };
 }
 
-async function generatePeaksFfmpeg(mp3Path: string, peaksPath: string): Promise<void> {
-  const { stdout } = await execFileAsync(
-    "ffmpeg",
-    ["-i", mp3Path, "-f", "f32le", "-ac", "1", "-ar", "22050", "-"],
-    { encoding: "buffer", maxBuffer: 50 * 1024 * 1024 },
-  );
-
-  const samples = new Float32Array(stdout.buffer, stdout.byteOffset, stdout.byteLength / 4);
-  const len = samples.length;
-  const chunkSize = Math.ceil(len / PEAK_COUNT);
-  const peaks: number[] = [];
-
-  for (let i = 0; i < len; i += chunkSize) {
-    let sum = 0;
-    const end = Math.min(i + chunkSize, len);
-    for (let j = i; j < end; j++) {
-      sum += Math.abs(samples[j]!);
-    }
-    peaks.push(sum / (end - i));
-  }
-
-  let max = 0;
-  for (const p of peaks) {
-    if (p > max) max = p;
-  }
-
-  await fs.writeFile(peaksPath, JSON.stringify({ max, peaks }));
-}
-
 export const soundRouter = Router();
 
-async function convertAndSaveSound(inputBuffer: Buffer, soundId: string): Promise<void> {
+async function saveSound(inputBuffer: Buffer, soundId: string): Promise<void> {
   const soundsDir = path.resolve(UPLOAD_PATH, "sounds");
   await fs.mkdir(soundsDir, { recursive: true });
 
-  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "sound-"));
-  const tmpInput = path.join(tmpDir, "input");
-  const tmpOutput = path.join(tmpDir, `output.${EXTENSION}`);
-
-  try {
-    await fs.writeFile(tmpInput, inputBuffer);
-
-    await execFileAsync("ffmpeg", [
-      "-i", tmpInput,
-      "-y",
-      "-vn",
-      "-codec:a", "libmp3lame",
-      "-q:a", "4",
-      "-ar", "22050",
-      tmpOutput,
-    ]);
-
-    const mp3Buffer = await fs.readFile(tmpOutput);
-    const filePath = path.resolve(soundsDir, `${soundId}.${EXTENSION}`);
-    await fs.writeFile(filePath, mp3Buffer);
-  } finally {
-    await fs.rm(tmpDir, { recursive: true, force: true });
-  }
+  const filePath = path.resolve(soundsDir, `${soundId}.${EXTENSION}`);
+  await fs.writeFile(filePath, inputBuffer);
 
   const peaksPath = path.resolve(soundsDir, `${soundId}.peaks.json`);
   const wavPeaks = computePeaksFromWav(inputBuffer);
   if (wavPeaks) {
     await fs.writeFile(peaksPath, JSON.stringify(wavPeaks));
-  } else {
-    const mp3Path = path.resolve(soundsDir, `${soundId}.${EXTENSION}`);
-    await generatePeaksFfmpeg(mp3Path, peaksPath);
   }
 }
 
@@ -174,10 +116,10 @@ soundRouter.post("/sounds", async (req, res) => {
   const { artist, title } = await extractMetadataFromSound(inputBuffer);
   const soundId = uuidv4();
 
-  // Return metadata immediately, convert in background
+  // Save WAV directly (no FFmpeg conversion needed)
   res.status(200).type("application/json").send({ artist, id: soundId, title });
 
-  convertAndSaveSound(inputBuffer, soundId).catch((err) => {
-    console.error("Sound conversion failed:", err);
+  saveSound(inputBuffer, soundId).catch((err) => {
+    console.error("Sound save failed:", err);
   });
 });
