@@ -47,6 +47,9 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
   const handleChangeImages = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
     const files = Array.from(ev.currentTarget.files ?? []).slice(0, 4);
+    if (files.length === 0) {
+      return;
+    }
     const isValid = files.every((file) => file.size <= MAX_UPLOAD_BYTES_LIMIT);
 
     setHasFileError(isValid !== true);
@@ -70,33 +73,49 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
           setIsConverting(false);
         })
-        .catch(console.error);
+        .catch((error) => {
+          console.error(error);
+          setIsConverting(false);
+          setHasFileError(true);
+        });
     }
   }, []);
 
   const handleChangeSound = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
-    const file = Array.from(ev.currentTarget.files ?? [])[0]!;
+    const file = Array.from(ev.currentTarget.files ?? [])[0];
+    if (file == null) {
+      return;
+    }
     const isValid = file.size <= MAX_UPLOAD_BYTES_LIMIT;
 
     setHasFileError(isValid !== true);
     if (isValid) {
       setIsConverting(true);
 
-      convertSound(file, { extension: "mp3" }).then((converted) => {
-        setParams((params) => ({
-          ...params,
-          images: [],
-          movie: undefined,
-          sound: new File([converted], "converted.mp3", { type: "audio/mpeg" }),
-        }));
+      convertSound(file, { extension: "mp3" })
+        .then((converted) => {
+          setParams((params) => ({
+            ...params,
+            images: [],
+            movie: undefined,
+            sound: new File([converted], "converted.mp3", { type: "audio/mpeg" }),
+          }));
 
-        setIsConverting(false);
-      });
+          setIsConverting(false);
+        })
+        .catch((error) => {
+          console.error(error);
+          setIsConverting(false);
+          setHasFileError(true);
+        });
     }
   }, []);
 
   const handleChangeMovie = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
-    const file = Array.from(ev.currentTarget.files ?? [])[0]!;
+    const file = Array.from(ev.currentTarget.files ?? [])[0];
+    if (file == null) {
+      return;
+    }
     const isValid = file.size <= MAX_UPLOAD_BYTES_LIMIT;
 
     setHasFileError(isValid !== true);
@@ -116,7 +135,11 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
           setIsConverting(false);
         })
-        .catch(console.error);
+        .catch((error) => {
+          console.error(error);
+          setIsConverting(false);
+          setHasFileError(true);
+        });
     }
   }, []);
 
@@ -139,6 +162,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
         className="border-cax-border placeholder-cax-text-subtle focus:outline-cax-brand w-full resize-none rounded-xl border px-3 py-2 focus:outline-2 focus:outline-offset-2"
         rows={4}
         onChange={handleChangeText}
+        value={params.text}
         placeholder="いまなにしてる？"
       />
 
@@ -167,7 +191,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       </div>
 
       <ModalSubmitButton
-        disabled={isConverting || isLoading || params.text === ""}
+        disabled={isConverting || isLoading || params.text.trim() === ""}
         loading={isConverting || isLoading}
       >
         {isConverting || isLoading ? "変換中" : "投稿する"}
