@@ -10,6 +10,8 @@ import {
 } from "@web-speed-hackathon-2026/server/src/models";
 
 export const directMessageRouter = Router();
+const DEFAULT_DM_MESSAGES_LIMIT = 50;
+const MAX_DM_MESSAGES_LIMIT = 200;
 
 directMessageRouter.get("/dm", async (req, res) => {
   if (req.session.userId === undefined) {
@@ -120,6 +122,14 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
+  const limitValue = Number.parseInt(`${req.query["limit"] ?? DEFAULT_DM_MESSAGES_LIMIT}`, 10);
+  const offsetValue = Number.parseInt(`${req.query["offset"] ?? 0}`, 10);
+  const limit =
+    Number.isNaN(limitValue) || limitValue < 1
+      ? DEFAULT_DM_MESSAGES_LIMIT
+      : Math.min(limitValue, MAX_DM_MESSAGES_LIMIT);
+  const offset = Number.isNaN(offsetValue) || offsetValue < 0 ? 0 : offsetValue;
+
   const conversation = await DirectMessageConversation.unscoped().findOne({
     include: [
       {
@@ -132,12 +142,6 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
         attributes: ["id", "username", "name"],
         include: [{ association: "profileImage", attributes: ["id", "alt"] }],
       },
-      {
-        association: "messages",
-        attributes: ["id", "body", "isRead", "createdAt"],
-        include: [{ association: "sender", attributes: ["id"] }],
-        required: false,
-      },
     ],
     where: {
       id: req.params.conversationId,
@@ -148,7 +152,22 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
     throw new httpErrors.NotFound();
   }
 
-  return res.status(200).type("application/json").send(conversation);
+  const messages = await DirectMessage.findAll({
+    attributes: ["id", "body", "isRead", "createdAt"],
+    include: [{ association: "sender", attributes: ["id"] }],
+    where: { conversationId: conversation.id },
+    order: [["createdAt", "DESC"]],
+    limit,
+    offset,
+  });
+  const pagedMessages = messages
+    .map((message) => message.toJSON())
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+  return res
+    .status(200)
+    .type("application/json")
+    .send({ ...conversation.toJSON(), messages: pagedMessages });
 });
 
 directMessageRouter.ws("/dm/:conversationId", async (req, _res) => {
