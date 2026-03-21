@@ -17,12 +17,12 @@ export const TimelineItem = ({ post, priority }: Props) => {
     <article className="hover:bg-cax-surface-subtle relative px-1 sm:px-4">
       <Link
         aria-hidden="true"
-        className="absolute inset-0"
+        className="absolute inset-0 z-1"
         tabIndex={-1}
         to={`/posts/${post.id}`}
       />
       <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
-        <div className="relative z-1 shrink-0 grow-0 pr-2 sm:pr-4">
+        <div className="relative z-2 shrink-0 grow-0 pr-2 sm:pr-4">
           <Link
             className="border-cax-border bg-cax-surface-subtle block h-12 w-12 overflow-hidden rounded-full border hover:opacity-75 sm:h-16 sm:w-16"
             to={`/users/${post.user.username}`}
@@ -41,20 +41,20 @@ export const TimelineItem = ({ post, priority }: Props) => {
         <div className="min-w-0 shrink grow">
           <p className="overflow-hidden text-sm text-ellipsis whitespace-nowrap">
             <Link
-              className="text-cax-text relative z-1 pr-1 font-bold hover:underline"
+              className="text-cax-text relative z-2 pr-1 font-bold hover:underline"
               to={`/users/${post.user.username}`}
             >
               {post.user.name}
             </Link>
             <Link
-              className="text-cax-text-muted relative z-1 pr-1 hover:underline"
+              className="text-cax-text-muted relative z-2 pr-1 hover:underline"
               to={`/users/${post.user.username}`}
             >
               @{post.user.username}
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link
-              className="text-cax-text-muted relative z-1 pr-1 hover:underline"
+              className="text-cax-text-muted relative z-2 pr-1 hover:underline"
               to={`/posts/${post.id}`}
             >
               <time dateTime={new Date(post.createdAt).toISOString()}>
@@ -66,17 +66,17 @@ export const TimelineItem = ({ post, priority }: Props) => {
             <TranslatableText text={post.text} />
           </div>
           {post.images?.length > 0 ? (
-            <div className="relative z-1 mt-2 w-full">
+            <div className="mt-2 w-full">
               <ImageArea images={post.images} {...(priority ? { priority: true } : {})} />
             </div>
           ) : null}
           {post.movie ? (
-            <div className="relative z-1 mt-2 w-full">
+            <div className="mt-2 w-full">
               <MovieArea movie={post.movie} />
             </div>
           ) : null}
           {post.sound ? (
-            <div className="relative z-1 mt-2 w-full">
+            <div className="mt-2 w-full">
               <SoundArea sound={post.sound} />
             </div>
           ) : null}

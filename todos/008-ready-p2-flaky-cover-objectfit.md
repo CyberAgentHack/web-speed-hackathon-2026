@@ -1,5 +1,5 @@
 ---
-status: ready
+status: complete
 priority: p2
 issue_id: "008"
 tags: [e2e, flaky, home, post-detail, image, object-fit]
@@ -21,12 +21,25 @@ flakyテスト:
 エラー: `expect(objectFit).toBe("cover")` で `""` を受け取る。
 画像の読み込みタイミングにより、`getComputedStyle` の結果が空になることがある。
 
-## Proposed Solutions
+## Root Cause
 
-1. 画像のdecode完了を待ってからobjectFitを確認する
-2. CoveredImage コンポーネントに明示的な `style` を設定する（Tailwind class だけでなく）
-3. テスト側でリトライ/待機ロジックを追加する
+`evaluate()` で DOM 要素を取得した後、React の hydration/re-render で要素が detach される。
+detach された要素の `getComputedStyle()` は全プロパティ `""` を返す。
+
+## Fix
+
+テスト側で `evaluate()` + `getComputedStyle()` の手動パターンを
+Playwright の `toHaveCSS()` (auto-retry assertion) に置き換え。
+ロケータを毎回再解決するので detachment・CSS 遅延を自動ハンドリング。
+
+```diff
+- const objectFit = await coveredImage.evaluate((el) => {
+-   return window.getComputedStyle(el).objectFit;
+- });
+- expect(objectFit).toBe("cover");
++ await expect(coveredImage).toHaveCSS("object-fit", "cover");
+```
 
 ## Acceptance Criteria
 
-- [ ] objectFit チェックが安定してパスする
+- [x] objectFit チェックが安定してパスする（3回連続パス確認済）
