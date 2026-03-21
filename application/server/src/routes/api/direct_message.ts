@@ -1,6 +1,6 @@
 import { Router } from "express";
 import httpErrors from "http-errors";
-import { col, where, Op } from "sequelize";
+import { Op } from "sequelize";
 
 import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
 import {
@@ -16,22 +16,66 @@ directMessageRouter.get("/dm", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversations = await DirectMessageConversation.findAll({
+  const userId = req.session.userId;
+
+  // 1. 会話一覧を取得（messages除外、initiator/member + profileImageのみ）
+  const conversations = await DirectMessageConversation.unscoped().findAll({
     where: {
-      [Op.and]: [
-        { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
-        where(col("messages.id"), { [Op.not]: null }),
-      ],
+      [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
     },
-    order: [[col("messages.createdAt"), "DESC"]],
+    include: [
+      { association: "initiator", include: [{ association: "profileImage" }] },
+      { association: "member", include: [{ association: "profileImage" }] },
+    ],
   });
 
-  const sorted = conversations.map((c) => ({
-    ...c.toJSON(),
-    messages: c.messages?.reverse(),
-  }));
+  const conversationIds = conversations.map((c) => c.id);
 
-  return res.status(200).type("application/json").send(sorted);
+  if (conversationIds.length === 0) {
+    return res.status(200).type("application/json").send([]);
+  }
+
+  // 2. 各会話の最新メッセージ1件を取得
+  const lastMessages = await Promise.all(
+    conversationIds.map((id) =>
+      DirectMessage.unscoped().findOne({
+        where: { conversationId: id },
+        order: [["createdAt", "DESC"]],
+        attributes: ["id", "body", "createdAt", "conversationId"],
+      }),
+    ),
+  );
+
+  const lastMessageMap = new Map(
+    lastMessages.filter((m) => m !== null).map((m) => [m.conversationId, m]),
+  );
+
+  // 3. 未読がある会話IDのSetを取得
+  const unreadRows = await DirectMessage.unscoped().findAll({
+    attributes: ["conversationId"],
+    where: {
+      conversationId: conversationIds,
+      senderId: { [Op.ne]: userId },
+      isRead: false,
+    },
+    group: ["conversationId"],
+  });
+  const unreadConversationIds = new Set(unreadRows.map((m) => m.conversationId));
+
+  // 4. 結果を組み立てて lastMessage.createdAt DESC でソート
+  const result = conversations
+    .filter((c) => lastMessageMap.has(c.id))
+    .map((c) => ({
+      ...c.toJSON(),
+      lastMessage: lastMessageMap.get(c.id)!.toJSON(),
+      hasUnread: unreadConversationIds.has(c.id),
+    }))
+    .sort(
+      (a, b) =>
+        new Date(b.lastMessage.createdAt).getTime() - new Date(a.lastMessage.createdAt).getTime(),
+    );
+
+  return res.status(200).type("application/json").send(result);
 });
 
 directMessageRouter.post("/dm", async (req, res) => {
