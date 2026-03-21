@@ -82,5 +82,7 @@ postRouter.post("/posts", async (req, res) => {
     },
   );
 
+  cache.clear();
+
   return res.status(200).type("application/json").send(post);
 });

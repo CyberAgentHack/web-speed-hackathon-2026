@@ -1,6 +1,8 @@
 /// <reference types="webpack-dev-server" />
 const path = require("path");
 
+const CompressionPlugin = require("compression-webpack-plugin");
+const zlib = require("zlib");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HTMLInlineCSSWebpackPlugin = require("html-inline-css-webpack-plugin").default;
 const HtmlWebpackPlugin = require("html-webpack-plugin");
@@ -86,6 +88,16 @@ const config = {
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
     new HTMLInlineCSSWebpackPlugin({ leaveCSSFile: true }),
+    new CompressionPlugin({
+      algorithm: "gzip",
+      test: /\.(js|css|html|svg)$/,
+    }),
+    new CompressionPlugin({
+      algorithm: "brotliCompress",
+      test: /\.(js|css|html|svg)$/,
+      compressionOptions: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 11 } },
+      filename: "[path][base].br",
+    }),
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js", ".json"],

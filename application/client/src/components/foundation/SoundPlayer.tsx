@@ -33,7 +33,7 @@ export const SoundPlayer = ({ sound }: Props) => {
 
   return (
     <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
-      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} src={soundUrl} />
+      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} preload="none" src={soundUrl} />
       <div className="p-2">
         <button
           className="bg-cax-accent text-cax-surface-raised flex h-8 w-8 items-center justify-center rounded-full text-sm hover:opacity-75"

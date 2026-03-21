@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -15,7 +15,7 @@ interface Props {
 export const PausableMovie = ({ src, poster }: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const prefersReducedMotion = useMemo(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches, []);
   const [isPlaying, setIsPlaying] = useState(!prefersReducedMotion);
 
   const handleClick = useCallback(() => {

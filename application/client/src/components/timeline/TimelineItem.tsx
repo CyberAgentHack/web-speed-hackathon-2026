@@ -1,5 +1,5 @@
 import { formatLL, toISOString } from "@web-speed-hackathon-2026/client/src/utils/format_date";
-import { MouseEventHandler, useCallback } from "react";
+import { MouseEventHandler, memo, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
@@ -31,7 +31,7 @@ interface Props {
   priority?: boolean;
 }
 
-export const TimelineItem = ({ post, priority }: Props) => {
+export const TimelineItem = memo(({ post, priority }: Props) => {
   const navigate = useNavigate();
 
   /**
@@ -108,4 +108,4 @@ export const TimelineItem = ({ post, priority }: Props) => {
       </div>
     </article>
   );
-};
+});

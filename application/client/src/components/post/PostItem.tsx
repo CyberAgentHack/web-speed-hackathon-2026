@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { formatLL, toISOString } from "@web-speed-hackathon-2026/client/src/utils/format_date";
 
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
@@ -11,7 +12,7 @@ interface Props {
   post: Models.Post;
 }
 
-export const PostItem = ({ post }: Props) => {
+export const PostItem = memo(({ post }: Props) => {
   return (
     <article className="px-1 sm:px-4">
       <div className="border-cax-border border-b px-4 pt-4 pb-4">
@@ -78,4 +79,4 @@ export const PostItem = ({ post }: Props) => {
       </div>
     </article>
   );
-};
+});
