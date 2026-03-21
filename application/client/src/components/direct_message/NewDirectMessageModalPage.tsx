@@ -1,4 +1,4 @@
-import { Field, InjectedFormProps, reduxForm } from "redux-form";
+import { ChangeEvent, FocusEvent, FormEvent, useCallback, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FormInputField } from "@web-speed-hackathon-2026/client/src/components/foundation/FormInputField";
@@ -9,28 +9,65 @@ import { validate } from "@web-speed-hackathon-2026/client/src/direct_message/va
 
 interface Props {
   id: string;
+  onSubmit: (values: NewDirectMessageFormData) => Promise<void>;
 }
 
-const NewDirectMessageModalPageComponent = ({
-  id,
-  invalid,
-  error,
-  submitting,
-  handleSubmit,
-}: Props & InjectedFormProps<NewDirectMessageFormData, Props>) => {
+export const NewDirectMessageModalPage = ({ id, onSubmit }: Props) => {
+  const [values, setValues] = useState<NewDirectMessageFormData>({ username: "" });
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | undefined>();
+
+  const errors = validate(values);
+  const invalid = Object.keys(errors).length > 0;
+
+  const handleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setValues((prev) => ({ ...prev, [name]: value }));
+  }, []);
+
+  const handleBlur = useCallback((e: FocusEvent<HTMLInputElement>) => {
+    const { name } = e.target;
+    setTouched((prev) => ({ ...prev, [name]: true }));
+  }, []);
+
+  const handleSubmit = useCallback(
+    async (e: FormEvent) => {
+      e.preventDefault();
+      setTouched({ username: true });
+      if (invalid) return;
+      setSubmitting(true);
+      setError(undefined);
+      try {
+        await onSubmit(values);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("エラーが発生しました");
+        }
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [invalid, onSubmit, values],
+  );
+
   return (
     <div className="grid gap-y-6">
       <h2 className="text-center text-2xl font-bold">新しくDMを始める</h2>
 
       <form className="flex flex-col gap-y-6" onSubmit={handleSubmit}>
-        <Field
+        <FormInputField
           name="username"
-          component={FormInputField}
-          props={{
-            label: "ユーザー名",
-            placeholder: "username",
-            leftItem: <span className="text-cax-text-subtle leading-none">@</span>,
-          }}
+          label="ユーザー名"
+          placeholder="username"
+          leftItem={<span className="text-cax-text-subtle leading-none">@</span>}
+          value={values.username}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          error={errors.username}
+          touched={touched.username}
         />
 
         <div className="grid gap-y-2">
@@ -47,11 +84,3 @@ const NewDirectMessageModalPageComponent = ({
     </div>
   );
 };
-
-export const NewDirectMessageModalPage = reduxForm<NewDirectMessageFormData, Props>({
-  form: "newDirectMessage",
-  validate,
-  initialValues: {
-    username: "",
-  },
-})(NewDirectMessageModalPageComponent);
