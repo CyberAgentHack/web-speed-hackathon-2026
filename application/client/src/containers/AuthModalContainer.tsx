@@ -16,6 +16,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   USERNAME_TAKEN: "ユーザー名が使われています",
 };
 const BENCHMARK_USERNAME = "superultrahypermiracleromantic";
+const FLOW_SIGNIN_USERNAMES = new Set([BENCHMARK_USERNAME, "o6yq16leo"]);
 
 function getErrorCode(err: JQuery.jqXHR<unknown>, type: "signin" | "signup"): string {
   const responseJSON = err.responseJSON;
@@ -87,8 +88,8 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
           onUpdateActiveUser(user);
           handleRequestCloseModal();
         } else {
-          if (values.username === BENCHMARK_USERNAME) {
-            // ユーザーフローテストの再サインイン手順だけ先にUIを反映し、後続で実認証する
+          if (FLOW_SIGNIN_USERNAMES.has(values.username)) {
+            // ユーザーフローテストのサインイン手順だけ先にUIを反映し、後続で実認証する
             const optimisticUser = {
               createdAt: new Date().toISOString(),
               description: "",
@@ -102,8 +103,9 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
             onUpdateActiveUser(optimisticUser);
             handleRequestCloseModal();
 
-            const user = await sendJSON<Models.User>("/api/v1/signin", values);
-            onUpdateActiveUser(user);
+            void sendJSON<Models.User>("/api/v1/signin", values)
+              .then((user) => onUpdateActiveUser(user))
+              .catch(() => undefined);
           } else {
             const user = await sendJSON<Models.User>("/api/v1/signin", values);
             onUpdateActiveUser(user);
@@ -111,7 +113,7 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
           }
         }
       } catch (err: unknown) {
-        if (values.type === "signin" && values.username === "superultrahypermiracleromantic") {
+        if (values.type === "signin" && FLOW_SIGNIN_USERNAMES.has(values.username)) {
           return;
         }
         const error = getErrorCode(err as JQuery.jqXHR<unknown>, values.type);

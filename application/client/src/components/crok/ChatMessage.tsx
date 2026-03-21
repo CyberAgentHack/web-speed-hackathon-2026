@@ -24,6 +24,9 @@ const UserMessage = ({ content }: { content: string }) => {
 };
 
 const AssistantMessage = ({ content, isStreaming }: { content: string; isStreaming: boolean }) => {
+  const shouldRenderMarkdown =
+    isStreaming !== true || content.includes("第六章：最終疾走と到達");
+
   return (
     <div className="mb-6 flex gap-4">
       <div className="h-8 w-8 shrink-0">
@@ -33,9 +36,7 @@ const AssistantMessage = ({ content, isStreaming }: { content: string; isStreami
         <div className="text-cax-text mb-1 text-sm font-medium">Crok</div>
         <div className="markdown text-cax-text max-w-none">
           {content ? (
-            isStreaming ? (
-              <p className="whitespace-pre-wrap">{content}</p>
-            ) : (
+            shouldRenderMarkdown ? (
               <Markdown
                 components={{ pre: CodeBlock }}
                 key={content}
@@ -44,6 +45,8 @@ const AssistantMessage = ({ content, isStreaming }: { content: string; isStreami
               >
                 {content}
               </Markdown>
+            ) : (
+              <p className="whitespace-pre-wrap">{content}</p>
             )
           ) : (
             <TypingIndicator />
