@@ -1,5 +1,5 @@
 import { ImageIFD, load } from "piexifjs";
-import { MouseEvent, useCallback, useEffect, useId, useState } from "react";
+import { MouseEvent, useCallback, useId, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
@@ -26,21 +26,27 @@ async function fetchAlt(src: string): Promise<string> {
 export const CoveredImage = ({ src }: Props) => {
   const dialogId = useId();
   const [alt, setAlt] = useState("");
+  const [altLoaded, setAltLoaded] = useState(false);
 
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
     ev.stopPropagation();
   }, []);
 
-  useEffect(() => {
-    fetchAlt(src).then(setAlt);
-  }, [src]);
+  const handleShowAlt = useCallback(() => {
+    if (!altLoaded) {
+      fetchAlt(src).then((text) => {
+        setAlt(text);
+        setAltLoaded(true);
+      });
+    }
+  }, [src, altLoaded]);
 
   return (
     <div className="relative h-full w-full overflow-hidden">
       <img
-        alt={alt}
+        alt=""
         className="absolute inset-0 h-full w-full object-cover"
-        fetchPriority="high"
+        loading="lazy"
         src={src}
       />
 
@@ -49,6 +55,7 @@ export const CoveredImage = ({ src }: Props) => {
         type="button"
         command="show-modal"
         commandfor={dialogId}
+        onClick={handleShowAlt}
       >
         ALT を表示する
       </button>
@@ -57,7 +64,7 @@ export const CoveredImage = ({ src }: Props) => {
         <div className="grid gap-y-6">
           <h1 className="text-center text-2xl font-bold">画像の説明</h1>
 
-          <p className="text-sm">{alt ?? "読み込み中..."}</p>
+          <p className="text-sm">{altLoaded ? alt || "（説明なし）" : "読み込み中..."}</p>
 
           <Button variant="secondary" command="close" commandfor={dialogId}>
             閉じる
