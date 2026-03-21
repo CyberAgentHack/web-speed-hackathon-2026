@@ -63,6 +63,25 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   const handleSubmit = useCallback(
     async (params: DirectMessageFormData) => {
+      if (conversation !== null && activeUser !== null) {
+        const optimisticMessage: Models.DirectMessage = {
+          body: params.body,
+          createdAt: new Date().toISOString(),
+          id: `optimistic-${Date.now()}`,
+          isRead: false,
+          sender: activeUser,
+          updatedAt: new Date().toISOString(),
+        };
+        setConversation((prev) =>
+          prev === null
+            ? prev
+            : {
+                ...prev,
+                messages: [...prev.messages, optimisticMessage],
+              },
+        );
+      }
+
       setIsSubmitting(true);
       try {
         await sendJSON(`/api/v1/dm/${conversationId}/messages`, {
@@ -73,7 +92,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
         setIsSubmitting(false);
       }
     },
-    [conversationId, loadConversation],
+    [activeUser, conversation, conversationId, loadConversation],
   );
 
   const handleTyping = useCallback(async () => {
