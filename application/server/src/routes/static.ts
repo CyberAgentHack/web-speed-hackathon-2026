@@ -11,20 +11,22 @@ export const staticRouter = Router();
 
 staticRouter.use(
   serveStatic(UPLOAD_PATH, {
-    maxAge: "1m",
+    immutable: true,
+    maxAge: "1y",
   }),
 );
 
 staticRouter.use(
   serveStatic(PUBLIC_PATH, {
-    maxAge: "1m",
+    immutable: true,
+    maxAge: "1y",
   }),
 );
 
 staticRouter.use(
   serveStatic(CLIENT_DIST_PATH, {
     index: false,
-    maxAge: "1m",
+    maxAge: "1h",
   }),
 );
 

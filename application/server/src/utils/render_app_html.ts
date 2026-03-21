@@ -163,7 +163,7 @@ function renderAppShell(content: string): string {
 
 function renderTimelineShell(posts: Array<any>): string {
   return posts
-    .slice(0, 2)
+    .slice(0, 1)
     .map((post, index) => {
       const profileImage = post.user?.profileImage?.id
         ? `<img alt="${escapeHtml(post.user.profileImage.alt ?? "")}" class="h-full w-full object-cover" decoding="${index === 0 ? "sync" : "async"}" fetchpriority="${index === 0 ? "high" : "auto"}" height="64" loading="${index === 0 ? "eager" : "lazy"}" src="${getProfileImagePath(post.user.profileImage.id)}" width="64" />`
@@ -232,7 +232,7 @@ function renderPostShell(post: any): string {
 
 function renderDmListShell(conversations: Array<any>, activeUserId: string): string {
   const items = conversations
-    .slice(0, 4)
+    .slice(0, 1)
     .map((conversation) => {
       const peer =
         conversation.initiator.id !== activeUserId ? conversation.initiator : conversation.member;

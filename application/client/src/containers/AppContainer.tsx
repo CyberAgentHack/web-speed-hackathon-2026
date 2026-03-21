@@ -1,6 +1,6 @@
 import { Suspense, lazy, useCallback, useEffect, useId, useRef, useState } from "react";
 import { HelmetProvider } from "react-helmet";
-import { Route, Routes, useLocation, useNavigate } from "react-router";
+import { Route, Routes, useLocation } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
@@ -23,7 +23,6 @@ const LazyCrokContainer = lazy(async () => {
 
 export const AppContainer = () => {
   const { pathname } = useLocation();
-  const navigate = useNavigate();
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
@@ -106,8 +105,7 @@ export const AppContainer = () => {
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
     applyActiveUser(null);
-    navigate("/");
-  }, [applyActiveUser, navigate]);
+  }, [applyActiveUser]);
 
   const authModalId = useId();
   const newPostModalId = useId();
