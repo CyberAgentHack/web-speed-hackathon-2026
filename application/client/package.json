@@ -5,7 +5,9 @@
   "license": "MPL-2.0",
   "author": "CyberAgent, Inc.",
   "scripts": {
-    "build": "NODE_ENV=production rspack build",
+    "build": "pnpm build:web && pnpm build:css",
+    "build:web": "NODE_ENV=production rspack build",
+    "build:css": "pnpm tailwindcss -i ./src/index.css -o ./src/root.css -m",
     "dev": "concurrently 'pnpm dev:serve' 'pnpm dev:css'",
     "dev:serve": "rspack serve",
     "dev:css": "pnpm tailwindcss -i ./src/index.css -o ./src/root.css --watch",

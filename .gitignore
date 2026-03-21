@@ -221,3 +221,4 @@ application/upload/**
 !application/upload/**/
 !application/upload/**/.gitkeep
 /application/server/meta.txt
+/application/client/src/root.css
