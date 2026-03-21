@@ -3,16 +3,13 @@ import { Helmet, HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
+import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
+import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
+import { TermContainer } from "@web-speed-hackathon-2026/client/src/containers/TermContainer";
 import {
   fetchJSON,
   sendJSON,
 } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
-
-const AuthModalContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/AuthModalContainer").then(
-    (m) => ({ default: m.AuthModalContainer }),
-  ),
-);
 const CrokContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/CrokContainer").then(
     (m) => ({ default: m.CrokContainer }),
@@ -33,11 +30,6 @@ const NewPostModalContainer = lazy(() =>
     (m) => ({ default: m.NewPostModalContainer }),
   ),
 );
-const NotFoundContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/NotFoundContainer").then(
-    (m) => ({ default: m.NotFoundContainer }),
-  ),
-);
 const PostContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/PostContainer").then(
     (m) => ({ default: m.PostContainer }),
@@ -46,11 +38,6 @@ const PostContainer = lazy(() =>
 const SearchContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/SearchContainer").then(
     (m) => ({ default: m.SearchContainer }),
-  ),
-);
-const TermContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/TermContainer").then(
-    (m) => ({ default: m.TermContainer }),
   ),
 );
 const TimelineContainer = lazy(() =>
