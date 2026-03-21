@@ -70,5 +70,6 @@ postRouter.post("/posts", async (req, res) => {
     },
   );
 
-  return res.status(200).type("application/json").send(post);
+  const fullPost = await Post.findByPk(post.id);
+  return res.status(200).type("application/json").send(attachWaveform(fullPost!.toJSON()));
 });
