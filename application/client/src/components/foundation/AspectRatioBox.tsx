@@ -1,6 +1,5 @@
-import { ComponentProps, ReactNode } from "react";
-
 import classNames from "classnames";
+import { ComponentProps, ReactNode } from "react";
 
 interface Props extends Omit<ComponentProps<"div">, "children"> {
   aspectRatio: `${number} / ${number}`;
@@ -9,11 +8,7 @@ interface Props extends Omit<ComponentProps<"div">, "children"> {
 
 export const AspectRatioBox = ({ aspectRatio, children, className, style, ...props }: Props) => {
   return (
-    <div
-      {...props}
-      className={classNames("w-full", className)}
-      style={{ ...style, aspectRatio }}
-    >
+    <div {...props} className={classNames("w-full", className)} style={{ ...style, aspectRatio }}>
       {children}
     </div>
   );

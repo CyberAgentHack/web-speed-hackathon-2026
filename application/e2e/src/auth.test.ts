@@ -77,6 +77,18 @@ test.describe("サインイン・新規登録", () => {
     await expect(page.getByRole("button", { name: "登録する" })).toBeEnabled();
   });
 
+  test("16文字以上の英数字のみパスワードでは登録ボタンが無効のまま", async ({ page }) => {
+    await page.getByRole("button", { name: "初めての方はこちら" }).click();
+    await page.getByRole("heading", { name: "新規登録" }).waitFor({ timeout: 10_000 });
+
+    const username = `test_${Date.now().toString(36)}`;
+
+    await page.getByRole("textbox", { name: "ユーザー名" }).pressSequentially(username);
+    await page.getByRole("textbox", { name: "名前" }).pressSequentially("テスト");
+    await page.getByRole("textbox", { name: "パスワード" }).pressSequentially("abcd1234efgh5678");
+    await expect(page.getByRole("button", { name: "登録する" })).toBeDisabled();
+  });
+
   test("サインインに失敗するとエラーが表示される", async ({ page }) => {
     await page.getByRole("textbox", { name: "ユーザー名" }).pressSequentially("o6yq16leo");
     await page.getByRole("textbox", { name: "パスワード" }).pressSequentially("wrong_password");

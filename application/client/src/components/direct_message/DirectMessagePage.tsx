@@ -1,5 +1,14 @@
 import classNames from "classnames";
-import { ChangeEvent, useCallback, useId, useRef, useState, KeyboardEvent, FormEvent } from "react";
+import {
+  ChangeEvent,
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  KeyboardEvent,
+  FormEvent,
+} from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
@@ -26,6 +35,7 @@ export const DirectMessagePage = ({
   onSubmit,
 }: Props) => {
   const formRef = useRef<HTMLFormElement>(null);
+  const previousScrollHeightRef = useRef(0);
   const textAreaId = useId();
 
   const peer =
@@ -34,6 +44,23 @@ export const DirectMessagePage = ({
   const [text, setText] = useState("");
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
+
+  useEffect(() => {
+    const observer = new ResizeObserver(() => {
+      const nextHeight = document.body.scrollHeight;
+      if (nextHeight <= previousScrollHeightRef.current) {
+        return;
+      }
+      previousScrollHeightRef.current = nextHeight;
+      window.scrollTo(0, nextHeight);
+    });
+    previousScrollHeightRef.current = document.body.scrollHeight;
+    observer.observe(document.body);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -59,9 +86,6 @@ export const DirectMessagePage = ({
       const currentText = text;
       void onSubmit({ body: currentText.trim() }).then(() => {
         setText((latestText) => (latestText === currentText ? "" : latestText));
-        requestAnimationFrame(() => {
-          window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-        });
       });
     },
     [onSubmit, text],

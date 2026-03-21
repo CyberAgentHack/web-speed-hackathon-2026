@@ -48,9 +48,7 @@ directMessageRouter.get("/dm", async (req, res) => {
 
   const sorted = conversations.map((c) => ({
     ...c.toJSON(),
-    messages: c.messages
-      ?.slice()
-      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime()),
+    messages: c.messages?.slice().sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime()),
   }));
 
   return res.status(200).type("application/json").send(sorted);

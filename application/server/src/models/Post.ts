@@ -41,10 +41,7 @@ export function initPost(sequelize: Sequelize) {
       },
     },
     {
-      indexes: [
-        { fields: ["createdAt"] },
-        { fields: ["userId", "createdAt"] },
-      ],
+      indexes: [{ fields: ["createdAt"] }, { fields: ["userId", "createdAt"] }],
       sequelize,
       defaultScope: {
         attributes: {
