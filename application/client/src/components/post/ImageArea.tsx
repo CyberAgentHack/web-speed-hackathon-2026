@@ -30,7 +30,7 @@ export const ImageArea = ({ images }: Props) => {
             >
               <CoveredImage
                 src={getImagePath(image.id)}
-                loading="lazy"
+                loading={idx === 0 ? "eager" : "lazy"}
               />
             </div>
           );
