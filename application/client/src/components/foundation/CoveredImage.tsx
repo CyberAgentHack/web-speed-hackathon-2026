@@ -1,7 +1,5 @@
 import classNames from "classnames";
-import sizeOf from "image-size";
-import { load, ImageIFD } from "piexifjs";
-import { MouseEvent, RefCallback, useCallback, useId, useMemo, useState } from "react";
+import { MouseEvent, RefCallback, useCallback, useEffect, useId, useMemo, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
@@ -24,14 +22,30 @@ export const CoveredImage = ({ src }: Props) => {
 
   const { data, isLoading } = useFetch(src, fetchBinary);
 
-  const imageSize = useMemo(() => {
-    return data != null ? sizeOf(Buffer.from(data)) : { height: 0, width: 0 };
-  }, [data]);
+  const [imageSize, setImageSize] = useState<{ height: number; width: number }>({ height: 0, width: 0 });
+  const [alt, setAlt] = useState("");
 
-  const alt = useMemo(() => {
-    const exif = data != null ? load(Buffer.from(data).toString("binary")) : null;
-    const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-    return raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
+  useEffect(() => {
+    if (data == null) return;
+    let cancelled = false;
+
+    (async () => {
+      const [{ default: sizeOf }, { load, ImageIFD }] = await Promise.all([
+        import("image-size"),
+        import("piexifjs"),
+      ]);
+
+      if (cancelled) return;
+
+      const size = sizeOf(Buffer.from(data));
+      setImageSize({ height: size.height ?? 0, width: size.width ?? 0 });
+
+      const exif = load(Buffer.from(data).toString("binary"));
+      const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
+      setAlt(raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "");
+    })();
+
+    return () => { cancelled = true; };
   }, [data]);
 
   const blobUrl = useMemo(() => {
@@ -51,7 +65,7 @@ export const CoveredImage = ({ src }: Props) => {
   }
 
   const containerRatio = containerSize.height / containerSize.width;
-  const imageRatio = imageSize?.height / imageSize?.width;
+  const imageRatio = imageSize.height / imageSize.width;
 
   return (
     <div ref={callbackRef} className="relative h-full w-full overflow-hidden">
