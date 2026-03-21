@@ -27,6 +27,7 @@ staticRouter.use(
 staticRouter.use(
   serveStatic(CLIENT_DIST_PATH, {
     etag: false,
+    index: false,
     lastModified: false,
   }),
 );
