@@ -54,6 +54,15 @@
     @apply decoration-cax-text-subtle line-through;
   }
 
+  /* コードブロック */
+  :where(pre) {
+    @apply my-6;
+    font-size: 14px;
+    padding: 24px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--color-cax-border);
+  }
+
   /* ブロック要素 */
   :where(p) {
     @apply text-cax-text my-6;

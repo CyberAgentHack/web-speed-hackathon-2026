@@ -18,11 +18,15 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
         return prevContent + (data.text ?? "");
       },
       onDone: (data: Models.SSEChunk) => data.done === true,
-      onComplete: (finalContent: string) => {
+      onComplete: (finalContent: string, lastData: Models.SSEChunk) => {
         setMessages((prev) => {
           const lastMessage = prev[prev.length - 1];
           if (lastMessage?.role === "assistant") {
-            return [...prev.slice(0, -1), { ...lastMessage, content: finalContent }];
+            const updated: Models.ChatMessage = { ...lastMessage, content: finalContent };
+            if (lastData.highlighted) {
+              updated.highlightedHtml = lastData.highlighted;
+            }
+            return [...prev.slice(0, -1), updated];
           }
           return prev;
         });
@@ -38,7 +42,7 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
   const displayMessages = useMemo(() => {
     if (currentAssistantContent !== null) {
       const lastMessage = messages[messages.length - 1];
-      if (lastMessage?.role === "assistant") {
+      if (lastMessage?.role === "assistant" && !lastMessage.highlightedHtml) {
         return [
           ...messages.slice(0, -1),
           { role: "assistant" as const, content: currentAssistantContent },

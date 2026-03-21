@@ -63,13 +63,23 @@ declare namespace Models {
     messages: DirectMessage[];
   }
 
+  interface DirectMessageConversationListItem {
+    id: string;
+    initiator: User;
+    member: User;
+    messages: DirectMessage[];
+    hasUnread: boolean;
+  }
+
   interface ChatMessage {
     role: "user" | "assistant";
     content: string;
+    highlightedHtml?: string;
   }
 
   interface SSEChunk {
     text?: string;
     done?: boolean;
+    highlighted?: string;
   }
 }

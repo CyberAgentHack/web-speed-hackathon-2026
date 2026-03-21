@@ -1,5 +1,5 @@
 ---
-status: ready
+status: complete
 priority: p1
 issue_id: "010"
 tags: [perf, bundle, lazy, critical-path]

@@ -3,7 +3,7 @@ import { useCallback, useRef, useState } from "react";
 interface SSEOptions<T> {
   onMessage: (data: T, prevContent: string) => string;
   onDone?: (data: T) => boolean;
-  onComplete?: (finalContent: string) => void;
+  onComplete?: (finalContent: string, lastData: T) => void;
 }
 
 interface ReturnValues {
@@ -49,7 +49,7 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
 
         const isDone = options.onDone?.(data) ?? false;
         if (isDone) {
-          options.onComplete?.(contentRef.current);
+          options.onComplete?.(contentRef.current, data);
           stop();
           return;
         }

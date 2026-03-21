@@ -8,6 +8,15 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import type { Tokenizer, IpadicFeatures } from "kuromoji";
 import { streamSSE } from "hono/streaming";
+import rehypeHighlight from "rehype-highlight";
+import rehypeKatex from "rehype-katex";
+import rehypeRaw from "rehype-raw";
+import rehypeStringify from "rehype-stringify";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import remarkParse from "remark-parse";
+import remarkRehype from "remark-rehype";
+import { unified } from "unified";
 
 import { getDb } from "@web-speed-hackathon-2026/server/src/db";
 import { qaSuggestions } from "@web-speed-hackathon-2026/server/src/db/schema";
@@ -15,6 +24,19 @@ import type { SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-8");
+
+const highlightedResponse = String(
+  unified()
+    .use(remarkParse)
+    .use(remarkGfm)
+    .use(remarkMath)
+    .use(remarkRehype, { allowDangerousHtml: true })
+    .use(rehypeRaw)
+    .use(rehypeKatex)
+    .use(rehypeHighlight)
+    .use(rehypeStringify)
+    .processSync(response),
+);
 
 const require = createRequire(import.meta.url);
 
@@ -111,7 +133,7 @@ export const crokRouter = new Hono<SessionEnv>()
         await stream.writeSSE({
           event: "message",
           id: String(messageId),
-          data: JSON.stringify({ text: "", done: true }),
+          data: JSON.stringify({ text: "", done: true, highlighted: highlightedResponse }),
         });
       }
     });

@@ -1,12 +1,10 @@
 import React, { Suspense } from "react";
 import "katex/dist/katex.min.css";
-import rehypeKatex from "rehype-katex";
+import "highlight.js/styles/atom-one-light.css";
 import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
 
 const Markdown = React.lazy(() => import("react-markdown"));
 
-import { CodeBlock } from "@web-speed-hackathon-2026/client/src/components/crok/CodeBlock";
 import { TypingIndicator } from "@web-speed-hackathon-2026/client/src/components/crok/TypingIndicator";
 import { CrokLogo } from "@web-speed-hackathon-2026/client/src/components/foundation/CrokLogo";
 
@@ -24,7 +22,13 @@ const UserMessage = ({ content }: { content: string }) => {
   );
 };
 
-const AssistantMessage = ({ content }: { content: string }) => {
+const AssistantMessage = ({
+  content,
+  highlightedHtml,
+}: {
+  content: string;
+  highlightedHtml?: string;
+}) => {
   return (
     <div className="mb-6 flex gap-4">
       <div className="h-8 w-8 shrink-0">
@@ -33,14 +37,11 @@ const AssistantMessage = ({ content }: { content: string }) => {
       <div className="min-w-0 flex-1">
         <div className="text-cax-text mb-1 text-sm font-medium">Crok</div>
         <div className="markdown text-cax-text max-w-none">
-          {content ? (
+          {highlightedHtml ? (
+            <div dangerouslySetInnerHTML={{ __html: highlightedHtml }} />
+          ) : content ? (
             <Suspense fallback={null}>
-              <Markdown
-                components={{ pre: CodeBlock }}
-                key={content}
-                rehypePlugins={[rehypeKatex]}
-                remarkPlugins={[remarkMath, remarkGfm]}
-              >
+              <Markdown key={content} remarkPlugins={[remarkGfm]}>
                 {content}
               </Markdown>
             </Suspense>
@@ -57,5 +58,10 @@ export const ChatMessage = ({ message }: Props) => {
   if (message.role === "user") {
     return <UserMessage content={message.content} />;
   }
-  return <AssistantMessage content={message.content} />;
+  return (
+    <AssistantMessage
+      content={message.content}
+      {...(message.highlightedHtml != null ? { highlightedHtml: message.highlightedHtml } : {})}
+    />
+  );
 };
