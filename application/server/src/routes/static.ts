@@ -6,7 +6,6 @@ import {
   PUBLIC_PATH,
   UPLOAD_PATH,
 } from "@web-speed-hackathon-2026/server/src/paths";
-import { renderAppHtml } from "@web-speed-hackathon-2026/server/src/utils/render_app_html";
 
 export const staticRouter = Router();
 
@@ -35,6 +34,9 @@ staticRouter.get("/{*splat}", async (req, res, next) => {
   }
 
   try {
+    const { renderAppHtml } = await import(
+      "@web-speed-hackathon-2026/server/src/utils/render_app_html"
+    );
     const html = await renderAppHtml(req);
     return res
       .status(200)
