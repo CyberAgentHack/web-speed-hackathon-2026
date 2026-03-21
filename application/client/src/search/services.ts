@@ -1,4 +1,4 @@
-const DATE_TOKEN_RE = /\b(from|since|until)\s*:?\s*(\d{4}-\d{2}-\d{2})\d*/gi;
+const LEADING_DATE_VALUE_RE = /^(\d{4}-\d{2}-\d{2})/;
 const DATE_VALUE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 const normalizeDateTokenKey = (key: string): "since" | "until" | null => {
@@ -13,6 +13,12 @@ const normalizeDateTokenKey = (key: string): "since" | "until" | null => {
   }
 
   return null;
+};
+
+const extractLeadingDateValue = (rawValue: string): string | null => {
+  const match = LEADING_DATE_VALUE_RE.exec(rawValue);
+
+  return match?.[1] ?? null;
 };
 
 const extractDateFilters = (query: string) => {
@@ -38,12 +44,15 @@ const extractDateFilters = (query: string) => {
     }
 
     const rawValue = token.slice(separatorIndex + 1);
+    const normalizedDateValue = extractLeadingDateValue(rawValue);
+    const resolvedDateValue = normalizedDateValue ?? rawValue ?? null;
+
     if (key === "since") {
-      sinceDate = rawValue || null;
+      sinceDate = resolvedDateValue;
       continue;
     }
 
-    untilDate = rawValue || null;
+    untilDate = resolvedDateValue;
   }
 
   return {
@@ -54,14 +63,26 @@ const extractDateFilters = (query: string) => {
 };
 
 export const sanitizeSearchText = (input: string): string => {
-  let text = input;
+  return input
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((token) => {
+      const separatorIndex = token.indexOf(":");
+      if (separatorIndex <= 0) {
+        return token;
+      }
 
-  text = text.replace(
-    DATE_TOKEN_RE,
-    (_match, key: string, date: string) => `${normalizeDateTokenKey(key) ?? key}:${date}`,
-  );
+      const key = normalizeDateTokenKey(token.slice(0, separatorIndex));
+      if (!key) {
+        return token;
+      }
 
-  return text;
+      const rawValue = token.slice(separatorIndex + 1);
+      const normalizedDateValue = extractLeadingDateValue(rawValue);
+
+      return normalizedDateValue ? `${key}:${normalizedDateValue}` : token;
+    })
+    .join(" ");
 };
 
 export const parseSearchQuery = (query: string) => {
