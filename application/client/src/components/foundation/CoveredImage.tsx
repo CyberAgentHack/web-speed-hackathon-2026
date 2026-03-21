@@ -34,8 +34,7 @@ export const CoveredImage = ({ src }: Props) => {
 
   return (
     <div className="relative h-full w-full overflow-hidden">
-      <img alt={alt} className={"object-cover"} src={src} />
-
+      <img alt={alt} className={"absolute w-full h-full object-cover"} src={src} />
       <button
         className="border-cax-border bg-cax-surface-raised/90 text-cax-text-muted hover:bg-cax-surface absolute right-1 bottom-1 rounded-full border px-2 py-1 text-center text-xs"
         type="button"
