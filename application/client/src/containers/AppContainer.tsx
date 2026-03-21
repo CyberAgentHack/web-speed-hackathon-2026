@@ -53,43 +53,44 @@ export const AppContainer = () => {
         newPostModalId={newPostModalId}
         onLogout={handleLogout}
       >
-        {isLoadingActiveUser ? (
-          loadingFallback
-        ) : (
-          <Suspense fallback={loadingFallback}>
-            <Routes>
-              <Route element={<TimelineContainer />} path="/" />
-              <Route
-                element={
-                  <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
-                }
-                path="/dm"
-              />
-              <Route
-                element={<DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />}
-                path="/dm/:conversationId"
-              />
-              <Route element={<SearchContainer />} path="/search" />
-              <Route element={<UserProfileContainer />} path="/users/:username" />
-              <Route element={<PostContainer />} path="/posts/:postId" />
-              <Route element={<TermContainer />} path="/terms" />
-              <Route
-                element={<CrokContainer activeUser={activeUser} authModalId={authModalId} />}
-                path="/crok"
-              />
-              <Route element={<NotFoundContainer />} path="*" />
-            </Routes>
-          </Suspense>
-        )}
+        <Suspense fallback={loadingFallback}>
+          <Routes>
+            <Route element={<TimelineContainer />} path="/" />
+            <Route
+              element={
+                isLoadingActiveUser ? loadingFallback :
+                <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
+              }
+              path="/dm"
+            />
+            <Route
+              element={
+                isLoadingActiveUser ? loadingFallback :
+                <DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />
+              }
+              path="/dm/:conversationId"
+            />
+            <Route element={<SearchContainer />} path="/search" />
+            <Route element={<UserProfileContainer />} path="/users/:username" />
+            <Route element={<PostContainer />} path="/posts/:postId" />
+            <Route element={<TermContainer />} path="/terms" />
+            <Route
+              element={
+                isLoadingActiveUser ? loadingFallback :
+                <CrokContainer activeUser={activeUser} authModalId={authModalId} />
+              }
+              path="/crok"
+            />
+            <Route element={<NotFoundContainer />} path="*" />
+          </Routes>
+        </Suspense>
       </AppPage>
 
+      <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
       {!isLoadingActiveUser && (
-        <>
-          <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
-          <Suspense fallback={null}>
-            <NewPostModalContainer id={newPostModalId} />
-          </Suspense>
-        </>
+        <Suspense fallback={null}>
+          <NewPostModalContainer id={newPostModalId} />
+        </Suspense>
       )}
     </>
   );
