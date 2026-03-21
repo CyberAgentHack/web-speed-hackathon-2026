@@ -1,4 +1,4 @@
-import { ChangeEventHandler, FormEventHandler, useCallback, useState } from "react";
+import { ChangeEventHandler, FormEventHandler, useCallback, useRef, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/components/modal/ModalErrorMessage";
@@ -23,21 +23,21 @@ interface Props {
 }
 
 export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubmit }: Props) => {
-  const [params, setParams] = useState<SubmitParams>({
+  const textRef = useRef("");
+  const filesRef = useRef<{ images: File[]; movie: File | undefined; sound: File | undefined }>({
     images: [],
     movie: undefined,
     sound: undefined,
-    text: "",
   });
 
+  const [hasText, setHasText] = useState(false);
   const [hasFileError, setHasFileError] = useState(false);
+  const [activeAttach, setActiveAttach] = useState<"none" | "images" | "sound" | "movie">("none");
 
   const handleChangeText = useCallback<ChangeEventHandler<HTMLTextAreaElement>>((ev) => {
     const value = ev.currentTarget.value;
-    setParams((params) => ({
-      ...params,
-      text: value,
-    }));
+    textRef.current = value;
+    setHasText(value !== "");
   }, []);
 
   const handleChangeImages = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
@@ -46,12 +46,8 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
     setHasFileError(isValid !== true);
     if (isValid) {
-      setParams((params) => ({
-        ...params,
-        images: files,
-        movie: undefined,
-        sound: undefined,
-      }));
+      filesRef.current = { images: files, movie: undefined, sound: undefined };
+      setActiveAttach(files.length > 0 ? "images" : "none");
     }
   }, []);
 
@@ -61,12 +57,8 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
     setHasFileError(isValid !== true);
     if (isValid) {
-      setParams((params) => ({
-        ...params,
-        images: [],
-        movie: undefined,
-        sound: file,
-      }));
+      filesRef.current = { images: [], movie: undefined, sound: file };
+      setActiveAttach("sound");
     }
   }, []);
 
@@ -76,12 +68,8 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
     setHasFileError(isValid !== true);
     if (isValid) {
-      setParams((params) => ({
-        ...params,
-        images: [],
-        movie: file,
-        sound: undefined,
-      }));
+      filesRef.current = { images: [], movie: file, sound: undefined };
+      setActiveAttach("movie");
     }
   }, []);
 
@@ -89,9 +77,12 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     (ev) => {
       ev.preventDefault();
       onResetError();
-      onSubmit(params);
+      onSubmit({
+        ...filesRef.current,
+        text: textRef.current,
+      });
     },
-    [params, onSubmit, onResetError],
+    [onSubmit, onResetError],
   );
 
   return (
@@ -110,28 +101,28 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       <div className="text-cax-text flex w-full items-center justify-evenly">
         <AttachFileInputButton
           accept="image/*"
-          active={params.images.length !== 0}
+          active={activeAttach === "images"}
           icon={<FontAwesomeIcon iconType="images" styleType="solid" />}
           label="画像を添付"
           onChange={handleChangeImages}
         />
         <AttachFileInputButton
           accept="audio/*"
-          active={params.sound !== undefined}
+          active={activeAttach === "sound"}
           icon={<FontAwesomeIcon iconType="music" styleType="solid" />}
           label="音声を添付"
           onChange={handleChangeSound}
         />
         <AttachFileInputButton
           accept="video/*"
-          active={params.movie !== undefined}
+          active={activeAttach === "movie"}
           icon={<FontAwesomeIcon iconType="video" styleType="solid" />}
           label="動画を添付"
           onChange={handleChangeMovie}
         />
       </div>
 
-      <ModalSubmitButton disabled={isLoading || params.text === ""} loading={isLoading}>
+      <ModalSubmitButton disabled={isLoading || !hasText} loading={isLoading}>
         {isLoading ? "投稿中" : "投稿する"}
       </ModalSubmitButton>
 

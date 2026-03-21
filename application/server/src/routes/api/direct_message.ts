@@ -5,13 +5,14 @@ import { v4 as uuidv4 } from "uuid";
 import * as v from "valibot";
 
 import { upgradeWebSocket } from "@web-speed-hackathon-2026/server/src/app";
-import { getDb } from "@web-speed-hackathon-2026/server/src/db";
+import { getDb, getSqlite } from "@web-speed-hackathon-2026/server/src/db";
 import {
   countUnreadMessages,
   emitDmNotifications,
   findConversationWithRelations,
-  findConversations,
+  findConversationsForList,
   findUserWithProfile,
+  getUnreadConversationIds,
 } from "@web-speed-hackathon-2026/server/src/db/queries";
 import {
   directMessageConversations,
@@ -149,21 +150,20 @@ export const directMessageRouter = new Hono<SessionEnv>()
       throw new HTTPException(401);
     }
 
-    const conversations = await findConversations(userId);
+    const conversations = findConversationsForList(userId);
+    const unreadSet = getUnreadConversationIds(userId);
 
     const filtered = conversations
       .filter((conv) => conv.messages.length > 0)
       .sort((a, b) => {
-        const aLast = a.messages[a.messages.length - 1]!.createdAt;
-        const bLast = b.messages[b.messages.length - 1]!.createdAt;
+        const aLast = a.messages[0]!.createdAt;
+        const bLast = b.messages[0]!.createdAt;
         return bLast.localeCompare(aLast);
       });
 
     const result = filtered.map((conv) => ({
       ...serializeConversation(conv as Parameters<typeof serializeConversation>[0]),
-      messages: conv.messages.map((m) =>
-        serializeDirectMessage(m as Parameters<typeof serializeDirectMessage>[0]),
-      ),
+      hasUnread: unreadSet.has(conv.id),
     }));
 
     return c.json(result as unknown as DirectMessageConversationResponse[]);
@@ -180,33 +180,48 @@ export const directMessageRouter = new Hono<SessionEnv>()
       throw new HTTPException(404);
     }
 
-    let conversation = await findConversationWithRelations(
-      or(
-        and(
-          eq(directMessageConversations.initiatorId, userId),
-          eq(directMessageConversations.memberId, peer.id),
-        ),
-        and(
-          eq(directMessageConversations.initiatorId, peer.id),
-          eq(directMessageConversations.memberId, userId),
-        ),
-      )!,
-    );
+    const existsWhere = or(
+      and(
+        eq(directMessageConversations.initiatorId, userId),
+        eq(directMessageConversations.memberId, peer.id),
+      ),
+      and(
+        eq(directMessageConversations.initiatorId, peer.id),
+        eq(directMessageConversations.memberId, userId),
+      ),
+    )!;
+
+    let conversation = await findConversationWithRelations(existsWhere);
 
     if (!conversation) {
       const db = getDb();
+      const sqlite = getSqlite();
       const id = uuidv4();
       const now = new Date().toISOString();
-      db.insert(directMessageConversations)
-        .values({
-          id,
-          initiatorId: userId,
-          memberId: peer.id,
-          createdAt: now,
-          updatedAt: now,
+      sqlite
+        .transaction(() => {
+          // Re-check inside transaction to prevent duplicate conversations
+          const existing = db
+            .select({ id: directMessageConversations.id })
+            .from(directMessageConversations)
+            .where(existsWhere)
+            .get();
+          if (!existing) {
+            db.insert(directMessageConversations)
+              .values({
+                id,
+                initiatorId: userId,
+                memberId: peer.id,
+                createdAt: now,
+                updatedAt: now,
+              })
+              .run();
+          }
         })
-        .run();
-      conversation = await findConversationWithRelations(eq(directMessageConversations.id, id));
+        .immediate();
+      conversation = await findConversationWithRelations(
+        or(existsWhere, eq(directMessageConversations.id, id))!,
+      );
     }
 
     return c.json(
@@ -257,7 +272,7 @@ export const directMessageRouter = new Hono<SessionEnv>()
       })
       .run();
 
-    await emitDmNotifications(messageId);
+    emitDmNotifications(messageId);
 
     const message = await db.query.directMessages.findFirst({
       where: eq(directMessages.id, messageId),
@@ -302,22 +317,11 @@ export const directMessageRouter = new Hono<SessionEnv>()
     const peerId =
       conversation.initiatorId !== userId ? conversation.initiatorId : conversation.memberId;
 
-    const targetIds = db
-      .select({ id: directMessages.id })
-      .from(directMessages)
-      .where(
-        and(
-          eq(directMessages.conversationId, conversation.id),
-          eq(directMessages.senderId, peerId),
-          eq(directMessages.isRead, false),
-        ),
-      )
-      .all();
-
-    if (targetIds.length > 0) {
-      const now = new Date().toISOString();
-      db.update(directMessages)
-        .set({ isRead: true, updatedAt: now })
+    const sqlite = getSqlite();
+    const markReadTxn = sqlite.transaction(() => {
+      const ids = db
+        .select({ id: directMessages.id })
+        .from(directMessages)
         .where(
           and(
             eq(directMessages.conversationId, conversation.id),
@@ -325,11 +329,28 @@ export const directMessageRouter = new Hono<SessionEnv>()
             eq(directMessages.isRead, false),
           ),
         )
-        .run();
+        .all();
 
-      for (const { id } of targetIds) {
-        await emitDmNotifications(id);
+      if (ids.length > 0) {
+        const now = new Date().toISOString();
+        db.update(directMessages)
+          .set({ isRead: true, updatedAt: now })
+          .where(
+            and(
+              eq(directMessages.conversationId, conversation.id),
+              eq(directMessages.senderId, peerId),
+              eq(directMessages.isRead, false),
+            ),
+          )
+          .run();
       }
+
+      return ids;
+    });
+    const targetIds = markReadTxn.immediate() as unknown as { id: string }[];
+
+    for (const { id } of targetIds) {
+      emitDmNotifications(id);
     }
 
     return c.json({});

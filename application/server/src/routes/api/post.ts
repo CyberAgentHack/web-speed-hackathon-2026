@@ -79,7 +79,7 @@ export const postRouter = new Hono<SessionEnv>()
           .run();
       }
     });
-    createPost();
+    createPost.immediate();
 
     const post = await findPostDetail(postId);
     return c.json<PostResponse>(serializePostDetail(post!) as unknown as PostResponse);

@@ -5,7 +5,7 @@ import { combineReducers, legacy_createStore as createStore } from "redux";
 import { reducer as formReducer } from "redux-form";
 import { SWRConfig } from "swr";
 
-import { clearSSRData, setSSRData } from "@web-speed-hackathon-2026/client/src/api/ssr-data";
+import { SSRDataProvider } from "@web-speed-hackathon-2026/client/src/api/ssr-context";
 import { swrConfig } from "@web-speed-hackathon-2026/client/src/api/swr";
 import {
   AppContainer,
@@ -20,6 +20,7 @@ export interface RenderOptions {
   ssrData: SSRData;
   bootstrapModules: string[];
   cssHref: string;
+  modulePreloads?: string[];
 }
 
 function computeTitle(url: string, ssrData: SSRData): string | undefined {
@@ -42,23 +43,24 @@ function computeTitle(url: string, ssrData: SSRData): string | undefined {
 }
 
 export async function render(options: RenderOptions): Promise<ReadableStream> {
-  const { url, ssrData, bootstrapModules, cssHref } = options;
-  setSSRData(ssrData);
+  const { url, ssrData, bootstrapModules, cssHref, modulePreloads } = options;
   const store = createStore(combineReducers({ form: formReducer }));
   const title = computeTitle(url, ssrData);
 
   const bootstrapScriptContent = `window.__SSR_DATA__=${JSON.stringify(ssrData).replace(/</g, "\\u003c")};window.__CSS_HREF__=${JSON.stringify(cssHref)}`;
 
   const stream = await renderToReadableStream(
-    <Provider store={store}>
-      <SWRConfig value={swrConfig}>
-        <StaticRouter location={url}>
-          <Document cssHref={cssHref} title={title}>
-            <AppContainer />
-          </Document>
-        </StaticRouter>
-      </SWRConfig>
-    </Provider>,
+    <SSRDataProvider value={ssrData}>
+      <Provider store={store}>
+        <SWRConfig value={swrConfig}>
+          <StaticRouter location={url}>
+            <Document cssHref={cssHref} title={title} modulePreloads={modulePreloads}>
+              <AppContainer />
+            </Document>
+          </StaticRouter>
+        </SWRConfig>
+      </Provider>
+    </SSRDataProvider>,
     {
       bootstrapModules,
       bootstrapScriptContent,
@@ -68,6 +70,5 @@ export async function render(options: RenderOptions): Promise<ReadableStream> {
     },
   );
   await stream.allReady;
-  clearSSRData();
   return stream;
 }

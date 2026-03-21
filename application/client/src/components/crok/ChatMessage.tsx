@@ -1,9 +1,5 @@
-import React, { Suspense } from "react";
 import "katex/dist/katex.min.css";
 import "highlight.js/styles/atom-one-light.css";
-import remarkGfm from "remark-gfm";
-
-const Markdown = React.lazy(() => import("react-markdown"));
 
 import { TypingIndicator } from "@web-speed-hackathon-2026/client/src/components/crok/TypingIndicator";
 import { CrokLogo } from "@web-speed-hackathon-2026/client/src/components/foundation/CrokLogo";
@@ -40,11 +36,7 @@ const AssistantMessage = ({
           {highlightedHtml ? (
             <div dangerouslySetInnerHTML={{ __html: highlightedHtml }} />
           ) : content ? (
-            <Suspense fallback={null}>
-              <Markdown key={content} remarkPlugins={[remarkGfm]}>
-                {content}
-              </Markdown>
-            </Suspense>
+            <div style={{ whiteSpace: "pre-wrap" }}>{content}</div>
           ) : (
             <TypingIndicator />
           )}

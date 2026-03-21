@@ -21,6 +21,7 @@ interface SSRData {
 let csrFallbackHtml = "";
 let entryScript = "";
 let cssHref = "";
+let baseModulePreloads: string[] = [];
 
 try {
   const indexHtml = fs.readFileSync(path.resolve(CLIENT_DIST_PATH, "index.html"), "utf-8");
@@ -36,9 +37,68 @@ try {
     cssHref = cssMatch[1]!;
   }
 
-  console.log("SSR: assets extracted — script:", entryScript, "css:", cssHref);
+  // Extract modulepreload hints from index.html (entry's static dependencies)
+  const preloadRe = /<link[^>]*rel="modulepreload"[^>]*href="([^"]+)"[^>]*>/g;
+  let m: RegExpExecArray | null;
+  while ((m = preloadRe.exec(indexHtml)) !== null) {
+    baseModulePreloads.push(m[1]!);
+  }
+
+  console.log(
+    "SSR: assets extracted — script:",
+    entryScript,
+    "css:",
+    cssHref,
+    "preloads:",
+    baseModulePreloads.length,
+  );
 } catch {
   console.warn("SSR: index.html not found in dist, SSR will be disabled");
+}
+
+// --- 起動時: SSR マニフェストからルート別チャンクを解決 ---
+
+type SSRManifest = Record<string, string[]>;
+let ssrManifest: SSRManifest = {};
+
+try {
+  const manifestPath = path.resolve(CLIENT_DIST_PATH, ".vite/ssr-manifest.json");
+  ssrManifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8")) as SSRManifest;
+  console.log("SSR: manifest loaded,", Object.keys(ssrManifest).length, "entries");
+} catch {
+  console.warn("SSR: ssr-manifest.json not found, route preloads disabled");
+}
+
+// Route → source module mapping for lazy-loaded containers
+const ROUTE_MODULES: Array<{ pattern: RegExp; modules: string[] }> = [
+  { pattern: /^\/$/, modules: ["containers/TimelineContainer.tsx"] },
+  {
+    pattern: /^\/dm$/,
+    modules: ["containers/DirectMessageListContainer.tsx", "containers/DirectMessageContainer.tsx"],
+  },
+  { pattern: /^\/dm\/[^/]+$/, modules: ["containers/DirectMessageContainer.tsx"] },
+  { pattern: /^\/search$/, modules: ["containers/SearchContainer.tsx"] },
+  { pattern: /^\/users\/[^/]+$/, modules: ["containers/UserProfileContainer.tsx"] },
+  { pattern: /^\/terms$/, modules: ["containers/TermContainer.tsx"] },
+  { pattern: /^\/crok$/, modules: ["containers/CrokContainer.tsx"] },
+];
+
+function resolveRoutePreloads(pathname: string): string[] {
+  const match = ROUTE_MODULES.find((r) => r.pattern.test(pathname));
+  if (!match) return [];
+
+  const chunks = new Set<string>();
+  for (const mod of match.modules) {
+    const assets = ssrManifest[mod];
+    if (!assets) continue;
+    for (const asset of assets) {
+      // Only preload JS chunks, not CSS/fonts
+      if (asset.endsWith(".js")) {
+        chunks.add(asset);
+      }
+    }
+  }
+  return [...chunks];
 }
 
 // --- 起動時: SSR バンドル読み込み ---
@@ -48,6 +108,7 @@ type RenderFn = (options: {
   ssrData: unknown;
   bootstrapModules: string[];
   cssHref: string;
+  modulePreloads?: string[];
 }) => Promise<ReadableStream>;
 
 let ssrRender: RenderFn | null = null;
@@ -177,12 +238,17 @@ ssrRouter.get("*", async (c) => {
       return c.html(csrFallbackHtml);
     }
 
+    // Route-specific lazy chunk preloads + entry static dependency preloads
+    const routePreloads = resolveRoutePreloads(url.pathname);
+    const modulePreloads = [...baseModulePreloads, ...routePreloads];
+
     // React がフルドキュメントをストリーム出力
     const reactStream = await ssrRender!({
       url: fullPath,
       ssrData,
       bootstrapModules: [entryScript],
       cssHref,
+      modulePreloads,
     });
 
     c.header("Content-Type", "text/html; charset=utf-8");

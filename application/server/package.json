@@ -47,6 +47,7 @@
     "@types/kuromoji": "0.1.3",
     "@types/node": "22.18.8",
     "@types/sharp": "0.32.0",
+    "bun-types": "1.3.10",
     "typescript": "5.9.3"
   },
   "packageManager": "pnpm@10.32.1"

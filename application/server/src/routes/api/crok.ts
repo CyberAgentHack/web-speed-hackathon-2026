@@ -115,8 +115,6 @@ export const crokRouter = new Hono<SessionEnv>()
     return streamSSE(c, async (stream) => {
       let messageId = 0;
 
-      await stream.sleep(3000);
-
       for (const char of response) {
         if (stream.aborted) break;
 
@@ -125,8 +123,6 @@ export const crokRouter = new Hono<SessionEnv>()
           id: String(messageId++),
           data: JSON.stringify({ text: char, done: false }),
         });
-
-        await stream.sleep(10);
       }
 
       if (!stream.aborted) {

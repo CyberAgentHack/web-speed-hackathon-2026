@@ -161,20 +161,54 @@ test.describe("Crok AIチャット", () => {
       timeout: 300_000,
     });
 
-    // コードブロックがシンタックスハイライトされていること
-    // react-syntax-highlighter が pre > code を生成する
+    // crok-response.md の主要見出しがレンダリングされていること
+    await expect(page.getByRole("heading", { name: /走れメロス/ })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByRole("heading", { name: "登場人物" })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("heading", { name: /第一章/ })).toBeVisible({ timeout: 15_000 });
+
+    // テーブルがレンダリングされていること（登場人物表、行程表など）
+    await expect(async () => {
+      expect(await page.locator("table").count()).toBeGreaterThanOrEqual(2);
+    }).toPass({ timeout: 15_000 });
+
+    // コードブロックがシンタックスハイライトされていること（json, bash, python, ts, rust, sql 等）
     const codeBlocks = page.locator("pre code");
     await expect(async () => {
-      const count = await codeBlocks.count();
-      expect(count).toBeGreaterThan(0);
+      expect(await codeBlocks.count()).toBeGreaterThanOrEqual(6);
+    }).toPass({ timeout: 15_000 });
+
+    // 数式がレンダリングされていること（KaTeX）— インラインとブロック両方
+    await expect(async () => {
+      expect(await page.locator(".katex").count()).toBeGreaterThan(0);
+    }).toPass({ timeout: 15_000 });
+    await expect(async () => {
+      expect(await page.locator(".katex-display").count()).toBeGreaterThan(0);
+    }).toPass({ timeout: 15_000 });
+  });
+
+  test("数式が初期仕様と同じ見た目でレンダリングされること", async ({ page }) => {
+    const chatInput = page.getByPlaceholder("メッセージを入力...");
+    await chatInput.fill("テスト");
+    await page.getByRole("button", { name: "送信" }).click();
+
+    // SSE完了を待つ
+    await expect(page.getByText("Crok AIは間違いを起こす可能性があります。")).toBeVisible({
+      timeout: 300_000,
+    });
+
+    // 数式がレンダリングされるまで待つ
+    await expect(async () => {
+      expect(await page.locator(".katex-display").count()).toBeGreaterThan(0);
     }).toPass({ timeout: 5_000 });
 
-    // 数式がレンダリングされていること（KaTeX）
-    const mathElements = page.locator(".katex");
-    await expect(async () => {
-      const count = await mathElements.count();
-      expect(count).toBeGreaterThan(0);
-    }).toPass({ timeout: 5_000 });
+    // フォントの読み込み完了を待機
+    await page.evaluate(() => document.fonts.ready);
+
+    // 最初のブロック数式のVRT
+    const firstBlockMath = page.locator(".katex-display").first();
+    await expect(firstBlockMath).toHaveScreenshot("crok-数式ブロック.png");
   });
 
   test("Enterでメッセージを送信、Shift+Enterで改行できること", async ({ page }) => {

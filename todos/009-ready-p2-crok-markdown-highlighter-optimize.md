@@ -1,5 +1,5 @@
 ---
-status: in_progress
+status: complete
 priority: p2
 issue_id: "009"
 tags: [perf, bundle, crok, lazy-load]

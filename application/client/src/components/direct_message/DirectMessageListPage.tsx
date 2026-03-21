@@ -19,7 +19,10 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     data: conversations,
     error,
     mutate,
-  } = useSWR<Array<Models.DirectMessageConversation>, Error, string>("/api/v1/dm", swrFetcher);
+  } = useSWR<Array<Models.DirectMessageConversationListItem>, Error, string>(
+    "/api/v1/dm",
+    swrFetcher,
+  );
 
   useWs("/api/v1/dm/unread", () => {
     void mutate();
@@ -62,16 +65,13 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
       ) : (
         <ul data-testid="dm-list">
           {conversations.map((conversation) => {
-            const { messages } = conversation;
             const peer =
               conversation.initiator.id !== activeUser.id
                 ? conversation.initiator
                 : conversation.member;
 
-            const lastMessage = messages.at(-1);
-            const hasUnread = messages
-              .filter((m) => m.sender.id === peer.id)
-              .some((m) => !m.isRead);
+            const lastMessage = conversation.messages.at(-1);
+            const hasUnread = conversation.hasUnread;
 
             return (
               <li className="grid" key={conversation.id}>

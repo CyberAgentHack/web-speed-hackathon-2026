@@ -137,6 +137,25 @@ test.describe("サインイン・新規登録", () => {
       await expect(submitButton).toBeEnabled();
     });
 
+    test("サインインバリデーション - 日本語ユーザー名でエラー", async ({ page }) => {
+      await page.getByRole("textbox", { name: "ユーザー名" }).pressSequentially("テストユーザー");
+      await page.getByRole("textbox", { name: "ユーザー名" }).blur();
+
+      await expect(
+        page.getByText("ユーザー名に使用できるのは英数字とアンダースコア(_)のみです"),
+      ).toBeVisible({ timeout: 5_000 });
+    });
+
+    test("サインインバリデーション - 16文字以上記号なしパスワードでエラー", async ({ page }) => {
+      await page.getByRole("textbox", { name: "ユーザー名" }).pressSequentially("o6yq16leo");
+      // 16文字以上の英数字のみパスワード（記号なし）
+      await page.getByRole("textbox", { name: "パスワード" }).pressSequentially("abcdefghijklmnop");
+      await page.getByRole("textbox", { name: "パスワード" }).blur();
+
+      // 送信ボタンが無効化されていること
+      await expect(page.getByRole("button", { name: "サインイン" }).last()).toBeDisabled();
+    });
+
     test("サインイン成功でモーダルが閉じ、サインアウトボタンが出現する", async ({ page }) => {
       await page.getByRole("textbox", { name: "ユーザー名" }).pressSequentially("o6yq16leo");
       await page.getByRole("textbox", { name: "パスワード" }).pressSequentially("wsh-2026");
