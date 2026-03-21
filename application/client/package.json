@@ -17,6 +17,9 @@
     "bayesian-bm25": "0.4.0",
     "bluebird": "3.7.2",
     "buffer": "6.0.3",
+
+    "process": "0.11.10",  // ← ここを追加
+
     "classnames": "2.5.1",
     "common-tags": "1.8.2",
     "core-js": "3.45.1",
