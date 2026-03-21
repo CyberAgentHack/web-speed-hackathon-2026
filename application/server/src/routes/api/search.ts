@@ -32,13 +32,27 @@ searchRouter.get("/search", async (req, res) => {
   const query = req.query["q"];
 
   if (typeof query !== "string" || query.trim() === "") {
+    console.info("[api/search] empty query", {
+      query,
+      limit: req.query["limit"],
+      offset: req.query["offset"],
+    });
     return res.status(200).type("application/json").send([]);
   }
 
   const { keywords, sinceDate, untilDate } = parseSearchQuery(query);
+  console.info("[api/search] parsed", {
+    query,
+    keywords,
+    sinceDate: sinceDate?.toISOString() ?? null,
+    untilDate: untilDate?.toISOString() ?? null,
+    limit: req.query["limit"],
+    offset: req.query["offset"],
+  });
 
   // キーワードも日付フィルターもない場合は空配列を返す
   if (!keywords && !sinceDate && !untilDate) {
+    console.info("[api/search] no effective filters", { query });
     return res.status(200).type("application/json").send([]);
   }
 
@@ -92,6 +106,7 @@ searchRouter.get("/search", async (req, res) => {
 
   const postIds = matchedPosts.map((post) => post.id);
   if (postIds.length === 0) {
+    console.info("[api/search] no matches", { query });
     return res.status(200).type("application/json").send([]);
   }
 
@@ -103,6 +118,12 @@ searchRouter.get("/search", async (req, res) => {
         [Op.in]: postIds,
       },
     },
+  });
+
+  console.info("[api/search] success", {
+    query,
+    matchedPostCount: postIds.length,
+    returnedPostCount: result.length,
   });
 
   return res.status(200).type("application/json").send(serializePosts(result));

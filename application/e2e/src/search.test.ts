@@ -125,6 +125,22 @@ test.describe("検索ページ", () => {
     await expect(heading).toContainText("の検索結果");
   });
 
+  test("since:YYYY-MM-DD に余計な文字が続いても正規化して検索できること", async ({ page }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await page.goto("/search");
+
+    const input = page.getByPlaceholder("検索 (例: キーワード since:2025-01-01 until:2025-12-31)");
+    await input.fill(`写真 since:2026-01-01${"0".repeat(20)}x`);
+    await page.getByRole("button", { name: "検索" }).click();
+
+    await page.waitForURL(/\/search\?q=/, { timeout: 10_000 });
+
+    const heading = page.locator("main h2");
+    await expect(heading).toContainText("「写真」");
+    await expect(heading).toContainText("2026-01-01 以降");
+    await expect(heading).toContainText("の検索結果");
+  });
+
   test("キーワードと since:YYYY-MM-DD until:YYYY-MM-DD を組み合わせて検索できること", async ({
     page,
   }) => {
