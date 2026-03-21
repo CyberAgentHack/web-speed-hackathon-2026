@@ -1,87 +1,36 @@
-import { useCallback, useMemo, useState } from "react";
-import { Helmet } from "react-helmet";
-
-import { CrokGate } from "@web-speed-hackathon-2026/client/src/components/crok/CrokGate";
+import { useCallback, useState } from "react";
 import { CrokPage } from "@web-speed-hackathon-2026/client/src/components/crok/CrokPage";
 import { useSSE } from "@web-speed-hackathon-2026/client/src/hooks/use_sse";
 
-type Props = {
-  activeUser: Models.User | null;
-  authModalId: string;
-};
+export const CrokContainer = ({ activeUser, authModalId }: any) => {
+  const [messages, setMessages] = useState<any[]>([]);
 
-export const CrokContainer = ({ activeUser, authModalId }: Props) => {
-  const [messages, setMessages] = useState<Models.ChatMessage[]>([]);
-
-  const sseOptions = useMemo(
-    () => ({
-      onMessage: (data: Models.SSEChunk, prevContent: string) => {
-        return prevContent + (data.text ?? "");
-      },
-      onDone: (data: Models.SSEChunk) => data.done === true,
-      onComplete: (finalContent: string) => {
-        setMessages((prev) => {
-          const lastMessage = prev[prev.length - 1];
-          if (lastMessage?.role === "assistant") {
-            return [...prev.slice(0, -1), { ...lastMessage, content: finalContent }];
-          }
-          return prev;
-        });
-      },
-    }),
-    [],
-  );
-
-  const { content, isStreaming, start } = useSSE<Models.SSEChunk>(sseOptions);
-
-  const currentAssistantContent = isStreaming || content ? content : null;
-
-  const displayMessages = useMemo(() => {
-    if (currentAssistantContent !== null) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage?.role === "assistant") {
-        return [
-          ...messages.slice(0, -1),
-          { role: "assistant" as const, content: currentAssistantContent },
-        ];
-      }
+  const { content, isStreaming, start } = useSSE<any>({
+    onMessage: (data: any, prev: string) => prev + (data.text ?? ""),
+    onDone: (data: any) => data.done === true,
+    onComplete: (final: string) => {
+      setMessages(prev => {
+        const last = prev[prev.length - 1];
+        if (last?.role === "assistant") {
+          return [...prev.slice(0, -1), { role: "assistant", content: final }];
+        }
+        return prev;
+      });
     }
-    return messages;
-  }, [messages, currentAssistantContent]);
+  });
 
-  const sendMessage = useCallback(
-    (userInput: string) => {
-      if (!userInput.trim() || isStreaming) return;
+  const sendMessage = useCallback((input: string) => {
+    if (!input.trim() || isStreaming) return;
+    setMessages(prev => [
+      ...prev,
+      { role: "user", content: input },
+      { role: "assistant", content: "" }
+    ]);
 
-      const userMessage: Models.ChatMessage = {
-        role: "user",
-        content: userInput,
-      };
-      const assistantMessage: Models.ChatMessage = {
-        role: "assistant",
-        content: "",
-      };
+    start(`/api/v1/crok?prompt=${encodeURIComponent(input)}`);
+  }, [isStreaming, start]);
 
-      setMessages((prev) => [...prev, userMessage, assistantMessage]);
+  if (!activeUser) return <div className="p-10 text-center">サインインしてください</div>;
 
-      const encodedPrompt = encodeURIComponent(userInput);
-      start(`/api/v1/crok?prompt=${encodedPrompt}`);
-    },
-    [isStreaming, start],
-  );
-
-  if (!activeUser) {
-    return (
-      <CrokGate headline="Crokを利用するにはサインインしてください" authModalId={authModalId} />
-    );
-  }
-
-  return (
-    <>
-      <Helmet>
-        <title>Crok - CaX</title>
-      </Helmet>
-      <CrokPage isStreaming={isStreaming} messages={displayMessages} onSendMessage={sendMessage} />
-    </>
-  );
+  return <CrokPage isStreaming={isStreaming} messages={messages} onSendMessage={sendMessage} />;
 };
