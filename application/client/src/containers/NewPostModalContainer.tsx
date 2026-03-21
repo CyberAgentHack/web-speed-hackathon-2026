@@ -32,10 +32,19 @@ async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promis
 
 interface Props {
   id: string;
+  onPostNavigationFailed: () => void;
+  onPostNavigationRequested: (path: string) => void;
+  onPostRequestStarted: () => void;
   openRequestId: number;
 }
 
-export const NewPostModalContainer = ({ id, openRequestId }: Props) => {
+export const NewPostModalContainer = ({
+  id,
+  onPostNavigationFailed,
+  onPostNavigationRequested,
+  onPostRequestStarted,
+  openRequestId,
+}: Props) => {
   const dialogId = useId();
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
@@ -81,16 +90,19 @@ export const NewPostModalContainer = ({ id, openRequestId }: Props) => {
     async (params: SubmitParams) => {
       try {
         setIsLoading(true);
+        onPostRequestStarted();
         const post = await sendNewPost(params);
         setIsLoading(false);
+        onPostNavigationRequested(`/posts/${post.id}`);
         ref.current?.close();
         navigate(`/posts/${post.id}`);
       } catch {
         setHasError(true);
+        onPostNavigationFailed();
         setIsLoading(false);
       }
     },
-    [navigate],
+    [navigate, onPostNavigationFailed, onPostNavigationRequested, onPostRequestStarted],
   );
 
   return (

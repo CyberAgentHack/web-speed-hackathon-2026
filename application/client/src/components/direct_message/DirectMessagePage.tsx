@@ -3,11 +3,11 @@ import {
   ChangeEvent,
   useCallback,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
   KeyboardEvent,
   FormEvent,
-  useEffect,
 } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -35,6 +35,7 @@ export const DirectMessagePage = ({
   onSubmit,
 }: Props) => {
   const formRef = useRef<HTMLFormElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const textAreaId = useId();
 
   const peer =
@@ -43,7 +44,6 @@ export const DirectMessagePage = ({
   const [text, setText] = useState("");
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
-  const scrollHeightRef = useRef(0);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -73,17 +73,22 @@ export const DirectMessagePage = ({
     [onSubmit, text],
   );
 
-  useEffect(() => {
-    const id = setInterval(() => {
-      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
-      if (height !== scrollHeightRef.current) {
-        scrollHeightRef.current = height;
-        window.scrollTo(0, height);
-      }
-    }, 1);
+  useLayoutEffect(() => {
+    const container = messagesContainerRef.current;
+    if (container == null) {
+      return;
+    }
 
-    return () => clearInterval(id);
-  }, []);
+    const frameId = window.requestAnimationFrame(() => {
+      container.scrollTo({
+        top: container.scrollHeight,
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [conversation.id, conversation.messages.length, isPeerTyping]);
 
   if (conversationError != null) {
     return (
@@ -114,7 +119,10 @@ export const DirectMessagePage = ({
         </div>
       </header>
 
-      <div className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8">
+      <div
+        className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8"
+        ref={messagesContainerRef}
+      >
         {conversation.messages.length === 0 && (
           <p className="text-cax-text-muted text-center text-sm">
             まだメッセージはありません。最初のメッセージを送信してみましょう。

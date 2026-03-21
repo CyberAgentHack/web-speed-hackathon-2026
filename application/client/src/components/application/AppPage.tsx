@@ -10,6 +10,7 @@ interface Props {
   activeUser: Models.User | null;
   children: ReactNode;
   isLoadingActiveUser: boolean;
+  isPostNavigationPending: boolean;
   onOpenAuthModal: () => void;
   onOpenNewPostModal: () => void;
   onLogout: () => void;
@@ -19,6 +20,7 @@ export const AppPage = ({
   activeUser,
   children,
   isLoadingActiveUser,
+  isPostNavigationPending,
   onOpenAuthModal,
   onOpenNewPostModal,
   onLogout,
@@ -72,7 +74,13 @@ export const AppPage = ({
           </Suspense>
         </aside>
         <main className="relative z-0 w-screen max-w-screen-sm min-w-0 shrink pb-12 lg:pb-0">
-          {children}
+          {isPostNavigationPending ? (
+            <div className="text-cax-text-muted flex min-h-screen items-center justify-center p-6">
+              投稿を反映中...
+            </div>
+          ) : (
+            children
+          )}
         </main>
       </div>
     </div>

@@ -153,6 +153,8 @@ export const AppContainer = () => {
   const newPostModalId = useId();
   const [authModalOpenRequestId, setAuthModalOpenRequestId] = useState(0);
   const [newPostModalOpenRequestId, setNewPostModalOpenRequestId] = useState(0);
+  const [isPostNavigationPending, setIsPostNavigationPending] = useState(false);
+  const [pendingPostPath, setPendingPostPath] = useState<string | null>(null);
   const [shouldLoadAuthModal, setShouldLoadAuthModal] = useState(false);
   const [shouldLoadNewPostModal, setShouldLoadNewPostModal] = useState(false);
   const routeFallback = (
@@ -169,11 +171,19 @@ export const AppContainer = () => {
     setNewPostModalOpenRequestId((requestId) => requestId + 1);
   }, []);
 
+  useEffect(() => {
+    if (pendingPostPath !== null && pathname === pendingPostPath) {
+      setIsPostNavigationPending(false);
+      setPendingPostPath(null);
+    }
+  }, [pathname, pendingPostPath]);
+
   return (
     <HelmetProvider>
       <AppPage
         activeUser={activeUser}
         isLoadingActiveUser={isLoadingActiveUser}
+        isPostNavigationPending={isPostNavigationPending}
         onOpenAuthModal={handleOpenAuthModal}
         onOpenNewPostModal={handleOpenNewPostModal}
         onLogout={handleLogout}
@@ -231,7 +241,22 @@ export const AppContainer = () => {
       </Suspense>
       <Suspense fallback={null}>
         {shouldLoadNewPostModal ? (
-          <NewPostModalContainer id={newPostModalId} openRequestId={newPostModalOpenRequestId} />
+          <NewPostModalContainer
+            id={newPostModalId}
+            onPostNavigationFailed={() => {
+              setIsPostNavigationPending(false);
+              setPendingPostPath(null);
+            }}
+            onPostNavigationRequested={(path) => {
+              setIsPostNavigationPending(true);
+              setPendingPostPath(path);
+            }}
+            onPostRequestStarted={() => {
+              setIsPostNavigationPending(true);
+              setPendingPostPath(null);
+            }}
+            openRequestId={newPostModalOpenRequestId}
+          />
         ) : null}
       </Suspense>
     </HelmetProvider>

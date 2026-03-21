@@ -11,7 +11,10 @@ export const TimelineContainer = () => {
     fetchMore,
     hasMore,
     isLoading,
-  } = useInfiniteFetch<Models.Post>("/api/v1/posts", fetchJSON);
+  } = useInfiniteFetch<Models.Post>("/api/v1/posts", fetchJSON, {
+    initialLimit: 10,
+    limit: 10,
+  });
 
   return (
     <InfiniteScroll fetchMore={fetchMore} hasMore={hasMore} isLoading={isLoading}>
