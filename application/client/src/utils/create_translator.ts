@@ -11,7 +11,7 @@ interface Params {
 export async function createTranslator(params: Params): Promise<Translator> {
   return {
     async translate(text: string): Promise<string> {
-      const res = await fetch("/api/translate", {
+      const res = await fetch("/api/v1/translate", {
         body: JSON.stringify({ text, sourceLang: params.sourceLanguage, targetLang: params.targetLanguage }),
         headers: { "Content-Type": "application/json" },
         method: "POST",
