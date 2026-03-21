@@ -2,20 +2,7 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 
 import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
-
-const cache = new Map<string, { data: unknown; expiry: number }>();
-const CACHE_TTL = 30 * 1000;
-
-function getCached<T>(key: string): T | null {
-  const entry = cache.get(key);
-  if (entry && entry.expiry > Date.now()) return entry.data as T;
-  cache.delete(key);
-  return null;
-}
-
-function setCache(key: string, data: unknown): void {
-  cache.set(key, { data, expiry: Date.now() + CACHE_TTL });
-}
+import { getCached, setCache } from "@web-speed-hackathon-2026/server/src/utils/response_cache";
 
 export const userRouter = Router();
 

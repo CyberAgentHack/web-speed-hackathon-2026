@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { readdirSync } from "node:fs";
 import path from "node:path";
 
 import history from "connect-history-api-fallback";
@@ -10,6 +10,28 @@ import {
   PUBLIC_PATH,
   UPLOAD_PATH,
 } from "@web-speed-hackathon-2026/server/src/paths";
+
+// Build a set of pre-compressed file paths at startup
+function buildCompressedFileSet(dir: string, ext: string): Set<string> {
+  const result = new Set<string>();
+  try {
+    const walkDir = (d: string) => {
+      for (const entry of readdirSync(d, { withFileTypes: true })) {
+        const fullPath = path.join(d, entry.name);
+        if (entry.isDirectory()) {
+          walkDir(fullPath);
+        } else if (entry.name.endsWith(ext)) {
+          result.add(fullPath);
+        }
+      }
+    };
+    walkDir(dir);
+  } catch { /* dir may not exist at import time */ }
+  return result;
+}
+
+const brFiles = buildCompressedFileSet(CLIENT_DIST_PATH, ".br");
+const gzFiles = buildCompressedFileSet(CLIENT_DIST_PATH, ".gz");
 
 export const staticRouter = Router();
 
@@ -24,7 +46,7 @@ staticRouter.use((req, res, next) => {
 
   if (accept.includes("br")) {
     const brPath = filePath + ".br";
-    if (existsSync(brPath)) {
+    if (brFiles.has(brPath)) {
       res.setHeader("Content-Encoding", "br");
       res.setHeader("Vary", "Accept-Encoding");
       if (req.path.endsWith(".js")) res.setHeader("Content-Type", "application/javascript");
@@ -43,7 +65,7 @@ staticRouter.use((req, res, next) => {
 
   if (accept.includes("gzip")) {
     const gzPath = filePath + ".gz";
-    if (existsSync(gzPath)) {
+    if (gzFiles.has(gzPath)) {
       res.setHeader("Content-Encoding", "gzip");
       res.setHeader("Vary", "Accept-Encoding");
       if (req.path.endsWith(".js")) res.setHeader("Content-Type", "application/javascript");

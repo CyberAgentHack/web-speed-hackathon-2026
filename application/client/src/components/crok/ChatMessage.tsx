@@ -9,11 +9,15 @@ import { CodeBlock } from "@web-speed-hackathon-2026/client/src/components/crok/
 import { TypingIndicator } from "@web-speed-hackathon-2026/client/src/components/crok/TypingIndicator";
 import { CrokLogo } from "@web-speed-hackathon-2026/client/src/components/foundation/CrokLogo";
 
+const markdownComponents = { pre: CodeBlock };
+const markdownRehypePlugins = [rehypeKatex];
+const markdownRemarkPlugins = [remarkMath, remarkGfm];
+
 const MemoizedMarkdown = memo(({ content }: { content: string }) => (
   <Markdown
-    components={{ pre: CodeBlock }}
-    rehypePlugins={[rehypeKatex]}
-    remarkPlugins={[remarkMath, remarkGfm]}
+    components={markdownComponents}
+    rehypePlugins={markdownRehypePlugins}
+    remarkPlugins={markdownRemarkPlugins}
   >
     {content}
   </Markdown>

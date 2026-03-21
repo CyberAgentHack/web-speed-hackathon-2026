@@ -104,6 +104,7 @@ const config = {
   },
   optimization: {
     minimize: true,
+    runtimeChunk: "single",
     splitChunks: {
       chunks: "all",
       maxInitialRequests: 25,

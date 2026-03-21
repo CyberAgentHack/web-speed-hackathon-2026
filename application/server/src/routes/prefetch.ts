@@ -10,6 +10,7 @@ export const prefetchRouter = Router();
 
 let headPart: string | null = null;
 let bodyPart: string | null = null;
+const htmlCache = new Map<string, string>();
 
 function loadHtmlParts(): void {
   if (headPart !== null) return;
@@ -125,28 +126,79 @@ prefetchRouter.use(async (req, res, next) => {
   try {
     loadHtmlParts();
 
+    // Check cache
+    const cached = htmlCache.get(req.path);
+    if (cached) {
+      res.setHeader("Content-Type", "text/html");
+      res.setHeader("Cache-Control", "no-cache");
+      return res.send(cached);
+    }
+
+    const prefetchData = await getPrefetchData(req.path, req.session.userId);
+    const lcpPreloads = extractLcpPreloads(prefetchData, req.path);
+
+    // LCP hero image for home
+    let heroImgTag = "";
+    if (req.path === "/" || req.path === "") {
+      const posts = prefetchData["/api/v1/posts?limit=30&offset=0"] as any[] | undefined;
+      if (posts && posts.length > 0) {
+        const postWithMovie = posts.find((p: any) => p.movie);
+        if (postWithMovie) {
+          heroImgTag = `<img id="lcp-hero" src="/movies/${postWithMovie.movie.id}.poster.avif" fetchpriority="high" loading="eager" style="position:fixed;top:0;left:0;width:1px;height:1px;opacity:0.01;pointer-events:none" alt="">`;
+        } else {
+          const postWithImage = posts.find((p: any) => p.images?.length > 0);
+          if (postWithImage) {
+            heroImgTag = `<img id="lcp-hero" src="/images/${postWithImage.images[0].id}.avif" fetchpriority="high" loading="eager" style="position:fixed;top:0;left:0;width:1px;height:1px;opacity:0.01;pointer-events:none" alt="">`;
+          }
+        }
+      }
+    }
+
+    const fullHtml = headPart + lcpPreloads +
+      (Object.keys(prefetchData).length > 0
+        ? `<script>window.__PREFETCH__=${JSON.stringify(prefetchData)}</script>`
+        : "") +
+      heroImgTag +
+      bodyPart;
+
+    htmlCache.set(req.path, fullHtml);
+
     res.setHeader("Content-Type", "text/html");
     res.setHeader("Cache-Control", "no-cache");
-
-    // Stream head immediately so browser starts loading CSS/JS
-    res.write(headPart);
-
-    // Run DB queries in parallel while browser downloads CSS/JS
-    const prefetchData = await getPrefetchData(req.path, req.session.userId);
-
-    // Inject LCP image preload hint for first post's image
-    const lcpPreloads = extractLcpPreloads(prefetchData, req.path);
-    if (lcpPreloads) {
-      res.write(lcpPreloads);
-    }
-
-    if (Object.keys(prefetchData).length > 0) {
-      res.write(`<script>window.__PREFETCH__=${JSON.stringify(prefetchData)}</script>`);
-    }
-
-    res.write(bodyPart);
-    return res.end();
+    return res.send(fullHtml);
   } catch {
     return next();
   }
 });
+
+export async function warmHtmlCache(): Promise<void> {
+  loadHtmlParts();
+  const prefetchData = await getPrefetchData("/");
+  const lcpPreloads = extractLcpPreloads(prefetchData, "/");
+
+  let heroImgTag = "";
+  const posts = prefetchData["/api/v1/posts?limit=30&offset=0"] as any[] | undefined;
+  if (posts && posts.length > 0) {
+    const postWithMovie = posts.find((p: any) => p.movie);
+    if (postWithMovie) {
+      heroImgTag = `<img id="lcp-hero" src="/movies/${postWithMovie.movie.id}.poster.avif" fetchpriority="high" loading="eager" style="position:fixed;top:0;left:0;width:1px;height:1px;opacity:0.01;pointer-events:none" alt="">`;
+    } else {
+      const postWithImage = posts.find((p: any) => p.images?.length > 0);
+      if (postWithImage) {
+        heroImgTag = `<img id="lcp-hero" src="/images/${postWithImage.images[0].id}.avif" fetchpriority="high" loading="eager" style="position:fixed;top:0;left:0;width:1px;height:1px;opacity:0.01;pointer-events:none" alt="">`;
+      }
+    }
+  }
+
+  const fullHtml = headPart + lcpPreloads +
+    (Object.keys(prefetchData).length > 0
+      ? `<script>window.__PREFETCH__=${JSON.stringify(prefetchData)}</script>`
+      : "") +
+    heroImgTag +
+    bodyPart;
+  htmlCache.set("/", fullHtml);
+}
+
+export function clearHtmlCache(): void {
+  htmlCache.clear();
+}

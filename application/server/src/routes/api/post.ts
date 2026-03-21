@@ -2,25 +2,12 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 
 import { Comment, Post } from "@web-speed-hackathon-2026/server/src/models";
-
-const cache = new Map<string, { data: unknown; expiry: number }>();
-const CACHE_TTL = 30 * 1000;
-
-function getCached<T>(key: string): T | null {
-  const entry = cache.get(key);
-  if (entry && entry.expiry > Date.now()) return entry.data as T;
-  cache.delete(key);
-  return null;
-}
-
-function setCache(key: string, data: unknown): void {
-  cache.set(key, { data, expiry: Date.now() + CACHE_TTL });
-}
+import { getCached, setCache, clearCache } from "@web-speed-hackathon-2026/server/src/utils/response_cache";
 
 export const postRouter = Router();
 
 postRouter.get("/posts", async (req, res) => {
-  const cacheKey = req.originalUrl;
+  const cacheKey = `posts:${req.originalUrl}`;
   const cached = getCached(cacheKey);
   if (cached) return res.status(200).type("application/json").send(cached);
 
@@ -34,7 +21,7 @@ postRouter.get("/posts", async (req, res) => {
 });
 
 postRouter.get("/posts/:postId", async (req, res) => {
-  const cacheKey = req.originalUrl;
+  const cacheKey = `posts:${req.originalUrl}`;
   const cached = getCached(cacheKey);
   if (cached) return res.status(200).type("application/json").send(cached);
 
@@ -82,7 +69,7 @@ postRouter.post("/posts", async (req, res) => {
     },
   );
 
-  cache.clear();
+  clearCache("posts:");
 
   return res.status(200).type("application/json").send(post);
 });

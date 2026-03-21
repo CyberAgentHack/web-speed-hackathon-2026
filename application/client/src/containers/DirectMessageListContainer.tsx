@@ -12,6 +12,7 @@ interface Props {
 
 export const DirectMessageListContainer = ({ activeUser, authModalId }: Props) => {
   const newDmModalId = useId();
+  useTitle("ダイレクトメッセージ - CaX");
 
   if (activeUser === null) {
     return (
@@ -21,8 +22,6 @@ export const DirectMessageListContainer = ({ activeUser, authModalId }: Props) =
       />
     );
   }
-
-  useTitle("ダイレクトメッセージ - CaX");
 
   return (
     <>

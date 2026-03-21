@@ -12,8 +12,9 @@ export const app = Express();
 app.set("trust proxy", true);
 
 app.use(compression());
-app.use(sessionMiddleware);
-app.use(bodyParser.json());
+
+app.use("/api/v1", sessionMiddleware);
+app.use("/api/v1", bodyParser.json());
 
 app.use("/api/v1/images", bodyParser.raw({ limit: "10mb" }));
 app.use("/api/v1/movies", bodyParser.raw({ limit: "10mb" }));
@@ -29,5 +30,6 @@ app.use("/api/v1", (req, res, next) => {
 });
 
 app.use("/api/v1", apiRouter);
+app.use(sessionMiddleware);
 app.use(prefetchRouter);
 app.use(staticRouter);

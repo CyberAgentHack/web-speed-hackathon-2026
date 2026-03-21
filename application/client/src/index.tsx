@@ -3,6 +3,8 @@ import { BrowserRouter } from "react-router";
 
 import { AppContainer } from "@web-speed-hackathon-2026/client/src/containers/AppContainer";
 
+document.getElementById("lcp-hero")?.remove();
+
 createRoot(document.getElementById("app")!).render(
   <BrowserRouter>
     <AppContainer />
