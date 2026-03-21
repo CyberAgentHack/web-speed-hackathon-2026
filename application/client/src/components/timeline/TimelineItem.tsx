@@ -108,9 +108,6 @@ export const TimelineItem = ({ post }: Props) => {
               </button>
             </div>
           ) : null}
-          {post.movie && !post.text.includes("動画を添付したテスト投稿です。") ? (
-            <p className="text-cax-text-muted mt-1 text-xs">動画を添付したテスト投稿です。</p>
-          ) : null}
           {post.sound ? (
             <div className="relative mt-2 w-full">
               <SoundArea sound={post.sound} />

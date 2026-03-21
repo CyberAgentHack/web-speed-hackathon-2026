@@ -4,6 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CaX</title>
+    <script>
+      window.__prefetchPromise = {};
+      window.__prefetchPromise["/api/v1/me"] = fetch("/api/v1/me");
+      if (location.pathname === "/") {
+        window.__prefetchPromise["/api/v1/posts?limit=12&offset=0"] = fetch("/api/v1/posts?limit=12&offset=0");
+      } else if (location.pathname.startsWith("/users/")) {
+        var u = location.pathname.replace("/users/", "");
+        window.__prefetchPromise["/api/v1/users/" + u] = fetch("/api/v1/users/" + u);
+        window.__prefetchPromise["/api/v1/users/" + u + "/posts?limit=12&offset=0"] = fetch("/api/v1/users/" + u + "/posts?limit=12&offset=0");
+      } else if (location.pathname.startsWith("/posts/")) {
+        var p = location.pathname.replace("/posts/", "");
+        window.__prefetchPromise["/api/v1/posts/" + p] = fetch("/api/v1/posts/" + p);
+        window.__prefetchPromise["/api/v1/posts/" + p + "/comments?limit=12&offset=0"] = fetch("/api/v1/posts/" + p + "/comments?limit=12&offset=0");
+      }
+    </script>
     <script src="/scripts/main.js" defer></script>
     <link rel="stylesheet" href="/styles/main.css" />
   </head>

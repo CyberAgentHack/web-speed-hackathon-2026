@@ -27,23 +27,6 @@ export const TimelineContainer = () => {
       <Helmet>
         <title>タイムライン - CaX</title>
       </Helmet>
-      <article className="px-1 pt-1 pb-0 sm:px-4" data-flow-sentinel>
-        <div className="text-cax-text-muted text-[10px] leading-none">
-          <p>動画を添付したテスト投稿です。</p>
-          <p>音声を添付したテスト投稿です。</p>
-          <p>シャイニングスター</p>
-          <p>魔王魂</p>
-          <button aria-label="動画プレイヤー" disabled type="button">
-            動画プレイヤー
-          </button>
-          <img
-            alt="熊の形をしたアスキーアート。アナログマというキャプションがついている"
-            height={1}
-            src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
-            width={1}
-          />
-        </div>
-      </article>
       <TimelinePage timeline={posts} />
     </InfiniteScroll>
   );
