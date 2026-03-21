@@ -2,6 +2,7 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 
 import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
+import { markDatabaseDirty } from "@web-speed-hackathon-2026/server/src/sequelize";
 
 export const userRouter = Router();
 
@@ -30,6 +31,7 @@ userRouter.put("/me", async (req, res) => {
 
   Object.assign(user, req.body);
   await user.save();
+  await markDatabaseDirty();
 
   return res.status(200).type("application/json").send(user);
 });

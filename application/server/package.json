@@ -7,7 +7,7 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --platform=node --format=esm --outfile=dist/index.js --external:bcrypt --external:sqlite3 --external:sequelize --external:express --external:express-session --external:compression --external:body-parser --external:connect-history-api-fallback --external:serve-static --external:ws --external:http-errors --external:music-metadata --external:file-type --external:uuid --banner:js=\"import{createRequire}from'module';const require=createRequire(import.meta.url);\"",
+    "build": "esbuild src/index.ts --bundle --platform=node --format=esm --outfile=dist/index.js --external:bcrypt --external:sqlite3 --external:sequelize --external:express --external:express-session --external:compression --external:body-parser --external:connect-history-api-fallback --external:serve-static --external:ws --external:http-errors --external:music-metadata --external:file-type --external:uuid --banner:js=\"import{createRequire}from'module';const require=createRequire(import.meta.url);\" && node ./scripts/prepareRuntimeDatabase.mjs",
     "start": "node dist/index.js",
     "start:dev": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",

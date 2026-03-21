@@ -3,6 +3,7 @@ import httpErrors from "http-errors";
 import { UniqueConstraintError, ValidationError } from "sequelize";
 
 import { User } from "@web-speed-hackathon-2026/server/src/models";
+import { markDatabaseDirty } from "@web-speed-hackathon-2026/server/src/sequelize";
 
 export const authRouter = Router();
 
@@ -10,6 +11,7 @@ authRouter.post("/signup", async (req, res) => {
   try {
     const { id: userId } = await User.create(req.body);
     const user = await User.findByPk(userId);
+    await markDatabaseDirty();
 
     req.session.userId = userId;
     return res.status(200).type("application/json").send(user);

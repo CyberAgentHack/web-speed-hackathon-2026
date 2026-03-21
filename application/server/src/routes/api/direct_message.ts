@@ -9,6 +9,7 @@ import {
   DirectMessageConversation,
   User,
 } from "@web-speed-hackathon-2026/server/src/models";
+import { markDatabaseDirty } from "@web-speed-hackathon-2026/server/src/sequelize";
 
 export const directMessageRouter = Router();
 
@@ -344,6 +345,7 @@ directMessageRouter.post("/dm/:conversationId/messages", async (req, res) => {
     conversationId: conversation.id,
     senderId: req.session.userId,
   });
+  await markDatabaseDirty();
   const hydratedMessage = await DirectMessage.scope("withSender").findByPk(message.id);
 
   return res
@@ -380,6 +382,7 @@ directMessageRouter.post("/dm/:conversationId/read", async (req, res) => {
   );
 
   if (updatedCount > 0) {
+    await markDatabaseDirty();
     const unreadCount = await countUnreadDirectMessagesForUser(req.session.userId);
     eventhub.emit(`dm:unread/${req.session.userId}`, { unreadCount });
     eventhub.emit(`dm:conversation/${conversation.id}:read/${peerId}`, {});

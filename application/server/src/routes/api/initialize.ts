@@ -4,14 +4,16 @@ import { Router } from "express";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
-import { initializeSequelize } from "../../sequelize";
+import { initializeSequelize, isDatabaseDirty } from "../../sequelize";
 import { sessionStore } from "../../session";
 
 export const initializeRouter = Router();
 
 initializeRouter.post("/initialize", async (_req, res) => {
   // DBリセット
-  await initializeSequelize();
+  if ((await isDatabaseDirty()) === true) {
+    await initializeSequelize({ resetDatabase: true });
+  }
   // sessionStoreをクリア
   sessionStore.clear();
   // uploadディレクトリをクリア

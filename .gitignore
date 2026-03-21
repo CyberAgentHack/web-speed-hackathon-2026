@@ -218,6 +218,7 @@ $RECYCLE.BIN/
 
 # Upload files (directories kept via .gitkeep)
 application/upload/**
+application/server/.runtime/
 !application/upload/**/
 !application/upload/**/.gitkeep
 
