@@ -1,0 +1,14 @@
+dataDir: ~/.agent-orchestrator
+worktreeDir: ~/.worktrees
+port: 3001
+defaults:
+  runtime: tmux
+  agent: claude-code
+  workspace: worktree
+  notifiers:
+    - desktop
+projects:
+  application:
+    repo: kazukitaninaka/web-speed-hackathon-2026
+    path: /Users/s21377/dev/events/web-speed-hackathon-2026/application
+    defaultBranch: main

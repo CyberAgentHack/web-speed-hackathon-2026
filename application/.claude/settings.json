@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/s21377/dev/events/web-speed-hackathon-2026/application/.claude/metadata-updater.sh",
+            "timeout": 5000
+          }
+        ]
+      }
+    ]
+  }
+}

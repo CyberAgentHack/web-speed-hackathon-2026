@@ -1,4 +1,3 @@
-import Bluebird from "bluebird";
 import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
 import {
   useEffect,
@@ -20,6 +19,15 @@ import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 interface Props {
   isStreaming: boolean;
   onSendMessage: (message: string) => void;
+}
+
+function buildTokenizer(dicPath: string): Promise<Tokenizer<IpadicFeatures>> {
+  return new Promise((resolve, reject) => {
+    kuromoji.builder({ dicPath }).build((err, tokenizer) => {
+      if (err) reject(err);
+      else resolve(tokenizer);
+    });
+  });
 }
 
 // トークン単位でハイライト
@@ -97,8 +105,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     let mounted = true;
 
     const init = async () => {
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
+      const nextTokenizer = await buildTokenizer("/dicts");
       if (mounted) {
         setTokenizer(nextTokenizer);
       }

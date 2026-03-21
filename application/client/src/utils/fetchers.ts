@@ -1,40 +1,37 @@
-import $ from "jquery";
 import { gzip } from "pako";
 
+export class FetchError extends Error {
+  responseJSON: unknown;
+  status: number;
+
+  constructor(message: string, status: number, responseJSON: unknown) {
+    super(message);
+    this.name = "FetchError";
+    this.status = status;
+    this.responseJSON = responseJSON;
+  }
+}
+
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "binary",
-    method: "GET",
-    responseType: "arraybuffer",
-    url,
-  });
-  return result;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Failed to fetch: ${response.statusText}`);
+  return response.arrayBuffer();
 }
 
 export async function fetchJSON<T>(url: string): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "json",
-    method: "GET",
-    url,
-  });
-  return result;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Failed to fetch: ${response.statusText}`);
+  return response.json();
 }
 
 export async function sendFile<T>(url: string, file: File): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    data: file,
-    dataType: "json",
-    headers: {
-      "Content-Type": "application/octet-stream",
-    },
+  const response = await fetch(url, {
     method: "POST",
-    processData: false,
-    url,
+    headers: { "Content-Type": "application/octet-stream" },
+    body: file,
   });
-  return result;
+  if (!response.ok) throw new Error(`Failed to send: ${response.statusText}`);
+  return response.json();
 }
 
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
@@ -42,17 +39,24 @@ export async function sendJSON<T>(url: string, data: object): Promise<T> {
   const uint8Array = new TextEncoder().encode(jsonString);
   const compressed = gzip(uint8Array);
 
-  const result = await $.ajax({
-    async: false,
-    data: compressed,
-    dataType: "json",
+  const response = await fetch(url, {
+    method: "POST",
     headers: {
       "Content-Encoding": "gzip",
       "Content-Type": "application/json",
     },
-    method: "POST",
-    processData: false,
-    url,
+    body: compressed,
   });
-  return result;
+
+  if (!response.ok) {
+    let responseJSON: unknown = null;
+    try {
+      responseJSON = await response.json();
+    } catch {
+      // ignore JSON parse errors
+    }
+    throw new FetchError(`Failed to send: ${response.statusText}`, response.status, responseJSON);
+  }
+
+  return response.json();
 }
