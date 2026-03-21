@@ -7,10 +7,11 @@ import { formatLL } from "@web-speed-hackathon-2026/client/src/utils/date_format
 import { getSafeProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
+  autoPlayMovie?: boolean;
   post: Models.Post;
 }
 
-export const PostItem = ({ post }: Props) => {
+export const PostItem = ({ autoPlayMovie = false, post }: Props) => {
   return (
     <article className="px-1 sm:px-4">
       <div className="border-cax-border border-b px-4 pt-4 pb-4">
@@ -57,7 +58,7 @@ export const PostItem = ({ post }: Props) => {
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea eager={true} movie={post.movie} />
+              <MovieArea autoPlayInViewport={autoPlayMovie} eager={true} movie={post.movie} />
             </div>
           ) : null}
           {post.sound ? (

@@ -1,10 +1,11 @@
 import classNames from "classnames";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 
 interface Props {
+  autoPlayInViewport?: boolean;
   eager?: boolean;
   posterSrc: string;
   src: string;
@@ -14,17 +15,76 @@ interface Props {
  * 初回描画は軽い poster を表示し、クリック後にだけ GIF を読み込みます。
  * 停止時は poster に戻して、初回表示のネットワーク負荷を抑えます。
  */
-export const PausableMovie = ({ eager = false, posterSrc, src }: Props) => {
+export const PausableMovie = ({
+  autoPlayInViewport = false,
+  eager = false,
+  posterSrc,
+  src,
+}: Props) => {
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isPausedByUser, setIsPausedByUser] = useState(false);
   const [displayPosterSrc, setDisplayPosterSrc] = useState(posterSrc);
 
   useEffect(() => {
     setDisplayPosterSrc(posterSrc);
   }, [posterSrc]);
 
+  useEffect(() => {
+    setIsPausedByUser(false);
+  }, [src]);
+
+  useEffect(() => {
+    if (!autoPlayInViewport) {
+      setIsVisible(false);
+      return;
+    }
+
+    const element = buttonRef.current;
+    if (element === null) {
+      return;
+    }
+
+    const updateVisibility = () => {
+      const rect = element.getBoundingClientRect();
+      setIsVisible(rect.bottom > 0 && rect.top < window.innerHeight);
+    };
+
+    updateVisibility();
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry?.isIntersecting === true);
+      },
+      {
+        threshold: 0.01,
+      },
+    );
+
+    observer.observe(element);
+    return () => {
+      observer.disconnect();
+    };
+  }, [autoPlayInViewport]);
+
+  useEffect(() => {
+    if (!autoPlayInViewport) {
+      return;
+    }
+
+    setIsPlaying(isVisible && !isPausedByUser);
+  }, [autoPlayInViewport, isPausedByUser, isVisible]);
+
   const handleClick = useCallback(() => {
-    setIsPlaying((current) => !current);
-  }, []);
+    setIsPlaying((current) => {
+      const nextIsPlaying = !current;
+      if (autoPlayInViewport) {
+        setIsPausedByUser(!nextIsPlaying);
+      }
+      return nextIsPlaying;
+    });
+  }, [autoPlayInViewport]);
 
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
@@ -33,6 +93,7 @@ export const PausableMovie = ({ eager = false, posterSrc, src }: Props) => {
         aria-pressed={isPlaying}
         className="group relative block h-full w-full"
         onClick={handleClick}
+        ref={buttonRef}
         type="button"
       >
         <img

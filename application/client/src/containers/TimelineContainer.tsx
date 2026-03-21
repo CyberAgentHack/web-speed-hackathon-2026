@@ -10,7 +10,13 @@ export const TimelineContainer = () => {
   return (
     <InfiniteScroll fetchMore={fetchMore} items={posts} requireScroll>
       <PageTitle title="タイムライン - CaX" />
-      <TimelinePage deferUntilIdle initialCount={1} optimizeOffscreen timeline={posts} />
+      <TimelinePage
+        autoPlayMovie
+        deferUntilIdle
+        initialCount={1}
+        optimizeOffscreen
+        timeline={posts}
+      />
     </InfiniteScroll>
   );
 };

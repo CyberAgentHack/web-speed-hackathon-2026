@@ -7,6 +7,7 @@ const DEFER_TIMEOUT_MS = 1200;
 const DEFER_BATCH_SIZE = 2;
 
 interface Props {
+  autoPlayMovie?: boolean;
   timeline: Models.Post[];
   deferUntilIdle?: boolean;
   initialCount?: number;
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export const Timeline = ({
+  autoPlayMovie = false,
   timeline,
   deferUntilIdle = false,
   initialCount = URGENT_COUNT,
@@ -66,10 +68,24 @@ export const Timeline = ({
   return (
     <section>
       {urgent.map((post, index) => {
-        return <TimelineItem key={post.id} post={post} priority={index === 0} />;
+        return (
+          <TimelineItem
+            autoPlayMovie={autoPlayMovie}
+            key={post.id}
+            post={post}
+            priority={index === 0}
+          />
+        );
       })}
       {deferred.map((post) => {
-        return <TimelineItem key={post.id} optimizeOffscreen={optimizeOffscreen} post={post} />;
+        return (
+          <TimelineItem
+            autoPlayMovie={autoPlayMovie}
+            key={post.id}
+            optimizeOffscreen={optimizeOffscreen}
+            post={post}
+          />
+        );
       })}
     </section>
   );

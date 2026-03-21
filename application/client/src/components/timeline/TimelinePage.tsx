@@ -1,6 +1,7 @@
 import { Timeline } from "@web-speed-hackathon-2026/client/src/components/timeline/Timeline";
 
 interface Props {
+  autoPlayMovie?: boolean;
   timeline: Models.Post[];
   deferUntilIdle?: boolean;
   initialCount?: number;
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export const TimelinePage = ({
+  autoPlayMovie = false,
   timeline,
   deferUntilIdle = false,
   initialCount,
@@ -15,6 +17,7 @@ export const TimelinePage = ({
 }: Props) => {
   return (
     <Timeline
+      autoPlayMovie={autoPlayMovie}
       deferUntilIdle={deferUntilIdle}
       initialCount={initialCount}
       optimizeOffscreen={optimizeOffscreen}

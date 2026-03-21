@@ -27,6 +27,7 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
  * @property {Models.Post} post
  */
 interface Props {
+  autoPlayMovie?: boolean;
   post: Models.Post;
   optimizeOffscreen?: boolean;
   priority?: boolean;
@@ -37,7 +38,12 @@ const OFFSCREEN_ITEM_STYLE: CSSProperties = {
   contentVisibility: "auto",
 };
 
-export const TimelineItem = ({ post, priority = false, optimizeOffscreen = false }: Props) => {
+export const TimelineItem = ({
+  autoPlayMovie = false,
+  post,
+  priority = false,
+  optimizeOffscreen = false,
+}: Props) => {
   const navigate = useNavigate();
 
   /**
@@ -105,7 +111,7 @@ export const TimelineItem = ({ post, priority = false, optimizeOffscreen = false
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea eager={priority} movie={post.movie} />
+              <MovieArea autoPlayInViewport={autoPlayMovie} eager={priority} movie={post.movie} />
             </div>
           ) : null}
           {post.sound ? (
