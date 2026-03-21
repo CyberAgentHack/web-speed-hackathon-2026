@@ -31,6 +31,25 @@ export class DirectMessage extends Model<
   declare conversation?: NonAttribute<DirectMessageConversation>;
 }
 
+export async function countUnreadDirectMessagesForUser(userId: string) {
+  return DirectMessage.count({
+    distinct: true,
+    where: {
+      senderId: { [Op.ne]: userId },
+      isRead: false,
+    },
+    include: [
+      {
+        association: "conversation",
+        where: {
+          [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
+        },
+        required: true,
+      },
+    ],
+  });
+}
+
 export function initDirectMessage(sequelize: Sequelize) {
   DirectMessage.init(
     {
@@ -73,7 +92,7 @@ export function initDirectMessage(sequelize: Sequelize) {
     },
   );
 
-  DirectMessage.addHook("afterSave", "onDmSaved", async (message) => {
+  DirectMessage.addHook("afterCreate", "onDmCreated", async (message) => {
     const directMessage = await DirectMessage.scope("withSender").findByPk(message.get().id);
     const conversation = await DirectMessageConversation.findByPk(directMessage?.conversationId);
 
@@ -86,22 +105,7 @@ export function initDirectMessage(sequelize: Sequelize) {
         ? conversation.memberId
         : conversation.initiatorId;
 
-    const unreadCount = await DirectMessage.count({
-      distinct: true,
-      where: {
-        senderId: { [Op.ne]: receiverId },
-        isRead: false,
-      },
-      include: [
-        {
-          association: "conversation",
-          where: {
-            [Op.or]: [{ initiatorId: receiverId }, { memberId: receiverId }],
-          },
-          required: true,
-        },
-      ],
-    });
+    const unreadCount = await countUnreadDirectMessagesForUser(receiverId);
 
     eventhub.emit(`dm:conversation/${conversation.id}:message`, directMessage);
     eventhub.emit(`dm:unread/${receiverId}`, { unreadCount });

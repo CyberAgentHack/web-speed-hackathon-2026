@@ -17,8 +17,46 @@ interface DmTypingEvent {
   type: "dm:conversation:typing";
   payload: {};
 }
+interface DmReadEvent {
+  type: "dm:conversation:read";
+  payload: {};
+}
 
 const TYPING_INDICATOR_DURATION_MS = 10 * 1000;
+
+function hasUnreadMessagesFromPeer(
+  conversation: Models.DirectMessageConversation | null,
+  activeUserId: string | undefined,
+) {
+  if (conversation == null || activeUserId == null) {
+    return false;
+  }
+
+  return conversation.messages.some(
+    (message) => message.sender.id !== activeUserId && !message.isRead,
+  );
+}
+
+function markActiveUserMessagesAsRead(
+  conversation: Models.DirectMessageConversation | null,
+  activeUserId: string | undefined,
+) {
+  if (conversation == null || activeUserId == null) {
+    return conversation;
+  }
+
+  let hasUpdates = false;
+  const messages = conversation.messages.map((message) => {
+    if (message.sender.id !== activeUserId || message.isRead) {
+      return message;
+    }
+
+    hasUpdates = true;
+    return { ...message, isRead: true };
+  });
+
+  return hasUpdates ? { ...conversation, messages } : conversation;
+}
 
 interface Props {
   activeUser: Models.User | null;
@@ -35,6 +73,9 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const conversationRef = useRef<Models.DirectMessageConversation | null>(null);
+  const isSendingReadRef = useRef(false);
+  const shouldRetryReadRef = useRef(false);
 
   const loadConversation = useCallback(async () => {
     if (activeUser == null) {
@@ -57,14 +98,44 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     }
   }, [activeUser, conversationId]);
 
-  const sendRead = useCallback(async () => {
-    await sendJSON(`/api/v1/dm/${conversationId}/read`, {});
-  }, [conversationId]);
+  useEffect(() => {
+    conversationRef.current = conversation;
+  }, [conversation]);
+
+  const sendReadIfNeeded = useCallback(async () => {
+    const currentConversation = conversationRef.current;
+    const activeUserId = activeUser?.id;
+    if (!hasUnreadMessagesFromPeer(currentConversation, activeUserId)) {
+      return;
+    }
+    if (isSendingReadRef.current) {
+      shouldRetryReadRef.current = true;
+      return;
+    }
+
+    isSendingReadRef.current = true;
+    try {
+      await sendJSON(`/api/v1/dm/${conversationId}/read`, {});
+    } finally {
+      isSendingReadRef.current = false;
+      if (shouldRetryReadRef.current) {
+        shouldRetryReadRef.current = false;
+        void sendReadIfNeeded();
+      }
+    }
+  }, [activeUser?.id, conversationId]);
 
   useEffect(() => {
     void loadConversation();
-    void sendRead();
-  }, [loadConversation, sendRead]);
+  }, [loadConversation]);
+
+  useEffect(() => {
+    if (!hasUnreadMessagesFromPeer(conversation, activeUser?.id)) {
+      return;
+    }
+
+    void sendReadIfNeeded();
+  }, [activeUser?.id, conversation, sendReadIfNeeded]);
 
   const handleSubmit = useCallback(
     async (params: DirectMessageFormData) => {
@@ -132,7 +203,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
   }, [conversationId]);
 
-  useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {
+  useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent | DmReadEvent) => {
     if (event.type === "dm:conversation:message") {
       const newMsg = event.payload;
       startTransition(() => {
@@ -151,7 +222,6 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
         }
         peerTypingTimeoutRef.current = null;
       }
-      void sendRead();
     } else if (event.type === "dm:conversation:typing") {
       setIsPeerTyping(true);
       if (peerTypingTimeoutRef.current !== null) {
@@ -160,6 +230,10 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
       peerTypingTimeoutRef.current = setTimeout(() => {
         setIsPeerTyping(false);
       }, TYPING_INDICATOR_DURATION_MS);
+    } else if (event.type === "dm:conversation:read") {
+      startTransition(() => {
+        setConversation((prev) => markActiveUserMessagesAsRead(prev, activeUser?.id));
+      });
     }
   });
 

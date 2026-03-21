@@ -4,6 +4,7 @@ import { Op } from "sequelize";
 
 import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
 import {
+  countUnreadDirectMessagesForUser,
   DirectMessage,
   DirectMessageConversation,
   User,
@@ -250,23 +251,7 @@ directMessageRouter.ws("/dm/unread", async (req, _res) => {
     eventhub.off(`dm:unread/${req.session.userId}`, handler);
   });
 
-  const unreadCount = await DirectMessage.count({
-    distinct: true,
-    where: {
-      senderId: { [Op.ne]: req.session.userId },
-      isRead: false,
-    },
-    include: [
-      {
-        association: "conversation",
-        where: {
-          [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
-        },
-        required: true,
-      },
-    ],
-  });
-
+  const unreadCount = await countUnreadDirectMessagesForUser(req.session.userId);
   eventhub.emit(`dm:unread/${req.session.userId}`, { unreadCount });
 });
 
@@ -324,6 +309,14 @@ directMessageRouter.ws("/dm/:conversationId", async (req, _res) => {
   req.ws.on("close", () => {
     eventhub.off(`dm:conversation/${conversation.id}:typing/${peerId}`, handleTyping);
   });
+
+  const handleRead = (payload: unknown) => {
+    req.ws.send(JSON.stringify({ type: "dm:conversation:read", payload }));
+  };
+  eventhub.on(`dm:conversation/${conversation.id}:read/${peerId}`, handleRead);
+  req.ws.on("close", () => {
+    eventhub.off(`dm:conversation/${conversation.id}:read/${peerId}`, handleRead);
+  });
 });
 
 directMessageRouter.post("/dm/:conversationId/messages", async (req, res) => {
@@ -379,13 +372,18 @@ directMessageRouter.post("/dm/:conversationId/read", async (req, res) => {
       ? conversation.initiatorId
       : conversation.memberId;
 
-  await DirectMessage.update(
+  const [updatedCount] = await DirectMessage.update(
     { isRead: true },
     {
       where: { conversationId: conversation.id, senderId: peerId, isRead: false },
-      individualHooks: true,
     },
   );
+
+  if (updatedCount > 0) {
+    const unreadCount = await countUnreadDirectMessagesForUser(req.session.userId);
+    eventhub.emit(`dm:unread/${req.session.userId}`, { unreadCount });
+    eventhub.emit(`dm:conversation/${conversation.id}:read/${peerId}`, {});
+  }
 
   return res.status(200).type("application/json").send({});
 });

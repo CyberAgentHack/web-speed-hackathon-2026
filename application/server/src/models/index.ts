@@ -2,6 +2,7 @@ import { Sequelize } from "sequelize";
 
 import { Comment, initComment } from "@web-speed-hackathon-2026/server/src/models/Comment";
 import {
+  countUnreadDirectMessagesForUser,
   DirectMessage,
   initDirectMessage,
 } from "@web-speed-hackathon-2026/server/src/models/DirectMessage";
@@ -182,6 +183,7 @@ export {
   ProfileImage,
   PostsImagesRelation,
   DirectMessage,
+  countUnreadDirectMessagesForUser,
   DirectMessageConversation,
   QaSuggestion,
 };
