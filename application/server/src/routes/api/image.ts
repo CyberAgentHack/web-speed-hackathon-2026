@@ -21,13 +21,13 @@ imageRouter.post("/images", async (req, res) => {
     throw new httpErrors.BadRequest();
   }
 
-  const converted = await convertImage(req.body);
+  const { buffer, alt } = await convertImage(req.body);
 
   const imageId = uuidv4();
 
   const filePath = path.resolve(UPLOAD_PATH, `./images/${imageId}.${EXTENSION}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
-  await fs.writeFile(filePath, converted);
+  await fs.writeFile(filePath, buffer);
 
-  return res.status(200).type("application/json").send({ id: imageId });
+  return res.status(200).type("application/json").send({ id: imageId, alt });
 });
