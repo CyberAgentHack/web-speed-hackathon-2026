@@ -51,9 +51,23 @@ const config = {
         test: /\.css$/i,
         use: [
           { loader: rspack.CssExtractRspackPlugin.loader },
-          { loader: "css-loader", options: { url: false } },
+          {
+            loader: "css-loader",
+            options: {
+              url: {
+                filter: (_url, resourcePath) => resourcePath.endsWith("katex.css"),
+              },
+            },
+          },
           { loader: "postcss-loader" },
         ],
+      },
+      {
+        test: /\.(woff2?|ttf)$/i,
+        type: "asset/resource",
+        generator: {
+          filename: "styles/fonts/[name][ext]",
+        },
       },
     ],
   },
@@ -75,14 +89,6 @@ const config = {
     }),
     new rspack.CssExtractRspackPlugin({
       filename: "styles/[name].css",
-    }),
-    new rspack.CopyRspackPlugin({
-      patterns: [
-        {
-          from: path.resolve(__dirname, "node_modules/katex/dist/fonts"),
-          to: path.resolve(DIST_PATH, "styles/fonts"),
-        },
-      ],
     }),
     new rspack.HtmlRspackPlugin({
       inject: true,

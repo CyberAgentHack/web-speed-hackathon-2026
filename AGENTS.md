@@ -86,9 +86,8 @@ pnpm ワークスペースによるモノレポ（`application/` 配下）。
 - `mode: "production"` で最適化有効（minimize, splitChunks: "all"）
 - `devtool: false`（ソースマップなし）
 - `builtin:swc-loader` で TypeScript/JSX をトランスパイル
-- ProvidePlugin で `Buffer`, `AudioContext` をグローバル注入
+- ProvidePlugin で `Buffer` をグローバル注入
 - `HtmlRspackPlugin` で `inject: true`（script/link タグ自動挿入）
-- KaTeX フォントを `CopyRspackPlugin` で dist にコピー
 
 ## チューニング知見
 
@@ -96,6 +95,7 @@ pnpm ワークスペースによるモノレポ（`application/` 配下）。
 - `React.memo` を API フェッチ由来のリスト行に使うときは、再 fetch のたびに新規オブジェクトになるモデル全体を props で渡さず、文字列・真偽値などの安定した表示用 props に落としてからメモ化すると効果が出やすい
 - `react-syntax-highlighter` はパッケージ直下のデフォルト import を避け、`dist/esm/prism-light` + 必要言語だけの明示登録に切り替えると、Crok のコードブロック用チャンクを production build で `1.262 MiB` から `482.412 KiB` まで削減できた
 - Crok の `react-markdown` / `rehype-katex` / `remark-gfm` / `remark-math` は `ChatMessage` から直接 import せず、`React.lazy` で分離した描画コンポーネント側へ閉じ込めると、`/crok` 初回表示時の entrypoint から外せる。production build では `main.js` / `vendor-*.js` / `658.js` にこれらの文字列が現れず、専用チャンク側のみに残ることを `rg` で確認できる
+- KaTeX CSS を全体の `index.css` に残すと全ページで数式用 CSS とフォント参照が発生する。`ChatMessage` の lazy 境界で `ChatMessageMarkdown` と `katex/dist/katex.css` を `Promise.all()` で同時に待ち、Rspack 側は `katex.css` に限って `url()` を解決するようにすると、KaTeX 非利用ページから CSS/フォントを外したまま FOUC なしで数式表示を維持できる
 - `classnames` は 9 箇所程度の利用ならローカル utility へ置換しやすい。文字列・配列・object syntax（`{ className: boolean }`）だけ互換を持たせれば、挙動を維持したまま依存を 1 つ削減できる
 - React 19 の SPA では `react-helmet` を外してネイティブ `<title>` へ寄せられるが、このリポジトリでは async fetch 後に確定する title が空になるケースがあった。`PageTitle` のような薄い wrapper で `<title>` を返しつつ `document.title` も同期すると、静的 route も動的 route も安定して置換できる
 - `AppContainer` で `/api/v1/me` 完了まで空の JSX を返すと、Navigation も lazy route も描画されず全画面が白くなる。認証待ち中も `AppPage` 自体は描画したままにして、auth 依存ページは `isLoadingActiveUser` を見て gate ではなく route fallback を返すと、LCP 改善と未認証 UI の誤表示回避を両立しやすい

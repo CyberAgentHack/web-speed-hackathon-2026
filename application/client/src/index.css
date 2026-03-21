@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "katex/dist/katex.min.css";
 
 @font-face {
   /* Source Han Serif JP Regular の Y 軸を 1/1.43 に縮小した改変フォント */

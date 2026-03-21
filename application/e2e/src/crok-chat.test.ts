@@ -1,6 +1,27 @@
 import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import { dynamicMediaMask, login, waitForPageToLoad, waitForVisibleMedia } from "./utils";
+
+async function getKatexLoadingState(page: Page) {
+  return page.evaluate(() => {
+    const hasKatexRule = Array.from(document.styleSheets).some((sheet) => {
+      try {
+        return Array.from((sheet as CSSStyleSheet).cssRules).some((rule) =>
+          rule.cssText.includes(".katex"),
+        );
+      } catch {
+        return false;
+      }
+    });
+
+    const hasKatexFontResource = performance
+      .getEntriesByType("resource")
+      .some((entry) => entry.name.includes("KaTeX_"));
+
+    return { hasKatexFontResource, hasKatexRule };
+  });
+}
 
 test.describe("Crok - 未サインイン", () => {
   test.beforeEach(async ({ page }) => {
@@ -172,5 +193,42 @@ test.describe("Crok AIチャット", () => {
     // メッセージが送信されていないことを確認（Shift+Enterは改行であり送信ではない）
     // ウェルカム画面がまだ表示されていること
     await expect(page.getByText("AIアシスタントに質問してみましょう")).toBeVisible();
+  });
+});
+
+test.describe("Crok KaTeX 遅延ロード", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await login(page);
+  });
+
+  test("KaTeX CSS/フォントは Crok でのみロードされる", async ({ page }) => {
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("article").first()).toBeVisible({ timeout: 30_000 });
+    await expect(await getKatexLoadingState(page)).toEqual({
+      hasKatexFontResource: false,
+      hasKatexRule: false,
+    });
+
+    await page.goto("/dm", { waitUntil: "domcontentloaded" });
+    await expect(page).toHaveTitle("ダイレクトメッセージ - CaX", { timeout: 30_000 });
+    await expect(await getKatexLoadingState(page)).toEqual({
+      hasKatexFontResource: false,
+      hasKatexRule: false,
+    });
+
+    await page.goto("/crok", { waitUntil: "domcontentloaded" });
+    await expect(page).toHaveTitle("Crok - CaX", { timeout: 30_000 });
+
+    const chatInput = page.getByPlaceholder("メッセージを入力...");
+    const prompt =
+      "『走れメロス』って、冷笑系の“どうせ人なんか信じても無駄”に対する話なんだと思うんだけどどう？";
+    await chatInput.fill(prompt);
+    await page.getByRole("button", { name: "送信" }).click();
+
+    await expect(page.locator(".katex").first()).toBeVisible({ timeout: 300_000 });
+    await expect
+      .poll(async () => getKatexLoadingState(page), { timeout: 30_000 })
+      .toEqual({ hasKatexFontResource: true, hasKatexRule: true });
   });
 });

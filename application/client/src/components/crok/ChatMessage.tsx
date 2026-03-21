@@ -8,11 +8,12 @@ interface Props {
 }
 
 const ChatMessageMarkdown = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/components/crok/ChatMessageMarkdown").then(
-    (m) => ({
-      default: m.ChatMessageMarkdown,
-    }),
-  ),
+  Promise.all([
+    import("@web-speed-hackathon-2026/client/src/components/crok/ChatMessageMarkdown"),
+    import("katex/dist/katex.css"),
+  ]).then(([m]) => ({
+    default: m.ChatMessageMarkdown,
+  })),
 );
 
 const UserMessage = ({ content }: { content: string }) => {

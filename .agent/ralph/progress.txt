@@ -278,3 +278,56 @@ Quality Checks:
 Commit:
 - Hash: `4dd792a`
 - Message: `feat: [US-015] - AppContainer の認証API ブロッキング解除 + Suspense fallback 修正`
+
+## 2026-03-21 - US-016 KaTeX CSS/フォントの Crok チャンク内遅延ロード化
+
+Implementation:
+- `application/client/src/index.css` から `@import "katex/dist/katex.min.css";` を削除し、全ページ共通 CSS から KaTeX を除外
+- `application/client/rspack.config.js` で `CopyRspackPlugin` による KaTeX フォント複製を削除し、`katex.css` に限って `url()` を解決する `css-loader` 設定と `woff/woff2/ttf` の `asset/resource` 出力を追加
+- `application/client/src/components/crok/ChatMessage.tsx` の lazy 境界で `ChatMessageMarkdown` と `katex/dist/katex.css` を `Promise.all()` で同時ロードするよう変更し、Crok 以外の route から KaTeX CSS/フォントを外しつつ FOUC を回避
+- `application/client/types/css.d.ts` を追加し、TypeScript で CSS dynamic import を解決
+- `application/e2e/src/crok-chat.test.ts` に、ホーム/DM では KaTeX stylesheet rule とフォント resource が存在せず、Crok 応答後に両方ロードされることを検証する E2E を追加
+- `AGENTS.md` に、KaTeX を lazy 境界で CSS と一緒に待つと FOUC を避けながら非 Crok ページから外せる知見を追記
+- 別 Codex エージェント (`Tesla`) にレビューを依頼し、初回の medium 指摘 2 件（FOUC と検証不足）を修正後、再レビューで `No findings` を確認
+
+Acceptance Criteria Verification:
+- AC: index.css から @import 'katex/dist/katex.min.css' が削除されている
+  Test case: `rg -n "katex/dist/katex.min.css" application/client/src/index.css -S`
+  Result: no matches。KaTeX CSS がグローバル entry CSS から外れていることを確認
+- AC: rspack.config の CopyRspackPlugin から KaTeX フォントコピー設定が削除されている
+  Test case: `rg -n "CopyRspackPlugin|node_modules/katex/dist/fonts" application/client/rspack.config.js -S`
+  Result: no matches。`CopyRspackPlugin` 経由の KaTeX フォント複製設定が除去されていることを確認
+- AC: ChatMessageMarkdown 内で KaTeX CSS が動的にロードされる仕組みになっている
+  Test case: `sed -n '1,80p' application/client/src/components/crok/ChatMessage.tsx`
+  Result: `ChatMessageMarkdown` の lazy 境界で `Promise.all([import(ChatMessageMarkdown), import("katex/dist/katex.css")])` を使い、Crok の markdown chunk 解決時に KaTeX CSS も同時ロードする構成になっていることを確認
+- AC: Crok チャットページで数式（KaTeX）が正しくレンダリングされる
+  Test case: `cd application && CI=1 E2E_BASE_URL=http://127.0.0.1:3001 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/crok-chat.test.ts --grep '質問を送信するとAIの応答が表示される'`
+  Result: passed。固定 Crok 応答に含まれる KaTeX 数式を含む画面で `.katex` 要素表示まで通過
+- AC: KaTeX を使用しないページ（ホーム、DM等）で KaTeX CSS/フォントがロードされない
+  Test case: `cd application && CI=1 E2E_BASE_URL=http://127.0.0.1:3001 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/crok-chat.test.ts --grep 'KaTeX CSS/フォントは Crok でのみロードされる'`; `rg -n "katex|KaTeX_" application/dist/styles/main.css application/dist/styles/607.css -S`
+  Result: 追加 E2E でホーム/DM の `document.styleSheets` と `performance.getEntriesByType("resource")` に KaTeX rule / font resource が存在しないことを確認し、Crok 応答後のみ両方が現れることを確認。build 出力でも `main.css` には no matches、`styles/607.css` のみに KaTeX CSS と `/styles/fonts/KaTeX_*` が含まれることを確認
+- AC: 該当箇所のE2Eテストが通っていること。E2Eは常に build & start したサーバーに対して実行する（pnpm e2e 参考）
+  Test case: `cd application && CI=1 E2E_BASE_URL=http://127.0.0.1:3001 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/home.test.ts --grep 'タイムラインが表示される'`; `cd application && CI=1 E2E_BASE_URL=http://127.0.0.1:3001 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/crok-chat.test.ts --grep '質問を送信するとAIの応答が表示される|KaTeX CSS/フォントは Crok でのみロードされる'`
+  Result: production build + start サーバー上で `home.test.ts` は `1 passed (14.2s)`、`crok-chat.test.ts` は `2 passed (16.5s)`
+- AC: codex skill で review を受けること。自己レビューではなく必ず新しい codex を起動して移譲し、feedback は適宜修正判断を行う
+  Test case: spawned Codex agent `Tesla` にレビュー依頼
+  Result: 初回レビューで medium 2 件（`useEffect` 起因の FOUC と読込境界の検証不足）を指摘され、lazy 境界での CSS 同時ロードと E2E 追加で修正。再レビューでは `No findings`
+- AC: Typecheck passes
+  Test case: `cd application && mise exec -- pnpm typecheck`
+  Result: passed
+
+Quality Checks:
+- `cd application && mise trust` -> passed (`No untrusted config files found.`)
+- `cd application && mise install` -> passed (`mise all tools are installed`)
+- `cd application && mise exec -- pnpm build` -> passed (Rspack asset size warning のみ)
+- `cd application && mise exec -- pnpm typecheck` -> passed
+- `rg -n "katex|KaTeX_" application/dist/styles/main.css application/dist/styles/607.css -S` -> passed (`main.css` は no matches、`styles/607.css` のみに matches)
+- `curl -s -o /dev/null -w '%{http_code}\n' -X POST http://127.0.0.1:3001/api/v1/initialize` -> passed (`200`)
+- `cd application && CI=1 E2E_BASE_URL=http://127.0.0.1:3001 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/home.test.ts --grep 'タイムラインが表示される'` -> passed (`1 passed (14.2s)`)
+- `cd application && CI=1 E2E_BASE_URL=http://127.0.0.1:3001 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/crok-chat.test.ts --grep '質問を送信するとAIの応答が表示される|KaTeX CSS/フォントは Crok でのみロードされる'` -> passed (`2 passed (16.5s)`)
+- `agent-browser open http://127.0.0.1:3001/ && agent-browser wait --load networkidle && agent-browser screenshot --full` -> screenshot captured on production server (`/Users/yuito_watanabe/.agent-browser/tmp/screenshots/screenshot-2026-03-21T06-33-00-572Z-pj3njd.png`)
+- Review by spawned Codex agent `Tesla` -> initial medium findings fixed, follow-up review returned `No findings`
+
+Commit:
+- Hash: pending post-commit
+- Message: `feat: [US-016] - KaTeX CSS/フォントの Crok チャンク内遅延ロード化`

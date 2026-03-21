@@ -252,7 +252,7 @@
         "Typecheck passes"
       ],
       "priority": 15,
-      "passes": false,
+      "passes": true,
       "notes": "index.css 2行目で全ページに KaTeX CSS をロード。KaTeX は Crok チャットでのみ使用。CSS 削除 + ChatMessageMarkdown 内での動的 import で 30-50ms + フォントファイル分を節約。"
     },
     {
