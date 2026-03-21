@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
-import { Helmet } from "react-helmet";
 
+import { PageTitle } from "@web-speed-hackathon-2026/client/src/components/application/PageTitle";
 import { CrokGate } from "@web-speed-hackathon-2026/client/src/components/crok/CrokGate";
 import { CrokPage } from "@web-speed-hackathon-2026/client/src/components/crok/CrokPage";
 import { useSSE } from "@web-speed-hackathon-2026/client/src/hooks/use_sse";
@@ -78,9 +78,7 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
 
   return (
     <>
-      <Helmet>
-        <title>Crok - CaX</title>
-      </Helmet>
+      <PageTitle title="Crok - CaX" />
       <CrokPage isStreaming={isStreaming} messages={displayMessages} onSendMessage={sendMessage} />
     </>
   );

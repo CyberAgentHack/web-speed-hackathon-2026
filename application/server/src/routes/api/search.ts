@@ -3,6 +3,8 @@ import { Op } from "sequelize";
 
 import { Post } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
+import { cache, TTL } from "../../cache";
+import { createPostPayloadQuery } from "./post_payloads";
 
 export const searchRouter = Router();
 
@@ -13,6 +15,16 @@ searchRouter.get("/search", async (req, res) => {
     return res.status(200).type("application/json").send([]);
   }
 
+  const normalizedQuery = query.trim();
+  const limit = req.query["limit"] != null ? Number(req.query["limit"]) : undefined;
+  const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
+  const cacheKey = `search:${normalizedQuery}:${limit ?? "all"}:${offset ?? 0}`;
+
+  const cachedResult = cache.get<Post[]>(cacheKey);
+  if (cachedResult !== undefined) {
+    return res.status(200).type("application/json").send(cachedResult);
+  }
+
   const { keywords, sinceDate, untilDate } = parseSearchQuery(query);
 
   // キーワードも日付フィルターもない場合は空配列を返す
@@ -21,9 +33,6 @@ searchRouter.get("/search", async (req, res) => {
   }
 
   const searchTerm = keywords ? `%${keywords}%` : null;
-  const limit = req.query["limit"] != null ? Number(req.query["limit"]) : undefined;
-  const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
-
   // 日付条件を構築
   const dateConditions: Record<symbol, Date>[] = [];
   if (sinceDate) {
@@ -38,24 +47,25 @@ searchRouter.get("/search", async (req, res) => {
   // テキスト検索条件
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
-  const postsByText = await Post.findAll({
-    limit,
-    offset,
-    where: {
-      ...textWhere,
-      ...dateWhere,
-    },
-  });
+  const postsByText = await Post.unscoped().findAll(
+    createPostPayloadQuery({
+      where: {
+        ...textWhere,
+        ...dateWhere,
+      },
+    }),
+  );
 
   // ユーザー名/名前での検索（キーワードがある場合のみ）
   let postsByUser: typeof postsByText = [];
   if (searchTerm) {
-    postsByUser = await Post.findAll({
+    postsByUser = await Post.unscoped().findAll({
+      ...createPostPayloadQuery({ where: dateWhere }),
       include: [
         {
           association: "user",
-          attributes: { exclude: ["profileImageId"] },
-          include: [{ association: "profileImage" }],
+          attributes: ["id", "name", "username"],
+          include: [{ association: "profileImage", attributes: ["id", "alt"] }],
           required: true,
           where: {
             [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
@@ -63,14 +73,13 @@ searchRouter.get("/search", async (req, res) => {
         },
         {
           association: "images",
+          attributes: ["id", "alt", "createdAt"],
+          required: false,
           through: { attributes: [] },
         },
-        { association: "movie" },
-        { association: "sound" },
+        { association: "movie", attributes: ["id"], required: false },
+        { association: "sound", attributes: ["artist", "id", "title"], required: false },
       ],
-      limit,
-      offset,
-      where: dateWhere,
     });
   }
 
@@ -86,7 +95,12 @@ searchRouter.get("/search", async (req, res) => {
 
   mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-  const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
+  const normalizedOffset = Number.isFinite(offset) ? Math.max(0, offset ?? 0) : 0;
+  const normalizedLimit =
+    Number.isFinite(limit) && (limit ?? 0) > 0 ? Number(limit) : mergedPosts.length;
+
+  const result = mergedPosts.slice(normalizedOffset, normalizedOffset + normalizedLimit);
+  cache.set(cacheKey, result, TTL.SEARCH);
 
   return res.status(200).type("application/json").send(result);
 });

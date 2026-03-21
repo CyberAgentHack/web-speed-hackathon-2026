@@ -1,6 +1,6 @@
-import { Helmet } from "react-helmet";
-import { useParams } from "react-router";
+import { useLocation, useParams } from "react-router";
 
+import { PageTitle } from "@web-speed-hackathon-2026/client/src/components/application/PageTitle";
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
 import { PostPage } from "@web-speed-hackathon-2026/client/src/components/post/PostPage";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
@@ -9,34 +9,34 @@ import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
+  const location = useLocation();
+  const initialPost = (location.state as { initialPost?: Models.Post } | null)?.initialPost;
+
   const { data: post, isLoading: isLoadingPost } = useFetch<Models.Post>(
     `/api/v1/posts/${postId}`,
     fetchJSON,
   );
+  const fallbackPost: Models.Post | null =
+    initialPost !== undefined && initialPost.id === postId ? initialPost : null;
+  const resolvedPost: Models.Post | null = post ?? fallbackPost;
 
   const { data: comments, fetchMore } = useInfiniteFetch<Models.Comment>(
     `/api/v1/posts/${postId}/comments`,
     fetchJSON,
   );
 
-  if (isLoadingPost) {
-    return (
-      <Helmet>
-        <title>読込中 - CaX</title>
-      </Helmet>
-    );
+  if (isLoadingPost && resolvedPost === null) {
+    return <PageTitle title="読込中 - CaX" />;
   }
 
-  if (post === null) {
+  if (resolvedPost === null) {
     return <NotFoundContainer />;
   }
 
   return (
     <InfiniteScroll fetchMore={fetchMore} items={comments}>
-      <Helmet>
-        <title>{post.user.name} さんのつぶやき - CaX</title>
-      </Helmet>
-      <PostPage comments={comments} post={post} />
+      <PageTitle title={`${resolvedPost.user.name} さんのつぶやき - CaX`} />
+      <PostPage comments={comments} post={resolvedPost} />
     </InfiniteScroll>
   );
 };

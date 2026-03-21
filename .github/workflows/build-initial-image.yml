@@ -1,0 +1,45 @@
+name: Build and Push Initial Docker Image
+
+on:
+    workflow_dispatch:
+
+env:
+    IMAGE_NAME: ghcr.io/shion1305/web-speed-hackathon-2026
+
+jobs:
+    build-initial:
+        if: github.repository == 'Shion1305/web-speed-hackathon-2026'
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            packages: write
+
+        steps:
+            - name: Checkout full history
+              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+              with:
+                  fetch-depth: 0
+
+            - name: Resolve initial commit
+              id: initial
+              run: |
+                  INITIAL_SHA="$(git rev-list --max-parents=0 HEAD | tail -n 1)"
+                  echo "sha=${INITIAL_SHA}" >> "$GITHUB_OUTPUT"
+                  git checkout "${INITIAL_SHA}"
+
+            - name: Log in to GHCR
+              uses: docker/login-action@v3
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Build and push initial image
+              uses: docker/build-push-action@v6
+              with:
+                  context: .
+                  file: Dockerfile
+                  push: true
+                  tags: |
+                      ${{ env.IMAGE_NAME }}:initial
+                      ${{ env.IMAGE_NAME }}:initial-${{ steps.initial.outputs.sha }}

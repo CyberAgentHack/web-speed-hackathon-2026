@@ -1,16 +1,19 @@
-import { promises as fs } from "fs";
-import path from "path";
-
 import { Router } from "express";
 import { fileTypeFromBuffer } from "file-type";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
-import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import { extractMetadataFromSound } from "@web-speed-hackathon-2026/server/src/utils/extract_metadata_from_sound";
+import {
+  createCanonicalMedia,
+  createDerivativeMedia,
+  getMediaPath,
+  storeMediaSource,
+} from "@web-speed-hackathon-2026/server/src/utils/media_derivation";
+import { mediaDerivationQueue } from "@web-speed-hackathon-2026/server/src/utils/media_derivation_queue";
 
-// 変換した音声の拡張子
-const EXTENSION = "mp3";
+const SOURCE_KIND = "sounds";
+const CANONICAL_EXT = "mp3";
 
 export const soundRouter = Router();
 
@@ -23,17 +26,31 @@ soundRouter.post("/sounds", async (req, res) => {
   }
 
   const type = await fileTypeFromBuffer(req.body);
-  if (type === undefined || type.ext !== EXTENSION) {
+  if (type === undefined || type.mime.startsWith("audio/") === false) {
     throw new httpErrors.BadRequest("Invalid file type");
   }
 
   const soundId = uuidv4();
-
+  const sourcePath = await storeMediaSource(SOURCE_KIND, soundId, type.ext, req.body);
   const { artist, title } = await extractMetadataFromSound(req.body);
+  const canonicalPath = getMediaPath(SOURCE_KIND, soundId, CANONICAL_EXT);
+  const metadata = { artist, title };
 
-  const filePath = path.resolve(UPLOAD_PATH, `./sounds/${soundId}.${EXTENSION}`);
-  await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds"), { recursive: true });
-  await fs.writeFile(filePath, req.body);
+  if (type.ext === CANONICAL_EXT) {
+    await createCanonicalMedia(SOURCE_KIND, sourcePath, canonicalPath, metadata);
+  } else {
+    void mediaDerivationQueue.enqueue({
+      key: `${SOURCE_KIND}:${soundId}:canonical`,
+      run: async () => {
+        await createCanonicalMedia(
+          SOURCE_KIND,
+          sourcePath,
+          canonicalPath,
+          metadata,
+        );
+      },
+    });
+  }
 
   return res.status(200).type("application/json").send({ artist, id: soundId, title });
 });

@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { SubmissionError } from "redux-form";
 
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { AuthModalPage } from "@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage";
@@ -16,41 +15,43 @@ const ERROR_MESSAGES: Record<string, string> = {
   USERNAME_TAKEN: "ユーザー名が使われています",
 };
 
-function getErrorCode(err: JQuery.jqXHR<unknown>, type: "signin" | "signup"): string {
-  const responseJSON = err.responseJSON;
-  if (
-    typeof responseJSON !== "object" ||
-    responseJSON === null ||
-    !("code" in responseJSON) ||
-    typeof responseJSON.code !== "string" ||
-    !Object.keys(ERROR_MESSAGES).includes(responseJSON.code)
-  ) {
-    if (type === "signup") {
-      return "登録に失敗しました";
-    } else {
-      return "パスワードが異なります";
+function getErrorMessage(err: unknown, type: "signin" | "signup"): string {
+  if (err instanceof Response) {
+    return type === "signup" ? "登録に失敗しました" : "パスワードが異なります";
+  }
+  if (typeof err === "object" && err !== null && "responseJSON" in err) {
+    const responseJSON = (err as { responseJSON: unknown }).responseJSON;
+    if (
+      typeof responseJSON === "object" &&
+      responseJSON !== null &&
+      "code" in responseJSON &&
+      typeof responseJSON.code === "string" &&
+      Object.keys(ERROR_MESSAGES).includes(responseJSON.code)
+    ) {
+      return ERROR_MESSAGES[responseJSON.code]!;
     }
   }
-
-  return ERROR_MESSAGES[responseJSON.code]!;
+  return type === "signup" ? "登録に失敗しました" : "パスワードが異なります";
 }
 
 export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
-  const [resetKey, setResetKey] = useState(0);
+  const [resetNonce, setResetNonce] = useState(0);
+  const [serverError, setServerError] = useState<string | undefined>(undefined);
+
   useEffect(() => {
     if (!ref.current) return;
     const element = ref.current;
 
-    const handleToggle = () => {
-      // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
-      setResetKey((key) => key + 1);
+    const handleClose = () => {
+      setResetNonce((nonce) => nonce + 1);
+      setServerError(undefined);
     };
-    element.addEventListener("toggle", handleToggle);
+    element.addEventListener("close", handleClose);
     return () => {
-      element.removeEventListener("toggle", handleToggle);
+      element.removeEventListener("close", handleClose);
     };
-  }, [ref, setResetKey]);
+  }, [ref, setResetNonce]);
 
   const handleRequestCloseModal = useCallback(() => {
     ref.current?.close();
@@ -59,6 +60,7 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   const handleSubmit = useCallback(
     async (values: AuthFormData) => {
       try {
+        setServerError(undefined);
         if (values.type === "signup") {
           const user = await sendJSON<Models.User>("/api/v1/signup", values);
           onUpdateActiveUser(user);
@@ -68,10 +70,7 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
         }
         handleRequestCloseModal();
       } catch (err: unknown) {
-        const error = getErrorCode(err as JQuery.jqXHR<unknown>, values.type);
-        throw new SubmissionError({
-          _error: error,
-        });
+        setServerError(getErrorMessage(err, values.type));
       }
     },
     [handleRequestCloseModal, onUpdateActiveUser],
@@ -80,9 +79,10 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   return (
     <Modal id={id} ref={ref} closedby="any">
       <AuthModalPage
-        key={resetKey}
         onRequestCloseModal={handleRequestCloseModal}
         onSubmit={handleSubmit}
+        resetNonce={resetNonce}
+        serverError={serverError}
       />
     </Modal>
   );

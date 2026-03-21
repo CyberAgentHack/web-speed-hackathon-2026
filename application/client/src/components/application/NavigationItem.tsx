@@ -2,6 +2,7 @@ import classNames from "classnames";
 import { useLocation } from "react-router";
 
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
+import { runDialogCommand } from "@web-speed-hackathon-2026/client/src/utils/dialog_command";
 
 interface Props {
   badge?: React.ReactNode;
@@ -15,6 +16,12 @@ interface Props {
 export const NavigationItem = ({ badge, href, icon, command, commandfor, text }: Props) => {
   const location = useLocation();
   const isActive = location.pathname === href;
+
+  const handleClick: React.ComponentPropsWithRef<"button">["onClick"] = (event) => {
+    if (event.defaultPrevented) return;
+    runDialogCommand(command, commandfor);
+  };
+
   return (
     <li>
       {href !== undefined ? (
@@ -35,8 +42,7 @@ export const NavigationItem = ({ badge, href, icon, command, commandfor, text }:
         <button
           className="hover:bg-cax-brand-soft flex h-12 w-12 flex-col items-center justify-center rounded-full sm:h-auto sm:w-24 sm:rounded-sm sm:px-2 lg:h-auto lg:w-auto lg:flex-row lg:justify-start lg:rounded-full lg:px-4 lg:py-2"
           type="button"
-          command={command}
-          commandfor={commandfor}
+          onClick={handleClick}
         >
           <span className="relative text-xl lg:pr-2 lg:text-3xl">
             {icon}

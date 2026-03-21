@@ -1,18 +1,20 @@
-import { MagickFormat } from "@imagemagick/magick-wasm";
-import { ChangeEventHandler, FormEventHandler, useCallback, useState } from "react";
+import { ChangeEventHandler, FormEventHandler, useCallback, useEffect, useRef, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/components/modal/ModalErrorMessage";
 import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/components/modal/ModalSubmitButton";
 import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/AttachFileInputButton";
-import { convertImage } from "@web-speed-hackathon-2026/client/src/utils/convert_image";
-import { convertMovie } from "@web-speed-hackathon-2026/client/src/utils/convert_movie";
-import { convertSound } from "@web-speed-hackathon-2026/client/src/utils/convert_sound";
+import { extractAltFromImageFile } from "@web-speed-hackathon-2026/client/src/utils/extract_alt_from_image";
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
+interface SubmitImage {
+  alt: string;
+  file: File;
+}
+
 interface SubmitParams {
-  images: File[];
+  images: SubmitImage[];
   movie: File | undefined;
   sound: File | undefined;
   text: string;
@@ -23,10 +25,46 @@ interface Props {
   hasError: boolean;
   isLoading: boolean;
   onResetError: () => void;
-  onSubmit: (params: SubmitParams) => void;
+  onSubmit: (params: SubmitParams) => Promise<void>;
 }
 
-export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubmit }: Props) => {
+function hasExtension(file: File, extensions: string[]): boolean {
+  const lowerName = file.name.toLowerCase();
+  return extensions.some((extension) => lowerName.endsWith(`.${extension}`));
+}
+
+function isAcceptableImage(file: File): boolean {
+  return (
+    file.type.startsWith("image/") ||
+    hasExtension(file, ["jpg", "jpeg", "png", "gif", "webp", "avif", "tif", "tiff"])
+  );
+}
+
+function isAcceptableSound(file: File): boolean {
+  return (
+    file.type === "audio/mpeg" ||
+    file.type === "audio/wav" ||
+    file.type === "audio/wave" ||
+    file.type === "audio/x-wav" ||
+    hasExtension(file, ["mp3", "wav", "wave"])
+  );
+}
+
+function isAcceptableMovie(file: File): boolean {
+  return (
+    file.type === "video/mp4" ||
+    file.type === "video/x-matroska" ||
+    hasExtension(file, ["mp4", "mkv"])
+  );
+}
+
+export const NewPostModalPage = ({
+  id,
+  hasError,
+  isLoading,
+  onResetError,
+  onSubmit,
+}: Props) => {
   const [params, setParams] = useState<SubmitParams>({
     images: [],
     movie: undefined,
@@ -34,99 +72,244 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     text: "",
   });
 
+  const paramsRef = useRef(params);
+  const mountedRef = useRef(true);
+  const selectionVersionRef = useRef(0);
+  const pendingConversionRef = useRef<Promise<void> | null>(null);
+
   const [hasFileError, setHasFileError] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
 
+  useEffect(() => {
+    paramsRef.current = params;
+  }, [params]);
+
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  const commitParams = useCallback((next: SubmitParams) => {
+    paramsRef.current = next;
+    setParams(next);
+  }, []);
+
+  const updateParams = useCallback(
+    (updater: (current: SubmitParams) => SubmitParams) => {
+      commitParams(updater(paramsRef.current));
+    },
+    [commitParams],
+  );
+
+  const beginSelection = useCallback(() => {
+    selectionVersionRef.current += 1;
+    pendingConversionRef.current = null;
+    if (mountedRef.current) {
+      setIsConverting(false);
+    }
+    return selectionVersionRef.current;
+  }, []);
+
+  const finishSelection = useCallback((version: number) => {
+    if (!mountedRef.current || selectionVersionRef.current !== version) {
+      return;
+    }
+
+    pendingConversionRef.current = null;
+    setIsConverting(false);
+  }, []);
+
   const handleChangeText = useCallback<ChangeEventHandler<HTMLTextAreaElement>>((ev) => {
     const value = ev.currentTarget.value;
-    setParams((params) => ({
-      ...params,
+    updateParams((current) => ({
+      ...current,
       text: value,
     }));
-  }, []);
+  }, [updateParams]);
 
-  const handleChangeImages = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
-    const files = Array.from(ev.currentTarget.files ?? []).slice(0, 4);
-    const isValid = files.every((file) => file.size <= MAX_UPLOAD_BYTES_LIMIT);
+  const handleChangeImages = useCallback<ChangeEventHandler<HTMLInputElement>>(
+    (ev) => {
+      const files = Array.from(ev.currentTarget.files ?? []).slice(0, 4);
+      if (files.length === 0) {
+        return;
+      }
 
-    setHasFileError(isValid !== true);
-    if (isValid) {
-      setIsConverting(true);
+      const isValid = files.every((file) => file.size <= MAX_UPLOAD_BYTES_LIMIT);
+      const version = beginSelection();
 
-      Promise.all(
-        files.map((file) =>
-          convertImage(file, { extension: MagickFormat.Jpg }).then(
-            (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
-          ),
-        ),
+      setHasFileError(isValid !== true);
+      if (!isValid) {
+        return;
+      }
+
+      const allAcceptable = files.every((file) => isAcceptableImage(file));
+      if (!allAcceptable) {
+        setHasFileError(true);
+        return;
+      }
+
+      if (mountedRef.current) {
+        setIsConverting(true);
+      }
+
+      const pending = Promise.all(
+        files.map(async (file) => ({
+          alt: await extractAltFromImageFile(file),
+          file,
+        })),
       )
-        .then((convertedFiles) => {
-          setParams((params) => ({
-            ...params,
-            images: convertedFiles,
-            movie: undefined,
-            sound: undefined,
-          }));
+        .then((images) => {
+        if (!mountedRef.current || selectionVersionRef.current !== version) {
+          return;
+        }
 
-          setIsConverting(false);
+        updateParams((current) => ({
+          ...current,
+          images,
+          movie: undefined,
+          sound: undefined,
+        }));
+      })
+        .catch(() => {
+          if (mountedRef.current && selectionVersionRef.current === version) {
+            setHasFileError(true);
+          }
         })
-        .catch(console.error);
-    }
-  }, []);
+        .finally(() => {
+          finishSelection(version);
+        });
 
-  const handleChangeSound = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
-    const file = Array.from(ev.currentTarget.files ?? [])[0]!;
-    const isValid = file.size <= MAX_UPLOAD_BYTES_LIMIT;
+      pendingConversionRef.current = pending;
+    },
+    [beginSelection, finishSelection, updateParams],
+  );
 
-    setHasFileError(isValid !== true);
-    if (isValid) {
-      setIsConverting(true);
+  const handleChangeSound = useCallback<ChangeEventHandler<HTMLInputElement>>(
+    (ev) => {
+      const file = ev.currentTarget.files?.[0];
+      if (file == null) {
+        return;
+      }
 
-      convertSound(file, { extension: "mp3" }).then((converted) => {
-        setParams((params) => ({
-          ...params,
+      const isValid = file.size <= MAX_UPLOAD_BYTES_LIMIT;
+      const version = beginSelection();
+
+      setHasFileError(isValid !== true);
+      if (!isValid) {
+        return;
+      }
+
+      if (isAcceptableSound(file)) {
+        updateParams((current) => ({
+          ...current,
           images: [],
           movie: undefined,
-          sound: new File([converted], "converted.mp3", { type: "audio/mpeg" }),
+          sound: file,
         }));
+        return;
+      }
 
-        setIsConverting(false);
-      });
-    }
-  }, []);
+      if (mountedRef.current) {
+        setIsConverting(true);
+      }
 
-  const handleChangeMovie = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
-    const file = Array.from(ev.currentTarget.files ?? [])[0]!;
-    const isValid = file.size <= MAX_UPLOAD_BYTES_LIMIT;
-
-    setHasFileError(isValid !== true);
-    if (isValid) {
-      setIsConverting(true);
-
-      convertMovie(file, { extension: "gif", size: undefined })
+      const pending = import("@web-speed-hackathon-2026/client/src/utils/convert_sound")
+        .then(({ convertSound }) => convertSound(file, { extension: "mp3" }))
         .then((converted) => {
-          setParams((params) => ({
-            ...params,
+          if (!mountedRef.current || selectionVersionRef.current !== version) {
+            return;
+          }
+
+          updateParams((current) => ({
+            ...current,
             images: [],
-            movie: new File([converted], "converted.gif", {
-              type: "image/gif",
+            movie: undefined,
+            sound: new File([converted], "converted.mp3", { type: "audio/mpeg" }),
+          }));
+        })
+        .catch(() => {
+          if (mountedRef.current && selectionVersionRef.current === version) {
+            setHasFileError(true);
+          }
+        })
+        .finally(() => {
+          finishSelection(version);
+        });
+
+      pendingConversionRef.current = pending;
+    },
+    [beginSelection, finishSelection, updateParams],
+  );
+
+  const handleChangeMovie = useCallback<ChangeEventHandler<HTMLInputElement>>(
+    (ev) => {
+      const file = ev.currentTarget.files?.[0];
+      if (file == null) {
+        return;
+      }
+
+      const isValid = file.size <= MAX_UPLOAD_BYTES_LIMIT;
+      const version = beginSelection();
+
+      setHasFileError(isValid !== true);
+      if (!isValid) {
+        return;
+      }
+
+      if (isAcceptableMovie(file)) {
+        updateParams((current) => ({
+          ...current,
+          images: [],
+          movie: file,
+          sound: undefined,
+        }));
+        return;
+      }
+
+      if (mountedRef.current) {
+        setIsConverting(true);
+      }
+
+      const pending = import("@web-speed-hackathon-2026/client/src/utils/convert_movie")
+        .then(({ convertMovie }) => convertMovie(file, { extension: "mp4", size: undefined }))
+        .then((converted) => {
+          if (!mountedRef.current || selectionVersionRef.current !== version) {
+            return;
+          }
+
+          updateParams((current) => ({
+            ...current,
+            images: [],
+            movie: new File([converted], "converted.mp4", {
+              type: "video/mp4",
             }),
             sound: undefined,
           }));
-
-          setIsConverting(false);
         })
-        .catch(console.error);
-    }
-  }, []);
+        .catch(() => {
+          if (mountedRef.current && selectionVersionRef.current === version) {
+            setHasFileError(true);
+          }
+        })
+        .finally(() => {
+          finishSelection(version);
+        });
+
+      pendingConversionRef.current = pending;
+    },
+    [beginSelection, finishSelection, updateParams],
+  );
 
   const handleSubmit = useCallback<FormEventHandler<HTMLFormElement>>(
-    (ev) => {
+    async (ev) => {
       ev.preventDefault();
       onResetError();
-      onSubmit(params);
+
+      await pendingConversionRef.current;
+      await onSubmit(paramsRef.current);
     },
-    [params, onSubmit, onResetError],
+    [onResetError, onSubmit],
   );
 
   return (

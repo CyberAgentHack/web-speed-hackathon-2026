@@ -1,7 +1,7 @@
-import moment from "moment";
-
+import { LazyImage } from "@web-speed-hackathon-2026/client/src/components/foundation/LazyImage";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
+import { formatLongDate, toISOString } from "@web-speed-hackathon-2026/client/src/utils/date";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
@@ -17,9 +17,9 @@ export const CommentItem = ({ comment }: Props) => {
             className="border-cax-border bg-cax-surface-subtle block h-8 w-8 overflow-hidden rounded-full border hover:opacity-75 sm:h-12 sm:w-12"
             to={`/users/${comment.user.username}`}
           >
-            <img
+            <LazyImage
               alt={comment.user.profileImage.alt}
-              src={getProfileImagePath(comment.user.profileImage.id)}
+              src={getProfileImagePath(comment.user.profileImage.id, 48)}
             />
           </Link>
         </div>
@@ -42,8 +42,8 @@ export const CommentItem = ({ comment }: Props) => {
             <TranslatableText text={comment.text} />
           </div>
           <p className="text-cax-text-muted pt-1 text-xs">
-            <time dateTime={moment(comment.createdAt).toISOString()}>
-              {moment(comment.createdAt).locale("ja").format("LL")}
+            <time dateTime={toISOString(comment.createdAt)}>
+              {formatLongDate(comment.createdAt)}
             </time>
           </p>
         </div>

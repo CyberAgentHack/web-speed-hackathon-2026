@@ -2,6 +2,8 @@ name: Deploy Review App
 on:
     pull_request_target:
         types: [opened, reopened, synchronize, closed]
+        branches:
+            - main
 
 env:
     FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
@@ -11,13 +13,13 @@ env:
 
 jobs:
     review_app:
+        if: github.event.pull_request.head.ref == 'main' && github.event.pull_request.head.repo.full_name != github.repository
         timeout-minutes: 30
         runs-on: ubuntu-latest
         outputs:
             url: ${{ steps.deploy.outputs.url }}
         concurrency:
             group: pr-${{ github.event.number }}
-            cancel-in-progress: true
 
         environment:
             name: deployment

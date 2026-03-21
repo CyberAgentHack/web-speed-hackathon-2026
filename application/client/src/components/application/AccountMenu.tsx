@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { LazyImage } from "@web-speed-hackathon-2026/client/src/components/foundation/LazyImage";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
@@ -37,10 +38,10 @@ export const AccountMenu = ({ user, onLogout }: Props) => {
         className="hover:bg-cax-surface-subtle flex w-full items-center gap-3 rounded-full p-2 transition-colors"
         onClick={() => setOpen((prev) => !prev)}
       >
-        <img
+        <LazyImage
           alt={user.profileImage.alt}
           className="h-10 w-10 shrink-0 rounded-full object-cover"
-          src={getProfileImagePath(user.profileImage.id)}
+          src={getProfileImagePath(user.profileImage.id, 40)}
         />
         <div className="hidden min-w-0 flex-1 text-left lg:block">
           <div className="text-cax-text truncate text-sm font-bold">{user.name}</div>

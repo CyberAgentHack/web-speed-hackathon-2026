@@ -1,6 +1,67 @@
+# Dependencies
 node_modules
-.git
-*.log
+**/node_modules
+.pnp
+.pnp.js
 
+# Version control
+.git
+.github
+.gitignore
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log*
+
+# Testing
+coverage
+.nyc_output
+application/e2e/src
+application/e2e/test-results
+**/__tests__
+**/*.test.*
+**/*.spec.*
+
+# Development files
+.env.local
+.env.development.local
+.env.test.local
+*.local
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+.tmp*
+.claude
+
+# Build tools
+scoring-tool
+docs
+README.md
+LICENSE
+*.md
+mise.toml
+fly.toml
+
+# Application specific
 application/server/seeds
 application/server/upload
+application/server/src/server-bundle.js
+application/.oxfmtrc.json
+application/.oxlintrc.json
+application/.prettierignore
+application/pnpm-lock.yaml
+application/pnpm-workspace.yaml
+**/pnpm-lock.yaml
+
+# Docker
+Dockerfile*
+.dockerignore
+docker-compose*

@@ -1,5 +1,3 @@
-import Bluebird from "bluebird";
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
 import {
   useEffect,
   useLayoutEffect,
@@ -11,10 +9,6 @@ import {
 } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import {
-  extractTokens,
-  filterSuggestionsBM25,
-} from "@web-speed-hackathon-2026/client/src/utils/bm25_search";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
@@ -22,27 +16,43 @@ interface Props {
   onSendMessage: (message: string) => void;
 }
 
-// トークン単位でハイライト
-function highlightMatchByTokens(text: string, queryTokens: string[]): React.ReactNode {
-  if (queryTokens.length === 0) return text;
+const MIN_SUGGESTION_QUERY_LENGTH = 3;
+const SUGGESTION_DEBOUNCE_MS = 280;
 
-  const lowerText = text.toLowerCase();
+function getQueryTerms(query: string): string[] {
+  return query
+    .toLowerCase()
+    .normalize("NFKC")
+    .split(/[\s\u3000、。,.!?！？/\\-]+/u)
+    .map((term) => term.trim())
+    .filter((term) => term !== "");
+}
 
-  // テキスト内でクエリトークンにマッチする範囲を収集
+function highlightMatchByQuery(text: string, query: string): React.ReactNode {
+  const queryTerms = getQueryTerms(query);
+  if (queryTerms.length === 0) {
+    return text;
+  }
+
+  const lowerText = text.toLowerCase().normalize("NFKC");
   const ranges: { start: number; end: number }[] = [];
-  for (const token of queryTokens) {
-    let pos = 0;
-    while (pos < lowerText.length) {
-      const index = lowerText.indexOf(token, pos);
-      if (index === -1) break;
-      ranges.push({ start: index, end: index + token.length });
-      pos = index + 1;
+
+  for (const term of queryTerms) {
+    let position = 0;
+    while (position < lowerText.length) {
+      const index = lowerText.indexOf(term, position);
+      if (index === -1) {
+        break;
+      }
+      ranges.push({ start: index, end: index + term.length });
+      position = index + 1;
     }
   }
 
-  if (ranges.length === 0) return text;
+  if (ranges.length === 0) {
+    return text;
+  }
 
-  // 範囲をソートしてマージ
   ranges.sort((a, b) => a.start - b.start);
   const merged: { start: number; end: number }[] = [ranges[0]!];
   for (let i = 1; i < ranges.length; i++) {
@@ -79,75 +89,72 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
+  const resizeFrameIdRef = useRef<number | null>(null);
+  const requestIdRef = useRef(0);
+  const lastSelectedSuggestionRef = useRef<string | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [queryTokens, setQueryTokens] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  // サジェストが更新されたら一番下にスクロール
   useLayoutEffect(() => {
     if (suggestionsRef.current && showSuggestions) {
       suggestionsRef.current.scrollTop = suggestionsRef.current.scrollHeight;
     }
   }, [suggestions, showSuggestions]);
 
-  // 初回にkuromojiトークナイザーを構築
   useEffect(() => {
-    let mounted = true;
+    if (isStreaming) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
 
-    const init = async () => {
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
-      if (mounted) {
-        setTokenizer(nextTokenizer);
-      }
-    };
-    init();
+    const query = inputValue.trim();
+    if (query.length < MIN_SUGGESTION_QUERY_LENGTH) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      lastSelectedSuggestionRef.current = null;
+      return;
+    }
+
+    if (lastSelectedSuggestionRef.current === query) {
+      setShowSuggestions(false);
+      return;
+    }
+
+    const requestId = ++requestIdRef.current;
+    setShowSuggestions(false);
+    setSuggestions([]);
+
+    const timer = window.setTimeout(() => {
+      void fetchJSON<{ suggestions: string[] }>(
+        `/api/v1/crok/suggestions?q=${encodeURIComponent(query)}`,
+      )
+        .then(({ suggestions: candidates }) => {
+          if (requestIdRef.current !== requestId) {
+            return;
+          }
+
+          setSuggestions(candidates);
+          setShowSuggestions(candidates.length > 0);
+        })
+        .catch(() => {
+          if (requestIdRef.current !== requestId) {
+            return;
+          }
+
+          setSuggestions([]);
+          setShowSuggestions(false);
+        });
+    }, SUGGESTION_DEBOUNCE_MS);
 
     return () => {
-      mounted = false;
+      window.clearTimeout(timer);
     };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const updateSuggestions = async () => {
-      if (!tokenizer || !inputValue.trim()) {
-        setSuggestions([]);
-        setQueryTokens([]);
-        setShowSuggestions(false);
-        return;
-      }
-
-      const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-        "/api/v1/crok/suggestions",
-      );
-      if (cancelled) {
-        return;
-      }
-
-      const tokens = extractTokens(tokenizer.tokenize(inputValue));
-      const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
-
-      if (cancelled) {
-        return;
-      }
-
-      setQueryTokens(tokens);
-      setSuggestions(results);
-      setShowSuggestions(results.length > 0);
-    };
-
-    void updateSuggestions();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [inputValue, tokenizer]);
+  }, [inputValue, isStreaming]);
 
   const adjustTextareaHeight = () => {
+    resizeFrameIdRef.current = null;
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.style.height = "auto";
@@ -155,23 +162,46 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   };
 
+  const scheduleTextareaHeight = () => {
+    if (resizeFrameIdRef.current !== null) {
+      return;
+    }
+    resizeFrameIdRef.current = window.requestAnimationFrame(adjustTextareaHeight);
+  };
+
   const resetTextareaHeight = () => {
+    if (resizeFrameIdRef.current !== null) {
+      window.cancelAnimationFrame(resizeFrameIdRef.current);
+      resizeFrameIdRef.current = null;
+    }
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
   };
 
+  useEffect(() => {
+    return () => {
+      if (resizeFrameIdRef.current !== null) {
+        window.cancelAnimationFrame(resizeFrameIdRef.current);
+      }
+    };
+  }, []);
+
   const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
+    if (lastSelectedSuggestionRef.current !== null && value !== lastSelectedSuggestionRef.current) {
+      lastSelectedSuggestionRef.current = null;
+    }
     setInputValue(value);
-    adjustTextareaHeight();
+    scheduleTextareaHeight();
   };
 
   const handleSuggestionClick = (suggestion: string) => {
+    lastSelectedSuggestionRef.current = suggestion;
     setInputValue(suggestion);
     setSuggestions([]);
-    setQueryTokens([]);
     setShowSuggestions(false);
+    scheduleTextareaHeight();
   };
 
   const handleSubmit = (e: FormEvent) => {
@@ -180,8 +210,8 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
       onSendMessage(inputValue.trim());
       setInputValue("");
       setSuggestions([]);
-      setQueryTokens([]);
       setShowSuggestions(false);
+      lastSelectedSuggestionRef.current = null;
       resetTextareaHeight();
     }
   };
@@ -210,7 +240,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
                 className="border-cax-border text-cax-text-muted hover:bg-cax-surface-subtle w-full border-b px-4 py-2 text-left text-sm last:border-b-0"
                 onClick={() => handleSuggestionClick(suggestion)}
               >
-                {highlightMatchByTokens(suggestion, queryTokens)}
+                {highlightMatchByQuery(suggestion, inputValue)}
               </button>
             ))}
           </div>

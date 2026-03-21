@@ -1,46 +1,51 @@
 export const sanitizeSearchText = (input: string): string => {
-  let text = input;
+  let text = input.trim();
 
   text = text.replace(
-    /\b(from|until)\s*:?\s*(\d{4}-\d{2}-\d{2})\d*/gi,
-    (_m, key, date) => `${key}:${date}`,
+    /\b(since|until)\s*:?\s*(\d{4}-\d{2}-\d{2})[^\s]*/gi,
+    (_m, key, date) => `${String(key).toLowerCase()}:${date}`,
   );
 
-  return text;
+  return text.replace(/\s+/g, " ");
 };
 
 export const parseSearchQuery = (query: string) => {
-  const sincePattern = /since:((\d|\d\d|\d\d\d\d-\d\d-\d\d)+)+$/;
-  const untilPattern = /until:((\d|\d\d|\d\d\d\d-\d\d-\d\d)+)+$/;
-
-  const sincePart = query.match(/since:[^\s]*/)?.[0] || "";
-  const untilPart = query.match(/until:[^\s]*/)?.[0] || "";
-
-  const sinceMatch = sincePattern.exec(sincePart);
-  const untilMatch = untilPattern.exec(untilPart);
-
-  const keywords = query
-    .replace(/since:.*(\d{4}-\d{2}-\d{2}).*/g, "")
-    .replace(/until:.*(\d{4}-\d{2}-\d{2}).*/g, "")
-    .trim();
-
-  const extractDate = (s: string | null) => {
-    if (!s) return null;
-    const m = /(\d{4}-\d{2}-\d{2})/.exec(s);
-    return m ? m[1] : null;
+  const extractDate = (token: string | null): string | null => {
+    if (token == null) {
+      return null;
+    }
+    const matched = /^(\d{4}-\d{2}-\d{2})/.exec(token);
+    return matched ? matched[1]! : null;
   };
+  const sinceToken = query.match(/\bsince:([^\s]+)/i)?.[1] ?? null;
+  const untilToken = query.match(/\buntil:([^\s]+)/i)?.[1] ?? null;
+  const keywords = query
+    .replace(/\bsince:[^\s]+/gi, "")
+    .replace(/\buntil:[^\s]+/gi, "")
+    .trim()
+    .replace(/\s+/g, " ");
 
   return {
     keywords,
-    sinceDate: extractDate(sinceMatch ? sinceMatch[1]! : null),
-    untilDate: extractDate(untilMatch ? untilMatch[1]! : null),
+    sinceDate: extractDate(sinceToken),
+    untilDate: extractDate(untilToken),
   };
 };
 
 export const isValidDate = (dateStr: string): boolean => {
-  const slowDateLike = /^(\d+)+-(\d+)+-(\d+)+$/;
-  if (!slowDateLike.test(dateStr)) return false;
+  const matched = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
+  if (matched == null) {
+    return false;
+  }
 
-  const date = new Date(dateStr);
-  return !Number.isNaN(date.getTime());
+  const year = Number(matched[1]);
+  const month = Number(matched[2]);
+  const day = Number(matched[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() + 1 === month &&
+    date.getUTCDate() === day
+  );
 };

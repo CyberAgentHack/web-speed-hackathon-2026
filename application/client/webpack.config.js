@@ -3,8 +3,11 @@ const path = require("path");
 
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const HTMLInlineCSSWebpackPlugin = require("html-inline-css-webpack-plugin").default;
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
 const webpack = require("webpack");
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 
 const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
@@ -25,18 +28,15 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: false,
   entry: {
     main: [
-      "core-js",
-      "regenerator-runtime/runtime",
-      "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: process.env.NODE_ENV === "production" ? "production" : "development",
   module: {
     rules: [
       {
@@ -54,33 +54,29 @@ const config = {
       },
       {
         resourceQuery: /binary/,
-        type: "asset/bytes",
+        type: "asset/resource",
+        generator: {
+          filename: "assets/[contenthash][ext]",
+        },
       },
     ],
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
-    filename: "scripts/[name].js",
+    filename: "scripts/[name]-[contenthash].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     clean: true,
   },
   plugins: [
-    new webpack.ProvidePlugin({
-      $: "jquery",
-      AudioContext: ["standardized-audio-context", "AudioContext"],
-      Buffer: ["buffer", "Buffer"],
-      "window.jQuery": "jquery",
-    }),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
     }),
     new MiniCssExtractPlugin({
-      filename: "styles/[name].css",
+      filename: "styles/[name]-[contenthash].css",
+      runtime: false,
     }),
     new CopyWebpackPlugin({
       patterns: [
@@ -91,9 +87,11 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: "head",
+      scriptLoading: "defer",
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
+    new HTMLInlineCSSWebpackPlugin(),
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
@@ -115,11 +113,6 @@ const config = {
         "node_modules",
         "@ffmpeg/core/dist/umd/ffmpeg-core.wasm",
       ),
-      "@imagemagick/magick-wasm/magick.wasm$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@imagemagick/magick-wasm/dist/magick.wasm",
-      ),
     },
     fallback: {
       fs: false,
@@ -128,14 +121,58 @@ const config = {
     },
   },
   optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
+    chunkIds: "deterministic",
+    moduleIds: "deterministic",
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          compress: {
+            passes: 2,
+            drop_console: true,
+          },
+        },
+      }),
+      new CssMinimizerPlugin({
+        minimizerOptions: {
+          preset: [
+            "default",
+            {
+              // Disabling calc reduction prevents sub-pixel rounding differences
+              // caused by converting calc(2/1.5) → 1.33333, which shifts layout
+              calc: false,
+            },
+          ],
+        },
+      }),
+    ],
+    runtimeChunk: "single",
+    splitChunks: {
+      chunks: "all",
+      maxSize: 500000,
+      cacheGroups: {
+        react: {
+          test: /[\\/]node_modules[\\/](react|react-dom|react-router|react-redux|redux)[\\/]/,
+          name: "framework",
+          chunks: "all",
+          priority: 20,
+          enforce: true,
+        },
+        vendors: {
+          test: /[\\/]node_modules[\\/]/,
+          chunks: "all",
+          priority: 10,
+          reuseExistingChunk: true,
+          minChunks: 2,
+        },
+      },
+    },
+    usedExports: true,
+    sideEffects: true,
   },
-  cache: false,
+  cache: {
+    type: "filesystem",
+  },
   ignoreWarnings: [
     {
       module: /@ffmpeg/,

@@ -1,8 +1,8 @@
 import classNames from "classnames";
-import moment from "moment";
 import {
   ChangeEvent,
   useCallback,
+  useMemo,
   useId,
   useRef,
   useState,
@@ -12,6 +12,8 @@ import {
 } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
+import { LazyImage } from "@web-speed-hackathon-2026/client/src/components/foundation/LazyImage";
+import { formatTime } from "@web-speed-hackathon-2026/client/src/utils/date";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
@@ -21,7 +23,7 @@ interface Props {
   activeUser: Models.User;
   isPeerTyping: boolean;
   isSubmitting: boolean;
-  onTyping: () => void;
+  onTyping: (text: string) => void;
   onSubmit: (params: DirectMessageFormData) => Promise<void>;
 }
 
@@ -35,6 +37,7 @@ export const DirectMessagePage = ({
   onSubmit,
 }: Props) => {
   const formRef = useRef<HTMLFormElement>(null);
+  const scrollHeightRef = useRef(0);
   const textAreaId = useId();
 
   const peer =
@@ -43,12 +46,12 @@ export const DirectMessagePage = ({
   const [text, setText] = useState("");
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
-  const scrollHeightRef = useRef(0);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
-      setText(event.target.value);
-      onTyping();
+      const nextText = event.target.value;
+      setText(nextText);
+      onTyping(nextText);
     },
     [onTyping],
   );
@@ -74,16 +77,55 @@ export const DirectMessagePage = ({
   );
 
   useEffect(() => {
-    const id = setInterval(() => {
-      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
+    const observer = new ResizeObserver((entries) => {
+      const height = entries[0]?.contentRect.height ?? document.body.scrollHeight;
       if (height !== scrollHeightRef.current) {
         scrollHeightRef.current = height;
         window.scrollTo(0, height);
       }
-    }, 1);
-
-    return () => clearInterval(id);
+    });
+    observer.observe(document.body);
+    return () => observer.disconnect();
   }, []);
+
+  const renderedMessages = useMemo(() => {
+    return conversation.messages.map((message) => {
+      const isActiveUserSend = message.sender.id === activeUser.id;
+
+      return (
+        <li
+          className={classNames(
+            "flex flex-col w-full",
+            isActiveUserSend ? "items-end" : "items-start",
+          )}
+          key={message.id}
+          style={{
+            containIntrinsicSize: "auto 4rem",
+            contentVisibility: "auto",
+          }}
+        >
+          <p
+            className={classNames(
+              "max-w-3/4 rounded-xl border px-4 py-2 text-sm whitespace-pre-wrap leading-relaxed wrap-anywhere",
+              isActiveUserSend
+                ? "rounded-br-sm border-transparent bg-cax-brand text-cax-surface-raised"
+                : "rounded-bl-sm border-cax-border bg-cax-surface text-cax-text",
+            )}
+          >
+            {message.body}
+          </p>
+          <div className="flex gap-1 text-xs">
+            <time dateTime={message.createdAt}>
+              {formatTime(message.createdAt)}
+            </time>
+            {isActiveUserSend && message.isRead && (
+              <span className="text-cax-text-muted">既読</span>
+            )}
+          </div>
+        </li>
+      );
+    });
+  }, [activeUser.id, conversation.messages]);
 
   if (conversationError != null) {
     return (
@@ -96,10 +138,10 @@ export const DirectMessagePage = ({
   return (
     <section className="bg-cax-surface flex min-h-[calc(100vh-(--spacing(12)))] flex-col lg:min-h-screen">
       <header className="border-cax-border bg-cax-surface sticky top-0 z-10 flex items-center gap-2 border-b px-4 py-3">
-        <img
+        <LazyImage
           alt={peer.profileImage.alt}
           className="h-12 w-12 rounded-full object-cover"
-          src={getProfileImagePath(peer.profileImage.id)}
+          src={getProfileImagePath(peer.profileImage.id, 48)}
         />
         <div className="min-w-0">
           <h1 className="overflow-hidden text-xl font-bold text-ellipsis whitespace-nowrap">
@@ -118,39 +160,7 @@ export const DirectMessagePage = ({
           </p>
         )}
 
-        <ul className="grid gap-3" data-testid="dm-message-list">
-          {conversation.messages.map((message) => {
-            const isActiveUserSend = message.sender.id === activeUser.id;
-
-            return (
-              <li
-                className={classNames(
-                  "flex flex-col w-full",
-                  isActiveUserSend ? "items-end" : "items-start",
-                )}
-              >
-                <p
-                  className={classNames(
-                    "max-w-3/4 rounded-xl border px-4 py-2 text-sm whitespace-pre-wrap leading-relaxed wrap-anywhere",
-                    isActiveUserSend
-                      ? "rounded-br-sm border-transparent bg-cax-brand text-cax-surface-raised"
-                      : "rounded-bl-sm border-cax-border bg-cax-surface text-cax-text",
-                  )}
-                >
-                  {message.body}
-                </p>
-                <div className="flex gap-1 text-xs">
-                  <time dateTime={message.createdAt}>
-                    {moment(message.createdAt).locale("ja").format("HH:mm")}
-                  </time>
-                  {isActiveUserSend && message.isRead && (
-                    <span className="text-cax-text-muted">既読</span>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+        <ul className="grid gap-3" data-testid="dm-message-list">{renderedMessages}</ul>
       </div>
 
       <div className="sticky bottom-12 z-10 lg:bottom-0">

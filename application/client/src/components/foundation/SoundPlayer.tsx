@@ -1,22 +1,32 @@
-import { ReactEventHandler, useCallback, useMemo, useRef, useState } from "react";
+import { ReactEventHandler, useCallback, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { SoundWaveSVG } from "@web-speed-hackathon-2026/client/src/components/foundation/SoundWaveSVG";
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
-import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
-import { getSoundPath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { useNearViewport } from "@web-speed-hackathon-2026/client/src/hooks/use_near_viewport";
+
+import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import {
+  getSoundSources,
+  getWaveformPath,
+} from "@web-speed-hackathon-2026/client/src/utils/get_path";
+
+interface WaveformData {
+  max: number;
+  peaks: number[];
+}
 
 interface Props {
   sound: Models.Sound;
 }
 
 export const SoundPlayer = ({ sound }: Props) => {
-  const { data, isLoading } = useFetch(getSoundPath(sound.id), fetchBinary);
-
-  const blobUrl = useMemo(() => {
-    return data !== null ? URL.createObjectURL(new Blob([data])) : null;
-  }, [data]);
+  const { isNearViewport, targetRef } = useNearViewport<HTMLDivElement>({
+    rootMargin: "320px 0px",
+  });
+  const waveformPath = isNearViewport ? getWaveformPath(sound.id) : null;
+  const { data: waveformData, isLoading } = useFetch(waveformPath, fetchJSON<WaveformData>);
 
   const [currentTimeRatio, setCurrentTimeRatio] = useState(0);
   const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>((ev) => {
@@ -37,13 +47,14 @@ export const SoundPlayer = ({ sound }: Props) => {
     });
   }, []);
 
-  if (isLoading || data === null || blobUrl === null) {
-    return null;
-  }
-
   return (
-    <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
-      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} src={blobUrl} />
+    <div ref={targetRef} className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
+      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} preload="none">
+        {isNearViewport &&
+          getSoundSources(sound.id).map((source) => (
+            <source key={source.type} src={source.src} type={source.type} />
+          ))}
+      </audio>
       <div className="p-2">
         <button
           className="bg-cax-accent text-cax-surface-raised flex h-8 w-8 items-center justify-center rounded-full text-sm hover:opacity-75"
@@ -63,13 +74,19 @@ export const SoundPlayer = ({ sound }: Props) => {
         <div className="pt-2">
           <AspectRatioBox aspectHeight={1} aspectWidth={10}>
             <div className="relative h-full w-full">
-              <div className="absolute inset-0 h-full w-full">
-                <SoundWaveSVG soundData={data} />
-              </div>
-              <div
-                className="bg-cax-surface-subtle absolute inset-0 h-full w-full opacity-75"
-                style={{ left: `${currentTimeRatio * 100}%` }}
-              ></div>
+              {isLoading || waveformData === null ? (
+                <div className="bg-cax-text-muted/20 absolute inset-0 rounded-sm" />
+              ) : (
+                <>
+                  <div className="absolute inset-0 h-full w-full">
+                    <SoundWaveSVG max={waveformData.max} peaks={waveformData.peaks} />
+                  </div>
+                  <div
+                    className="bg-cax-surface-subtle absolute inset-0 h-full w-full opacity-75"
+                    style={{ left: `${currentTimeRatio * 100}%` }}
+                  ></div>
+                </>
+              )}
             </div>
           </AspectRatioBox>
         </div>

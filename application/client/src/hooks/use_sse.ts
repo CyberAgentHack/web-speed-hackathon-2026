@@ -14,16 +14,53 @@ interface ReturnValues {
   reset: () => void;
 }
 
+const STREAM_FLUSH_INTERVAL_MS = 260;
+
 export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
   const [content, setContent] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const contentRef = useRef("");
+  const renderedContentRef = useRef("");
+  const flushTimerIdRef = useRef<number | null>(null);
+  const lastFlushAtRef = useRef(0);
+
+  const flushContent = useCallback(
+    (force: boolean) => {
+      const now = performance.now();
+      if (!force && now - lastFlushAtRef.current < STREAM_FLUSH_INTERVAL_MS) {
+        return;
+      }
+      if (contentRef.current === renderedContentRef.current) {
+        return;
+      }
+
+      lastFlushAtRef.current = now;
+      renderedContentRef.current = contentRef.current;
+      setContent(contentRef.current);
+    },
+    [setContent],
+  );
+
+  const scheduleFlush = useCallback(() => {
+    if (flushTimerIdRef.current !== null) {
+      return;
+    }
+
+    flushTimerIdRef.current = window.setTimeout(() => {
+      flushTimerIdRef.current = null;
+      flushContent(true);
+    }, STREAM_FLUSH_INTERVAL_MS);
+  }, [flushContent]);
 
   const stop = useCallback(() => {
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
+    }
+    if (flushTimerIdRef.current !== null) {
+      window.clearTimeout(flushTimerIdRef.current);
+      flushTimerIdRef.current = null;
     }
     setIsStreaming(false);
   }, []);
@@ -32,12 +69,15 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
     stop();
     setContent("");
     contentRef.current = "";
+    renderedContentRef.current = "";
   }, [stop]);
 
   const start = useCallback(
     (url: string) => {
       stop();
       contentRef.current = "";
+      renderedContentRef.current = "";
+      lastFlushAtRef.current = 0;
       setContent("");
       setIsStreaming(true);
 
@@ -49,14 +89,19 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
 
         const isDone = options.onDone?.(data) ?? false;
         if (isDone) {
+          flushContent(true);
           options.onComplete?.(contentRef.current);
           stop();
           return;
         }
 
         const newContent = options.onMessage(data, contentRef.current);
+        if (newContent === contentRef.current) {
+          return;
+        }
         contentRef.current = newContent;
-        setContent(newContent);
+        flushContent(false);
+        scheduleFlush();
       };
 
       eventSource.onerror = (error) => {
@@ -64,7 +109,7 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
         stop();
       };
     },
-    [options, stop],
+    [flushContent, options, scheduleFlush, stop],
   );
 
   return { content, isStreaming, start, stop, reset };

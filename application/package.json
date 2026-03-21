@@ -5,9 +5,9 @@
   "author": "CyberAgent, Inc.",
   "type": "module",
   "scripts": {
-    "build": "pnpm --filter @web-speed-hackathon-2026/client build",
-    "start": "pnpm --filter @web-speed-hackathon-2026/server start",
-    "typecheck": "pnpm run --recursive typecheck",
+    "build": "bun --filter @web-speed-hackathon-2026/client build",
+    "start": "bun --filter @web-speed-hackathon-2026/server start",
+    "typecheck": "bun --filter '*' typecheck",
     "format": "pnpm run format:oxlint && pnpm run format:oxfmt",
     "format:oxlint": "oxlint --fix",
     "format:oxfmt": "oxfmt"
@@ -17,7 +17,24 @@
     "oxlint": "1.43.0"
   },
   "engines": {
-    "node": "24.14.0"
+    "bun": ">=1.0.0"
   },
-  "packageManager": "pnpm@10.32.1"
+  "packageManager": "bun@1.3.11",
+  "workspaces": [
+    "client/",
+    "server/",
+    "e2e/"
+  ],
+  "overrides": {
+    "gifler>bluebird": "3.7.2",
+    "gifler>omggif": "1.0.10"
+  },
+  "trustedDependencies": [
+    "better-sqlite3",
+    "bcrypt",
+    "esbuild",
+    "core-js",
+    "sharp",
+    "negaposi-analyzer-ja"
+  ]
 }

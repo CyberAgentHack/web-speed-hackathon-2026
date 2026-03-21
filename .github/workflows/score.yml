@@ -1,0 +1,414 @@
+name: Score
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        types: [opened, reopened, synchronize]
+    workflow_dispatch:
+
+concurrency:
+    group: score-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
+    cancel-in-progress: true
+
+jobs:
+    score:
+        name: Build & Score (run ${{ matrix.run_index }} of 5)
+        runs-on: ubuntu-24.04
+        timeout-minutes: 45
+
+        strategy:
+            fail-fast: false
+            matrix:
+                run_index: [1, 2, 3, 4, 5]
+
+        permissions:
+            contents: read
+
+        steps:
+            # ------------------------------------------------------------------ #
+            # 1. Checkout
+            # ------------------------------------------------------------------ #
+            - name: Checkout repository
+              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+            # ------------------------------------------------------------------ #
+            # 2. Set up Node.js (for scoring-tool)
+            # ------------------------------------------------------------------ #
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "24"
+
+            # ------------------------------------------------------------------ #
+            # 3. Set up pnpm (for scoring-tool)
+            # ------------------------------------------------------------------ #
+            - name: Set up pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: "10.32.1"
+
+            # ------------------------------------------------------------------ #
+            # 4. Cache pnpm store for scoring-tool
+            # ------------------------------------------------------------------ #
+            - name: Cache pnpm store
+              uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+              with:
+                  path: ~/.local/share/pnpm/store
+                  key: pnpm-store-${{ runner.os }}-${{ hashFiles('scoring-tool/pnpm-lock.yaml', 'scoring-tool/package.json') }}
+                  restore-keys: |
+                      pnpm-store-${{ runner.os }}-
+
+            # ------------------------------------------------------------------ #
+            # 5. Build Docker image using Dockerfile (same as production)
+            # ------------------------------------------------------------------ #
+            - name: Build Docker image
+              run: docker build -f Dockerfile -t wsh-app .
+
+            # ------------------------------------------------------------------ #
+            # 6. Start the application container
+            #    Constraints match fly.toml: shared 1 CPU, 2 GB RAM
+            # ------------------------------------------------------------------ #
+            - name: Start application container
+              run: |
+                  docker run -d \
+                    --name wsh-app \
+                    --cpus=1 \
+                    --memory=2g \
+                    -p 8080:8080 \
+                    -e PORT=8080 \
+                    -e NODE_ENV=production \
+                    wsh-app
+                  echo "Container started"
+
+            # ------------------------------------------------------------------ #
+            # 7. Wait for the server to become ready
+            # ------------------------------------------------------------------ #
+            - name: Wait for application server to be ready
+              run: |
+                  echo "Waiting for server on http://localhost:8080 ..."
+                  for i in $(seq 1 300); do
+                    set +e
+                    CURL_OUT=$(curl --verbose --max-time 3 http://localhost:8080/ 2>&1)
+                    CURL_STATUS=$?
+                    set -e
+                    if [ "${CURL_STATUS}" -eq 0 ]; then
+                      echo "Server is ready (attempt ${i})"
+                      exit 0
+                    fi
+                    echo "  Attempt ${i}/300 - curl exit=${CURL_STATUS}"
+                    if [ $((i % 10)) -eq 0 ]; then
+                      echo "--- curl verbose output (last 30 lines) ---"
+                      echo "${CURL_OUT}" | tail -30
+                      echo "--- Container status ---"
+                      docker inspect wsh-app --format='status={{.State.Status}} running={{.State.Running}} exitCode={{.State.ExitCode}}' || true
+                      echo "--- Container logs (last 20) ---"
+                      docker logs --tail 20 wsh-app 2>&1 || true
+                    fi
+                    sleep 2
+                  done
+                  echo "ERROR: Server did not become ready within 600 seconds"
+                  echo "--- Last 100 lines of container log ---"
+                  docker logs --tail 100 wsh-app 2>&1 || true
+                  exit 1
+
+            - name: Verify API is working
+              run: |
+                  echo "Testing /api/v1/posts endpoint..."
+                  set +e
+                  API_OUT=$(curl -s --max-time 10 http://localhost:8080/api/v1/posts 2>&1)
+                  echo "API response (first 500 chars): ${API_OUT:0:500}"
+                  echo "Container logs (last 30):"
+                  docker logs --tail 30 wsh-app 2>&1 || true
+
+            # ------------------------------------------------------------------ #
+            # 8. Install scoring-tool dependencies
+            # ------------------------------------------------------------------ #
+            - name: Install scoring-tool dependencies
+              working-directory: scoring-tool
+              run: pnpm install --frozen-lockfile
+
+            # ------------------------------------------------------------------ #
+            # 9. Install Chrome stable for Playwright
+            # ------------------------------------------------------------------ #
+            - name: Install Chrome and Playwright system dependencies
+              working-directory: scoring-tool
+              run: pnpm exec playwright install chrome --with-deps
+
+            # ------------------------------------------------------------------ #
+            # 10. Run scoring tool
+            # ------------------------------------------------------------------ #
+            - name: Run scoring tool
+              working-directory: scoring-tool
+              run: |
+                  set -o pipefail
+                  env -u GITHUB_ACTIONS pnpm start --applicationUrl http://localhost:8080 \
+                    2>&1 | tee /tmp/score.txt || true
+
+            # ------------------------------------------------------------------ #
+            # 11. Upload score output as artifact
+            # ------------------------------------------------------------------ #
+            - name: Upload score artifact
+              if: always()
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              with:
+                  name: score-run-${{ matrix.run_index }}
+                  path: /tmp/score.txt
+                  retention-days: 14
+                  if-no-files-found: warn
+
+            # ------------------------------------------------------------------ #
+            # 12. Stop the application container
+            # ------------------------------------------------------------------ #
+            - name: Stop application container
+              if: always()
+              run: docker rm -f wsh-app >/dev/null 2>&1 || true
+
+    report:
+        name: Report Scores
+        runs-on: ubuntu-24.04
+        needs: score
+        # Run even if some score matrix jobs failed, but skip on cancellation.
+        # `always()` would also run on cancellation which wastes a runner.
+        if: ${{ !cancelled() }}
+        timeout-minutes: 15
+
+        permissions:
+            contents: write
+            issues: write
+            pull-requests: write
+            actions: read
+
+        steps:
+            # ------------------------------------------------------------------ #
+            # 1. Checkout (needed for generate-score-comment.mjs)
+            # ------------------------------------------------------------------ #
+            - name: Checkout repository
+              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+            # ------------------------------------------------------------------ #
+            # 2. Set up Node.js (needed to run generate-score-comment.mjs)
+            # ------------------------------------------------------------------ #
+            - name: Set up Node.js 24.14.0
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+              with:
+                  node-version: "24.14.0"
+
+            # ------------------------------------------------------------------ #
+            # 3. Download all score run artifacts
+            # ------------------------------------------------------------------ #
+            - name: Download score-run-1
+              uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+              with:
+                  name: score-run-1
+                  path: /tmp/runs/1
+              continue-on-error: true
+
+            - name: Download score-run-2
+              uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+              with:
+                  name: score-run-2
+                  path: /tmp/runs/2
+              continue-on-error: true
+
+            - name: Download score-run-3
+              uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+              with:
+                  name: score-run-3
+                  path: /tmp/runs/3
+              continue-on-error: true
+
+            - name: Download score-run-4
+              uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+              with:
+                  name: score-run-4
+                  path: /tmp/runs/4
+              continue-on-error: true
+
+            - name: Download score-run-5
+              uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+              with:
+                  name: score-run-5
+                  path: /tmp/runs/5
+              continue-on-error: true
+
+            - name: Collect run files
+              run: |
+                  for i in 1 2 3 4 5; do
+                    if [ -s "/tmp/runs/${i}/score.txt" ]; then
+                      cp "/tmp/runs/${i}/score.txt" "/tmp/score-${i}.txt"
+                    fi
+                  done
+
+            # ------------------------------------------------------------------ #
+            # 4. Download baseline scores from latest main branch run
+            # ------------------------------------------------------------------ #
+            - name: Download baseline scores artifact
+              if: github.event_name == 'pull_request'
+              uses: dawidd6/action-download-artifact@07ab29fd4a977ae4d2b275087cf67563dfdf0295 # v9
+              with:
+                  name: score-baseline
+                  branch: main
+                  workflow: score.yml
+                  # Only use a fully completed main run, not one that is still
+                  # in progress (avoids racing against a concurrent main push).
+                  workflow_conclusion: success
+                  path: /tmp/baseline
+                  if_no_artifact_found: warn
+              continue-on-error: true
+
+            # ------------------------------------------------------------------ #
+            # 5. Generate rich score comment
+            # ------------------------------------------------------------------ #
+            - name: Generate score comment
+              run: |
+                  RUN_FILES=""
+                  for i in 1 2 3 4 5; do
+                    if [ -s "/tmp/score-${i}.txt" ]; then
+                      RUN_FILES="${RUN_FILES},/tmp/score-${i}.txt"
+                    fi
+                  done
+                  RUN_FILES="${RUN_FILES#,}"
+
+                  BASELINE_ARG=""
+                  if [ -f "/tmp/baseline/scores.json" ]; then
+                    BASELINE_ARG="--baseline /tmp/baseline/scores.json"
+                  fi
+
+                  node .github/scripts/generate-score-comment.mjs \
+                    --runs "${RUN_FILES}" \
+                    ${BASELINE_ARG} \
+                    --commit "${{ github.sha }}" \
+                    --output /tmp/comment.md \
+                    --json-output /tmp/scores.json
+
+            # ------------------------------------------------------------------ #
+            # 6. Post score comment on PR / summary on push
+            # ------------------------------------------------------------------ #
+            - name: Post score results
+              if: always()
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  COMMENT_MARKER="<!-- wsh-score-result -->"
+                  COMMENT_BODY="$(cat /tmp/comment.md 2>/dev/null || echo 'Score output not available')"
+
+                  if [ "${{ github.event_name }}" = "pull_request" ]; then
+                    PR_NUMBER="${{ github.event.pull_request.number }}"
+                    REPO="${{ github.repository }}"
+
+                    EXISTING_COMMENT_ID=$(gh api \
+                      "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+                      --jq ".[] | select(.body | startswith(\"${COMMENT_MARKER}\")) | .id" \
+                      2>/dev/null | head -1)
+
+                    if [ -n "$EXISTING_COMMENT_ID" ]; then
+                      echo "Updating existing score comment (id: ${EXISTING_COMMENT_ID})"
+                      gh api \
+                        --method PATCH \
+                        "repos/${REPO}/issues/comments/${EXISTING_COMMENT_ID}" \
+                        -f body="${COMMENT_BODY}"
+                    else
+                      echo "Creating new score comment on PR #${PR_NUMBER}"
+                      gh pr comment "${PR_NUMBER}" \
+                        --repo "${REPO}" \
+                        --body "${COMMENT_BODY}"
+                    fi
+
+                  else
+                    cat /tmp/comment.md >> $GITHUB_STEP_SUMMARY
+                  fi
+
+            # ------------------------------------------------------------------ #
+            # 7. Save scores as baseline artifact (main branch only)
+            # ------------------------------------------------------------------ #
+            - name: Save baseline scores artifact
+              if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              with:
+                  name: score-baseline
+                  path: /tmp/scores.json
+                  retention-days: 30
+                  if-no-files-found: warn
+
+            # ------------------------------------------------------------------ #
+            # 8. Label the PR with the score delta (PR runs only)
+            # ------------------------------------------------------------------ #
+            - name: Apply score delta label to PR
+              if: github.event_name == 'pull_request'
+              uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+              with:
+                  script: |
+                      const fs = require('fs');
+                      if (!fs.existsSync('/tmp/scores.json')) {
+                        core.warning('scores.json not found, skipping label'); return;
+                      }
+                      const s = JSON.parse(fs.readFileSync('/tmp/scores.json', 'utf8'));
+                      const cur = s.grandTotal?.med;
+                      if (cur == null) { core.warning('No grand total'); return; }
+
+                      const baselineRaw = fs.existsSync('/tmp/baseline/scores.json')
+                        ? JSON.parse(fs.readFileSync('/tmp/baseline/scores.json', 'utf8'))
+                        : null;
+                      const base = baselineRaw?.grandTotal?.med ?? null;
+                      let labelName, color;
+                      if (base != null && !isNaN(base)) {
+                        const d = cur - base;
+                        // Thresholds (out of 1150 total)
+                        if      (d >=  50) { labelName = 'score: major improvement';  color = '0e8a16'; }
+                        else if (d >=  10) { labelName = 'score: improvement';         color = '2cbe4e'; }
+                        else if (d >=   1) { labelName = 'score: minor improvement';   color = 'a8f7b0'; }
+                        else if (d >  -1)  { labelName = 'score: no change';           color = 'e4e669'; }
+                        else if (d >  -10) { labelName = 'score: minor regression';    color = 'f9d0c4'; }
+                        else if (d >  -50) { labelName = 'score: regression';          color = 'e4735a'; }
+                        else               { labelName = 'score: major regression';    color = 'd93f0b'; }
+                      } else {
+                        labelName = 'score: no baseline';
+                        color = '0075ca';
+                      }
+
+                      // Upsert the label definition in the repo
+                      try {
+                        await github.rest.issues.createLabel({
+                          ...context.repo, name: labelName, color,
+                        });
+                      } catch (e) {
+                        if (e.status === 422) {
+                          await github.rest.issues.updateLabel({
+                            ...context.repo, name: labelName, color,
+                          });
+                        } else throw e;
+                      }
+
+                      // Swap out any existing score: label on this PR
+                      const { data: current } = await github.rest.issues.listLabelsOnIssue({
+                        ...context.repo, issue_number: context.issue.number,
+                      });
+                      for (const l of current.filter(l => l.name.startsWith('score:'))) {
+                        await github.rest.issues.removeLabel({
+                          ...context.repo, issue_number: context.issue.number, name: l.name,
+                        });
+                      }
+                      await github.rest.issues.addLabels({
+                        ...context.repo, issue_number: context.issue.number, labels: [labelName],
+                      });
+                      core.info(`Applied label: ${labelName}`);
+
+            # ------------------------------------------------------------------ #
+            # 9. Upload all raw score files as artifact (for debugging)
+            # ------------------------------------------------------------------ #
+            - name: Upload raw score logs
+              if: always()
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              with:
+                  name: score-logs-${{ github.run_id }}-${{ github.run_attempt }}
+                  path: |
+                      /tmp/score-1.txt
+                      /tmp/score-2.txt
+                      /tmp/score-3.txt
+                      /tmp/score-4.txt
+                      /tmp/score-5.txt
+                      /tmp/scores.json
+                      /tmp/comment.md
+                  retention-days: 14
+                  if-no-files-found: ignore

@@ -220,3 +220,24 @@ $RECYCLE.BIN/
 application/upload/**
 !application/upload/**/
 !application/upload/**/.gitkeep
+
+
+.tmp*
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Build output
+application/dist
+application/client/dist
+application/server/dist
+
+# Scoring tool
+scoring-tool/node_modules
+
+# Warp/Claude
+.claude
+

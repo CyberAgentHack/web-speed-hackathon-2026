@@ -12,25 +12,54 @@ export function useHasContentBelow(
   boundaryRef: RefObject<HTMLElement | null>,
 ): boolean {
   const [hasContentBelow, setHasContentBelow] = useState(false);
+  const [hiddenViewportHeight, setHiddenViewportHeight] = useState(0);
 
   useEffect(() => {
-    let active = true;
-    const check = () => {
-      if (!active) return;
-      const endEl = contentEndRef.current;
-      const barEl = boundaryRef.current;
-      if (endEl && barEl) {
-        const endRect = endEl.getBoundingClientRect();
-        const barRect = barEl.getBoundingClientRect();
-        setHasContentBelow(endRect.top > barRect.top);
-      }
-      scheduler.postTask(check, { priority: "user-blocking", delay: 1 });
+    const boundaryElement = boundaryRef.current;
+    if (boundaryElement === null) {
+      return;
+    }
+
+    const updateHiddenViewportHeight = () => {
+      const boundaryRect = boundaryElement.getBoundingClientRect();
+      setHiddenViewportHeight(Math.max(0, Math.ceil(window.innerHeight - boundaryRect.top)));
     };
-    scheduler.postTask(check, { priority: "user-blocking", delay: 1 });
+
+    updateHiddenViewportHeight();
+
+    const resizeObserver = new ResizeObserver(updateHiddenViewportHeight);
+    resizeObserver.observe(boundaryElement);
+    window.addEventListener("resize", updateHiddenViewportHeight);
+
     return () => {
-      active = false;
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", updateHiddenViewportHeight);
     };
-  }, [contentEndRef, boundaryRef]);
+  }, [boundaryRef]);
+
+  useEffect(() => {
+    const contentEndElement = contentEndRef.current;
+    if (contentEndElement === null) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setHasContentBelow(!(entry?.isIntersecting ?? true));
+      },
+      {
+        root: null,
+        rootMargin: `0px 0px -${hiddenViewportHeight}px 0px`,
+        threshold: 0,
+      },
+    );
+
+    observer.observe(contentEndElement);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [contentEndRef, hiddenViewportHeight]);
 
   return hasContentBelow;
 }
