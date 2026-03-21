@@ -16,7 +16,10 @@ app.use(bodyParser.raw({ limit: "10mb" }));
 app.use(
     compression({
         filter: (req, res) => {
-            if (req.path === "/api/v1/crok") {
+            if (
+                req.path.startsWith("/api/v1/crok") ||
+                req.headers.accept?.includes("text/event-stream")
+            ) {
                 return false;
             }
             return compression.filter(req, res);
