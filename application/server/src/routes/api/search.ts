@@ -58,5 +58,6 @@ searchRouter.get("/search", async (req, res) => {
     subQuery: false,
   });
 
+  res.setHeader("Cache-Control", "public, max-age=5");
   return res.status(200).type("application/json").send(posts);
 });

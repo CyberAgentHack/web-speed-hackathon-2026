@@ -45,6 +45,7 @@ userRouter.get("/users/:username", async (req, res) => {
     throw new httpErrors.NotFound();
   }
 
+  res.setHeader("Cache-Control", "public, max-age=5");
   return res.status(200).type("application/json").send(user);
 });
 
@@ -67,5 +68,6 @@ userRouter.get("/users/:username/posts", async (req, res) => {
     },
   });
 
+  res.setHeader("Cache-Control", "public, max-age=5");
   return res.status(200).type("application/json").send(posts);
 });

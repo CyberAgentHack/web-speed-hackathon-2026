@@ -17,7 +17,7 @@ staticRouter.use(
   serveStatic(UPLOAD_PATH, {
     etag: true,
     lastModified: true,
-    maxAge: "1d",
+    maxAge: "1y",
   }),
 );
 
