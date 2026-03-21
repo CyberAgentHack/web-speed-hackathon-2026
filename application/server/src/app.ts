@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 
-import { apiRouter } from "@web-speed-hackathon-2026/server/src/routes/api";
-import { staticRouter } from "@web-speed-hackathon-2026/server/src/routes/static";
-import { createSessionMiddleware } from "@web-speed-hackathon-2026/server/src/session";
+import { apiRouter } from "@web-speed-hackathon-2026/server/src/routes/api.ts";
+import { staticRouter } from "@web-speed-hackathon-2026/server/src/routes/static.ts";
+import { createSessionMiddleware } from "@web-speed-hackathon-2026/server/src/session.ts";
 
 export const app = new Hono();
 
