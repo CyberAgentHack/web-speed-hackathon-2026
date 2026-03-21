@@ -171,7 +171,6 @@ export const DirectMessagePage = ({
               onChange={handleChange}
               onKeyDown={handleKeyDown}
               rows={textAreaRows}
-              disabled={isSubmitting}
             />
           </div>
           <button
