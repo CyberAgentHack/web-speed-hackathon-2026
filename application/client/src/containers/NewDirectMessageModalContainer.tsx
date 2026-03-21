@@ -11,6 +11,10 @@ interface Props {
   id: string;
 }
 
+interface CreateConversationResult {
+  id: string;
+}
+
 export const NewDirectMessageModalContainer = ({ id }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
@@ -34,11 +38,11 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
       try {
         const normalizedUsername = values.username.trim().replace(/^@/, "");
         const user = await fetchJSON<Models.User>(`/api/v1/users/${normalizedUsername}`);
-        const conversation = await sendJSON<Models.DirectMessageConversation>(`/api/v1/dm`, {
+        const conversation = await sendJSON<CreateConversationResult>(`/api/v1/dm`, {
           peerId: user.id,
         });
-        ref.current?.close();
         navigate(`/dm/${conversation.id}`);
+        ref.current?.close();
       } catch {
         throw new SubmissionError({
           _error: "ユーザーが見つかりませんでした",

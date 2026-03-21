@@ -79,10 +79,10 @@ export const AppContainer = () => {
 
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
   const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
-  const ignoreInitialAuthRequestRef = useRef(false);
+  const authStateVersionRef = useRef(0);
 
   const handleUpdateActiveUser = useCallback((user: Models.User) => {
-    ignoreInitialAuthRequestRef.current = true;
+    authStateVersionRef.current += 1;
     flushSync(() => {
       setActiveUser(user);
       setIsLoadingActiveUser(false);
@@ -90,34 +90,43 @@ export const AppContainer = () => {
   }, []);
 
   useEffect(() => {
+    const requestVersion = authStateVersionRef.current;
+
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {
-        if (ignoreInitialAuthRequestRef.current) {
+        if (requestVersion !== authStateVersionRef.current) {
           return;
         }
-        setActiveUser(user);
+        flushSync(() => {
+          setActiveUser(user);
+        });
       })
       .catch((error: { status?: number }) => {
-        if (ignoreInitialAuthRequestRef.current) {
+        if (requestVersion !== authStateVersionRef.current) {
           return;
         }
-        setActiveUser(null);
+        flushSync(() => {
+          setActiveUser(null);
+        });
         if (error.status !== 401) {
           console.error(error);
         }
       })
       .finally(() => {
-        if (ignoreInitialAuthRequestRef.current) {
+        if (requestVersion !== authStateVersionRef.current) {
           return;
         }
-        setIsLoadingActiveUser(false);
+        flushSync(() => {
+          setIsLoadingActiveUser(false);
+        });
       });
   }, [setActiveUser, setIsLoadingActiveUser]);
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
-    ignoreInitialAuthRequestRef.current = true;
+    authStateVersionRef.current += 1;
     flushSync(() => {
       setActiveUser(null);
+      setIsLoadingActiveUser(false);
     });
     navigate("/");
   }, [navigate]);

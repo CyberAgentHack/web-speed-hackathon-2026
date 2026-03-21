@@ -14,6 +14,7 @@ export async function login(
   await page.getByRole("textbox", { name: "ユーザー名" }).pressSequentially(username);
   await page.getByRole("textbox", { name: "パスワード" }).pressSequentially(password);
   await page.getByRole("button", { name: "サインイン" }).last().click();
+  await page.getByRole("link", { name: "マイページ" }).waitFor({ timeout: 30_000 });
   await page.getByRole("link", { name: "Crok" }).waitFor({ timeout: 30_000 });
 }
 
