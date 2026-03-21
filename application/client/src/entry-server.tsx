@@ -69,6 +69,5 @@ export async function render(options: RenderOptions): Promise<ReadableStream> {
       },
     },
   );
-  await stream.allReady;
   return stream;
 }

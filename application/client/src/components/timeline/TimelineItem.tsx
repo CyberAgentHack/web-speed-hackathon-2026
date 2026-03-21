@@ -32,7 +32,9 @@ export const TimelineItem = ({ post, priority }: Props) => {
               className="h-full w-full object-cover"
               decoding="async"
               height={64}
-              loading="lazy"
+              {...(priority
+                ? { fetchPriority: "high" as const, loading: "eager" as const }
+                : { loading: "lazy" as const })}
               src={getProfileImagePath(post.user.profileImage.id)}
               width={64}
             />
