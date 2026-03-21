@@ -6,8 +6,14 @@ import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getImagePath, getMoviePosterPath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
+const HOME_INITIAL_POST_LIMIT = 12;
+
 export const TimelineContainer = () => {
-  const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>("/api/v1/posts", fetchJSON);
+  const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>(
+    "/api/v1/posts",
+    fetchJSON,
+    HOME_INITIAL_POST_LIMIT,
+  );
   const firstPost = posts[0];
   const preloadImageHref = firstPost?.images?.[0]?.id ? getImagePath(firstPost.images[0].id) : null;
   const preloadPosterHref = firstPost?.movie?.id ? getMoviePosterPath(firstPost.movie.id) : null;

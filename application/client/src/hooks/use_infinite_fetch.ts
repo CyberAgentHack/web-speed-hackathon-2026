@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const LIMIT = 30;
+const DEFAULT_LIMIT = 30;
 
 interface ReturnValues<T> {
   data: Array<T>;
@@ -12,6 +12,7 @@ interface ReturnValues<T> {
 export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
+  limit = DEFAULT_LIMIT,
 ): ReturnValues<T> {
   const internalRef = useRef({ isLoading: false, offset: 0 });
 
@@ -28,7 +29,7 @@ export function useInfiniteFetch<T>(
     }
 
     const requestUrl = new URL(apiPath, window.location.origin);
-    requestUrl.searchParams.set("limit", String(LIMIT));
+    requestUrl.searchParams.set("limit", String(limit));
     requestUrl.searchParams.set("offset", String(offset));
 
     setResult((cur) => ({
@@ -64,7 +65,7 @@ export function useInfiniteFetch<T>(
         };
       },
     );
-  }, [apiPath, fetcher]);
+  }, [apiPath, fetcher, limit]);
 
   useEffect(() => {
     if (!apiPath) {
