@@ -4,12 +4,15 @@ const path = require("path");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 const webpack = require("webpack");
 
 const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
+
+const isProd = process.env.NODE_ENV === "production";
 
 /** @type {import('webpack').Configuration} */
 const config = {
@@ -25,7 +28,9 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+
+  devtool: isProd ? "source-map" : "inline-source-map",
+
   entry: {
     main: [
       "core-js",
@@ -36,7 +41,9 @@ const config = {
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+
+  mode: isProd ? "production" : "development",
+
   module: {
     rules: [
       {
@@ -58,14 +65,15 @@ const config = {
       },
     ],
   },
+
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
-    filename: "scripts/[name].js",
+    filename: "scripts/[name].[contenthash].js",
     path: DIST_PATH,
     publicPath: "auto",
     clean: true,
   },
+
   plugins: [
     new webpack.ProvidePlugin({
       $: "jquery",
@@ -75,12 +83,11 @@ const config = {
     }),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
-      // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
+      NODE_ENV: process.env.NODE_ENV || "development",
     }),
     new MiniCssExtractPlugin({
-      filename: "styles/[name].css",
+      filename: "styles/[name].[contenthash].css",
     }),
     new CopyWebpackPlugin({
       patterns: [
@@ -91,10 +98,20 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: "body",
       template: path.resolve(SRC_PATH, "./index.html"),
+      minify: isProd
+        ? {
+            collapseWhitespace: true,
+            removeComments: true,
+            removeRedundantAttributes: true,
+            useShortDoctype: true,
+          }
+        : false,
     }),
+    ...(process.env.ANALYZE === "true" ? [new BundleAnalyzerPlugin()] : []),
   ],
+
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
     alias: {
@@ -103,7 +120,7 @@ const config = {
         "node_modules",
         "bayesian-bm25/dist/index.js",
       ),
-      ["kuromoji$"]: path.resolve(
+      kuromoji$: path.resolve(
         __dirname,
         "node_modules",
         "kuromoji/build/kuromoji.js",
@@ -125,15 +142,21 @@ const config = {
       url: false,
     },
   },
+
   optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
+    minimize: isProd,
+    splitChunks: isProd
+      ? {
+          chunks: "all",
+        }
+      : false,
+    runtimeChunk: isProd ? "single" : false,
   },
-  cache: false,
+
+  cache: {
+    type: "filesystem",
+  },
+
   ignoreWarnings: [
     {
       module: /@ffmpeg/,
