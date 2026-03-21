@@ -32,6 +32,24 @@ export const InfiniteScroll = ({ children, fetchMore, hasMore, isLoading }: Prop
     };
   }, [fetchMore, hasMore, isLoading]);
 
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (sentinel == null || !hasMore || isLoading) {
+      return;
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      const sentinelTop = sentinel.getBoundingClientRect().top;
+      if (sentinelTop <= window.innerHeight + 240) {
+        fetchMore();
+      }
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [fetchMore, hasMore, isLoading]);
+
   return (
     <>
       {children}
