@@ -1,5 +1,5 @@
 import moment from "moment";
-import { MouseEventHandler, useCallback, useEffect, useRef, useState } from "react";
+import { MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
@@ -32,28 +32,6 @@ interface Props {
 
 export const TimelineItem = ({ post }: Props) => {
   const navigate = useNavigate();
-  const articleRef = useRef<HTMLElement>(null);
-  const [isMediaVisible, setIsMediaVisible] = useState(false);
-
-  useEffect(() => {
-    const target = articleRef.current;
-    if (target == null || isMediaVisible) {
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          setIsMediaVisible(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "300px 0px" },
-    );
-
-    observer.observe(target);
-    return () => observer.disconnect();
-  }, [isMediaVisible]);
 
   /**
    * ボタンやリンク以外の箇所をクリックしたとき かつ 文字が選択されてないとき、投稿詳細ページに遷移する
@@ -69,7 +47,7 @@ export const TimelineItem = ({ post }: Props) => {
   );
 
   return (
-    <article ref={articleRef} className="hover:bg-cax-surface-subtle px-1 sm:px-4" onClick={handleClick}>
+    <article className="hover:bg-cax-surface-subtle px-1 sm:px-4" onClick={handleClick}>
       <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
         <div className="shrink-0 grow-0 pr-2 sm:pr-4">
           <Link
@@ -78,7 +56,6 @@ export const TimelineItem = ({ post }: Props) => {
           >
             <img
               alt={post.user.profileImage.alt}
-              loading="lazy"
               src={getProfileImagePath(post.user.profileImage.id)}
             />
           </Link>
@@ -109,29 +86,17 @@ export const TimelineItem = ({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              {isMediaVisible ? (
-                <ImageArea images={post.images} />
-              ) : (
-                <div className="bg-cax-surface-subtle border-cax-border h-32 w-full rounded-lg border" />
-              )}
+              <ImageArea images={post.images} />
             </div>
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              {isMediaVisible ? (
-                <MovieArea movie={post.movie} />
-              ) : (
-                <div className="bg-cax-surface-subtle border-cax-border h-32 w-full rounded-lg border" />
-              )}
+              <MovieArea movie={post.movie} />
             </div>
           ) : null}
           {post.sound ? (
             <div className="relative mt-2 w-full">
-              {isMediaVisible ? (
-                <SoundArea sound={post.sound} />
-              ) : (
-                <div className="bg-cax-surface-subtle border-cax-border h-16 w-full rounded-lg border" />
-              )}
+              <SoundArea sound={post.sound} />
             </div>
           ) : null}
         </div>
