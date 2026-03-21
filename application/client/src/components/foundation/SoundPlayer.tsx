@@ -1,8 +1,9 @@
-import { ReactEventHandler, useCallback, useEffect, useRef, useState } from "react";
+import { ReactEventHandler, useCallback, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { SoundWaveSVG } from "@web-speed-hackathon-2026/client/src/components/foundation/SoundWaveSVG";
+import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getSoundPath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
@@ -12,37 +13,7 @@ interface Props {
 
 export const SoundPlayer = ({ sound }: Props) => {
   const soundPath = getSoundPath(sound.id);
-  const [data, setData] = useState<ArrayBuffer | null>(null);
-  const [inView, setInView] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    if (!("IntersectionObserver" in window)) {
-      setInView(true);
-      void fetchBinary(soundPath).then(setData).catch(() => {});
-      return;
-    }
-
-    let cancelled = false;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          observer.disconnect();
-          setInView(true);
-          void fetchBinary(soundPath).then((d) => { if (!cancelled) setData(d); }).catch(() => {});
-        }
-      },
-      { threshold: 0, rootMargin: "200px 0px" },
-    );
-    observer.observe(el);
-    return () => {
-      cancelled = true;
-      observer.disconnect();
-    };
-  }, [soundPath]);
+  const { data } = useFetch(soundPath, fetchBinary);
 
   const [currentTimeRatio, setCurrentTimeRatio] = useState(0);
   const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>((ev) => {
@@ -64,12 +35,8 @@ export const SoundPlayer = ({ sound }: Props) => {
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      data-sound-area
-      className="bg-cax-surface-subtle flex h-full w-full items-center justify-center"
-    >
-      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} preload="none" src={inView ? soundPath : undefined} />
+    <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
+      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} src={soundPath} />
       <div className="p-2">
         <button
           className="bg-cax-accent text-cax-surface-raised flex h-8 w-8 items-center justify-center rounded-full text-sm hover:opacity-75"
