@@ -26,9 +26,6 @@ importers:
       buffer:
         specifier: 6.0.3
         version: 6.0.3
-      classnames:
-        specifier: 2.5.1
-        version: 2.5.1
       fast-average-color:
         specifier: 9.5.0
         version: 9.5.0
@@ -2286,9 +2283,6 @@ packages:
   chrome-trace-event@1.0.4:
     resolution: {integrity: sha512-rNjApaLzuwaOTjCiT8lSDdGN1APCiqkChLMJxJPWLunPAt5fy8xgU9/jNOchV84wfIxrA0lRQB7oCT8jrn/wrQ==}
     engines: {node: '>=6.0'}
-
-  classnames@2.5.1:
-    resolution: {integrity: sha512-saHYOzhIQs6wy2sVxTM6bUDsQO4F50V9RQ22qBpEdCW+I+/Wmke2HOl6lS6dTpdxVhb88/I6+Hs+438c3lfUow==}
 
   color-convert@2.0.1:
     resolution: {integrity: sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==}
@@ -6714,8 +6708,6 @@ snapshots:
 
   chrome-trace-event@1.0.4:
     optional: true
-
-  classnames@2.5.1: {}
 
   color-convert@2.0.1:
     dependencies:

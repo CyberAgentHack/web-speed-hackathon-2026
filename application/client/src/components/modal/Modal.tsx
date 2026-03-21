@@ -1,5 +1,6 @@
-import classNames from "classnames";
 import { ComponentPropsWithRef } from "react";
+
+import { classNames } from "@web-speed-hackathon-2026/client/src/utils/class_names";
 
 interface Props extends ComponentPropsWithRef<"dialog"> {}
 

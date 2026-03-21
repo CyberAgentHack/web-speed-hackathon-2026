@@ -1,7 +1,6 @@
-import classNames from "classnames";
-
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { CoveredImage } from "@web-speed-hackathon-2026/client/src/components/foundation/CoveredImage";
+import { classNames } from "@web-speed-hackathon-2026/client/src/utils/class_names";
 import { getImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {

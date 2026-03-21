@@ -1,6 +1,5 @@
-import classNames from "classnames";
-
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
+import { classNames } from "@web-speed-hackathon-2026/client/src/utils/class_names";
 
 interface Props {
   children: string | null;

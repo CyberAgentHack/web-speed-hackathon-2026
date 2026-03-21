@@ -1,4 +1,3 @@
-import classNames from "classnames";
 import {
   ChangeEvent,
   useCallback,
@@ -13,6 +12,7 @@ import {
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { ProfileImage } from "@web-speed-hackathon-2026/client/src/components/foundation/ProfileImage";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
+import { classNames } from "@web-speed-hackathon-2026/client/src/utils/class_names";
 import { formatTime } from "@web-speed-hackathon-2026/client/src/utils/format_date";
 
 interface Props {

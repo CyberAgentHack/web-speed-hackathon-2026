@@ -124,3 +124,50 @@ Quality Checks:
 Commit:
 - Hash: pending post-commit
 - Message: `feat: [US-011] - Crok 関連ライブラリの dynamic import 化`
+
+## 2026-03-21 - US-012 classnames を軽量ユーティリティ関数に置換
+
+Implementation:
+- `application/client/src/utils/class_names.ts` を新規追加し、文字列・配列・object syntax（`{ className: boolean }`）を再帰的に連結できる軽量 `classNames` utility を実装
+- `application/client/src/components/direct_message/DirectMessagePage.tsx`、`application/client/src/components/modal/Modal.tsx`、`application/client/src/components/modal/ModalErrorMessage.tsx`、`application/client/src/components/foundation/Input.tsx`、`application/client/src/components/foundation/Button.tsx`、`application/client/src/components/foundation/PausableMovie.tsx`、`application/client/src/components/post/ImageArea.tsx`、`application/client/src/components/application/NavigationItem.tsx`、`application/client/src/components/new_post_modal/AttachFileInputButton.tsx` の `classnames` import をローカル utility へ置換
+- `application/client/package.json` から `classnames` を削除し、`mise exec -- pnpm install` で `application/pnpm-lock.yaml` からも解決を除去
+- `AGENTS.md` に、限定的な `classnames` 利用ならローカル utility へ寄せて依存を 1 つ削減できる知見を追記
+- 別 Codex エージェント (`Euclid`) にレビューを依頼し、`no findings` を確認
+
+Acceptance Criteria Verification:
+- AC: classnames パッケージが package.json から削除されている
+  Test case: `rg -n "\\bclassnames\\b" application/client/package.json application/pnpm-lock.yaml -S`
+  Result: no matches。`application/client/package.json` と `application/pnpm-lock.yaml` の双方から `classnames` が除去されていることを確認
+- AC: classnames の全使用箇所（9ファイル）が軽量ユーティリティ関数に置換されている
+  Test case: `rg -n "from ['\\\"]classnames['\\\"]|require\\(['\\\"]classnames['\\\"]\\)" application -S`; `sed -n '1,220p' application/client/src/utils/class_names.ts`
+  Result: direct import / require は no matches。新設 utility が 9 コンポーネントから参照され、既存の呼び出し形をカバーする実装になっていることを確認
+- AC: 条件付きクラス名の結合が正しく動作する（object syntax、配列、文字列のケースすべて）
+  Test case: `cd application && node --experimental-strip-types -e "import('./client/src/utils/class_names.ts').then(({ classNames }) => { const results = [classNames('base', ['array-a', ['array-b']], { on: true, off: false }), classNames('base', undefined, 'tail'), classNames(['x', false, ['y']], { z: 1 })]; console.log(JSON.stringify(results)); })"`
+  Result: `["base array-a array-b on","base tail","x y z"]` を確認。object syntax・配列・文字列の各ケースで期待どおり連結される
+- AC: 該当箇所のE2Eテストが通っていること
+  Test case: `curl -s -o /dev/null -w '%{http_code}\n' -X POST http://127.0.0.1:3011/api/v1/initialize`; `CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/auth.test.ts`; `curl -s -o /dev/null -w '%{http_code}\n' -X POST http://127.0.0.1:3011/api/v1/initialize`; `CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/dm.test.ts`; `curl -s -o /dev/null -w '%{http_code}\n' -X POST http://127.0.0.1:3011/api/v1/initialize`; `CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/posting.test.ts --grep '画像の投稿ができる'`; `curl -s -o /dev/null -w '%{http_code}\n' -X POST http://127.0.0.1:3011/api/v1/initialize`; `CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/post-detail.test.ts --grep '動画が自動再生され、クリックで一時停止・再生を切り替えられる'`
+  Result: `auth.test.ts` は `6 passed (6.7s)`、`dm.test.ts` は `17 passed (1.7m)`、画像投稿は `1 passed (7.0s)`、動画再生は `1 passed (16.9s)`。production build + start サーバー上で、置換対象 UI の主要経路が通過
+- AC: Typecheck passes
+  Test case: `cd application && mise exec -- pnpm typecheck`
+  Result: passed
+
+Quality Checks:
+- `cd application && mise trust` -> passed (`No untrusted config files found.`)
+- `cd application && mise install` -> passed (`mise all tools are installed`)
+- `cd application && mise exec -- pnpm install` -> passed (`Packages: -1`; peer dependency warning のみ)
+- `cd application && mise exec -- pnpm typecheck` -> passed
+- `cd application && mise exec -- pnpm build` -> passed (Rspack asset size warning のみ)
+- `cd application && rg -n "\\bclassnames\\b" client/package.json pnpm-lock.yaml -S` -> passed (no matches)
+- `cd application && node --experimental-strip-types -e "import('./client/src/utils/class_names.ts').then(({ classNames }) => { const results = [classNames('base', ['array-a', ['array-b']], { on: true, off: false }), classNames('base', undefined, 'tail'), classNames(['x', false, ['y']], { z: 1 })]; console.log(JSON.stringify(results)); })"` -> passed (`["base array-a array-b on","base tail","x y z"]`)
+- `cd application && CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/auth.test.ts` -> passed (`6 passed (6.7s)`)
+- `cd application && CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/dm.test.ts` -> passed (`17 passed (1.7m)`)
+- `cd application && CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/posting.test.ts --grep '画像の投稿ができる'` -> passed (`1 passed (7.0s)`)
+- `cd application && CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/post-detail.test.ts --grep '動画が自動再生され、クリックで一時停止・再生を切り替えられる'` -> passed (`1 passed (16.9s)`)
+- `cd application/client && npx -y react-doctor@latest . --verbose --diff` -> passed with warnings (`99 / 100 Great`; `NavigationItem.tsx` の既存 `command` / `commandfor` 属性に対する unknown property warning のみ)
+- `agent-browser open http://127.0.0.1:3011 && agent-browser wait 3000 && agent-browser screenshot --full` -> screenshot captured (`/Users/yuito_watanabe/.agent-browser/tmp/screenshots/screenshot-2026-03-21T04-59-10-035Z-xvm4tt.png`)
+- `agent-browser open http://127.0.0.1:3011/dm && agent-browser wait 3000 && agent-browser screenshot --full && agent-browser get title` -> screenshot captured on DM route (`/Users/yuito_watanabe/.agent-browser/tmp/screenshots/screenshot-2026-03-21T04-59-17-866Z-90qy6s.png`, title `CaX`)
+- Review by spawned Codex agent `Euclid` -> no findings
+
+Commit:
+- Hash: pending post-commit
+- Message: `feat: [US-012] - classnames を軽量ユーティリティ関数に置換`

@@ -200,7 +200,7 @@
         "Typecheck passes"
       ],
       "priority": 12,
-      "passes": false,
+      "passes": true,
       "notes": "9ファイルで使用。`(...args) => args.flat().filter(Boolean).join(' ')` 程度の関数で代替可能。ただしobject syntax（{className: boolean}）を使っている箇所がある場合はその対応も必要。"
     },
     {

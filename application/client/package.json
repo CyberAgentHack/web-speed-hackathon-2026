@@ -12,7 +12,6 @@
   "dependencies": {
     "@web-speed-hackathon-2026/client": "workspace:*",
     "buffer": "6.0.3",
-    "classnames": "2.5.1",
     "fast-average-color": "9.5.0",
     "katex": "0.16.25",
     "react": "19.2.0",

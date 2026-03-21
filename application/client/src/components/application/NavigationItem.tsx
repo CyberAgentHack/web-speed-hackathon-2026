@@ -1,7 +1,7 @@
-import classNames from "classnames";
 import { useLocation } from "react-router";
 
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
+import { classNames } from "@web-speed-hackathon-2026/client/src/utils/class_names";
 
 interface Props {
   badge?: React.ReactNode;
