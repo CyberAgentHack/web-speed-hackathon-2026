@@ -25,20 +25,22 @@ authRouter.post("/signup", async (req, res) => {
 });
 
 authRouter.post("/signin", async (req, res) => {
-  const user = await User.findOne({
+  const userForAuth = await User.unscoped().findOne({
+    attributes: ["id", "password"],
     where: {
       username: req.body.username,
     },
   });
 
-  if (user === null) {
+  if (userForAuth === null) {
     return res.status(400).type("application/json").send({ code: "INVALID_CREDENTIALS" });
   }
-  if (!user.validPassword(req.body.password)) {
+  if (!(await userForAuth.validPassword(req.body.password))) {
     return res.status(400).type("application/json").send({ code: "INVALID_CREDENTIALS" });
   }
 
-  req.session.userId = user.id;
+  req.session.userId = userForAuth.id;
+  const user = await User.findByPk(userForAuth.id);
   return res.status(200).type("application/json").send(user);
 });
 
