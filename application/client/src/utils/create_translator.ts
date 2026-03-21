@@ -9,8 +9,10 @@ interface Params {
 }
 
 // エンジンをキャッシュして毎回ロードし直さないようにする
-let cachedEngine: Awaited<ReturnType<import("@mlc-ai/web-llm")["CreateMLCEngine"]>> | null = null;
-let engineLoadingPromise: Promise<typeof cachedEngine> | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let cachedEngine: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let engineLoadingPromise: Promise<any> | null = null;
 
 async function getEngine() {
   if (cachedEngine) return cachedEngine;
@@ -29,19 +31,17 @@ export async function createTranslator(params: Params): Promise<Translator> {
     { stripIndents },
     { loads },
     { default: langs },
-    { default: invariant },
   ] = await Promise.all([
     import("common-tags"),
     import("json-repair-js"),
     import("langs"),
-    import("tiny-invariant"),
   ]);
 
   const sourceLang = langs.where("1", params.sourceLanguage);
-  invariant(sourceLang, `Unsupported source language code: ${params.sourceLanguage}`);
+  if (!sourceLang) throw new Error(`Unsupported source language code: ${params.sourceLanguage}`);
 
   const targetLang = langs.where("1", params.targetLanguage);
-  invariant(targetLang, `Unsupported target language code: ${params.targetLanguage}`);
+  if (!targetLang) throw new Error(`Unsupported target language code: ${params.targetLanguage}`);
 
   const engine = await getEngine();
 
@@ -66,15 +66,14 @@ export async function createTranslator(params: Params): Promise<Translator> {
       });
 
       const content = reply.choices[0]!.message.content;
-      invariant(content, "No content in the reply from the translation engine.");
+      if (!content) throw new Error("No content in the reply from the translation engine.");
 
       const parsed = loads(content);
-      invariant(
-        parsed != null && "result" in parsed,
-        "The translation result is missing in the reply.",
-      );
+      if (parsed == null || !("result" in parsed)) {
+        throw new Error("The translation result is missing in the reply.");
+      }
 
-      return String(parsed.result);
+      return String((parsed as Record<string, unknown>)["result"]);
     },
     [Symbol.dispose]: () => {
       // エンジンはキャッシュするためアンロードしない

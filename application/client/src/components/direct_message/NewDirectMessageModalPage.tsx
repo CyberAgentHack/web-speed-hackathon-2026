@@ -7,12 +7,11 @@ import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/componen
 import { NewDirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
 
 interface Props {
-  id: string;
   onSubmit: (values: NewDirectMessageFormData) => Promise<string | null>;
   onClose?: () => void;
 }
 
-export const NewDirectMessageModalPage = ({ id, onSubmit, onClose }: Props) => {
+export const NewDirectMessageModalPage = ({ onSubmit, onClose }: Props) => {
   const [username, setUsername] = useState("");
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);

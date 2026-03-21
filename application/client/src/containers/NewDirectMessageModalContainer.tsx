@@ -48,7 +48,7 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
 
   return (
     <Modal id={id} ref={ref}>
-      <NewDirectMessageModalPage key={resetKey} id={id} onSubmit={handleSubmit} onClose={handleClose} />
+      <NewDirectMessageModalPage key={resetKey} onSubmit={handleSubmit} onClose={handleClose} />
     </Modal>
   );
 };
