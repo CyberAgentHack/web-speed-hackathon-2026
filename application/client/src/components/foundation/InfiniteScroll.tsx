@@ -62,12 +62,13 @@ export const InfiniteScroll = ({ children, fetchMore, items, requireScroll = fal
     return () => observer.disconnect();
   }, [canLoadMore, fetchMore]);
 
-  // 連続で末尾にいるとき、追加レンダー後に IO が再発火しない環境でも次ページに進める
+  // 連続で末尾にいるとき、追加レンダー後に IO が再発火しない環境でも次ページに進める。
+  // ただし requireScroll の場合は明示スクロールなしで連鎖取得しない。
   useEffect(() => {
     const prev = prevLengthRef.current;
     prevLengthRef.current = items.length;
 
-    if (!canLoadMore || items.length <= prev) {
+    if (!canLoadMore || items.length <= prev || requireScroll) {
       return;
     }
 
@@ -83,7 +84,7 @@ export const InfiniteScroll = ({ children, fetchMore, items, requireScroll = fal
       }
     });
     return () => cancelAnimationFrame(id);
-  }, [items.length, canLoadMore, fetchMore]);
+  }, [items.length, canLoadMore, fetchMore, requireScroll]);
 
   return (
     <>
