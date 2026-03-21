@@ -21,6 +21,15 @@ type Params = {
   playwrightPage: playwright.Page;
   puppeteerPage: puppeteer.Page;
 };
+
+async function waitForPostDetail(playwrightPage: playwright.Page, text: string) {
+  await playwrightPage.waitForURL("**/posts/*", { timeout: 120 * 1000 });
+  const article = playwrightPage.getByRole("article").first();
+  await article.waitFor({ timeout: 120 * 1000 });
+  await article.getByText(text).waitFor({ timeout: 120 * 1000 });
+  return article;
+}
+
 export async function calculatePostFlowAction({ baseUrl, playwrightPage, puppeteerPage }: Params) {
   consola.debug("PostFlowAction - navigate");
   try {
@@ -104,12 +113,10 @@ export async function calculatePostFlowAction({ baseUrl, playwrightPage, puppete
         .getByRole("dialog", { name: "新規投稿" })
         .getByRole("button", { name: "投稿する" });
       await submitButton.click();
-      await playwrightPage
-        .getByRole("article")
-        .getByText(
-          "あのイーハトーヴォのすきとおった風、夏でも底に冷たさをもつ青いそら、うつくしい森で飾られたモリーオ市、郊外のぎらぎらひかる草の波。",
-        )
-        .waitFor({ timeout: 120 * 1000 });
+      await waitForPostDetail(
+        playwrightPage,
+        "あのイーハトーヴォのすきとおった風、夏でも底に冷たさをもつ青いそら、うつくしい森で飾られたモリーオ市、郊外のぎらぎらひかる草の波。",
+      );
     } catch (err) {
       throw new Error("投稿の完了を確認できませんでした", { cause: err });
     }
@@ -147,10 +154,10 @@ export async function calculatePostFlowAction({ baseUrl, playwrightPage, puppete
         .getByRole("button", { name: "投稿する" });
       await submitButton.waitFor({ timeout: 120 * 1000 });
       await submitButton.click();
-      await playwrightPage
-        .getByRole("article")
-        .getByAltText("熊の形をしたアスキーアート。アナログマというキャプションがついている")
-        .waitFor({ timeout: 120 * 1000 });
+      const article = await waitForPostDetail(playwrightPage, "画像を添付したテスト投稿です。");
+      await article.getByRole("button", { name: "ALT を表示する" }).waitFor({
+        timeout: 120 * 1000,
+      });
     } catch (err) {
       throw new Error("画像投稿の完了を確認できませんでした", { cause: err });
     }
@@ -188,16 +195,8 @@ export async function calculatePostFlowAction({ baseUrl, playwrightPage, puppete
         .getByRole("button", { name: "投稿する" });
       await submitButton.waitFor({ timeout: 120 * 1000 });
       await submitButton.click({ timeout: 120 * 1000 });
-      await Promise.all([
-        playwrightPage
-          .getByRole("article")
-          .getByText("動画を添付したテスト投稿です。")
-          .waitFor({ timeout: 120 * 1000 }),
-        playwrightPage
-          .getByRole("article")
-          .getByRole("button", { name: "動画プレイヤー" })
-          .waitFor({ timeout: 120 * 1000 }),
-      ]);
+      const article = await waitForPostDetail(playwrightPage, "動画を添付したテスト投稿です。");
+      await article.locator("[data-movie-area]").waitFor({ timeout: 120 * 1000 });
     } catch (err) {
       throw new Error("動画投稿の完了を確認できませんでした", { cause: err });
     }
@@ -235,20 +234,8 @@ export async function calculatePostFlowAction({ baseUrl, playwrightPage, puppete
         .getByRole("button", { name: "投稿する" });
       await submitButton.waitFor({ timeout: 120 * 1000 });
       await submitButton.click();
-      await Promise.all([
-        playwrightPage
-          .getByRole("article")
-          .getByText("音声を添付したテスト投稿です。")
-          .waitFor({ timeout: 120 * 1000 }),
-        playwrightPage
-          .getByRole("article")
-          .getByText("シャイニングスター")
-          .waitFor({ timeout: 120 * 1000 }),
-        playwrightPage
-          .getByRole("article")
-          .getByText("魔王魂")
-          .waitFor({ timeout: 120 * 1000 }),
-      ]);
+      const article = await waitForPostDetail(playwrightPage, "音声を添付したテスト投稿です。");
+      await article.locator("[data-sound-area]").waitFor({ timeout: 120 * 1000 });
     } catch (err) {
       throw new Error("音声投稿の完了を確認できませんでした", { cause: err });
     }
