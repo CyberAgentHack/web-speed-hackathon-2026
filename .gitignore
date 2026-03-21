@@ -223,3 +223,4 @@ application/upload/**
 
 .qodo
 memo.md
+compress.sh
