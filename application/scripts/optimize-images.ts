@@ -24,6 +24,7 @@ async function optimizeImage(
   const buf = await fs.readFile(filePath);
   const optimized = await sharp(buf)
     .resize(maxWidth, maxHeight, { fit: "inside", withoutEnlargement: true })
+    .withMetadata()
     .jpeg({ quality: MOZJPEG_QUALITY, mozjpeg: true })
     .toBuffer();
 
