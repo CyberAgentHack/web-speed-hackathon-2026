@@ -19,7 +19,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
   const { mutate } = useSWRConfig();
 
   const {
-    data: conversations,
+    data,
     error,
     isLoading,
   } = useFetch<Array<Models.DirectMessageConversation>>(
@@ -31,9 +31,15 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     void mutate(dmListApiPath);
   });
 
-  if (isLoading || conversations == null) {
+  if (isLoading || data == null) {
     return null;
   }
+
+  const conversations = data.toSorted((a, b) => {
+    const aLastMessage = a.messages.at(-1)!;
+    const bLastMessage = b.messages.at(-1)!;
+    return new Date(bLastMessage.createdAt).getTime() - new Date(aLastMessage.createdAt).getTime();
+  });
 
   return (
     <section>
