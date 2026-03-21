@@ -41,6 +41,16 @@ const LCP_PRELOADS: Array<{
       return `<link rel="preload" as="image" fetchpriority="high" href="/movies/${movieId}_poster.webp">`;
     },
   },
+  {
+    // Terms page - preload Rei no Are Mincho font (LCP is heading text)
+    pattern: /^\/terms$/,
+    getLinks: () => {
+      return [
+        '<link rel="preload" as="font" type="font/woff2" href="/fonts/ReiNoAreMincho-Heavy.woff2" crossorigin>',
+        '<link rel="preload" as="font" type="font/woff2" href="/fonts/ReiNoAreMincho-Regular.woff2" crossorigin>',
+      ].join('\n');
+    },
+  },
 ];
 
 function getPreloadLinks(urlPath: string): string {
