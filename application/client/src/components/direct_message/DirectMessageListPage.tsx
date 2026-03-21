@@ -40,15 +40,8 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     void loadConversations();
   });
 
-  // ✅ ローディング表示を返す
   if (conversations == null) {
-    return (
-      <section>
-        <header className="border-cax-border flex flex-col gap-4 border-b px-4 pt-6 pb-4">
-          <h1 className="text-2xl font-bold">ダイレクトメッセージ</h1>
-        </header>
-      </section>
-    );
+    return null;
   }
 
   return (
@@ -133,7 +126,6 @@ function formatRelativeTime(date: Date): string {
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
-  
   if (minutes < 1) return "たった今";
   if (minutes < 60) return `${minutes}分前`;
   if (hours < 24) return `${hours}時間前`;

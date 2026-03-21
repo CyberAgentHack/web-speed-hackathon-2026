@@ -23,9 +23,10 @@ const TYPING_INDICATOR_DURATION_MS = 10 * 1000;
 interface Props {
   activeUser: Models.User | null;
   authModalId: string;
+  isLoadingActiveUser: boolean; // ← 追加
 }
 
-export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
+export const DirectMessageContainer = ({ activeUser, authModalId, isLoadingActiveUser }: Props) => {
   const { conversationId = "" } = useParams<{ conversationId: string }>();
 
   const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(null);
@@ -36,14 +37,9 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadConversation = useCallback(async () => {
-    if (activeUser == null) {
-      return;
-    }
-
+    if (activeUser == null) return;
     try {
-      const data = await fetchJSON<Models.DirectMessageConversation>(
-        `/api/v1/dm/${conversationId}`,
-      );
+      const data = await fetchJSON<Models.DirectMessageConversation>(`/api/v1/dm/${conversationId}`);
       setConversation(data);
       setConversationError(null);
     } catch (error) {
@@ -61,20 +57,15 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     void sendRead();
   }, [loadConversation, sendRead]);
 
-  const handleSubmit = useCallback(
-    async (params: DirectMessageFormData) => {
-      setIsSubmitting(true);
-      try {
-        await sendJSON(`/api/v1/dm/${conversationId}/messages`, {
-          body: params.body,
-        });
-        loadConversation();
-      } finally {
-        setIsSubmitting(false);
-      }
-    },
-    [conversationId, loadConversation],
-  );
+  const handleSubmit = useCallback(async (params: DirectMessageFormData) => {
+    setIsSubmitting(true);
+    try {
+      await sendJSON(`/api/v1/dm/${conversationId}/messages`, { body: params.body });
+      loadConversation();
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [conversationId, loadConversation]);
 
   const handleTyping = useCallback(async () => {
     void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
@@ -85,23 +76,26 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
       void loadConversation().then(() => {
         if (event.payload.sender.id !== activeUser?.id) {
           setIsPeerTyping(false);
-          if (peerTypingTimeoutRef.current !== null) {
-            clearTimeout(peerTypingTimeoutRef.current);
-          }
+          if (peerTypingTimeoutRef.current !== null) clearTimeout(peerTypingTimeoutRef.current);
           peerTypingTimeoutRef.current = null;
         }
       });
       void sendRead();
     } else if (event.type === "dm:conversation:typing") {
       setIsPeerTyping(true);
-      if (peerTypingTimeoutRef.current !== null) {
-        clearTimeout(peerTypingTimeoutRef.current);
-      }
-      peerTypingTimeoutRef.current = setTimeout(() => {
-        setIsPeerTyping(false);
-      }, TYPING_INDICATOR_DURATION_MS);
+      if (peerTypingTimeoutRef.current !== null) clearTimeout(peerTypingTimeoutRef.current);
+      peerTypingTimeoutRef.current = setTimeout(() => setIsPeerTyping(false), TYPING_INDICATOR_DURATION_MS);
     }
   });
+
+  // ローディング中は空のシェルを返す
+  if (isLoadingActiveUser) {
+    return (
+      <section className="px-6 py-10">
+        <p className="text-cax-text-muted text-center">読み込み中...</p>
+      </section>
+    );
+  }
 
   if (activeUser === null) {
     return (
@@ -113,10 +107,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   }
 
   if (conversation == null) {
-    if (conversationError != null) {
-      return <NotFoundContainer />;
-    }
-    // ローディング中でもHTMLを返す
+    if (conversationError != null) return <NotFoundContainer />;
     return (
       <section className="px-6 py-10">
         <p className="text-cax-text-muted text-center">読み込み中...</p>
@@ -124,8 +115,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     );
   }
 
-  const peer =
-    conversation.initiator.id !== activeUser?.id ? conversation.initiator : conversation.member;
+  const peer = conversation.initiator.id !== activeUser?.id ? conversation.initiator : conversation.member;
 
   return (
     <>
