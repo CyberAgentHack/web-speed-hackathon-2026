@@ -74,7 +74,10 @@ export const NewDirectMessageModalPage = ({ id, onSubmit }: Props) => {
           <ModalSubmitButton disabled={submitting || invalid} loading={submitting}>
             DMを開始
           </ModalSubmitButton>
-          <Button variant="secondary" command="close" commandfor={id}>
+          <Button variant="secondary" onClick={() => {
+            const dialog = document.getElementById(id) as HTMLDialogElement | null;
+            dialog?.close();
+          }}>
             キャンセル
           </Button>
         </div>

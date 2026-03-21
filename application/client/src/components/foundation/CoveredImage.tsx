@@ -37,9 +37,11 @@ export const CoveredImage = ({ alt, src, srcSet, sizes, isLCP }: Props) => {
       <button
         className="border-cax-border bg-cax-surface-raised/90 text-cax-text-muted hover:bg-cax-surface absolute right-1 bottom-1 rounded-full border px-2 py-1 text-center text-xs"
         type="button"
-        command="show-modal"
-        commandfor={dialogId}
-        onClick={(ev) => ev.stopPropagation()}
+        onClick={(ev) => {
+          ev.stopPropagation();
+          const dialog = document.getElementById(dialogId) as HTMLDialogElement | null;
+          dialog?.showModal();
+        }}
       >
         ALT を表示する
       </button>
@@ -50,7 +52,10 @@ export const CoveredImage = ({ alt, src, srcSet, sizes, isLCP }: Props) => {
 
           <p className="text-sm">{alt}</p>
 
-          <Button variant="secondary" command="close" commandfor={dialogId}>
+          <Button variant="secondary" onClick={() => {
+            const dialog = document.getElementById(dialogId) as HTMLDialogElement | null;
+            dialog?.close();
+          }}>
             閉じる
           </Button>
         </div>

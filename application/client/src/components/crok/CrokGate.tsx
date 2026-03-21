@@ -1,3 +1,5 @@
+import { useCallback } from "react";
+
 interface Props {
   headline: string;
   description?: string;
@@ -11,6 +13,11 @@ export const CrokGate = ({
   buttonLabel = "サインイン",
   authModalId,
 }: Props) => {
+  const handleClick = useCallback(() => {
+    const dialog = document.getElementById(authModalId) as HTMLDialogElement | null;
+    dialog?.showModal();
+  }, [authModalId]);
+
   return (
     <>
       <section className="space-y-4 px-6 py-12 text-center">
@@ -19,8 +26,7 @@ export const CrokGate = ({
         <button
           className="bg-cax-brand text-cax-surface-raised hover:bg-cax-brand-strong inline-flex items-center justify-center rounded-full px-6 py-2 shadow"
           type="button"
-          command="show-modal"
-          commandfor={authModalId}
+          onClick={handleClick}
         >
           {buttonLabel}
         </button>
