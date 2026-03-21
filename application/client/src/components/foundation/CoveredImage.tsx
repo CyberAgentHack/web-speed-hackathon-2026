@@ -1,5 +1,5 @@
 import { ImageIFD, load } from "piexifjs";
-import { MouseEvent, useCallback, useId, useState } from "react";
+import { MouseEvent, useCallback, useEffect, useId, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
@@ -9,33 +9,36 @@ interface Props {
   src: string;
 }
 
+async function fetchAlt(src: string): Promise<string> {
+  try {
+    const data = await fetchBinary(src);
+    const exif = load(Buffer.from(data).toString("binary"));
+    const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
+    return raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
+  } catch {
+    return "";
+  }
+}
+
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
 export const CoveredImage = ({ src }: Props) => {
   const dialogId = useId();
-  const [alt, setAlt] = useState<string | null>(null);
+  const [alt, setAlt] = useState("");
 
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
     ev.stopPropagation();
   }, []);
 
-  const handleAltClick = useCallback(async () => {
-    if (alt !== null) return;
-    try {
-      const data = await fetchBinary(src);
-      const exif = load(Buffer.from(data).toString("binary"));
-      const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-      setAlt(raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "");
-    } catch {
-      setAlt("");
-    }
-  }, [src, alt]);
+  useEffect(() => {
+    fetchAlt(src).then(setAlt);
+  }, [src]);
 
   return (
     <div className="relative h-full w-full overflow-hidden">
       <img
-        alt=""
+        alt={alt}
         className="absolute inset-0 h-full w-full object-cover"
         fetchPriority="high"
         src={src}
@@ -46,7 +49,6 @@ export const CoveredImage = ({ src }: Props) => {
         type="button"
         command="show-modal"
         commandfor={dialogId}
-        onClick={handleAltClick}
       >
         ALT を表示する
       </button>
