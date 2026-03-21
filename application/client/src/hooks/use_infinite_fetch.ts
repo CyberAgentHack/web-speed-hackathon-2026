@@ -5,6 +5,7 @@ const LIMIT = 5;
 interface ReturnValues<T> {
   data: Array<T>;
   error: Error | null;
+  hasMore: boolean;
   isLoading: boolean;
   fetchMore: () => void;
 }
@@ -18,20 +19,18 @@ export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
 ): ReturnValues<T> {
-  const internalRef = useRef({ isLoading: false, offset: 0 });
+  const internalRef = useRef({ isLoading: false, offset: 0, hasMore: true });
 
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
     data: [],
     error: null,
+    hasMore: true,
     isLoading: true,
   });
 
   const fetchMore = useCallback(() => {
-    if (!apiPath) {
-      return;
-    }
-    const { isLoading, offset } = internalRef.current;
-    if (isLoading) {
+    const { isLoading, offset, hasMore } = internalRef.current;
+    if (!apiPath || isLoading || !hasMore) {
       return;
     }
 
@@ -40,21 +39,26 @@ export function useInfiniteFetch<T>(
       isLoading: true,
     }));
     internalRef.current = {
+      hasMore,
       isLoading: true,
       offset,
     };
 
     const paginatedPath = buildPaginatedPath(apiPath, offset);
     void fetcher(paginatedPath).then(
-      (allData) => {
+      (page) => {
+        const nextOffset = offset + page.length;
+        const nextHasMore = page.length === LIMIT;
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData],
+          data: [...cur.data, ...page],
+          hasMore: nextHasMore,
           isLoading: false,
         }));
         internalRef.current = {
+          hasMore: nextHasMore,
           isLoading: false,
-          offset: offset + allData.length,
+          offset: nextOffset,
         };
       },
       (error) => {
@@ -64,6 +68,7 @@ export function useInfiniteFetch<T>(
           isLoading: false,
         }));
         internalRef.current = {
+          hasMore,
           isLoading: false,
           offset,
         };
@@ -75,9 +80,11 @@ export function useInfiniteFetch<T>(
     setResult(() => ({
       data: [],
       error: null,
+      hasMore: apiPath !== "",
       isLoading: apiPath !== "",
     }));
     internalRef.current = {
+      hasMore: apiPath !== "",
       isLoading: false,
       offset: 0,
     };

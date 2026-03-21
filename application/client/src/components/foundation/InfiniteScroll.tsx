@@ -4,24 +4,22 @@ interface Props {
   children: ReactNode;
   items: any[];
   fetchMore: () => void;
+  hasMore?: boolean;
 }
 
-export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
+export const InfiniteScroll = ({ children, fetchMore, items, hasMore = true }: Props) => {
   const latestItem = items[items.length - 1];
 
   const prevReachedRef = useRef(false);
 
   useEffect(() => {
     const handler = () => {
-      // 念の為 2の18乗 回、最下部かどうかを確認する
-      const hasReached = Array.from(Array(2 ** 18), () => {
-        return window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
-      }).every(Boolean);
+      const hasReached = window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
 
       // 画面最下部にスクロールしたタイミングで、登録したハンドラを呼び出す
       if (hasReached && !prevReachedRef.current) {
         // アイテムがないときは追加で読み込まない
-        if (latestItem !== undefined) {
+        if (latestItem !== undefined && hasMore) {
           fetchMore();
         }
       }
@@ -43,7 +41,7 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
       document.removeEventListener("resize", handler);
       document.removeEventListener("scroll", handler);
     };
-  }, [latestItem, fetchMore]);
+  }, [latestItem, fetchMore, hasMore]);
 
   return <>{children}</>;
 };
