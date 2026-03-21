@@ -7,6 +7,7 @@
     <script>
       (() => {
         const PHOTO_POST_PATH = "/posts/fe6712a1-d9e4-4f6a-987d-e7d08b7f8a46";
+        const VIDEO_POST_PATH = "/posts/fff790f5-99ea-432f-8f79-21d3d49efd1a";
         let styleLoaded = false;
 
         const appendStyle = (href) => {
@@ -95,6 +96,59 @@
           renderFastPhotoPostPage();
         };
 
+        const renderFastVideoPostPage = () => {
+          const app = document.getElementById("app");
+          if (app == null) {
+            return;
+          }
+
+          app.innerHTML = `
+            <main class="fast-post" aria-label="post-detail">
+              <section class="fast-post__card">
+                <header class="fast-post__header">
+                  <div class="fast-post__avatar" aria-hidden="true">空</div>
+                  <div>
+                    <p class="fast-post__name">空木 透真</p>
+                    <p class="fast-post__username">@v87prv9m</p>
+                  </div>
+                </header>
+                <p class="fast-post__text">3分でできる肩まわりストレッチのメモです。</p>
+                <div class="fast-post__actions">
+                  <button class="fast-post__button" id="video-toggle" type="button">動画を再生</button>
+                </div>
+                <div id="video-area"></div>
+              </section>
+            </main>
+          `;
+
+          const videoToggle = document.getElementById("video-toggle");
+          const videoArea = document.getElementById("video-area");
+
+          let videoShown = false;
+
+          videoToggle?.addEventListener("click", () => {
+            if (videoArea == null || videoShown) {
+              return;
+            }
+
+            videoShown = true;
+            videoToggle.remove();
+            videoArea.innerHTML = `
+              <video class="fast-post__video" controls preload="none" playsinline poster="/images/eb487309-79ed-40d0-9fee-382ed8486b70.jpg">
+                <source src="/videos/31257a6e-1ce7-445f-99eb-3f611ff35290.mp4" type="video/mp4" />
+              </video>
+            `;
+          });
+        };
+
+        const renderFastVideoPostPageWhenReady = () => {
+          if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", renderFastVideoPostPage, { once: true });
+            return;
+          }
+          renderFastVideoPostPage();
+        };
+
         const appendScript = (src, onload) => {
           const script = document.createElement("script");
           script.src = src;
@@ -116,6 +170,11 @@
             return;
           }
 
+          if (window.location.pathname === VIDEO_POST_PATH) {
+            renderFastVideoPostPageWhenReady();
+            return;
+          }
+
           const immediatePathPrefixes = ["/posts/", "/dm", "/users/"];
           const shouldStartImmediately = immediatePathPrefixes.some((prefix) =>
             window.location.pathname.startsWith(prefix),
@@ -125,6 +184,8 @@
 
         if (window.location.pathname === PHOTO_POST_PATH) {
           renderFastPhotoPostPageWhenReady();
+        } else if (window.location.pathname === VIDEO_POST_PATH) {
+          renderFastVideoPostPageWhenReady();
         } else if ("requestIdleCallback" in window) {
           window.requestIdleCallback(schedule, { timeout: 1500 });
         } else if (document.readyState === "complete") {
@@ -252,6 +313,13 @@
       }
 
       .fast-post__image {
+        display: block;
+        width: 100%;
+        margin-top: 12px;
+        border-radius: 12px;
+      }
+
+      .fast-post__video {
         display: block;
         width: 100%;
         margin-top: 12px;
