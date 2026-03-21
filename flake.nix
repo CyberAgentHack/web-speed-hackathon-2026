@@ -18,8 +18,10 @@
           devShells.default = pkgs.mkShell {
             packages = with pkgs; [
               brotli
-              python314Packages.fonttools
+              ffmpeg
+              imagemagick
               python314Packages.brotli
+              python314Packages.fonttools
             ];
           };
         };

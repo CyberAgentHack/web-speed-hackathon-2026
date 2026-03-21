@@ -7,7 +7,6 @@ import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import { convertImage } from "@web-speed-hackathon-2026/server/src/utils/convert_image";
-import { extractAltFromExif } from "@web-speed-hackathon-2026/server/src/utils/extract_alt_from_exif";
 
 // 変換した画像の拡張子
 const EXTENSION = "jpg";
@@ -23,13 +22,12 @@ imageRouter.post("/images", async (req, res) => {
   }
 
   let converted: Buffer;
+  let alt: string;
   try {
-    converted = await convertImage(req.body);
+    ({ data: converted, alt } = await convertImage(req.body));
   } catch {
     return res.status(400).send("Invalid image");
   }
-
-  const alt = extractAltFromExif(converted);
 
   const imageId = uuidv4();
 
