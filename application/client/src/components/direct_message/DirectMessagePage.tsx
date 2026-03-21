@@ -45,10 +45,19 @@ export const DirectMessagePage = ({
   const isInvalid = text.trim().length === 0;
   const scrollHeightRef = useRef(0);
 
+  // Debounce typing indicator to avoid API request on every keystroke
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
       setText(event.target.value);
-      onTyping();
+      if (typingTimerRef.current === null) {
+        onTyping();
+      } else {
+        clearTimeout(typingTimerRef.current);
+      }
+      typingTimerRef.current = setTimeout(() => {
+        typingTimerRef.current = null;
+      }, 3000);
     },
     [onTyping],
   );
@@ -74,15 +83,19 @@ export const DirectMessagePage = ({
   );
 
   useEffect(() => {
-    const id = setInterval(() => {
-      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
-      if (height !== scrollHeightRef.current) {
-        scrollHeightRef.current = height;
-        window.scrollTo(0, height);
+    // Use ResizeObserver instead of 1ms setInterval to avoid blocking main thread
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const height = entry.contentRect.height;
+        if (height !== scrollHeightRef.current) {
+          scrollHeightRef.current = height;
+          window.scrollTo(0, height);
+        }
       }
-    }, 1);
+    });
+    observer.observe(document.body);
 
-    return () => clearInterval(id);
+    return () => observer.disconnect();
   }, []);
 
   if (conversationError != null) {
