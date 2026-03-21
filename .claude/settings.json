@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3:*)",
+      "Bash(wc -c /Users/mitsunagahiroka/git/hackathon/web-speed-hackathon-2026/application/dist/scripts/main.js)"
+    ]
+  }
+}
