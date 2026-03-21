@@ -1,45 +1,28 @@
 import { useEffect, useState } from "react";
 
-interface ReturnValues<T> {
-  data: T | null;
-  error: Error | null;
-  isLoading: boolean;
-}
-
-export function useFetch<T>(
-  apiPath: string,
-  fetcher: (apiPath: string) => Promise<T>,
-): ReturnValues<T> {
-  const [result, setResult] = useState<ReturnValues<T>>({
-    data: null,
-    error: null,
-    isLoading: true,
-  });
+export const useFetch = (url: string) => {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setResult(() => ({
-      data: null,
-      error: null,
-      isLoading: true,
-    }));
+    let ignore = false; //  アンマウント対策
 
-    void fetcher(apiPath).then(
-      (data) => {
-        setResult((cur) => ({
-          ...cur,
-          data,
-          isLoading: false,
-        }));
-      },
-      (error) => {
-        setResult((cur) => ({
-          ...cur,
-          error,
-          isLoading: false,
-        }));
-      },
-    );
-  }, [apiPath, fetcher]);
+    const fetchData = async () => {
+      const res = await fetch(url);
+      const json = await res.json();
 
-  return result;
-}
+      if (!ignore) {
+        setData(json);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      ignore = true;
+    };
+  }, [url]); //  urlだけ依存
+
+  return { data, loading };
+};
