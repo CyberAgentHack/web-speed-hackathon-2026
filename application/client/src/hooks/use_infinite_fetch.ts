@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 
 const DEFAULT_LIMIT = 30;
 
@@ -72,12 +72,14 @@ export function useInfiniteFetch<T>(
         }
 
         const nextHasMore = pageData.length === pageLimit;
-        setResult((cur) => ({
-          ...cur,
-          data: [...cur.data, ...pageData],
-          hasMore: nextHasMore,
-          isLoading: false,
-        }));
+        startTransition(() => {
+          setResult((cur) => ({
+            ...cur,
+            data: [...cur.data, ...pageData],
+            hasMore: nextHasMore,
+            isLoading: false,
+          }));
+        });
         internalRef.current = {
           hasMore: nextHasMore,
           isLoading: false,
@@ -90,11 +92,13 @@ export function useInfiniteFetch<T>(
           return;
         }
 
-        setResult((cur) => ({
-          ...cur,
-          error,
-          isLoading: false,
-        }));
+        startTransition(() => {
+          setResult((cur) => ({
+            ...cur,
+            error,
+            isLoading: false,
+          }));
+        });
         internalRef.current = {
           hasMore,
           isLoading: false,

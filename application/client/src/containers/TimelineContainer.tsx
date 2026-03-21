@@ -12,8 +12,8 @@ export const TimelineContainer = () => {
     hasMore,
     isLoading,
   } = useInfiniteFetch<Models.Post>("/api/v1/posts", fetchJSON, {
-    initialLimit: 10,
-    limit: 10,
+    initialLimit: 15,
+    limit: 15,
   });
 
   return (

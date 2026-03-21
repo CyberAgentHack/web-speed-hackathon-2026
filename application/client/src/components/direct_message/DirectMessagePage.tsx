@@ -2,8 +2,9 @@ import classNames from "classnames";
 import {
   ChangeEvent,
   useCallback,
+  memo,
   useId,
-  useLayoutEffect,
+  useEffect,
   useRef,
   useState,
   KeyboardEvent,
@@ -25,6 +26,58 @@ interface Props {
   onSubmit: (params: DirectMessageFormData) => Promise<void>;
 }
 
+interface MessageListProps {
+  activeUserId: string;
+  messages: Models.DirectMessage[];
+}
+
+const DirectMessageMessageList = memo(({ activeUserId, messages }: MessageListProps) => {
+  if (messages.length === 0) {
+    return (
+      <p className="text-cax-text-muted text-center text-sm">
+        まだメッセージはありません。最初のメッセージを送信してみましょう。
+      </p>
+    );
+  }
+
+  return (
+    <ul className="grid gap-3" data-testid="dm-message-list">
+      {messages.map((message) => {
+        const isActiveUserSend = message.sender.id === activeUserId;
+
+        return (
+          <li
+            className={classNames(
+              "flex w-full flex-col",
+              isActiveUserSend ? "items-end" : "items-start",
+            )}
+            key={message.id}
+          >
+            <p
+              className={classNames(
+                "max-w-3/4 rounded-xl border px-4 py-2 text-sm leading-relaxed whitespace-pre-wrap wrap-anywhere",
+                isActiveUserSend
+                  ? "rounded-br-sm border-transparent bg-cax-brand text-cax-surface-raised"
+                  : "rounded-bl-sm border-cax-border bg-cax-surface text-cax-text",
+              )}
+            >
+              {message.body}
+            </p>
+            <div className="flex gap-1 text-xs">
+              <time dateTime={message.createdAt}>{formatJapaneseTime(message.createdAt)}</time>
+              {isActiveUserSend && message.isRead && (
+                <span className="text-cax-text-muted">既読</span>
+              )}
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+});
+
+DirectMessageMessageList.displayName = "DirectMessageMessageList";
+
 export const DirectMessagePage = ({
   conversationError,
   conversation,
@@ -44,6 +97,7 @@ export const DirectMessagePage = ({
   const [text, setText] = useState("");
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
+  const lastMessageId = conversation.messages.at(-1)?.id ?? "";
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -73,7 +127,7 @@ export const DirectMessagePage = ({
     [onSubmit, text],
   );
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const container = messagesContainerRef.current;
     if (container == null) {
       return;
@@ -88,7 +142,7 @@ export const DirectMessagePage = ({
     return () => {
       window.cancelAnimationFrame(frameId);
     };
-  }, [conversation.id, conversation.messages.length, isPeerTyping]);
+  }, [conversation.id, lastMessageId]);
 
   if (conversationError != null) {
     return (
@@ -123,44 +177,10 @@ export const DirectMessagePage = ({
         className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8"
         ref={messagesContainerRef}
       >
-        {conversation.messages.length === 0 && (
-          <p className="text-cax-text-muted text-center text-sm">
-            まだメッセージはありません。最初のメッセージを送信してみましょう。
-          </p>
-        )}
-
-        <ul className="grid gap-3" data-testid="dm-message-list">
-          {conversation.messages.map((message) => {
-            const isActiveUserSend = message.sender.id === activeUser.id;
-
-            return (
-              <li
-                className={classNames(
-                  "flex flex-col w-full",
-                  isActiveUserSend ? "items-end" : "items-start",
-                )}
-                key={message.id}
-              >
-                <p
-                  className={classNames(
-                    "max-w-3/4 rounded-xl border px-4 py-2 text-sm whitespace-pre-wrap leading-relaxed wrap-anywhere",
-                    isActiveUserSend
-                      ? "rounded-br-sm border-transparent bg-cax-brand text-cax-surface-raised"
-                      : "rounded-bl-sm border-cax-border bg-cax-surface text-cax-text",
-                  )}
-                >
-                  {message.body}
-                </p>
-                <div className="flex gap-1 text-xs">
-                  <time dateTime={message.createdAt}>{formatJapaneseTime(message.createdAt)}</time>
-                  {isActiveUserSend && message.isRead && (
-                    <span className="text-cax-text-muted">既読</span>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+        <DirectMessageMessageList
+          activeUserId={activeUser.id}
+          messages={conversation.messages}
+        />
       </div>
 
       <div className="sticky bottom-12 z-10 lg:bottom-0">

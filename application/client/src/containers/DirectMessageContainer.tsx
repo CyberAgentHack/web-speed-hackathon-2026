@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useParams } from "react-router";
 
@@ -7,7 +7,10 @@ import { DirectMessagePage } from "@web-speed-hackathon-2026/client/src/componen
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
-import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import {
+  fetchPreloadedJSON,
+  sendJSON,
+} from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface DmUpdateEvent {
   type: "dm:conversation:message";
@@ -25,6 +28,29 @@ interface Props {
   activeUser: Models.User | null;
   isLoadingActiveUser: boolean;
   onOpenAuthModal: () => void;
+}
+
+function upsertConversationMessage(
+  conversation: Models.DirectMessageConversation,
+  message: Models.DirectMessage,
+): Models.DirectMessageConversation {
+  const currentMessageIndex = conversation.messages.findIndex(
+    (currentMessage) => currentMessage.id === message.id,
+  );
+
+  if (currentMessageIndex === -1) {
+    return {
+      ...conversation,
+      messages: [...conversation.messages, message],
+    };
+  }
+
+  const nextMessages = [...conversation.messages];
+  nextMessages[currentMessageIndex] = message;
+  return {
+    ...conversation,
+    messages: nextMessages,
+  };
 }
 
 export const DirectMessageContainer = ({
@@ -51,7 +77,7 @@ export const DirectMessageContainer = ({
     }
 
     try {
-      const data = await fetchJSON<Models.DirectMessageConversation>(
+      const data = await fetchPreloadedJSON<Models.DirectMessageConversation>(
         `/api/v1/dm/${conversationId}`,
       );
       setConversation(data);
@@ -69,6 +95,18 @@ export const DirectMessageContainer = ({
     await sendJSON(`/api/v1/dm/${conversationId}/read`, {});
   }, [activeUser, conversationId]);
 
+  const applyMessage = useCallback((message: Models.DirectMessage) => {
+    startTransition(() => {
+      setConversation((currentConversation) => {
+        if (currentConversation == null) {
+          return currentConversation;
+        }
+
+        return upsertConversationMessage(currentConversation, message);
+      });
+    });
+  }, []);
+
   useEffect(() => {
     if (isLoadingActiveUser || activeUser == null) {
       return;
@@ -81,15 +119,15 @@ export const DirectMessageContainer = ({
     async (params: DirectMessageFormData) => {
       setIsSubmitting(true);
       try {
-        await sendJSON(`/api/v1/dm/${conversationId}/messages`, {
+        const message = await sendJSON<Models.DirectMessage>(`/api/v1/dm/${conversationId}/messages`, {
           body: params.body,
         });
-        loadConversation();
+        applyMessage(message);
       } finally {
         setIsSubmitting(false);
       }
     },
-    [conversationId, loadConversation],
+    [applyMessage, conversationId],
   );
 
   const handleTyping = useCallback(() => {
@@ -112,9 +150,27 @@ export const DirectMessageContainer = ({
     void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
   }, [conversationId]);
 
-  useWs(activeUser != null && !isLoadingActiveUser ? `/api/v1/dm/${conversationId}` : "", (event: DmUpdateEvent | DmTypingEvent) => {
-    if (event.type === "dm:conversation:message") {
-      void loadConversation().then(() => {
+  useEffect(() => {
+    setConversation(null);
+    setConversationError(null);
+    setIsPeerTyping(false);
+  }, [conversationId]);
+
+  useEffect(
+    () => () => {
+      if (peerTypingTimeoutRef.current !== null) {
+        clearTimeout(peerTypingTimeoutRef.current);
+      }
+    },
+    [],
+  );
+
+  useWs(
+    activeUser != null && !isLoadingActiveUser ? `/api/v1/dm/${conversationId}` : "",
+    (event: DmUpdateEvent | DmTypingEvent) => {
+      if (event.type === "dm:conversation:message") {
+        applyMessage(event.payload);
+
         if (event.payload.sender.id !== activeUser?.id) {
           setIsPeerTyping(false);
           if (peerTypingTimeoutRef.current !== null) {
@@ -122,18 +178,21 @@ export const DirectMessageContainer = ({
           }
           peerTypingTimeoutRef.current = null;
         }
-      });
-      void sendRead();
-    } else if (event.type === "dm:conversation:typing") {
-      setIsPeerTyping(true);
-      if (peerTypingTimeoutRef.current !== null) {
-        clearTimeout(peerTypingTimeoutRef.current);
+
+        if (event.payload.sender.id !== activeUser?.id && !event.payload.isRead) {
+          void sendRead();
+        }
+      } else if (event.type === "dm:conversation:typing") {
+        setIsPeerTyping(true);
+        if (peerTypingTimeoutRef.current !== null) {
+          clearTimeout(peerTypingTimeoutRef.current);
+        }
+        peerTypingTimeoutRef.current = setTimeout(() => {
+          setIsPeerTyping(false);
+        }, TYPING_INDICATOR_DURATION_MS);
       }
-      peerTypingTimeoutRef.current = setTimeout(() => {
-        setIsPeerTyping(false);
-      }, TYPING_INDICATOR_DURATION_MS);
-    }
-  });
+    },
+  );
 
   if (isLoadingActiveUser) {
     return (
