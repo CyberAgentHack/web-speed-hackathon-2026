@@ -11,12 +11,16 @@ async function calculate(data: ArrayBuffer): Promise<ParsedData> {
   return new Promise((resolve) => {
     const audioCtx = new (window as any).AudioContext();
 
-    audioCtx.decodeAudioData(data.slice(0), (buffer) => {
+    audioCtx.decodeAudioData(data.slice(0), (buffer: AudioBuffer) => {
       // 左の音声データの絶対値を取る（Float32Array のまま保持）
       const leftChannelData = buffer.getChannelData(0);
       const leftData = new Float32Array(leftChannelData.length);
       for (let i = 0; i < leftChannelData.length; i++) {
-        leftData[i] = Math.abs(leftChannelData[i]);
+        const sample = leftChannelData[i];
+        if (sample == null) {
+          continue;
+        }
+        leftData[i] = Math.abs(sample);
       }
 
       // 右の音声データの絶対値を取る
@@ -25,7 +29,11 @@ async function calculate(data: ArrayBuffer): Promise<ParsedData> {
         ? (() => {
             const right = new Float32Array(rightChannelData.length);
             for (let i = 0; i < rightChannelData.length; i++) {
-              right[i] = Math.abs(rightChannelData[i]);
+              const sample = rightChannelData[i];
+              if (sample == null) {
+                continue;
+              }
+              right[i] = Math.abs(sample);
             }
             return right;
           })()

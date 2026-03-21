@@ -16,6 +16,12 @@ interface DmUpdateEvent {
   type: "dm:conversation:message";
   payload: Models.DirectMessage;
 }
+interface DmReadEvent {
+  type: "dm:conversation:read";
+  payload: {
+    readerId: string;
+  };
+}
 interface DmTypingEvent {
   type: "dm:conversation:typing";
   payload: {};
@@ -98,7 +104,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   useWs(
     `/api/v1/dm/${conversationId}`,
-    (event: DmUpdateEvent | DmTypingEvent) => {
+    (event: DmUpdateEvent | DmReadEvent | DmTypingEvent) => {
       if (event.type === "dm:conversation:message") {
         void loadConversation().then(() => {
           if (event.payload.sender.id !== activeUser?.id) {
@@ -110,6 +116,8 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
           }
         });
         void sendRead();
+      } else if (event.type === "dm:conversation:read") {
+        void loadConversation();
       } else if (event.type === "dm:conversation:typing") {
         setIsPeerTyping(true);
         if (peerTypingTimeoutRef.current !== null) {

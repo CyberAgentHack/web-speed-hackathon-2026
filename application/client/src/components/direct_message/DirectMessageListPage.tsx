@@ -15,7 +15,11 @@ interface Props {
   onOpenNewDm?: () => void;
 }
 
-export const DirectMessageListPage = ({ activeUser, newDmModalId, onOpenNewDm }: Props) => {
+export const DirectMessageListPage = ({
+  activeUser,
+  newDmModalId: _newDmModalId,
+  onOpenNewDm,
+}: Props) => {
   const [conversations, setConversations] =
     useState<Array<Models.DirectMessageConversation> | null>(null);
   const [error, setError] = useState<Error | null>(null);
@@ -70,16 +74,18 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId, onOpenNewDm }:
       ) : (
         <ul data-testid="dm-list">
           {conversations.map((conversation) => {
-            const { messages } = conversation;
             const peer =
               conversation.initiator.id !== activeUser.id
                 ? conversation.initiator
                 : conversation.member;
 
-            const lastMessage = messages.at(-1);
-            const hasUnread = messages
-              .filter((m) => m.sender.id === peer.id)
-              .some((m) => !m.isRead);
+            const lastMessage = conversation.latestMessage ?? conversation.messages.at(-1);
+            const hasUnread =
+              conversation.unreadCount != null
+                ? conversation.unreadCount > 0
+                : conversation.messages
+                    .filter((m) => m.sender.id === peer.id)
+                    .some((m) => !m.isRead);
 
             return (
               <li className="grid" key={conversation.id}>

@@ -1,6 +1,5 @@
 import { promises as fs } from "fs";
 import path from "path";
-import { Readable } from "stream";
 
 import { Router } from "express";
 import { fileTypeFromBuffer } from "file-type";
