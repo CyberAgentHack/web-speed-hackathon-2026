@@ -6,6 +6,7 @@ import { faker } from "@faker-js/faker/locale/ja";
 
 import { computePeaks } from "@web-speed-hackathon-2026/server/src/utils/compute_peaks";
 import { extractAltFromExif } from "@web-speed-hackathon-2026/server/src/utils/extract_alt_from_exif";
+import { extractThumbnail } from "@web-speed-hackathon-2026/server/src/utils/extract_thumbnail";
 
 // Set seed for reproducible results
 faker.seed(123);
@@ -183,10 +184,10 @@ function pickRandomN<T>(arr: T[], n: number): T[] {
 
 async function generateProfileImages(): Promise<ProfileImageSeed[]> {
   const { computeAverageColor } = await import("../src/utils/compute_average_color.js");
-  const profilesDir = path.resolve(__dirname, "../../public/images/profiles");
+  const profilesDir = path.resolve(__dirname, "../../public/original-images/profiles");
   const results: ProfileImageSeed[] = [];
   for (const id of EXISTING_PROFILE_IMAGE_IDS) {
-    const imagePath = path.join(profilesDir, `${id}.avif`);
+    const imagePath = path.join(profilesDir, `${id}.jpg`);
     const averageColor = await computeAverageColor(imagePath);
     results.push({ id, alt: "", averageColor });
   }
@@ -225,21 +226,28 @@ function generateUsers(count: number, profileImages: ProfileImageSeed[]): UserSe
 }
 
 function generateImages(): ImageSeed[] {
-  // Use existing image IDs from public/images/
-  const imagesDir = path.resolve(__dirname, "../../public/images");
+  // Use original JPEG images for EXIF alt extraction
+  const originalImagesDir = path.resolve(__dirname, "../../public/original-images");
   const baseTime = now - ONE_WEEK_MS;
   return EXISTING_IMAGE_IDS.map((id, i) => ({
     id,
-    alt: extractAltFromExif(readFileSync(path.join(imagesDir, `${id}.avif`))),
+    alt: extractAltFromExif(readFileSync(path.join(originalImagesDir, `${id}.jpg`))),
     createdAt: new Date(baseTime + i * 60 * 1000).toISOString(),
   }));
 }
 
-function generateMovies(): MovieSeed[] {
-  // Use existing movie IDs from public/movies/
-  return EXISTING_MOVIE_IDS.map((id) => ({
-    id,
-  }));
+async function generateMovies(): Promise<MovieSeed[]> {
+  const moviesDir = path.resolve(__dirname, "../../public/movies");
+  const thumbnailsDir = path.resolve(__dirname, "../../public/movies/thumbnails");
+  const { mkdirSync, writeFileSync } = await import("node:fs");
+  mkdirSync(thumbnailsDir, { recursive: true });
+
+  for (const id of EXISTING_MOVIE_IDS) {
+    const videoPath = path.join(moviesDir, `${id}.mp4`);
+    const thumbnail = await extractThumbnail(videoPath);
+    writeFileSync(path.join(thumbnailsDir, `${id}.avif`), thumbnail);
+  }
+  return EXISTING_MOVIE_IDS.map((id) => ({ id }));
 }
 
 async function generateSounds(): Promise<SoundSeed[]> {
@@ -713,8 +721,8 @@ async function main() {
   console.log("3. Generating Images (using existing assets)...");
   const images = generateImages();
 
-  console.log("4. Generating Movies (using existing assets)...");
-  const movies = generateMovies();
+  console.log("4. Generating Movies (using existing assets + thumbnails)...");
+  const movies = await generateMovies();
 
   console.log("5. Generating Sounds (using existing assets)...");
   const sounds = await generateSounds();
