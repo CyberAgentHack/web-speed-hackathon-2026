@@ -23,7 +23,7 @@ export function useInfiniteFetch<T>(
 
   const fetchMore = useCallback(() => {
     const { isLoading, offset } = internalRef.current;
-    if (isLoading) {
+    if (isLoading || !apiPath) {
       return;
     }
 
@@ -36,11 +36,16 @@ export function useInfiniteFetch<T>(
       offset,
     };
 
-    void fetcher(apiPath).then(
-      (allData) => {
+    const url = new URL(apiPath, window.location.origin);
+    url.searchParams.set("offset", String(offset));
+    url.searchParams.set("limit", String(LIMIT));
+    const paginatedPath = url.pathname + url.search;
+
+    void fetcher(paginatedPath).then(
+      (data) => {
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...data],
           isLoading: false,
         }));
         internalRef.current = {
