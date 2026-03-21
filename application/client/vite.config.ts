@@ -1,7 +1,8 @@
 import path from "node:path";
 
+import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
-import react from "@vitejs/plugin-react";
+import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import type { Plugin } from "vite";
 import { defineConfig } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
@@ -25,6 +26,9 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     react(),
+    babel({
+      presets: [reactCompilerPreset()],
+    }),
     asyncCssPlugin(),
     viteStaticCopy({
       targets: [
