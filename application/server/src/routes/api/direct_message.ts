@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { col, Op } from "sequelize";
+import { Op } from "sequelize";
 
 import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
 import {
@@ -24,13 +24,32 @@ directMessageRouter.get("/dm", async (c) => {
     where: {
       [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
     },
-    order: [[col("messages.createdAt"), "DESC"]],
+    include: [
+      { association: "initiator", include: [{ association: "profileImage" }] },
+      { association: "member", include: [{ association: "profileImage" }] },
+      {
+        association: "messages",
+        include: [{ association: "sender", include: [{ association: "profileImage" }] }],
+        order: [["createdAt", "DESC"]],
+        // separate: true で会話ごとに別クエリ（limitが正しく機能する）
+        separate: true,
+        limit: 50,
+      },
+    ],
   });
 
-  const sorted = conversations.map((conv) => ({
-    ...conv.toJSON(),
-    messages: conv.messages?.reverse(),
-  }));
+  // 最終メッセージのタイムスタンプで降順ソート（メッセージなしは末尾）
+  const sorted = conversations
+    .filter((conv) => (conv.messages?.length ?? 0) > 0)
+    .sort((a, b) => {
+      const aTime = new Date(a.messages![0]!.createdAt).getTime();
+      const bTime = new Date(b.messages![0]!.createdAt).getTime();
+      return bTime - aTime;
+    })
+    .map((conv) => ({
+      ...conv.toJSON(),
+      messages: conv.messages?.slice().reverse(), // ASC順に戻す（クライアントが .at(-1) で最新を取得）
+    }));
 
   return c.json(sorted);
 });

@@ -1,3 +1,4 @@
+import { MagickFormat } from "@imagemagick/magick-wasm";
 import { ChangeEventHandler, FormEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -54,7 +55,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
       Promise.all(
         files.map((file) =>
-          convertImage(file, { extension: "jpg" }).then(
+          convertImage(file, { extension: MagickFormat.Jpg }).then(
             (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
           ),
         ),

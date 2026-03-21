@@ -6,7 +6,6 @@
     "jsx": "react-jsx",
     "target": "esnext",
     "lib": ["DOM", "ESNext"],
-    "types": ["vite/client"],
     "module": "esnext",
     "moduleResolution": "bundler",
     "paths": {
