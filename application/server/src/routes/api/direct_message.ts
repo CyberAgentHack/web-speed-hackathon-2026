@@ -204,6 +204,14 @@ directMessageRouter.get(
         id: c.req.param("conversationId"),
         [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
       },
+      include: [
+        {
+          association: "messages",
+          include: [{ association: "sender", include: [{ association: "profileImage" }] }],
+          order: [["createdAt", "ASC"]],
+          separate: true,
+        },
+      ],
     });
     if (conversation === null) {
       throw new HTTPException(404);
