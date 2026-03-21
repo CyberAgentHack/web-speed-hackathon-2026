@@ -68,7 +68,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
         await sendJSON(`/api/v1/dm/${conversationId}/messages`, {
           body: params.body,
         });
-        loadConversation();
+        await loadConversation();
       } finally {
         setIsSubmitting(false);
       }
@@ -116,7 +116,11 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     if (conversationError != null) {
       return <NotFoundContainer />;
     }
-    return null;
+    return (
+      <div className="flex items-center justify-center p-8">
+        <span className="text-cax-text-muted text-sm">読み込み中...</span>
+      </div>
+    );
   }
 
   const peer =

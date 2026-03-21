@@ -1,4 +1,4 @@
-import moment from "moment";
+import { fromNow } from "@web-speed-hackathon-2026/client/src/utils/format_date";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -41,18 +41,16 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     void loadConversations();
   });
 
-  if (conversations == null) {
-    return null;
-  }
-
   return (
     <section>
       <header className="border-cax-border flex flex-col gap-4 border-b px-4 pt-6 pb-4">
         <h1 className="text-2xl font-bold">ダイレクトメッセージ</h1>
         <div className="flex flex-wrap items-center gap-4">
           <Button
-            command="show-modal"
-            commandfor={newDmModalId}
+            onClick={() => {
+              const target = document.getElementById(newDmModalId);
+              if (target instanceof HTMLDialogElement) target.showModal();
+            }}
             leftItem={<FontAwesomeIcon iconType="paper-plane" styleType="solid" />}
           >
             新しくDMを始める
@@ -60,7 +58,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
         </div>
       </header>
 
-      {error != null ? (
+      {conversations == null ? null : error != null ? (
         <p className="text-cax-danger px-4 py-6 text-center text-sm">DMの取得に失敗しました</p>
       ) : conversations.length === 0 ? (
         <p className="text-cax-text-muted px-4 py-6 text-center">
@@ -100,7 +98,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {fromNow(lastMessage.createdAt)}
                           </time>
                         )}
                       </div>

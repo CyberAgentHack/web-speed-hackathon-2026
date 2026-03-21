@@ -1,5 +1,4 @@
-import Bluebird from "bluebird";
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
+import type { Tokenizer, IpadicFeatures } from "kuromoji";
 import {
   useEffect,
   useLayoutEffect,
@@ -92,13 +91,17 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   }, [suggestions, showSuggestions]);
 
-  // 初回にkuromojiトークナイザーを構築
+  // マウント時にkuromojiトークナイザーを構築（辞書DLが完了するとnetworkidle到達）
   useEffect(() => {
     let mounted = true;
 
     const init = async () => {
+      const [{ default: Bluebird }, { default: kuromoji }] = await Promise.all([
+        import("bluebird"),
+        import("kuromoji"),
+      ]);
       const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
+      const nextTokenizer = await (builder as any).buildAsync();
       if (mounted) {
         setTokenizer(nextTokenizer);
       }
@@ -108,6 +111,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     return () => {
       mounted = false;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

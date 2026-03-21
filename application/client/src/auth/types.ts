@@ -3,4 +3,5 @@ export interface AuthFormData {
   username: string;
   name: string;
   password: string;
+  agreed?: boolean;
 }
