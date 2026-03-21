@@ -10,6 +10,7 @@ import { initializeRouter } from "@web-speed-hackathon-2026/server/src/routes/ap
 import { movieRouter } from "@web-speed-hackathon-2026/server/src/routes/api/movie";
 import { postRouter } from "@web-speed-hackathon-2026/server/src/routes/api/post";
 import { searchRouter } from "@web-speed-hackathon-2026/server/src/routes/api/search";
+import { sentimentRouter } from "@web-speed-hackathon-2026/server/src/routes/api/sentiment";
 import { soundRouter } from "@web-speed-hackathon-2026/server/src/routes/api/sound";
 import { userRouter } from "@web-speed-hackathon-2026/server/src/routes/api/user";
 
@@ -20,6 +21,7 @@ apiRouter.use(userRouter);
 apiRouter.use(postRouter);
 apiRouter.use(directMessageRouter);
 apiRouter.use(searchRouter);
+apiRouter.use(sentimentRouter);
 apiRouter.use(movieRouter);
 apiRouter.use(imageRouter);
 apiRouter.use(soundRouter);
