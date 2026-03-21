@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, useCallback, useRef, useState } from "react";
 
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/auth/validation";
@@ -18,21 +18,34 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | undefined>();
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof AuthFormData, string>>>({});
+  const [fieldValues, setFieldValues] = useState({ username: "", name: "", password: "" });
+
+  const getFormValues = useCallback((): AuthFormData => {
+    return {
+      type,
+      username: fieldValues.username,
+      name: fieldValues.name,
+      password: fieldValues.password,
+    };
+  }, [type, fieldValues]);
+
+  const handleFieldChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const { name, value } = e.target;
+      const newValues = { ...fieldValues, [name]: value };
+      setFieldValues(newValues);
+      const errors = validate({ type, ...newValues });
+      setFieldErrors(errors);
+    },
+    [type, fieldValues],
+  );
+
+  const isFormValid = Object.keys(validate(getFormValues())).length === 0;
 
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
       e.preventDefault();
-      const form = formRef.current;
-      if (!form) return;
-
-      const formData = new FormData(form);
-      const values: AuthFormData = {
-        type,
-        username: (formData.get("username") as string) || "",
-        name: (formData.get("name") as string) || "",
-        password: (formData.get("password") as string) || "",
-      };
-
+      const values = getFormValues();
       const errors = validate(values);
       setFieldErrors(errors);
       if (Object.keys(errors).length > 0) return;
@@ -49,7 +62,7 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
         setSubmitting(false);
       }
     },
-    [type, onSubmit],
+    [getFormValues, onSubmit],
   );
 
   const toggleType = useCallback(() => {
@@ -77,6 +90,7 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
           leftItem={<span className="text-cax-text-subtle leading-none">@</span>}
           autoComplete="username"
           error={fieldErrors.username}
+          onChange={handleFieldChange}
         />
 
         {type === "signup" && (
@@ -85,6 +99,7 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
             name="name"
             autoComplete="nickname"
             error={fieldErrors.name}
+            onChange={handleFieldChange}
           />
         )}
 
@@ -94,6 +109,7 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
           type="password"
           autoComplete={type === "signup" ? "new-password" : "current-password"}
           error={fieldErrors.password}
+          onChange={handleFieldChange}
         />
       </div>
 
@@ -106,7 +122,7 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
         </p>
       ) : null}
 
-      <ModalSubmitButton disabled={submitting} loading={submitting}>
+      <ModalSubmitButton disabled={submitting || !isFormValid} loading={submitting}>
         {type === "signin" ? "サインイン" : "登録する"}
       </ModalSubmitButton>
 
