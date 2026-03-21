@@ -2,6 +2,16 @@ import { expect, test } from "@playwright/test";
 
 import { login, scrollEntire } from "./utils";
 
+interface DmMessagePayload {
+  body: string;
+  createdAt: string;
+}
+
+interface DmConversationPayload {
+  id: string;
+  messages: DmMessagePayload[];
+}
+
 test.describe("DM一覧", () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
@@ -127,6 +137,28 @@ test.describe("DM一覧", () => {
     });
 
     expect(times).toEqual(sortedTimes);
+  });
+
+  test("DM詳細APIがlimit/offsetでページネーションできること", async ({ page }) => {
+    await login(page);
+    await page.goto("/dm");
+
+    await page.getByTestId("dm-list").locator("a").first().click();
+    await page.waitForURL("**/dm/*", { timeout: 10 * 1000 });
+
+    const conversationId = page.url().split("/").at(-1);
+    expect(conversationId).toBeTruthy();
+
+    const response = await page.request.get(`/api/v1/dm/${conversationId}?limit=1&offset=1`);
+    expect(response.ok()).toBe(true);
+    const conversation = (await response.json()) as DmConversationPayload;
+
+    expect(conversation.id).toBe(conversationId);
+    expect(conversation.messages.length).toBeLessThanOrEqual(1);
+    if (conversation.messages.length === 1) {
+      expect(conversation.messages[0]).toHaveProperty("body");
+      expect(conversation.messages[0]).toHaveProperty("createdAt");
+    }
   });
 
   test("Enterでメッセージを送信・Shift+Enterで改行できること", async ({ page }) => {
