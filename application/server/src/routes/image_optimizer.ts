@@ -89,9 +89,9 @@ imageOptimizerRouter.get("/images/:id.jpg", async (req, res, next) => {
 
   try {
     const pipeline = applyFormat(
-      sharp(fileBuffer).resize(600, undefined, { fit: "inside", withoutEnlargement: true }),
+      sharp(fileBuffer).resize(350, undefined, { fit: "inside", withoutEnlargement: true }),
       format,
-      75,
+      50,
     );
 
     const optimized = await pipeline.toBuffer();
