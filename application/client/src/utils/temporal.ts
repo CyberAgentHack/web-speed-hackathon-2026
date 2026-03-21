@@ -1,10 +1,14 @@
+const JAPAN_TIME_ZONE = "Asia/Tokyo";
+
 const jaLongDateFormatter = new Intl.DateTimeFormat("ja-JP", {
   dateStyle: "long",
+  timeZone: JAPAN_TIME_ZONE,
 });
 const jaHourMinuteFormatter = new Intl.DateTimeFormat("ja-JP", {
   hour: "2-digit",
   minute: "2-digit",
   hour12: false,
+  timeZone: JAPAN_TIME_ZONE,
 });
 const jaRelativeTimeFormatter = new Intl.RelativeTimeFormat("ja-JP", {
   numeric: "auto",
