@@ -12,10 +12,12 @@ interface Props {
 export const SoundPlayer = ({ sound }: Props) => {
   const soundUrl = getSoundPath(sound.id);
 
-  const [currentTimeRatio, setCurrentTimeRatio] = useState(0);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>((ev) => {
     const el = ev.currentTarget;
-    setCurrentTimeRatio(el.currentTime / el.duration);
+    if (overlayRef.current) {
+      overlayRef.current.style.left = `${(el.currentTime / el.duration) * 100}%`;
+    }
   }, []);
 
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -57,8 +59,9 @@ export const SoundPlayer = ({ sound }: Props) => {
                 <SoundWaveSVG soundUrl={soundUrl} waveform={sound.waveform} />
               </div>
               <div
+                ref={overlayRef}
                 className="bg-cax-surface-subtle absolute inset-0 h-full w-full opacity-75"
-                style={{ left: `${currentTimeRatio * 100}%` }}
+                style={{ left: "0%" }}
               ></div>
             </div>
           </AspectRatioBox>
