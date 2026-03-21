@@ -37,6 +37,7 @@ export const CoveredImage = ({ src }: Props) => {
       <img
         alt=""
         className="absolute inset-0 h-full w-full object-cover"
+        fetchPriority="high"
         src={src}
       />
 
