@@ -2,7 +2,7 @@ import path from "node:path";
 
 import { expect, test } from "@playwright/test";
 
-import { dynamicMediaMask, login, waitForVisibleMedia } from "./utils";
+import { dynamicMediaMask, login, waitForPageToLoad, waitForVisibleMedia } from "./utils";
 
 test.describe("投稿機能", () => {
   test.beforeEach(async ({ page }) => {
@@ -22,6 +22,7 @@ test.describe("投稿機能", () => {
 
     // VRT: 投稿モーダル（テキスト入力後）
     await waitForVisibleMedia(page);
+    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("posting-テキスト入力後.png", {
       mask: dynamicMediaMask(page),
     });
