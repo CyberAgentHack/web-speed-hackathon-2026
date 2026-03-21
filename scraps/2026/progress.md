@@ -69,11 +69,12 @@
 - [x] DM送信フロー計測不能の修正 → DM送信（50点）解禁
   - 原因: `DirectMessageListPage.tsx` が `conversations === null` 中に `return null` しているため、「新しくDMを始める」ボタンが採点ツールのクリック時に DOM に存在しない
   - 対策: `return null` を廃止してヘッダー（ボタン含む）を常に描画。リスト部分のみ `conversations == null` で非表示
-- [ ] **Phase 4 ⑤** Tailwind CSS ブラウザランタイム → 静的ビルド化
-  - `index.html` の `@tailwindcss/browser@4.2.1` CDN 読み込みを削除
-  - `<style type="text/tailwindcss">` の `@theme` / `@utility` ブロックを `index.css` に移動
-  - `@tailwindcss/postcss` を `postcss.config.js` に追加してビルド時に静的 CSS を生成
-  - 全ページの TBT が 15〜25 点残っている主因と推定。解決で ~100点改善見込み
+- [x] **Phase 4 ⑤** Tailwind CSS ブラウザランタイム → 静的ビルド化
+  - `tailwindcss` + `@tailwindcss/postcss` をインストール
+  - `postcss.config.js`: `postcss-import` + `postcss-preset-env` → `@tailwindcss/postcss` のみに (v4 は import・nesting・autoprefixer を内包)
+  - `index.css`: `@import "tailwindcss"` 追加、`@theme` / `@layer base` / `@utility markdown` を移植
+  - `index.html` の CDN script + `<style type="text/tailwindcss">` を削除
+  - 出力: `dist/styles/main.css` 42 KB として静的生成確認
 - [x] Crok の Markdown レンダリングをストリーミング中/完了後で切り替える
   - ストリーミング中: `<p className="whitespace-pre-wrap">` で plain text 表示（Markdown パース・KaTeX コストをゼロに）
   - ストリーム完了後: react-markdown + rehype-katex でレンダリング切り替え
@@ -108,7 +109,7 @@
 - [ ] **Phase 4 ⑦** ホーム LCP=0 の原因調査・修正
   - ローカルで動作確認。`<video>` LCP の `preload` / `autoplay` 属性を確認
 - [ ] **Phase 5** サーバー最適化
-  - gzip 圧縮を有効化（express `compression` ミドルウェア）
+  - brotli 圧縮を有効化（express `compression` ミドルウェア）
   - DB インデックスを追加（テーブルのリレーションを確認）
   - N+1 クエリを一括クエリに変換
   - API レスポンスの不要フィールド削除・limit 設定
