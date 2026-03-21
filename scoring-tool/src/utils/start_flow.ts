@@ -15,9 +15,11 @@ export async function startFlow(page: puppeteer.Page) {
           "first-contentful-paint",
           "speed-index",
           "largest-contentful-paint",
+          "largest-contentful-paint-element",
           "total-blocking-time",
           "cumulative-layout-shift",
           "interaction-to-next-paint",
+          "network-requests",
         ],
         screenEmulation: {
           disabled: true,
