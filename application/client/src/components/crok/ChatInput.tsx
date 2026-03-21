@@ -1,6 +1,4 @@
-import { type Tokenizer, type IpadicFeatures } from "kuromoji";
 import {
-  startTransition,
   useDeferredValue,
   useEffect,
   useLayoutEffect,
@@ -12,12 +10,6 @@ import {
 } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import {
-  buildSuggestionIndex,
-  extractTokens,
-  filterSuggestions,
-  type SuggestionIndexEntry,
-} from "@web-speed-hackathon-2026/client/src/utils/bm25_search";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
@@ -82,9 +74,6 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
-  const [rawSuggestions, setRawSuggestions] = useState<string[] | null>(null);
-  const [indexedSuggestions, setIndexedSuggestions] = useState<SuggestionIndexEntry[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
@@ -98,73 +87,35 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   }, [suggestions, showSuggestions]);
 
-  // 初回にkuromojiトークナイザーを構築
   useEffect(() => {
-    let mounted = true;
-
-    const init = async () => {
-      const [{ default: Bluebird }, { default: kuromoji }] = await Promise.all([
-        import("bluebird"),
-        import("kuromoji"),
-      ]);
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
-      if (mounted) {
-        setTokenizer(nextTokenizer);
-      }
-    };
-    init();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    void fetchJSON<{ suggestions: string[] }>("/api/v1/crok/suggestions")
-      .then(({ suggestions }) => {
-        if (!cancelled) {
-          setRawSuggestions(suggestions);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setRawSuggestions([]);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (tokenizer === null || rawSuggestions === null) {
-      return;
-    }
-
-    startTransition(() => {
-      setIndexedSuggestions(buildSuggestionIndex(tokenizer, rawSuggestions));
-    });
-  }, [rawSuggestions, tokenizer]);
-
-  useEffect(() => {
-    if (!tokenizer || !deferredInputValue.trim()) {
+    const query = deferredInputValue.trim();
+    if (query.length === 0) {
       setSuggestions([]);
       setQueryTokens([]);
       setShowSuggestions(false);
       return;
     }
 
-    const tokens = extractTokens(tokenizer.tokenize(deferredInputValue));
-    const results = filterSuggestions(indexedSuggestions, deferredInputValue, tokens);
+    const timeoutId = window.setTimeout(() => {
+      void fetchJSON<{ suggestions: string[] }>(
+        `/api/v1/crok/suggestions?q=${encodeURIComponent(query)}`,
+      )
+        .then(({ suggestions }) => {
+          const tokens = [query.toLowerCase()];
+          setQueryTokens(tokens);
+          setSuggestions(suggestions);
+          setShowSuggestions(suggestions.length > 0);
+        })
+        .catch(() => {
+          setSuggestions([]);
+          setShowSuggestions(false);
+        });
+    }, 200);
 
-    setQueryTokens(tokens);
-    setSuggestions(results);
-    setShowSuggestions(results.length > 0);
-  }, [deferredInputValue, indexedSuggestions, tokenizer]);
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [deferredInputValue]);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;

@@ -16,6 +16,9 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
   const sseOptions = useMemo(
     () => ({
       onMessage: (data: Models.SSEChunk, prevContent: string) => {
+        if (data.replace) {
+          return data.text ?? "";
+        }
         return prevContent + (data.text ?? "");
       },
       onDone: (data: Models.SSEChunk) => data.done === true,

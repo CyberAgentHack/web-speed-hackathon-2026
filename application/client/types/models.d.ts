@@ -70,6 +70,7 @@ declare namespace Models {
   }
 
   interface SSEChunk {
+    replace?: boolean;
     text?: string;
     done?: boolean;
   }
