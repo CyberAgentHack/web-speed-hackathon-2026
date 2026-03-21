@@ -24,13 +24,7 @@ const UserMessage = ({ content }: { content: string }) => {
   );
 };
 
-const AssistantMessage = ({
-  content,
-  isStreaming = false,
-}: {
-  content: string;
-  isStreaming?: boolean;
-}) => {
+const AssistantMessage = ({ content, isStreaming = false }: { content: string; isStreaming?: boolean }) => {
   return (
     <div className="mb-6 flex gap-4">
       <div className="h-8 w-8 shrink-0">

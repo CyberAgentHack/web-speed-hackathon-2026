@@ -1,4 +1,3 @@
-import fs from "node:fs";
 import path from "path";
 
 import history from "connect-history-api-fallback";
@@ -6,8 +5,6 @@ import { Router } from "express";
 import serveStatic from "serve-static";
 import sharp from "sharp";
 
-import { cache, TTL } from "@web-speed-hackathon-2026/server/src/cache";
-import { Post } from "@web-speed-hackathon-2026/server/src/models";
 import {
   CLIENT_DIST_PATH,
   PUBLIC_PATH,
@@ -23,141 +20,6 @@ const TRANSFORMED_IMAGE_CACHE_MAX = 500;
 const IMAGE_MEDIA_PATH = /^\/images\/.+\.(jpg|webp|avif)$/i;
 const MOVIE_MEDIA_PATH = /^\/movies\/.+\.(mp4|webm)$/i;
 const SOUND_MEDIA_PATH = /^\/sounds\/.+\.(mp3|ogg)$/i;
-
-// ── Bootstrap injection ──────────────────────────────────────────────
-let baseHtml = "";
-try {
-  baseHtml = fs.readFileSync(path.join(CLIENT_DIST_PATH, "index.html"), "utf8");
-} catch {
-  // Will be populated after the client is built
-}
-
-const POST_DETAIL_ROUTE = /^\/posts\/([a-f0-9-]{36})$/;
-const BOOTSTRAP_LIMIT = 30;
-
-function serializeBootstrap(data: unknown): string {
-  return JSON.stringify(data)
-    .replace(/</g, "\\u003c")
-    .replace(/>/g, "\\u003e")
-    .replace(/&/g, "\\u0026");
-}
-
-function buildPreloadHints(posts: any[]): string {
-  const hints: string[] = [];
-  for (const post of posts) {
-    const images = post.images;
-    if (images && images.length > 0) {
-      hints.push(
-        `<link rel="preload" href="/images/${images[0].id}.webp" as="image" fetchpriority="high">`,
-      );
-      break;
-    }
-    const movie = post.movie;
-    if (movie) {
-      hints.push(
-        `<link rel="preload" href="/movies/${movie.id}.mp4" as="video" fetchpriority="high">`,
-      );
-      break;
-    }
-  }
-  return hints.join("");
-}
-
-const htmlSnapshotCache = new Map<string, string>();
-
-export function clearHtmlCache() {
-  htmlSnapshotCache.clear();
-}
-
-export async function warmHtmlCache() {
-  if (!baseHtml) return;
-  try {
-    await warmRoute("/");
-  } catch {
-    // non-fatal
-  }
-}
-
-async function warmRoute(reqPath: string) {
-  const html = await buildInjectedHtml(reqPath);
-  if (html) {
-    htmlSnapshotCache.set(reqPath, html);
-  }
-}
-
-async function buildInjectedHtml(reqPath: string): Promise<string | null> {
-  const bootstrapData: Record<string, unknown> = {};
-  let preloadHints = "";
-
-  try {
-    if (reqPath === "/") {
-      const cacheKey = `posts:${BOOTSTRAP_LIMIT}:0`;
-      let posts = cache.get<Post[]>(cacheKey);
-      if (posts === undefined) {
-        posts = await Post.findAll({ limit: BOOTSTRAP_LIMIT, offset: 0 });
-        cache.set(cacheKey, posts, TTL.POST);
-      }
-      const postsJson = JSON.parse(JSON.stringify(posts));
-      bootstrapData[`/api/v1/posts?limit=${BOOTSTRAP_LIMIT}&offset=0`] = postsJson;
-      preloadHints = buildPreloadHints(postsJson);
-    }
-
-    const postMatch = reqPath.match(POST_DETAIL_ROUTE);
-    if (postMatch) {
-      const postId = postMatch[1]!;
-      const cacheKey = `post:${postId}`;
-      let post = cache.get<Post>(cacheKey);
-      if (post === undefined) {
-        post = (await Post.findByPk(postId)) ?? undefined;
-        if (post !== undefined) {
-          cache.set(cacheKey, post, TTL.POST);
-        }
-      }
-      if (post !== undefined) {
-        bootstrapData[`/api/v1/posts/${postId}`] = JSON.parse(JSON.stringify(post));
-      }
-    }
-  } catch {
-    // Silently fall back to non-bootstrapped HTML
-  }
-
-  if (Object.keys(bootstrapData).length === 0) {
-    return null;
-  }
-
-  const scriptTag = `<script>window.__CAX_BOOTSTRAP__=${serializeBootstrap(bootstrapData)}</script>`;
-  let html = baseHtml;
-  if (preloadHints) {
-    html = html.replace("</head>", `${preloadHints}</head>`);
-  }
-  html = html.replace("</head>", `${scriptTag}</head>`);
-  return html;
-}
-
-// Serve bootstrapped HTML for matching routes BEFORE history fallback
-staticRouter.use(async (req, res, next) => {
-  if (!baseHtml || req.method !== "GET") return next();
-
-  const lastSegment = req.path.split("/").pop() || "";
-  if (lastSegment.includes(".") || req.path.startsWith("/api/")) return next();
-
-  // Only bootstrap specific routes
-  if (req.path !== "/" && !POST_DETAIL_ROUTE.test(req.path)) {
-    // For non-bootstrapped HTML pages, serve the base HTML directly
-    res.setHeader("Content-Type", "text/html; charset=UTF-8");
-    res.setHeader("Cache-Control", "no-cache");
-    return res.send(baseHtml);
-  }
-
-  let html = htmlSnapshotCache.get(req.path);
-  if (!html) {
-    html = (await buildInjectedHtml(req.path)) ?? baseHtml;
-  }
-
-  res.setHeader("Content-Type", "text/html; charset=UTF-8");
-  res.setHeader("Cache-Control", "no-cache");
-  res.send(html);
-});
 
 // SPA 対応のため、ファイルが存在しないときに index.html を返す
 staticRouter.use(history());

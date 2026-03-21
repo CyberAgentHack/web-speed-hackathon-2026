@@ -5,8 +5,12 @@ import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components
 import { SoundWaveSVG } from "@web-speed-hackathon-2026/client/src/components/foundation/SoundWaveSVG";
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { useNearViewport } from "@web-speed-hackathon-2026/client/src/hooks/use_near_viewport";
+
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
-import { getSoundPath, getSoundSources } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import {
+  getSoundPath,
+  getSoundSources,
+} from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   sound: Models.Sound;
@@ -43,16 +47,8 @@ export const SoundPlayer = ({ sound }: Props) => {
   }
 
   return (
-    <div
-      ref={targetRef}
-      className="bg-cax-surface-subtle flex h-full w-full items-center justify-center"
-    >
-      <audio
-        ref={audioRef}
-        loop={true}
-        onTimeUpdate={handleTimeUpdate}
-        src={soundPath ?? undefined}
-      >
+    <div ref={targetRef} className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
+      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} src={soundPath ?? undefined}>
         {isNearViewport &&
           getSoundSources(sound.id).map((source) => (
             <source key={source.type} src={source.src} type={source.type} />

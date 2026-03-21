@@ -32,11 +32,7 @@ movieRouter.post("/movies", async (req, res) => {
   const movieId = uuidv4();
   const sourcePath = await storeMediaSource(SOURCE_KIND, movieId, type.ext, req.body);
   if (type.ext === CANONICAL_EXT) {
-    await createCanonicalMedia(
-      SOURCE_KIND,
-      sourcePath,
-      getMediaPath(SOURCE_KIND, movieId, CANONICAL_EXT),
-    );
+    await createCanonicalMedia(SOURCE_KIND, sourcePath, getMediaPath(SOURCE_KIND, movieId, CANONICAL_EXT));
   }
   void mediaDerivationQueue.enqueue({
     key: `${SOURCE_KIND}:${movieId}`,
@@ -48,11 +44,7 @@ movieRouter.post("/movies", async (req, res) => {
           getMediaPath(SOURCE_KIND, movieId, CANONICAL_EXT),
         );
       }
-      await createDerivativeMedia(
-        SOURCE_KIND,
-        sourcePath,
-        getMediaPath(SOURCE_KIND, movieId, "webm"),
-      );
+      await createDerivativeMedia(SOURCE_KIND, sourcePath, getMediaPath(SOURCE_KIND, movieId, "webm"));
     },
   });
 

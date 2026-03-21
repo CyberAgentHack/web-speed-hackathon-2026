@@ -15,11 +15,7 @@ export interface MediaSource {
   type: string;
 }
 
-const buildPath = (
-  basePath: string,
-  extension: string,
-  options: { h?: number; w?: number } = {},
-) => {
+const buildPath = (basePath: string, extension: string, options: { h?: number; w?: number } = {}) => {
   const url = new URL(`${basePath}.${extension}`, window.location.origin);
   if (options.w !== undefined) {
     url.searchParams.set("w", String(options.w));

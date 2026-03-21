@@ -60,11 +60,7 @@ export const TimelineItem = ({ post, prioritizeMedia = false }: Props) => {
   );
 
   return (
-    <article
-      className="hover:bg-cax-surface-subtle px-1 sm:px-4"
-      onClick={handleClick}
-      style={{ contentVisibility: "auto", containIntrinsicSize: "auto 400px" }}
-    >
+    <article className="hover:bg-cax-surface-subtle px-1 sm:px-4" onClick={handleClick}>
       <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
         <div className="shrink-0 grow-0 pr-2 sm:pr-4">
           <Link
@@ -93,7 +89,9 @@ export const TimelineItem = ({ post, prioritizeMedia = false }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={toISOString(post.createdAt)}>{formatLongDate(post.createdAt)}</time>
+              <time dateTime={toISOString(post.createdAt)}>
+                {formatLongDate(post.createdAt)}
+              </time>
             </Link>
           </p>
           <div className="text-cax-text leading-relaxed">

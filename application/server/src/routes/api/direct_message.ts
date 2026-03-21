@@ -146,34 +146,25 @@ directMessageRouter.get("/dm", async (req, res) => {
       createdAt: r.member_createdAt,
       profileImage: { id: r.member_pi_id, alt: r.member_pi_alt },
     },
-    messages:
-      r.msg_id === null
-        ? []
-        : [
-            {
-              id: r.msg_id,
-              body: r.msg_body,
-              isRead: Boolean(r.msg_isRead),
-              createdAt: r.msg_createdAt,
-              updatedAt: r.msg_updatedAt,
-              conversationId: r.id,
-              senderId: r.msg_senderId,
-              sender:
-                r.sender_id === null
-                  ? null
-                  : {
-                      id: r.sender_id,
-                      username: r.sender_username,
-                      name: r.sender_name,
-                      description: r.sender_description,
-                      createdAt: r.sender_createdAt,
-                      profileImage:
-                        r.sender_pi_id === null
-                          ? null
-                          : { id: r.sender_pi_id, alt: r.sender_pi_alt },
-                    },
-            },
-          ],
+    messages: r.msg_id === null ? [] : [
+      {
+        id: r.msg_id,
+        body: r.msg_body,
+        isRead: Boolean(r.msg_isRead),
+        createdAt: r.msg_createdAt,
+        updatedAt: r.msg_updatedAt,
+        conversationId: r.id,
+        senderId: r.msg_senderId,
+        sender: r.sender_id === null ? null : {
+          id: r.sender_id,
+          username: r.sender_username,
+          name: r.sender_name,
+          description: r.sender_description,
+          createdAt: r.sender_createdAt,
+          profileImage: r.sender_pi_id === null ? null : { id: r.sender_pi_id, alt: r.sender_pi_alt },
+        },
+      },
+    ],
   }));
 
   return res.status(200).type("application/json").send(result);

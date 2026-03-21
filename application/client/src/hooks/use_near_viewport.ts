@@ -46,9 +46,7 @@ export function useNearViewport<T extends Element>({
     }
 
     const observer = new IntersectionObserver((entries) => {
-      const isVisible = entries.some(
-        (entry) => entry.isIntersecting || entry.intersectionRatio > 0,
-      );
+      const isVisible = entries.some((entry) => entry.isIntersecting || entry.intersectionRatio > 0);
       if (!isVisible) {
         return;
       }

@@ -69,39 +69,13 @@ export const AppContainer = () => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
-  const needsAuthImmediately = pathname.startsWith("/dm") || pathname.startsWith("/crok");
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
   useEffect(() => {
-    let cancelled = false;
-    const doFetch = () => {
-      void fetchJSON<Models.User>("/api/v1/me")
-        .then((user) => {
-          if (!cancelled) setActiveUser(user);
-        })
-        .catch(() => undefined);
-    };
-
-    if (needsAuthImmediately) {
-      doFetch();
-    } else {
-      // Defer /me fetch so it doesn't compete with critical rendering
-      const id =
-        typeof requestIdleCallback === "function"
-          ? requestIdleCallback(doFetch, { timeout: 2000 })
-          : (setTimeout(doFetch, 100) as unknown as number);
-      return () => {
-        cancelled = true;
-        if (typeof cancelIdleCallback === "function") {
-          cancelIdleCallback(id);
-        } else {
-          clearTimeout(id);
-        }
-      };
-    }
-
-    return () => {
-      cancelled = true;
-    };
+    void fetchJSON<Models.User>("/api/v1/me")
+      .then((user) => {
+        setActiveUser(user);
+      })
+      .catch(() => undefined);
   }, []);
 
   const handleLogout = useCallback(async () => {

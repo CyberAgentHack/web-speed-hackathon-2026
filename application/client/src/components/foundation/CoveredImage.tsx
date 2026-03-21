@@ -88,12 +88,7 @@ export const CoveredImage = ({ sources, src, srcSet, sizes, alt, priority = fals
     <div className="relative h-full w-full overflow-hidden">
       <picture className="absolute inset-0 h-full w-full">
         {sources?.map((source) => (
-          <source
-            key={source.type}
-            sizes={source.sizes}
-            srcSet={source.srcSet}
-            type={source.type}
-          />
+          <source key={source.type} sizes={source.sizes} srcSet={source.srcSet} type={source.type} />
         ))}
         <img
           alt={resolvedAlt}

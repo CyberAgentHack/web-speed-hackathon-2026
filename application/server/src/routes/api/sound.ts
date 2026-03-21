@@ -58,15 +58,10 @@ soundRouter.post("/sounds", async (req, res) => {
           },
         );
       }
-      await createDerivativeMedia(
-        SOURCE_KIND,
-        sourcePath,
-        getMediaPath(SOURCE_KIND, soundId, "ogg"),
-        {
-          artist,
-          title,
-        },
-      );
+      await createDerivativeMedia(SOURCE_KIND, sourcePath, getMediaPath(SOURCE_KIND, soundId, "ogg"), {
+        artist,
+        title,
+      });
     },
   });
 

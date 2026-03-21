@@ -1,5 +1,4 @@
 import { ComponentPropsWithRef } from "react";
-import { Helmet } from "react-helmet";
 
 import { PageTitle } from "@web-speed-hackathon-2026/client/src/components/application/PageTitle";
 import { openDialog } from "@web-speed-hackathon-2026/client/src/utils/dialog_command";

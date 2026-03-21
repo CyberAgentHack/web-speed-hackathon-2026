@@ -2,7 +2,10 @@ import classNames from "classnames";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { CoveredImage } from "@web-speed-hackathon-2026/client/src/components/foundation/CoveredImage";
-import { getImagePath, getImageSources } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import {
+  getImagePath,
+  getImageSources,
+} from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   images: Models.Image[];

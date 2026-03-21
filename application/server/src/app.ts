@@ -25,12 +25,8 @@ app.use(
   }),
 );
 
-app.use("/api/v1", (req, res, next) => {
-  if (req.method === "GET" || req.method === "HEAD") {
-    res.setHeader("Cache-Control", "private, max-age=2, stale-while-revalidate=10");
-  } else {
-    res.setHeader("Cache-Control", "no-store");
-  }
+app.use("/api/v1", (_req, res, next) => {
+  res.setHeader("Cache-Control", "no-store");
   return next();
 });
 

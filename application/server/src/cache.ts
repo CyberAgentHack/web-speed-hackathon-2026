@@ -45,7 +45,7 @@ export const cache = new MemoryCache();
 
 // TTL constants
 export const TTL = {
-  USER: 30_000, // 30s — user profiles change infrequently
-  POST: 10_000, // 10s — posts are fairly stable
+  USER: 30_000,   // 30s — user profiles change infrequently
+  POST: 10_000,   // 10s — posts are fairly stable
   SEARCH: 10_000, // 10s — search traffic is hot and mostly read-heavy
 } as const;

@@ -32,11 +32,7 @@ imageRouter.post("/images", async (req, res) => {
   const imageId = uuidv4();
   const sourcePath = await storeMediaSource(SOURCE_KIND, imageId, type.ext, req.body);
   if (type.ext === CANONICAL_EXT) {
-    await createCanonicalMedia(
-      SOURCE_KIND,
-      sourcePath,
-      getMediaPath(SOURCE_KIND, imageId, CANONICAL_EXT),
-    );
+    await createCanonicalMedia(SOURCE_KIND, sourcePath, getMediaPath(SOURCE_KIND, imageId, CANONICAL_EXT));
   }
   void mediaDerivationQueue.enqueue({
     key: `${SOURCE_KIND}:${imageId}`,
@@ -49,11 +45,7 @@ imageRouter.post("/images", async (req, res) => {
         );
       }
       for (const ext of ["avif", "webp"] as const) {
-        await createDerivativeMedia(
-          SOURCE_KIND,
-          sourcePath,
-          getMediaPath(SOURCE_KIND, imageId, ext),
-        );
+        await createDerivativeMedia(SOURCE_KIND, sourcePath, getMediaPath(SOURCE_KIND, imageId, ext));
       }
     },
   });

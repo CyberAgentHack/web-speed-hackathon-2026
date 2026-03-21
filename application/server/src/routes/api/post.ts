@@ -2,7 +2,6 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 
 import { Comment, Post } from "@web-speed-hackathon-2026/server/src/models";
-
 import { cache, TTL } from "../../cache";
 
 export const postRouter = Router();
@@ -25,7 +24,7 @@ postRouter.get("/posts/:postId", async (req, res) => {
   const cacheKey = `post:${req.params.postId}`;
   let post = cache.get<Post>(cacheKey);
   if (post === undefined) {
-    post = (await Post.findByPk(req.params.postId)) ?? undefined;
+    post = await Post.findByPk(req.params.postId) ?? undefined;
     if (post !== undefined) {
       cache.set(cacheKey, post, TTL.POST);
     }

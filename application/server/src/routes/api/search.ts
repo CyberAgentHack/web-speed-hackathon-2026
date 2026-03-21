@@ -3,7 +3,6 @@ import { Op } from "sequelize";
 
 import { Post } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
-
 import { cache, TTL } from "../../cache";
 
 export const searchRouter = Router();

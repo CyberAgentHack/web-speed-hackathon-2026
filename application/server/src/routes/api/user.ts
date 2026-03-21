@@ -15,7 +15,7 @@ userRouter.get("/me", async (req, res) => {
   const cacheKey = `user:id:${req.session.userId}`;
   let user = cache.get<User>(cacheKey);
   if (user === undefined) {
-    user = (await User.findByPk(req.session.userId)) ?? undefined;
+    user = await User.findByPk(req.session.userId) ?? undefined;
     if (user === undefined) {
       throw new httpErrors.NotFound();
     }
@@ -58,7 +58,7 @@ userRouter.get("/users/:username", async (req, res) => {
   const cacheKey = `user:username:${req.params.username}`;
   let user = cache.get<User>(cacheKey);
   if (user === undefined) {
-    user = (await User.findOne({ where: { username: req.params.username } })) ?? undefined;
+    user = await User.findOne({ where: { username: req.params.username } }) ?? undefined;
     if (user === undefined) {
       throw new httpErrors.NotFound();
     }
@@ -72,7 +72,7 @@ userRouter.get("/users/:username/posts", async (req, res) => {
   const cacheKey = `user:username:${req.params.username}`;
   let user = cache.get<User>(cacheKey);
   if (user === undefined) {
-    user = (await User.findOne({ where: { username: req.params.username } })) ?? undefined;
+    user = await User.findOne({ where: { username: req.params.username } }) ?? undefined;
     if (user === undefined) {
       throw new httpErrors.NotFound();
     }

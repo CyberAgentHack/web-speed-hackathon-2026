@@ -1,9 +1,5 @@
 const longDateFmt = new Intl.DateTimeFormat("ja", { dateStyle: "long" });
-const timeFmt = new Intl.DateTimeFormat("ja", {
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: false,
-});
+const timeFmt = new Intl.DateTimeFormat("ja", { hour: "2-digit", minute: "2-digit", hour12: false });
 const rtf = new Intl.RelativeTimeFormat("ja", { numeric: "auto" });
 
 export function toISOString(date: string | Date): string {

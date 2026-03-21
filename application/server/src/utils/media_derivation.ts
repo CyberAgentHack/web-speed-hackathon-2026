@@ -50,7 +50,10 @@ async function pathExists(filePath: string): Promise<boolean> {
 function safeResolveWithin(rootPath: string, relativePath: string): string | undefined {
   const resolvedRoot = path.resolve(rootPath);
   const resolvedPath = path.resolve(rootPath, relativePath);
-  if (resolvedPath !== resolvedRoot && !resolvedPath.startsWith(`${resolvedRoot}${path.sep}`)) {
+  if (
+    resolvedPath !== resolvedRoot &&
+    !resolvedPath.startsWith(`${resolvedRoot}${path.sep}`)
+  ) {
     return undefined;
   }
   return resolvedPath;
@@ -173,7 +176,16 @@ async function createMovieVariant(
     return;
   }
 
-  await runFfmpeg([...baseArgs, "-c:v", "libvpx-vp9", "-b:v", "0", "-crf", "32", outputPath]);
+  await runFfmpeg([
+    ...baseArgs,
+    "-c:v",
+    "libvpx-vp9",
+    "-b:v",
+    "0",
+    "-crf",
+    "32",
+    outputPath,
+  ]);
 }
 
 async function createSoundVariant(
@@ -227,11 +239,7 @@ export function getMediaSourcePath(kind: MediaKind, id: string, ext: string): st
   return path.resolve(UPLOAD_PATH, "source", kind, `${id}.${ext}`);
 }
 
-export function getMediaPath(
-  kind: MediaKind,
-  id: string,
-  ext = getCanonicalExtension(kind),
-): string {
+export function getMediaPath(kind: MediaKind, id: string, ext = getCanonicalExtension(kind)): string {
   return path.resolve(UPLOAD_PATH, kind, `${id}.${ext}`);
 }
 
@@ -299,10 +307,7 @@ export async function storeMediaAndCreateCanonical(
   return sourcePath;
 }
 
-export async function resolveMediaPath(
-  relativePath: string,
-  kind: MediaKind,
-): Promise<string | undefined> {
+export async function resolveMediaPath(relativePath: string, kind: MediaKind): Promise<string | undefined> {
   const canonicalExt = getCanonicalExtension(kind);
   const parsed = path.posix.parse(relativePath);
   const canonicalRelativePath = path.posix.join(parsed.dir, `${parsed.name}.${canonicalExt}`);
