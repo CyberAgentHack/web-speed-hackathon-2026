@@ -12,6 +12,10 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
   while (target !== null && target instanceof Element) {
     const tagName = target.tagName.toLowerCase();
     if (["button", "a"].includes(tagName)) {
+      // 動画プレイヤー内のボタンは除外（クリックをarticleナビゲーションに透過させる）
+      if (tagName === "button" && target.closest("[data-movie-area]")) {
+        return false;
+      }
       return true;
     }
     if (currentTarget === target) {
