@@ -2,13 +2,30 @@ import path from "node:path";
 
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
+import type { Plugin } from "vite";
 import { defineConfig } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
+
+function asyncCssPlugin(): Plugin {
+  return {
+    name: "async-css",
+    enforce: "post",
+    transformIndexHtml(html) {
+      return html.replace(
+        /<link rel="stylesheet" crossorigin href="(\/assets\/index-[^"]+\.css)">/,
+        `<style>body{background-color:#f5f5f4}</style>
+    <link rel="preload" as="style" crossorigin href="$1" onload="this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" crossorigin href="$1"></noscript>`,
+      );
+    },
+  };
+}
 
 export default defineConfig({
   plugins: [
     tailwindcss(),
     react(),
+    asyncCssPlugin(),
     viteStaticCopy({
       targets: [
         {
