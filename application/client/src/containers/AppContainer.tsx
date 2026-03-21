@@ -4,8 +4,11 @@ import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
-import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
 import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
+import {
+  listenDialogOpenRequest,
+  openDialog,
+} from "@web-speed-hackathon-2026/client/src/utils/dialog_command";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 const CrokContainer = lazy(() =>
@@ -28,6 +31,11 @@ const DirectMessageListContainer = lazy(() =>
 const NotFoundContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/NotFoundContainer").then((m) => ({
     default: m.NotFoundContainer,
+  })),
+);
+const NewPostModalContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer").then((m) => ({
+    default: m.NewPostModalContainer,
   })),
 );
 const PostContainer = lazy(() =>
@@ -75,6 +83,27 @@ export const AppContainer = () => {
 
   const authModalId = useId();
   const newPostModalId = useId();
+  const [isNewPostModalMounted, setIsNewPostModalMounted] = useState(false);
+
+  const handleDialogOpenRequest = useCallback(
+    (dialogId: string) => {
+      if (dialogId === newPostModalId) {
+        setIsNewPostModalMounted(true);
+      }
+    },
+    [newPostModalId],
+  );
+
+  useEffect(() => {
+    return listenDialogOpenRequest(handleDialogOpenRequest);
+  }, [handleDialogOpenRequest]);
+
+  useEffect(() => {
+    if (!isNewPostModalMounted) {
+      return;
+    }
+    openDialog(newPostModalId);
+  }, [newPostModalId, isNewPostModalMounted]);
 
   return (
     <HelmetProvider>
@@ -111,7 +140,9 @@ export const AppContainer = () => {
       </AppPage>
 
       <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
-      <NewPostModalContainer id={newPostModalId} />
+      <Suspense fallback={null}>
+        {isNewPostModalMounted ? <NewPostModalContainer id={newPostModalId} /> : null}
+      </Suspense>
     </HelmetProvider>
   );
 };

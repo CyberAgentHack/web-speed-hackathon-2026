@@ -42,8 +42,6 @@ export const NavigationItem = ({ badge, href, icon, command, commandfor, text }:
         <button
           className="hover:bg-cax-brand-soft flex h-12 w-12 flex-col items-center justify-center rounded-full sm:h-auto sm:w-24 sm:rounded-sm sm:px-2 lg:h-auto lg:w-auto lg:flex-row lg:justify-start lg:rounded-full lg:px-4 lg:py-2"
           type="button"
-          command={command}
-          commandfor={commandfor}
           onClick={handleClick}
         >
           <span className="relative text-xl lg:pr-2 lg:text-3xl">

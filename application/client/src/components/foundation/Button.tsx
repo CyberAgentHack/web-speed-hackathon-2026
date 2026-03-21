@@ -42,8 +42,6 @@ export const Button = ({
         className,
       )}
       type="button"
-      command={command}
-      commandfor={commandfor}
       onClick={handleClick}
       {...props}
     >

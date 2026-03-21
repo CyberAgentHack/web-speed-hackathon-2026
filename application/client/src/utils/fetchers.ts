@@ -3,6 +3,26 @@ interface APIError extends Error {
   status: number;
 }
 
+interface PrefetchedJSONEntry {
+  data: unknown;
+  expiresAt: number;
+}
+
+const PREFETCH_CACHE_TTL_MS = 20_000;
+const prefetchedJSONCache = new Map<string, PrefetchedJSONEntry>();
+
+function getPrefetchedJSONEntry(url: string): PrefetchedJSONEntry | undefined {
+  const entry = prefetchedJSONCache.get(url);
+  if (entry === undefined) {
+    return undefined;
+  }
+  if (Date.now() > entry.expiresAt) {
+    prefetchedJSONCache.delete(url);
+    return undefined;
+  }
+  return entry;
+}
+
 async function fetchOrThrow(url: string, options?: RequestInit): Promise<Response> {
   const response = await fetch(url, options);
   if (!response.ok) {
@@ -29,6 +49,37 @@ export async function fetchBinary(url: string): Promise<ArrayBuffer> {
 export async function fetchJSON<T>(url: string): Promise<T> {
   const response = await fetchOrThrow(url);
   return response.json() as Promise<T>;
+}
+
+export function primePrefetchedJSON<T>(url: string, data: T): void {
+  prefetchedJSONCache.set(url, {
+    data,
+    expiresAt: Date.now() + PREFETCH_CACHE_TTL_MS,
+  });
+}
+
+export function consumePrefetchedJSON<T>(url: string): T | undefined {
+  const entry = getPrefetchedJSONEntry(url);
+  if (entry === undefined) {
+    return undefined;
+  }
+
+  prefetchedJSONCache.delete(url);
+  return entry.data as T;
+}
+
+export async function prefetchJSON<T>(url: string): Promise<void> {
+  const cachedEntry = getPrefetchedJSONEntry(url);
+  if (cachedEntry !== undefined) {
+    return;
+  }
+
+  try {
+    const data = await fetchJSON<T>(url);
+    primePrefetchedJSON(url, data);
+  } catch {
+    // Prefetch should not block the user path when it fails.
+  }
 }
 
 export async function sendFile<T>(url: string, file: File): Promise<T> {

@@ -1,4 +1,7 @@
 import { Helmet } from "react-helmet";
+import { ComponentPropsWithRef } from "react";
+
+import { openDialog } from "@web-speed-hackathon-2026/client/src/utils/dialog_command";
 
 interface Props {
   headline: string;
@@ -13,6 +16,10 @@ export const DirectMessageGate = ({
   buttonLabel = "サインイン",
   authModalId,
 }: Props) => {
+  const handleOpenAuthModal: ComponentPropsWithRef<"button">["onClick"] = () => {
+    openDialog(authModalId);
+  };
+
   return (
     <>
       <Helmet>
@@ -24,8 +31,7 @@ export const DirectMessageGate = ({
         <button
           className="bg-cax-brand text-cax-surface-raised hover:bg-cax-brand-strong inline-flex items-center justify-center rounded-full px-6 py-2 shadow"
           type="button"
-          command="show-modal"
-          commandfor={authModalId}
+          onClick={handleOpenAuthModal}
         >
           {buttonLabel}
         </button>

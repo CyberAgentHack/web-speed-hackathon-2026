@@ -3,7 +3,11 @@ import { useNavigate } from "react-router";
 
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { NewPostModalPage } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage";
-import { sendFile, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import {
+  prefetchJSON,
+  sendFile,
+  sendJSON,
+} from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface SubmitParams {
   images: File[];
@@ -68,30 +72,26 @@ export const NewPostModalContainer = ({ id }: Props) => {
   const dialogId = useId();
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
-  const [isOpen, setIsOpen] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     const element = ref.current;
     if (element == null) {
       return;
     }
 
-    const handleToggle = () => {
-      setIsOpen(element.open);
-      if (!element.open) {
-        // モーダルを閉じたときのみフォームの状態をリセットする
-        setResetKey((key) => key + 1);
-      }
+    const handleClose = () => {
+      setResetKey((key) => key + 1);
+      setHasError(false);
     };
-    element.addEventListener("toggle", handleToggle);
+    element.addEventListener("close", handleClose);
     return () => {
-      element.removeEventListener("toggle", handleToggle);
+      element.removeEventListener("close", handleClose);
     };
   }, []);
 
   const navigate = useNavigate();
-
-  const [hasError, setHasError] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleResetError = useCallback(() => {
     setHasError(false);
@@ -102,6 +102,8 @@ export const NewPostModalContainer = ({ id }: Props) => {
       try {
         setIsLoading(true);
         const post = await sendNewPost(params);
+        const postPath = `/api/v1/posts/${post.id}`;
+        void prefetchJSON(postPath);
         ref.current?.close();
         navigate(`/posts/${post.id}`);
       } catch {
@@ -119,7 +121,7 @@ export const NewPostModalContainer = ({ id }: Props) => {
         key={resetKey}
         id={dialogId}
         hasError={hasError}
-        isOpen={isOpen}
+        isOpen
         isLoading={isLoading}
         onResetError={handleResetError}
         onSubmit={handleSubmit}

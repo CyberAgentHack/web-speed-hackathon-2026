@@ -6,8 +6,17 @@ interface Options {
   extension: MagickFormat;
 }
 
+let imageMagickInitPromise: Promise<void> | null = null;
+
+async function initializeImageMagickOnce(): Promise<void> {
+  if (imageMagickInitPromise == null) {
+    imageMagickInitPromise = initializeImageMagick(new URL(magickWasmUrl, location.origin));
+  }
+  await imageMagickInitPromise;
+}
+
 export async function convertImage(file: File, options: Options): Promise<Blob> {
-  await initializeImageMagick(new URL(magickWasmUrl, location.origin));
+  await initializeImageMagickOnce();
 
   const byteArray = new Uint8Array(await file.arrayBuffer());
 

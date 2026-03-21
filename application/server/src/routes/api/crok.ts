@@ -21,6 +21,9 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+const STREAM_CHUNK_SIZE = 48;
+const STREAM_INTERVAL_MS = 16;
+
 crokRouter.get("/crok", async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
@@ -32,17 +35,16 @@ crokRouter.get("/crok", async (req, res) => {
   res.flushHeaders();
 
   let messageId = 0;
-
-  // TTFT (Time to First Token)
-  await sleep(3000);
-
-  for (const char of response) {
+  for (let index = 0; index < response.length; index += STREAM_CHUNK_SIZE) {
     if (res.closed) break;
 
-    const data = JSON.stringify({ text: char, done: false });
+    const chunk = response.slice(index, index + STREAM_CHUNK_SIZE);
+    const data = JSON.stringify({ text: chunk, done: false });
     res.write(`event: message\nid: ${messageId++}\ndata: ${data}\n\n`);
 
-    await sleep(10);
+    if (index + STREAM_CHUNK_SIZE < response.length) {
+      await sleep(STREAM_INTERVAL_MS);
+    }
   }
 
   if (!res.closed) {

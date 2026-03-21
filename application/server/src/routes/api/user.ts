@@ -35,14 +35,21 @@ userRouter.put("/me", async (req, res) => {
     throw new httpErrors.NotFound();
   }
 
+  const previousUsername = user.username;
+
   Object.assign(user, req.body);
   await user.save();
 
   // Invalidate caches for this user
   cache.delete(`user:id:${req.session.userId}`);
+  if (previousUsername) {
+    cache.delete(`user:username:${previousUsername}`);
+  }
   if (user.username) {
     cache.delete(`user:username:${user.username}`);
   }
+  cache.deleteByPrefix("user:posts:");
+  cache.deleteByPrefix("search:");
 
   return res.status(200).type("application/json").send(user);
 });
@@ -72,13 +79,21 @@ userRouter.get("/users/:username/posts", async (req, res) => {
     cache.set(cacheKey, user, TTL.USER);
   }
 
-  const posts = await Post.findAll({
-    limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
-    offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
-    where: {
-      userId: user.id,
-    },
-  });
+  const limit = req.query["limit"] != null ? Number(req.query["limit"]) : undefined;
+  const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
+  const userPostsCacheKey = `user:posts:${user.id}:${limit ?? "all"}:${offset ?? 0}`;
+
+  let posts = cache.get<Post[]>(userPostsCacheKey);
+  if (posts === undefined) {
+    posts = await Post.findAll({
+      limit,
+      offset,
+      where: {
+        userId: user.id,
+      },
+    });
+    cache.set(userPostsCacheKey, posts, TTL.POST);
+  }
 
   return res.status(200).type("application/json").send(posts);
 });

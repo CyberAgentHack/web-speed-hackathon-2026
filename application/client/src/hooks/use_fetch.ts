@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+import { consumePrefetchedJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+
 interface ReturnValues<T> {
   data: T | null;
   error: Error | null;
@@ -18,6 +20,16 @@ export function useFetch<T>(
 
   useEffect(() => {
     if (apiPath === null) {
+      return;
+    }
+
+    const prefetchedData = consumePrefetchedJSON<T>(apiPath);
+    if (prefetchedData !== undefined) {
+      setResult({
+        data: prefetchedData,
+        error: null,
+        isLoading: false,
+      });
       return;
     }
 
