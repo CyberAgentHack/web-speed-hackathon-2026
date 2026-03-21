@@ -18,6 +18,7 @@ const USER_POSTS_LIMIT = 8;
 type HydratedPost = {
   user?: { profileImage?: { id?: string | null } | null } | null;
   images?: Array<{ id: string }> | null;
+  movie?: { id: string } | null;
 };
 type HydratedConversation = {
   initiator: { id: string; profileImage?: { id?: string | null } | null };
@@ -71,6 +72,10 @@ function getProfileImagePath(profileImageId: string): string {
   return `/images/profiles/${profileImageId}.jpg`;
 }
 
+function getMoviePath(movieId: string): string {
+  return `/movies/${movieId}.gif`;
+}
+
 function serializeForInlineScript(value: unknown): string {
   return JSON.stringify(value).replace(/</g, "\\u003c");
 }
@@ -97,6 +102,10 @@ function addPostPreloads(
   }
   if (post.images?.[0]?.id) {
     preloads.add(getImagePath(post.images[0].id));
+    return;
+  }
+  if (post.movie?.id) {
+    preloads.add(getMoviePath(post.movie.id));
   }
 }
 
@@ -162,6 +171,9 @@ function renderTimelineShell(posts: Array<any>): string {
       const heroImage = post.images?.[0]?.id
         ? `<div class="relative mt-2 w-full"><div class="border-cax-border grid h-full w-full grid-cols-2 grid-rows-2 gap-1 overflow-hidden rounded-lg border" style="aspect-ratio:16 / 9"><div class="${post.images.length === 1 ? "col-span-2 row-span-2" : "col-span-1 row-span-2"} bg-cax-surface-subtle"><img alt="${escapeHtml(post.images[0].alt ?? "")}" class="h-full w-full object-cover" decoding="${index === 0 ? "sync" : "async"}" fetchpriority="${index === 0 ? "high" : "auto"}" loading="${index === 0 ? "eager" : "lazy"}" src="${getImagePath(post.images[0].id)}" /></div></div></div>`
         : "";
+      const heroMovie = !post.images?.[0]?.id && post.movie?.id
+        ? `<div class="relative mt-2 w-full"><div class="border-cax-border overflow-hidden rounded-lg border" style="aspect-ratio:1 / 1"><img alt="" class="h-full w-full object-cover" decoding="${index === 0 ? "sync" : "async"}" fetchpriority="${index === 0 ? "high" : "auto"}" loading="${index === 0 ? "eager" : "lazy"}" src="${getMoviePath(post.movie.id)}" /></div></div>`
+        : "";
 
       return [
         '<article class="hover:bg-cax-surface-subtle px-1 sm:px-4">',
@@ -176,6 +188,7 @@ function renderTimelineShell(posts: Array<any>): string {
         "</p>",
         `<div class="text-cax-text leading-relaxed">${escapeHtml(post.text ?? "")}</div>`,
         heroImage,
+        heroMovie,
         "</div>",
         "</div>",
         "</article>",
@@ -190,6 +203,9 @@ function renderPostShell(post: any): string {
     : "";
   const heroImage = post.images?.[0]?.id
     ? `<div class="relative mt-2 w-full"><div class="border-cax-border grid h-full w-full grid-cols-2 grid-rows-2 gap-1 overflow-hidden rounded-lg border" style="aspect-ratio:16 / 9"><div class="${post.images.length === 1 ? "col-span-2 row-span-2" : "col-span-1 row-span-2"} bg-cax-surface-subtle"><img alt="${escapeHtml(post.images[0].alt ?? "")}" class="h-full w-full object-cover" decoding="sync" fetchpriority="high" loading="eager" src="${getImagePath(post.images[0].id)}" /></div></div></div>`
+    : "";
+  const heroMovie = !post.images?.[0]?.id && post.movie?.id
+    ? `<div class="relative mt-2 w-full"><div class="border-cax-border overflow-hidden rounded-lg border" style="aspect-ratio:1 / 1"><img alt="" class="h-full w-full object-cover" decoding="sync" fetchpriority="high" loading="eager" src="${getMoviePath(post.movie.id)}" /></div></div>`
     : "";
 
   return [
@@ -207,6 +223,7 @@ function renderPostShell(post: any): string {
     '<div class="pt-2 sm:pt-4">',
     `<div class="text-cax-text text-xl leading-relaxed">${escapeHtml(post.text ?? "")}</div>`,
     heroImage,
+    heroMovie,
     "</div>",
     "</div>",
     "</article>",
