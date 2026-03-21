@@ -14,12 +14,12 @@ const response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-
 
 crokRouter.get("/crok/suggestions", async (_req, res) => {
   res.setHeader("Cache-Control", "public, max-age=3600");
-  const suggestions = await QaSuggestion.findAll({ logging: false });
+  const suggestions = await QaSuggestion.findAll({ attributes: ["question"], logging: false });
   res.json({ suggestions: suggestions.map((s) => s.question) });
 });
 
 
-const CHUNK_SIZE = 5;
+const CHUNK_SIZE = 50;
 
 crokRouter.get("/crok", async (req, res) => {
   if (req.session.userId === undefined) {
