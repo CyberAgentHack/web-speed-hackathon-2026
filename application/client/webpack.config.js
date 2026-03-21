@@ -118,11 +118,6 @@ const config = {
         reactVendor: {
           test: /[\\/]node_modules[\\/](react|react-dom|react-router|scheduler)[\\/]/,
           name: "vendor-react",
-          priority: 20,
-        },
-        defaultVendors: {
-          test: /[\\/]node_modules[\\/]/,
-          name: "vendor",
           priority: 10,
         },
       },
