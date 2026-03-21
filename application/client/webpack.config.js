@@ -98,6 +98,9 @@ const config = {
       openAnalyzer: false,
       reportFilename: path.resolve(DIST_PATH, "bundle-report.html"),
     }),
+    new webpack.IgnorePlugin({
+      resourceRegExp: /moment$/,
+    }),
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
