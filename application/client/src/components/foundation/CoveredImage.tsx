@@ -25,7 +25,6 @@ export const CoveredImage = ({ alt, src }: Props) => {
         alt={alt}
         className="absolute inset-0 h-full w-full object-cover"
         src={src}
-        loading="lazy"
       />
       <button
         className="border-cax-border bg-cax-surface-raised/90 text-cax-text-muted hover:bg-cax-surface absolute right-1 bottom-1 rounded-full border px-2 py-1 text-center text-xs"
