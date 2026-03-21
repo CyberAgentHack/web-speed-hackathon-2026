@@ -123,20 +123,10 @@ async function generatePeaksFfmpeg(mp3Path: string, peaksPath: string): Promise<
 
 export const soundRouter = Router();
 
-soundRouter.post("/sounds", async (req, res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
-  }
-  if (Buffer.isBuffer(req.body) === false) {
-    throw new httpErrors.BadRequest();
-  }
+async function convertAndSaveSound(inputBuffer: Buffer, soundId: string): Promise<void> {
+  const soundsDir = path.resolve(UPLOAD_PATH, "sounds");
+  await fs.mkdir(soundsDir, { recursive: true });
 
-  const inputBuffer = req.body as Buffer;
-
-  // Extract metadata from the original file
-  const { artist, title } = await extractMetadataFromSound(inputBuffer);
-
-  const soundId = uuidv4();
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "sound-"));
   const tmpInput = path.join(tmpDir, "input");
   const tmpOutput = path.join(tmpDir, `output.${EXTENSION}`);
@@ -149,31 +139,45 @@ soundRouter.post("/sounds", async (req, res) => {
       "-y",
       "-vn",
       "-codec:a", "libmp3lame",
-      "-q:a", "2",
+      "-q:a", "4",
+      "-ar", "22050",
       tmpOutput,
     ]);
 
     const mp3Buffer = await fs.readFile(tmpOutput);
-
-    const soundsDir = path.resolve(UPLOAD_PATH, "sounds");
-    await fs.mkdir(soundsDir, { recursive: true });
-
     const filePath = path.resolve(soundsDir, `${soundId}.${EXTENSION}`);
     await fs.writeFile(filePath, mp3Buffer);
-
   } finally {
     await fs.rm(tmpDir, { recursive: true, force: true });
   }
 
-  // Generate peaks in background (non-blocking)
-  const peaksPath = path.resolve(UPLOAD_PATH, "sounds", `${soundId}.peaks.json`);
+  const peaksPath = path.resolve(soundsDir, `${soundId}.peaks.json`);
   const wavPeaks = computePeaksFromWav(inputBuffer);
   if (wavPeaks) {
-    fs.writeFile(peaksPath, JSON.stringify(wavPeaks)).catch(() => {});
+    await fs.writeFile(peaksPath, JSON.stringify(wavPeaks));
   } else {
-    const mp3Path = path.resolve(UPLOAD_PATH, "sounds", `${soundId}.${EXTENSION}`);
-    generatePeaksFfmpeg(mp3Path, peaksPath).catch(() => {});
+    const mp3Path = path.resolve(soundsDir, `${soundId}.${EXTENSION}`);
+    await generatePeaksFfmpeg(mp3Path, peaksPath);
+  }
+}
+
+soundRouter.post("/sounds", async (req, res) => {
+  if (req.session.userId === undefined) {
+    throw new httpErrors.Unauthorized();
+  }
+  if (Buffer.isBuffer(req.body) === false) {
+    throw new httpErrors.BadRequest();
   }
 
-  return res.status(200).type("application/json").send({ artist, id: soundId, title });
+  const inputBuffer = req.body as Buffer;
+
+  const { artist, title } = await extractMetadataFromSound(inputBuffer);
+  const soundId = uuidv4();
+
+  // Return metadata immediately, convert in background
+  res.status(200).type("application/json").send({ artist, id: soundId, title });
+
+  convertAndSaveSound(inputBuffer, soundId).catch((err) => {
+    console.error("Sound conversion failed:", err);
+  });
 });

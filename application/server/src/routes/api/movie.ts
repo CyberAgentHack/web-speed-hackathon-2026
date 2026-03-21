@@ -14,16 +14,7 @@ const execFileAsync = promisify(execFile);
 
 export const movieRouter = Router();
 
-movieRouter.post("/movies", async (req, res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
-  }
-  if (Buffer.isBuffer(req.body) === false) {
-    throw new httpErrors.BadRequest();
-  }
-
-  const inputBuffer = req.body as Buffer;
-  const movieId = uuidv4();
+async function convertAndSaveMovie(inputBuffer: Buffer, movieId: string): Promise<void> {
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "movie-"));
   const tmpInput = path.join(tmpDir, "input");
   const tmpOutput = path.join(tmpDir, "output.mp4");
@@ -48,12 +39,29 @@ movieRouter.post("/movies", async (req, res) => {
 
     const mp4Buffer = await fs.readFile(tmpOutput);
 
-    const filePath = path.resolve(UPLOAD_PATH, `./movies/${movieId}.mp4`);
     await fs.mkdir(path.resolve(UPLOAD_PATH, "movies"), { recursive: true });
+    const filePath = path.resolve(UPLOAD_PATH, `./movies/${movieId}.mp4`);
     await fs.writeFile(filePath, mp4Buffer);
   } finally {
     await fs.rm(tmpDir, { recursive: true, force: true });
   }
+}
 
-  return res.status(200).type("application/json").send({ id: movieId });
+movieRouter.post("/movies", async (req, res) => {
+  if (req.session.userId === undefined) {
+    throw new httpErrors.Unauthorized();
+  }
+  if (Buffer.isBuffer(req.body) === false) {
+    throw new httpErrors.BadRequest();
+  }
+
+  const inputBuffer = req.body as Buffer;
+  const movieId = uuidv4();
+
+  // Return ID immediately, convert in background
+  res.status(200).type("application/json").send({ id: movieId });
+
+  convertAndSaveMovie(inputBuffer, movieId).catch((err) => {
+    console.error("Movie conversion failed:", err);
+  });
 });

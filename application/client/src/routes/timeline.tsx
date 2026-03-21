@@ -18,7 +18,7 @@ export async function loader({ context }: LoaderFunctionArgs) {
 	const ssrPosts: Models.Post[] = [];
 	for (const post of posts) {
 		const w = postWeight(post);
-		if (weight + w > 5) break;
+		if (weight + w > 7) break;
 		weight += w;
 		ssrPosts.push(post);
 	}

@@ -121,6 +121,16 @@ export const PausableMovie = ({ src }: Props) => {
     setIsReady(true);
   }, []);
 
+  const handleError = useCallback(() => {
+    const video = videoRef.current;
+    if (!video || isReady) return;
+    setTimeout(() => {
+      if (videoRef.current && !isReady) {
+        videoRef.current.load();
+      }
+    }, 2000);
+  }, [isReady]);
+
   return (
     <div ref={containerRef}>
       <video
@@ -133,6 +143,7 @@ export const PausableMovie = ({ src }: Props) => {
         className="sr-only"
         src={src}
         onLoadedData={handleLoadedData}
+        onError={handleError}
       />
       <AspectRatioBox aspectHeight={1} aspectWidth={1}>
         {isReady ? (

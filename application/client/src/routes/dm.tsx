@@ -107,20 +107,39 @@ export default function Dm() {
 		}
 	}, [initialConversation, activeUser, sendRead]);
 
+	const tempIdCounter = useRef(0);
+
 	const handleSubmit = useCallback(
 		async (params: DirectMessageFormData) => {
+			const tempId = `__temp_${Date.now()}_${tempIdCounter.current++}`;
+			const optimisticMessage: Models.DirectMessage = {
+				id: tempId,
+				body: params.body,
+				sender: activeUser!,
+				isRead: false,
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+			} as Models.DirectMessage;
+
+			setMessages((prev) => [...prev, optimisticMessage]);
 			setIsSubmitting(true);
 			try {
 				const message = await sendJSON<Models.DirectMessage>(
 					`/api/v1/dm/${conversationId}/messages`,
 					{ body: params.body },
 				);
-				setMessages((prev) => [...prev, message]);
+				setMessages((prev) => {
+					const withoutTemp = prev.filter((m) => m.id !== tempId);
+					if (withoutTemp.some((m) => m.id === message.id)) return withoutTemp;
+					return [...withoutTemp, message];
+				});
+			} catch {
+				setMessages((prev) => prev.filter((m) => m.id !== tempId));
 			} finally {
 				setIsSubmitting(false);
 			}
 		},
-		[conversationId],
+		[conversationId, activeUser],
 	);
 
 	const handleTyping = useCallback(async () => {
