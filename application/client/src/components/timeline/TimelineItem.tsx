@@ -1,12 +1,13 @@
-import { MouseEventHandler, useCallback } from "react";
+import { MouseEventHandler, Suspense, lazy, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
-import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
 import { formatDateJa } from "@web-speed-hackathon-2026/client/src/utils/format_date";
-import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
-import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+
+const ImageArea = lazy(() => import("@web-speed-hackathon-2026/client/src/components/post/ImageArea").then(m => ({ default: m.ImageArea })));
+const MovieArea = lazy(() => import("@web-speed-hackathon-2026/client/src/components/post/MovieArea").then(m => ({ default: m.MovieArea })));
+const SoundArea = lazy(() => import("@web-speed-hackathon-2026/client/src/components/post/SoundArea").then(m => ({ default: m.SoundArea })));
 
 const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Element): boolean => {
   while (target !== null && target instanceof Element) {
@@ -84,21 +85,23 @@ export const TimelineItem = ({ post }: Props) => {
           <div className="text-cax-text leading-relaxed">
             <TranslatableText text={post.text} />
           </div>
-          {post.images?.length > 0 ? (
-            <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
-            </div>
-          ) : null}
-          {post.movie ? (
-            <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
-            </div>
-          ) : null}
-          {post.sound ? (
-            <div className="relative mt-2 w-full">
-              <SoundArea sound={post.sound} />
-            </div>
-          ) : null}
+          <Suspense>
+            {post.images?.length > 0 ? (
+              <div className="relative mt-2 w-full">
+                <ImageArea images={post.images} />
+              </div>
+            ) : null}
+            {post.movie ? (
+              <div className="relative mt-2 w-full">
+                <MovieArea movie={post.movie} />
+              </div>
+            ) : null}
+            {post.sound ? (
+              <div className="relative mt-2 w-full">
+                <SoundArea sound={post.sound} />
+              </div>
+            ) : null}
+          </Suspense>
         </div>
       </div>
     </article>
