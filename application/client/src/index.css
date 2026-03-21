@@ -4,14 +4,14 @@
 
 @font-face {
   font-family: "Rei no Are Mincho";
-  font-display: swap; /* ← block → swap */
+  font-display: block; /* ← block → swap */
   src: url(/fonts/ReiNoAreMincho-Regular.otf) format("opentype");
   font-weight: normal;
 }
 
 @font-face {
   font-family: "Rei no Are Mincho";
-  font-display: swap; /* ← block → swap */
+  font-display: block; /* ← block → swap */
   src: url(/fonts/ReiNoAreMincho-Heavy.otf) format("opentype");
   font-weight: bold;
 }
