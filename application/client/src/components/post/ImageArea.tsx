@@ -10,6 +10,7 @@ interface Props {
 }
 
 export const ImageArea = ({ images, priority = false }: Props) => {
+  console.log("ImageArea rendered with images:", images);
   return (
     <AspectRatioBox aspectHeight={9} aspectWidth={16}>
       <div className="border-cax-border grid h-full w-full grid-cols-2 grid-rows-2 gap-1 overflow-hidden rounded-lg border">
@@ -25,7 +26,7 @@ export const ImageArea = ({ images, priority = false }: Props) => {
                 "row-span-2": images.length <= 2 || (images.length === 3 && idx === 0),
               })}
             >
-              <CoveredImage src={getImagePath(image.id)} priority={idx ===0 && priority} />
+              <CoveredImage src={getImagePath(image.id)} priority={idx ===0 && priority} alt={image.alt} />
             </div>
           );
         })}

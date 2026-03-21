@@ -27,38 +27,38 @@ const seedsDir = path.resolve(__dirname, "../seeds");
 // These IDs correspond to actual files in the public directory
 
 // public/images/*.jpg (30 files)
-const EXISTING_IMAGE_IDS = [
-  "029b4b75-bbcc-4aa5-8bd7-e4bb12a33cd3",
-  "078c4d42-12e3-4c1d-823c-9ba552f6b066",
-  "083258be-3e8c-4537-ac9c-fd5fd9cd943b",
-  "18358ca6-0aa7-4592-9926-1ec522b9aacb",
-  "19b3516f-ccfc-4d76-a45c-fc2aade43afe",
-  "26117ade-f330-46a2-8c48-767b6f472613",
-  "3a5915dc-6ef0-4c66-ad4b-bba9c724cfbc",
-  "4685b32a-43d2-4478-bb79-2cdb56f8ecf0",
-  "49b8af97-9536-4a23-86f6-21526ff2715b",
-  "5be3fce7-0365-4aa3-a1b6-cdeb553e8dfb",
-  "5e7212da-6b4c-4eb2-b828-b0bc35bfbc1c",
-  "6d532fa5-daff-4876-a26f-b5c8669d1176",
-  "737f764e-f495-4104-b6d6-8434681718d5",
-  "77284ba9-06c0-4c66-92a9-4d2513336e24",
-  "824ddc65-8afc-4cd5-8176-1a8053758e72",
-  "85946f86-c0bd-4d6b-83b7-94eb32dcbcf4",
-  "9bb2f5c0-0f7c-4b9d-8e6a-aa87ebe7efc5",
-  "9c8c5258-f659-4890-8b7f-0485097d957b",
-  "a21c9b2c-9fc7-4d3c-8488-a465150f7b1c",
-  "af15685e-2e43-4453-bc8f-55e386bd5963",
-  "af15f1d0-8350-46f4-9652-e02eb31469da",
-  "c095fdc4-eb78-4ae1-9efa-4b8e360177ce",
-  "da2bfcde-14fd-473c-ae79-572d95152b61",
-  "ddc7053e-0f2f-49b1-9c07-e1060e2fa4aa",
-  "e40ff559-d0d3-4eb0-8792-21cb171b815c",
-  "eb487309-79ed-40d0-9fee-382ed8486b70",
-  "ec098438-5fac-44a8-bd5a-84c575a32790",
-  "ee6d7cb7-3c05-4bde-92e5-aebef3785904",
-  "f046441d-b837-4dc7-b0ae-5cf2604eab4c",
-  "f478a152-02f8-46a3-91ce-d1d7944d303a",
-];
+// const EXISTING_IMAGE_IDS = [
+//   "029b4b75-bbcc-4aa5-8bd7-e4bb12a33cd3",
+//   "078c4d42-12e3-4c1d-823c-9ba552f6b066",
+//   "083258be-3e8c-4537-ac9c-fd5fd9cd943b",
+//   "18358ca6-0aa7-4592-9926-1ec522b9aacb",
+//   "19b3516f-ccfc-4d76-a45c-fc2aade43afe",
+//   "26117ade-f330-46a2-8c48-767b6f472613",
+//   "3a5915dc-6ef0-4c66-ad4b-bba9c724cfbc",
+//   "4685b32a-43d2-4478-bb79-2cdb56f8ecf0",
+//   "49b8af97-9536-4a23-86f6-21526ff2715b",
+//   "5be3fce7-0365-4aa3-a1b6-cdeb553e8dfb",
+//   "5e7212da-6b4c-4eb2-b828-b0bc35bfbc1c",
+//   "6d532fa5-daff-4876-a26f-b5c8669d1176",
+//   "737f764e-f495-4104-b6d6-8434681718d5",
+//   "77284ba9-06c0-4c66-92a9-4d2513336e24",
+//   "824ddc65-8afc-4cd5-8176-1a8053758e72",
+//   "85946f86-c0bd-4d6b-83b7-94eb32dcbcf4",
+//   "9bb2f5c0-0f7c-4b9d-8e6a-aa87ebe7efc5",
+//   "9c8c5258-f659-4890-8b7f-0485097d957b",
+//   "a21c9b2c-9fc7-4d3c-8488-a465150f7b1c",
+//   "af15685e-2e43-4453-bc8f-55e386bd5963",
+//   "af15f1d0-8350-46f4-9652-e02eb31469da",
+//   "c095fdc4-eb78-4ae1-9efa-4b8e360177ce",
+//   "da2bfcde-14fd-473c-ae79-572d95152b61",
+//   "ddc7053e-0f2f-49b1-9c07-e1060e2fa4aa",
+//   "e40ff559-d0d3-4eb0-8792-21cb171b815c",
+//   "eb487309-79ed-40d0-9fee-382ed8486b70",
+//   "ec098438-5fac-44a8-bd5a-84c575a32790",
+//   "ee6d7cb7-3c05-4bde-92e5-aebef3785904",
+//   "f046441d-b837-4dc7-b0ae-5cf2604eab4c",
+//   "f478a152-02f8-46a3-91ce-d1d7944d303a",
+// ];
 
 // public/movies/*.gif (15 files)
 const EXISTING_MOVIE_IDS = [
@@ -143,6 +143,129 @@ const EXISTING_PROFILE_IMAGE_IDS = [
   "f4619909-0f90-45dd-ada0-6c6305453a74",
   "fd571d42-c471-47fd-846f-d3c1325685fd",
 ];
+const EXISTING_IMAGE_IDS = 
+[
+  {
+    "alt": "海岸沿いにある大きな岩の上に水着の女性が座っている",
+    "relativePath": "029b4b75-bbcc-4aa5-8bd7-e4bb12a33cd3"
+  },
+  {
+    "alt": "枯れた木々に雪が積もっている森林を自動車道が通っていて日が差している",
+    "relativePath": "078c4d42-12e3-4c1d-823c-9ba552f6b066"
+  },
+  {
+    "alt": "黒い布で頭を覆う女性がスマートフォンで自撮りをしている",
+    "relativePath": "083258be-3e8c-4537-ac9c-fd5fd9cd943b"
+  },
+  {
+    "alt": "高いところから大都市のビルや車が光る夜景を眺めている",
+    "relativePath": "18358ca6-0aa7-4592-9926-1ec522b9aacb"
+  },
+  {
+    "alt": "黒い車の斜め前方を接写している",
+    "relativePath": "19b3516f-ccfc-4d76-a45c-fc2aade43afe"
+  },
+  {
+    "alt": "ジャングルの中で２人の女性が大きい葉の裏から顔を覗かせている",
+    "relativePath": "26117ade-f330-46a2-8c48-767b6f472613"
+  },
+  {
+    "alt": "雪の降る中で街灯の頭に雪が積もっている",
+    "relativePath": "3a5915dc-6ef0-4c66-ad4b-bba9c724cfbc"
+  },
+  {
+    "alt": "暗がりのなか緑色の縁を持つ窓に光が照らされている",
+    "relativePath": "4685b32a-43d2-4478-bb79-2cdb56f8ecf0"
+  },
+  {
+    "alt": "峡谷のなかを大きな道路があり車が１台走っている",
+    "relativePath": "49b8af97-9536-4a23-86f6-21526ff2715b"
+  },
+  {
+    "alt": "コードを書いている最中のデスクにワイヤレスイヤホンがある",
+    "relativePath": "5be3fce7-0365-4aa3-a1b6-cdeb553e8dfb"
+  },
+  {
+    "alt": "雪の降る森を空から俯瞰している",
+    "relativePath": "5e7212da-6b4c-4eb2-b828-b0bc35bfbc1c"
+  },
+  {
+    "alt": "４枚の異なる柄のセーターが畳まれて積まれている",
+    "relativePath": "6d532fa5-daff-4876-a26f-b5c8669d1176"
+  },
+  {
+    "alt": "薄暗い空間で踊る女性が赤く照らされている",
+    "relativePath": "737f764e-f495-4104-b6d6-8434681718d5"
+  },
+  {
+    "alt": "砂漠のなかで女性が遠くを見つめる",
+    "relativePath": "77284ba9-06c0-4c66-92a9-4d2513336e24"
+  },
+  {
+    "alt": "ミュージアムの看板が隣接する川に反射している",
+    "relativePath": "824ddc65-8afc-4cd5-8176-1a8053758e72"
+  },
+  {
+    "alt": "砂糖で白くコーティングされたうえにキャラメルが線状にかかっているドーナッツ",
+    "relativePath": "85946f86-c0bd-4d6b-83b7-94eb32dcbcf4"
+  },
+  {
+    "alt": "無機質な壁に小窓があり斜め格子状に木の板が貼られている",
+    "relativePath": "9bb2f5c0-0f7c-4b9d-8e6a-aa87ebe7efc5"
+  },
+  {
+    "alt": "広大な草原の中央に礼服を着た男性と白いドレスを着た女性が立っている",
+    "relativePath": "9c8c5258-f659-4890-8b7f-0485097d957b"
+  },
+  {
+    "alt": "横たわる長髪の男性を目を閉じた女性がかかえている",
+    "relativePath": "a21c9b2c-9fc7-4d3c-8488-a465150f7b1c"
+  },
+  {
+    "alt": "サングラスを掛けた男性が草むらの中央で格好をつけている",
+    "relativePath": "af15685e-2e43-4453-bc8f-55e386bd5963"
+  },
+  {
+    "alt": "白で統一された建築物が立ち並ぶ一角にあるプール",
+    "relativePath": "af15f1d0-8350-46f4-9652-e02eb31469da"
+  },
+  {
+    "alt": "デスクの上にスマートフォンと水筒が置かれている",
+    "relativePath": "c095fdc4-eb78-4ae1-9efa-4b8e360177ce"
+  },
+  {
+    "alt": "幼少の少年が大きなジョウロで植物に水をやっている",
+    "relativePath": "da2bfcde-14fd-473c-ae79-572d95152b61"
+  },
+  {
+    "alt": "霧で奥が見えないほどの巨大な橋が海峡にかかっている",
+    "relativePath": "ddc7053e-0f2f-49b1-9c07-e1060e2fa4aa"
+  },
+  {
+    "alt": "一面の雪原のなかに淡い青色の湖がある",
+    "relativePath": "e40ff559-d0d3-4eb0-8792-21cb171b815c"
+  },
+  {
+    "alt": "くし形に切られた大量のいちじく",
+    "relativePath": "eb487309-79ed-40d0-9fee-382ed8486b70"
+  },
+  {
+    "alt": "茶色で照りのある革靴を履いた男性の足元",
+    "relativePath": "ec098438-5fac-44a8-bd5a-84c575a32790"
+  },
+  {
+    "alt": "古代エジプトの風貌をした男性が女性を抱きかかえている",
+    "relativePath": "ee6d7cb7-3c05-4bde-92e5-aebef3785904"
+  },
+  {
+    "alt": "冬景色を背景に小枝に生える葉っぱを映している",
+    "relativePath": "f046441d-b837-4dc7-b0ae-5cf2604eab4c"
+  },
+  {
+    "alt": "宙にオレンジ色の輪っかがペンキのようなもので描かれている",
+    "relativePath": "f478a152-02f8-46a3-91ce-d1d7944d303a"
+  }
+]
 
 const CONFIG = {
   USER_COUNT: 100,
@@ -221,8 +344,8 @@ function generateImages(): ImageSeed[] {
   // Use existing image IDs from public/images/
   const baseTime = now - ONE_WEEK_MS;
   return EXISTING_IMAGE_IDS.map((id, i) => ({
-    id,
-    alt: "",
+    id: id.relativePath,
+    alt: id.alt,
     createdAt: new Date(baseTime + i * 60 * 1000).toISOString(),
   }));
 }
