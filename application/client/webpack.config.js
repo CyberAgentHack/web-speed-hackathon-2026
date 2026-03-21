@@ -56,10 +56,10 @@ const config = {
     ],
   },
   output: {
-    chunkFilename: "scripts/chunk-[contenthash].js",
-    filename: "scripts/[name].js",
+    chunkFilename: "scripts/[name]-[contenthash].js",
+    filename: "scripts/[name]-[contenthash].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     clean: true,
   },
   plugins: [
@@ -74,7 +74,7 @@ const config = {
       NODE_ENV: "production",
     }),
     new MiniCssExtractPlugin({
-      filename: "styles/[name].css",
+      filename: "styles/[name]-[contenthash].css",
     }),
     new CopyWebpackPlugin({
       patterns: [
@@ -85,7 +85,7 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: "body",
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
   ],
@@ -123,12 +123,36 @@ const config = {
   },
   optimization: {
     minimize: true,
+    moduleIds: "deterministic",
+    chunkIds: "deterministic",
+    runtimeChunk: "single",
     splitChunks: {
-      chunks: "async",
+      chunks: "all",
+      cacheGroups: {
+        framework: {
+          name: "framework",
+          chunks: "all",
+          test: /[\\/]node_modules[\\/](react|react-dom|react-router|react-redux|redux)[\\/]/,
+          enforce: true,
+          priority: 40,
+        },
+        ffmpeg: {
+          name: "feature-ffmpeg",
+          chunks: "async",
+          test: /[\\/]node_modules[\\/](?:@ffmpeg)[\\/]/,
+          enforce: true,
+          priority: 30,
+        },
+        default: false,
+        defaultVendors: false,
+      },
     },
     concatenateModules: true,
     usedExports: true,
     sideEffects: true,
+  },
+  cache: {
+    type: "filesystem",
   },
   ignoreWarnings: [
     {
