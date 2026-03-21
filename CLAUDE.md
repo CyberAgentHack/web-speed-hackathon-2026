@@ -132,7 +132,6 @@ pnpm run seed:insert     # シード挿入
 ### CI 注意事項
 
 - CI 上で oxlint / oxfmt を実行する場合は `pnpm exec` を使う（`npx` は不可）
-- VRT スナップショットは Linux と macOS で差異が出る。CI 用スナップショットは Linux 環境で生成する必要がある
 
 ### パフォーマンス変更時のワークフロー
 

@@ -56,7 +56,7 @@ jobs:
           retention-days: 1
 
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     needs: build
     continue-on-error: true
     strategy:
@@ -83,8 +83,8 @@ jobs:
       - uses: actions/cache@v4
         id: playwright-cache
         with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ steps.playwright-version.outputs.version }}
+          path: ~/Library/Caches/ms-playwright
+          key: playwright-macos-${{ steps.playwright-version.outputs.version }}
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: cd application && pnpm --filter @web-speed-hackathon-2026/e2e exec playwright install --with-deps chrome
@@ -96,7 +96,7 @@ jobs:
           E2E_WORKERS: 2
         run: |
           cd application && pnpm run start &
-          timeout 60 bash -c 'until curl -s http://localhost:3000 > /dev/null 2>&1; do sleep 2; done'
+          for i in $(seq 1 30); do curl -s http://localhost:3000 > /dev/null 2>&1 && break; sleep 2; done
           cd application/e2e && pnpm run test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
       - uses: actions/upload-artifact@v4
         if: always()
