@@ -5,9 +5,8 @@ module.exports = {
       "@babel/preset-env",
       {
         targets: "baseline widely available on 2026-01-01",
-        corejs: "3",
         modules: false,
-        useBuiltIns: "usage",
+        useBuiltIns: false,
       },
     ],
     [
