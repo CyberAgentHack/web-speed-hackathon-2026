@@ -109,13 +109,12 @@ async function buildSsrFallback(
 
   if (pathname === "/") {
     const apiPath = "/api/v1/posts";
-    const homeLimit = 10;
+    const homeLimit = 5;
     const firstPage = await fetchSsrJson<Models.Post[]>(
       req,
       getSsrFirstPagePath(apiPath, homeLimit),
     );
     if (firstPage !== undefined) {
-      fallback[getSsrFirstPagePath(apiPath, homeLimit)] = firstPage;
       fallback[buildSsrInfiniteCacheKey(apiPath, homeLimit)] = [firstPage];
     }
   }
@@ -136,7 +135,6 @@ async function buildSsrFallback(
     }
 
     if (commentsFirstPage !== undefined) {
-      fallback[getSsrFirstPagePath(commentsApiPath)] = commentsFirstPage;
       fallback[buildSsrInfiniteCacheKey(commentsApiPath)] = [commentsFirstPage];
     }
   }
@@ -157,7 +155,6 @@ async function buildSsrFallback(
     }
 
     if (postsFirstPage !== undefined) {
-      fallback[getSsrFirstPagePath(postsApiPath)] = postsFirstPage;
       fallback[buildSsrInfiniteCacheKey(postsApiPath)] = [postsFirstPage];
     }
   }
@@ -173,8 +170,6 @@ async function buildSsrFallback(
       );
 
       if (postsFirstPage !== undefined) {
-        fallback[getSsrFirstPagePath(searchApiPath, searchLimit)] =
-          postsFirstPage;
         fallback[buildSsrInfiniteCacheKey(searchApiPath, searchLimit)] = [
           postsFirstPage,
         ];
