@@ -1,12 +1,12 @@
-import { createRequire } from "node:module";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { Router } from "express";
 
 export const sentimentRouter = Router();
 
-const require = createRequire(import.meta.url);
-const dicPath = path.join(path.dirname(require.resolve("kuromoji/package.json")), "dict");
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const dicPath = path.resolve(__dirname, "../../../../public/dicts");
 
 let tokenizerPromise: Promise<any> | null = null;
 
@@ -52,7 +52,8 @@ sentimentRouter.post("/sentiment", async (req, res) => {
     }
 
     res.json({ score, label });
-  } catch {
+  } catch (err) {
+    console.error("Sentiment analysis error:", err);
     res.json({ score: 0, label: "neutral" });
   }
 });
