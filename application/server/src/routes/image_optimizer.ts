@@ -8,8 +8,6 @@ import { PUBLIC_PATH, UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/p
 
 export const imageOptimizerRouter = Router();
 
-const cache = new Map<string, Buffer>();
-
 function detectBestFormat(acceptHeader: string | undefined): { format: "avif" | "webp" | "jpeg"; contentType: string } {
   if (acceptHeader?.includes("image/avif")) {
     return { format: "avif", contentType: "image/avif" };
@@ -34,14 +32,6 @@ function applyFormat(pipeline: sharp.Sharp, format: "avif" | "webp" | "jpeg", qu
 imageOptimizerRouter.get("/images/profiles/:id.jpg", async (req, res, next) => {
   const { id } = req.params;
   const { format, contentType } = detectBestFormat(req.headers.accept);
-  const cacheKey = `profile:${id}:${format}`;
-
-  const cached = cache.get(cacheKey);
-  if (cached) {
-    res.setHeader("Content-Type", contentType);
-    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-    return res.send(cached);
-  }
 
   const filePaths = [
     path.join(UPLOAD_PATH, "images", "profiles", `${id}.jpg`),
@@ -66,8 +56,6 @@ imageOptimizerRouter.get("/images/profiles/:id.jpg", async (req, res, next) => {
     const pipeline = applyFormat(sharp(fileBuffer).resize(96, 96, { fit: "cover" }), format, 60);
 
     const optimized = await pipeline.toBuffer();
-    cache.set(cacheKey, optimized);
-
     res.setHeader("Content-Type", contentType);
     res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
     return res.send(optimized);
@@ -79,14 +67,6 @@ imageOptimizerRouter.get("/images/profiles/:id.jpg", async (req, res, next) => {
 imageOptimizerRouter.get("/images/:id.jpg", async (req, res, next) => {
   const { id } = req.params;
   const { format, contentType } = detectBestFormat(req.headers.accept);
-  const cacheKey = `image:${id}:${format}`;
-
-  const cached = cache.get(cacheKey);
-  if (cached) {
-    res.setHeader("Content-Type", contentType);
-    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-    return res.send(cached);
-  }
 
   const filePaths = [
     path.join(UPLOAD_PATH, "images", `${id}.jpg`),
@@ -109,14 +89,12 @@ imageOptimizerRouter.get("/images/:id.jpg", async (req, res, next) => {
 
   try {
     const pipeline = applyFormat(
-      sharp(fileBuffer).resize(163, undefined, { fit: "inside", withoutEnlargement: true }),
+      sharp(fileBuffer).resize(600, undefined, { fit: "inside", withoutEnlargement: true }),
       format,
-      60,
+      75,
     );
 
     const optimized = await pipeline.toBuffer();
-    cache.set(cacheKey, optimized);
-
     res.setHeader("Content-Type", contentType);
     res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
     return res.send(optimized);

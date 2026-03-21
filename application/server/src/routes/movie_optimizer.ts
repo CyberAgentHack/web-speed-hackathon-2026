@@ -12,20 +12,10 @@ const execFileAsync = promisify(execFile);
 
 export const movieOptimizerRouter = Router();
 
-const cache = new Map<string, Buffer>();
-
 movieOptimizerRouter.get("/movies/:id.mp4", async (req, res, next) => {
   const { id } = req.params;
-  const cacheKey = `movie:${id}:mp4`;
 
-  const cached = cache.get(cacheKey);
-  if (cached) {
-    res.setHeader("Content-Type", "video/mp4");
-    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-    return res.send(cached);
-  }
-
-  // Check if MP4 already exists (pre-converted)
+  // Check if MP4 already exists (pre-converted or previously converted from GIF)
   const mp4Paths = [
     path.join(UPLOAD_PATH, "movies", `${id}.mp4`),
     path.join(PUBLIC_PATH, "movies", `${id}.mp4`),
@@ -34,7 +24,6 @@ movieOptimizerRouter.get("/movies/:id.mp4", async (req, res, next) => {
   for (const mp4Path of mp4Paths) {
     try {
       const mp4Buffer = await fs.readFile(mp4Path) as Buffer;
-      cache.set(cacheKey, mp4Buffer);
       res.setHeader("Content-Type", "video/mp4");
       res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
       return res.send(mp4Buffer);
@@ -43,24 +32,26 @@ movieOptimizerRouter.get("/movies/:id.mp4", async (req, res, next) => {
     }
   }
 
-  // Convert GIF to MP4 on-the-fly (for uploaded movies)
+  // Convert GIF to MP4 and persist to disk
   const gifPaths = [
-    path.join(UPLOAD_PATH, "movies", `${id}.gif`),
-    path.join(PUBLIC_PATH, "movies", `${id}.gif`),
+    { gif: path.join(UPLOAD_PATH, "movies", `${id}.gif`), mp4: path.join(UPLOAD_PATH, "movies", `${id}.mp4`) },
+    { gif: path.join(PUBLIC_PATH, "movies", `${id}.gif`), mp4: path.join(PUBLIC_PATH, "movies", `${id}.mp4`) },
   ];
 
   let gifPath: string | null = null;
-  for (const filePath of gifPaths) {
+  let mp4OutputPath: string | null = null;
+  for (const { gif, mp4 } of gifPaths) {
     try {
-      await fs.access(filePath);
-      gifPath = filePath;
+      await fs.access(gif);
+      gifPath = gif;
+      mp4OutputPath = mp4;
       break;
     } catch {
       continue;
     }
   }
 
-  if (!gifPath) {
+  if (!gifPath || !mp4OutputPath) {
     return next();
   }
 
@@ -82,7 +73,7 @@ movieOptimizerRouter.get("/movies/:id.mp4", async (req, res, next) => {
     ]);
 
     const mp4Buffer = await fs.readFile(tmpOutput) as Buffer;
-    cache.set(cacheKey, mp4Buffer);
+    await fs.writeFile(mp4OutputPath, mp4Buffer);
 
     res.setHeader("Content-Type", "video/mp4");
     res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
