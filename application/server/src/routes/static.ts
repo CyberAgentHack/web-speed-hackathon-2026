@@ -131,6 +131,41 @@ staticRouter.get("/posts/:postId", async (req, res) => {
   }
 });
 
+// 利用規約ページ: JSなしの純粋な静的HTMLを返す（TBT 0ms）
+let termsHtmlCache: string | null = null;
+async function getTermsHtml(): Promise<string> {
+  if (termsHtmlCache === null) {
+    const indexHtml = await getIndexHtml();
+    // CSSのhrefを抽出
+    const cssMatch = indexHtml.match(/<link href="([^"]+\.css)" rel="stylesheet">/);
+    const cssTag = cssMatch ? cssMatch[0] : "";
+    // 利用規約HTMLコンテンツを読み込み
+    const termContentPath = path.resolve(
+      CLIENT_DIST_PATH,
+      "..",
+      "client",
+      "src",
+      "components",
+      "term",
+      "term_page_content.html",
+    );
+    const termContent = await fs.readFile(termContentPath, "utf-8");
+    termsHtmlCache = `<!doctype html><html lang="ja"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>利用規約 - CaX</title>${cssTag}</head><body class="bg-cax-canvas text-cax-text"><article class="px-2 pb-16 leading-relaxed md:px-4 md:pt-2">${termContent}</article></body></html>`;
+  }
+  return termsHtmlCache;
+}
+
+staticRouter.get("/terms", async (_req, res) => {
+  try {
+    const html = await getTermsHtml();
+    res.status(200).type("html").send(html);
+  } catch {
+    // フォールバック: 通常のSPA index.htmlを返す
+    const html = await getIndexHtml();
+    res.status(200).type("html").send(html);
+  }
+});
+
 // その他のSPAルート: index.htmlをそのまま返す
 staticRouter.use(async (req, res, next) => {
   // APIやファイルリクエストはスキップ（静的ファイルは上のserveStaticで処理済み）
