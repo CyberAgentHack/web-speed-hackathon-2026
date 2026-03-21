@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useState } from "react";
 import { Helmet } from "react-helmet";
 
 import { SearchPage } from "@web-speed-hackathon-2026/client/src/components/application/SearchPage";
@@ -6,13 +7,30 @@ import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use
 import { useSearchParams } from "@web-speed-hackathon-2026/client/src/hooks/use_search_params";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
+type SearchResponse = {
+  posts: Models.Post[];
+  isNegative: boolean;
+};
+
 export const SearchContainer = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
 
+  const [isNegative, setIsNegative] = useState(false);
+
+  useEffect(() => {
+    setIsNegative(false);
+  }, [query]);
+
+  const searchFetcher = useCallback(async (url: string): Promise<Models.Post[]> => {
+    const response = await fetchJSON<SearchResponse>(url);
+    setIsNegative(response.isNegative);
+    return response.posts;
+  }, []);
+
   const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>(
     query ? `/api/v1/search?q=${encodeURIComponent(query)}` : "",
-    fetchJSON,
+    searchFetcher,
   );
 
   return (
@@ -20,7 +38,7 @@ export const SearchContainer = () => {
       <Helmet>
         <title>検索 - CaX</title>
       </Helmet>
-      <SearchPage query={query} results={posts} initialValues={{ searchText: query }} />
+      <SearchPage query={query} results={posts} isNegative={isNegative} initialValues={{ searchText: query }} />
     </InfiniteScroll>
   );
 };

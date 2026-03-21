@@ -2,6 +2,7 @@ import { Router } from "express";
 import { Op, literal } from "sequelize";
 
 import { Image, Post } from "@web-speed-hackathon-2026/server/src/models";
+import { analyzeSentiment } from "@web-speed-hackathon-2026/server/src/utils/analyze_sentiment.js";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 
 export const searchRouter = Router();
@@ -23,7 +24,7 @@ searchRouter.get("/search", async (req, res) => {
   const query = req.query["q"];
 
   if (typeof query !== "string" || query.trim() === "") {
-    return res.status(200).type("application/json").send([]);
+    return res.status(200).type("application/json").send({ isNegative: false, posts: [] });
   }
 
   const { keywords, sinceDate, untilDate } = parseSearchQuery(query);
@@ -31,7 +32,7 @@ searchRouter.get("/search", async (req, res) => {
 
   // キーワードも日付フィルターもない場合は空配列を返す
   if (!keywords && !sinceDate && !untilDate) {
-    return res.status(200).type("application/json").send([]);
+    return res.status(200).type("application/json").send({ isNegative: false, posts: [] });
   }
   if (sequelize == null) {
     throw new Error("Post sequelize is not initialized");
@@ -75,31 +76,34 @@ searchRouter.get("/search", async (req, res) => {
     .filter(Boolean)
     .join(" ");
 
-  const result = await Post.unscoped().findAll({
-    include: [
-      {
-        association: "user",
-        include: [{ association: "profileImage" }],
-        required: true,
+  const [result, isNegative] = await Promise.all([
+    Post.unscoped().findAll({
+      include: [
+        {
+          association: "user",
+          include: [{ association: "profileImage" }],
+          required: true,
+        },
+        {
+          association: "images",
+          through: { attributes: [] },
+        },
+        { association: "movie" },
+        { association: "sound" },
+      ],
+      order: [
+        ["createdAt", "DESC"],
+        ["id", "DESC"],
+        [{ model: Image, as: "images" }, "createdAt", "ASC"],
+      ],
+      where: {
+        id: {
+          [Op.in]: literal(`(${subquery})`),
+        },
       },
-      {
-        association: "images",
-        through: { attributes: [] },
-      },
-      { association: "movie" },
-      { association: "sound" },
-    ],
-    order: [
-      ["createdAt", "DESC"],
-      ["id", "DESC"],
-      [{ model: Image, as: "images" }, "createdAt", "ASC"],
-    ],
-    where: {
-      id: {
-        [Op.in]: literal(`(${subquery})`),
-      },
-    },
-  });
+    }),
+    analyzeSentiment(keywords ?? ""),
+  ]);
 
-  return res.status(200).type("application/json").send(result);
+  return res.status(200).type("application/json").send({ isNegative, posts: result });
 });
