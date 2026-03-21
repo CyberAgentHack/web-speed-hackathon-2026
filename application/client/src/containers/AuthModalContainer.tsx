@@ -61,6 +61,24 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser, openRequestKey = 0 
     element.showModal();
   }, [openRequestKey]);
 
+  useEffect(() => {
+    const element = ref.current;
+    if (element == null || !element.open) {
+      return;
+    }
+
+    const animationFrameId = window.requestAnimationFrame(() => {
+      const usernameInput = element.querySelector<HTMLInputElement>(
+        'input[data-auth-input="username"]',
+      );
+      usernameInput?.focus({ preventScroll: true });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(animationFrameId);
+    };
+  }, [resetKey]);
+
   const handleRequestCloseModal = useCallback(() => {
     ref.current?.close();
   }, [ref]);
