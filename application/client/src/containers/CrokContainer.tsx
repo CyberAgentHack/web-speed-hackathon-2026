@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 
 import { CrokGate } from "@web-speed-hackathon-2026/client/src/components/crok/CrokGate";
+import { useDocumentTitle } from "@web-speed-hackathon-2026/client/src/hooks/use_document_title";
 import { CrokPage } from "@web-speed-hackathon-2026/client/src/components/crok/CrokPage";
 import { useSSE } from "@web-speed-hackathon-2026/client/src/hooks/use_sse";
 
@@ -69,6 +70,8 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
     [isStreaming, start],
   );
 
+  useDocumentTitle("Crok - CaX");
+
   if (!activeUser) {
     return (
       <CrokGate headline="Crokを利用するにはサインインしてください" authModalId={authModalId} />
@@ -76,9 +79,6 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
   }
 
   return (
-    <>
-      <title>Crok - CaX</title>
-      <CrokPage isStreaming={isStreaming} messages={displayMessages} onSendMessage={sendMessage} />
-    </>
+    <CrokPage isStreaming={isStreaming} messages={displayMessages} onSendMessage={sendMessage} />
   );
 };

@@ -3,6 +3,7 @@ import { useParams } from "react-router";
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
 import { UserProfilePage } from "@web-speed-hackathon-2026/client/src/components/user_profile/UserProfilePage";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
+import { useDocumentTitle } from "@web-speed-hackathon-2026/client/src/hooks/use_document_title";
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
@@ -19,10 +20,12 @@ export const UserProfileContainer = () => {
     fetchJSON,
   );
 
+  useDocumentTitle(
+    isLoadingUser ? "読込中 - CaX" : user ? `${user.name} さんのタイムライン - CaX` : "ページが見つかりません - CaX",
+  );
+
   if (isLoadingUser) {
-    return (
-      <title>読込中 - CaX</title>
-    );
+    return null;
   }
 
   if (user === null) {
@@ -31,7 +34,6 @@ export const UserProfileContainer = () => {
 
   return (
     <InfiniteScroll fetchMore={fetchMore} items={posts}>
-      <title>{user.name} さんのタイムライン - CaX</title>
       <UserProfilePage timeline={posts} user={user} />
     </InfiniteScroll>
   );
