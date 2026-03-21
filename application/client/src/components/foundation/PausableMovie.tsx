@@ -5,9 +5,10 @@ import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components
 
 interface Props {
   src: string;
+  poster?: string;
 }
 
-export const PausableMovie = ({ src }: Props) => {
+export const PausableMovie = ({ src, poster }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -67,6 +68,7 @@ export const PausableMovie = ({ src }: Props) => {
             playsInline
             className="w-full"
             onLoadedMetadata={handleLoadedMetadata}
+            poster={poster}
             preload="metadata"
             src={src}
           />

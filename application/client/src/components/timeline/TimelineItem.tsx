@@ -95,7 +95,7 @@ export const TimelineItem = ({ post, priority }: Props) => {
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
+              <MovieArea movie={post.movie} priority={priority} />
             </div>
           ) : null}
           {post.sound ? (

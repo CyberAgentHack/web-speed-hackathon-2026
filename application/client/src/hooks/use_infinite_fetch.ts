@@ -49,7 +49,7 @@ export function useInfiniteFetch<T>(
   const internalRef = useRef({
     isLoading: false,
     offset: initialData.current !== null ? initialData.current.length : 0,
-    hasMore: initialData.current !== null ? initialData.current.length >= limit : true,
+    hasMore: true,
   });
 
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
@@ -109,6 +109,7 @@ export function useInfiniteFetch<T>(
   useEffect(() => {
     if (didUseInitialData.current) {
       didUseInitialData.current = false;
+      fetchMore();
       return;
     }
     setResult(() => ({

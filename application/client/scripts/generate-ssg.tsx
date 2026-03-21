@@ -120,7 +120,7 @@ interface SsgPage {
 }
 
 function buildSsgPages(): SsgPage[] {
-  const timelineData = buildTimelineData(10);
+  const timelineData = buildTimelineData(3);
   return [
     { urlPath: "/terms", outputFile: "terms.html", title: "利用規約 - CaX" },
     {
