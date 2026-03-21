@@ -93,7 +93,7 @@ const config = {
   },
   output: {
     chunkFilename: "scripts/[name]-[contenthash].js",
-    filename: "scripts/[name].js",
+    filename: "scripts/[name]-[contenthash].js",
     path: DIST_PATH,
     publicPath: "/",
     enabledWasmLoadingTypes: ["fetch"],
@@ -113,7 +113,7 @@ const config = {
       NODE_ENV: process.env.NODE_ENV || "production",
     }),
     new rspack.CssExtractRspackPlugin({
-      filename: "styles/[name].css",
+      filename: "styles/[name]-[contenthash].css",
     }),
     new rspack.CopyRspackPlugin({
       patterns: [
