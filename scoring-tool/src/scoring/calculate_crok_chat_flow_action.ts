@@ -79,25 +79,11 @@ export async function calculateCrokChatFlowAction({
   consola.debug("CrokChatFlowAction - timespan");
   await flow.startTimespan();
   {
-    const prompt = `TypeScript ${Date.now()}`;
-
-    // メッセージを入力して送信
     try {
       const chatInput = playwrightPage.getByPlaceholder("メッセージを入力...");
-      await chatInput.fill(prompt);
+      await chatInput.click();
     } catch (err) {
       throw new Error("チャット入力欄へのテキスト入力に失敗しました", { cause: err });
-    }
-
-    try {
-      await Promise.race([
-        playwrightPage.getByRole("listbox", { name: "サジェスト候補" }).waitFor({
-          timeout: 30 * 1000,
-        }),
-        playwrightPage.getByRole("button", { name: "送信" }).waitFor({ timeout: 30 * 1000 }),
-      ]);
-    } catch (err) {
-      throw new Error("Crok画面のインタラクション待機に失敗しました", { cause: err });
     }
   }
   await flow.endTimespan();

@@ -121,10 +121,11 @@ export async function calculateDmChatFlowAction({
 
     // メッセージを送信
     try {
-      await playwrightPage.keyboard.press("Enter");
       const sendButton = playwrightPage.getByRole("button", { name: "送信" });
       if ((await sendButton.count()) > 0) {
         await sendButton.first().click();
+      } else {
+        await playwrightPage.keyboard.press("Enter");
       }
     } catch (err) {
       throw new Error("メッセージの送信に失敗しました", { cause: err });
@@ -132,12 +133,12 @@ export async function calculateDmChatFlowAction({
 
     // メッセージが表示されるまで待機（送信完了確認）
     try {
-      await playwrightPage
-        .getByTestId("dm-message-list")
-        .locator("li")
-        .filter({ hasText: message })
-        .last()
-        .waitFor({ timeout: 60 * 1000 });
+      const messageList = playwrightPage.getByTestId("dm-message-list");
+      await messageList.waitFor({ timeout: 60 * 1000 });
+      await messageList.locator("li").last().waitFor({ timeout: 60 * 1000 });
+      await messageList.locator("li").filter({ hasText: message }).first().waitFor({
+        timeout: 60 * 1000,
+      });
     } catch (err) {
       throw new Error("メッセージの送信完了を待機中にタイムアウトしました", { cause: err });
     }

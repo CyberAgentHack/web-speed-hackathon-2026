@@ -7,6 +7,7 @@ import { startFlow } from "../utils/start_flow";
 
 import { calculateHackathonScore } from "./utils/calculate_hackathon_score";
 
+
 type Params = {
   baseUrl: string;
   playwrightPage: playwright.Page;
