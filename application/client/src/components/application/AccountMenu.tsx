@@ -19,19 +19,26 @@ export const AccountMenu = ({ user, onLogout }: Props) => {
         }
       }}
     >
-      {open && (
-        <div className="border-cax-border bg-cax-surface absolute bottom-full left-0 mb-2 w-full overflow-hidden rounded-xl border py-1 shadow-lg">
-          <button
-            className="text-cax-text hover:bg-cax-surface-subtle w-full px-4 py-3 text-left text-sm font-bold"
-            onClick={() => {
-              setOpen(false);
-              onLogout();
-            }}
-          >
-            サインアウト
-          </button>
-        </div>
-      )}
+      <div
+        aria-hidden={!open}
+        className={
+          open
+            ? "border-cax-border bg-cax-surface absolute bottom-full left-0 z-20 mb-2 w-full overflow-hidden rounded-xl border py-1 shadow-lg"
+            : "pointer-events-none absolute bottom-full left-0 z-20 mb-2 max-h-0 w-full overflow-hidden opacity-0"
+        }
+      >
+        <button
+          className="text-cax-text hover:bg-cax-surface-subtle w-full px-4 py-3 text-left text-sm font-bold"
+          tabIndex={open ? 0 : -1}
+          type="button"
+          onClick={() => {
+            setOpen(false);
+            onLogout();
+          }}
+        >
+          サインアウト
+        </button>
+      </div>
       <button
         aria-label="アカウントメニュー"
         className="hover:bg-cax-surface-subtle flex w-full items-center gap-3 rounded-full p-2 transition-colors"
@@ -40,7 +47,9 @@ export const AccountMenu = ({ user, onLogout }: Props) => {
         <img
           alt={user.profileImage.alt}
           className="h-10 w-10 shrink-0 rounded-full object-cover"
+          height={40}
           src={getProfileImagePath(user.profileImage.id)}
+          width={40}
         />
         <div className="hidden min-w-0 flex-1 text-left lg:block">
           <div className="text-cax-text truncate text-sm font-bold">{user.name}</div>

@@ -1,0 +1,94 @@
+import type { Page, LaunchOptions, BrowserLaunchArgumentOptions } from 'puppeteer-core';
+import { ChromeChannel } from '../types';
+/**
+ *
+ * Parameter for {@link BaseBrowser}
+ *
+ **/
+export interface BaseBrowserOptions {
+    /**
+     *
+     * Options to launch Puppeteer Browser instance.
+     *
+     **/
+    launchOptions?: LaunchOptions & BrowserLaunchArgumentOptions;
+    /**
+     *
+     * Channel to search installed Chromium for.
+     *
+     **/
+    chromiumChannel?: ChromeChannel;
+    /**
+     *
+     * User defind Chromium execuatable binary path
+     *
+     **/
+    chromiumPath?: string;
+}
+/**
+ *
+ * Wrapper for Puppeteer page.
+ *
+ **/
+export declare abstract class BaseBrowser {
+    protected opt: BaseBrowserOptions;
+    private browser;
+    private _page;
+    private _executablePath;
+    private debugInputResolver;
+    private debugInputPromise;
+    /**
+     *
+     * @param opt See {@link BaseBrowserOptions}
+     *
+     **/
+    constructor(opt: BaseBrowserOptions);
+    /**
+     *
+     * @returns Puppeteer Page object.
+     *
+     * @remarks
+     * Use this after calling `boot`.
+     *
+     **/
+    get page(): Page;
+    /**
+     *
+     * Instantiates Puppeteer browser and page.
+     *
+     **/
+    boot(): Promise<this>;
+    /**
+     *
+     * Disposes Puppeteer browser and pages.
+     *
+     **/
+    close(): Promise<void>;
+    /**
+     *
+     * Get found or user defined executable Chromium binray path.
+     *
+     **/
+    get executablePath(): string;
+    /**
+     *
+     * Waits for developer's action only if the browser is instantiated with `headless: false` .
+     *
+     * @example
+     *
+     * ```ts
+     * class MyBrowser extends BaseBrowser {
+     *   async doSomething() {
+     *     doXxxx();
+     *
+     *     // This method stops until developer inputs `nextStep()` into the page's developer console
+     *     await this.waitForDebugInput();
+     *     doYyyy();
+     *   }
+     * }
+     * ```
+     *
+     **/
+    protected waitForDebugInput(): Promise<void>;
+    private setupDebugInput;
+}

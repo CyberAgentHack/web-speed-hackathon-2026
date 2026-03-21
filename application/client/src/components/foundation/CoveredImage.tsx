@@ -57,6 +57,7 @@ export const CoveredImage = ({ src }: Props) => {
     <div ref={callbackRef} className="relative h-full w-full overflow-hidden">
       <img
         alt={alt}
+        decoding="async"
         className={classNames(
           "absolute left-1/2 top-1/2 max-w-none -translate-x-1/2 -translate-y-1/2",
           {
@@ -64,7 +65,9 @@ export const CoveredImage = ({ src }: Props) => {
             "w-full h-auto": containerRatio <= imageRatio,
           },
         )}
+        height={imageSize.height > 0 ? imageSize.height : 9}
         src={blobUrl}
+        width={imageSize.width > 0 ? imageSize.width : 16}
       />
 
       <button

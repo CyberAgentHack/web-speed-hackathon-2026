@@ -1,0 +1,95 @@
+//#region src-js/libs/prettier.ts
+let prettierCache;
+async function loadPrettier() {
+	if (prettierCache) return prettierCache;
+	prettierCache = await import("./prettier-O-uJkFBA.js");
+	return prettierCache;
+}
+/**
+* TODO: Plugins support
+* - Read `plugins` field
+* - Load plugins dynamically and parse `languages` field
+* - Map file extensions and filenames to Prettier parsers
+*
+* @returns Array of loaded plugin's `languages` info
+*/
+async function resolvePlugins() {
+	return [];
+}
+/**
+* Format xxx-in-js code snippets
+*
+* @returns Formatted code snippet
+* TODO: In the future, this should return `Doc` instead of string,
+* otherwise, we cannot calculate `printWidth` correctly.
+*/
+async function formatEmbeddedCode({ code, parserName, options }) {
+	const prettier = await loadPrettier();
+	options.parser = parserName;
+	await setupTailwindPlugin(options);
+	return prettier.format(code, options);
+}
+/**
+* Format non-js file
+*
+* @returns Formatted code
+*/
+async function formatFile({ code, parserName, fileName, options }) {
+	const prettier = await loadPrettier();
+	options.parser = parserName;
+	options.filepath = fileName;
+	await setupTailwindPlugin(options);
+	return prettier.format(code, options);
+}
+let tailwindPluginCache;
+async function loadTailwindPlugin() {
+	if (tailwindPluginCache) return tailwindPluginCache;
+	tailwindPluginCache = await import("./dist-CaTLGVG6.js");
+	return tailwindPluginCache;
+}
+const TAILWIND_RELEVANT_PARSERS = new Set([
+	"html",
+	"vue",
+	"angular",
+	"glimmer"
+]);
+/**
+* Set up Tailwind CSS plugin for Prettier when:
+* - `options._tailwindPluginEnabled` is set
+* - And, the parser is relevant for Tailwind CSS
+* Loads the plugin lazily. Option mapping is done in Rust side.
+*/
+async function setupTailwindPlugin(options) {
+	if (!options._tailwindPluginEnabled) return;
+	delete options._tailwindPluginEnabled;
+	if (!TAILWIND_RELEVANT_PARSERS.has(options.parser)) return;
+	const tailwindPlugin = await loadTailwindPlugin();
+	options.plugins = options.plugins || [];
+	options.plugins.push(tailwindPlugin);
+}
+/**
+* Process Tailwind CSS classes found in JSX attributes.
+* Option mapping (`experimentalTailwindcss.xxx` → `tailwindXxx`) is done in Rust side.
+* @param args - Object containing filepath, classes, and options
+* @returns Array of sorted class strings (same order/length as input)
+*/
+async function sortTailwindClasses({ filepath, classes, options = {} }) {
+	const tailwindPlugin = await loadTailwindPlugin();
+	options.filepath = filepath;
+	const context = await tailwindPlugin.getTailwindConfig(options);
+	if (!context) return classes;
+	const env = {
+		context,
+		options
+	};
+	return classes.map((classStr) => {
+		try {
+			return tailwindPlugin.sortClasses(classStr, { env });
+		} catch {
+			return classStr;
+		}
+	});
+}
+
+//#endregion
+export { sortTailwindClasses as i, formatFile as n, resolvePlugins as r, formatEmbeddedCode as t };

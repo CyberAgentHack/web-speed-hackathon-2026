@@ -1,0 +1,12 @@
+import { ChromeChannel } from './types';
+export type FindOptions = {
+    executablePath?: string;
+    channel?: ChromeChannel;
+};
+export declare function findChrome(options: FindOptions): Promise<{
+    executablePath: string;
+    type: string;
+} | {
+    executablePath: null;
+    type: null;
+}>;

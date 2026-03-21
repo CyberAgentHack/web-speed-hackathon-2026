@@ -1,0 +1,109 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.StoriesBrowser = void 0;
+const base_browser_1 = require("./base-browser");
+const logger_1 = require("../logger");
+const errors_1 = require("../errors");
+/**
+ *
+ * Browser class to fetch all stories names.
+ *
+ **/
+class StoriesBrowser extends base_browser_1.BaseBrowser {
+    /**
+     *
+     * @param connection Connected connection to the target Storybook server
+     * @param opt Options to launch browser
+     * @param logger Logger instance
+     *
+     **/
+    constructor(connection, opt = {}, logger = new logger_1.Logger('silent')) {
+        super(opt);
+        this.connection = connection;
+        this.opt = opt;
+        this.logger = logger;
+    }
+    /**
+     *
+     * Fetches stories' id, kind and names
+     *
+     * @returns List of stories
+     *
+     * @remarks
+     * This method automatically detects version of the Storybook.
+     *
+     **/
+    async getStories() {
+        this.logger.debug('Wait for stories definition.');
+        await this.page.goto(this.connection.url);
+        let stories = null;
+        // Note:
+        // Don't wait fo this `goto` promise. Sometimes Chromimue emits timeout error and this navigation and causes whole screenshot process abortion.
+        // For detail, see https://github.com/reg-viz/storycap/issues/896#issuecomment-2317248668
+        this.page.goto(this.connection.url + '/iframe.html?selectedKind=story-crawler-kind&selectedStory=story-crawler-story');
+        await this.page.waitForFunction(() => {
+            var _a;
+            return window.__STORYBOOK_CLIENT_API__ ||
+                ((_a = window.__STORYBOOK_PREVIEW__) === null || _a === void 0 ? void 0 : _a.storyStoreValue);
+        }, {
+            timeout: 60000,
+        });
+        await this.page.waitForTimeout(500);
+        await this.page.evaluate(() => {
+            var _a;
+            const api = window.__STORYBOOK_CLIENT_API__ || window.__STORYBOOK_PREVIEW__;
+            function isPreviewApi(api) {
+                return api.storyStoreValue !== undefined;
+            }
+            if (api === undefined)
+                return;
+            if (isPreviewApi(api)) {
+                return api.storyStoreValue && api.storyStoreValue.cacheAllCSFFiles();
+            }
+            return ((_a = api.storyStore) === null || _a === void 0 ? void 0 : _a.cacheAllCSFFiles) && api.storyStore.cacheAllCSFFiles();
+        });
+        const result = await this.page.evaluate(() => {
+            function isPreviewApi(api) {
+                return api.storyStoreValue !== undefined;
+            }
+            return new Promise(res => {
+                const getStories = (count = 0) => {
+                    const MAX_CONFIGURE_WAIT_COUNT = 4000;
+                    const api = window.__STORYBOOK_CLIENT_API__ || window.__STORYBOOK_PREVIEW__;
+                    if (api === undefined)
+                        return;
+                    // for Storybook v7
+                    const configuringV7store = !isPreviewApi(api) && api.storyStore && !api.storyStore.cachedCSFFiles;
+                    // for Storybook v8
+                    const configuringV8store = isPreviewApi(api) && api.storyStoreValue && !api.storyStoreValue.cachedCSFFiles;
+                    if (configuringV7store || configuringV8store) {
+                        if (count < MAX_CONFIGURE_WAIT_COUNT) {
+                            setTimeout(() => getStories(++count), 16);
+                        }
+                        else {
+                            res({ stories: null, timeout: true });
+                        }
+                        return;
+                    }
+                    const stories = (isPreviewApi(api) && api.storyStoreValue
+                        ? Object.values(api.storyStoreValue.extract())
+                        : api.raw
+                            ? api.raw()
+                            : []).map(_ => ({ id: _.id, kind: _.kind, story: _.name, version: 'v5' }));
+                    res({ stories, timeout: false });
+                };
+                getStories();
+            });
+        });
+        if (result.timeout) {
+            throw new errors_1.StoriesTimeoutError();
+        }
+        stories = result.stories;
+        if (!stories) {
+            throw new errors_1.NoStoriesError();
+        }
+        this.logger.debug(stories);
+        return stories;
+    }
+}
+exports.StoriesBrowser = StoriesBrowser;

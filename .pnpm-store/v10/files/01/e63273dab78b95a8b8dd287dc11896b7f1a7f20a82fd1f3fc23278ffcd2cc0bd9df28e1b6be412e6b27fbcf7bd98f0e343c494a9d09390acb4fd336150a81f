@@ -1,0 +1,18 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.time = void 0;
+/**
+ *
+ * Calculates time until given Promise object is resolved
+ *
+ * @param target - Target Promise
+ * @returns Time to perform and the result of the original promise
+ *
+ **/
+async function time(target) {
+    const start = Date.now();
+    const result = await target;
+    const end = Date.now();
+    return [result, end - start];
+}
+exports.time = time;

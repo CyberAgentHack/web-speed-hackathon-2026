@@ -1,0 +1,101 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.StoryPreviewBrowser = void 0;
+const base_browser_1 = require("./base-browser");
+const logger_1 = require("../logger");
+const async_utils_1 = require("../async-utils");
+const dummyStory = {
+    version: 'v5',
+    id: '__dummy__--__dummy__',
+    kind: '__dummy__',
+    story: '__dummy__',
+};
+/**
+ *
+ * Browser class to visit Storybook's preview window.
+ *
+ **/
+class StoryPreviewBrowser extends base_browser_1.BaseBrowser {
+    /**
+     *
+     * @param connection Connected connection to the target Storybook
+     * @param idx Index number of this browser
+     * @param opt Options to launch browser
+     * @param logger Logger instance
+     *
+     **/
+    constructor(connection, idx = 0, opt = {}, logger = new logger_1.Logger('silent')) {
+        super(opt);
+        this.connection = connection;
+        this.idx = idx;
+        this.opt = opt;
+        this.logger = logger;
+    }
+    /**
+     *
+     * @override
+     *
+     **/
+    async boot() {
+        await super.boot();
+        await this.page.goto(this.connection.url + '/iframe.html?selectedKind=scszisui&selectedStory=scszisui', {
+            timeout: 60000,
+            waitUntil: 'domcontentloaded',
+        });
+        return this;
+    }
+    /**
+     *
+     * @returns Story which this instance visit
+     *
+     **/
+    get currentStory() {
+        return this._currentStory;
+    }
+    /**
+     *
+     * Triggers to change story to display in the browser page's frame
+     *
+     * @param story Target story
+     * @param opt: Options
+     *
+     * @remarks
+     * To resolve of this method **does not** mean completion of rendering the target story.
+     *
+     **/
+    async setCurrentStory(story, opt = {}) {
+        if (this._currentStory && this._currentStory.id === story.id && !!opt.forceRerender) {
+            await this.page.evaluate((d) => window.postMessage(JSON.stringify(d), '*'), this.createPostmessageData(dummyStory));
+            await (0, async_utils_1.sleep)(50);
+        }
+        this._currentStory = story;
+        this.debug('Set story', story.id);
+        const data = this.createPostmessageData(story);
+        await this.page.evaluate((d) => window.postMessage(JSON.stringify(d), '*'), data);
+    }
+    /**
+     *
+     * Logs debug message with the index number
+     *
+     **/
+    debug(...args) {
+        this.logger.debug.apply(this.logger, [`[cid: ${this.idx}]`, ...args]);
+    }
+    createPostmessageData(story) {
+        // REMARKS
+        // This uses storybook post message channel, which is Storybook internal API.
+        return {
+            key: 'storybook-channel',
+            event: {
+                type: 'setCurrentStory',
+                args: [
+                    {
+                        storyId: story.id,
+                    },
+                ],
+                from: 'storycap',
+            },
+        };
+    }
+}
+exports.StoryPreviewBrowser = StoryPreviewBrowser;

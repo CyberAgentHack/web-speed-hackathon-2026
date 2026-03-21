@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const storybook_connection_1 = require("./storybook-connection");
+describe(storybook_connection_1.StorybookConnection, () => {
+    describe(storybook_connection_1.StorybookConnection.spawnCmd, () => {
+        it('should spawn child process', async () => {
+            const out = await new Promise(res => {
+                const proc = storybook_connection_1.StorybookConnection.spawnCmd('npm --version');
+                proc.stdout.once('data', (data) => res(data.toString('utf8')));
+            });
+            expect(out).toBeTruthy();
+        });
+    });
+});

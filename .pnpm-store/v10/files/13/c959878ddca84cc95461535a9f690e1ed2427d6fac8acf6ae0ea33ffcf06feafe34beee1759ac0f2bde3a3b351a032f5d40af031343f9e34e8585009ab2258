@@ -1,0 +1,10 @@
+import wrapErrorMessage from"wrap-error-message";
+
+
+export const mergeMessage=({parent,child,target,stackError})=>{
+const parentMessage=parent.message;
+const stackErrorMessage=stackError.message;
+
+target.message=child.message;
+return wrapErrorMessage(target,parentMessage,stackErrorMessage)
+};

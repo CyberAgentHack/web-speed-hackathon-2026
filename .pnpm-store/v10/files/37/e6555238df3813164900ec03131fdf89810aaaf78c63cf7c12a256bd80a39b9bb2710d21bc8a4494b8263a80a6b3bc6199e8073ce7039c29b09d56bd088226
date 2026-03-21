@@ -1,0 +1,77 @@
+/// <reference types="node" />
+import * as cp from 'child_process';
+import { Logger } from './logger';
+export interface StorybookConnectionOptions {
+    storybookUrl: string;
+    serverCmd?: string;
+    serverTimeout?: number;
+}
+export type StorybookConnectionStatus = 'CONNECTED' | 'CONNECTING' | 'DISCONNECTED';
+/**
+ *
+ * Represents a connection to Storybook server
+ *
+ * @example
+ *
+ * ```ts
+ * const connection = new StorybookConnection({ storybookUrl: 'http://localhost:9009' });
+ * await connection.connect();
+ * ```
+ *
+ * You can boot Storybook server via `serverCmd`
+ *
+ * ```ts
+ * const connection = new StorybookConnection({
+ *   storybookUrl: 'http://localhost:9009',
+ *   serverCmd: 'start-storybook -p 9009',
+ * });
+ * await connection.connect();
+ * ```
+ *
+ **/
+export declare class StorybookConnection {
+    private opt;
+    private logger;
+    static spawnCmd(command: string, options?: cp.SpawnOptions): cp.ChildProcess;
+    private proc?;
+    private _status;
+    /**
+     *
+     * @param opt Options for construction
+     * @param logger Logger instance
+     *
+     **/
+    constructor(opt: StorybookConnectionOptions, logger?: Logger);
+    /**
+     *
+     * @returns URL of Storybook server connecting
+     *
+     **/
+    get url(): string;
+    /**
+     *
+     * @returns {@link StorybookConnectionStatus}
+     *
+     **/
+    get status(): StorybookConnectionStatus;
+    /**
+     *
+     * Connect Storybook server
+     *
+     * @returns Promise of the connection that resolves after connected
+     *
+     * @remarks
+     * If the connection has `serverCmd`, this method boots the server as a child process.
+     *
+     **/
+    connect(): Promise<this>;
+    /**
+     *
+     * Disconnect to the Storybook server.
+     *
+     * @remarks
+     * If the connection has `serverCmd`, this method shutdowns it.
+     *
+     **/
+    disconnect(): Promise<void>;
+}

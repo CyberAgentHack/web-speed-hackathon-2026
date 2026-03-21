@@ -1,9 +1,11 @@
 import $ from "jquery";
 import { gzip } from "pako";
 
+const ajaxCredentials = { xhrFields: { withCredentials: true } as const };
+
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {
   const result = await $.ajax({
-    async: false,
+    ...ajaxCredentials,
     dataType: "binary",
     method: "GET",
     responseType: "arraybuffer",
@@ -14,7 +16,7 @@ export async function fetchBinary(url: string): Promise<ArrayBuffer> {
 
 export async function fetchJSON<T>(url: string): Promise<T> {
   const result = await $.ajax({
-    async: false,
+    ...ajaxCredentials,
     dataType: "json",
     method: "GET",
     url,
@@ -24,7 +26,7 @@ export async function fetchJSON<T>(url: string): Promise<T> {
 
 export async function sendFile<T>(url: string, file: File): Promise<T> {
   const result = await $.ajax({
-    async: false,
+    ...ajaxCredentials,
     data: file,
     dataType: "json",
     headers: {
@@ -43,7 +45,7 @@ export async function sendJSON<T>(url: string, data: object): Promise<T> {
   const compressed = gzip(uint8Array);
 
   const result = await $.ajax({
-    async: false,
+    ...ajaxCredentials,
     data: compressed,
     dataType: "json",
     headers: {

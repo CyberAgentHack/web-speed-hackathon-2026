@@ -1,0 +1,52 @@
+{
+  "name": "@inkkit/ink-markdown",
+  "version": "1.0.0",
+  "description": "Render markdown text using Ink",
+  "author": "Cameron Hunter <hello@cameronhunter.co.uk>",
+  "contributors": [
+    {
+      "name": "Dawid Harat"
+    }
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deralaxo/InkKit.git"
+  },
+  "homepage": "https://github.com/deralaxo/InkKit/tree/main/packages/ink-markdown#readme",
+  "bugs": {
+    "url": "https://github.com/deralaxo/InkKit/issues"
+  },
+  "keywords": [
+    "ink-component",
+    "ink",
+    "component",
+    "markdown",
+    "react",
+    "jsx",
+    "terminal",
+    "term",
+    "console",
+    "command-line"
+  ],
+  "type": "module",
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "@types/marked-terminal": "6.0.0",
+    "@internal/config": "0.0.0"
+  },
+  "dependencies": {
+    "dedent": "1.5.1",
+    "marked": "9.1.5",
+    "marked-terminal": "6.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "build:demo": "tsc -p demo/tsconfig.json",
+    "clean": "rm -rf dist demo/dist node_modules .turbo",
+    "demo": "pnpm build:demo && node demo/dist/demo/index.js"
+  }
+}

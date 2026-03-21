@@ -1,0 +1,156 @@
+/**
+ *
+ * Waits for given time
+ *
+ **/
+export declare function sleep(time?: number): Promise<void>;
+/**
+ *
+ * Represents a task to do something which resolves `<T>`.
+ *
+ **/
+export type Task<T, S> = (worker: S) => Promise<T>;
+/**
+ *
+ * Allocates and executes tasks in parallel
+ *
+ * @param tasks - Generator function which yields next task
+ * @param workers - Processors which deal each task
+ * @returns List of results of the all tasks
+ *
+ **/
+export declare function runParallel<T, S>(tasks: () => AsyncGenerator<Task<T, S>, void>, workers: S[]): Promise<T[]>;
+/**
+ *
+ * Controller to command a {@link Queue}
+ *
+ **/
+export interface QueueController<R> {
+    /**
+     *
+     * Add a task request
+     *
+     **/
+    push(request: R): void;
+    /**
+     *
+     * Close the queue
+     *
+     **/
+    close(): void;
+}
+/**
+ *
+ * Parameters to create {@link Queue}
+ *
+ **/
+export type QueueOptions<R, T, S> = {
+    initialRequests?: R[] | IterableIterator<R>;
+    /**
+     *
+     * Creates a task from the given request
+     *
+     * @param request - Queued request object
+     * @param controller - Commands to operate this queue instance
+     * @returns A task object corresponding to the request
+     *
+     **/
+    createTask(request: R, controller: QueueController<R>): Task<T, S>;
+    /**
+     *
+     * If set true, the queue instance does not stop when the list of waiting requests gets empty.
+     *
+     **/
+    allowEmpty?: boolean;
+};
+/**
+ *
+ * Represents list of tasks waiting
+ *
+ **/
+export declare class Queue<R, T, S> {
+    private requestIdCounter;
+    private tobeContinued;
+    private readonly futureRequests;
+    private readonly resolvers;
+    private readonly requestingIds;
+    private readonly allowEmpty;
+    private readonly createDelegationTask;
+    /**
+     *
+     * @param opt - See {@link QueueOptions}
+     *
+     **/
+    constructor({ initialRequests, createTask, allowEmpty }: QueueOptions<R, T, S>);
+    /**
+     *
+     * Add a new request to this queue
+     *
+     * @param req - Request object
+     *
+     **/
+    push(req: R): void;
+    /**
+     *
+     * Ends to execute
+     *
+     *
+     **/
+    close(): void;
+    /**
+     *
+     * Creates a task generator
+     *
+     * @returns Generator function
+     *
+     **/
+    tasks(): AsyncGenerator<Task<T, S>, void>;
+    /**
+     *
+     * Create {@link QueueController} instance corresponding to this queue
+     *
+     * @returns A queue controller
+     *
+     **/
+    publishController(): QueueController<R>;
+    private generateId;
+    private createTask;
+}
+/**
+ *
+ * Optional parameters for {@link createExecutionService}
+ *
+ **/
+export type CreateExecutionServiceOptions = {
+    /**
+     *
+     * If set true, the queue instance does not stop when the list of waiting requests gets empty.
+     *
+     **/
+    allowEmpty?: boolean;
+};
+/**
+ *
+ * Executor for queued tasks in parallel
+ *
+ **/
+export interface ExecutionService<R, T> extends QueueController<R> {
+    /**
+     *
+     * Executes given tasks in parallel
+     *
+     **/
+    execute(): Promise<T[]>;
+}
+/**
+ *
+ * Creates queue and executor from worker and initial request.
+ *
+ * @param workers - List of workers to perform tasks
+ * @param initialRequests - Initial requests
+ * @param createTask - Converts from a given request to a task performed by each worker
+ * @param options - Option parameters
+ * @returns {@link ExecutionService} instance
+ *
+ **/
+export declare function createExecutionService<R, T, S>(workers: S[], initialRequests: R[] | IterableIterator<R>, createTask: (request: R, context: QueueController<R>) => Task<T, S>, options?: CreateExecutionServiceOptions): ExecutionService<R, T>;

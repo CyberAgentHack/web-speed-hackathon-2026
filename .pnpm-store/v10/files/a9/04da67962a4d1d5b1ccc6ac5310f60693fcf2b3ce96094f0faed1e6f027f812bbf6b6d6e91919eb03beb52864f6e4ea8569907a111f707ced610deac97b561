@@ -1,0 +1,58 @@
+import type { Page } from 'puppeteer-core';
+/**
+ *
+ * Helper to wait until requesting assets are resolved
+ *
+ * @example
+ *
+ * ```ts
+ * class Worker {
+ *   constructor() {
+ *     this.resourceWatcher = new ResourceWatcher(this.page).init();
+ *   }
+ *   async someTask() {
+ *     this.resourceWatcher.clear();
+ *     await this.doSomething(this.page); // Trigger some HTTP requests
+ *     await this.resourceWatcher.waitForRequestsComplete();
+ *   }
+ * }
+ * ```
+ *
+ **/
+export declare class ResourceWatcher {
+    private page;
+    private resolvedAssetsMap;
+    private requestedAssetUrls;
+    /**
+     *
+     * @param page - Puppeteer page object
+     *
+     **/
+    constructor(page: Page);
+    /**
+     *
+     * Registers listeners to the Puppeteer page object.
+     *
+     * @returns The ResourceWatcher instance itself
+     *
+     **/
+    init(): this;
+    /**
+     *
+     * Clears requested URLs to wait for.
+     *
+     **/
+    clear(): void;
+    /**
+     *
+     * @returns URLs requested
+     *
+     **/
+    getRequestedUrls(): string[];
+    /**
+     *
+     * Waits until the all resource requests are finished.
+     *
+     **/
+    waitForRequestsComplete(): Promise<string[]>;
+}

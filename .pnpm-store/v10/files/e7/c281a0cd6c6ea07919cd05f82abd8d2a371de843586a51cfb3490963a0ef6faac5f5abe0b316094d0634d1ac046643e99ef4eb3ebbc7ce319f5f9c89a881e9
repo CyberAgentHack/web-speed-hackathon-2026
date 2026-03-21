@@ -1,0 +1,68 @@
+{
+  "name": "set-error-message",
+  "version": "3.0.1",
+  "type": "module",
+  "exports": {
+    "types": "./build/src/main.d.ts",
+    "default": "./build/src/main.js"
+  },
+  "main": "./build/src/main.js",
+  "types": "./build/src/main.d.ts",
+  "files": [
+    "build/src/**/*.{js,json,d.ts}",
+    "!build/src/**/*.test.js",
+    "!build/src/{helpers,fixtures}"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "test": "gulp test"
+  },
+  "description": "Properly update an error's message",
+  "keywords": [
+    "browser",
+    "code-quality",
+    "error",
+    "error-classes",
+    "error-handler",
+    "error-handling",
+    "error-monitoring",
+    "error-reporting",
+    "errors",
+    "exceptions",
+    "javascript",
+    "library",
+    "message",
+    "messages",
+    "monitoring",
+    "nodejs",
+    "stack",
+    "stacktrace",
+    "stacktraces",
+    "typescript"
+  ],
+  "license": "MIT",
+  "homepage": "https://www.github.com/ehmicky/set-error-message",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ehmicky/set-error-message.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ehmicky/set-error-message/issues"
+  },
+  "author": "ehmicky <ehmicky@gmail.com> (https://github.com/ehmicky)",
+  "directories": {
+    "lib": "src"
+  },
+  "dependencies": {
+    "normalize-exception": "^4.0.1"
+  },
+  "devDependencies": {
+    "@ehmicky/dev-tasks": "^3.0.33",
+    "@ehmicky/eslint-config": "^20.0.31",
+    "@ehmicky/prettier-config": "^1.0.6",
+    "test-each": "^7.0.1"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  }
+}

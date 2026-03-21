@@ -23,7 +23,10 @@ export const PostItem = ({ post }: Props) => {
             >
               <img
                 alt={post.user.profileImage.alt}
+                className="h-full w-full object-cover"
+                height={64}
                 src={getProfileImagePath(post.user.profileImage.id)}
+                width={64}
               />
             </Link>
           </div>
@@ -48,7 +51,8 @@ export const PostItem = ({ post }: Props) => {
         </div>
         <div className="pt-2 sm:pt-4">
           <div className="text-cax-text text-xl leading-relaxed">
-            <TranslatableText text={post.text} />
+            <p>{post.text}</p>
+            <TranslatableText suppressPrimaryParagraph text={post.text} />
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">

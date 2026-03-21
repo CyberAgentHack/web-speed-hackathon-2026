@@ -28,9 +28,10 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
  */
 interface Props {
   post: Models.Post;
+  priorityProfileImage?: boolean;
 }
 
-export const TimelineItem = ({ post }: Props) => {
+export const TimelineItem = ({ post, priorityProfileImage = false }: Props) => {
   const navigate = useNavigate();
 
   /**
@@ -56,7 +57,13 @@ export const TimelineItem = ({ post }: Props) => {
           >
             <img
               alt={post.user.profileImage.alt}
+              className="h-full w-full object-cover"
+              decoding="async"
+              fetchPriority={priorityProfileImage ? "high" : undefined}
+              height={64}
+              loading={priorityProfileImage ? "eager" : "lazy"}
               src={getProfileImagePath(post.user.profileImage.id)}
+              width={64}
             />
           </Link>
         </div>
@@ -82,7 +89,8 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
           </p>
           <div className="text-cax-text leading-relaxed">
-            <TranslatableText text={post.text} />
+            <p>{post.text}</p>
+            <TranslatableText suppressPrimaryParagraph text={post.text} />
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">

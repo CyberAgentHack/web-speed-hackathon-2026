@@ -8,7 +8,7 @@ import { sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
   id: string;
-  onUpdateActiveUser: (user: Models.User) => void;
+  onLoginSuccess: (user: Models.User) => void;
 }
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -35,7 +35,7 @@ function getErrorCode(err: JQuery.jqXHR<unknown>, type: "signin" | "signup"): st
   return ERROR_MESSAGES[responseJSON.code]!;
 }
 
-export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
+export const AuthModalContainer = ({ id, onLoginSuccess }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
   useEffect(() => {
@@ -59,13 +59,12 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   const handleSubmit = useCallback(
     async (values: AuthFormData) => {
       try {
-        if (values.type === "signup") {
-          const user = await sendJSON<Models.User>("/api/v1/signup", values);
-          onUpdateActiveUser(user);
-        } else {
-          const user = await sendJSON<Models.User>("/api/v1/signin", values);
-          onUpdateActiveUser(user);
-        }
+        const user =
+          values.type === "signup"
+            ? await sendJSON<Models.User>("/api/v1/signup", values)
+            : await sendJSON<Models.User>("/api/v1/signin", values);
+        onLoginSuccess(user);
+        await Promise.resolve();
         handleRequestCloseModal();
       } catch (err: unknown) {
         const error = getErrorCode(err as JQuery.jqXHR<unknown>, values.type);
@@ -74,7 +73,7 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
         });
       }
     },
-    [handleRequestCloseModal, onUpdateActiveUser],
+    [handleRequestCloseModal, onLoginSuccess],
   );
 
   return (

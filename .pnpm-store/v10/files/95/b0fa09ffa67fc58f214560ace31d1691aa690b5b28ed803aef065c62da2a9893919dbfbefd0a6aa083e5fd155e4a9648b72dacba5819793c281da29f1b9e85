@@ -1,0 +1,187 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createExecutionService = exports.Queue = exports.runParallel = exports.sleep = void 0;
+/**
+ *
+ * Waits for given time
+ *
+ **/
+async function sleep(time = 0) {
+    await Promise.resolve();
+    if (time <= 0)
+        return;
+    return new Promise(res => setTimeout(() => res(), time));
+}
+exports.sleep = sleep;
+/**
+ *
+ * Allocates and executes tasks in parallel
+ *
+ * @param tasks - Generator function which yields next task
+ * @param workers - Processors which deal each task
+ * @returns List of results of the all tasks
+ *
+ **/
+async function runParallel(tasks, workers) {
+    const results = [];
+    const p = workers.length;
+    if (!p)
+        throw new Error('No workers');
+    const generator = tasks();
+    await Promise.all([...new Array(p).keys()].map(i => new Promise((res, rej) => {
+        async function next() {
+            const { done, value: task } = await generator.next();
+            if (done || !task)
+                return res();
+            try {
+                results.push(await task(workers[i]));
+                return await next();
+            }
+            catch (error) {
+                rej(error);
+            }
+        }
+        return next();
+    })));
+    return results;
+}
+exports.runParallel = runParallel;
+const cancelationToken = Symbol('cancel');
+/**
+ *
+ * Represents list of tasks waiting
+ *
+ **/
+class Queue {
+    /**
+     *
+     * @param opt - See {@link QueueOptions}
+     *
+     **/
+    constructor({ initialRequests, createTask, allowEmpty }) {
+        this.requestIdCounter = 0;
+        this.tobeContinued = true;
+        this.futureRequests = [];
+        this.resolvers = [];
+        this.requestingIds = new Set();
+        this.createDelegationTask = createTask;
+        this.allowEmpty = !!allowEmpty;
+        if (initialRequests) {
+            for (const req of initialRequests) {
+                this.push(req);
+            }
+        }
+    }
+    /**
+     *
+     * Add a new request to this queue
+     *
+     * @param req - Request object
+     *
+     **/
+    push(req) {
+        if (this.resolvers.length) {
+            const resolver = this.resolvers.shift();
+            resolver.resolve(req);
+        }
+        else {
+            this.futureRequests.push(Promise.resolve(req));
+        }
+    }
+    /**
+     *
+     * Ends to execute
+     *
+     *
+     **/
+    close() {
+        this.tobeContinued = false;
+        this.resolvers.forEach(({ cancel }) => cancel());
+    }
+    /**
+     *
+     * Creates a task generator
+     *
+     * @returns Generator function
+     *
+     **/
+    async *tasks() {
+        const controller = this.publishController();
+        while (this.tobeContinued && (this.allowEmpty || this.futureRequests.length || this.requestingIds.size)) {
+            if (this.futureRequests.length === 0) {
+                this.futureRequests.push(new Promise((resolve, reject) => {
+                    const cancel = () => reject(cancelationToken);
+                    this.resolvers.push({ resolve, cancel });
+                }));
+            }
+            const futureRequest = this.futureRequests.shift();
+            try {
+                const req = await futureRequest;
+                yield this.createTask(req, controller);
+            }
+            catch (reason) {
+                if (reason !== cancelationToken) {
+                    throw reason;
+                }
+            }
+        }
+    }
+    /**
+     *
+     * Create {@link QueueController} instance corresponding to this queue
+     *
+     * @returns A queue controller
+     *
+     **/
+    publishController() {
+        return {
+            push: this.push.bind(this),
+            close: async () => {
+                await Promise.resolve();
+                this.close();
+            },
+        };
+    }
+    generateId() {
+        return `request_${++this.requestIdCounter}`;
+    }
+    createTask(req, controller) {
+        const delegate = this.createDelegationTask(req, controller);
+        const rid = this.generateId();
+        this.requestingIds.add(rid);
+        return async (worker) => {
+            const result = await delegate(worker);
+            this.requestingIds.delete(rid);
+            if (!this.allowEmpty && this.requestingIds.size === 0 && this.futureRequests.length === 0) {
+                this.close();
+            }
+            return result;
+        };
+    }
+}
+exports.Queue = Queue;
+/**
+ *
+ * Creates queue and executor from worker and initial request.
+ *
+ * @param workers - List of workers to perform tasks
+ * @param initialRequests - Initial requests
+ * @param createTask - Converts from a given request to a task performed by each worker
+ * @param options - Option parameters
+ * @returns {@link ExecutionService} instance
+ *
+ **/
+function createExecutionService(workers, initialRequests, createTask, options = {}) {
+    const queue = new Queue({
+        initialRequests,
+        createTask,
+        allowEmpty: !!options.allowEmpty,
+    });
+    return {
+        execute() {
+            return runParallel(queue.tasks.bind(queue), workers);
+        },
+        ...queue.publishController(),
+    };
+}
+exports.createExecutionService = createExecutionService;
