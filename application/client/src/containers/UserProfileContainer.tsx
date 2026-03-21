@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet";
 import { useParams } from "react-router";
 
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
@@ -20,7 +21,11 @@ export const UserProfileContainer = () => {
   );
 
   if (isLoadingUser) {
-    return <title>読込中 - CaX</title>;
+    return (
+      <Helmet>
+        <title>読込中 - CaX</title>
+      </Helmet>
+    );
   }
 
   if (user === null) {
@@ -29,7 +34,9 @@ export const UserProfileContainer = () => {
 
   return (
     <InfiniteScroll fetchMore={fetchMore} items={posts}>
-      <title>{user.name} さんのタイムライン - CaX</title>
+      <Helmet>
+        <title>{user.name} さんのタイムライン - CaX</title>
+      </Helmet>
       <UserProfilePage timeline={posts} user={user} />
     </InfiniteScroll>
   );

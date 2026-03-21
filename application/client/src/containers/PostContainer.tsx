@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet";
 import { useParams } from "react-router";
 
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
@@ -19,7 +20,11 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
   );
 
   if (isLoadingPost) {
-    return <title>読込中 - CaX</title>;
+    return (
+      <Helmet>
+        <title>読込中 - CaX</title>
+      </Helmet>
+    );
   }
 
   if (post === null) {
@@ -28,7 +33,9 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
 
   return (
     <InfiniteScroll fetchMore={fetchMore} items={comments}>
-      <title>{post.user.name} さんのつぶやき - CaX</title>
+      <Helmet>
+        <title>{post.user.name} さんのつぶやき - CaX</title>
+      </Helmet>
       <PostPage comments={comments} post={post} />
     </InfiniteScroll>
   );
