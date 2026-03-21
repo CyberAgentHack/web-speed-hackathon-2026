@@ -1,7 +1,7 @@
 import classNames from "classnames";
 import sizeOf from "image-size";
 import { load, ImageIFD } from "piexifjs";
-import { MouseEvent, RefCallback, useCallback, useId, useMemo, useState } from "react";
+import { MouseEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
@@ -55,22 +55,53 @@ export const CoveredImage = ({ src }: Props) => {
     return data != null ? URL.createObjectURL(new Blob([data])) : null;
   }, [data]);
 
+  useEffect(() => {
+    if (blobUrl == null) {
+      return;
+    }
+
+    return () => {
+      URL.revokeObjectURL(blobUrl);
+    };
+  }, [blobUrl]);
+
   const [containerSize, setContainerSize] = useState({ height: 0, width: 0 });
-  const callbackRef = useCallback<RefCallback<HTMLDivElement>>((el) => {
-    setContainerSize({
-      height: el?.clientHeight ?? 0,
-      width: el?.clientWidth ?? 0,
-    });
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (el == null) {
+      return;
+    }
+
+    const updateContainerSize = () => {
+      setContainerSize({
+        height: el.clientHeight,
+        width: el.clientWidth,
+      });
+    };
+
+    updateContainerSize();
+
+    const observer = new ResizeObserver(updateContainerSize);
+    observer.observe(el);
+
+    return () => {
+      observer.disconnect();
+    };
   }, []);
 
   const hasImage = !isLoading && data !== null && blobUrl !== null;
+  const hasValidSize = containerSize.height > 0 && containerSize.width > 0;
+  const hasValidImageSize = imageSize.height > 0 && imageSize.width > 0;
+  const canCalculateRatio = hasValidSize && hasValidImageSize;
 
   const containerRatio = containerSize.height / containerSize.width;
   const imageRatio = imageSize?.height / imageSize?.width;
 
   return (
     <div
-      ref={callbackRef}
+      ref={containerRef}
       className={classNames("relative h-full w-full overflow-hidden bg-cax-surface-subtle", {
         "animate-pulse": !hasImage,
       })}
@@ -80,9 +111,9 @@ export const CoveredImage = ({ src }: Props) => {
         className={classNames(
           "absolute left-1/2 top-1/2 max-w-none -translate-x-1/2 -translate-y-1/2",
           {
-            "h-full w-auto": hasImage && containerRatio > imageRatio,
-            "h-auto w-full": hasImage && containerRatio <= imageRatio,
-            "h-full w-full": !hasImage,
+            "h-full w-auto": hasImage && canCalculateRatio && containerRatio > imageRatio,
+            "h-auto w-full": hasImage && canCalculateRatio && containerRatio <= imageRatio,
+            "h-full w-full": !hasImage || !canCalculateRatio,
           },
         )}
         src={hasImage ? blobUrl : undefined}
