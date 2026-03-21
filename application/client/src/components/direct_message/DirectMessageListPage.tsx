@@ -76,7 +76,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                 : conversation.member;
 
             const lastMessage = messages.at(-1);
-            const hasUnread = messages
+            const hasUnread = (conversation as any).hasUnread ?? messages
               .filter((m) => m.sender.id === peer.id)
               .some((m) => !m.isRead);
 

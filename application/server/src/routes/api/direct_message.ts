@@ -23,23 +23,47 @@ directMessageRouter.get("/dm", async (req, res) => {
     include: [
       { association: "initiator", include: [{ association: "profileImage" }] },
       { association: "member", include: [{ association: "profileImage" }] },
-      {
-        association: "messages",
-        attributes: ["id", "body", "createdAt", "isRead", "senderId"],
-        include: [{ association: "sender", attributes: ["id"] }],
-        order: [["createdAt", "ASC"]],
-        required: true,
-      },
     ],
     order: [["createdAt", "DESC"]],
   });
 
-  // 最新メッセージの日時でソート
-  const sorted = conversations
+  // 各会話の最新メッセージと未読フラグを個別に取得
+  const results = await Promise.all(
+    conversations.map(async (conv) => {
+      const lastMessage = await DirectMessage.findOne({
+        attributes: ["id", "body", "createdAt", "isRead", "senderId"],
+        include: [{ association: "sender", attributes: ["id"] }],
+        where: { conversationId: conv.id },
+        order: [["createdAt", "DESC"]],
+      });
+
+      if (!lastMessage) return null;
+
+      const peerId =
+        conv.initiatorId !== req.session.userId ? conv.initiatorId : conv.memberId;
+      const hasUnread = await DirectMessage.count({
+        where: {
+          conversationId: conv.id,
+          senderId: peerId,
+          isRead: false,
+        },
+      });
+
+      return {
+        ...conv.toJSON(),
+        messages: [lastMessage.toJSON()],
+        hasUnread: hasUnread > 0,
+      };
+    }),
+  );
+
+  // メッセージがない会話を除外し、最新メッセージの日時でソート
+  const sorted = results
+    .filter((r) => r !== null)
     .sort((a, b) => {
-      const aLast = a.messages![a.messages!.length - 1]!.createdAt.getTime();
-      const bLast = b.messages![b.messages!.length - 1]!.createdAt.getTime();
-      return bLast - aLast;
+      const aTime = new Date(a.messages[0].createdAt).getTime();
+      const bTime = new Date(b.messages[0].createdAt).getTime();
+      return bTime - aTime;
     });
 
   return res.status(200).type("application/json").send(sorted);
