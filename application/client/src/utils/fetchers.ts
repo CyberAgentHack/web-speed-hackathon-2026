@@ -2,11 +2,13 @@ import { gzip } from "pako";
 
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {
   const res = await fetch(url);
+  if (!res.ok) throw new Error(`${res.status}`);
   return res.arrayBuffer();
 }
 
 export async function fetchJSON<T>(url: string): Promise<T> {
   const res = await fetch(url);
+  if (!res.ok) throw new Error(`${res.status}`);
   return res.json() as Promise<T>;
 }
 
@@ -18,6 +20,7 @@ export async function sendFile<T>(url: string, file: File): Promise<T> {
     },
     body: file,
   });
+  if (!res.ok) throw new Error(`${res.status}`);
   return res.json() as Promise<T>;
 }
 
@@ -34,5 +37,6 @@ export async function sendJSON<T>(url: string, data: object): Promise<T> {
     },
     body: compressed,
   });
+  if (!res.ok) throw new Error(`${res.status}`);
   return res.json() as Promise<T>;
 }
