@@ -25,15 +25,17 @@ run = "pnpm -C application build"
 
 [tasks.dev]
 description = "ビルド → ローカルサーバー起動 (ポート 3000)"
-depends = ["build"]
-run = "pnpm -C application start"
+run = [
+  "pnpm -C application build",
+  "pnpm -C application start",
+]
 
 [tasks.analyze]
 description = "バンドルサイズを可視化 → bundle-report.html"
 run = "pnpm -C application --filter @web-speed-hackathon-2026/client analyze"
 
 [tasks.test]
-description = "VRT テストを実行する"
+description = "VRT テストを実行する (メモリに注意)"
 run = "pnpm -C application --filter @web-speed-hackathon-2026/e2e test"
 
 [tasks.test-update]
@@ -41,7 +43,7 @@ description = "VRT ベースライン更新 (メモリに注意)"
 run = "pnpm -C application --filter @web-speed-hackathon-2026/e2e test:update"
 
 [tasks.test-remote]
-description = "VRT テストをリモート環境に対して実行する"
+description = "VRT テストをリモート環境に対して実行する (メモリに注意)"
 run = "E2E_BASE_URL=$REMOTE_URL pnpm -C application --filter @web-speed-hackathon-2026/e2e test"
 
 [tasks.score]
@@ -62,10 +64,10 @@ run = "pnpm -C application format"
 
 [tasks.seed]
 description = "シードデータを生成して DB に投入する"
-run = """
-pnpm -C application --filter @web-speed-hackathon-2026/server seed:generate
-pnpm -C application --filter @web-speed-hackathon-2026/server seed:insert
-"""
+run = [
+  "pnpm -C application --filter @web-speed-hackathon-2026/server seed:generate",
+  "pnpm -C application --filter @web-speed-hackathon-2026/server seed:insert",
+]
 
 [tasks.initialize]
 description = "POST /api/v1/initialize でデータリセット ($APP_URL)"

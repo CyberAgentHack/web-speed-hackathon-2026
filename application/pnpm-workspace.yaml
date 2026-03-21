@@ -12,5 +12,7 @@ allowBuilds:
 overrides:
   gifler>bluebird: 3.7.2
   gifler>omggif: 1.0.10
+patchedDependencies:
+  redux-form@8.3.10: patches/redux-form@8.3.10.patch
 saveExact: true
 shellEmulator: true

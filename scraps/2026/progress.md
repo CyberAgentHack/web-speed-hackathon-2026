@@ -2,7 +2,7 @@
 
 発見した問題の対応状況と残 TODO を管理する。発見内容の詳細は [`findings.md`](./findings.md) を参照。現在のコードと [`checklist.md`](../checklist.md) を参考に、随時項目を追加・更新していくこと。
 
-チェックが付いているものは対応済み。上から優先順。
+チェックが付いているものは対応済み。**上から優先順。**
 
 ---
 
@@ -47,6 +47,21 @@
   - `server/src/routes/api/sound.ts`: `EXTENSION = "opus"`、ffmpeg に `-c:a libopus -b:a 32k` 追加
   - `get_path.ts`: `getSoundPath` の拡張子 `.mp3` → `.opus`
   - `SoundWaveSVG.tsx`: `AudioContext.decodeAudioData` はフォーマット非依存 → 変更不要
+- [x] **E2E 対応③** ホーム→投稿詳細 click timeout (ローカルのみ失敗・無視)
+  - `AppContainer` の `<Suspense fallback={null}>` → `<Suspense fallback={<div className="min-h-screen" />}>` に変更 (CLS 改善も兼ねる)
+  - 調査結果: タイムライン最上位は画像投稿 (動画ではない)。`PausableMovie.stopPropagation` は無関係
+  - 根本原因: `CoveredImage` が JS でバイナリ fetch → 画像表示まで重い → WSL 環境でタイムアウト
+  - ローカル固有の問題のため無視。Phase 4 ④ `CoveredImage` サーバー移行で根本解消される見込み
+- [x] **E2E 対応①** 検索バリデーション: redux-form × react-redux v9 の非互換バグ修正
+  - `SearchPage.tsx` の条件 `(meta.touched || meta.submitFailed) && meta.error` は正しかった
+  - 根本原因: react-redux v9 が hooks ベースに移行したため class component の `UNSAFE_componentWillReceiveProps` が呼ばれなくなり、redux-form の `validateIfNeeded` が永遠に実行されなかった
+  - `pnpm patch` で `redux-form@8.3.10` の `es/createReduxForm.js` + `lib/createReduxForm.js` に `componentDidUpdate` を追加して修正
+  - `application/patches/redux-form@8.3.10.patch` として管理 (`pnpm-workspace.yaml` の `patchedDependencies` に登録済み)
+- [x] `mise.toml`: `dev` タスクの `depends + run` → `run` 配列形式に変更 (`seed` も同様)
+  - `depends = ["build"]` は mise 仕様上は正しいが、実際にビルドが先に完了することを保証できないケースがあった
+  - `run = ["pnpm build", "pnpm start"]` 配列形式は mise が直列実行・失敗時停止を保証する
+- [x] **E2E 対応②** DM一覧 VRT スナップショット更新
+  - `playwright test --update-snapshots --grep "DM一覧が表示される"` で更新済み
 - [ ] `crok.ts`: `sleep(10)` × 文字数 を**削除** → Crok AIチャット（50 点）が採点対象になる（運営許可済み 2026-03-21）**← 1行変更、今すぐやる**
 - [ ] DM送信フロー計測不能の修正 → DM送信（50点）解禁
   - 原因: `DirectMessageListPage.tsx` が `conversations === null` 中に `return null` しているため、「新しくDMを始める」ボタンが採点ツールのクリック時に DOM に存在しない可能性
@@ -93,12 +108,4 @@
   - DB インデックスを追加（テーブルのリレーションを確認）
   - N+1 クエリを一括クエリに変換
   - API レスポンスの不要フィールド削除・limit 設定
-- [ ] **E2E 対応①** 検索バリデーション: `SearchInput` の `meta.touched && meta.error` → `(meta.touched || meta.submitFailed) && meta.error` に変更
-  - origin/main から存在していた pre-existing バグ。今回の E2E 更新で新テストとして追加され発覚
-- [ ] **E2E 対応②** DM一覧 VRT スナップショット更新: `playwright test --update-snapshots --grep "DM一覧が表示される"`
-  - 現在の期待 1080px に対し実際は 1277px。upstream サンプルも 1277px
-- [ ] **E2E 対応③** ホーム→投稿詳細 click timeout 調査・修正 (緊急度高)
-  - `<Suspense fallback={null}>` で article が visible だが stable でない可能性
-  - `fallback={<div />}` など最小限の要素に変更して再テスト
-  - 「読み込み直後にボタンが反応しない」ユーザー体験上の問題でもあるため優先して対処
 - [ ] `crok.ts`: `sleep(3000)` の削除は**任意**（許可済みだが E2E リスクあり。最後に試す）

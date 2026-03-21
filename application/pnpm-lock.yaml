@@ -8,6 +8,11 @@ overrides:
   gifler>bluebird: 3.7.2
   gifler>omggif: 1.0.10
 
+patchedDependencies:
+  redux-form@8.3.10:
+    hash: d146046b587373ede489454057bc6fe6380202c4ba2dae98537a76b0bd4d777b
+    path: patches/redux-form@8.3.10.patch
+
 importers:
 
   .:
@@ -89,7 +94,7 @@ importers:
         version: 5.0.1
       redux-form:
         specifier: 8.3.10
-        version: 8.3.10(react-redux@9.2.0(@types/react@19.2.2)(react@19.2.0)(redux@5.0.1))(react@19.2.0)(redux@5.0.1)
+        version: 8.3.10(patch_hash=d146046b587373ede489454057bc6fe6380202c4ba2dae98537a76b0bd4d777b)(react-redux@9.2.0(@types/react@19.2.2)(react@19.2.0)(redux@5.0.1))(react@19.2.0)(redux@5.0.1)
       regenerator-runtime:
         specifier: 0.14.1
         version: 0.14.1
@@ -9080,7 +9085,7 @@ snapshots:
     dependencies:
       resolve: 1.22.10
 
-  redux-form@8.3.10(react-redux@9.2.0(@types/react@19.2.2)(react@19.2.0)(redux@5.0.1))(react@19.2.0)(redux@5.0.1):
+  redux-form@8.3.10(patch_hash=d146046b587373ede489454057bc6fe6380202c4ba2dae98537a76b0bd4d777b)(react-redux@9.2.0(@types/react@19.2.2)(react@19.2.0)(redux@5.0.1))(react@19.2.0)(redux@5.0.1):
     dependencies:
       '@babel/runtime': 7.28.4
       es6-error: 4.1.1
