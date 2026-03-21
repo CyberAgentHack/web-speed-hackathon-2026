@@ -8,6 +8,9 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const HTMLInlineCSSWebpackPlugin = require("html-inline-css-webpack-plugin").default;
 const webpack = require("webpack");
 
+const REACT_ROUTER_PACKAGE_PATH = path.dirname(require.resolve("react-router/package.json"));
+const REACT_ROUTER_PRODUCTION_ENTRY = path.resolve(REACT_ROUTER_PACKAGE_PATH, "dist/production/index.mjs");
+
 const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
@@ -108,6 +111,9 @@ const config = {
   plugins,
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
+    alias: {
+      "react-router$": REACT_ROUTER_PRODUCTION_ENTRY,
+    },
     fallback: {
       fs: false,
       path: false,
