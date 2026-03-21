@@ -4,7 +4,6 @@ import { Route, Routes, useLocation, useNavigate } from "react-router";
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
 import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
-import { SearchContainer } from "@web-speed-hackathon-2026/client/src/containers/SearchContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 const CrokContainer = lazy(() =>
@@ -42,6 +41,11 @@ const TermContainer = lazy(() =>
 const TimelineContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/TimelineContainer").then((m) => ({
     default: m.TimelineContainer,
+  })),
+);
+const SearchContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/SearchContainer").then((m) => ({
+    default: m.SearchContainer,
   })),
 );
 const UserProfileContainer = lazy(() =>
@@ -122,7 +126,14 @@ export const AppContainer = () => {
             }
             path="/dm/:conversationId"
           />
-          <Route element={<SearchContainer />} path="/search" />
+          <Route
+            element={
+              <Suspense fallback={null}>
+                <SearchContainer />
+              </Suspense>
+            }
+            path="/search"
+          />
           <Route
             element={
               <Suspense fallback={null}>
