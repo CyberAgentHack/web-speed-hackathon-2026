@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useId, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
 import { apiClient } from "@web-speed-hackathon-2026/client/src/api/client";
@@ -82,7 +82,9 @@ export const NewPostModalContainer = ({ id }: Props) => {
         setIsLoading(true);
         const post = await sendNewPost(params);
         ref.current?.close();
-        void navigate(`/posts/${post.id}`);
+        startTransition(() => {
+          void navigate(`/posts/${post.id}`);
+        });
       } catch {
         setHasError(true);
       } finally {

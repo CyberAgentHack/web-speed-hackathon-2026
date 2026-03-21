@@ -255,7 +255,10 @@ function stripPostForSSR(post: Record<string, unknown>): Record<string, unknown>
           username: user["username"],
           name: user["name"],
           profileImage: user["profileImage"]
-            ? { id: (user["profileImage"] as Record<string, unknown>)["id"] }
+            ? {
+                id: (user["profileImage"] as Record<string, unknown>)["id"],
+                alt: (user["profileImage"] as Record<string, unknown>)["alt"],
+              }
             : null,
         }
       : null,
