@@ -4,6 +4,7 @@ import { TimelineItem } from "@web-speed-hackathon-2026/client/src/components/ti
 
 interface Props {
   timeline: Models.Post[];
+  eager?: boolean;
 }
 
 const LazyTimelineItem = ({ post }: { post: Models.Post }) => {
@@ -34,10 +35,13 @@ const LazyTimelineItem = ({ post }: { post: Models.Post }) => {
   return <TimelineItem post={post} />;
 };
 
-export const Timeline = ({ timeline }: Props) => {
+export const Timeline = ({ timeline, eager }: Props) => {
   return (
     <section>
       {timeline.map((post, idx) => {
+        if (eager) {
+          return <TimelineItem key={post.id} post={post} isFirst />;
+        }
         if (idx < 2) {
           return <TimelineItem key={post.id} post={post} isFirst={idx === 0} />;
         }

@@ -147,7 +147,7 @@ export const SearchPage = ({ query, results }: Props) => {
           検索結果が見つかりませんでした
         </div>
       ) : (
-        <Timeline timeline={results} />
+        <Timeline timeline={results} eager />
       )}
     </div>
   );
