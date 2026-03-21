@@ -35,26 +35,7 @@ export async function calculateHomePage({ baseUrl, playwrightPage, puppeteerPage
     steps: [result],
   } = await flow.createFlowResult();
 
-  const audits = result!.lhr.audits;
-
-  // LCP情報
-  const lcpAudit = audits["largest-contentful-paint"];
-  console.log("Home LCP:", lcpAudit?.numericValue, "ms, score:", lcpAudit?.score);
-
-  // ネットワークリクエスト一覧（サイズ順）
-  const networkAudit = audits["network-requests"];
-  if (networkAudit?.details?.items) {
-    const items = (networkAudit.details.items as any[])
-      .filter((r: any) => r.transferSize > 0)
-      .sort((a: any, b: any) => b.transferSize - a.transferSize);
-    console.log("\n=== Network Requests (by size) ===");
-    for (const r of items) {
-      console.log(`${Math.round(r.transferSize / 1024)}KB | ${Math.round(r.endTime - r.startTime)}ms | ${r.url}`);
-    }
-    console.log(`Total: ${Math.round(items.reduce((s: number, r: any) => s + r.transferSize, 0) / 1024)}KB`);
-  }
-
-  const { breakdown, scoreX100 } = calculateHackathonScore(audits, {
+  const { breakdown, scoreX100 } = calculateHackathonScore(result!.lhr.audits, {
     isUserflow: false,
   });
 
