@@ -66,6 +66,14 @@ export default defineConfig({
           if (name.endsWith(".css")) return "styles/[name][extname]";
           return "assets/[name]-[hash][extname]";
         },
+        manualChunks: (id) => {
+          if (id.includes("node_modules/@ffmpeg")) return "ffmpeg";
+          if (id.includes("node_modules/@imagemagick")) return "imagemagick";
+          if (id.includes("node_modules/kuromoji")) return "kuromoji";
+          if (id.includes("node_modules/pako")) return "pako";
+          if (id.includes("node_modules/react-dom")) return "react-dom";
+          if (id.includes("node_modules/react")) return "react";
+        },
       },
     },
   },

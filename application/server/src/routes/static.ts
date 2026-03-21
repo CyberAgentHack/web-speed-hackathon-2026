@@ -1,8 +1,10 @@
+import { readFile } from "node:fs/promises";
 import path from "path";
 
 import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
 
+import { Post } from "@web-speed-hackathon-2026/server/src/models";
 import {
   CLIENT_DIST_PATH,
   PUBLIC_PATH,
@@ -51,6 +53,21 @@ staticApp.use(
     },
   }),
 );
+
+// Home page: inject initial posts data to eliminate API round-trip for LCP
+const indexHtmlPath = path.join(CLIENT_DIST_PATH, "index.html");
+staticApp.get("/", async (c) => {
+  const [html, posts] = await Promise.all([
+    readFile(indexHtmlPath, "utf8"),
+    Post.findAll({ limit: 30, offset: 0 }),
+  ]);
+  const postsJson = JSON.stringify(posts.map((p) => p.toJSON()));
+  const injected = html.replace(
+    "</head>",
+    `<script>window.__INITIAL_POSTS__=${postsJson}</script></head>`,
+  );
+  return c.html(injected, 200);
+});
 
 // SPA fallback: serve index.html for all non-file routes
 staticApp.use("*", serveStatic({ path: "index.html", root: distRoot }));
