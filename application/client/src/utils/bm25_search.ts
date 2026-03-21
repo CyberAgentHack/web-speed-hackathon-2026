@@ -1,5 +1,4 @@
 import { BM25 } from "bayesian-bm25";
-import _ from "lodash";
 
 const STOP_WORDS = new Set([
   "の", "は", "が", "を", "に", "で", "と", "も", "へ", "や",
@@ -37,15 +36,13 @@ export function filterSuggestionsBM25(
   const tokenizedCandidates = candidates.map((c) => extractTokensFromText(c));
   bm25.index(tokenizedCandidates);
 
-  const results = _.zipWith(candidates, bm25.getScores(queryTokens), (text, score) => {
-    return { text, score };
-  });
+  const scores = bm25.getScores(queryTokens) as number[];
+  const results = candidates.map((text, i) => ({ text, score: scores[i]! }));
 
   // スコアが高い（＝類似度が高い）ものが下に来るように、上位10件を取得する
-  return _(results)
+  return results
     .filter((s) => s.score > 0)
-    .sortBy(["score"])
+    .sort((a, b) => a.score - b.score)
     .slice(-10)
-    .map((s) => s.text)
-    .value();
+    .map((s) => s.text);
 }
