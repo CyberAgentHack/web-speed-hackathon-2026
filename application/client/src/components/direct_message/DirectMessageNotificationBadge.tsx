@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
 
-interface DmUnreadEvent {
+export interface DmUnreadEvent {
   type: "dm:unread";
   payload: {
     unreadCount: number;

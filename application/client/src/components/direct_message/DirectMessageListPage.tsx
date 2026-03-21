@@ -7,6 +7,7 @@ import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
 import { formatFromNow } from "@web-speed-hackathon-2026/client/src/utils/format_date";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { DmUnreadEvent } from "./DirectMessageNotificationBadge";
 
 interface Props {
   activeUser: Models.User;
@@ -37,8 +38,10 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     void loadConversations();
   }, [loadConversations]);
 
-  useWs("/api/v1/dm/unread", () => {
-    void loadConversations();
+  useWs("/api/v1/dm/unread", (event: DmUnreadEvent) => {
+    if (event.payload.unreadCount > 0) {
+      void loadConversations();
+    }
   });
 
   if (conversations == null) {
