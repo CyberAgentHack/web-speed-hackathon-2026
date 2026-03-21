@@ -29,10 +29,12 @@ export async function sendFile<T>(url: string, file: File): Promise<T> {
 }
 
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
-  const { gzip } = await import("pako");
-  const jsonString = JSON.stringify(data);
-  const uint8Array = new TextEncoder().encode(jsonString);
-  const compressed = gzip(uint8Array);
+  const uint8Array = new TextEncoder().encode(JSON.stringify(data));
+  const cs = new CompressionStream("gzip");
+  const writer = cs.writable.getWriter();
+  await writer.write(uint8Array);
+  await writer.close();
+  const compressed = await new Response(cs.readable).arrayBuffer();
 
   const response = await fetch(url, {
     method: "POST",
