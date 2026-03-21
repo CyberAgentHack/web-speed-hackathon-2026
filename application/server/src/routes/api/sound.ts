@@ -55,13 +55,22 @@ soundRouter.post("/sounds", async (req, res) => {
   const artist = metadata.artist ?? "Unknown";
   const title = metadata.title ?? "Unknown";
 
+  console.log("[POST /sounds] Metadata extraction result:", {
+    artist,
+    title,
+    raw_metadata: metadata,
+  });
+
   // MP3 → Opus に変換
   const opusBuffer = await convertToOpus(req.body);
 
   const filePath = path.resolve(UPLOAD_PATH, `./sounds/${soundId}.${EXTENSION}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds"), { recursive: true });
   await fs.writeFile(filePath, opusBuffer);
+
+  console.log("[POST /sounds] Saving to DB:", { artist, id: soundId, title });
   await Sound.create({ artist, id: soundId, title });
 
+  console.log("[POST /sounds] Response:", { artist, id: soundId, title });
   return res.status(200).type("application/json").send({ artist, id: soundId, title });
 });
