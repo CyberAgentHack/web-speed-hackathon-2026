@@ -18,12 +18,15 @@ export const PostItem = ({ post }: Props) => {
         <div className="flex items-center justify-center">
           <div className="shrink-0 grow-0 pr-2">
             <Link
+              aria-label={`${post.user.name}のプロフィール`}
               className="border-cax-border bg-cax-surface-subtle block h-14 w-14 overflow-hidden rounded-full border hover:opacity-95 sm:h-16 sm:w-16"
               to={`/users/${post.user.username}`}
             >
               <img
                 alt={post.user.profileImage.alt}
+                height={64}
                 src={getProfileImagePath(post.user.profileImage.id)}
+                width={64}
               />
             </Link>
           </div>

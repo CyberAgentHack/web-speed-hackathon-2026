@@ -51,12 +51,15 @@ export const TimelineItem = ({ post }: Props) => {
       <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
         <div className="shrink-0 grow-0 pr-2 sm:pr-4">
           <Link
+            aria-label={`${post.user.name}のプロフィール`}
             className="border-cax-border bg-cax-surface-subtle block h-12 w-12 overflow-hidden rounded-full border hover:opacity-75 sm:h-16 sm:w-16"
             to={`/users/${post.user.username}`}
           >
             <img
               alt={post.user.profileImage.alt}
+              height={64}
               src={getProfileImagePath(post.user.profileImage.id)}
+              width={64}
             />
           </Link>
         </div>

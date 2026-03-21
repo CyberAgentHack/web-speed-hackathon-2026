@@ -12,6 +12,7 @@ export const TimelineContainer = () => {
     <InfiniteScroll fetchMore={fetchMore} items={posts}>
       <Helmet>
         <title>タイムライン - CaX</title>
+        <meta name="description" content="CaX - みんなの投稿をリアルタイムで確認できるタイムライン" />
       </Helmet>
       <TimelinePage timeline={posts} />
     </InfiniteScroll>
