@@ -12,17 +12,31 @@ import {
 export const directMessageRouter = Router();
 
 function sanitizeDmMessagePayload(payload: unknown): unknown {
-  if (typeof payload !== "object" || payload === null) {
-    return payload;
+  const normalizedPayload = typeof payload === "object" &&
+      payload !== null &&
+      "toJSON" in payload &&
+      typeof payload.toJSON === "function"
+    ? payload.toJSON()
+    : payload;
+
+  if (typeof normalizedPayload !== "object" || normalizedPayload === null) {
+    return normalizedPayload;
   }
 
-  const payloadRecord = payload as Record<string, unknown>;
-  const sender = payloadRecord["sender"];
-  if (typeof sender !== "object" || sender === null) {
-    return payload;
+  const payloadRecord = normalizedPayload as Record<string, unknown>;
+  const senderPayload = payloadRecord["sender"];
+  const normalizedSender = typeof senderPayload === "object" &&
+      senderPayload !== null &&
+      "toJSON" in senderPayload &&
+      typeof senderPayload.toJSON === "function"
+    ? senderPayload.toJSON()
+    : senderPayload;
+
+  if (typeof normalizedSender !== "object" || normalizedSender === null) {
+    return payloadRecord;
   }
 
-  const senderRecord = sender as Record<string, unknown>;
+  const senderRecord = normalizedSender as Record<string, unknown>;
   return {
     ...payloadRecord,
     sender: {
