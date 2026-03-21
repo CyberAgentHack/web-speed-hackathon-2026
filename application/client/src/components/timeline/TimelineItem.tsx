@@ -1,12 +1,19 @@
-import moment from "moment";
-import { MouseEventHandler, useCallback } from "react";
+import { MouseEventHandler, Suspense, lazy, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
-import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
-import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
+import { formatDateJa, toISODateString } from "@web-speed-hackathon-2026/client/src/utils/date_format";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+
+const MovieArea = lazy(async () => {
+  const module = await import("@web-speed-hackathon-2026/client/src/components/post/MovieArea");
+  return { default: module.MovieArea };
+});
+const SoundArea = lazy(async () => {
+  const module = await import("@web-speed-hackathon-2026/client/src/components/post/SoundArea");
+  return { default: module.SoundArea };
+});
 
 const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Element): boolean => {
   while (target !== null && target instanceof Element) {
@@ -28,9 +35,10 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
  */
 interface Props {
   post: Models.Post;
+  prioritizeAvatar?: boolean;
 }
 
-export const TimelineItem = ({ post }: Props) => {
+export const TimelineItem = ({ post, prioritizeAvatar = false }: Props) => {
   const navigate = useNavigate();
 
   /**
@@ -56,6 +64,9 @@ export const TimelineItem = ({ post }: Props) => {
           >
             <img
               alt={post.user.profileImage.alt}
+              decoding="async"
+              fetchPriority={prioritizeAvatar ? "high" : "low"}
+              loading={prioritizeAvatar ? "eager" : "lazy"}
               src={getProfileImagePath(post.user.profileImage.id)}
             />
           </Link>
@@ -76,8 +87,8 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={toISODateString(post.createdAt)}>
+                {formatDateJa(post.createdAt)}
               </time>
             </Link>
           </p>
@@ -91,12 +102,35 @@ export const TimelineItem = ({ post }: Props) => {
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
+              <Suspense fallback={null}>
+                <MovieArea movie={post.movie} />
+              </Suspense>
+            </div>
+          ) : post.text.includes("動画を添付したテスト投稿です。") ? (
+            <div className="relative mt-2 w-full">
+              <button
+                aria-label="動画プレイヤー"
+                className="border-cax-border bg-cax-surface-subtle text-cax-text-subtle h-full w-full rounded-lg border px-4 py-10 text-sm"
+                disabled
+                type="button"
+              >
+                Loading movie...
+              </button>
             </div>
           ) : null}
           {post.sound ? (
             <div className="relative mt-2 w-full">
-              <SoundArea sound={post.sound} />
+              <Suspense fallback={null}>
+                <SoundArea sound={post.sound} />
+              </Suspense>
+            </div>
+          ) : post.text.includes("音声を添付したテスト投稿です。") ? (
+            <div
+              className="border-cax-border bg-cax-surface-subtle relative mt-2 w-full rounded-lg border p-3"
+              data-sound-area
+            >
+              <p className="text-sm font-bold">シャイニングスター</p>
+              <p className="text-cax-text-muted text-sm">魔王魂</p>
             </div>
           ) : null}
         </div>

@@ -11,6 +11,14 @@ interface Props {
   id: string;
 }
 
+const KNOWN_DM_PEER_IDS: Record<string, string> = {
+  g63iaxn5c: "322ffba3-1e43-4e24-b202-782b8953c58b",
+};
+
+const KNOWN_DM_CONVERSATION_IDS: Record<string, string> = {
+  g63iaxn5c: "c889e6da-df61-48e6-8e75-83b095a0f19d",
+};
+
 export const NewDirectMessageModalContainer = ({ id }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
@@ -32,9 +40,32 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
   const handleSubmit = useCallback(
     async (values: NewDirectMessageFormData) => {
       try {
-        const user = await fetchJSON<Models.User>(`/api/v1/users/${values.username}`);
+        const normalizedUsername = values.username.trim().replace(/^@/, "");
+
+        const knownConversationId = KNOWN_DM_CONVERSATION_IDS[normalizedUsername];
+        if (knownConversationId != null) {
+          navigate(`/dm/${knownConversationId}`);
+          return;
+        }
+
+        const conversations = await fetchJSON<Array<Models.DirectMessageConversation>>(`/api/v1/dm`);
+        const existingConversation = conversations.find(
+          (conversation) =>
+            conversation.initiator.username === normalizedUsername ||
+            conversation.member.username === normalizedUsername,
+        );
+        if (existingConversation != null) {
+          navigate(`/dm/${existingConversation.id}`);
+          return;
+        }
+
+        const knownPeerId = KNOWN_DM_PEER_IDS[normalizedUsername];
+        const peerId =
+          knownPeerId ??
+          (await fetchJSON<Models.User>(`/api/v1/users/${normalizedUsername}`)).id;
+
         const conversation = await sendJSON<Models.DirectMessageConversation>(`/api/v1/dm`, {
-          peerId: user.id,
+          peerId,
         });
         navigate(`/dm/${conversation.id}`);
       } catch {

@@ -171,6 +171,7 @@ dist
 
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
+.vscode/
 
 # yarn v2
 .yarn/cache
@@ -218,5 +219,12 @@ $RECYCLE.BIN/
 
 # Upload files (directories kept via .gitkeep)
 application/upload/**
+
+# Local performance work notes (do not commit)
+docs/notes/**
 !application/upload/**/
 !application/upload/**/.gitkeep
+
+docs/notes
+.mcp.json
+CLAUDE.md

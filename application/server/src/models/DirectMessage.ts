@@ -74,7 +74,12 @@ export function initDirectMessage(sequelize: Sequelize) {
 
   DirectMessage.addHook("afterSave", "onDmSaved", async (message) => {
     const directMessage = await DirectMessage.findByPk(message.get().id);
-    const conversation = await DirectMessageConversation.findByPk(directMessage?.conversationId);
+    const conversation = await DirectMessageConversation.unscoped().findByPk(
+      directMessage?.conversationId,
+      {
+        attributes: ["id", "initiatorId", "memberId"],
+      },
+    );
 
     if (directMessage == null || conversation == null) {
       return;

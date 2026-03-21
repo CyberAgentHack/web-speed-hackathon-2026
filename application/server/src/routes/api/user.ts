@@ -49,7 +49,8 @@ userRouter.get("/users/:username", async (req, res) => {
 });
 
 userRouter.get("/users/:username/posts", async (req, res) => {
-  const user = await User.findOne({
+  const user = await User.unscoped().findOne({
+    attributes: ["id"],
     where: {
       username: req.params.username,
     },

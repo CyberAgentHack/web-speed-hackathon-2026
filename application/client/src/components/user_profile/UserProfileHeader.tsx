@@ -1,8 +1,7 @@
-import { FastAverageColor } from "fast-average-color";
-import moment from "moment";
 import { ReactEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
+import { formatDateJa, toISODateString } from "@web-speed-hackathon-2026/client/src/utils/date_format";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
@@ -15,10 +14,21 @@ export const UserProfileHeader = ({ user }: Props) => {
   // 画像の平均色を取得します
   /** @type {React.ReactEventHandler<HTMLImageElement>} */
   const handleLoadImage = useCallback<ReactEventHandler<HTMLImageElement>>((ev) => {
-    const fac = new FastAverageColor();
-    const { rgb } = fac.getColor(ev.currentTarget, { mode: "precision" });
-    setAverageColor(rgb);
-    fac.destroy();
+    const image = ev.currentTarget;
+    const schedule =
+      window.requestIdleCallback ??
+      ((callback: () => void) => {
+        window.setTimeout(callback, 300);
+      });
+
+    schedule(() => {
+      void import("fast-average-color").then(({ FastAverageColor }) => {
+        const fac = new FastAverageColor();
+        const { rgb } = fac.getColor(image, { mode: "speed" });
+        setAverageColor(rgb);
+        fac.destroy();
+      });
+    });
   }, []);
 
   return (
@@ -30,6 +40,7 @@ export const UserProfileHeader = ({ user }: Props) => {
         <img
           alt=""
           crossOrigin="anonymous"
+          decoding="async"
           onLoad={handleLoadImage}
           src={getProfileImagePath(user.profileImage.id)}
         />
@@ -43,8 +54,8 @@ export const UserProfileHeader = ({ user }: Props) => {
             <FontAwesomeIcon iconType="calendar-alt" styleType="regular" />
           </span>
           <span>
-            <time dateTime={moment(user.createdAt).toISOString()}>
-              {moment(user.createdAt).locale("ja").format("LL")}
+            <time dateTime={toISODateString(user.createdAt)}>
+              {formatDateJa(user.createdAt)}
             </time>
             からサービスを利用しています
           </span>

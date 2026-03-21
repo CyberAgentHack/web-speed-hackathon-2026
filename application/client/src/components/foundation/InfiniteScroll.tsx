@@ -10,40 +10,59 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
   const latestItem = items[items.length - 1];
 
   const prevReachedRef = useRef(false);
+  const animationFrameRef = useRef<number | null>(null);
+  const isScheduledRef = useRef(false);
+  const latestItemRef = useRef(latestItem);
 
   useEffect(() => {
-    const handler = () => {
-      // 念の為 2の18乗 回、最下部かどうかを確認する
-      const hasReached = Array.from(Array(2 ** 18), () => {
-        return window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
-      }).every(Boolean);
+    latestItemRef.current = latestItem;
+  }, [latestItem]);
+
+  useEffect(() => {
+    const run = () => {
+      const hasReached =
+        window.innerHeight + Math.ceil(window.scrollY) >= document.documentElement.scrollHeight;
 
       // 画面最下部にスクロールしたタイミングで、登録したハンドラを呼び出す
       if (hasReached && !prevReachedRef.current) {
         // アイテムがないときは追加で読み込まない
-        if (latestItem !== undefined) {
+        if (latestItemRef.current !== undefined) {
           fetchMore();
         }
       }
 
       prevReachedRef.current = hasReached;
+      isScheduledRef.current = false;
+      animationFrameRef.current = null;
+    };
+
+    const handler = () => {
+      if (isScheduledRef.current) {
+        return;
+      }
+
+      isScheduledRef.current = true;
+      animationFrameRef.current = window.requestAnimationFrame(run);
     };
 
     // 最初は実行されないので手動で呼び出す
     prevReachedRef.current = false;
-    handler();
+    run();
 
-    document.addEventListener("wheel", handler, { passive: false });
-    document.addEventListener("touchmove", handler, { passive: false });
-    document.addEventListener("resize", handler, { passive: false });
-    document.addEventListener("scroll", handler, { passive: false });
+    document.addEventListener("wheel", handler, { passive: true });
+    document.addEventListener("touchmove", handler, { passive: true });
+    document.addEventListener("resize", handler);
+    document.addEventListener("scroll", handler, { passive: true });
     return () => {
+      if (animationFrameRef.current != null) {
+        window.cancelAnimationFrame(animationFrameRef.current);
+      }
       document.removeEventListener("wheel", handler);
       document.removeEventListener("touchmove", handler);
       document.removeEventListener("resize", handler);
       document.removeEventListener("scroll", handler);
     };
-  }, [latestItem, fetchMore]);
+  }, [fetchMore]);
 
   return <>{children}</>;
 };

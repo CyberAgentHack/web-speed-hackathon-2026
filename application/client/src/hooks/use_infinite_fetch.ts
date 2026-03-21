@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const LIMIT = 30;
+const LIMIT = 12;
 
 interface ReturnValues<T> {
   data: Array<T>;
@@ -13,7 +13,7 @@ export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
 ): ReturnValues<T> {
-  const internalRef = useRef({ isLoading: false, offset: 0 });
+  const internalRef = useRef({ isLoading: false, isExhausted: false, offset: 0 });
 
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
     data: [],
@@ -22,8 +22,12 @@ export function useInfiniteFetch<T>(
   });
 
   const fetchMore = useCallback(() => {
-    const { isLoading, offset } = internalRef.current;
-    if (isLoading) {
+    if (apiPath.trim() === "") {
+      return;
+    }
+
+    const { isLoading, isExhausted, offset } = internalRef.current;
+    if (isLoading || isExhausted) {
       return;
     }
 
@@ -33,19 +37,24 @@ export function useInfiniteFetch<T>(
     }));
     internalRef.current = {
       isLoading: true,
+      isExhausted,
       offset,
     };
 
-    void fetcher(apiPath).then(
-      (allData) => {
+    const separator = apiPath.includes("?") ? "&" : "?";
+    const pagedApiPath = `${apiPath}${separator}limit=${LIMIT}&offset=${offset}`;
+
+    void fetcher(pagedApiPath).then(
+      (pageData) => {
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...pageData],
           isLoading: false,
         }));
         internalRef.current = {
           isLoading: false,
-          offset: offset + LIMIT,
+          isExhausted: pageData.length < LIMIT,
+          offset: offset + pageData.length,
         };
       },
       (error) => {
@@ -56,6 +65,7 @@ export function useInfiniteFetch<T>(
         }));
         internalRef.current = {
           isLoading: false,
+          isExhausted,
           offset,
         };
       },
@@ -66,14 +76,17 @@ export function useInfiniteFetch<T>(
     setResult(() => ({
       data: [],
       error: null,
-      isLoading: true,
+      isLoading: apiPath.trim() !== "",
     }));
     internalRef.current = {
       isLoading: false,
+      isExhausted: false,
       offset: 0,
     };
 
-    fetchMore();
+    if (apiPath.trim() !== "") {
+      fetchMore();
+    }
   }, [fetchMore]);
 
   return {

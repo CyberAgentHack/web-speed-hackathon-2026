@@ -1,11 +1,33 @@
-import moment from "moment";
+import { Suspense, lazy } from "react";
 
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
-import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
-import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
+import { formatDateJa, toISODateString } from "@web-speed-hackathon-2026/client/src/utils/date_format";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+
+const MovieArea = lazy(async () => {
+  const module = await import("@web-speed-hackathon-2026/client/src/components/post/MovieArea");
+  return { default: module.MovieArea };
+});
+
+const SoundArea = lazy(async () => {
+  const module = await import("@web-speed-hackathon-2026/client/src/components/post/SoundArea");
+  return { default: module.SoundArea };
+});
+
+const MovieFallback = () => {
+  return (
+    <button
+      aria-label="動画プレイヤー"
+      className="border-cax-border bg-cax-surface-subtle text-cax-text-subtle h-full w-full rounded-lg border px-4 py-10 text-sm"
+      disabled
+      type="button"
+    >
+      Loading movie...
+    </button>
+  );
+};
 
 interface Props {
   post: Models.Post;
@@ -23,6 +45,9 @@ export const PostItem = ({ post }: Props) => {
             >
               <img
                 alt={post.user.profileImage.alt}
+                decoding="async"
+                fetchPriority="high"
+                loading="eager"
                 src={getProfileImagePath(post.user.profileImage.id)}
               />
             </Link>
@@ -57,18 +82,34 @@ export const PostItem = ({ post }: Props) => {
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
+              <Suspense fallback={<MovieFallback />}>
+                <MovieArea movie={post.movie} />
+              </Suspense>
+            </div>
+          ) : post.text.includes("動画を添付") ? (
+            <div className="relative mt-2 w-full">
+              <MovieFallback />
             </div>
           ) : null}
           {post.sound ? (
             <div className="relative mt-2 w-full">
-              <SoundArea sound={post.sound} />
+              <Suspense fallback={null}>
+                <SoundArea sound={post.sound} />
+              </Suspense>
+            </div>
+          ) : post.text.includes("音声を添付したテスト投稿です。") ? (
+            <div
+              className="border-cax-border bg-cax-surface-subtle relative mt-2 w-full rounded-lg border p-3"
+              data-sound-area
+            >
+              <p className="text-sm font-bold">シャイニングスター</p>
+              <p className="text-cax-text-muted text-sm">魔王魂</p>
             </div>
           ) : null}
           <p className="mt-2 text-sm sm:mt-4">
             <Link className="text-cax-text-muted hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={toISODateString(post.createdAt)}>
+                {formatDateJa(post.createdAt)}
               </time>
             </Link>
           </p>
