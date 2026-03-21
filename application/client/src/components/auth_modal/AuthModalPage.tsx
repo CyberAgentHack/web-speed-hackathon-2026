@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/auth/validation";
@@ -13,6 +13,9 @@ interface Props {
 }
 
 export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
+  const usernameInputId = useId();
+  const nameInputId = useId();
+  const passwordInputId = useId();
   const [values, setValues] = useState<AuthFormData>({
     type: "signin",
     username: "",
@@ -73,9 +76,12 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
 
       <div className="grid gap-y-2">
         <div className="flex flex-col gap-y-1">
-          <label className="block text-sm">ユーザー名</label>
+          <label className="block text-sm" htmlFor={usernameInputId}>
+            ユーザー名
+          </label>
           <Input
             autoComplete="username"
+            id={usernameInputId}
             leftItem={<span className="text-cax-text-subtle leading-none">@</span>}
             value={values.username}
             onChange={(event) => {
@@ -90,9 +96,12 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
 
         {type === "signup" && (
           <div className="flex flex-col gap-y-1">
-            <label className="block text-sm">名前</label>
+            <label className="block text-sm" htmlFor={nameInputId}>
+              名前
+            </label>
             <Input
               autoComplete="nickname"
+              id={nameInputId}
               value={values.name}
               onChange={(event) => {
                 setValues((prev) => ({ ...prev, name: event.target.value }));
@@ -104,9 +113,12 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
         )}
 
         <div className="flex flex-col gap-y-1">
-          <label className="block text-sm">パスワード</label>
+          <label className="block text-sm" htmlFor={passwordInputId}>
+            パスワード
+          </label>
           <Input
             autoComplete={type === "signup" ? "new-password" : "current-password"}
+            id={passwordInputId}
             type="password"
             value={values.password}
             onChange={(event) => {
