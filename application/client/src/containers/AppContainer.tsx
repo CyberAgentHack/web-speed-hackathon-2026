@@ -88,16 +88,6 @@ export const AppContainer = () => {
   const authModalId = useId();
   const newPostModalId = useId();
 
-  if (isLoadingActiveUser) {
-    return (
-      <HelmetProvider>
-        <Helmet>
-          <title>読込中 - CaX</title>
-        </Helmet>
-      </HelmetProvider>
-    );
-  }
-
   return (
     <HelmetProvider>
       <AppPage
