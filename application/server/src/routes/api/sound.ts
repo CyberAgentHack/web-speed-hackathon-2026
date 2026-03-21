@@ -8,6 +8,7 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
+import { Sound } from "@web-speed-hackathon-2026/server/src/models";
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import { extractMetadataFromSound } from "@web-speed-hackathon-2026/server/src/utils/extract_metadata_from_sound";
 import { extractWavMetadata } from "@web-speed-hackathon-2026/server/src/utils/extract_wav_metadata";
@@ -84,6 +85,8 @@ soundRouter.post("/sounds", async (req, res) => {
   const soundsDir = path.resolve(UPLOAD_PATH, "sounds");
   await fs.mkdir(soundsDir, { recursive: true });
   await fs.writeFile(path.resolve(soundsDir, `${soundId}.${EXTENSION}`), mp3Buffer);
+
+  await Sound.create({ id: soundId, artist: artist || "Unknown", title: title || "Unknown" });
 
   return res.status(200).type("application/json").send({ artist, id: soundId, title });
 });
