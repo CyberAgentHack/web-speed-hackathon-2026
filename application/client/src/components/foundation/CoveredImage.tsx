@@ -45,7 +45,6 @@ export const CoveredImage = ({ alt = "", src }: Props) => {
             "w-full h-auto": !isWide,
           },
         )}
-        loading="lazy"
         onLoad={handleLoad}
         src={src}
       />

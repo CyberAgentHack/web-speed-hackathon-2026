@@ -135,6 +135,14 @@ const config = {
     minimize: true,
     splitChunks: {
       chunks: "all",
+      cacheGroups: {
+        defaultVendors: {
+          test: /[\\/]node_modules[\\/]/,
+          name: "vendors",
+          chunks: "initial",
+          priority: -10,
+        },
+      },
     },
     concatenateModules: true,
     usedExports: true,
