@@ -25,7 +25,7 @@ export const CoveredImage = ({ alt, fetchPriority = "auto", loading = "lazy", sr
       <img
         alt={alt}
         className="absolute inset-0 h-full w-full object-cover"
-        decoding="async"
+        decoding={loading === "eager" ? "sync" : "async"}
         fetchPriority={fetchPriority}
         loading={loading}
         src={src}

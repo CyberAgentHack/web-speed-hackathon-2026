@@ -35,6 +35,7 @@ export const DirectMessagePage = ({
   onSubmit,
 }: Props) => {
   const formRef = useRef<HTMLFormElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const previousMessageCountRef = useRef(0);
   const textAreaId = useId();
@@ -91,6 +92,10 @@ export const DirectMessagePage = ({
 
     previousMessageCountRef.current = nextCount;
     const frameId = window.requestAnimationFrame(() => {
+      const container = messagesContainerRef.current;
+      if (container != null) {
+        container.scrollTop = container.scrollHeight;
+      }
       messagesEndRef.current?.scrollIntoView({ block: "end" });
     });
 
@@ -127,7 +132,10 @@ export const DirectMessagePage = ({
         </div>
       </header>
 
-      <div className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8">
+      <div
+        className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8"
+        ref={messagesContainerRef}
+      >
         {conversation.messages.length === 0 && (
           <p className="text-cax-text-muted text-center text-sm">
             まだメッセージはありません。最初のメッセージを送信してみましょう。

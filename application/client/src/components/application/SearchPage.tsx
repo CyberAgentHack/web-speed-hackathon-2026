@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { FormEvent, useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Field, InjectedFormProps, reduxForm, WrappedFieldProps } from "redux-form";
 
@@ -18,19 +18,23 @@ interface Props {
   results: Models.Post[];
 }
 
-const SearchInput = ({ input, meta }: WrappedFieldProps) => (
+interface SearchInputProps extends WrappedFieldProps {
+  showError?: boolean;
+}
+
+const SearchInput = ({ input, meta, showError = false }: SearchInputProps) => (
   <div className="flex flex-1 flex-col">
     <input
       {...input}
       className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
-        (meta.touched || meta.submitFailed) && meta.error
+        (meta.touched || showError) && meta.error
           ? "border-cax-danger focus:border-cax-danger"
           : "border-cax-border focus:border-cax-brand-strong"
       }`}
       placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
       type="text"
     />
-    {(meta.touched || meta.submitFailed) && meta.error && (
+    {(meta.touched || showError) && meta.error && (
       <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>
     )}
   </div>
@@ -43,6 +47,7 @@ const SearchPageComponent = ({
   handleSubmit,
 }: Props & InjectedFormProps<SearchFormData, Props>) => {
   const navigate = useNavigate();
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const parsed = parseSearchQuery(query);
 
@@ -65,12 +70,20 @@ const SearchPageComponent = ({
     navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
   };
 
+  const handleFormSubmit = useCallback(
+    (event: FormEvent<HTMLFormElement>) => {
+      setSubmitAttempted(true);
+      void handleSubmit(onSubmit)(event);
+    },
+    [handleSubmit],
+  );
+
   return (
     <div className="flex flex-col gap-4">
       <div className="bg-cax-surface p-4 shadow">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleFormSubmit}>
           <div className="flex gap-2">
-            <Field name="searchText" component={SearchInput} />
+            <Field name="searchText" component={SearchInput} showError={submitAttempted} />
             <Button variant="primary" type="submit">
               検索
             </Button>
