@@ -25,6 +25,8 @@ export const PausableMovie = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [isPausedByUser, setIsPausedByUser] = useState(false);
+  const [isMovieLoaded, setIsMovieLoaded] = useState(false);
+  const [shouldLoadMovie, setShouldLoadMovie] = useState(false);
   const [displayPosterSrc, setDisplayPosterSrc] = useState(posterSrc);
 
   useEffect(() => {
@@ -32,6 +34,8 @@ export const PausableMovie = ({
   }, [posterSrc]);
 
   useEffect(() => {
+    setIsMovieLoaded(false);
+    setShouldLoadMovie(false);
     setIsPausedByUser(false);
   }, [src]);
 
@@ -76,6 +80,12 @@ export const PausableMovie = ({
     setIsPlaying(isVisible && !isPausedByUser);
   }, [autoPlayInViewport, isPausedByUser, isVisible]);
 
+  useEffect(() => {
+    if (isPlaying) {
+      setShouldLoadMovie(true);
+    }
+  }, [isPlaying]);
+
   const handleClick = useCallback(() => {
     setIsPlaying((current) => {
       const nextIsPlaying = !current;
@@ -107,8 +117,36 @@ export const PausableMovie = ({
               setDisplayPosterSrc(src);
             }
           }}
-          src={isPlaying ? src : displayPosterSrc}
+          src={displayPosterSrc}
         />
+        {shouldLoadMovie ? (
+          <img
+            alt=""
+            aria-hidden
+            className={classNames("pointer-events-none absolute object-cover transition-opacity", {
+              "opacity-100": isPlaying && isMovieLoaded,
+              "opacity-0": !isPlaying || !isMovieLoaded,
+            })}
+            decoding="async"
+            fetchPriority="low"
+            loading="eager"
+            onError={() => {
+              setIsPlaying(false);
+              setShouldLoadMovie(false);
+            }}
+            onLoad={() => {
+              setIsMovieLoaded(true);
+            }}
+            src={src}
+            // Keep the moving GIF slightly smaller than poster so poster remains stable LCP.
+            style={{
+              bottom: "1px",
+              left: "1px",
+              right: "1px",
+              top: "1px",
+            }}
+          />
+        ) : null}
 
         <div
           className={classNames(
