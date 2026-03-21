@@ -1,14 +1,10 @@
 import { randomUUID } from "crypto";
+import { execFile } from "child_process";
 import { promises as fs } from "fs";
 import os from "os";
 import path from "path";
 
 import ffmpegPath from "ffmpeg-static";
-import ffmpeg from "fluent-ffmpeg";
-
-if (ffmpegPath) {
-  ffmpeg.setFfmpegPath(ffmpegPath);
-}
 
 const UNKNOWN_ARTIST = "Unknown Artist";
 const UNKNOWN_TITLE = "Unknown Title";
@@ -21,47 +17,111 @@ interface ConvertResult {
 }
 
 /**
- * 音声ファイルをMP3に変換し、メタデータを抽出する（1パス）
- * - 入力ファイルをtmpに書き出し、ffmpegでMP3変換 + ffmetadata出力を同時に行う
- * - Shift_JISメタデータはUTF-8に変換
+ * 音声ファイルをMP3に変換し、メタデータとピークを抽出する
+ * - ピーク抽出は入力バッファから直接計算（ffmpeg 不要）
+ * - ffmpeg は MP3 変換 + メタデータ抽出のみ（単一プロセス）
  */
 export async function convertAndExtractSound(input: Buffer): Promise<ConvertResult> {
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "sound-"));
   const inputPath = path.join(tmpDir, `input-${randomUUID()}`);
-  const outputPath = path.join(tmpDir, `output-${randomUUID()}.mp3`);
-  const metaPath = path.join(tmpDir, `meta-${randomUUID()}.txt`);
+  const outputMp3 = path.join(tmpDir, `output.mp3`);
+  const outputMeta = path.join(tmpDir, `meta.txt`);
 
   try {
     await fs.writeFile(inputPath, input);
 
-    // メタデータ抽出（ffmetadata形式で出力）
+    // ピーク抽出は WAV バッファから直接（ffmpeg 不要）
+    const peaksPromise = Promise.resolve(extractPeaksFromWavBuffer(input));
+
+    // ffmpeg: MP3 変換 + メタデータ抽出（1プロセス2出力）
     await new Promise<void>((resolve, reject) => {
-      ffmpeg(inputPath)
-        .outputOptions(["-f", "ffmetadata"])
-        .output(metaPath)
-        .on("end", () => resolve())
-        .on("error", (err: Error) => reject(err))
-        .run();
+      execFile(
+        ffmpegPath!,
+        [
+          "-i", inputPath,
+          "-vn", "-q:a", "9", outputMp3,
+          "-f", "ffmetadata", outputMeta,
+          "-y",
+        ],
+        { timeout: 120_000 },
+        (err) => {
+          if (err) reject(err);
+          else resolve();
+        },
+      );
     });
 
-    // MP3変換
-    await new Promise<void>((resolve, reject) => {
-      ffmpeg(inputPath)
-        .outputOptions(["-vn"])
-        .output(outputPath)
-        .on("end", () => resolve())
-        .on("error", (err: Error) => reject(err))
-        .run();
-    });
-
-    const mp3Buffer = await fs.readFile(outputPath);
-    const { artist, title } = await extractMetadata(metaPath);
-    const peaks = await extractPeaks(outputPath, tmpDir);
+    const [mp3Buffer, { artist, title }, peaks] = await Promise.all([
+      fs.readFile(outputMp3),
+      extractMetadata(outputMeta),
+      peaksPromise,
+    ]);
 
     return { mp3Buffer, artist, title, peaks };
   } finally {
     await fs.rm(tmpDir, { recursive: true, force: true });
   }
+}
+
+/**
+ * WAV バッファから直接ピーク値を抽出する（ffmpeg 不要）
+ * WAV ヘッダをパースして PCM データ位置を特定し、100チャンクの平均を計算
+ */
+function extractPeaksFromWavBuffer(buf: Buffer): number[] {
+  // "data" チャンクを探す
+  let dataOffset = 12; // RIFF ヘッダ (12 bytes) の後
+  let dataSize = 0;
+  while (dataOffset < buf.length - 8) {
+    const chunkId = buf.toString("ascii", dataOffset, dataOffset + 4);
+    const chunkSize = buf.readUInt32LE(dataOffset + 4);
+    if (chunkId === "data") {
+      dataOffset += 8;
+      dataSize = chunkSize;
+      break;
+    }
+    dataOffset += 8 + chunkSize;
+    // パディング（奇数サイズの場合）
+    if (chunkSize % 2 !== 0) dataOffset++;
+  }
+
+  if (dataSize === 0) {
+    return new Array(PEAK_CHUNKS).fill(0);
+  }
+
+  // fmt チャンクからチャンネル数とビット深度を取得
+  const channels = buf.readUInt16LE(22);
+  const bitsPerSample = buf.readUInt16LE(34);
+  const bytesPerSample = bitsPerSample / 8;
+  const totalSamples = Math.floor(dataSize / (bytesPerSample * channels));
+
+  // モノラル化 + ピーク計算（16bit を想定、それ以外は 16bit として扱う）
+  const chunkSize = Math.ceil(totalSamples / PEAK_CHUNKS);
+  const peaks: number[] = [];
+
+  for (let chunk = 0; chunk < PEAK_CHUNKS; chunk++) {
+    const start = chunk * chunkSize;
+    const end = Math.min(start + chunkSize, totalSamples);
+    if (start >= totalSamples) {
+      peaks.push(0);
+      continue;
+    }
+    let sum = 0;
+    for (let i = start; i < end; i++) {
+      // 全チャンネルの平均をモノラル値とする
+      let monoVal = 0;
+      for (let ch = 0; ch < channels; ch++) {
+        const bytePos = dataOffset + (i * channels + ch) * bytesPerSample;
+        if (bytePos + 1 < buf.length) {
+          monoVal += buf.readInt16LE(bytePos);
+        }
+      }
+      sum += Math.abs(monoVal / channels);
+    }
+    peaks.push(sum / (end - start));
+  }
+
+  const max = Math.max(...peaks, 1);
+  return peaks.map((p) => Math.round((p / max) * 1000) / 1000);
 }
 
 async function extractMetadata(metaPath: string): Promise<{ artist: string; title: string }> {
@@ -102,20 +162,20 @@ function parseFFmetadata(ffmetadata: string): Partial<Record<string, string>> {
 
 const PEAK_CHUNKS = 100;
 
-/**
- * 音声ファイルから100個のピーク値を抽出する
- * ffmpegでモノラルs16le PCMに変換し、チャンク平均を計算
- */
+// extractPeaks は外部から呼ばれている場合に備えてエクスポート維持
 export async function extractPeaks(audioPath: string, tmpDir: string): Promise<number[]> {
   const pcmPath = path.join(tmpDir, `pcm-${randomUUID()}.raw`);
 
   await new Promise<void>((resolve, reject) => {
-    ffmpeg(audioPath)
-      .outputOptions(["-ac", "1", "-f", "s16le", "-acodec", "pcm_s16le"])
-      .output(pcmPath)
-      .on("end", () => resolve())
-      .on("error", (err: Error) => reject(err))
-      .run();
+    execFile(
+      ffmpegPath!,
+      ["-i", audioPath, "-ac", "1", "-ar", "8000", "-f", "s16le", "-acodec", "pcm_s16le", pcmPath, "-y"],
+      { timeout: 60_000 },
+      (err) => {
+        if (err) reject(err);
+        else resolve();
+      },
+    );
   });
 
   const pcmBuffer = await fs.readFile(pcmPath);
@@ -133,7 +193,6 @@ export async function extractPeaks(audioPath: string, tmpDir: string): Promise<n
     peaks.push(sum / (end - i));
   }
 
-  // 0-1 に正規化
   const max = Math.max(...peaks, 1);
   return peaks.map((p) => Math.round((p / max) * 1000) / 1000);
 }

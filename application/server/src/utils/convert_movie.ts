@@ -13,7 +13,7 @@ if (ffmpegPath) {
 /**
  * 動画ファイルをMP4に変換する
  * - 先頭5秒のみ切り出し
- * - 正方形にクロップ
+ * - 正方形にクロップ → 320x320 にスケールダウン
  * - 10fps、音声なし
  */
 const TIMEOUT_MS = 30_000;
@@ -34,12 +34,16 @@ export async function convertMovie(input: Buffer): Promise<Buffer> {
           "-r",
           "10",
           "-vf",
-          "crop='min(iw,ih)':'min(iw,ih)'",
+          "crop='min(iw,ih)':'min(iw,ih)',scale=320:320",
           "-an",
           "-pix_fmt",
           "yuv420p",
           "-movflags",
           "+faststart",
+          "-preset",
+          "ultrafast",
+          "-crf",
+          "30",
         ])
         .output(outputPath)
         .on("end", () => {
