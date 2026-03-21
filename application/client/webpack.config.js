@@ -1,10 +1,12 @@
 /// <reference types="webpack-dev-server" />
 const path = require("path");
 
+const CompressionPlugin = require("compression-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const webpack = require("webpack");
+const zlib = require("zlib");
 
 const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
@@ -87,6 +89,24 @@ const config = {
     new HtmlWebpackPlugin({
       inject: true,
       template: path.resolve(SRC_PATH, "./index.html"),
+    }),
+    new CompressionPlugin({
+      filename: "[path][base].br",
+      algorithm: "brotliCompress",
+      test: /\.(js|css|html)$/,
+      compressionOptions: {
+        params: {
+          [zlib.constants.BROTLI_PARAM_QUALITY]: 11,
+        },
+      },
+      threshold: 256,
+    }),
+    new CompressionPlugin({
+      filename: "[path][base].gz",
+      algorithm: "gzip",
+      test: /\.(js|css|html)$/,
+      compressionOptions: { level: 9 },
+      threshold: 256,
     }),
   ],
   resolve: {
