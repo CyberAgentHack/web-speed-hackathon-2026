@@ -68,7 +68,15 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   );
 
   return (
-    <Modal id={id} ref={ref} closedby="any">
+    <Modal
+      id={id}
+      ref={ref}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          ref.current?.close();
+        }
+      }}
+    >
       <AuthModalPage
         key={resetKey}
         onRequestCloseModal={handleRequestCloseModal}
