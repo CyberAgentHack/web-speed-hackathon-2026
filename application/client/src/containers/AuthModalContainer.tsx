@@ -59,13 +59,14 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   const handleSubmit = useCallback(
     async (values: AuthFormData) => {
       try {
+        let user: Models.User;
         if (values.type === "signup") {
-          const user = await sendJSON<Models.User>("/api/v1/signup", values);
-          onUpdateActiveUser(user);
+          user = await sendJSON<Models.User>("/api/v1/signup", values);
         } else {
-          const user = await sendJSON<Models.User>("/api/v1/signin", values);
-          onUpdateActiveUser(user);
+          user = await sendJSON<Models.User>("/api/v1/signin", values);
         }
+
+        onUpdateActiveUser(user);
         handleRequestCloseModal();
       } catch (err: unknown) {
         const error = getErrorCode(err as JQuery.jqXHR<unknown>, values.type);

@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useId, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { Helmet, HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
@@ -82,8 +83,10 @@ export const AppContainer = () => {
 
   const handleUpdateActiveUser = useCallback((user: Models.User) => {
     ignoreInitialAuthRequestRef.current = true;
-    setActiveUser(user);
-    setIsLoadingActiveUser(false);
+    flushSync(() => {
+      setActiveUser(user);
+      setIsLoadingActiveUser(false);
+    });
   }, []);
 
   useEffect(() => {
@@ -113,7 +116,9 @@ export const AppContainer = () => {
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
     ignoreInitialAuthRequestRef.current = true;
-    setActiveUser(null);
+    flushSync(() => {
+      setActiveUser(null);
+    });
     navigate("/");
   }, [navigate]);
 
