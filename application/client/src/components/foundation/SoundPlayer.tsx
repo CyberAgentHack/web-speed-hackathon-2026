@@ -14,10 +14,13 @@ interface Props {
 export const SoundPlayer = ({ sound }: Props) => {
   const { data: waveformData } = useFetch(`/api/v1/sounds/${sound.id}/waveform`, fetchJSON<{ peaks: number[] }>);
 
-  const [currentTimeRatio, setCurrentTimeRatio] = useState(0);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>((ev) => {
     const el = ev.currentTarget;
-    setCurrentTimeRatio(el.currentTime / el.duration);
+    const ratio = el.currentTime / el.duration;
+    if (overlayRef.current) {
+      overlayRef.current.style.left = `${ratio * 100}%`;
+    }
   }, []);
 
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -59,8 +62,9 @@ export const SoundPlayer = ({ sound }: Props) => {
                 <SoundWaveSVG peaks={waveformData?.peaks ?? []} />
               </div>
               <div
+                ref={overlayRef}
                 className="bg-cax-surface-subtle absolute inset-0 h-full w-full opacity-75"
-                style={{ left: `${currentTimeRatio * 100}%` }}
+                style={{ left: "0%" }}
               ></div>
             </div>
           </AspectRatioBox>

@@ -10,6 +10,10 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
   const latestItem = items[items.length - 1];
 
   const prevReachedRef = useRef(false);
+  const fetchMoreRef = useRef(fetchMore);
+  useEffect(() => {
+    fetchMoreRef.current = fetchMore;
+  }, [fetchMore]);
 
   useEffect(() => {
     const handler = () => {
@@ -19,7 +23,7 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
       if (hasReached && !prevReachedRef.current) {
         // アイテムがないときは追加で読み込まない
         if (latestItem !== undefined) {
-          fetchMore();
+          fetchMoreRef.current();
         }
       }
 
@@ -40,7 +44,7 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
       document.removeEventListener("resize", handler);
       document.removeEventListener("scroll", handler);
     };
-  }, [latestItem, fetchMore]);
+  }, [latestItem]); // fetchMoreをdepsから除外しリスナーの再登録を抑制
 
   return <>{children}</>;
 };
