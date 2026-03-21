@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useId, useMemo, useState } from "react";
 
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/auth/validation";
@@ -51,7 +51,8 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
     }
   };
 
-  const invalid = Object.keys(errors).length > 0;
+  const validationErrors = useMemo(() => validate(values), [values]);
+  const invalid = Object.keys(validationErrors).length > 0;
 
   return (
     <form className="grid gap-y-6" onSubmit={handleSubmit}>
