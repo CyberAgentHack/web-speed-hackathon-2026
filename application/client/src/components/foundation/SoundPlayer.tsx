@@ -1,4 +1,4 @@
-import { ReactEventHandler, useCallback, useRef, useState } from "react";
+import { ReactEventHandler, useCallback, useEffect, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -13,6 +13,11 @@ export const SoundPlayer = ({ sound }: Props) => {
   const soundUrl = getSoundPath(sound.id);
 
   const overlayRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (overlayRef.current) {
+      overlayRef.current.style.left = "0%";
+    }
+  }, []);
   const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>((ev) => {
     const el = ev.currentTarget;
     const ratio = el.currentTime / el.duration;
@@ -62,7 +67,6 @@ export const SoundPlayer = ({ sound }: Props) => {
               <div
                 ref={overlayRef}
                 className="bg-cax-surface-subtle absolute inset-0 h-full w-full opacity-75"
-                style={{ left: "0%" }}
               ></div>
             </div>
           </AspectRatioBox>

@@ -18,20 +18,34 @@ export function useHasContentBelow(
     const barEl = boundaryRef.current;
     if (!endEl || !barEl) return;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        // When the end element is NOT intersecting the viewport, content is below
-        setHasContentBelow(!entry!.isIntersecting);
-      },
-      {
-        root: null,
-        rootMargin: `0px 0px -${barEl.getBoundingClientRect().height}px 0px`,
-        threshold: 0,
-      },
-    );
+    let intersectionObserver: IntersectionObserver | null = null;
 
-    observer.observe(endEl);
-    return () => observer.disconnect();
+    const createObserver = () => {
+      intersectionObserver?.disconnect();
+      intersectionObserver = new IntersectionObserver(
+        ([entry]) => {
+          setHasContentBelow(!entry!.isIntersecting);
+        },
+        {
+          root: null,
+          rootMargin: `0px 0px -${barEl.getBoundingClientRect().height}px 0px`,
+          threshold: 0,
+        },
+      );
+      intersectionObserver.observe(endEl);
+    };
+
+    createObserver();
+
+    const resizeObserver = new ResizeObserver(() => {
+      createObserver();
+    });
+    resizeObserver.observe(barEl);
+
+    return () => {
+      intersectionObserver?.disconnect();
+      resizeObserver.disconnect();
+    };
   }, [contentEndRef, boundaryRef]);
 
   return hasContentBelow;
