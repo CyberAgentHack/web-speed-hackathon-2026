@@ -1,60 +1,48 @@
-import { ReactNode, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
+import type { ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
-  items: any[];
+  items: unknown[];
   fetchMore: () => void;
 }
 
 export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
   const latestItem = items[items.length - 1];
-
-  const prevReachedRef = useRef(false);
-  const animationFrameRef = useRef<number | null>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const runCheck = () => {
-      animationFrameRef.current = null;
-      const hasReached =
-        window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
+    const target = sentinelRef.current;
+    if (target === null) {
+      return;
+    }
 
-      // 画面最下部にスクロールしたタイミングで、登録したハンドラを呼び出す
-      if (hasReached && !prevReachedRef.current) {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) {
+          return;
+        }
+
         // アイテムがないときは追加で読み込まない
         if (latestItem !== undefined) {
           fetchMore();
         }
-      }
+      },
+      {
+        root: null,
+        rootMargin: "200px 0px",
+        threshold: 0,
+      },
+    );
 
-      prevReachedRef.current = hasReached;
-    };
-
-    const handler = () => {
-      if (animationFrameRef.current !== null) {
-        return;
-      }
-      animationFrameRef.current = window.requestAnimationFrame(runCheck);
-    };
-
-    // 最初は実行されないので手動で呼び出す
-    prevReachedRef.current = false;
-    runCheck();
-
-    document.addEventListener("wheel", handler, { passive: true });
-    document.addEventListener("touchmove", handler, { passive: true });
-    document.addEventListener("resize", handler, { passive: true });
-    document.addEventListener("scroll", handler, { passive: true });
-    return () => {
-      if (animationFrameRef.current !== null) {
-        window.cancelAnimationFrame(animationFrameRef.current);
-        animationFrameRef.current = null;
-      }
-      document.removeEventListener("wheel", handler);
-      document.removeEventListener("touchmove", handler);
-      document.removeEventListener("resize", handler);
-      document.removeEventListener("scroll", handler);
-    };
+    observer.observe(target);
+    return () => observer.disconnect();
   }, [latestItem, fetchMore]);
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <div aria-hidden className="h-px w-full" ref={sentinelRef} />
+    </>
+  );
 };
