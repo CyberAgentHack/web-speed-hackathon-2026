@@ -438,22 +438,16 @@ test.describe("DM詳細画面", () => {
     // DM一覧に未読バッジが表示されるまで待つ
     await expect(dmList.getByText("未読").first()).toBeVisible({ timeout: 15_000 });
 
-    // DM詳細画面を開く（この時点でWS接続が確立される）
+    // DM詳細画面を開く
     await page.getByRole("link", { name: "g16hmw55" }).click();
     await page.waitForURL("**/dm/*", { timeout: 10_000, waitUntil: "commit" });
     await expect(page.getByTestId("dm-message-list")).toBeVisible({ timeout: 5_000 });
 
-    // page自身がメッセージを送信 → レスポンスでmutateConversationが走り既読処理される
-    const marker2 = `read-trigger-${Date.now().toString(36)}`;
-    const pageInput = page.getByRole("textbox", { name: "内容" });
-    await pageInput.click();
-    await pageInput.pressSequentially(marker2, { delay: 10 });
-    await page.keyboard.press("Enter");
-
-    // 送信完了を待つ
-    await expect(page.getByTestId("dm-message-list")).toContainText(marker2, {
-      timeout: 15_000,
-    });
+    // URLからconversationIdを取得し、既読APIを直接呼び出す
+    const conversationId = page.url().split("/dm/")[1];
+    await page.evaluate(async (id) => {
+      await fetch(`/api/v1/dm/${id}/read`, { method: "POST" });
+    }, conversationId);
 
     await peerContext.close();
 

@@ -8,7 +8,8 @@ export async function login(
 ): Promise<void> {
   await page.goto("/not-found", { waitUntil: "domcontentloaded" });
   const signinButton = page.getByRole("button", { name: "サインイン" });
-  await expect(signinButton).toBeVisible({ timeout: 10_000 });
+  // fieldset disabled でハイドレーション完了まで無効化されているので toBeEnabled で待つ
+  await expect(signinButton).toBeEnabled({ timeout: 30_000 });
   await signinButton.click();
   await page.getByRole("heading", { name: "サインイン" }).waitFor({ timeout: 10_000 });
   await page.getByRole("textbox", { name: "ユーザー名" }).pressSequentially(username);
@@ -16,15 +17,15 @@ export async function login(
   const submitButton = page.getByRole("button", { name: "サインイン" }).last();
   await expect(submitButton).toBeEnabled({ timeout: 10_000 });
   await submitButton.click();
-  await page.getByRole("link", { name: "Crok" }).waitFor({ timeout: 10_000 });
+  await page.getByRole("link", { name: "Crok" }).waitFor({ timeout: 30_000 });
 }
 
 /** ページの読み込みを安定させるための関数 */
 export async function waitForPageToLoad(page: Page): Promise<void> {
-  // ネットワークがidleになるまで待つ
-  await page.waitForLoadState("networkidle", { timeout: 30_000 });
-  // ページの表示を安定させるため、10秒待つ
-  await page.waitForTimeout(10_000);
+  // フォント読み込み完了を待つ
+  await page.evaluate(() => document.fonts.ready);
+  // メディア読み込み完了を待つ
+  await waitForVisibleMedia(page);
 }
 
 /** ビューポート内の全メディア（img/movie/sound）が読み込み完了するまで待つ */
