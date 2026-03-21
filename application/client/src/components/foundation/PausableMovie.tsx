@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -13,35 +13,6 @@ interface Props {
  */
 export const PausableMovie = ({ src }: Props) => {
   const videoElemRef = useRef<HTMLVideoElement>(null);
-
-  // useEffect(() => {
-  //   if (videoElemRef.current === null) {
-  //     return;
-  //   }
-
-  //   const video = videoElemRef.current;
-
-  //   const observer = new IntersectionObserver((targetsList) => {
-  //     if(targetsList == null || targetsList.length !== 1) {
-  //       console.info(targetsList);
-  //       throw new Error("Expected to only receive one dir div[ref=lastRef] but it wasn't");
-  //     }
-
-  //     // 視覚効果 off のとき GIF を自動再生しない
-  //     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-  //       setIsPlaying(false);
-  //     } else {
-  //       setIsPlaying(true);
-  //       video.play();
-  //     }
-  //   });
-
-  //   observer.observe(videoElemRef.current);
-
-  //   return () => {
-  //     return 
-  //   };
-  // }, []);
 
   const [isPlaying, setIsPlaying] = useState(true);
   const handleClick = useCallback(() => {
