@@ -28,10 +28,10 @@ export const SearchPage = ({ query, results }: Props) => {
     setTouched(false);
   }, [query]);
 
-  const errors = validate({ searchText });
+  const errors = useMemo(() => validate({ searchText }), [searchText]);
   const searchError = errors.searchText;
 
-  const parsed = parseSearchQuery(query);
+  const parsed = useMemo(() => parseSearchQuery(query), [query]);
 
   useEffect(() => {
     if (!parsed.keywords) {
