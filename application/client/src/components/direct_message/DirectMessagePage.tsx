@@ -73,12 +73,8 @@ export const DirectMessagePage = ({
   );
 
   useEffect(() => {
-    const observer = new ResizeObserver(() => {
-      window.scrollTo(0, document.body.scrollHeight);
-    });
-    observer.observe(document.body);
-    return () => observer.disconnect();
-  }, []);
+    window.scrollTo(0, document.body.scrollHeight);
+  }, [conversation.messages.length]);
 
   if (conversationError != null) {
     return (
