@@ -19,6 +19,8 @@ tags:
     description: ダイレクトメッセージ
   - name: Search
     description: 検索
+  - name: Translate
+    description: 翻訳
   - name: Crok
     description: AI チャット
   - name: Initialize
@@ -66,6 +68,10 @@ paths:
                     enum:
                       - USERNAME_TAKEN
                       - INVALID_USERNAME
+                      - USERNAME_REQUIRED
+                      - NAME_REQUIRED
+                      - PASSWORD_REQUIRED
+                      - PASSWORD_NEEDS_SYMBOL
   /signin:
     post:
       tags:
@@ -106,6 +112,49 @@ paths:
             application/json:
               schema:
                 type: object
+  /translate:
+    post:
+      tags:
+        - Translate
+      summary: テキスト翻訳
+      operationId: translateText
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+                - sourceLanguage
+                - targetLanguage
+              properties:
+                text:
+                  type: string
+                sourceLanguage:
+                  type: string
+                  example: ja
+                targetLanguage:
+                  type: string
+                  example: en
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - result
+                properties:
+                  result:
+                    type: string
+        "400":
+          description: Bad Request
+        "502":
+          description: Bad Gateway
+        "503":
+          description: Service Unavailable
   /me:
     get:
       tags:
