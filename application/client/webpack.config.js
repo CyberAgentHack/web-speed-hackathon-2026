@@ -30,8 +30,8 @@ const config = {
   devtool: false,
   entry: {
     main: [
-      "core-js",
-      "regenerator-runtime/runtime",
+      // core-js と regenerator-runtime を削除
+      // Babel の useBuiltIns: "usage" が必要なものだけ自動追加
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
@@ -48,9 +48,22 @@ const config = {
           options: {
             // 外部の .babelrc 等を無視して、ここで本番設定を強制します
             presets: [
-              ["@babel/preset-env", { modules: false }],
-              ["@babel/preset-react", { 
-                runtime: "automatic", 
+              ["@babel/preset-env", {
+                modules: false,
+                useBuiltIns: "usage", // 使用しているポリフィルだけ含める
+                corejs: 3, // core-js のバージョン指定
+                targets: {
+                  // モダンブラウザをターゲットに（不要なポリフィル削減）
+                  browsers: [
+                    "last 2 Chrome versions",
+                    "last 2 Firefox versions",
+                    "last 2 Safari versions",
+                    "last 2 Edge versions"
+                  ]
+                }
+              }],
+              ["@babel/preset-react", {
+                runtime: "automatic",
                 development: false // ★ これが jsxDEV を消す決定打です
               }],
               "@babel/preset-typescript"
