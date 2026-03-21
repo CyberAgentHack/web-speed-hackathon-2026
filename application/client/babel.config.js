@@ -4,7 +4,7 @@ module.exports = {
     [
       "@babel/preset-env",
       {
-        targets: "> 0.5%, last 2 versions, not dead",
+        targets: "chrome >= 90, edge >= 90, firefox >= 88, safari >= 15",
         corejs: "3",
         modules: false,
         useBuiltIns: "usage",
