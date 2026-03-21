@@ -8,7 +8,7 @@ module.exports = {
         corejs: "3",
         // Keep ESM syntax for webpack to preserve import() code splitting.
         modules: false,
-        useBuiltIns: false,
+        useBuiltIns: "usage",
       },
     ],
     [

@@ -1,6 +1,3 @@
-import { stripIndents } from "common-tags";
-import * as JSONRepairJS from "json-repair-js";
-import langs from "langs";
 import invariant from "tiny-invariant";
 
 interface Translator {
@@ -14,6 +11,18 @@ interface Params {
 }
 
 export async function createTranslator(params: Params): Promise<Translator> {
+  const [
+    { stripIndents },
+    JSONRepairJS,
+    { default: langs },
+    { CreateMLCEngine },
+  ] = await Promise.all([
+    import("common-tags"),
+    import("json-repair-js"),
+    import("langs"),
+    import(/* webpackChunkName: "web-llm" */ "@mlc-ai/web-llm"),
+  ]);
+
   const sourceLang = langs.where("1", params.sourceLanguage);
   invariant(
     sourceLang,
@@ -26,9 +35,6 @@ export async function createTranslator(params: Params): Promise<Translator> {
     `Unsupported target language code: ${params.targetLanguage}`,
   );
 
-  const { CreateMLCEngine } = await import(
-    /* webpackChunkName: "web-llm" */ "@mlc-ai/web-llm"
-  );
   const engine = await CreateMLCEngine("gemma-2-2b-jpn-it-q4f16_1-MLC");
 
   return {

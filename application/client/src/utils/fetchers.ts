@@ -1,4 +1,5 @@
 import $ from "jquery";
+import "jquery-binarytransport";
 import { gzip } from "pako";
 
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {
