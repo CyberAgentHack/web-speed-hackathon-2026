@@ -17,10 +17,12 @@
       "WebSearch",
       "WebFetch(domain:github.com)",
       "Bash(BASE_URL=http://wsh.localhost:1355 pnpm run test)",
-      "Bash(find /Users/kenya.masuko/dev/web-speed-hackathon-2026/application -path */node_modules -prune -o -name *kuromoji* -o -name *dicts*)"
+      "Bash(find /Users/kenya.masuko/dev/web-speed-hackathon-2026/application -path */node_modules -prune -o -name *kuromoji* -o -name *dicts*)",
+      "Bash(ls -lh /Users/kenya.masuko/dev/web-speed-hackathon-2026/application/public/images/*.jpg)"
     ]
   },
   "enabledPlugins": {
     "everything-claude-code@everything-claude-code": true
-  }
+  },
+  "plansDirectory": ".claude/plans"
 }
