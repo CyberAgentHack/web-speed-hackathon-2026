@@ -3,6 +3,10 @@ packages:
   - server/
   - e2e/
 allowBuilds:
+  '@fortawesome/fontawesome-common-types': true
+  '@fortawesome/fontawesome-svg-core': true
+  '@fortawesome/free-regular-svg-icons': true
+  '@fortawesome/free-solid-svg-icons': true
   bcrypt: true
   core-js: true
   esbuild: true
