@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Field, InjectedFormProps, reduxForm, WrappedFieldProps } from "redux-form";
 
@@ -19,26 +19,40 @@ interface Props {
 }
 
 interface SearchInputProps extends WrappedFieldProps {
+  errorText?: string;
+  onTextChange?: (value: string) => void;
   showError?: boolean;
 }
 
-const SearchInput = ({ input, meta, showError = false }: SearchInputProps) => (
-  <div className="flex flex-1 flex-col">
-    <input
-      {...input}
-      className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
-        (meta.touched || showError) && meta.error
-          ? "border-cax-danger focus:border-cax-danger"
-          : "border-cax-border focus:border-cax-brand-strong"
-      }`}
-      placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
-      type="text"
-    />
-    {(meta.touched || showError) && meta.error && (
-      <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>
-    )}
-  </div>
-);
+const SearchInput = ({
+  input,
+  meta,
+  errorText,
+  onTextChange,
+  showError = false,
+}: SearchInputProps) => {
+  const displayError = showError ? errorText ?? meta.error : meta.touched ? meta.error : undefined;
+
+  return (
+    <div className="flex flex-1 flex-col">
+      <input
+        {...input}
+        onChange={(event) => {
+          input.onChange(event);
+          onTextChange?.(event.currentTarget.value);
+        }}
+        className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
+          displayError
+            ? "border-cax-danger focus:border-cax-danger"
+            : "border-cax-border focus:border-cax-brand-strong"
+        }`}
+        placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
+        type="text"
+      />
+      {displayError && <span className="text-cax-danger mt-1 text-xs">{displayError}</span>}
+    </div>
+  );
+};
 
 const SearchPageComponent = ({
   isNegativeQuery,
@@ -47,7 +61,14 @@ const SearchPageComponent = ({
   handleSubmit,
 }: Props & InjectedFormProps<SearchFormData, Props>) => {
   const navigate = useNavigate();
+  const [formError, setFormError] = useState<string | undefined>();
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [currentSearchText, setCurrentSearchText] = useState(query);
+
+  useEffect(() => {
+    setCurrentSearchText(query);
+    setFormError(undefined);
+  }, [query]);
 
   const parsed = parseSearchQuery(query);
 
@@ -70,12 +91,32 @@ const SearchPageComponent = ({
     navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
   };
 
+  const submitSearch = useCallback(
+    (event?: FormEvent<HTMLFormElement>) => {
+      setSubmitAttempted(true);
+      const validationErrors = validate({ searchText: currentSearchText });
+      if (typeof validationErrors.searchText === "string") {
+        setFormError(validationErrors.searchText);
+        event?.preventDefault();
+        return;
+      }
+
+      setFormError(undefined);
+      if (event != null) {
+        void handleSubmit(onSubmit)(event);
+        return;
+      }
+
+      void handleSubmit(onSubmit)();
+    },
+    [currentSearchText, handleSubmit],
+  );
+
   const handleFormSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
-      setSubmitAttempted(true);
-      void handleSubmit(onSubmit)(event);
+      submitSearch(event);
     },
-    [handleSubmit],
+    [submitSearch],
   );
 
   return (
@@ -83,8 +124,25 @@ const SearchPageComponent = ({
       <div className="bg-cax-surface p-4 shadow">
         <form onSubmit={handleFormSubmit}>
           <div className="flex gap-2">
-            <Field name="searchText" component={SearchInput} showError={submitAttempted} />
-            <Button variant="primary" type="submit">
+            <Field
+              name="searchText"
+              component={SearchInput}
+              errorText={formError}
+              onTextChange={(nextValue: string) => {
+                setCurrentSearchText(nextValue);
+                if (formError != null) {
+                  setFormError(undefined);
+                }
+              }}
+              showError={submitAttempted}
+            />
+            <Button
+              variant="primary"
+              type="button"
+              onClick={() => {
+                submitSearch();
+              }}
+            >
               検索
             </Button>
           </div>
