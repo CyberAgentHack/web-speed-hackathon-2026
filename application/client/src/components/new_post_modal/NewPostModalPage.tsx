@@ -54,11 +54,13 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     if (isValid) {
       setIsConverting(true);
 
-      import("@web-speed-hackathon-2026/client/src/utils/convert_image")
-        .then(({ convertImage }) =>
+      Promise.all([
+        import("@imagemagick/magick-wasm"),
+        import("@web-speed-hackathon-2026/client/src/utils/convert_image"),
+      ]).then(([{ MagickFormat }, { convertImage }]) =>
           Promise.all(
             files.map((file) =>
-              convertImage(file).then(
+              convertImage(file, { extension: MagickFormat.WebP }).then(
                 ({ blob, alt }) => ({ file: new File([blob], "converted.webp", { type: "image/webp" }), alt }),
               ),
             ),
