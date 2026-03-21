@@ -15,4 +15,11 @@ if (appNode != null) {
       </BrowserRouter>
     </Provider>,
   );
+
+  if (document.body.dataset["hasPrerender"] === "1") {
+    window.requestAnimationFrame(() => {
+      document.body.dataset["appMounted"] = "1";
+      document.getElementById("prerender-shell")?.remove();
+    });
+  }
 }

@@ -15,6 +15,14 @@
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
+
+  body[data-has-prerender="1"][data-app-mounted="0"] #app {
+    visibility: hidden;
+  }
+
+  body[data-app-mounted="1"] #prerender-shell {
+    display: none;
+  }
 }
 
 @theme {

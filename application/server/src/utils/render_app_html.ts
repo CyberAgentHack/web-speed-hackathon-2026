@@ -449,9 +449,18 @@ export async function renderAppHtml(req: Request) {
     Object.keys(bootstrapData).length > 0
       ? `<script>window.__BOOTSTRAP_DATA__=${serializeForInlineScript(bootstrapData)};</script>`
       : "";
-  const appShell = shellMarkup !== "" ? `<div id="app">${shellMarkup}</div>` : '<div id="app"></div>';
+  const appShell =
+    shellMarkup !== ""
+      ? `<div id="prerender-shell">${shellMarkup}</div><div id="app"></div>`
+      : '<div id="app"></div>';
 
   return template
+    .replace(
+      '<body class="bg-cax-canvas text-cax-text">',
+      `<body class="bg-cax-canvas text-cax-text"${
+        shellMarkup !== "" ? ' data-has-prerender="1" data-app-mounted="0"' : ""
+      }>`,
+    )
     .replace('<div id="app"></div>', appShell)
     .replace("</head>", `${preloadTags}${bootstrapScript}</head>`);
 }

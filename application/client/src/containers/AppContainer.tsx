@@ -77,7 +77,9 @@ export const AppContainer = () => {
     };
 
     if (shouldPrioritizeAuth) {
-      setIsLoadingActiveUser(true);
+      if (activeUser == null) {
+        setIsLoadingActiveUser(true);
+      }
       loadActiveUser();
       return () => {
         cancelled = true;
@@ -100,7 +102,7 @@ export const AppContainer = () => {
         window.cancelIdleCallback(idleCallbackId);
       }
     };
-  }, [pathname]);
+  }, [activeUser, pathname]);
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
     applyActiveUser(null);
