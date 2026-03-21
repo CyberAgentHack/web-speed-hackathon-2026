@@ -31,7 +31,7 @@ staticRouter.use(
   }),
 );
 
-staticRouter.get("*", async (req, res, next) => {
+staticRouter.get("/{*splat}", async (req, res, next) => {
   if (/\.[^/]+$/.test(req.path)) {
     return next();
   }
