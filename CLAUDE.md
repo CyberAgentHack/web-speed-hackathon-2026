@@ -11,8 +11,8 @@ Web Speed Hackathon 2026 — 架空のSNS「CaX」のパフォーマンスを改
 ## コマンド
 
 ```bash
-# セットアップ（mise-en-place が必要）
-mise trust && mise install
+# セットアップ（asdf でバージョン管理）
+asdf install
 cd application && pnpm install --frozen-lockfile
 
 # ビルド・起動

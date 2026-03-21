@@ -220,3 +220,10 @@ $RECYCLE.BIN/
 application/upload/**
 !application/upload/**/
 !application/upload/**/.gitkeep
+
+# 競技戦略・作業ログ（非公開）
+.claude/
+performance-issues/
+worklog/
+docs/architecture.md
+application/server/database.sqlite
