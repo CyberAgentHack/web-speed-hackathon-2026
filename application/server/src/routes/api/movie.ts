@@ -38,6 +38,8 @@ movieRouter.post("/movies", async (req, res) => {
         "-y",
         "-i",
         inputPath,
+        "-t",
+        "5",
         "-r",
         "10",
         "-vf",
