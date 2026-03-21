@@ -23,7 +23,7 @@ const isCodeElement = (children: ReactNode): children is ReactElement<ComponentP
 async function loadHighlighter() {
   const [{ default: SyntaxHighlighter }, styleMod, javascript, typescript, python, json, bash, css, xml, sql, java, cpp, go, rust, ruby, php, csharp, swift, kotlin, markdown] = await Promise.all([
     import("react-syntax-highlighter/dist/esm/light"),
-    import("react-syntax-highlighter/dist/esm/styles/hljs"),
+    import("react-syntax-highlighter/dist/esm/styles/hljs/atom-one-light"),
     import("react-syntax-highlighter/dist/esm/languages/hljs/javascript"),
     import("react-syntax-highlighter/dist/esm/languages/hljs/typescript"),
     import("react-syntax-highlighter/dist/esm/languages/hljs/python"),
@@ -64,7 +64,7 @@ async function loadHighlighter() {
   SyntaxHighlighter.registerLanguage("kotlin", kotlin.default);
   SyntaxHighlighter.registerLanguage("markdown", markdown.default);
 
-  return { Component: SyntaxHighlighter as typeof SyntaxHighlighterType, style: styleMod.atomOneLight };
+  return { Component: SyntaxHighlighter as typeof SyntaxHighlighterType, style: styleMod.default };
 }
 
 export const CodeBlock = ({ children }: ComponentProps<"pre">) => {
