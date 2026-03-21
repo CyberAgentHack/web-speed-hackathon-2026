@@ -31,8 +31,6 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(null);
   const [conversationError, setConversationError] = useState<Error | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -64,9 +62,6 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   const handleSubmit = useCallback(
     async (params: DirectMessageFormData) => {
-      setIsSubmitting(true);
-
-      // 옵티미스틱: 즉시 로컬 state에 메시지 추가
       const optimisticId = `optimistic-${Date.now()}`;
       const optimisticMessage: Models.DirectMessage = {
         id: optimisticId,
@@ -85,23 +80,18 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
         };
       });
 
-      try {
-        await sendJSON(`/api/v1/dm/${conversationId}/messages`, {
-          body: params.body,
+      // 서버 전송은 백그라운드 (await 하지 않음)
+      sendJSON(`/api/v1/dm/${conversationId}/messages`, { body: params.body })
+        .then(() => loadConversation())
+        .catch(() => {
+          setConversation((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              messages: prev.messages.filter((m) => m.id !== optimisticId),
+            };
+          });
         });
-        loadConversation();
-      } catch {
-        // 실패 시 옵티미스틱 메시지 제거
-        setConversation((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            messages: prev.messages.filter((m) => m.id !== optimisticId),
-          };
-        });
-      } finally {
-        setIsSubmitting(false);
-      }
     },
     [conversationId, activeUser, loadConversation],
   );
@@ -162,7 +152,6 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
       activeUser={activeUser}
       onTyping={handleTyping}
       isPeerTyping={isPeerTyping}
-      isSubmitting={isSubmitting}
       onSubmit={handleSubmit}
     />
   );
