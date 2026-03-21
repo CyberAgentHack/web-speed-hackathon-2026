@@ -6,25 +6,35 @@ import { useInViewport } from "@web-speed-hackathon-2026/client/src/hooks/use_in
 
 interface Props {
   src: string;
+  /** タイムラインでは article クリック遷移との干渉を避けるため、クリックを一時的に無効化する */
+  delayInteraction?: boolean;
 }
 
 /**
  * クリックすると再生・一時停止を切り替えます。
  * ビューポート付近に入るまでフェッチを遅延します。
  */
-export const PausableMovie = ({ src }: Props) => {
+export const PausableMovie = ({ src, delayInteraction = false }: Props) => {
   const [containerRef, isInViewport] = useInViewport("200px");
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // マウント後しばらくはボタンのクリックを透過させる
-  // （タイムラインで article クリック→遷移を優先するため）
-  const [isInteractive, setIsInteractive] = useState(false);
+  // タイムラインではマウント後しばらくボタンのクリックを透過させる
+  const [isInteractive, setIsInteractive] = useState(!delayInteraction);
   useEffect(() => {
+    if (!delayInteraction) return;
     const id = setTimeout(() => setIsInteractive(true), 500);
     return () => clearTimeout(id);
-  }, []);
+  }, [delayInteraction]);
 
+  // prefers-reduced-motion: 動きを減らす設定の場合は自動再生を止める
   const [isPlaying, setIsPlaying] = useState(true);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      videoRef.current?.pause();
+      setIsPlaying(false);
+    }
+  }, [isInViewport]);
+
   const handleClick = useCallback(() => {
     setIsPlaying((isPlaying) => {
       if (isPlaying) {
