@@ -7,12 +7,13 @@ import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components
 interface Props {
   src: string;
   poster?: string;
+  isLCP?: boolean;
 }
 
 /**
  * クリックすると再生・一時停止を切り替えます。
  */
-export const PausableMovie = ({ src, poster }: Props) => {
+export const PausableMovie = ({ src, poster, isLCP }: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -67,6 +68,15 @@ export const PausableMovie = ({ src, poster }: Props) => {
           onClick={handleClick}
           type="button"
         >
+          {poster && !isPlaying && (
+            <img
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover"
+              fetchPriority={isLCP ? "high" : undefined}
+              loading={isLCP ? "eager" : "lazy"}
+              src={poster}
+            />
+          )}
           <video
             ref={videoRef}
             loop
