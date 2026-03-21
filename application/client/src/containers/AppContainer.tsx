@@ -8,7 +8,7 @@ import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/contain
 import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
-import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { HttpError, fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 const CrokContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/CrokContainer").then((m) => ({
@@ -61,6 +61,13 @@ export const AppContainer = () => {
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {
         setActiveUser(user);
+      })
+      .catch((error: unknown) => {
+        if (error instanceof HttpError && error.status === 401) {
+          setActiveUser(null);
+          return;
+        }
+        throw error;
       })
       .finally(() => {
         setIsLoadingActiveUser(false);
