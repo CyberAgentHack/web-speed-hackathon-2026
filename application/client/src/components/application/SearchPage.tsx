@@ -95,6 +95,7 @@ export const SearchPage = ({ query, results }: Props) => {
           <div className="flex gap-2">
             <div className="flex flex-1 flex-col">
               <input
+                aria-label="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
                 name="searchText"
                 value={values.searchText}
                 onChange={(e) => setValues({ searchText: e.target.value })}
