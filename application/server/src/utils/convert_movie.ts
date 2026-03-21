@@ -8,7 +8,7 @@ import ffmpeg from "fluent-ffmpeg";
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 /**
- * 動画を WebM (VP9) に変換する（先頭5秒、正方形クロップ、10fps、無音）
+ * 動画を WebM (VP8) に変換する（先頭5秒、正方形クロップ、10fps、無音、960px以下にリサイズ）
  */
 export async function convertMovieToWebm(input: Buffer): Promise<Buffer> {
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "movie-"));
@@ -21,17 +21,21 @@ export async function convertMovieToWebm(input: Buffer): Promise<Buffer> {
     ffmpeg(inputPath)
       .duration(5)
       .fps(10)
-      .videoFilter("crop='min(iw,ih)':'min(iw,ih)'")
+      .videoFilter("crop='min(iw,ih)':'min(iw,ih)',scale='min(960,iw)':'min(960,ih)'")
       .noAudio()
       .outputOptions([
         "-c:v",
-        "libvpx-vp9",
+        "libvpx",
         "-pix_fmt",
-        "yuva420p",
+        "yuv420p",
         "-crf",
         "40",
         "-b:v",
-        "0",
+        "1M",
+        "-cpu-used",
+        "8",
+        "-deadline",
+        "realtime",
       ])
       .output(outputPath)
       .on("end", () => resolve())
