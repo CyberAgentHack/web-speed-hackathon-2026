@@ -35,7 +35,7 @@
 | `server/src/routes/api/crok.ts` | `await sleep(3000)` | 3 秒待機中に専用アニメーションあり — **削除可能**（運営確認済み 2026-03-21）。ただし E2E テストが落ちるリスクあり。react-syntax-highlighter の lazy load タイミングは後述の「ストリーミング中 Markdown 不要」対応で解決済みになる |
 | `server/src/routes/api/crok.ts` | `await sleep(10)` × 文字数 | `crok-response.md` が **7,490 文字** → 合計 **74.9 秒** のストリーミング。**削除・短縮ともに許可（運営確認済み 2026-03-21）**。削除すれば Crok AIチャット（50 点）が採点対象になる |
 | `client/src/components/direct_message/DirectMessagePage.tsx` | `setInterval(() => {...}, 1)` | 毎ミリ秒スクロール監視・TBT 大幅増加 |
-| `client/src/components/foundation/AspectRatioBox.tsx` | `setTimeout(calcStyle, 500)` | 500ms 描画遅延・CLS |
+| `client/src/components/foundation/AspectRatioBox.tsx` | `setTimeout(calcStyle, 500)` → `ResizeObserver` に置換済みだが、JS 計算のため初期 `height: 0` でコンテンツ非表示 → ResizeObserver 発火後に高さ確定 → **CLS 発生・LCP=0** の原因 | CSS `aspect-ratio` プロパティに完全置換で解消済み |
 
 ---
 

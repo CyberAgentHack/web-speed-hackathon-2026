@@ -146,8 +146,12 @@
     - `public/sprites/font-awesome-subsetted/` に配置
     - `FontAwesomeIcon.tsx`: スプライトパスを新ディレクトリに変更
 - [x] `loading="lazy"` を LCP 以外の画像に追加 → Phase 4 ⑧ で対応済み
-- [ ] **Phase 4 ⑦** ホーム LCP=0 の原因調査・修正
-  - ローカルで動作確認。`<video>` LCP の `preload` / `autoplay` 属性を確認
+- [x] **Phase 4 ⑦** ホーム CLS・LCP 改善 — `AspectRatioBox` を CSS `aspect-ratio` に置き換え
+  - 根本原因: JS (`ResizeObserver` + `useState`) で高さを計算するため、初期状態は `height: 0` でコンテンツ非表示 → ResizeObserver 発火後に高さ確定 → CLS 発生
+  - 副作用: video/image が遅れて DOM に追加されるため LCP 候補として認識されず LCP=0 になっていた
+  - 対策: CSS `aspect-ratio: {w} / {h}` に置き換え (useState/useEffect/useRef を完全除去)
+  - 影響範囲: `PausableMovie` (1:1)・`ImageArea` (16:9)・`SoundPlayer` 内 `SoundWaveSVG` (10:1)
+  - 期待効果: ホーム CLS 9.75 → ほぼ 0、LCP=0 → 改善
 - [ ] **Phase 5** サーバー最適化
   - brotli 圧縮を有効化（express `compression` ミドルウェア）
   - DB インデックスを追加（テーブルのリレーションを確認）
