@@ -1,7 +1,12 @@
 import exifReader from "exif-reader";
 import sharp from "sharp";
 
-export async function convertImage(input: Buffer): Promise<Buffer> {
+interface ConvertImageResult {
+  buffer: Buffer;
+  alt: string;
+}
+
+export async function convertImage(input: Buffer): Promise<ConvertImageResult> {
   let imageDescription: string | undefined;
 
   try {
@@ -25,5 +30,5 @@ export async function convertImage(input: Buffer): Promise<Buffer> {
     });
   }
 
-  return await pipeline.toBuffer();
+  return { buffer: await pipeline.toBuffer(), alt: imageDescription ?? "" };
 }
