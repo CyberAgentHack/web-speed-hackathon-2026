@@ -37,13 +37,15 @@ async function calculate(data: ArrayBuffer): Promise<ParsedData> {
   const buffer = await audioCtx.decodeAudioData(data.slice(0));
   const chunkSize = Math.max(1, Math.ceil(buffer.length / 100));
   const peaks: number[] = [];
+  const channel1 = buffer.getChannelData(0);
+  const channel2 = buffer.getChannelData(1);
   let max = 0;
   for (let idx = 0; idx < buffer.length; idx += chunkSize) {
     let sum = 0;
     let count = 0;
     for (let i = 0; i < chunkSize && idx + i < buffer.length; i++) {
-      sum += Math.abs(buffer.getChannelData(0)[idx + i] ?? 0);
-      sum += Math.abs(buffer.getChannelData(1)[idx + i] ?? 0);
+      sum += Math.abs(channel1[idx + i] ?? 0);
+      sum += Math.abs(channel2[idx + i] ?? 0);
       count += 2;
     }
     const peak = count > 0 ? sum / count : 0;
