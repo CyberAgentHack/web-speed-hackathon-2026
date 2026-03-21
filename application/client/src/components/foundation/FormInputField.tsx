@@ -1,4 +1,4 @@
-import { InputHTMLAttributes, ReactNode, useId } from "react";
+import { InputHTMLAttributes, memo, ReactNode, useId } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { Input } from "@web-speed-hackathon-2026/client/src/components/foundation/Input";
@@ -11,7 +11,7 @@ interface Props extends InputHTMLAttributes<HTMLInputElement> {
   touched?: boolean;
 }
 
-export const FormInputField = ({ label, leftItem, rightItem, error, touched, ...props }: Props) => {
+export const FormInputField = memo(({ label, leftItem, rightItem, error, touched, ...props }: Props) => {
   const inputId = useId();
   const errorMessageId = useId();
   const isInvalid = touched && error;
@@ -39,4 +39,5 @@ export const FormInputField = ({ label, leftItem, rightItem, error, touched, ...
       )}
     </div>
   );
-};
+});
+FormInputField.displayName = "FormInputField";

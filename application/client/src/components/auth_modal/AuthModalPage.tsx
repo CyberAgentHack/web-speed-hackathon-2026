@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useState } from "react";
+import { FormEvent, useCallback, useMemo, useState } from "react";
 
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/auth/validation";
@@ -23,7 +23,7 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const errors = validate(values);
+  const errors = useMemo(() => validate(values), [values]);
   const invalid = Object.keys(errors).length > 0;
 
   const handleChange = useCallback((name: keyof AuthFormData, value: string) => {
@@ -33,6 +33,13 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
   const handleBlur = useCallback((name: string) => {
     setTouched((prev) => ({ ...prev, [name]: true }));
   }, []);
+
+  const handleUsernameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => handleChange("username", e.target.value), [handleChange]);
+  const handleUsernameBlur = useCallback(() => handleBlur("username"), [handleBlur]);
+  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => handleChange("name", e.target.value), [handleChange]);
+  const handleNameBlur = useCallback(() => handleBlur("name"), [handleBlur]);
+  const handlePasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => handleChange("password", e.target.value), [handleChange]);
+  const handlePasswordBlur = useCallback(() => handleBlur("password"), [handleBlur]);
 
   const handleToggleType = useCallback(() => {
     setValues((prev) => ({
@@ -84,8 +91,8 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
           leftItem={<span className="text-cax-text-subtle leading-none">@</span>}
           autoComplete="username"
           value={values.username}
-          onChange={(e) => handleChange("username", e.target.value)}
-          onBlur={() => handleBlur("username")}
+          onChange={handleUsernameChange}
+          onBlur={handleUsernameBlur}
           error={errors["username"]}
           touched={touched["username"]}
         />
@@ -96,8 +103,8 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
             label="名前"
             autoComplete="nickname"
             value={values.name}
-            onChange={(e) => handleChange("name", e.target.value)}
-            onBlur={() => handleBlur("name")}
+            onChange={handleNameChange}
+            onBlur={handleNameBlur}
             error={errors["name"]}
             touched={touched["name"]}
           />
@@ -109,8 +116,8 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
           type="password"
           autoComplete={type === "signup" ? "new-password" : "current-password"}
           value={values.password}
-          onChange={(e) => handleChange("password", e.target.value)}
-          onBlur={() => handleBlur("password")}
+          onChange={handlePasswordChange}
+          onBlur={handlePasswordBlur}
           error={errors["password"]}
           touched={touched["password"]}
         />
