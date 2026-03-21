@@ -1,4 +1,4 @@
-import { ReactEventHandler, useCallback, useRef, useState } from "react";
+import { ReactEventHandler, useCallback, useEffect, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -13,6 +13,7 @@ interface Props {
 
 export const SoundPlayer = ({ sound }: Props) => {
   const [currentTimeRatio, setCurrentTimeRatio] = useState(0);
+  const [hasStartedLoading, setHasStartedLoading] = useState(false);
   const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>((ev) => {
     const el = ev.currentTarget;
     if (Number.isFinite(el.duration) && el.duration > 0) {
@@ -23,6 +24,12 @@ export const SoundPlayer = ({ sound }: Props) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const handleTogglePlaying = useCallback(() => {
+    if (!hasStartedLoading) {
+      setHasStartedLoading(true);
+      setIsPlaying(true);
+      return;
+    }
+
     setIsPlaying((isPlaying) => {
       if (isPlaying) {
         audioRef.current?.pause();
@@ -31,11 +38,31 @@ export const SoundPlayer = ({ sound }: Props) => {
       }
       return !isPlaying;
     });
-  }, []);
+  }, [hasStartedLoading]);
+
+  useEffect(() => {
+    const el = audioRef.current;
+    if (el == null || !hasStartedLoading) {
+      return;
+    }
+    if (isPlaying) {
+      el.play().catch(() => {
+        setIsPlaying(false);
+      });
+      return;
+    }
+    el.pause();
+  }, [hasStartedLoading, isPlaying]);
 
   return (
     <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
-      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} src={getSoundPath(sound.id)} />
+      <audio
+        ref={audioRef}
+        loop={true}
+        onTimeUpdate={handleTimeUpdate}
+        preload="none"
+        src={hasStartedLoading ? getSoundPath(sound.id) : undefined}
+      />
       <div className="p-2">
         <button
           className="bg-cax-accent text-cax-surface-raised flex h-8 w-8 items-center justify-center rounded-full text-sm hover:opacity-75"
