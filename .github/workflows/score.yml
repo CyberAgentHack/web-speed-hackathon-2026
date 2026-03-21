@@ -329,15 +329,23 @@ jobs:
                       const cur = s.grandTotal?.med;
                       if (cur == null) { core.warning('No grand total'); return; }
 
-                      const r = v => Math.round(v * 100) / 100;
-                      const base = s.grandTotal?.base;
+                      const baselineRaw = fs.existsSync('/tmp/baseline/scores.json')
+                        ? JSON.parse(fs.readFileSync('/tmp/baseline/scores.json', 'utf8'))
+                        : null;
+                      const base = baselineRaw?.grandTotal?.med ?? null;
                       let labelName, color;
                       if (base != null && !isNaN(base)) {
-                        const d = r(cur - base);
-                        labelName = `score: ${d >= 0 ? '+' : ''}${d}`;
-                        color = d >= 0 ? '0e8a16' : 'd93f0b';
+                        const d = cur - base;
+                        // Thresholds (out of 1150 total)
+                        if      (d >=  50) { labelName = 'score: major improvement';  color = '0e8a16'; }
+                        else if (d >=  10) { labelName = 'score: improvement';         color = '2cbe4e'; }
+                        else if (d >=   1) { labelName = 'score: minor improvement';   color = 'a8f7b0'; }
+                        else if (d >  -1)  { labelName = 'score: no change';           color = 'e4e669'; }
+                        else if (d >  -10) { labelName = 'score: minor regression';    color = 'f9d0c4'; }
+                        else if (d >  -50) { labelName = 'score: regression';          color = 'e4735a'; }
+                        else               { labelName = 'score: major regression';    color = 'd93f0b'; }
                       } else {
-                        labelName = `score: ${r(cur)}`;
+                        labelName = 'score: no baseline';
                         color = '0075ca';
                       }
 

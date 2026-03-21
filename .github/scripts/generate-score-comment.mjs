@@ -54,27 +54,29 @@ function parseScoreOutput(text) {
   const targets = new Map();
   const failures = new Map(); // page name -> reason string
 
-  // Reconstruct logical lines — CI log lines may wrap mid-row
+  // Reconstruct logical lines — CI log lines may wrap mid-row.
+  // A complete box-drawing row ends with "│"; a wrapped one does not.
+  // Continuation fragments (after trim) are appended to the previous line.
   const rawLines = text.split("\n");
   const lines = [];
   for (const raw of rawLines) {
     const t = raw.trim();
-    if (t.startsWith("│")) {
+    if (t === "") continue;
+    // Border rows are always standalone
+    if (t.startsWith("┌") || t.startsWith("├") || t.startsWith("└")) {
       lines.push(t);
-    } else if (
-      lines.length > 0 &&
-      !t.startsWith("┌") && !t.startsWith("├") && !t.startsWith("└") &&
-      t !== ""
-    ) {
+      continue;
+    }
+    // If the previous line is an incomplete box row (starts │, doesn't end │),
+    // this is a continuation fragment — append it.
+    if (lines.length > 0) {
       const last = lines[lines.length - 1];
-      if (last.startsWith("│")) {
+      if (last.startsWith("│") && !last.endsWith("│")) {
         lines[lines.length - 1] = last + t;
         continue;
       }
-      lines.push(t);
-    } else {
-      lines.push(t);
     }
+    lines.push(t);
   }
 
   function splitBoxRow(line) {
