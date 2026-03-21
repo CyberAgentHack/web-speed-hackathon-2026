@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import {
   createCanonicalMedia,
+  createDerivativeMedia,
   getMediaPath,
   storeMediaSource,
 } from "@web-speed-hackathon-2026/server/src/utils/media_derivation";
