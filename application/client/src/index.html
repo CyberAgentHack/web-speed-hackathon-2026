@@ -4,7 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CaX</title>
-    <script defer src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.1"></script>
+    <!-- Critical inline styles for immediate paint -->
+    <style>
+      /* Immediate paint styles - no external dependencies */
+      body { margin: 0; background-color: #f5f5f4; color: #134e4a; font-family: system-ui, -apple-system, sans-serif; }
+      #app { min-height: 100vh; }
+    </style>
+    <!-- Load Tailwind async to not block initial paint -->
+    <script>
+      // Load Tailwind asynchronously after initial paint
+      (function() {
+        var script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.1';
+        script.async = true;
+        document.head.appendChild(script);
+      })();
+    </script>
     <style type="text/tailwindcss">
       @layer base {
         button:not(:disabled),
@@ -172,6 +187,11 @@
     </style>
   </head>
   <body class="bg-cax-canvas text-cax-text">
-    <div id="app"></div>
+    <div id="app">
+      <!-- Immediate FCP fallback for NO_FCP prevention -->
+      <div style="padding: 1.5rem 1rem; font-family: system-ui, -apple-system, sans-serif; font-size: 14px; color: #374151;">
+        <p style="margin: 0; line-height: 1.5;">読み込み中...</p>
+      </div>
+    </div>
   </body>
 </html>

@@ -25,8 +25,8 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
         <Helmet>
           <title>読込中 - CaX</title>
         </Helmet>
-        <div className="px-4 py-6">
-          <p className="text-cax-text">投稿を読み込み中です...</p>
+        <div style={{ padding: '1.5rem 1rem', fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '14px', color: '#374151' }}>
+          <p style={{ margin: 0, lineHeight: '1.5' }}>投稿を読み込み中です...</p>
         </div>
       </>
     );
