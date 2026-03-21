@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { Op } from "sequelize";
+import { Op, WhereOptions } from "sequelize";
 
 import { Post } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
@@ -24,69 +24,31 @@ searchRouter.get("/search", async (req, res) => {
   const limit = req.query["limit"] != null ? Number(req.query["limit"]) : undefined;
   const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
 
-  // 日付条件を構築
-  const dateConditions: Record<symbol, Date>[] = [];
-  if (sinceDate) {
-    dateConditions.push({ [Op.gte]: sinceDate });
-  }
-  if (untilDate) {
-    dateConditions.push({ [Op.lte]: untilDate });
-  }
-  const dateWhere =
-    dateConditions.length > 0 ? { createdAt: Object.assign({}, ...dateConditions) } : {};
+  const whereConditions: WhereOptions<Post>[] = [];
 
-  // テキスト検索条件
-  const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
-
-  const postsByText = await Post.findAll({
-    limit,
-    offset,
-    where: {
-      ...textWhere,
-      ...dateWhere,
-    },
-  });
-
-  // ユーザー名/名前での検索（キーワードがある場合のみ）
-  let postsByUser: typeof postsByText = [];
   if (searchTerm) {
-    postsByUser = await Post.findAll({
-      include: [
-        {
-          association: "user",
-          attributes: { exclude: ["profileImageId"] },
-          include: [{ association: "profileImage" }],
-          required: true,
-          where: {
-            [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
-          },
-        },
-        {
-          association: "images",
-          through: { attributes: [] },
-        },
-        { association: "movie" },
-        { association: "sound" },
+    whereConditions.push({
+      [Op.or]: [
+        { text: { [Op.like]: searchTerm } },
+        { "$user.username$": { [Op.like]: searchTerm } },
+        { "$user.name$": { [Op.like]: searchTerm } },
       ],
-      limit,
-      offset,
-      where: dateWhere,
     });
   }
-
-  const postIdSet = new Set<string>();
-  const mergedPosts: typeof postsByText = [];
-
-  for (const post of [...postsByText, ...postsByUser]) {
-    if (!postIdSet.has(post.id)) {
-      postIdSet.add(post.id);
-      mergedPosts.push(post);
-    }
+  if (sinceDate) {
+    whereConditions.push({ createdAt: { [Op.gte]: sinceDate } });
+  }
+  if (untilDate) {
+    whereConditions.push({ createdAt: { [Op.lte]: untilDate } });
   }
 
-  mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  const posts = await Post.findAll({
+    subQuery: false,
+    where: { [Op.and]: whereConditions },
+    order: [["createdAt", "DESC"]],
+    limit,
+    offset,
+  });
 
-  const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
-
-  return res.status(200).type("application/json").send(result);
+  return res.status(200).type("application/json").send(posts);
 });
