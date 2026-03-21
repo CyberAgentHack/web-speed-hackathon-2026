@@ -1,14 +1,18 @@
+import { execFile } from "child_process";
 import { promises as fs } from "fs";
+import os from "os";
 import path from "path";
+import { promisify } from "util";
 
+import ffmpegPath from "@ffmpeg-installer/ffmpeg";
 import { Router } from "express";
-import { fileTypeFromBuffer } from "file-type";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
-// 変換した動画の拡張子
+const execFileAsync = promisify(execFile);
+
 const EXTENSION = "mp4";
 
 export const movieRouter = Router();
@@ -21,16 +25,32 @@ movieRouter.post("/movies", async (req, res) => {
     throw new httpErrors.BadRequest();
   }
 
-  const type = await fileTypeFromBuffer(req.body);
-  if (type === undefined || type.ext !== EXTENSION) {
-    throw new httpErrors.BadRequest("Invalid file type");
-  }
-
   const movieId = uuidv4();
 
-  const filePath = path.resolve(UPLOAD_PATH, `./movies/${movieId}.${EXTENSION}`);
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "movie-"));
+  const inputPath = path.join(tmpDir, "input");
+  const outputPath = path.resolve(UPLOAD_PATH, `./movies/${movieId}.${EXTENSION}`);
+
   await fs.mkdir(path.resolve(UPLOAD_PATH, "movies"), { recursive: true });
-  await fs.writeFile(filePath, req.body);
+  await fs.writeFile(inputPath, req.body);
+
+  try {
+    await execFileAsync(ffmpegPath.path, [
+      "-i",
+      inputPath,
+      "-t",
+      "5",
+      "-r",
+      "10",
+      "-vf",
+      "crop='min(iw,ih)':'min(iw,ih)'",
+      "-an",
+      "-y",
+      outputPath,
+    ]);
+  } finally {
+    await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
+  }
 
   return res.status(200).type("application/json").send({ id: movieId });
 });
