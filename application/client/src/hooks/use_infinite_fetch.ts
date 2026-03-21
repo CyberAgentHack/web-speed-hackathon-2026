@@ -27,6 +27,18 @@ type PrefetchState<T> = {
   promise: Promise<T[]> | null;
 };
 
+function ensureArrayResponse<T>(apiPath: string, value: unknown): T[] {
+  if (Array.isArray(value)) {
+    return value as T[];
+  }
+
+  console.error("[debug][useInfiniteFetch] expected array response", {
+    apiPath,
+    value,
+  });
+  throw new Error(`Expected array response from ${apiPath}`);
+}
+
 function takePrefetch<T>(key?: string): PrefetchState<T> {
   if (key !== "__PREFETCH_TIMELINE__") {
     return { items: null, promise: null };
@@ -40,7 +52,9 @@ function takePrefetch<T>(key?: string): PrefetchState<T> {
   }
 
   if (window.__PREFETCH_TIMELINE__) {
-    const promise = window.__PREFETCH_TIMELINE__ as Promise<T[]>;
+    const promise = (window.__PREFETCH_TIMELINE__ as Promise<unknown>).then((value) =>
+      ensureArrayResponse<T>(key, value),
+    );
     window.__PREFETCH_TIMELINE__ = undefined;
     return { items: null, promise };
   }
@@ -128,7 +142,10 @@ export function useInfiniteFetch<T>(
 
     void dataPromise.then(
       (items) => {
-        const nextItems = serverPagination ? items : items.slice(offset, offset + pageSize);
+        const safeItems = ensureArrayResponse<T>(apiPath, items);
+        const nextItems = serverPagination
+          ? safeItems
+          : safeItems.slice(offset, offset + pageSize);
         setResult((cur) => ({
           ...cur,
           data: [...cur.data, ...nextItems],

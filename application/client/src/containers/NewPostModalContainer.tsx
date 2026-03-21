@@ -1,25 +1,9 @@
-import {
-  lazy,
-  startTransition,
-  Suspense,
-  useCallback,
-  useEffect,
-  useId,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
+import { NewPostModalPage } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage";
 import { sendFile, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
-
-const NewPostModalPage = lazy(async () =>
-  import("@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage").then(
-    (module) => ({
-      default: module.NewPostModalPage,
-    }),
-  ),
-);
 
 interface SubmitParams {
   images: File[];
@@ -55,23 +39,19 @@ export const NewPostModalContainer = ({ id }: Props) => {
   const dialogId = useId();
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
-  const [shouldRenderPage, setShouldRenderPage] = useState(false);
   useEffect(() => {
     const element = ref.current;
     if (element == null) {
       return;
     }
 
-    const handleToggle = () => {
-      // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
+    const handleClose = () => {
+      // モーダルを閉じたタイミングでフォーム状態をリセットする
       setResetKey((key) => key + 1);
-      if (element.open) {
-        setShouldRenderPage(true);
-      }
     };
-    element.addEventListener("toggle", handleToggle);
+    element.addEventListener("close", handleClose);
     return () => {
-      element.removeEventListener("toggle", handleToggle);
+      element.removeEventListener("close", handleClose);
     };
   }, []);
 
@@ -91,9 +71,7 @@ export const NewPostModalContainer = ({ id }: Props) => {
         const post = await sendNewPost(params);
         prefetchPost(post);
         ref.current?.close();
-        startTransition(() => {
-          navigate(`/posts/${post.id}`);
-        });
+        navigate(`/posts/${post.id}`);
       } catch {
         setHasError(true);
       } finally {
@@ -105,18 +83,14 @@ export const NewPostModalContainer = ({ id }: Props) => {
 
   return (
     <Modal aria-labelledby={dialogId} id={id} ref={ref} closedby="any">
-      {shouldRenderPage ? (
-        <Suspense fallback={null}>
-          <NewPostModalPage
-            key={resetKey}
-            id={dialogId}
-            hasError={hasError}
-            isLoading={isLoading}
-            onResetError={handleResetError}
-            onSubmit={handleSubmit}
-          />
-        </Suspense>
-      ) : null}
+      <NewPostModalPage
+        key={resetKey}
+        id={dialogId}
+        hasError={hasError}
+        isLoading={isLoading}
+        onResetError={handleResetError}
+        onSubmit={handleSubmit}
+      />
     </Modal>
   );
 };
