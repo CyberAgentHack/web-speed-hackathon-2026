@@ -19,7 +19,7 @@ export async function convertToMp4(input: Buffer): Promise<Buffer> {
       ffmpeg(tmpIn)
         .duration(5)
         .fps(10)
-        .videoFilter("crop='min(iw,ih)':'min(iw,ih)',scale=trunc(iw/2)*2:trunc(ih/2)*2")
+        .videoFilter("crop='min(iw,ih)':'min(iw,ih)',scale=640:640")
         .noAudio()
         .videoCodec("libx264")
         .outputOptions(["-pix_fmt yuv420p", "-movflags +faststart"])
