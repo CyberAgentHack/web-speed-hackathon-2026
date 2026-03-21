@@ -1,8 +1,12 @@
 import classNames from "classnames";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Animator, Decoder } from "gifler";
+import { GifReader } from "omggif";
+import { RefCallback, useCallback, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
+import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
+import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
   src: string;
@@ -12,21 +16,54 @@ interface Props {
  * クリックすると再生・一時停止を切り替えます。
  */
 export const PausableMovie = ({ src }: Props) => {
+  const { data, isLoading } = useFetch(src, fetchBinary);
+
+  const animatorRef = useRef<Animator>(null);
+  const canvasCallbackRef = useCallback<RefCallback<HTMLCanvasElement>>(
+    (el) => {
+      animatorRef.current?.stop();
+
+      if (el === null || data === null) {
+        return;
+      }
+
+      // GIF を解析する
+      const reader = new GifReader(new Uint8Array(data));
+      const frames = Decoder.decodeFramesSync(reader);
+      const animator = new Animator(reader, frames);
+
+      animator.animateInCanvas(el);
+      animator.onFrame(frames[0]!);
+
+      // 視覚効果 off のとき GIF を自動再生しない
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setIsPlaying(false);
+        animator.stop();
+      } else {
+        setIsPlaying(true);
+        animator.start();
+      }
+
+      animatorRef.current = animator;
+    },
+    [data],
+  );
+
   const [isPlaying, setIsPlaying] = useState(true);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const handleClick = useCallback(() => {
-    setIsPlaying((cur) => !cur);
+    setIsPlaying((isPlaying) => {
+      if (isPlaying) {
+        animatorRef.current?.stop();
+      } else {
+        animatorRef.current?.start();
+      }
+      return !isPlaying;
+    });
   }, []);
-  const playbackSrc = `${src}#t=0.1`;
-  useEffect(() => {
-    const el = videoRef.current;
-    if (el == null) return;
-    if (isPlaying) {
-      void el.play().catch(() => undefined);
-    } else {
-      el.pause();
-    }
-  }, [isPlaying]);
+
+  if (isLoading || data === null) {
+    return null;
+  }
 
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
@@ -36,16 +73,7 @@ export const PausableMovie = ({ src }: Props) => {
         onClick={handleClick}
         type="button"
       >
-        <video
-          ref={videoRef}
-          className="h-full w-full object-cover"
-          autoPlay={isPlaying}
-          loop={true}
-          muted={true}
-          playsInline={true}
-          preload="metadata"
-          src={playbackSrc}
-        />
+        <canvas ref={canvasCallbackRef} className="w-full" />
         <div
           className={classNames(
             "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",

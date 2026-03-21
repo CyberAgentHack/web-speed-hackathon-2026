@@ -11,22 +11,18 @@ interface Props {
  */
 export const AspectRatioBox = ({ aspectHeight, aspectWidth, children }: Props) => {
   const ref = useRef<HTMLDivElement>(null);
-  const [clientHeight, setClientHeight] = useState(1);
+  const [clientHeight, setClientHeight] = useState(0);
 
   useEffect(() => {
     // clientWidth とアスペクト比から clientHeight を計算する
     function calcStyle() {
       const clientWidth = ref.current?.clientWidth ?? 0;
-      if (clientWidth === 0) {
-        return;
-      }
       setClientHeight((clientWidth / aspectWidth) * aspectHeight);
     }
-    calcStyle();
-    requestAnimationFrame(calcStyle);
+    setTimeout(() => calcStyle(), 500);
 
     // ウィンドウサイズが変わるたびに計算する
-    window.addEventListener("resize", calcStyle, { passive: true });
+    window.addEventListener("resize", calcStyle, { passive: false });
     return () => {
       window.removeEventListener("resize", calcStyle);
     };
@@ -34,7 +30,8 @@ export const AspectRatioBox = ({ aspectHeight, aspectWidth, children }: Props) =
 
   return (
     <div ref={ref} className="relative h-1 w-full" style={{ height: clientHeight }}>
-      <div className="absolute inset-0">{children}</div>
+      {/* 高さが計算できるまで render しない */}
+      {clientHeight !== 0 ? <div className="absolute inset-0">{children}</div> : null}
     </div>
   );
 };
