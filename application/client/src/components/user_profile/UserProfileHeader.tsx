@@ -35,7 +35,7 @@ export const UserProfileHeader = ({ user }: Props) => {
           src={getProfileImagePath(user.profileImage.id)}
         />
       </div>
-      <div className="px-4 pt-20">
+      <div className="px-4 pt-[72px]">
         <h1 className="text-2xl font-bold">{user.name}</h1>
         <p className="text-cax-text-muted">@{user.username}</p>
         <p className="pt-2">{user.description}</p>
