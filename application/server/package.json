@@ -35,9 +35,15 @@
     "tsx": "4.20.6",
     "uuid": "13.0.0",
     "web-audio-api": "1.0.0",
+    "bayesian-bm25": "0.4.0",
+    "bluebird": "3.7.2",
+    "kuromoji": "0.1.2",
+    "negaposi-analyzer-ja": "1.0.1",
     "ws": "8.18.3"
   },
   "devDependencies": {
+    "@types/bluebird": "3.5.42",
+    "@types/kuromoji": "0.1.3",
     "@faker-js/faker": "10.2.0",
     "@types/bcrypt": "6.0.0",
     "@types/body-parser": "1.19.6",

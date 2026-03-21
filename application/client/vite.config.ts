@@ -10,8 +10,6 @@ export default defineConfig({
   resolve: {
     alias: {
       "@web-speed-hackathon-2026/client": path.resolve(__dirname),
-      "kuromoji": path.resolve(__dirname, "node_modules/kuromoji/build/kuromoji.js"),
-      "bayesian-bm25": path.resolve(__dirname, "node_modules/bayesian-bm25/dist/index.js"),
     },
   },
   define: {
@@ -31,7 +29,6 @@ export default defineConfig({
       "/movies": { target: "http://localhost:3000" },
       "/sounds": { target: "http://localhost:3000" },
       "/fonts": { target: "http://localhost:3000" },
-      "/dicts": { target: "http://localhost:3000" },
       "/sprites": { target: "http://localhost:3000" },
     },
   },
