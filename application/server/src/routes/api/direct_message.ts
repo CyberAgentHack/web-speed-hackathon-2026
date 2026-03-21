@@ -87,22 +87,25 @@ directMessageRouter.ws("/dm/unread", async (req, _res) => {
     eventhub.off(`dm:unread/${req.session.userId}`, handler);
   });
 
-  const unreadCount = await DirectMessage.count({
-    distinct: true,
+  const conversations = await DirectMessageConversation.unscoped().findAll({
+    attributes: ["id"],
     where: {
-      senderId: { [Op.ne]: req.session.userId },
-      isRead: false,
+      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
-    include: [
-      {
-        association: "conversation",
-        where: {
-          [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
-        },
-        required: true,
-      },
-    ],
+    raw: true,
   });
+  const conversationIds = conversations.map((c) => c.id);
+
+  const unreadCount =
+    conversationIds.length === 0
+      ? 0
+      : await DirectMessage.count({
+          where: {
+            conversationId: { [Op.in]: conversationIds },
+            senderId: { [Op.ne]: req.session.userId },
+            isRead: false,
+          },
+        });
 
   eventhub.emit(`dm:unread/${req.session.userId}`, { unreadCount });
 });
@@ -172,7 +175,8 @@ directMessageRouter.post("/dm/:conversationId/messages", async (req, res) => {
     throw new httpErrors.BadRequest();
   }
 
-  const conversation = await DirectMessageConversation.findOne({
+  const conversation = await DirectMessageConversation.unscoped().findOne({
+    attributes: ["id"],
     where: {
       id: req.params.conversationId,
       [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],

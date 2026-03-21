@@ -58,6 +58,14 @@ export function initDirectMessageConversation(sequelize: Sequelize) {
           },
         ],
       },
+      indexes: [
+        {
+          fields: ["initiatorId"],
+        },
+        {
+          fields: ["memberId"],
+        },
+      ],
     },
   );
 }

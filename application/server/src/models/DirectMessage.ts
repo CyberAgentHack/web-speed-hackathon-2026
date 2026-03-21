@@ -69,12 +69,35 @@ export function initDirectMessage(sequelize: Sequelize) {
         ],
         order: [["createdAt", "ASC"]],
       },
+      indexes: [
+        {
+          fields: ["conversationId", "createdAt"],
+        },
+        {
+          fields: ["conversationId", "isRead", "senderId"],
+        },
+        {
+          fields: ["senderId", "isRead"],
+        },
+      ],
     },
   );
 
   DirectMessage.addHook("afterSave", "onDmSaved", async (message) => {
-    const directMessage = await DirectMessage.findByPk(message.get().id);
-    const conversation = await DirectMessageConversation.findByPk(directMessage?.conversationId);
+    const directMessage = await DirectMessage.unscoped().findByPk(message.get().id, {
+      include: [
+        {
+          association: "sender",
+          include: [{ association: "profileImage" }],
+        },
+      ],
+    });
+    const conversation = await DirectMessageConversation.unscoped().findByPk(
+      directMessage?.conversationId,
+      {
+        attributes: ["id", "initiatorId", "memberId"],
+      },
+    );
 
     if (directMessage == null || conversation == null) {
       return;
@@ -85,22 +108,25 @@ export function initDirectMessage(sequelize: Sequelize) {
         ? conversation.memberId
         : conversation.initiatorId;
 
-    const unreadCount = await DirectMessage.count({
-      distinct: true,
+    const receiverConversations = await DirectMessageConversation.unscoped().findAll({
+      attributes: ["id"],
       where: {
-        senderId: { [Op.ne]: receiverId },
-        isRead: false,
+        [Op.or]: [{ initiatorId: receiverId }, { memberId: receiverId }],
       },
-      include: [
-        {
-          association: "conversation",
-          where: {
-            [Op.or]: [{ initiatorId: receiverId }, { memberId: receiverId }],
-          },
-          required: true,
-        },
-      ],
+      raw: true,
     });
+    const receiverConversationIds = receiverConversations.map((c) => c.id);
+
+    const unreadCount =
+      receiverConversationIds.length === 0
+        ? 0
+        : await DirectMessage.count({
+            where: {
+              conversationId: { [Op.in]: receiverConversationIds },
+              senderId: { [Op.ne]: receiverId },
+              isRead: false,
+            },
+          });
 
     eventhub.emit(`dm:conversation/${conversation.id}:message`, directMessage);
     eventhub.emit(`dm:unread/${receiverId}`, { unreadCount });
