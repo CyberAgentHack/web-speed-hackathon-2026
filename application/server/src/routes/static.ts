@@ -15,6 +15,80 @@ import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/par
 
 export const staticRouter = Router();
 
+/** HTML 埋め込み用: 説明文など巨大フィールドを除き、インラインスクリプトのパース時間を抑える */
+function trimUserForClientPreload(u: unknown): Record<string, unknown> | null {
+  if (u == null || typeof u !== "object") return null;
+  const raw = u as Record<string, unknown>;
+  const pi = raw["profileImage"];
+  const profileImage =
+    pi != null && typeof pi === "object"
+      ? {
+          alt: (pi as Record<string, unknown>)["alt"] ?? "",
+          id: (pi as Record<string, unknown>)["id"],
+        }
+      : pi;
+  return {
+    id: raw["id"],
+    name: raw["name"],
+    profileImage,
+    username: raw["username"],
+  };
+}
+
+function trimPostForClientPreload(raw: Record<string, unknown>): Record<string, unknown> {
+  const images = raw["images"];
+  const trimmedImages = Array.isArray(images)
+    ? images.map((im) => {
+        const row = im as Record<string, unknown>;
+        return { alt: row["alt"] ?? "", id: row["id"] };
+      })
+    : images;
+
+  const movie = raw["movie"];
+  const trimmedMovie =
+    movie != null && typeof movie === "object"
+      ? { id: (movie as Record<string, unknown>)["id"] }
+      : movie;
+
+  const sound = raw["sound"];
+  const trimmedSound =
+    sound != null && typeof sound === "object"
+      ? { id: (sound as Record<string, unknown>)["id"] }
+      : sound;
+
+  return {
+    createdAt: raw["createdAt"],
+    id: raw["id"],
+    images: trimmedImages,
+    movie: trimmedMovie,
+    sound: trimmedSound,
+    text: raw["text"],
+    user: trimUserForClientPreload(raw["user"]),
+  };
+}
+
+/** 投稿詳細の LCP 候補（先頭画像 or 動画 GIF）を先読みして、JS 実行前から取得を開始する */
+function buildPostDetailLcpPreloadTags(post: Record<string, unknown> | null): string {
+  if (post == null) return "";
+  const parts: string[] = [];
+  const images = post["images"];
+  if (Array.isArray(images) && images.length > 0) {
+    const first = images[0] as { id?: string } | undefined;
+    if (first?.id != null && first.id !== "") {
+      parts.push(
+        `<link rel="preload" as="image" href="/images/${first.id}.jpg" fetchpriority="high">`,
+      );
+    }
+  }
+  const movie = post["movie"] as { id?: string } | null | undefined;
+  if (movie != null && typeof movie === "object" && movie.id != null && movie.id !== "") {
+    parts.push(
+      `<link rel="preload" as="image" href="/movies/${movie.id}.gif" fetchpriority="high">`,
+    );
+  }
+  return parts.join("");
+}
+
 // index.html テンプレートをキャッシュ
 let _htmlTemplate: string | null = null;
 function getHtmlTemplate(): string {
@@ -139,7 +213,8 @@ async function buildPreloadData(req: Parameters<Parameters<typeof Router>[0]>[0]
         // 投稿詳細ページ
         const postId = postMatch[1];
         const post = await Post.findByPk(postId);
-        data[`/api/v1/posts/${postId}`] = post ? post.toJSON() : null;
+        data[`/api/v1/posts/${postId}`] =
+          post != null ? trimPostForClientPreload(post.toJSON() as Record<string, unknown>) : null;
       }
     }
 
@@ -255,8 +330,14 @@ staticRouter.use(async (req, res, next) => {
 
   try {
     const preloadData = await buildPreloadData(req);
+    const postMatch = req.path.match(/^\/posts\/([^/]+)$/);
+    const postKey = postMatch != null ? `/api/v1/posts/${postMatch[1]}` : null;
+    const postPayload =
+      postKey != null && postKey in preloadData ? (preloadData[postKey] as Record<string, unknown> | null) : null;
+    const lcpPreload = postKey != null ? buildPostDetailLcpPreloadTags(postPayload) : "";
     const script = `<script>window.__PRELOAD_DATA__=${JSON.stringify(preloadData)};</script>`;
-    const html = template.replace("</head>", `${script}</head>`);
+    let html = lcpPreload !== "" ? template.replace("<head>", `<head>${lcpPreload}`) : template;
+    html = html.replace("</head>", `${script}</head>`);
     return res.type("text/html").send(html);
   } catch {
     return next();

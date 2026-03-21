@@ -15,7 +15,7 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
   );
 
   const { data: comments, fetchMore } = useInfiniteFetch<Models.Comment>(
-    `/api/v1/posts/${postId}/comments`,
+    postId != null ? `/api/v1/posts/${postId}/comments` : "",
     fetchJSON,
   );
 

@@ -5,6 +5,7 @@ import { Route, Routes, useLocation, useNavigate } from "react-router";
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
 import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
+import { PostContainer } from "@web-speed-hackathon-2026/client/src/containers/PostContainer";
 import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
@@ -36,12 +37,6 @@ const DirectMessageListContainer = lazy(() =>
   })),
 );
 
-const PostContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/PostContainer").then((m) => ({
-    default: m.PostContainer,
-  })),
-);
-
 const SearchContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/SearchContainer").then((m) => ({
     default: m.SearchContainer,
@@ -55,7 +50,6 @@ const TermContainer = lazy(() =>
 );
 
 // ルート初期表示でだけ lazy chunk の取得を前倒しする
-// (render delay の短縮: Lighthouse が LCP 候補を決める前に chunk を揃える)
 if (typeof window !== "undefined") {
   const path = window.location.pathname;
 
@@ -67,8 +61,6 @@ if (typeof window !== "undefined") {
     void import("@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer");
   } else if (path.startsWith("/dm/")) {
     void import("@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer");
-  } else if (/^\/posts\/[^/]+$/.test(path)) {
-    void import("@web-speed-hackathon-2026/client/src/containers/PostContainer");
   }
 }
 

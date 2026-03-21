@@ -7,12 +7,14 @@ import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Mod
 interface Props {
   src: string;
   alt: string;
+  /** 複数枚あるときは 1 枚だけ true（LCP・帯域の競合を避ける） */
+  isLcpCandidate?: boolean;
 }
 
 /**
  * LCP を安定させるため、バイナリ取得/解析は行わず直に表示します
  */
-export const CoveredImage = ({ src, alt }: Props) => {
+export const CoveredImage = ({ src, alt, isLcpCandidate = true }: Props) => {
   const dialogId = useId();
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
@@ -25,9 +27,9 @@ export const CoveredImage = ({ src, alt }: Props) => {
         alt={alt}
         className={classNames("absolute inset-0 h-full w-full object-cover")}
         src={src}
-        loading="eager"
         decoding="async"
-        fetchPriority="high"
+        fetchPriority={isLcpCandidate ? "high" : "low"}
+        loading={isLcpCandidate ? "eager" : "lazy"}
       />
 
       <button
