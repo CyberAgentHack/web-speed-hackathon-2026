@@ -14,6 +14,7 @@ export class FetchError extends Error {
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {
   const response = await fetch(url);
   if (!response.ok) {
+    await response.body?.cancel();
     throw new FetchError(response);
   }
   return response.arrayBuffer();
@@ -22,6 +23,7 @@ export async function fetchBinary(url: string): Promise<ArrayBuffer> {
 export async function fetchJSON<T>(url: string): Promise<T> {
   const response = await fetch(url);
   if (!response.ok) {
+    await response.body?.cancel();
     throw new FetchError(response);
   }
   return response.json() as Promise<T>;
@@ -36,6 +38,7 @@ export async function sendFile<T>(url: string, file: File): Promise<T> {
     body: file,
   });
   if (!response.ok) {
+    await response.body?.cancel();
     throw new FetchError(response);
   }
   return response.json() as Promise<T>;
