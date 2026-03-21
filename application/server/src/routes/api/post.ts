@@ -26,6 +26,15 @@ postRouter.get("/posts/:postId", async (req, res) => {
 
 postRouter.get("/posts/:postId/comments", async (req, res) => {
   const posts = await Comment.findAll({
+    attributes: { exclude: ["userId", "postId"] },
+    include: [
+      {
+        association: "user",
+        attributes: { exclude: ["profileImageId"] },
+        include: [{ association: "profileImage" }],
+      },
+    ],
+    order: [["createdAt", "ASC"]],
     limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
     offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
     where: {
