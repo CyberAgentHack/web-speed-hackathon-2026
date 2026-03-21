@@ -1,5 +1,5 @@
 import { load, ImageIFD } from "piexifjs";
-import { MouseEvent, useCallback, useId, useState } from "react";
+import { MouseEvent, useCallback, useEffect, useId, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
@@ -28,6 +28,10 @@ export const CoveredImage = ({ src }: Props) => {
     const altText = raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
     setAlt(altText);
   }, [src]);
+
+  useEffect(() => {
+    void handleShowAlt();
+  }, [handleShowAlt]);
 
   return (
     <div className="relative h-full w-full overflow-hidden">
