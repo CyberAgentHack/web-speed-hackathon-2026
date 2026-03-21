@@ -38,7 +38,12 @@ export const SearchContainer = () => {
       <Helmet>
         <title>検索 - CaX</title>
       </Helmet>
-      <SearchPage query={query} results={posts} isNegative={isNegative} initialValues={{ searchText: query }} />
+      <SearchPage
+        query={query}
+        results={posts}
+        isNegative={isNegative}
+        initialValues={{ searchText: query }}
+      />
     </InfiniteScroll>
   );
 };

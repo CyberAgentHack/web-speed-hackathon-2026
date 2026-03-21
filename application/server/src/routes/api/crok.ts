@@ -44,6 +44,10 @@ crokRouter.get("/crok/suggestions", async (req, res) => {
   res.json({ suggestions, queryTokens });
 });
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 crokRouter.get("/crok", async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
@@ -61,6 +65,7 @@ crokRouter.get("/crok", async (req, res) => {
 
     const data = JSON.stringify({ text: char, done: false });
     res.write(`event: message\nid: ${messageId++}\ndata: ${data}\n\n`);
+    await sleep(10);
   }
 
   if (!res.closed) {
