@@ -27,9 +27,13 @@ export const CrokPage = ({ messages, isStreaming, onSendMessage }: Props) => {
         <div className="mx-auto max-w-2xl px-4 py-8">
           {messages.length === 0 && <WelcomeScreen />}
 
-          {messages.map((message, index) => (
-            <ChatMessage key={index} message={message} />
-          ))}
+          {messages.map((message, index) => {
+            const isLastMessage = index === messages.length - 1;
+            const renderMarkdown = !(isStreaming && isLastMessage && message.role === "assistant");
+            return (
+              <ChatMessage key={index} message={message} renderMarkdown={renderMarkdown} />
+            );
+          })}
           <div ref={messagesEndRef} />
         </div>
       </div>
