@@ -181,12 +181,16 @@ function pickRandomN<T>(arr: T[], n: number): T[] {
   return faker.helpers.arrayElements(arr, n);
 }
 
-function generateProfileImages(): ProfileImageSeed[] {
-  // Use existing profile image IDs from public/images/profiles/
-  return EXISTING_PROFILE_IMAGE_IDS.map((id) => ({
-    id,
-    alt: "",
-  }));
+async function generateProfileImages(): Promise<ProfileImageSeed[]> {
+  const { computeAverageColor } = await import("../src/utils/compute_average_color.js");
+  const profilesDir = path.resolve(__dirname, "../../public/images/profiles");
+  const results: ProfileImageSeed[] = [];
+  for (const id of EXISTING_PROFILE_IMAGE_IDS) {
+    const imagePath = path.join(profilesDir, `${id}.jpg`);
+    const averageColor = await computeAverageColor(imagePath);
+    results.push({ id, alt: "", averageColor });
+  }
+  return results;
 }
 
 function generateUsers(count: number, profileImages: ProfileImageSeed[]): UserSeed[] {
@@ -701,7 +705,7 @@ async function main() {
   console.log("Generating seed data...");
 
   console.log("1. Generating ProfileImages (using existing assets)...");
-  const profileImages = generateProfileImages();
+  const profileImages = await generateProfileImages();
 
   console.log("2. Generating Users...");
   const users = generateUsers(CONFIG.USER_COUNT, profileImages);
