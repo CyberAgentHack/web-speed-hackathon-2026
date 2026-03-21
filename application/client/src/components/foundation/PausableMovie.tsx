@@ -6,12 +6,13 @@ import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components
 
 interface Props {
   src: string;
+  showControls?: boolean;
 }
 
 /**
  * クリックすると再生・一時停止を切り替えます。
  */
-export const PausableMovie = ({ src }: Props) => {
+export const PausableMovie = ({ src, showControls = true }: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -68,16 +69,18 @@ export const PausableMovie = ({ src }: Props) => {
           ref={canvasRef}
           className="h-full w-full object-cover"
         />
-        <div
-          className={classNames(
-            "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
-            {
-              "opacity-0 group-hover:opacity-100": isPlaying,
-            },
-          )}
-        >
-          <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
-        </div>
+        {showControls && (
+          <div
+            className={classNames(
+              "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
+              {
+                "opacity-0 group-hover:opacity-100": isPlaying,
+              },
+            )}
+          >
+            <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
+          </div>
+        )}
       </button>
     </AspectRatioBox>
   );

@@ -8,10 +8,13 @@ import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
-const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Element): boolean => {
+const isClickedInteractiveElement = (target: EventTarget | null, currentTarget: Element): boolean => {
   while (target !== null && target instanceof Element) {
     const tagName = target.tagName.toLowerCase();
-    if (["button", "a"].includes(tagName)) {
+    if (tagName === "a") {
+      return true;
+    }
+    if (tagName === "button" && (target as HTMLElement).getAttribute("aria-label") !== "動画プレイヤー") {
       return true;
     }
     if (currentTarget === target) {
@@ -53,7 +56,7 @@ export const TimelineItem = ({ post, isPriority = false }: Props) => {
   const handleClick = useCallback<MouseEventHandler>(
     (ev) => {
       const isSelectedText = document.getSelection()?.isCollapsed === false;
-      if (!isClickedAnchorOrButton(ev.target, ev.currentTarget) && !isSelectedText) {
+      if (!isClickedInteractiveElement(ev.target, ev.currentTarget) && !isSelectedText) {
         navigate(`/posts/${post.id}`);
       }
     },
@@ -112,7 +115,7 @@ export const TimelineItem = ({ post, isPriority = false }: Props) => {
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
+              <MovieArea movie={post.movie} showControls={false} />
             </div>
           ) : null}
           {post.sound ? (
