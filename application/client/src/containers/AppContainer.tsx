@@ -54,11 +54,7 @@ const NewPostModalContainer = lazy(() =>
     default: m.NewPostModalContainer,
   })),
 );
-const AuthModalContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/AuthModalContainer").then((m) => ({
-    default: m.AuthModalContainer,
-  })),
-);
+import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
 
 export const AppContainer = () => {
   const { pathname } = useLocation();
@@ -129,8 +125,8 @@ export const AppContainer = () => {
         </Suspense>
       </AppPage>
 
-      <Suspense fallback={<><dialog id={authModalId} /><dialog id={newPostModalId} /></>}>
-        <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
+      <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
+      <Suspense fallback={<dialog id={newPostModalId} />}>
         <NewPostModalContainer id={newPostModalId} />
       </Suspense>
     </>
