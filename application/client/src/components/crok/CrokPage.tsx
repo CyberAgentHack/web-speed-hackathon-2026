@@ -10,13 +10,23 @@ interface Props {
   messages: Models.ChatMessage[];
   isStreaming: boolean;
   streamingContentRef: RefObject<string>;
+  streamingHtmlRef: RefObject<string | null>;
+  onStreamingComplete: () => void;
   onSendMessage: (message: string) => void;
 }
 
-export const CrokPage = ({ messages, isStreaming, streamingContentRef, onSendMessage }: Props) => {
+export const CrokPage = ({ messages, isStreaming, streamingContentRef, streamingHtmlRef, onStreamingComplete, onSendMessage }: Props) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const stickyBarRef = useRef<HTMLDivElement>(null);
   const showScrollButton = useHasContentBelow(messagesEndRef, stickyBarRef);
+  const streamingIndexRef = useRef<number | null>(null);
+
+  if (isStreaming) {
+    const lastAssistantIdx = messages.findLastIndex((m) => m.role === "assistant");
+    if (lastAssistantIdx >= 0) {
+      streamingIndexRef.current = lastAssistantIdx;
+    }
+  }
 
   const handleScrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -29,13 +39,15 @@ export const CrokPage = ({ messages, isStreaming, streamingContentRef, onSendMes
           {messages.length === 0 && <WelcomeScreen />}
 
           {messages.map((message, index) => {
-            const isStreamingMsg = isStreaming && message.role === "assistant" && index === messages.length - 1;
+            const useStreamingView = index === streamingIndexRef.current;
             return (
               <ChatMessage
                 key={index}
                 message={message}
-                streaming={isStreamingMsg}
-                streamingContentRef={isStreamingMsg ? streamingContentRef : undefined}
+                streaming={useStreamingView}
+                streamingContentRef={useStreamingView ? streamingContentRef : undefined}
+                streamingHtmlRef={useStreamingView ? streamingHtmlRef : undefined}
+                onStreamingComplete={useStreamingView ? onStreamingComplete : undefined}
               />
             );
           })}

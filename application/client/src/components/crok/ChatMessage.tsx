@@ -13,6 +13,8 @@ interface Props {
   message: Models.ChatMessage;
   streaming?: boolean;
   streamingContentRef?: RefObject<string>;
+  streamingHtmlRef?: RefObject<string | null>;
+  onStreamingComplete?: () => void;
 }
 
 const UserMessage = ({ content }: { content: string }) => {
@@ -25,13 +27,29 @@ const UserMessage = ({ content }: { content: string }) => {
   );
 };
 
-const StreamingContent = ({ contentRef }: { contentRef: RefObject<string> }) => {
-  const preRef = useRef<HTMLPreElement>(null);
+const StreamingContent = ({ contentRef, htmlRef, onComplete }: {
+  contentRef: RefObject<string>;
+  htmlRef: RefObject<string | null>;
+  onComplete: () => void;
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const preRef = useRef<HTMLPreElement | null>(null);
   const lastContentRef = useRef("");
+  const completedRef = useRef(false);
   const [hasContent, setHasContent] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
+      if (completedRef.current) return;
+
+      if (htmlRef.current && containerRef.current) {
+        completedRef.current = true;
+        clearInterval(timer);
+        containerRef.current.innerHTML = htmlRef.current;
+        onComplete();
+        return;
+      }
+
       if (contentRef.current !== lastContentRef.current) {
         if (!hasContent && contentRef.current) {
           setHasContent(true);
@@ -41,22 +59,28 @@ const StreamingContent = ({ contentRef }: { contentRef: RefObject<string> }) => 
         }
         lastContentRef.current = contentRef.current;
       }
-    }, 500);
+    }, 100);
     return () => clearInterval(timer);
-  }, [contentRef, hasContent]);
+  }, [contentRef, htmlRef, hasContent, onComplete]);
 
   if (!hasContent) {
     return <TypingIndicator />;
   }
 
-  return <pre ref={preRef} className="whitespace-pre-wrap font-[inherit]" />;
+  return (
+    <div ref={containerRef}>
+      <pre ref={preRef} className="whitespace-pre-wrap font-[inherit]" />
+    </div>
+  );
 };
 
-const AssistantMessage = ({ content, html, streaming, streamingContentRef }: {
+const AssistantMessage = ({ content, html, streaming, streamingContentRef, streamingHtmlRef, onStreamingComplete }: {
   content: string;
   html?: string;
   streaming: boolean;
   streamingContentRef?: RefObject<string>;
+  streamingHtmlRef?: RefObject<string | null>;
+  onStreamingComplete?: () => void;
 }) => {
   return (
     <div className="mb-6 flex gap-4">
@@ -66,8 +90,8 @@ const AssistantMessage = ({ content, html, streaming, streamingContentRef }: {
       <div className="min-w-0 flex-1">
         <div className="text-cax-text mb-1 text-sm font-medium">Crok</div>
         <div className="markdown text-cax-text max-w-none">
-          {streaming && streamingContentRef ? (
-            <StreamingContent contentRef={streamingContentRef} />
+          {streaming && streamingContentRef && streamingHtmlRef && onStreamingComplete ? (
+            <StreamingContent contentRef={streamingContentRef} htmlRef={streamingHtmlRef} onComplete={onStreamingComplete} />
           ) : content ? (
             html ? (
               <div dangerouslySetInnerHTML={{ __html: html }} />
@@ -89,7 +113,7 @@ const AssistantMessage = ({ content, html, streaming, streamingContentRef }: {
   );
 };
 
-export const ChatMessage = ({ message, streaming, streamingContentRef }: Props) => {
+export const ChatMessage = ({ message, streaming, streamingContentRef, streamingHtmlRef, onStreamingComplete }: Props) => {
   if (message.role === "user") {
     return <UserMessage content={message.content} />;
   }
@@ -99,6 +123,8 @@ export const ChatMessage = ({ message, streaming, streamingContentRef }: Props) 
       html={message.html}
       streaming={streaming ?? false}
       streamingContentRef={streamingContentRef}
+      streamingHtmlRef={streamingHtmlRef}
+      onStreamingComplete={onStreamingComplete}
     />
   );
 };

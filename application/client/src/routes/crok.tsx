@@ -27,11 +27,12 @@ export default function Crok() {
 					return prev;
 				});
 			},
+			getHtml: (data: Models.SSEChunk) => data.html,
 		}),
 		[],
 	);
 
-	const { contentRef, isStreaming, start } = useSSE<Models.SSEChunk>(sseOptions);
+	const { contentRef, htmlRef, isStreaming, start, finalize } = useSSE<Models.SSEChunk>(sseOptions);
 
 	const sendMessage = useCallback(
 		(userInput: string) => {
@@ -70,6 +71,8 @@ export default function Crok() {
 				isStreaming={isStreaming}
 				messages={messages}
 				streamingContentRef={contentRef}
+				streamingHtmlRef={htmlRef}
+				onStreamingComplete={finalize}
 				onSendMessage={sendMessage}
 			/>
 		</>

@@ -4,13 +4,17 @@ interface SSEOptions<T> {
   onMessage: (data: T, prevContent: string) => string;
   onDone?: (data: T) => boolean;
   onComplete?: (finalContent: string, doneData: T) => void;
+  getHtml?: (doneData: T) => string | undefined;
 }
 
 interface ReturnValues {
   contentRef: RefObject<string>;
+  htmlRef: RefObject<string | null>;
+  doneDataRef: RefObject<unknown>;
   isStreaming: boolean;
   start: (url: string) => void;
   stop: () => void;
+  finalize: () => void;
   reset: () => void;
 }
 
@@ -18,6 +22,8 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
   const [isStreaming, setIsStreaming] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const contentRef = useRef("");
+  const htmlRef = useRef<string | null>(null);
+  const doneDataRef = useRef<unknown>(null);
 
   const stop = useCallback(() => {
     if (eventSourceRef.current) {
@@ -27,15 +33,23 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
     setIsStreaming(false);
   }, []);
 
+  const finalize = useCallback(() => {
+    setIsStreaming(false);
+  }, []);
+
   const reset = useCallback(() => {
     stop();
     contentRef.current = "";
+    htmlRef.current = null;
+    doneDataRef.current = null;
   }, [stop]);
 
   const start = useCallback(
     (url: string) => {
       stop();
       contentRef.current = "";
+      htmlRef.current = null;
+      doneDataRef.current = null;
       setIsStreaming(true);
 
       const eventSource = new EventSource(url);
@@ -46,8 +60,14 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
 
         const isDone = options.onDone?.(data) ?? false;
         if (isDone) {
-          options.onComplete?.(contentRef.current, data);
-          stop();
+          htmlRef.current = options.getHtml?.(data) ?? null;
+          doneDataRef.current = data;
+          if (eventSourceRef.current) {
+            eventSourceRef.current.close();
+            eventSourceRef.current = null;
+          }
+          // Don't call stop() or setIsStreaming(false) here.
+          // StreamingContent will detect htmlRef, inject HTML, then call finalize().
           return;
         }
 
@@ -63,5 +83,5 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
     [options, stop],
   );
 
-  return { contentRef, isStreaming, start, stop, reset };
+  return { contentRef, htmlRef, doneDataRef, isStreaming, start, stop, finalize, reset };
 }

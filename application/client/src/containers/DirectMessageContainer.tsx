@@ -105,7 +105,12 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {
     if (event.type === "dm:conversation:message") {
       setMessages((prev) => {
-        if (prev.some((m) => m.id === event.payload.id)) return prev;
+        const idx = prev.findIndex((m) => m.id === event.payload.id);
+        if (idx >= 0) {
+          const updated = [...prev];
+          updated[idx] = event.payload;
+          return updated;
+        }
         return [...prev, event.payload];
       });
       if (event.payload.sender.id !== activeUser?.id) {
