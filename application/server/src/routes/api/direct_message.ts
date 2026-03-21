@@ -1,20 +1,23 @@
-import { Router } from "express";
-import httpErrors from "http-errors";
-import { literal, Op } from "sequelize";
+import { Router } from 'express';
+import httpErrors from 'http-errors';
+import { literal, Op } from 'sequelize';
 
-import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
+import { eventhub } from '@web-speed-hackathon-2026/server/src/eventhub';
 import {
   DirectMessage,
   DirectMessageConversation,
   User,
-} from "@web-speed-hackathon-2026/server/src/models";
+} from '@web-speed-hackathon-2026/server/src/models';
 
 export const directMessageRouter = Router();
 
-directMessageRouter.get("/dm", async (req, res) => {
+directMessageRouter.get('/dm', async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
   }
+
+  const userId = req.session.userId;
+  const escapedUserId = DirectMessageConversation.sequelize!.escape(userId);
 
   const hasMessages = literal(`EXISTS (
     SELECT 1
@@ -26,34 +29,65 @@ directMessageRouter.get("/dm", async (req, res) => {
       FROM "DirectMessages" AS "DirectMessage"
      WHERE "DirectMessage"."conversationId" = "DirectMessageConversation"."id"
   )`);
+  const unreadCount = literal(`(
+    SELECT COUNT(*)
+      FROM "DirectMessages" AS "UnreadMessage"
+     WHERE "UnreadMessage"."conversationId" = "DirectMessageConversation"."id"
+       AND "UnreadMessage"."senderId" != ${escapedUserId}
+       AND "UnreadMessage"."isRead" = false
+  )`);
 
   const conversations = await DirectMessageConversation.unscoped().findAll({
+    attributes: {
+      include: [[unreadCount, 'unreadCount']],
+    },
     where: {
       [Op.and]: [
         {
-          [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
+          [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
         },
         hasMessages,
       ],
     },
-    order: [[latestMessageCreatedAt, "DESC"]],
+    order: [[latestMessageCreatedAt, 'DESC']],
     include: [
       {
-        association: "initiator",
-        attributes: ["id", "description", "name", "username", "createdAt", "updatedAt"],
-        include: [{ association: "profileImage", attributes: ["id", "alt"] }],
+        association: 'initiator',
+        attributes: [
+          'id',
+          'description',
+          'name',
+          'username',
+          'createdAt',
+          'updatedAt',
+        ],
+        include: [{ association: 'profileImage', attributes: ['id', 'alt'] }],
       },
       {
-        association: "member",
-        attributes: ["id", "description", "name", "username", "createdAt", "updatedAt"],
-        include: [{ association: "profileImage", attributes: ["id", "alt"] }],
+        association: 'member',
+        attributes: [
+          'id',
+          'description',
+          'name',
+          'username',
+          'createdAt',
+          'updatedAt',
+        ],
+        include: [{ association: 'profileImage', attributes: ['id', 'alt'] }],
       },
       {
-        association: "messages",
-        attributes: ["id", "body", "isRead", "createdAt", "updatedAt", "senderId"],
-        include: [{ association: "sender", attributes: ["id"] }],
+        association: 'messages',
+        attributes: [
+          'id',
+          'body',
+          'isRead',
+          'createdAt',
+          'updatedAt',
+          'senderId',
+        ],
+        include: [{ association: 'sender', attributes: ['id'] }],
         limit: 1,
-        order: [["createdAt", "DESC"]],
+        order: [['createdAt', 'DESC']],
         required: false,
         separate: true,
       },
@@ -62,11 +96,16 @@ directMessageRouter.get("/dm", async (req, res) => {
 
   return res
     .status(200)
-    .type("application/json")
-    .send(conversations.map((c) => c.toJSON()));
+    .type('application/json')
+    .send(
+      conversations.map((c) => ({
+        ...c.toJSON(),
+        unreadCount: Number(c.get('unreadCount') ?? 0),
+      })),
+    );
 });
 
-directMessageRouter.post("/dm", async (req, res) => {
+directMessageRouter.post('/dm', async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
   }
@@ -90,20 +129,20 @@ directMessageRouter.post("/dm", async (req, res) => {
   });
   await conversation.reload();
 
-  return res.status(200).type("application/json").send(conversation);
+  return res.status(200).type('application/json').send(conversation);
 });
 
-directMessageRouter.ws("/dm/unread", async (req, _res) => {
+directMessageRouter.ws('/dm/unread', async (req, _res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
   }
 
   const handler = (payload: unknown) => {
-    req.ws.send(JSON.stringify({ type: "dm:unread", payload }));
+    req.ws.send(JSON.stringify({ type: 'dm:unread', payload }));
   };
 
   eventhub.on(`dm:unread/${req.session.userId}`, handler);
-  req.ws.on("close", () => {
+  req.ws.on('close', () => {
     eventhub.off(`dm:unread/${req.session.userId}`, handler);
   });
 
@@ -114,10 +153,13 @@ directMessageRouter.ws("/dm/unread", async (req, _res) => {
     },
     include: [
       {
-        association: "conversation",
+        association: 'conversation',
         attributes: [],
         where: {
-          [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
+          [Op.or]: [
+            { initiatorId: req.session.userId },
+            { memberId: req.session.userId },
+          ],
         },
         required: true,
       },
@@ -127,7 +169,7 @@ directMessageRouter.ws("/dm/unread", async (req, _res) => {
   eventhub.emit(`dm:unread/${req.session.userId}`, { unreadCount });
 });
 
-directMessageRouter.get("/dm/:conversationId", async (req, res) => {
+directMessageRouter.get('/dm/:conversationId', async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
   }
@@ -135,13 +177,18 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
   const conversation = await DirectMessageConversation.findOne({
     where: {
       id: req.params.conversationId,
-      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
+      [Op.or]: [
+        { initiatorId: req.session.userId },
+        { memberId: req.session.userId },
+      ],
     },
     include: [
       {
-        association: "messages",
-        include: [{ association: "sender", include: [{ association: "profileImage" }] }],
-        order: [["createdAt", "ASC"]],
+        association: 'messages',
+        include: [
+          { association: 'sender', include: [{ association: 'profileImage' }] },
+        ],
+        order: [['createdAt', 'ASC']],
         required: false,
         separate: true,
       },
@@ -151,19 +198,22 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
     throw new httpErrors.NotFound();
   }
 
-  return res.status(200).type("application/json").send(conversation);
+  return res.status(200).type('application/json').send(conversation);
 });
 
-directMessageRouter.ws("/dm/:conversationId", async (req, _res) => {
+directMessageRouter.ws('/dm/:conversationId', async (req, _res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
   }
 
   const conversation = await DirectMessageConversation.unscoped().findOne({
-    attributes: ["id", "initiatorId", "memberId"],
+    attributes: ['id', 'initiatorId', 'memberId'],
     where: {
       id: req.params.conversationId,
-      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
+      [Op.or]: [
+        { initiatorId: req.session.userId },
+        { memberId: req.session.userId },
+      ],
     },
   });
   if (conversation == null) {
@@ -176,37 +226,52 @@ directMessageRouter.ws("/dm/:conversationId", async (req, _res) => {
       : conversation.memberId;
 
   const handleMessageUpdated = (payload: unknown) => {
-    req.ws.send(JSON.stringify({ type: "dm:conversation:message", payload }));
+    req.ws.send(JSON.stringify({ type: 'dm:conversation:message', payload }));
   };
-  eventhub.on(`dm:conversation/${conversation.id}:message`, handleMessageUpdated);
-  req.ws.on("close", () => {
-    eventhub.off(`dm:conversation/${conversation.id}:message`, handleMessageUpdated);
+  eventhub.on(
+    `dm:conversation/${conversation.id}:message`,
+    handleMessageUpdated,
+  );
+  req.ws.on('close', () => {
+    eventhub.off(
+      `dm:conversation/${conversation.id}:message`,
+      handleMessageUpdated,
+    );
   });
 
   const handleTyping = (payload: unknown) => {
-    req.ws.send(JSON.stringify({ type: "dm:conversation:typing", payload }));
+    req.ws.send(JSON.stringify({ type: 'dm:conversation:typing', payload }));
   };
-  eventhub.on(`dm:conversation/${conversation.id}:typing/${peerId}`, handleTyping);
-  req.ws.on("close", () => {
-    eventhub.off(`dm:conversation/${conversation.id}:typing/${peerId}`, handleTyping);
+  eventhub.on(
+    `dm:conversation/${conversation.id}:typing/${peerId}`,
+    handleTyping,
+  );
+  req.ws.on('close', () => {
+    eventhub.off(
+      `dm:conversation/${conversation.id}:typing/${peerId}`,
+      handleTyping,
+    );
   });
 });
 
-directMessageRouter.post("/dm/:conversationId/messages", async (req, res) => {
+directMessageRouter.post('/dm/:conversationId/messages', async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
   }
 
   const body: unknown = req.body?.body;
-  if (typeof body !== "string" || body.trim().length === 0) {
+  if (typeof body !== 'string' || body.trim().length === 0) {
     throw new httpErrors.BadRequest();
   }
 
   const conversation = await DirectMessageConversation.unscoped().findOne({
-    attributes: ["id"],
+    attributes: ['id'],
     where: {
       id: req.params.conversationId,
-      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
+      [Op.or]: [
+        { initiatorId: req.session.userId },
+        { memberId: req.session.userId },
+      ],
     },
   });
   if (conversation === null) {
@@ -220,19 +285,22 @@ directMessageRouter.post("/dm/:conversationId/messages", async (req, res) => {
   });
   await message.reload();
 
-  return res.status(201).type("application/json").send(message);
+  return res.status(201).type('application/json').send(message);
 });
 
-directMessageRouter.post("/dm/:conversationId/read", async (req, res) => {
+directMessageRouter.post('/dm/:conversationId/read', async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
   }
 
   const conversation = await DirectMessageConversation.unscoped().findOne({
-    attributes: ["id", "initiatorId", "memberId"],
+    attributes: ['id', 'initiatorId', 'memberId'],
     where: {
       id: req.params.conversationId,
-      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
+      [Op.or]: [
+        { initiatorId: req.session.userId },
+        { memberId: req.session.userId },
+      ],
     },
   });
   if (conversation === null) {
@@ -256,26 +324,32 @@ directMessageRouter.post("/dm/:conversationId/read", async (req, res) => {
     },
   );
 
-  return res.status(200).type("application/json").send({});
+  return res.status(200).type('application/json').send({});
 });
 
-directMessageRouter.post("/dm/:conversationId/typing", async (req, res) => {
+directMessageRouter.post('/dm/:conversationId/typing', async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
   }
 
   const conversation = await DirectMessageConversation.unscoped().findOne({
-    attributes: ["id"],
+    attributes: ['id'],
     where: {
       id: req.params.conversationId,
-      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
+      [Op.or]: [
+        { initiatorId: req.session.userId },
+        { memberId: req.session.userId },
+      ],
     },
   });
   if (conversation === null) {
     throw new httpErrors.NotFound();
   }
 
-  eventhub.emit(`dm:conversation/${conversation.id}:typing/${req.session.userId}`, {});
+  eventhub.emit(
+    `dm:conversation/${conversation.id}:typing/${req.session.userId}`,
+    {},
+  );
 
-  return res.status(200).type("application/json").send({});
+  return res.status(200).type('application/json').send({});
 });
