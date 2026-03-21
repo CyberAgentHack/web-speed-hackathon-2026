@@ -37,7 +37,7 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
         });
         primePrefetchJSON(`/api/v1/dm/${conversation.id}`, conversation);
         ref.current?.close();
-        navigate(`/dm/${conversation.id}`, { flushSync: true });
+        navigate(`/dm/${conversation.id}`);
       } catch {
         throw new Error("ユーザーが見つかりませんでした");
       }

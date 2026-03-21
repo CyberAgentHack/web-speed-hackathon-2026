@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useEffect, useId } from "react";
 
 import { DirectMessageGate } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageGate";
 import { PageTitle } from "@web-speed-hackathon-2026/client/src/components/foundation/PageTitle";
@@ -12,6 +12,11 @@ interface Props {
 
 export const DirectMessageListContainer = ({ activeUser, authModalId }: Props) => {
   const newDmModalId = useId();
+
+  // Prefetch DirectMessageContainer chunk so navigation to /dm/:id is instant
+  useEffect(() => {
+    void import("@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer");
+  }, []);
 
   if (activeUser === null) {
     return (
