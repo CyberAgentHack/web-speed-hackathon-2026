@@ -11,9 +11,9 @@ import {
 } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
+import { ProfileImage } from "@web-speed-hackathon-2026/client/src/components/foundation/ProfileImage";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
 import { formatTime } from "@web-speed-hackathon-2026/client/src/utils/format_date";
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   conversationError: Error | null;
@@ -97,11 +97,10 @@ export const DirectMessagePage = ({
   return (
     <section className="bg-cax-surface flex min-h-[calc(100vh-(--spacing(12)))] flex-col lg:min-h-screen">
       <header className="border-cax-border bg-cax-surface sticky top-0 z-10 flex items-center gap-2 border-b px-4 py-3">
-        <img
-          alt={peer.profileImage.alt}
+        <ProfileImage
           className="h-12 w-12 rounded-full object-cover"
           height={48}
-          src={getProfileImagePath(peer.profileImage.id)}
+          profileImage={peer.profileImage}
           width={48}
         />
         <div className="min-w-0">
@@ -127,6 +126,7 @@ export const DirectMessagePage = ({
 
             return (
               <li
+                key={message.id}
                 className={classNames(
                   "flex flex-col w-full",
                   isActiveUserSend ? "items-end" : "items-start",

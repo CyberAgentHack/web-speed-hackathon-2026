@@ -19,13 +19,13 @@ const NEGATIVE_CORRECTION = POSI_COUNT / NEGA_COUNT;
 const dictPath = path.resolve(import.meta.dirname, "../../data/pn_ja.dic.json");
 const posiNegaDict: DictEntry[] = JSON.parse(readFileSync(dictPath, "utf-8"));
 
-function analyzeSentiment(tokens: { surface_form: string; reading: string; pos: string }[]): number {
+function analyzeSentiment(tokens: { surface_form: string; reading?: string; pos: string }[]): number {
   if (tokens.length === 0) return 0;
 
   let score = 0;
   for (const token of tokens) {
     const found = posiNegaDict.find(
-      (dict) => dict.surface === token.surface_form && dict.reading === token.reading,
+      (dict) => dict.surface === token.surface_form && dict.reading === (token.reading ?? ""),
     );
     if (found) {
       const rank = found.rank;

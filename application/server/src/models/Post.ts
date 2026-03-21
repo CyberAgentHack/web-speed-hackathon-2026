@@ -42,6 +42,16 @@ export function initPost(sequelize: Sequelize) {
     },
     {
       sequelize,
+      indexes: [
+        {
+          fields: ["userId"],
+          name: "posts_user_id",
+        },
+        {
+          fields: ["createdAt"],
+          name: "posts_created_at",
+        },
+      ],
       defaultScope: {
         attributes: {
           exclude: ["userId", "movieId", "soundId"],

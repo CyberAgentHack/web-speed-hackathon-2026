@@ -26,4 +26,5 @@ export async function initializeSequelize() {
     storage: TEMP_PATH,
   });
   initModels(_sequelize);
+  await _sequelize.sync();
 }

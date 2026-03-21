@@ -33,7 +33,6 @@ const AssistantMessage = ({ content }: { content: string }) => {
           {content ? (
             <Markdown
               components={{ pre: CodeBlock }}
-              key={content}
               rehypePlugins={[rehypeKatex]}
               remarkPlugins={[remarkMath, remarkGfm]}
             >

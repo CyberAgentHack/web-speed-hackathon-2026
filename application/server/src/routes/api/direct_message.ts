@@ -1,9 +1,10 @@
 import { Router } from "express";
 import httpErrors from "http-errors";
-import { col, where, Op } from "sequelize";
+import { QueryTypes, Op } from "sequelize";
 
 import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
 import {
+  countUnreadDirectMessagesForUser,
   DirectMessage,
   DirectMessageConversation,
   User,
@@ -18,18 +19,95 @@ directMessageRouter.get("/dm", async (req, res) => {
 
   const conversations = await DirectMessageConversation.findAll({
     where: {
-      [Op.and]: [
-        { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
-        where(col("messages.id"), { [Op.not]: null }),
-      ],
+      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
-    order: [[col("messages.createdAt"), "DESC"]],
   });
 
-  const sorted = conversations.map((c) => ({
-    ...c.toJSON(),
-    messages: c.messages?.reverse(),
-  }));
+  if (conversations.length === 0) {
+    return res.status(200).type("application/json").send([]);
+  }
+
+  const conversationIds = conversations.map((conversation) => conversation.id);
+  const placeholders = conversationIds.map(() => "?").join(", ");
+
+  // Load only the newest message per conversation to keep the DM list light.
+  const latestMessageRows = await DirectMessage.sequelize!.query<{
+    conversationId: string;
+    id: string;
+  }>(
+    `
+      SELECT ranked.id, ranked.conversationId
+      FROM (
+        SELECT
+          "id",
+          "conversationId",
+          ROW_NUMBER() OVER (
+            PARTITION BY "conversationId"
+            ORDER BY "createdAt" DESC, "id" DESC
+          ) AS "rowNumber"
+        FROM "DirectMessages"
+        WHERE "conversationId" IN (${placeholders})
+      ) AS ranked
+      WHERE ranked."rowNumber" = 1
+    `,
+    {
+      replacements: conversationIds,
+      type: QueryTypes.SELECT,
+    },
+  );
+
+  const latestMessages = await DirectMessage.unscoped().findAll({
+    include: [
+      {
+        association: "sender",
+        include: [{ association: "profileImage" }],
+      },
+    ],
+    where: {
+      id: latestMessageRows.map((row) => row.id),
+    },
+  });
+  const latestMessagesByConversationId = new Map(
+    latestMessages.map((message) => [message.conversationId, message]),
+  );
+
+  const unreadConversationRows = await DirectMessage.unscoped().findAll({
+    attributes: ["conversationId"],
+    group: ["conversationId"],
+    raw: true,
+    where: {
+      conversationId: conversationIds,
+      isRead: false,
+      senderId: { [Op.ne]: req.session.userId },
+    },
+  });
+  const unreadConversationIds = new Set(
+    unreadConversationRows.map((row) => row.conversationId as string),
+  );
+
+  const sorted = conversations
+    .map((conversation) => {
+      const latestMessage = latestMessagesByConversationId.get(conversation.id);
+      if (latestMessage == null) {
+        return null;
+      }
+
+      return {
+        ...conversation.toJSON(),
+        hasUnread: unreadConversationIds.has(conversation.id),
+        messages: [latestMessage.toJSON()],
+      };
+    })
+    .filter((conversation) => conversation != null)
+    .sort((a, b) => {
+      const aLastMessage = a.messages.at(-1);
+      const bLastMessage = b.messages.at(-1);
+
+      return (
+        new Date(bLastMessage?.createdAt ?? 0).getTime() -
+        new Date(aLastMessage?.createdAt ?? 0).getTime()
+      );
+    });
 
   return res.status(200).type("application/json").send(sorted);
 });
@@ -75,22 +153,7 @@ directMessageRouter.ws("/dm/unread", async (req, _res) => {
     eventhub.off(`dm:unread/${req.session.userId}`, handler);
   });
 
-  const unreadCount = await DirectMessage.count({
-    distinct: true,
-    where: {
-      senderId: { [Op.ne]: req.session.userId },
-      isRead: false,
-    },
-    include: [
-      {
-        association: "conversation",
-        where: {
-          [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
-        },
-        required: true,
-      },
-    ],
-  });
+  const unreadCount = await countUnreadDirectMessagesForUser(req.session.userId);
 
   eventhub.emit(`dm:unread/${req.session.userId}`, { unreadCount });
 });
@@ -101,6 +164,15 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
   }
 
   const conversation = await DirectMessageConversation.findOne({
+    include: [
+      {
+        association: "messages",
+        include: [{ association: "sender", include: [{ association: "profileImage" }] }],
+        order: [["createdAt", "ASC"]],
+        required: false,
+        separate: true,
+      },
+    ],
     where: {
       id: req.params.conversationId,
       [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
@@ -200,13 +272,32 @@ directMessageRouter.post("/dm/:conversationId/read", async (req, res) => {
       ? conversation.initiatorId
       : conversation.memberId;
 
-  await DirectMessage.update(
+  const [updatedCount] = await DirectMessage.update(
     { isRead: true },
     {
       where: { conversationId: conversation.id, senderId: peerId, isRead: false },
-      individualHooks: true,
     },
   );
+
+  if (updatedCount > 0) {
+    const unreadCount = await countUnreadDirectMessagesForUser(req.session.userId);
+    const latestPeerMessage = await DirectMessage.unscoped().findOne({
+      attributes: ["id", "body", "senderId", "conversationId", "isRead", "createdAt", "updatedAt"],
+      order: [
+        ["createdAt", "DESC"],
+        ["id", "DESC"],
+      ],
+      where: {
+        conversationId: conversation.id,
+        senderId: peerId,
+      },
+    });
+
+    if (latestPeerMessage != null) {
+      eventhub.emit(`dm:conversation/${conversation.id}:message`, latestPeerMessage.toJSON());
+    }
+    eventhub.emit(`dm:unread/${req.session.userId}`, { unreadCount });
+  }
 
   return res.status(200).type("application/json").send({});
 });

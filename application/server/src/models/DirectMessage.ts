@@ -6,7 +6,7 @@ import {
   InferCreationAttributes,
   Model,
   NonAttribute,
-  Op,
+  QueryTypes,
   Sequelize,
   UUIDV4,
 } from "sequelize";
@@ -29,6 +29,33 @@ export class DirectMessage extends Model<
 
   declare sender?: NonAttribute<User>;
   declare conversation?: NonAttribute<DirectMessageConversation>;
+}
+
+export async function countUnreadDirectMessagesForUser(userId: string) {
+  const sequelize = DirectMessage.sequelize;
+  if (sequelize == null) {
+    throw new Error("DirectMessage sequelize is not initialized");
+  }
+
+  const [row] = await sequelize.query<{ unreadCount: number | string }>(
+    `
+      SELECT COUNT(*) AS "unreadCount"
+      FROM "DirectMessages"
+      WHERE "isRead" = ?
+        AND "senderId" != ?
+        AND "conversationId" IN (
+          SELECT "id"
+          FROM "DirectMessageConversations"
+          WHERE "initiatorId" = ? OR "memberId" = ?
+        )
+    `,
+    {
+      replacements: [false, userId, userId, userId],
+      type: QueryTypes.SELECT,
+    },
+  );
+
+  return Number(row?.unreadCount ?? 0);
 }
 
 export function initDirectMessage(sequelize: Sequelize) {
@@ -60,6 +87,16 @@ export function initDirectMessage(sequelize: Sequelize) {
     },
     {
       sequelize,
+      indexes: [
+        {
+          fields: ["conversationId"],
+          name: "direct_messages_conversation_id",
+        },
+        {
+          fields: ["isRead"],
+          name: "direct_messages_is_read",
+        },
+      ],
       defaultScope: {
         include: [
           {
@@ -72,37 +109,25 @@ export function initDirectMessage(sequelize: Sequelize) {
     },
   );
 
-  DirectMessage.addHook("afterSave", "onDmSaved", async (message) => {
-    const directMessage = await DirectMessage.findByPk(message.get().id);
-    const conversation = await DirectMessageConversation.findByPk(directMessage?.conversationId);
+  DirectMessage.addHook("afterSave", "onDmSaved", async (message: DirectMessage) => {
+    const conversation =
+      message.conversation ??
+      (await DirectMessageConversation.findByPk(message.conversationId, {
+        attributes: ["id", "initiatorId", "memberId"],
+      }));
 
-    if (directMessage == null || conversation == null) {
+    if (conversation == null) {
       return;
     }
 
     const receiverId =
-      conversation.initiatorId === directMessage.senderId
+      conversation.initiatorId === message.senderId
         ? conversation.memberId
         : conversation.initiatorId;
 
-    const unreadCount = await DirectMessage.count({
-      distinct: true,
-      where: {
-        senderId: { [Op.ne]: receiverId },
-        isRead: false,
-      },
-      include: [
-        {
-          association: "conversation",
-          where: {
-            [Op.or]: [{ initiatorId: receiverId }, { memberId: receiverId }],
-          },
-          required: true,
-        },
-      ],
-    });
+    const unreadCount = await countUnreadDirectMessagesForUser(receiverId);
 
-    eventhub.emit(`dm:conversation/${conversation.id}:message`, directMessage);
+    eventhub.emit(`dm:conversation/${conversation.id}:message`, message.toJSON());
     eventhub.emit(`dm:unread/${receiverId}`, { unreadCount });
   });
 }
