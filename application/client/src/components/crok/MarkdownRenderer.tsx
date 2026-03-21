@@ -1,27 +1,19 @@
 import "katex/dist/katex.min.css";
-import Markdown from "react-markdown";
-import rehypeKatex from "rehype-katex";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
+import { useMemo } from "react";
 
-import { CodeBlock } from "@web-speed-hackathon-2026/client/src/components/crok/CodeBlock";
-
-const components = { pre: CodeBlock };
-const rehypePlugins = [rehypeKatex];
-const remarkPlugins = [remarkMath, remarkGfm];
+import { renderMarkdown } from "@web-speed-hackathon-2026/client/src/utils/render_markdown";
 
 interface Props {
   content: string;
 }
 
 export const MarkdownRenderer = ({ content }: Props) => {
+  const html = useMemo(() => renderMarkdown(content), [content]);
+
   return (
-    <Markdown
-      components={components}
-      rehypePlugins={rehypePlugins}
-      remarkPlugins={remarkPlugins}
-    >
-      {content}
-    </Markdown>
+    <div
+      className="crok-markdown"
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
   );
 };
