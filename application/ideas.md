@@ -2,6 +2,7 @@ After migrating to Vite, getting "Buffer is not defined" in the browser.
 Webpack previously injected Buffer via ProvidePlugin.
 
 Fix options:
+
 1. Add to vite.config.ts:
    define: { global: 'globalThis' }
    and install + configure vite-plugin-node-polyfills

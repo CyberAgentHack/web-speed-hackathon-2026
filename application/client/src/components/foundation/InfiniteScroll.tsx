@@ -13,7 +13,8 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
 
   useEffect(() => {
     const handler = () => {
-      const hasReached = window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
+      const hasReached =
+        window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
 
       // 画面最下部にスクロールしたタイミングで、登録したハンドラを呼び出す
       if (hasReached && !prevReachedRef.current) {

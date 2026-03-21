@@ -1,21 +1,10 @@
-Three critical issues to fix:
+The "写真つき投稿詳細ページ" (post detail with photo) has TBT of 0 points.
+This page can show images, movies, and sounds via ImageArea, MovieArea, SoundArea.
 
-1. SSR is not working — curl http://localhost:3000 shows empty <body>
-   - renderToString() result must be inserted into the HTML response body
-   - Fix the server HTML handler
+Investigate what's causing high TBT on this page:
+1. Check SoundWaveSVG — is audio decoding blocking the main thread?
+   Move heavy computation to a Web Worker if possible.
+2. Check if any heavy synchronous operations run on mount in PostPage/PostItem
+3. Check MovieArea and SoundArea for any blocking initialization
 
-2. Tailwind CSS browser runtime is loaded via CDN script tag:
-   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.1"></script>
-   This is extremely heavy — it processes CSS at runtime in the browser.
-   Replace with build-time CSS generation:
-   - Install @tailwindcss/vite
-   - Add to vite.config.ts plugins
-   - Remove the CDN script tag from HTML
-   - Add @import "tailwindcss" to the CSS entry file
-
-3. DM pages broken: "ユーザー名の入力に失敗"
-   - Check NewDirectMessageModalPage.tsx
-   - Verify input has id attribute and label has matching htmlFor
-   - Fix if missing
-
-Validate with typecheck and build after all changes.
+Report findings only, no changes yet.
