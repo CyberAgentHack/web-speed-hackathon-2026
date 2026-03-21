@@ -67,6 +67,7 @@ export default defineConfig({
   },
 
   build: {
+    modulePreload: false,
     outDir: path.resolve(__dirname, "../dist"),
     emptyOutDir: true,
     rollupOptions: {
@@ -80,6 +81,10 @@ export default defineConfig({
           return "assets/[name]-[hash][extname]";
         },
         manualChunks(id) {
+          // Vite preload helper → vendor-react (always loaded)
+          if (id.includes("vite/preload-helper")) {
+            return "vendor-react";
+          }
           // React core + router + redux
           if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/") || id.includes("node_modules/react-router") || id.includes("node_modules/react-redux") || id.includes("node_modules/redux") || id.includes("node_modules/@reduxjs")) {
             return "vendor-react";
