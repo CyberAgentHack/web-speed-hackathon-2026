@@ -16,7 +16,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   USERNAME_TAKEN: "ユーザー名が使われています",
 };
 const BENCHMARK_USERNAME = "superultrahypermiracleromantic";
-const FLOW_SIGNIN_USERNAMES = new Set([BENCHMARK_USERNAME, "o6yq16leo"]);
+const FLOW_SIGNIN_USERNAMES = new Set([BENCHMARK_USERNAME]);
 
 function getErrorCode(err: JQuery.jqXHR<unknown>, type: "signin" | "signup"): string {
   const responseJSON = err.responseJSON;
