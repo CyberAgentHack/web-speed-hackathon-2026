@@ -1,6 +1,7 @@
 import {
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type ChangeEvent,
@@ -9,11 +10,11 @@ import {
 } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import type {
-  extractTokens as ExtractTokensFn,
-  filterSuggestionsBM25 as FilterSuggestionsBM25Fn,
-} from "@web-speed-hackathon-2026/client/src/utils/bm25_search";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import type {
+  SuggestionWorkerRequest,
+  SuggestionWorkerResponse,
+} from "@web-speed-hackathon-2026/client/src/workers/crok_suggestions.worker";
 
 interface Props {
   isStreaming: boolean;
@@ -77,15 +78,14 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const [tokenizer, setTokenizer] = useState<any>(null);
-  const [bm25Utils, setBm25Utils] = useState<{
-    extractTokens: typeof ExtractTokensFn;
-    filterSuggestionsBM25: typeof FilterSuggestionsBM25Fn;
-  } | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isWorkerReady, setIsWorkerReady] = useState(false);
+  const workerRef = useRef<Worker | null>(null);
+  const requestIdRef = useRef(0);
+  const latestRequestIdRef = useRef(0);
 
   // サジェストが更新されたら一番下にスクロール
   useLayoutEffect(() => {
@@ -94,36 +94,46 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   }, [suggestions, showSuggestions]);
 
-  // 初回入力時にkuromojiトークナイザーを構築（遅延初期化）
-  const initStarted = useRef(false);
-  const initKuromoji = () => {
-    if (initStarted.current || tokenizer) return;
-    initStarted.current = true;
-    (async () => {
-      const [Bluebird, kuromoji, bm25] = await Promise.all([
-        import("bluebird"),
-        import("kuromoji"),
-        import("@web-speed-hackathon-2026/client/src/utils/bm25_search"),
-      ]);
-      const builder = Bluebird.default.promisifyAll(
-        kuromoji.default.builder({ dicPath: "/dicts" }),
-      );
-      const nextTokenizer = await builder.buildAsync();
-      setTokenizer(nextTokenizer);
-      setBm25Utils({
-        extractTokens: bm25.extractTokens,
-        filterSuggestionsBM25: bm25.filterSuggestionsBM25,
-      });
-    })();
-  };
+  const worker = useMemo(
+    () =>
+      new Worker(new URL("../../workers/crok_suggestions.worker.ts", import.meta.url), {
+        type: "module",
+      }),
+    [],
+  );
 
   const suggestionsCache = useRef<string[] | null>(null);
+
+  useEffect(() => {
+    workerRef.current = worker;
+    const handleMessage = (event: MessageEvent<SuggestionWorkerResponse>) => {
+      if (event.data.type === "inited") {
+        setIsWorkerReady(true);
+        return;
+      }
+      if (event.data.type === "suggested") {
+        if (event.data.requestId !== latestRequestIdRef.current) return;
+        setQueryTokens(event.data.tokens);
+        setSuggestions(event.data.results);
+        setShowSuggestions(event.data.results.length > 0);
+      }
+    };
+
+    worker.addEventListener("message", handleMessage);
+    worker.postMessage({ type: "init" } satisfies SuggestionWorkerRequest);
+
+    return () => {
+      worker.removeEventListener("message", handleMessage);
+      worker.terminate();
+      workerRef.current = null;
+    };
+  }, [worker]);
 
   useEffect(() => {
     let cancelled = false;
 
     const updateSuggestions = async () => {
-      if (!tokenizer || !bm25Utils || !inputValue.trim()) {
+      if (!isWorkerReady || !inputValue.trim()) {
         setSuggestions([]);
         setQueryTokens([]);
         setShowSuggestions(false);
@@ -137,17 +147,16 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
         candidates = res.suggestions;
         suggestionsCache.current = candidates;
       }
-
-      const tokens = bm25Utils.extractTokens(tokenizer.tokenize(inputValue));
-      const results = bm25Utils.filterSuggestionsBM25(tokenizer, candidates, tokens);
-
-      if (cancelled) {
-        return;
-      }
-
-      setQueryTokens(tokens);
-      setSuggestions(results);
-      setShowSuggestions(results.length > 0);
+      const workerInstance = workerRef.current;
+      if (!workerInstance) return;
+      const requestId = ++requestIdRef.current;
+      latestRequestIdRef.current = requestId;
+      workerInstance.postMessage({
+        type: "suggest",
+        requestId,
+        inputValue,
+        candidates,
+      } satisfies SuggestionWorkerRequest);
     };
 
     const timer = setTimeout(updateSuggestions, 300);
@@ -156,7 +165,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [inputValue, tokenizer, bm25Utils]);
+  }, [inputValue, isWorkerReady]);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
@@ -176,7 +185,6 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     const value = e.target.value;
     setInputValue(value);
     adjustTextareaHeight();
-    initKuromoji();
   };
 
   const handleSuggestionClick = (suggestion: string) => {
