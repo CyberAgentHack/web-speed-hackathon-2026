@@ -9,7 +9,7 @@ export const useFetch = (path: string) => {
 
     const fetchData = async () => {
       try {
-        // 🔥 相対パスでAPIを叩く（Fly対応）
+        //  相対パスでAPIを叩く（Fly対応）
         const res = await fetch(path);
 
         if (!res.ok) {
