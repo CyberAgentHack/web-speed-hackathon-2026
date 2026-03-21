@@ -1,5 +1,4 @@
 import classNames from "classnames";
-import moment from "moment";
 import {
   ChangeEvent,
   useCallback,
@@ -11,9 +10,10 @@ import {
   useEffect,
 } from "react";
 
+import { AvatarImage } from "@web-speed-hackathon-2026/client/src/components/foundation/AvatarImage";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { formatTime } from "@web-speed-hackathon-2026/client/src/utils/date_formatter";
 
 interface Props {
   conversationError: Error | null;
@@ -43,7 +43,7 @@ export const DirectMessagePage = ({
   const [text, setText] = useState("");
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
-  const scrollHeightRef = useRef(0);
+  const messageListRef = useRef<HTMLUListElement>(null);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -74,15 +74,27 @@ export const DirectMessagePage = ({
   );
 
   useEffect(() => {
-    const id = setInterval(() => {
-      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
-      if (height !== scrollHeightRef.current) {
-        scrollHeightRef.current = height;
-        window.scrollTo(0, height);
-      }
-    }, 1);
+    const el = messageListRef.current;
+    if (!el) return;
 
-    return () => clearInterval(id);
+    let rafId: number | null = null;
+    const observer = new MutationObserver(() => {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+      rafId = requestAnimationFrame(() => {
+        window.scrollTo(0, document.body.scrollHeight);
+        rafId = null;
+      });
+    });
+
+    observer.observe(el, { childList: true });
+    return () => {
+      observer.disconnect();
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+    };
   }, []);
 
   if (conversationError != null) {
@@ -96,10 +108,11 @@ export const DirectMessagePage = ({
   return (
     <section className="bg-cax-surface flex min-h-[calc(100vh-(--spacing(12)))] flex-col lg:min-h-screen">
       <header className="border-cax-border bg-cax-surface sticky top-0 z-10 flex items-center gap-2 border-b px-4 py-3">
-        <img
-          alt={peer.profileImage.alt}
-          className="h-12 w-12 rounded-full object-cover"
-          src={getProfileImagePath(peer.profileImage.id)}
+        <AvatarImage
+          className="h-12 w-12 rounded-full"
+          height={48}
+          profileImage={peer.profileImage}
+          width={48}
         />
         <div className="min-w-0">
           <h1 className="overflow-hidden text-xl font-bold text-ellipsis whitespace-nowrap">
@@ -118,12 +131,13 @@ export const DirectMessagePage = ({
           </p>
         )}
 
-        <ul className="grid gap-3" data-testid="dm-message-list">
+        <ul className="grid gap-3" data-testid="dm-message-list" ref={messageListRef}>
           {conversation.messages.map((message) => {
             const isActiveUserSend = message.sender.id === activeUser.id;
 
             return (
               <li
+                key={message.id}
                 className={classNames(
                   "flex flex-col w-full",
                   isActiveUserSend ? "items-end" : "items-start",
@@ -141,7 +155,7 @@ export const DirectMessagePage = ({
                 </p>
                 <div className="flex gap-1 text-xs">
                   <time dateTime={message.createdAt}>
-                    {moment(message.createdAt).locale("ja").format("HH:mm")}
+                    {formatTime(message.createdAt)}
                   </time>
                   {isActiveUserSend && message.isRead && (
                     <span className="text-cax-text-muted">既読</span>
