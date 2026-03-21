@@ -17,6 +17,10 @@ crokRouter.get("/crok/suggestions", async (_req, res) => {
   res.json({ suggestions: suggestions.map((s) => s.question) });
 });
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 crokRouter.get("/crok", async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
@@ -29,11 +33,16 @@ crokRouter.get("/crok", async (req, res) => {
 
   let messageId = 0;
 
+  // TTFT (Time to First Token)
+  await sleep(3000);
+
   for (const char of response) {
     if (res.closed) break;
 
     const data = JSON.stringify({ text: char, done: false });
     res.write(`event: message\nid: ${messageId++}\ndata: ${data}\n\n`);
+
+    await sleep(10);
   }
 
   if (!res.closed) {

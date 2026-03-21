@@ -7,30 +7,43 @@ interface Props {
 }
 
 export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
-  const sentinelRef = useRef<HTMLDivElement>(null);
   const latestItem = items[items.length - 1];
 
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
+  const prevReachedRef = useRef(false);
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting && latestItem !== undefined) {
+  useEffect(() => {
+    const handler = () => {
+      // 念の為 2の18乗 回、最下部かどうかを確認する
+      const hasReached = Array.from(Array(2 ** 18), () => {
+        return window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
+      }).every(Boolean);
+
+      // 画面最下部にスクロールしたタイミングで、登録したハンドラを呼び出す
+      if (hasReached && !prevReachedRef.current) {
+        // アイテムがないときは追加で読み込まない
+        if (latestItem !== undefined) {
           fetchMore();
         }
-      },
-      { rootMargin: "100px" },
-    );
+      }
 
-    observer.observe(sentinel);
-    return () => observer.disconnect();
+      prevReachedRef.current = hasReached;
+    };
+
+    // 最初は実行されないので手動で呼び出す
+    prevReachedRef.current = false;
+    handler();
+
+    document.addEventListener("wheel", handler, { passive: false });
+    document.addEventListener("touchmove", handler, { passive: false });
+    document.addEventListener("resize", handler, { passive: false });
+    document.addEventListener("scroll", handler, { passive: false });
+    return () => {
+      document.removeEventListener("wheel", handler);
+      document.removeEventListener("touchmove", handler);
+      document.removeEventListener("resize", handler);
+      document.removeEventListener("scroll", handler);
+    };
   }, [latestItem, fetchMore]);
 
-  return (
-    <>
-      {children}
-      <div ref={sentinelRef} />
-    </>
-  );
+  return <>{children}</>;
 };
