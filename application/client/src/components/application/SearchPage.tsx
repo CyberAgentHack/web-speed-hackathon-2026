@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { Field, InjectedFormProps, reduxForm, WrappedFieldProps } from "redux-form";
+import { Field, InjectedFormProps, reduxForm, SubmissionError, WrappedFieldProps } from "redux-form";
 
 import { Timeline } from "@web-speed-hackathon-2026/client/src/components/timeline/Timeline";
 import {
@@ -18,28 +18,32 @@ interface Props {
   results: Models.Post[];
 }
 
-const SearchInput = ({ input, meta }: WrappedFieldProps) => (
+const SearchInput = ({ input, meta, formSubmitFailed }: WrappedFieldProps & { formSubmitFailed?: boolean }) => {
+  const hasError = (meta.touched || formSubmitFailed) && meta.error;
+  return (
   <div className="flex flex-1 flex-col">
     <input
       {...input}
       className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
-        meta.touched && meta.error
+        hasError
           ? "border-cax-danger focus:border-cax-danger"
           : "border-cax-border focus:border-cax-brand-strong"
       }`}
       placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
       type="text"
     />
-    {meta.touched && meta.error && (
+    {hasError && (
       <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>
     )}
   </div>
-);
+  );
+};
 
 const SearchPageComponent = ({
   query,
   results,
   handleSubmit,
+  submitFailed,
 }: Props & InjectedFormProps<SearchFormData, Props>) => {
   const navigate = useNavigate();
   const [isNegative, setIsNegative] = useState(false);
@@ -71,6 +75,10 @@ const SearchPageComponent = ({
   }, [parsed]);
 
   const onSubmit = (values: SearchFormData) => {
+    const errors = validate(values);
+    if (Object.keys(errors).length > 0) {
+      throw new SubmissionError(errors);
+    }
     const sanitizedText = sanitizeSearchText(values.searchText.trim());
     navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
   };
@@ -80,7 +88,7 @@ const SearchPageComponent = ({
       <div className="bg-cax-surface p-4 shadow">
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="flex gap-2">
-            <Field name="searchText" component={SearchInput} />
+            <Field name="searchText" component={SearchInput} formSubmitFailed={submitFailed} />
             <Button variant="primary" type="submit">
               検索
             </Button>
@@ -123,7 +131,6 @@ const SearchPageComponent = ({
 
 export const SearchPage = reduxForm<SearchFormData, Props>({
   form: "search",
-  // ???: This no longer tracks the change so browser navigation does not change the text
-  // enableReinitialize: true,
+  enableReinitialize: true,
   validate,
 })(SearchPageComponent);

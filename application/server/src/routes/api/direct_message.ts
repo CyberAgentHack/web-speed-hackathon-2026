@@ -16,7 +16,7 @@ directMessageRouter.get("/dm", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversations = await DirectMessageConversation.findAll({
+  const conversations = await DirectMessageConversation.unscoped().findAll({
     where: {
       [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
