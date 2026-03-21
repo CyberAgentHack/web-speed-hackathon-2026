@@ -1,21 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import {
-  Field,
-  InjectedFormProps,
-  reduxForm,
-  SubmissionError,
-  WrappedFieldProps,
-} from "redux-form";
 
 import { useSSRData } from "@web-speed-hackathon-2026/client/src/api/ssr-context";
 import { Timeline } from "@web-speed-hackathon-2026/client/src/components/timeline/Timeline";
 import {
   parseSearchQuery,
   sanitizeSearchText,
+  isValidDate,
 } from "@web-speed-hackathon-2026/client/src/search/services";
-import { SearchFormData } from "@web-speed-hackathon-2026/client/src/search/types";
-import { validate } from "@web-speed-hackathon-2026/client/src/search/validation";
 
 import { Button } from "../foundation/Button";
 
@@ -24,32 +16,38 @@ interface Props {
   results: Models.Post[];
 }
 
-const SearchInput = ({ input, meta }: WrappedFieldProps) => (
-  <div className="flex flex-1 flex-col">
-    <input
-      {...input}
-      aria-label="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
-      className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
-        meta.touched && meta.error
-          ? "border-cax-danger focus:border-cax-danger"
-          : "border-cax-border focus:border-cax-brand-strong"
-      }`}
-      placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
-      type="text"
-    />
-    {meta.touched && meta.error && (
-      <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>
-    )}
-  </div>
-);
+function validateSearch(searchText: string): string | null {
+  const raw = searchText.trim();
 
-const SearchPageComponent = ({
-  query,
-  results,
-  handleSubmit,
-}: Props & InjectedFormProps<SearchFormData, Props>) => {
+  if (!raw) {
+    return "検索キーワードを入力してください";
+  }
+
+  const { keywords, sinceDate, untilDate } = parseSearchQuery(raw);
+
+  if (!keywords && !sinceDate && !untilDate) {
+    return "検索キーワードまたは日付範囲を指定してください";
+  }
+
+  if (sinceDate && !isValidDate(sinceDate)) {
+    return `since: の日付形式が不正です: ${sinceDate}`;
+  }
+
+  if (untilDate && !isValidDate(untilDate)) {
+    return `until: の日付形式が不正です: ${untilDate}`;
+  }
+
+  if (sinceDate && untilDate && new Date(sinceDate) > new Date(untilDate)) {
+    return "since: は until: より前の日付を指定してください";
+  }
+
+  return null;
+}
+
+export const SearchPage = ({ query, results }: Props) => {
   const navigate = useNavigate();
   const parsed = parseSearchQuery(query);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   // SSR で事前取得された sentiment があれば初期値として使う
   const ssrData = useSSRData();
@@ -102,21 +100,40 @@ const SearchPageComponent = ({
     return parts.join(" ");
   }, [parsed]);
 
-  const onSubmit = (values: SearchFormData) => {
-    const errors = validate(values);
-    if (Object.keys(errors).length > 0) {
-      throw new SubmissionError(errors);
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const searchText = (formData.get("searchText") as string) ?? "";
+    const error = validateSearch(searchText);
+    if (error) {
+      setSearchError(error);
+      return;
     }
-    const sanitizedText = sanitizeSearchText(values.searchText.trim());
+    setSearchError(null);
+    const sanitizedText = sanitizeSearchText(searchText.trim());
     void navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
   };
 
   return (
     <div className="flex flex-col gap-4">
       <div className="bg-cax-surface p-4 shadow">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit}>
           <div className="flex gap-2">
-            <Field name="searchText" component={SearchInput} />
+            <div className="flex flex-1 flex-col">
+              <input
+                name="searchText"
+                aria-label="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
+                className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
+                  searchError
+                    ? "border-cax-danger focus:border-cax-danger"
+                    : "border-cax-border focus:border-cax-brand-strong"
+                }`}
+                placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
+                type="text"
+                defaultValue={query}
+              />
+              {searchError && <span className="text-cax-danger mt-1 text-xs">{searchError}</span>}
+            </div>
             <Button variant="primary" type="submit">
               検索
             </Button>
@@ -156,9 +173,3 @@ const SearchPageComponent = ({
     </div>
   );
 };
-
-export const SearchPage = reduxForm<SearchFormData, Props>({
-  form: "search",
-  enableReinitialize: true,
-  validate,
-})(SearchPageComponent);

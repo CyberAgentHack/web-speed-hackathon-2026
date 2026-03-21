@@ -13,9 +13,10 @@ type Params = {
 export async function createPage({ device }: Params) {
   const userDataDir = await fs.mkdtemp(path.resolve(os.tmpdir(), "playwright-"));
 
+  const debugPort = process.env["CHROME_DEBUG_PORT"] || "9222";
   const chromiumPath = process.env["CHROMIUM_PATH"] || "chromium";
   const playwrightContext = await playwright.chromium.launchPersistentContext(userDataDir, {
-    args: ["--remote-debugging-port=9222"],
+    args: [`--remote-debugging-port=${debugPort}`],
     executablePath: chromiumPath,
     devtools: false,
     headless: !debug.enabled("wsh:browser"),
@@ -26,7 +27,7 @@ export async function createPage({ device }: Params) {
   await playwrightPage.goto("about:blank");
 
   const puppeteerBrowser = await puppeteer.connect({
-    browserURL: "http://127.0.0.1:9222",
+    browserURL: `http://127.0.0.1:${debugPort}`,
     defaultViewport: {
       deviceScaleFactor: device.deviceScaleFactor!,
       hasTouch: device.hasTouch!,

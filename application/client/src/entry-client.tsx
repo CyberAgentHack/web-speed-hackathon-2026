@@ -1,7 +1,6 @@
 import "./index.css";
 import "./buildinfo";
 import { createRoot, hydrateRoot } from "react-dom/client";
-import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router";
 import { SWRConfig } from "swr";
 
@@ -12,7 +11,6 @@ import {
   type SSRData,
 } from "@web-speed-hackathon-2026/client/src/containers/AppContainer";
 import { Document } from "@web-speed-hackathon-2026/client/src/Document";
-import { store } from "@web-speed-hackathon-2026/client/src/store";
 
 const ssrData: SSRData | null = ((window as any).__SSR_DATA__ as SSRData | undefined) ?? null;
 const cssHref = (window as any).__CSS_HREF__ as string | undefined;
@@ -21,15 +19,13 @@ if (ssrData) {
   hydrateRoot(
     document,
     <SSRDataProvider value={ssrData}>
-      <Provider store={store}>
-        <SWRConfig value={swrConfig}>
-          <BrowserRouter unstable_useTransitions={true}>
-            <Document cssHref={cssHref}>
-              <AppContainer />
-            </Document>
-          </BrowserRouter>
-        </SWRConfig>
-      </Provider>
+      <SWRConfig value={swrConfig}>
+        <BrowserRouter unstable_useTransitions={false}>
+          <Document cssHref={cssHref}>
+            <AppContainer />
+          </Document>
+        </BrowserRouter>
+      </SWRConfig>
     </SSRDataProvider>,
     { onRecoverableError: () => {} },
   );
@@ -40,13 +36,11 @@ if (ssrData) {
   const appEl = document.getElementById("app")!;
   createRoot(appEl).render(
     <SSRDataProvider value={null}>
-      <Provider store={store}>
-        <SWRConfig value={swrConfig}>
-          <BrowserRouter unstable_useTransitions={true}>
-            <AppContainer />
-          </BrowserRouter>
-        </SWRConfig>
-      </Provider>
+      <SWRConfig value={swrConfig}>
+        <BrowserRouter unstable_useTransitions={false}>
+          <AppContainer />
+        </BrowserRouter>
+      </SWRConfig>
     </SSRDataProvider>,
   );
 }

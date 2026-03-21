@@ -87,8 +87,82 @@ pnpm dev                                            # Vite HMR (:8080) + server 
 
 ```bash
 pnpm build                                          # Vite build → dist/ + dist-ssr/
-PORT=3333 pnpm start                                # server → http://localhost:3333
+PORT=4000 pnpm start                                # server → http://localhost:4000
 ```
+
+> **dev と同時実行する場合は PORT=4000 を使う。** PORT=3333 は dev スロットと競合する。
+
+---
+
+## 環境分離（ポート・DB の競合回避）
+
+dev / 本番確認 / scoring-tool を **同時に** 動かすための構成。
+
+### 環境スロット
+
+| スロット | 用途 | Server PORT | Vite Dev | アクセス URL |
+|---------|------|------------|----------|-------------|
+| **dev** | 日常開発 (HMR) | 3333 | 8080 | `http://localhost:8080` |
+| **prod** | 本番ビルド確認 / scoring | 4000 | — | `http://localhost:4000` |
+
+> Port 3000 は vibe-kanban が常時使用しているため全スロットで避ける。
+
+### 同時実行パターン（dev + prod + scoring）
+
+```
+ターミナル 1: cd application && PORT=3333 pnpm dev
+ターミナル 2: cd application && pnpm build && PORT=4000 pnpm start
+ターミナル 3: cd scoring-tool && pnpm start --applicationUrl http://localhost:4000
+```
+
+### なぜ DB は競合しないか
+
+- サーバー起動時に `database.sqlite` を `os.tmpdir()/wsh-<random>/` へコピー
+- 各プロセスが独立した tmpdir コピーを使用
+- `POST /api/v1/initialize` は tmpdir 内 DB をリセット（ソース DB は不変）
+- **seed 再生成**（`seed:insert`）はソース DB を直接書き換えるため、実行後はサーバーを再起動すること
+
+### ポート設定一覧
+
+| コンポーネント | 設定方法 | デフォルト |
+|-------------|---------|-----------|
+| Server (Bun.serve) | `PORT` env | 3000 |
+| Vite Dev Server | ハードコード | 8080 |
+| Vite Proxy 先 | `PORT` env | 3333 |
+| E2E テスト | `E2E_BASE_URL` env | `http://localhost:3000` |
+| Scoring Tool | `--applicationUrl` CLI | 必須指定 |
+| Chromium Debug Port | `CHROME_DEBUG_PORT` env | 9222 |
+
+### E2E / VRT 実行
+
+```bash
+# dev サーバーに対して
+E2E_BASE_URL=http://localhost:3333 pnpm --filter @web-speed-hackathon-2026/e2e test
+
+# prod ビルドに対して
+E2E_BASE_URL=http://localhost:4000 pnpm --filter @web-speed-hackathon-2026/e2e test
+```
+
+### Chromium デバッグポート
+
+scoring-tool は `CHROME_DEBUG_PORT` env でデバッグポートを変更できる（デフォルト: 9222）。
+E2E と scoring-tool を同時実行する場合はポートを分ける:
+
+```bash
+# scoring-tool（ポート 9333）
+CHROME_DEBUG_PORT=9333 pnpm start --applicationUrl http://localhost:4000
+
+# E2E（Playwright は独自にポートを割り当てるため設定不要）
+E2E_BASE_URL=http://localhost:3333 pnpm --filter @web-speed-hackathon-2026/e2e test
+```
+
+古い Chrome プロセスが残っている場合: `kill $(lsof -t -i:9222)`
+
+### その他の注意事項
+
+- `nix develop` 外で Playwright/Puppeteer を使うと Chrome が見つからず失敗する
+
+---
 
 ## アーキテクチャ概要（現在の構成）
 

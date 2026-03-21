@@ -1,8 +1,5 @@
 import { renderToReadableStream } from "react-dom/server";
-import { Provider } from "react-redux";
 import { StaticRouter } from "react-router";
-import { combineReducers, legacy_createStore as createStore } from "redux";
-import { reducer as formReducer } from "redux-form";
 import { SWRConfig } from "swr";
 
 import { SSRDataProvider } from "@web-speed-hackathon-2026/client/src/api/ssr-context";
@@ -44,22 +41,19 @@ function computeTitle(url: string, ssrData: SSRData): string | undefined {
 
 export async function render(options: RenderOptions): Promise<ReadableStream> {
   const { url, ssrData, bootstrapModules, cssHref, modulePreloads } = options;
-  const store = createStore(combineReducers({ form: formReducer }));
   const title = computeTitle(url, ssrData);
 
   const bootstrapScriptContent = `window.__SSR_DATA__=${JSON.stringify(ssrData).replace(/</g, "\\u003c")};window.__CSS_HREF__=${JSON.stringify(cssHref)}`;
 
   const stream = await renderToReadableStream(
     <SSRDataProvider value={ssrData}>
-      <Provider store={store}>
-        <SWRConfig value={swrConfig}>
-          <StaticRouter location={url}>
-            <Document cssHref={cssHref} title={title} modulePreloads={modulePreloads}>
-              <AppContainer />
-            </Document>
-          </StaticRouter>
-        </SWRConfig>
-      </Provider>
+      <SWRConfig value={swrConfig}>
+        <StaticRouter location={url}>
+          <Document cssHref={cssHref} title={title} modulePreloads={modulePreloads}>
+            <AppContainer />
+          </Document>
+        </StaticRouter>
+      </SWRConfig>
     </SSRDataProvider>,
     {
       bootstrapModules,
