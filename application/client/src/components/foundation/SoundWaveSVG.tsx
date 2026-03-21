@@ -5,31 +5,56 @@ interface ParsedData {
   peaks: number[];
 }
 
+interface WorkerResponse {
+  id: number;
+  max: number;
+  peaks: number[];
+}
+
+let _worker: Worker | null = null;
+let _nextId = 0;
+const _pending = new Map<number, { resolve: (data: ParsedData) => void; reject: (err: Error) => void }>();
+
+function getSoundWaveWorker(): Worker {
+  if (!_worker) {
+    _worker = new Worker(
+      /* webpackChunkName: "sound-wave-worker" */
+      new URL("../../utils/sound_wave.worker", import.meta.url),
+      { type: "module" },
+    );
+    _worker.onmessage = (ev: MessageEvent<WorkerResponse>) => {
+      const { id, max, peaks } = ev.data;
+      const p = _pending.get(id);
+      if (!p) return;
+      _pending.delete(id);
+      p.resolve({ max, peaks });
+    };
+    _worker.onerror = (ev) => {
+      for (const [, p] of _pending) {
+        p.reject(new Error(`Worker error: ${ev.message}`));
+      }
+      _pending.clear();
+    };
+  }
+  return _worker;
+}
+
 async function calculate(data: ArrayBuffer): Promise<ParsedData> {
   const audioCtx = new AudioContext();
-
-  // 音声をデコードする
   const buffer = await audioCtx.decodeAudioData(data.slice(0));
   const left = buffer.getChannelData(0);
-  const right = buffer.getChannelData(1);
-  const n = left.length;
+  const right = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : left;
 
-  // 100 chunk に分けて左右平均の chunk 平均を計算 (lodash 不使用で高速化)
-  const chunkSize = Math.ceil(n / 100);
-  const peaks: number[] = [];
-  for (let i = 0; i < 100; i++) {
-    let sum = 0;
-    let count = 0;
-    const end = Math.min((i + 1) * chunkSize, n);
-    for (let j = i * chunkSize; j < end; j++) {
-      sum += (Math.abs(left[j]!) + Math.abs(right[j]!)) / 2;
-      count++;
-    }
-    peaks.push(count > 0 ? sum / count : 0);
-  }
-  const max = Math.max(...peaks);
+  const leftCopy = new Float32Array(left);
+  const rightCopy = new Float32Array(right);
+  const id = _nextId++;
 
-  return { max, peaks };
+  return new Promise((resolve, reject) => {
+    _pending.set(id, { resolve, reject });
+    const transferList: Transferable[] = [leftCopy.buffer];
+    if (rightCopy.buffer !== leftCopy.buffer) transferList.push(rightCopy.buffer);
+    getSoundWaveWorker().postMessage({ id, leftData: leftCopy, rightData: rightCopy }, transferList);
+  });
 }
 
 interface Props {

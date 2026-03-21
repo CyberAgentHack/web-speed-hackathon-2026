@@ -85,7 +85,7 @@ export const CoveredImage = ({ src }: Props) => {
     setIsLoadingAlt(true);
     try {
       const data = await fetchBinaryCached(src);
-      const { load, ImageIFD } = await import("piexifjs");
+      const { load, ImageIFD } = await getPiexifjs();
       setAlt(extractAlt(data, load, ImageIFD));
     } catch {
       setAlt("");

@@ -12,12 +12,17 @@
   <body class="bg-cax-canvas text-cax-text">
     <!-- CCSS Shell Root: pre-rendered layout (FCP improvement) -->
     <div id="ccss-shell-root" class="relative z-0 flex justify-center font-sans">
-      <div class="bg-cax-surface text-cax-text flex min-h-screen max-w-full">
-        <aside id="ccss-nav-root" class="relative z-10">
-          <!-- React Portal renders Navigation component here -->
-        </aside>
-        <div id="app" class="relative z-0 w-screen max-w-screen-sm min-w-0 shrink pb-12 lg:pb-0">
-          <!-- React content rendered here -->
+      <div class="bg-cax-surface text-cax-text min-h-screen max-w-full" style="display:flex;flex-direction:column;width:100%;">
+        <header style="padding:0.75rem 1rem;flex-shrink:0;">
+          <h1 style="font-size:1.5rem;font-weight:700;line-height:1.2;">CaX</h1>
+        </header>
+        <div style="display:flex;flex:1;min-height:0;">
+          <aside id="ccss-nav-root" class="relative z-10">
+            <!-- React Portal renders Navigation component here -->
+          </aside>
+          <div id="app" class="relative z-0 w-screen max-w-screen-sm min-w-0 shrink pb-12 lg:pb-0">
+            <!-- React content rendered here -->
+          </div>
         </div>
       </div>
     </div>
