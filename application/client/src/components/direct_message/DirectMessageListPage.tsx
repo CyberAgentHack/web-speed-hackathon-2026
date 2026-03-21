@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -78,7 +78,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
   );
 };
 
-const ConversationItem = ({ conversation, activeUser }: { conversation: Models.DirectMessageConversation, activeUser: Models.User }) => {
+const ConversationItem = memo(({ conversation, activeUser }: { conversation: Models.DirectMessageConversation, activeUser: Models.User }) => {
   const { messages } = conversation;
   const peer =
     conversation.initiator.id !== activeUser.id
@@ -86,11 +86,13 @@ const ConversationItem = ({ conversation, activeUser }: { conversation: Models.D
       : conversation.member;
 
   const lastMessage = messages.at(-1);
-  const hasUnread = messages
-    .some((m) => m.sender.id === peer.id && !m.isRead)
+  const hasUnread = useMemo(
+    () => messages.some((m) => m.sender.id === peer.id && !m.isRead),
+    [messages, peer.id],
+  );
 
   return (
-    <li className="grid" key={conversation.id}>
+    <li className="grid">
       <Link className="hover:bg-cax-surface-subtle px-4" to={`/dm/${conversation.id}`}>
         <div className="border-cax-border flex gap-4 border-b px-4 pt-2 pb-4">
           <img
@@ -126,4 +128,4 @@ const ConversationItem = ({ conversation, activeUser }: { conversation: Models.D
       </Link>
     </li>
   )
-}
+})
