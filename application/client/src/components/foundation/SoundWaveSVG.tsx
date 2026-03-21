@@ -5,6 +5,35 @@ interface ParsedData {
   peaks: number[];
 }
 
+type IdleTaskId = number | ReturnType<typeof globalThis.setTimeout>;
+
+function scheduleIdleTask(callback: () => void): IdleTaskId {
+  const browserGlobals = globalThis as typeof globalThis & {
+    requestIdleCallback?: (cb: () => void, options?: { timeout: number }) => number;
+    cancelIdleCallback?: (idleId: number) => void;
+  };
+
+  if (typeof browserGlobals.requestIdleCallback === "function") {
+    return browserGlobals.requestIdleCallback(callback, { timeout: 2000 });
+  }
+
+  return globalThis.setTimeout(callback, 0);
+}
+
+function cancelIdleTask(id: IdleTaskId) {
+  const browserGlobals = globalThis as typeof globalThis & {
+    requestIdleCallback?: (cb: () => void, options?: { timeout: number }) => number;
+    cancelIdleCallback?: (idleId: number) => void;
+  };
+
+  if (typeof browserGlobals.cancelIdleCallback === "function") {
+    browserGlobals.cancelIdleCallback(id as number);
+    return;
+  }
+
+  globalThis.clearTimeout(id);
+}
+
 async function calculate(data: ArrayBuffer): Promise<ParsedData> {
   const audioCtx = new AudioContext();
 
@@ -33,29 +62,36 @@ async function calculate(data: ArrayBuffer): Promise<ParsedData> {
   // // chunk の平均の中から最大値を取る
   // const max = peaks.length > 0 ? Math.max(...peaks) : 0;
 
-  // デコード
-  const buffer = await audioCtx.decodeAudioData(data.slice(0));
-  const chunkSize = Math.max(1, Math.ceil(buffer.length / 100));
-  const peaks: number[] = [];
-  const channel1 = buffer.getChannelData(0);
-  const channel2 = buffer.getChannelData(1);
-  let max = 0;
-  for (let idx = 0; idx < buffer.length; idx += chunkSize) {
-    let sum = 0;
-    let count = 0;
-    for (let i = 0; i < chunkSize && idx + i < buffer.length; i++) {
-      sum += Math.abs(channel1[idx + i] ?? 0);
-      sum += Math.abs(channel2[idx + i] ?? 0);
-      count += 2;
+  try {
+    // デコード
+    const buffer = await audioCtx.decodeAudioData(data.slice(0));
+    const chunkSize = Math.max(1, Math.ceil(buffer.length / 100));
+    const peaks: number[] = [];
+    const channel1 = buffer.getChannelData(0);
+    const channel2 = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : null;
+    let max = 0;
+    for (let idx = 0; idx < buffer.length; idx += chunkSize) {
+      let sum = 0;
+      let count = 0;
+      for (let i = 0; i < chunkSize && idx + i < buffer.length; i++) {
+        sum += Math.abs(channel1[idx + i] ?? 0);
+        count += 1;
+        if (channel2 !== null) {
+          sum += Math.abs(channel2[idx + i] ?? 0);
+          count += 1;
+        }
+      }
+      const peak = count > 0 ? sum / count : 0;
+      peaks.push(peak);
+      if (peak > max) {
+        max = peak;
+      }
     }
-    const peak = count > 0 ? sum / count : 0;
-    peaks.push(peak);
-    if (peak > max) {
-      max = peak;
-    }
-  }  
 
-  return { max, peaks };
+    return { max, peaks };
+  } finally {
+    await audioCtx.close();
+  }  
 }
 
 interface Props {
@@ -70,9 +106,19 @@ export const SoundWaveSVG = ({ soundData }: Props) => {
   });
 
   useEffect(() => {
-    calculate(soundData).then(({ max, peaks }) => {
-      setPeaks({ max, peaks });
+    let isDisposed = false;
+    const idleTaskId = scheduleIdleTask(() => {
+      calculate(soundData).then(({ max, peaks }) => {
+        if (!isDisposed) {
+          setPeaks({ max, peaks });
+        }
+      });
     });
+
+    return () => {
+      isDisposed = true;
+      cancelIdleTask(idleTaskId);
+    };
   }, [soundData]);
 
   return (
