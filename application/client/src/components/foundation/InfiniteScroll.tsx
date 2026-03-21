@@ -8,43 +8,42 @@ interface Props {
 
 export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
   const latestItem = items[items.length - 1];
-
-  const prevReachedRef = useRef(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const hasRequestedRef = useRef(false);
 
   useEffect(() => {
-    const handler = () => {
-      // 念の為 2の18乗 回、最下部かどうかを確認する
-      // const hasReached = Array.from(Array(2 ** 18), () => {
-      //   return window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
-      // }).every(Boolean);
-     const hasReached = window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight
+    const sentinel = sentinelRef.current;
+    if (sentinel == null || latestItem === undefined) {
+      hasRequestedRef.current = false;
+      return;
+    }
 
-      // 画面最下部にスクロールしたタイミングで、登録したハンドラを呼び出す
-      if (hasReached && !prevReachedRef.current) {
-        // アイテムがないときは追加で読み込まない
-        if (latestItem !== undefined) {
+    hasRequestedRef.current = false;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry?.isIntersecting && !hasRequestedRef.current) {
+          hasRequestedRef.current = true;
           fetchMore();
         }
-      }
+      },
+      {
+        rootMargin: "200px 0px",
+      },
+    );
 
-      prevReachedRef.current = hasReached;
-    };
+    observer.observe(sentinel);
 
-    // 最初は実行されないので手動で呼び出す
-    prevReachedRef.current = false;
-    handler();
-
-    document.addEventListener("wheel", handler, { passive: true });
-    document.addEventListener("touchmove", handler, { passive: true });
-    document.addEventListener("resize", handler, { passive: true });
-    document.addEventListener("scroll", handler, { passive: true });
     return () => {
-      document.removeEventListener("wheel", handler);
-      document.removeEventListener("touchmove", handler);
-      document.removeEventListener("resize", handler);
-      document.removeEventListener("scroll", handler);
+      observer.disconnect();
     };
   }, [latestItem, fetchMore]);
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" />
+    </>
+  );
 };

@@ -35,6 +35,7 @@ export const DirectMessagePage = ({
   onSubmit,
 }: Props) => {
   const formRef = useRef<HTMLFormElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const textAreaId = useId();
 
   const peer =
@@ -43,7 +44,6 @@ export const DirectMessagePage = ({
   const [text, setText] = useState("");
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
-  const scrollHeightRef = useRef(0);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -74,16 +74,8 @@ export const DirectMessagePage = ({
   );
 
   useEffect(() => {
-    const id = setInterval(() => {
-      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
-      if (height !== scrollHeightRef.current) {
-        scrollHeightRef.current = height;
-        window.scrollTo(0, height);
-      }
-    }, 1);
-
-    return () => clearInterval(id);
-  }, []);
+    messagesEndRef.current?.scrollIntoView({ block: "end" });
+  }, [conversation.messages.length]);
 
   if (conversationError != null) {
     return (
@@ -155,6 +147,7 @@ export const DirectMessagePage = ({
             );
           })}
         </ul>
+        <div ref={messagesEndRef} />
       </div>
 
       <div className="sticky bottom-12 z-10 lg:bottom-0">

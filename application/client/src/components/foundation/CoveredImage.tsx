@@ -1,9 +1,7 @@
-import { load, ImageIFD } from "piexifjs";
-import { MouseEvent, useCallback, useId, useState } from "react";
+import { MouseEvent, useCallback, useId } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
-import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
   src: string;
