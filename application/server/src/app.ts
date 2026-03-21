@@ -10,7 +10,24 @@ export const app = Express();
 
 app.set("trust proxy", true);
 
-app.use(compression());
+app.use(
+  compression({
+    filter: (req, res) => {
+      const contentType = res.getHeader("Content-Type");
+      const values = Array.isArray(contentType)
+        ? contentType
+        : contentType !== undefined
+          ? [String(contentType)]
+          : [];
+
+      if (values.some((value) => value.includes("text/event-stream"))) {
+        return false;
+      }
+
+      return compression.filter(req, res);
+    },
+  }),
+);
 app.use(sessionMiddleware);
 app.use(bodyParser.json());
 app.use(bodyParser.raw({ limit: "10mb" }));
