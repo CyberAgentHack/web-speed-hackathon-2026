@@ -123,6 +123,12 @@ const config = {
       chunks: "all",
       maxSize: 200000,
       cacheGroups: {
+        wasmBinary: {
+          test: /[\\/](@ffmpeg|@imagemagick)[\\/]/,
+          chunks: "async",
+          enforce: true,
+          priority: 30,
+        },
         vendor: {
           test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
           name: "vendor-react",
