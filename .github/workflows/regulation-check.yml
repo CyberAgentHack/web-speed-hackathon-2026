@@ -6,6 +6,10 @@ on:
     pull_request:
         types: [opened, reopened, synchronize]
 
+concurrency:
+    group: regulation-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
+    cancel-in-progress: true
+
 jobs:
     regulation:
         name: VRT & E2E (Baseline vs Current)

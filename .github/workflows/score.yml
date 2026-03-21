@@ -6,6 +6,10 @@ on:
     pull_request:
         types: [opened, reopened, synchronize]
 
+concurrency:
+    group: score-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
+    cancel-in-progress: true
+
 jobs:
     score:
         name: Build & Score (run ${{ matrix.run_index }} of 5)
