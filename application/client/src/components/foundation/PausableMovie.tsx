@@ -8,12 +8,13 @@ interface Props {
   src: string;
   width?: number;
   height?: number;
+  fetchPriority?: "high" | "low" | "auto";
 }
 
 /**
  * クリックすると再生/一時停止を切り替える動画プレイヤー。
  */
-export const PausableMovie = ({ src, width, height }: Props) => {
+export const PausableMovie = ({ src, width, height, fetchPriority = "auto" }: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -69,7 +70,7 @@ export const PausableMovie = ({ src, width, height }: Props) => {
             loop
             muted
             playsInline
-            preload="metadata"
+            preload={fetchPriority === "high" ? "auto" : "metadata"}
             className="h-full w-full object-cover"
             width={width}
             height={height}
@@ -92,7 +93,7 @@ export const PausableMovie = ({ src, width, height }: Props) => {
           loop
           muted
           playsInline
-          preload="metadata"
+          preload={fetchPriority === "high" ? "auto" : "metadata"}
           className="h-full w-full object-cover"
           width={width}
           height={height}
