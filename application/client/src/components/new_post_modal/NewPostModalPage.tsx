@@ -60,7 +60,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       ]).then(([{ MagickFormat }, { convertImage }]) =>
         Promise.all(
           files.map((file) =>
-            convertImage(file, { extension: MagickFormat.Webp }).then(
+            convertImage(file, { extension: MagickFormat.WebP }).then(
               ({ blob, alt }) => ({ file: new File([blob], "converted.webp", { type: "image/webp" }), alt }),
             ),
           ),
@@ -73,10 +73,11 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
             movie: undefined,
             sound: undefined,
           }));
-
-          setIsConverting(false);
         })
-        .catch(console.error);
+        .catch(console.error)
+        .finally(() => {
+          setIsConverting(false);
+        });
     }
   }, []);
 
@@ -95,9 +96,11 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
           movie: undefined,
           sound: new File([converted], "converted.mp3", { type: "audio/mpeg" }),
         }));
-
-        setIsConverting(false);
-      });
+      })
+        .catch(console.error)
+        .finally(() => {
+          setIsConverting(false);
+        });
     }
   }, []);
 
@@ -119,10 +122,11 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
             }),
             sound: undefined,
           }));
-
-          setIsConverting(false);
         })
-        .catch(console.error);
+        .catch(console.error)
+        .finally(() => {
+          setIsConverting(false);
+        });
     }
   }, []);
 

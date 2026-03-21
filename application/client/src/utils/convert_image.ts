@@ -17,15 +17,19 @@ export async function convertImage(file: File, options: Options): Promise<Conver
 
   const byteArray = new Uint8Array(await file.arrayBuffer());
 
-  return new Promise((resolve) => {
-    ImageMagick.read(byteArray, (img) => {
-      const comment = img.comment ?? "";
+  return new Promise((resolve, reject) => {
+    try {
+      ImageMagick.read(byteArray, (img) => {
+        const comment = img.comment ?? "";
 
-      img.format = options.extension;
+        img.format = options.extension;
 
-      img.write((output) => {
-        resolve({ blob: new Blob([output as Uint8Array<ArrayBuffer>]), alt: comment });
+        img.write((output) => {
+          resolve({ blob: new Blob([output as Uint8Array<ArrayBuffer>]), alt: comment });
+        });
       });
-    });
+    } catch (err) {
+      reject(err);
+    }
   });
 }
