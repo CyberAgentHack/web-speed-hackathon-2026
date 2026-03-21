@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+const INITIAL_LIMIT = 2;
 const LIMIT = 5;
 
 interface ReturnValues<T> {
@@ -13,7 +14,7 @@ export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
 ): ReturnValues<T> {
-  const internalRef = useRef({ isLoading: false, offset: 0 });
+  const internalRef = useRef({ isLoading: false, offset: 0, isFirstFetch: true });
 
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
     data: [],
@@ -22,10 +23,12 @@ export function useInfiniteFetch<T>(
   });
 
   const fetchMore = useCallback(() => {
-    const { isLoading, offset } = internalRef.current;
+    const { isLoading, offset, isFirstFetch } = internalRef.current;
     if (isLoading || !apiPath) {
       return;
     }
+
+    const currentLimit = isFirstFetch ? INITIAL_LIMIT : LIMIT;
 
     setResult((cur) => ({
       ...cur,
@@ -34,10 +37,11 @@ export function useInfiniteFetch<T>(
     internalRef.current = {
       isLoading: true,
       offset,
+      isFirstFetch,
     };
 
     const separator = apiPath.includes("?") ? "&" : "?";
-    const paginatedPath = `${apiPath}${separator}limit=${LIMIT}&offset=${offset}`;
+    const paginatedPath = `${apiPath}${separator}limit=${currentLimit}&offset=${offset}`;
 
     void fetcher(paginatedPath).then(
       (pageData) => {
@@ -48,7 +52,8 @@ export function useInfiniteFetch<T>(
         }));
         internalRef.current = {
           isLoading: false,
-          offset: offset + LIMIT,
+          offset: offset + currentLimit,
+          isFirstFetch: false,
         };
       },
       (error) => {
@@ -60,6 +65,7 @@ export function useInfiniteFetch<T>(
         internalRef.current = {
           isLoading: false,
           offset,
+          isFirstFetch: false,
         };
       },
     );
@@ -74,6 +80,7 @@ export function useInfiniteFetch<T>(
     internalRef.current = {
       isLoading: false,
       offset: 0,
+      isFirstFetch: true,
     };
 
     fetchMore();
