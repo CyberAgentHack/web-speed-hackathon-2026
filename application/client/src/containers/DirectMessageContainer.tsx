@@ -13,6 +13,10 @@ interface DmUpdateEvent {
   type: "dm:conversation:message";
   payload: Models.DirectMessage;
 }
+interface DmReadEvent {
+  type: "dm:conversation:read";
+  payload: { senderId: string };
+}
 interface DmTypingEvent {
   type: "dm:conversation:typing";
   payload: {};
@@ -88,8 +92,20 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     }, 2000);
   }, [conversationId]);
 
-  useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {
-    if (event.type === "dm:conversation:message") {
+  useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmReadEvent | DmTypingEvent) => {
+    if (event.type === "dm:conversation:read") {
+      setConversation((prev) => {
+        if (prev == null) return prev;
+        return {
+          ...prev,
+          messages: prev.messages.map((m) =>
+            m.sender.id === event.payload.senderId && !m.isRead
+              ? { ...m, isRead: true }
+              : m,
+          ),
+        };
+      });
+    } else if (event.type === "dm:conversation:message") {
       setConversation((prev) => {
         if (prev == null) return prev;
         const exists = prev.messages.some((m) => m.id === event.payload.id);

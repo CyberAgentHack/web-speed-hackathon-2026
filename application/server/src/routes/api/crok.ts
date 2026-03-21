@@ -47,7 +47,7 @@ crokRouter.get("/crok", async (req, res) => {
     const data = JSON.stringify({ text, done: false });
     res.write(`event: message\nid: ${messageId++}\ndata: ${data}\n\n`);
 
-    await new Promise<void>((resolve) => setImmediate(resolve));
+    await new Promise<void>((resolve) => setTimeout(resolve, 1));
   }
 
   if (!res.closed) {

@@ -241,6 +241,10 @@ directMessageRouter.post("/dm/:conversationId/read", async (req, res) => {
     ],
   });
   eventhub.emit(`dm:unread/${req.session.userId}`, { unreadCount });
+  eventhub.emit(`dm:conversation/${conversation.id}`, {
+    type: "dm:conversation:read",
+    payload: { senderId: peerId },
+  });
 
   return res.status(200).type("application/json").send({});
 });

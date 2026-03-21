@@ -1,4 +1,4 @@
-import { ReactEventHandler, useCallback, useMemo, useRef, useState } from "react";
+import { ReactEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -16,6 +16,13 @@ export const SoundPlayer = ({ sound }: Props) => {
 
   const [soundData, setSoundData] = useState<ArrayBuffer | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // 波形表示用に即座にデータを取得
+  useEffect(() => {
+    fetchBinary(soundPath).then((data) => {
+      setSoundData(data);
+    });
+  }, [soundPath]);
 
   const blobUrl = useMemo(() => {
     return soundData !== null ? URL.createObjectURL(new Blob([soundData])) : null;

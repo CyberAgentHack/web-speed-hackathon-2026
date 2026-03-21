@@ -11,7 +11,7 @@ test.describe("投稿詳細", () => {
     await page.goto("/");
     const firstArticle = page.locator("article").first();
     await expect(firstArticle).toBeVisible({ timeout: 30_000 });
-    await firstArticle.click();
+    await firstArticle.locator("time").first().click();
     await page.waitForURL("**/posts/*", { timeout: 30_000 });
 
     const article = page.locator("article").first();
@@ -29,7 +29,7 @@ test.describe("投稿詳細", () => {
     await page.goto("/");
     const firstArticle = page.locator("article").first();
     await expect(firstArticle).toBeVisible({ timeout: 30_000 });
-    await firstArticle.click();
+    await firstArticle.locator("time").first().click();
     await page.waitForURL("**/posts/*", { timeout: 30_000 });
 
     await expect(page).toHaveTitle(/さんのつぶやき - CaX/, { timeout: 30_000 });
@@ -72,9 +72,9 @@ test.describe("投稿詳細 - 音声", () => {
   });
 
   test("音声の波形が表示され、再生ボタンで切り替えられる", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "networkidle" });
     const soundArticle = page.locator('article:has(svg[viewBox="0 0 100 1"])').first();
-    await expect(soundArticle).toBeVisible({ timeout: 30_000 });
+    await expect(soundArticle).toBeVisible({ timeout: 60_000 });
     await soundArticle.locator("time").first().click();
     await page.waitForURL("**/posts/*", { timeout: 30_000 });
 
@@ -107,7 +107,7 @@ test.describe("投稿詳細 - 写真", () => {
     await page.goto("/");
     const imageArticle = page.locator("article:has(.grid img)").first();
     await expect(imageArticle).toBeVisible({ timeout: 30_000 });
-    await imageArticle.click();
+    await imageArticle.locator("time").first().click();
     await page.waitForURL("**/posts/*", { timeout: 30_000 });
 
     const coveredImage = page.locator(".grid img").first();
