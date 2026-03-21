@@ -5,10 +5,30 @@ import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
 
 export const userRouter = Router();
 
+const DEFAULT_POST_LIMIT = 10;
+const MAX_POST_LIMIT = 20;
+
+function parseLimit(value: unknown): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return DEFAULT_POST_LIMIT;
+  }
+  return Math.min(parsed, MAX_POST_LIMIT);
+}
+
+function parseOffset(value: unknown): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return 0;
+  }
+  return parsed;
+}
+
 userRouter.get("/me", async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
   }
+
   const user = await User.findByPk(req.session.userId);
 
   if (user === null) {
@@ -22,6 +42,7 @@ userRouter.put("/me", async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
   }
+
   const user = await User.findByPk(req.session.userId);
 
   if (user === null) {
@@ -60,8 +81,8 @@ userRouter.get("/users/:username/posts", async (req, res) => {
   }
 
   const posts = await Post.findAll({
-    limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
-    offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
+    limit: parseLimit(req.query["limit"]),
+    offset: parseOffset(req.query["offset"]),
     where: {
       userId: user.id,
     },
