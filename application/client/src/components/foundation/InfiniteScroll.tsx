@@ -18,7 +18,7 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
       if (entry?.isIntersecting) {
         fetchMore();
       }
-    });
+    }, { rootMargin: '200px' });
     observer.observe(el);
     return () => observer.disconnect();
   }, [latestItem, fetchMore]);
@@ -26,7 +26,7 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
   return (
     <>
       {children}
-      <div ref={sentinelRef} />
+      <div ref={sentinelRef} style={{ height: '1px' }} />
     </>
   );
 };
