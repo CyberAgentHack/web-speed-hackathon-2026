@@ -1,0 +1,80 @@
+import { CrokGate } from "@web-speed-hackathon-2026/client/src/components/crok/CrokGate";
+import { CrokPage } from "@web-speed-hackathon-2026/client/src/components/crok/CrokPage";
+import { useSSE } from "@web-speed-hackathon-2026/client/src/hooks/use_sse";
+import { useCallback, useMemo, useState } from "react";
+import { useOutletContext } from "react-router";
+import type { LayoutContext } from "./layout";
+
+export default function Crok() {
+	const { activeUser, authModalId } = useOutletContext<LayoutContext>();
+	const [messages, setMessages] = useState<Models.ChatMessage[]>([]);
+
+	const sseOptions = useMemo(
+		() => ({
+			onMessage: (data: Models.SSEChunk, prevContent: string) => {
+				return prevContent + (data.text ?? "");
+			},
+			onDone: (data: Models.SSEChunk) => data.done === true,
+			onComplete: (finalContent: string, doneData: Models.SSEChunk) => {
+				setMessages((prev) => {
+					const lastMessage = prev[prev.length - 1];
+					if (lastMessage?.role === "assistant") {
+						return [
+							...prev.slice(0, -1),
+							{ ...lastMessage, content: finalContent, html: doneData.html },
+						];
+					}
+					return prev;
+				});
+			},
+			getHtml: (data: Models.SSEChunk) => data.html,
+		}),
+		[],
+	);
+
+	const { contentRef, htmlRef, isStreaming, start, finalize } = useSSE<Models.SSEChunk>(sseOptions);
+
+	const sendMessage = useCallback(
+		(userInput: string) => {
+			if (!userInput.trim() || isStreaming) return;
+
+			const userMessage: Models.ChatMessage = {
+				role: "user",
+				content: userInput,
+			};
+			const assistantMessage: Models.ChatMessage = {
+				role: "assistant",
+				content: "",
+			};
+
+			setMessages((prev) => [...prev, userMessage, assistantMessage]);
+
+			const encodedPrompt = encodeURIComponent(userInput);
+			start(`/api/v1/crok?prompt=${encodedPrompt}`);
+		},
+		[isStreaming, start],
+	);
+
+	if (!activeUser) {
+		return (
+			<CrokGate
+				headline="Crokを利用するにはサインインしてください"
+				authModalId={authModalId}
+			/>
+		);
+	}
+
+	return (
+		<>
+			<title>Crok - CaX</title>
+			<CrokPage
+				isStreaming={isStreaming}
+				messages={messages}
+				streamingContentRef={contentRef}
+				streamingHtmlRef={htmlRef}
+				onStreamingComplete={finalize}
+				onSendMessage={sendMessage}
+			/>
+		</>
+	);
+}

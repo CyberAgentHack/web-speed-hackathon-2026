@@ -1,4 +1,3 @@
-import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -6,16 +5,18 @@ import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { formatFromNow } from "@web-speed-hackathon-2026/client/src/utils/format_date";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   activeUser: Models.User;
   newDmModalId: string;
+  initialConversations?: Array<Models.DirectMessageConversation> | null;
 }
 
-export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
+export const DirectMessageListPage = ({ activeUser, newDmModalId, initialConversations }: Props) => {
   const [conversations, setConversations] =
-    useState<Array<Models.DirectMessageConversation> | null>(null);
+    useState<Array<Models.DirectMessageConversation> | null>(initialConversations ?? null);
   const [error, setError] = useState<Error | null>(null);
 
   const loadConversations = useCallback(async () => {
@@ -34,8 +35,9 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
   }, [activeUser]);
 
   useEffect(() => {
+    if (initialConversations != null) return;
     void loadConversations();
-  }, [loadConversations]);
+  }, [loadConversations, initialConversations]);
 
   useWs("/api/v1/dm/unread", () => {
     void loadConversations();
@@ -76,7 +78,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                 : conversation.member;
 
             const lastMessage = messages.at(-1);
-            const hasUnread = messages
+            const hasUnread = conversation.hasUnread ?? messages
               .filter((m) => m.sender.id === peer.id)
               .some((m) => !m.isRead);
 
@@ -88,6 +90,8 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                       alt={peer.profileImage.alt}
                       className="w-12 shrink-0 self-start rounded-full"
                       src={getProfileImagePath(peer.profileImage.id)}
+                      width={48}
+                      height={48}
                     />
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-center justify-between">
@@ -100,7 +104,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {formatFromNow(lastMessage.createdAt)}
                           </time>
                         )}
                       </div>

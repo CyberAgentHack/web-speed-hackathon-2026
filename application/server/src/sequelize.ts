@@ -26,4 +26,19 @@ export async function initializeSequelize() {
     storage: TEMP_PATH,
   });
   initModels(_sequelize);
+
+  await _sequelize.query(`
+    CREATE INDEX IF NOT EXISTS idx_posts_userId ON Posts (userId);
+    CREATE INDEX IF NOT EXISTS idx_posts_createdAt ON Posts (createdAt);
+    CREATE INDEX IF NOT EXISTS idx_comments_postId ON Comments (postId);
+    CREATE INDEX IF NOT EXISTS idx_comments_userId ON Comments (userId);
+    CREATE INDEX IF NOT EXISTS idx_dm_conversationId ON DirectMessages (conversationId);
+    CREATE INDEX IF NOT EXISTS idx_dm_senderId ON DirectMessages (senderId);
+    CREATE INDEX IF NOT EXISTS idx_dm_isRead ON DirectMessages (isRead);
+    CREATE INDEX IF NOT EXISTS idx_dm_conv_sender_read ON DirectMessages (conversationId, senderId, isRead);
+    CREATE INDEX IF NOT EXISTS idx_dmc_initiatorId ON DirectMessageConversations (initiatorId);
+    CREATE INDEX IF NOT EXISTS idx_dmc_memberId ON DirectMessageConversations (memberId);
+    CREATE INDEX IF NOT EXISTS idx_pir_postId ON PostsImagesRelations (postId);
+    CREATE INDEX IF NOT EXISTS idx_pir_imageId ON PostsImagesRelations (imageId);
+  `);
 }

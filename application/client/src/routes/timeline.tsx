@@ -1,0 +1,48 @@
+import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
+import { TimelinePage } from "@web-speed-hackathon-2026/client/src/components/timeline/TimelinePage";
+import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
+import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { getImagePath, getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { getLoaderContext } from "@web-speed-hackathon-2026/client/src/utils/server_fetch";
+import type { LoaderFunctionArgs } from "react-router";
+import { useLoaderData } from "react-router";
+
+function postWeight(post: Models.Post): number {
+	return (post.images?.length > 0 || post.movie) ? 3 : 1;
+}
+
+export async function loader({ context }: LoaderFunctionArgs) {
+	const ctx = getLoaderContext(context);
+	const posts = await ctx.getPosts(10, 0) as Models.Post[];
+	let weight = 0;
+	const ssrPosts: Models.Post[] = [];
+	for (const post of posts) {
+		const w = postWeight(post);
+		if (weight + w > 7) break;
+		weight += w;
+		ssrPosts.push(post);
+	}
+	return { posts: ssrPosts };
+}
+
+export default function Timeline() {
+	const { posts: initialPosts } = useLoaderData<typeof loader>();
+	const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>(
+		"/api/v1/posts",
+		fetchJSON,
+		initialPosts,
+	);
+
+	const firstPost = initialPosts[0];
+	const lcpImage = firstPost?.images?.length > 0
+		? getImagePath(firstPost.images[0]!.id)
+		: firstPost ? getProfileImagePath(firstPost.user.profileImage.id) : null;
+
+	return (
+		<InfiniteScroll fetchMore={fetchMore} items={posts}>
+			<title>タイムライン - CaX</title>
+			{lcpImage && <link rel="preload" as="image" href={lcpImage} />}
+			<TimelinePage timeline={posts} />
+		</InfiniteScroll>
+	);
+}

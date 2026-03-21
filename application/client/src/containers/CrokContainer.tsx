@@ -1,6 +1,4 @@
 import { useCallback, useMemo, useState } from "react";
-import { Helmet } from "react-helmet";
-
 import { CrokGate } from "@web-speed-hackathon-2026/client/src/components/crok/CrokGate";
 import { CrokPage } from "@web-speed-hackathon-2026/client/src/components/crok/CrokPage";
 import { useSSE } from "@web-speed-hackathon-2026/client/src/hooks/use_sse";
@@ -19,35 +17,21 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
         return prevContent + (data.text ?? "");
       },
       onDone: (data: Models.SSEChunk) => data.done === true,
-      onComplete: (finalContent: string) => {
+      onComplete: (finalContent: string, doneData: Models.SSEChunk) => {
         setMessages((prev) => {
           const lastMessage = prev[prev.length - 1];
           if (lastMessage?.role === "assistant") {
-            return [...prev.slice(0, -1), { ...lastMessage, content: finalContent }];
+            return [...prev.slice(0, -1), { ...lastMessage, content: finalContent, html: doneData.html }];
           }
           return prev;
         });
       },
+      getHtml: (data: Models.SSEChunk) => data.html,
     }),
     [],
   );
 
-  const { content, isStreaming, start } = useSSE<Models.SSEChunk>(sseOptions);
-
-  const currentAssistantContent = isStreaming || content ? content : null;
-
-  const displayMessages = useMemo(() => {
-    if (currentAssistantContent !== null) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage?.role === "assistant") {
-        return [
-          ...messages.slice(0, -1),
-          { role: "assistant" as const, content: currentAssistantContent },
-        ];
-      }
-    }
-    return messages;
-  }, [messages, currentAssistantContent]);
+  const { contentRef, htmlRef, isStreaming, start, finalize } = useSSE<Models.SSEChunk>(sseOptions);
 
   const sendMessage = useCallback(
     (userInput: string) => {
@@ -78,10 +62,8 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
 
   return (
     <>
-      <Helmet>
-        <title>Crok - CaX</title>
-      </Helmet>
-      <CrokPage isStreaming={isStreaming} messages={displayMessages} onSendMessage={sendMessage} />
+      <title>Crok - CaX</title>
+      <CrokPage isStreaming={isStreaming} messages={messages} streamingContentRef={contentRef} streamingHtmlRef={htmlRef} onStreamingComplete={finalize} onSendMessage={sendMessage} />
     </>
   );
 };

@@ -37,8 +37,7 @@ export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }
           {activeUser !== null ? (
             <NavigationItem
               icon={<FontAwesomeIcon iconType="edit" styleType="solid" />}
-              command="show-modal"
-              commandfor={newPostModalId}
+              modalTargetId={newPostModalId}
               text="投稿する"
             />
           ) : null}
@@ -53,8 +52,7 @@ export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }
             <NavigationItem
               icon={<FontAwesomeIcon iconType="sign-in-alt" styleType="solid" />}
               text="サインイン"
-              command="show-modal"
-              commandfor={authModalId}
+              modalTargetId={authModalId}
             />
           ) : null}
           {activeUser !== null ? (

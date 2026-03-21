@@ -3,7 +3,8 @@ import { useNavigate } from "react-router";
 
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { NewPostModalPage } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage";
-import { sendFile, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { computeWavPeaks, extractImageAlt, extractSoundMetadata } from "@web-speed-hackathon-2026/client/src/utils/extract_client_metadata";
+import { sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface SubmitParams {
   images: File[];
@@ -12,17 +13,62 @@ interface SubmitParams {
   text: string;
 }
 
-async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promise<Models.Post> {
-  const payload = {
-    images: images
-      ? await Promise.all(images.map((image) => sendFile("/api/v1/images", image)))
-      : [],
-    movie: movie ? await sendFile("/api/v1/movies", movie) : undefined,
-    sound: sound ? await sendFile("/api/v1/sounds", sound) : undefined,
-    text,
-  };
+interface FileUploadTask {
+  url: string;
+  file: File;
+}
 
-  return sendJSON("/api/v1/posts", payload);
+async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promise<{ post: Models.Post; uploads: FileUploadTask[] }> {
+  const uploads: FileUploadTask[] = [];
+
+  const imagePayloads = await Promise.all(
+    images.map(async (image) => {
+      const buffer = await image.arrayBuffer();
+      const alt = extractImageAlt(buffer);
+      const id = crypto.randomUUID();
+      uploads.push({ url: `/api/v1/images/${id}/file`, file: image });
+      return { id, alt };
+    }),
+  );
+
+  let moviePayload: { id: string } | undefined;
+  if (movie) {
+    const id = crypto.randomUUID();
+    uploads.push({ url: `/api/v1/movies/${id}/file`, file: movie });
+    moviePayload = { id };
+  }
+
+  let soundPayload: { id: string; title?: string; artist?: string } | undefined;
+  let peaksUpload: { soundId: string; data: { max: number; peaks: number[] } } | undefined;
+  if (sound) {
+    const buffer = await sound.arrayBuffer();
+    const meta = extractSoundMetadata(buffer);
+    const peaks = computeWavPeaks(buffer);
+    const id = crypto.randomUUID();
+    uploads.push({ url: `/api/v1/sounds/${id}/file`, file: sound });
+    soundPayload = { id, ...meta };
+    if (peaks) {
+      peaksUpload = { soundId: id, data: peaks };
+    }
+  }
+
+  // Upload peaks before post creation so it's available when page renders
+  if (peaksUpload) {
+    await fetch(`/api/v1/sounds/${peaksUpload.soundId}/peaks`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(peaksUpload.data),
+    });
+  }
+
+  const post = await sendJSON<Models.Post>("/api/v1/posts", {
+    images: imagePayloads,
+    movie: moviePayload,
+    sound: soundPayload,
+    text,
+  });
+
+  return { post, uploads };
 }
 
 interface Props {
@@ -40,7 +86,6 @@ export const NewPostModalContainer = ({ id }: Props) => {
     }
 
     const handleToggle = () => {
-      // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
       setResetKey((key) => key + 1);
     };
     element.addEventListener("toggle", handleToggle);
@@ -62,9 +107,18 @@ export const NewPostModalContainer = ({ id }: Props) => {
     async (params: SubmitParams) => {
       try {
         setIsLoading(true);
-        const post = await sendNewPost(params);
+        const { post, uploads } = await sendNewPost(params);
         ref.current?.close();
         navigate(`/posts/${post.id}`);
+        for (const { url, file } of uploads) {
+          fetch(url, {
+            method: "PUT",
+            headers: { "Content-Type": "application/octet-stream" },
+            body: file,
+          }).catch((err) => {
+            console.error("Background upload failed:", err);
+          });
+        }
       } catch {
         setHasError(true);
       } finally {

@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { type RefObject, useRef } from "react";
 
 import { ChatInput } from "@web-speed-hackathon-2026/client/src/components/crok/ChatInput";
 import { ChatMessage } from "@web-speed-hackathon-2026/client/src/components/crok/ChatMessage";
@@ -9,13 +9,24 @@ import { useHasContentBelow } from "@web-speed-hackathon-2026/client/src/hooks/u
 interface Props {
   messages: Models.ChatMessage[];
   isStreaming: boolean;
+  streamingContentRef: RefObject<string>;
+  streamingHtmlRef: RefObject<string | null>;
+  onStreamingComplete: () => void;
   onSendMessage: (message: string) => void;
 }
 
-export const CrokPage = ({ messages, isStreaming, onSendMessage }: Props) => {
+export const CrokPage = ({ messages, isStreaming, streamingContentRef, streamingHtmlRef, onStreamingComplete, onSendMessage }: Props) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const stickyBarRef = useRef<HTMLDivElement>(null);
   const showScrollButton = useHasContentBelow(messagesEndRef, stickyBarRef);
+  const streamingIndexRef = useRef<number | null>(null);
+
+  if (isStreaming) {
+    const lastAssistantIdx = messages.findLastIndex((m) => m.role === "assistant");
+    if (lastAssistantIdx >= 0) {
+      streamingIndexRef.current = lastAssistantIdx;
+    }
+  }
 
   const handleScrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -27,9 +38,19 @@ export const CrokPage = ({ messages, isStreaming, onSendMessage }: Props) => {
         <div className="mx-auto max-w-2xl px-4 py-8">
           {messages.length === 0 && <WelcomeScreen />}
 
-          {messages.map((message, index) => (
-            <ChatMessage key={index} message={message} />
-          ))}
+          {messages.map((message, index) => {
+            const useStreamingView = index === streamingIndexRef.current;
+            return (
+              <ChatMessage
+                key={index}
+                message={message}
+                streaming={useStreamingView}
+                streamingContentRef={useStreamingView ? streamingContentRef : undefined}
+                streamingHtmlRef={useStreamingView ? streamingHtmlRef : undefined}
+                onStreamingComplete={useStreamingView ? onStreamingComplete : undefined}
+              />
+            );
+          })}
           <div ref={messagesEndRef} />
         </div>
       </div>

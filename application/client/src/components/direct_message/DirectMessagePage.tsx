@@ -1,5 +1,4 @@
 import classNames from "classnames";
-import moment from "moment";
 import {
   ChangeEvent,
   useCallback,
@@ -13,11 +12,15 @@ import {
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
+import { formatTime } from "@web-speed-hackathon-2026/client/src/utils/format_date";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   conversationError: Error | null;
   conversation: Models.DirectMessageConversation;
+  messages: Models.DirectMessage[];
+  hasMore: boolean;
+  onLoadMore: () => Promise<void>;
   activeUser: Models.User;
   isPeerTyping: boolean;
   isSubmitting: boolean;
@@ -28,6 +31,9 @@ interface Props {
 export const DirectMessagePage = ({
   conversationError,
   conversation,
+  messages,
+  hasMore,
+  onLoadMore,
   activeUser,
   isPeerTyping,
   isSubmitting,
@@ -35,7 +41,9 @@ export const DirectMessagePage = ({
   onSubmit,
 }: Props) => {
   const formRef = useRef<HTMLFormElement>(null);
+  const messageListRef = useRef<HTMLUListElement>(null);
   const textAreaId = useId();
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const peer =
     conversation.initiator.id !== activeUser.id ? conversation.initiator : conversation.member;
@@ -43,7 +51,6 @@ export const DirectMessagePage = ({
   const [text, setText] = useState("");
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
-  const scrollHeightRef = useRef(0);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -66,23 +73,38 @@ export const DirectMessagePage = ({
   const handleSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      void onSubmit({ body: text.trim() }).then(() => {
-        setText("");
-      });
+      const body = text.trim();
+      if (!body) return;
+      setText("");
+      void onSubmit({ body });
     },
     [onSubmit, text],
   );
 
-  useEffect(() => {
-    const id = setInterval(() => {
-      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
-      if (height !== scrollHeightRef.current) {
-        scrollHeightRef.current = height;
-        window.scrollTo(0, height);
-      }
-    }, 1);
+  const handleLoadMore = useCallback(async () => {
+    if (isLoadingMore) return;
+    setIsLoadingMore(true);
 
-    return () => clearInterval(id);
+    const scrollContainer = document.documentElement;
+    const prevScrollHeight = document.body.scrollHeight;
+
+    try {
+      await onLoadMore();
+      requestAnimationFrame(() => {
+        const newScrollHeight = document.body.scrollHeight;
+        window.scrollTo(0, newScrollHeight - prevScrollHeight + scrollContainer.scrollTop);
+      });
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [onLoadMore, isLoadingMore]);
+
+  useEffect(() => {
+    const observer = new ResizeObserver(() => {
+      window.scrollTo(0, document.body.scrollHeight);
+    });
+    observer.observe(document.body);
+    return () => observer.disconnect();
   }, []);
 
   if (conversationError != null) {
@@ -100,6 +122,8 @@ export const DirectMessagePage = ({
           alt={peer.profileImage.alt}
           className="h-12 w-12 rounded-full object-cover"
           src={getProfileImagePath(peer.profileImage.id)}
+          width={48}
+          height={48}
         />
         <div className="min-w-0">
           <h1 className="overflow-hidden text-xl font-bold text-ellipsis whitespace-nowrap">
@@ -112,18 +136,32 @@ export const DirectMessagePage = ({
       </header>
 
       <div className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8">
-        {conversation.messages.length === 0 && (
+        {hasMore && (
+          <div className="flex justify-center">
+            <button
+              className="text-cax-brand hover:text-cax-brand-strong text-sm disabled:opacity-50"
+              disabled={isLoadingMore}
+              onClick={handleLoadMore}
+              type="button"
+            >
+              {isLoadingMore ? "読み込み中..." : "過去のメッセージを読み込む"}
+            </button>
+          </div>
+        )}
+
+        {messages.length === 0 && !hasMore && (
           <p className="text-cax-text-muted text-center text-sm">
             まだメッセージはありません。最初のメッセージを送信してみましょう。
           </p>
         )}
 
-        <ul className="grid gap-3" data-testid="dm-message-list">
-          {conversation.messages.map((message) => {
+        <ul className="grid gap-3" data-testid="dm-message-list" ref={messageListRef}>
+          {messages.map((message) => {
             const isActiveUserSend = message.sender.id === activeUser.id;
 
             return (
               <li
+                key={message.id}
                 className={classNames(
                   "flex flex-col w-full",
                   isActiveUserSend ? "items-end" : "items-start",
@@ -141,7 +179,7 @@ export const DirectMessagePage = ({
                 </p>
                 <div className="flex gap-1 text-xs">
                   <time dateTime={message.createdAt}>
-                    {moment(message.createdAt).locale("ja").format("HH:mm")}
+                    {formatTime(message.createdAt)}
                   </time>
                   {isActiveUserSend && message.isRead && (
                     <span className="text-cax-text-muted">既読</span>
@@ -176,12 +214,11 @@ export const DirectMessagePage = ({
               onChange={handleChange}
               onKeyDown={handleKeyDown}
               rows={textAreaRows}
-              disabled={isSubmitting}
             />
           </div>
           <button
             className="bg-cax-brand text-cax-surface-raised hover:bg-cax-brand-strong rounded-full px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={isInvalid || isSubmitting}
+            disabled={isInvalid}
             type="submit"
           >
             <FontAwesomeIcon iconType="arrow-right" styleType="solid" />
