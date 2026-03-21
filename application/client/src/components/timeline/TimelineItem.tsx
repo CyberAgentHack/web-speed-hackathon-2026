@@ -1,16 +1,22 @@
-import moment from "moment";
 import { MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
+import { TimelineImageArea } from "@web-speed-hackathon-2026/client/src/components/post/TimelineImageArea";
+import { TimelineMovieArea } from "@web-speed-hackathon-2026/client/src/components/post/TimelineMovieArea";
+import { TimelineSoundArea } from "@web-speed-hackathon-2026/client/src/components/post/TimelineSoundArea";
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
 import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
 import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
+const jaLongDateFormatter = new Intl.DateTimeFormat("ja-JP", {
+  dateStyle: "long",
+});
+
 const isClickedAnchorOrButton = (
   target: EventTarget | null,
-  currentTarget: Element
+  currentTarget: Element,
 ): boolean => {
   while (target !== null && target instanceof Element) {
     const tagName = target.tagName.toLowerCase();
@@ -25,10 +31,6 @@ const isClickedAnchorOrButton = (
   return false;
 };
 
-/**
- * @typedef {object} Props
- * @property {Models.Post} post
- */
 interface Props {
   post: Models.Post;
 }
@@ -36,9 +38,6 @@ interface Props {
 export const TimelineItem = ({ post }: Props) => {
   const navigate = useNavigate();
 
-  /**
-   * ボタンやリンク以外の箇所をクリックしたとき かつ 文字が選択されてないとき、投稿詳細ページに遷移する
-   */
   const handleClick = useCallback<MouseEventHandler>(
     (ev) => {
       const isSelectedText = document.getSelection()?.isCollapsed === false;
@@ -49,7 +48,7 @@ export const TimelineItem = ({ post }: Props) => {
         navigate(`/posts/${post.id}`);
       }
     },
-    [post, navigate]
+    [post, navigate],
   );
 
   return (
@@ -89,8 +88,8 @@ export const TimelineItem = ({ post }: Props) => {
               className="text-cax-text-muted pr-1 hover:underline"
               to={`/posts/${post.id}`}
             >
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={new Date(post.createdAt).toISOString()}>
+                {jaLongDateFormatter.format(new Date(post.createdAt))}
               </time>
             </Link>
           </p>
@@ -98,6 +97,21 @@ export const TimelineItem = ({ post }: Props) => {
             <TranslatableText text={post.text} />
           </div>
           {post.images?.length > 0 ? (
+            <div className="relative mt-2 w-full">
+              <TimelineImageArea images={post.images} />
+            </div>
+          ) : null}
+          {post.movie ? (
+            <div className="relative mt-2 w-full">
+              <TimelineMovieArea movie={post.movie} />
+            </div>
+          ) : null}
+          {post.sound ? (
+            <div className="relative mt-2 w-full">
+              <TimelineSoundArea sound={post.sound} />
+            </div>
+          ) : null}
+          {/* {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
               <ImageArea images={post.images} />
             </div>
@@ -111,7 +125,7 @@ export const TimelineItem = ({ post }: Props) => {
             <div className="relative mt-2 w-full">
               <SoundArea sound={post.sound} />
             </div>
-          ) : null}
+          ) : null} */}
         </div>
       </div>
     </article>
