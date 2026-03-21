@@ -4,6 +4,7 @@ import { useNavigate } from "react-router";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { NewPostModalPage } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage";
 import {
+  primePrefetchedJSON,
   prefetchJSON,
   sendFile,
   sendJSON,
@@ -95,7 +96,12 @@ export const NewPostModalContainer = ({ activeUser, id }: Props) => {
                 user: activeUser,
               } as Models.Post);
         const postPath = `/api/v1/posts/${post.id}`;
-        void prefetchJSON(postPath);
+        if (optimisticPost !== undefined) {
+          primePrefetchedJSON(postPath, optimisticPost);
+        } else {
+          primePrefetchedJSON(postPath, post);
+          void prefetchJSON(postPath);
+        }
         ref.current?.close();
         navigate(`/posts/${post.id}`, {
           state: optimisticPost === undefined ? undefined : { initialPost: optimisticPost },
@@ -106,7 +112,7 @@ export const NewPostModalContainer = ({ activeUser, id }: Props) => {
         setIsLoading(false);
       }
     },
-    [navigate],
+    [activeUser, navigate],
   );
 
   return (

@@ -68,7 +68,7 @@ postRouter.post("/posts", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const post = await Post.create(
+  const createdPost = await Post.create(
     {
       ...req.body,
       userId: req.session.userId,
@@ -89,6 +89,10 @@ postRouter.post("/posts", async (req, res) => {
   cache.deleteByPrefix("posts:");
   cache.deleteByPrefix("search:");
   cache.deleteByPrefix("user:posts:");
+
+  const post =
+    (await Post.unscoped().findOne(createPostPayloadQuery({ where: { id: createdPost.id } }))) ??
+    createdPost;
 
   return res.status(200).type("application/json").send(post);
 });
