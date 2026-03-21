@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { SubmissionError } from "redux-form";
 
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { AuthModalPage } from "@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage";
@@ -67,10 +66,8 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
         }
         handleRequestCloseModal();
       } catch (err: unknown) {
-        const error = getErrorCode(err, values.type);
-        throw new SubmissionError({
-          _error: error,
-        });
+        const errorMsg = getErrorCode(err, values.type);
+        throw new Error(errorMsg);
       }
     },
     [handleRequestCloseModal, onUpdateActiveUser],

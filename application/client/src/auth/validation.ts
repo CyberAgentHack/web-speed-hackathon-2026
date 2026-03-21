@@ -1,9 +1,7 @@
-import { FormErrors } from "redux-form";
-
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 
-export const validate = (values: AuthFormData): FormErrors<AuthFormData> => {
-  const errors: FormErrors<AuthFormData> = {};
+export const validate = (values: AuthFormData): Record<string, string> => {
+  const errors: Record<string, string> = {};
 
   const normalizedName = values.name?.trim() || "";
   const normalizedPassword = values.password?.trim() || "";
