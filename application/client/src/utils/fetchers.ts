@@ -19,7 +19,11 @@ export async function sendFile<T>(url: string, file: File): Promise<T> {
     },
     method: "POST",
   });
-  return response.json() as Promise<T>;
+  const json = await response.json();
+  if (!response.ok) {
+    throw json;
+  }
+  return json as T;
 }
 
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
