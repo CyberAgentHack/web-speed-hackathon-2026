@@ -1,53 +1,50 @@
+import { Router } from "express";
 import httpErrors from "http-errors";
 
-import { Comment, Image, Movie, Post, Sound } from "@web-speed-hackathon-2026/server/src/models";
-import { Hono } from "hono";
-import { Env } from "../../env";
+import { Comment, Post } from "@web-speed-hackathon-2026/server/src/models";
 
-export const postRouter = new Hono<Env>();
+export const postRouter = Router();
 
-postRouter.get("/posts", async (c) => {
+postRouter.get("/posts", async (req, res) => {
   const posts = await Post.findAll({
-    limit: c.req.query("limit") != null ? Number(c.req.query("limit")) : undefined,
-    offset: c.req.query("offset") != null ? Number(c.req.query("offset")) : undefined,
+    limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
+    offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
   });
 
-  return c.json(posts);
+  return res.status(200).type("application/json").send(posts);
 });
 
-postRouter.get("/posts/:postId", async (c) => {
-  const post = await Post.findByPk(c.req.param("postId"));
+postRouter.get("/posts/:postId", async (req, res) => {
+  const post = await Post.findByPk(req.params.postId);
 
   if (post === null) {
     throw new httpErrors.NotFound();
   }
 
-  return c.json(post);
+  return res.status(200).type("application/json").send(post);
 });
 
-postRouter.get("/posts/:postId/comments", async (c) => {
+postRouter.get("/posts/:postId/comments", async (req, res) => {
   const posts = await Comment.findAll({
-    limit: c.req.query("limit") != null ? Number(c.req.query("limit")) : undefined,
-    offset: c.req.query("offset") != null ? Number(c.req.query("offset")) : undefined,
+    limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
+    offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
     where: {
-      postId: c.req.param("postId"),
+      postId: req.params.postId,
     },
   });
 
-  return c.json(posts);
+  return res.status(200).type("application/json").send(posts);
 });
 
-postRouter.post("/posts", async (c) => {
-  const userId = c.get("session").get("userId");
-  if (userId == undefined) {
+postRouter.post("/posts", async (req, res) => {
+  if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
   }
 
-  const body = await c.req.json<{ text: string; images: Image[]; movie?: Movie; sound?: Sound }>();
   const post = await Post.create(
     {
-      ...body,
-      userId: userId,
+      ...req.body,
+      userId: req.session.userId,
     },
     {
       include: [
@@ -61,5 +58,5 @@ postRouter.post("/posts", async (c) => {
     },
   );
 
-  return c.json(post);
+  return res.status(200).type("application/json").send(post);
 });

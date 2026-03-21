@@ -1,12 +1,11 @@
-import { MemoryStore, sessionMiddleware as session } from "hono-sessions";
+import session, { MemoryStore } from "express-session";
 
-export let sessionStore = new MemoryStore();
+export const sessionStore = new MemoryStore();
 
 export const sessionMiddleware = session({
   store: sessionStore,
-  encryptionKey: "secretsecretsecretsecretsecretsecret",
+  proxy: true,
+  resave: false,
+  saveUninitialized: false,
+  secret: "secret",
 });
-
-export function clearSessions() {
-  sessionStore = new MemoryStore();
-}

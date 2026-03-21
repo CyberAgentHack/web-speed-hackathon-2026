@@ -1,28 +1,28 @@
+import { Router } from "express";
 import { Op } from "sequelize";
 
 import { Post } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
-import { Hono } from "hono";
 
-export const searchRouter = new Hono();
+export const searchRouter = Router();
 
-searchRouter.get("/search", async (c) => {
-  const query = c.req.query("q");
+searchRouter.get("/search", async (req, res) => {
+  const query = req.query["q"];
 
   if (typeof query !== "string" || query.trim() === "") {
-    return c.json([]);
+    return res.status(200).type("application/json").send([]);
   }
 
   const { keywords, sinceDate, untilDate } = parseSearchQuery(query);
 
   // キーワードも日付フィルターもない場合は空配列を返す
   if (!keywords && !sinceDate && !untilDate) {
-    return c.json([]);
+    return res.status(200).type("application/json").send([]);
   }
 
   const searchTerm = keywords ? `%${keywords}%` : null;
-  const limit = c.req.query("limit") != null ? Number(c.req.query("limit")) : undefined;
-  const offset = c.req.query("offset") != null ? Number(c.req.query("offset")) : undefined;
+  const limit = req.query["limit"] != null ? Number(req.query["limit"]) : undefined;
+  const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
 
   // 日付条件を構築
   const dateConditions: Record<symbol, Date>[] = [];
@@ -88,5 +88,5 @@ searchRouter.get("/search", async (c) => {
 
   const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
 
-  return c.json(result);
+  return res.status(200).type("application/json").send(result);
 });

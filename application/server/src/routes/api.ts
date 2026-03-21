@@ -1,3 +1,4 @@
+import { Router, NextFunction, Request, Response } from "express";
 import httpErrors from "http-errors";
 import { ValidationError } from "sequelize";
 
@@ -11,37 +12,36 @@ import { postRouter } from "@web-speed-hackathon-2026/server/src/routes/api/post
 import { searchRouter } from "@web-speed-hackathon-2026/server/src/routes/api/search";
 import { soundRouter } from "@web-speed-hackathon-2026/server/src/routes/api/sound";
 import { userRouter } from "@web-speed-hackathon-2026/server/src/routes/api/user";
-import { Hono } from "hono";
-import { ContentfulStatusCode } from "hono/utils/http-status";
 
-export const apiRouter = new Hono();
+export const apiRouter = Router();
 
-apiRouter.route("/", initializeRouter);
-apiRouter.route("/", userRouter);
-apiRouter.route("/", postRouter);
-apiRouter.route("/", directMessageRouter);
-apiRouter.route("/", searchRouter);
-apiRouter.route("/", movieRouter);
-apiRouter.route("/", imageRouter);
-apiRouter.route("/", soundRouter);
-apiRouter.route("/", authRouter);
-apiRouter.route("/", crokRouter);
+apiRouter.use(initializeRouter);
+apiRouter.use(userRouter);
+apiRouter.use(postRouter);
+apiRouter.use(directMessageRouter);
+apiRouter.use(searchRouter);
+apiRouter.use(movieRouter);
+apiRouter.use(imageRouter);
+apiRouter.use(soundRouter);
+apiRouter.use(authRouter);
+apiRouter.use(crokRouter);
 
-apiRouter.onError(async (err) => {
+apiRouter.use(async (err: Error, _req: Request, _res: Response, _next: NextFunction) => {
   if (err instanceof ValidationError) {
-    console.error(err);
     throw new httpErrors.BadRequest();
   }
   throw err;
 });
 
-apiRouter.onError(async (err, c) => {
+apiRouter.use(async (err: Error, _req: Request, res: Response, _next: NextFunction) => {
   if (!httpErrors.isHttpError(err) || err.status === 500) {
     console.error(err);
   }
 
-  const statusCode: ContentfulStatusCode = httpErrors.isHttpError(err)
-    ? (err.status as ContentfulStatusCode)
-    : 500;
-  return c.json({ message: err.message }, statusCode);
+  return res
+    .status(httpErrors.isHttpError(err) ? err.status : 500)
+    .type("application/json")
+    .send({
+      message: err.message,
+    });
 });
