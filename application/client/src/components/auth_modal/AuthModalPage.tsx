@@ -4,9 +4,10 @@ import { Field, formValueSelector, InjectedFormProps, reduxForm } from "redux-fo
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/auth/validation";
 import { FormInputField } from "@web-speed-hackathon-2026/client/src/components/foundation/FormInputField";
-import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
+// import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/components/modal/ModalErrorMessage";
 import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/components/modal/ModalSubmitButton";
+import { Link } from "react-router";
 
 interface Props {
   onRequestCloseModal: () => void;

@@ -1,12 +1,13 @@
 // import moment from "moment";
 
-import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
+// import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
 import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
 import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 import dayjs from "dayjs";
+import { Link } from "react-router";
 
 interface Props {
   post: Models.Post;

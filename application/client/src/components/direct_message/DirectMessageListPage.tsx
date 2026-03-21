@@ -5,10 +5,11 @@ import relativeTime from 'dayjs/plugin/relativeTime';import { useCallback, useEf
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
+// import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { Link } from 'react-router';
 
 interface Props {
   activeUser: Models.User;
