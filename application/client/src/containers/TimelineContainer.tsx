@@ -7,7 +7,7 @@ import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetch_json
 export const TimelineContainer = () => {
   useDocumentTitle("タイムライン - CaX");
   const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>("/api/v1/posts", fetchJSON, {
-    pageSize: 15,
+    pageSize: 8,
     serverPagination: true,
     prefetchKey: "__PREFETCH_TIMELINE__",
   });
