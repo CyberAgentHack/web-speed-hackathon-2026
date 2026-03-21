@@ -9,8 +9,8 @@ interface Options {
 /** ImageMagick WASM初期化のキャッシュ（重複フェッチ・初期化防止） */
 let initPromise: Promise<void> | null = null;
 
-/** ImageMagick WASMを一度だけ初期化する */
-async function ensureImageMagickInitialized(): Promise<void> {
+/** ImageMagick WASMを一度だけ初期化する。事前呼び出しで投稿時の待ち時間を短縮 */
+export async function ensureImageMagickInitialized(): Promise<void> {
   if (!initPromise) {
     initPromise = fetch(magickWasmUrl)
       .then((res) => res.arrayBuffer())

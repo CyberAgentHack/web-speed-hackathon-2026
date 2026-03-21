@@ -3,6 +3,7 @@ import { lazy, Suspense, useCallback, useEffect, useId, useState } from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
+import { ensureImageMagickInitialized } from "@web-speed-hackathon-2026/client/src/utils/convert_image";
 /**
  * AuthModalContainer / NewPostModalContainer は lazy() から外して直接importする。
  * サインインフロー（4フロー最大200点に影響）と投稿フローの安定性を確保するため、
@@ -61,6 +62,10 @@ export const AppContainer = () => {
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {
         setActiveUser(user);
+        // ログイン済みの場合、idle時にImageMagick WASMを事前初期化（投稿時の待ち時間短縮）
+        if (user && "requestIdleCallback" in window) {
+          requestIdleCallback(() => { void ensureImageMagickInitialized(); });
+        }
       })
       .catch(() => {
         // 未ログイン時は404が返るため無視
