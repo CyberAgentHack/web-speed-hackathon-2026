@@ -71,8 +71,8 @@ export default defineConfig({
           if (id.includes("vite/preload-helper")) {
             return "vendor-react";
           }
-          // React core + router + redux
-          if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/") || id.includes("node_modules/react-router") || id.includes("node_modules/react-redux") || id.includes("node_modules/redux") || id.includes("node_modules/@reduxjs")) {
+          // React core + router
+          if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/") || id.includes("node_modules/react-router")) {
             return "vendor-react";
           }
           // Markdown rendering (Crok page)

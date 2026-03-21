@@ -1,13 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { Field, InjectedFormProps, SubmissionError, reduxForm, WrappedFieldProps } from "redux-form";
 
 import { Timeline } from "@web-speed-hackathon-2026/client/src/components/timeline/Timeline";
 import {
   parseSearchQuery,
   sanitizeSearchText,
 } from "@web-speed-hackathon-2026/client/src/search/services";
-import { SearchFormData } from "@web-speed-hackathon-2026/client/src/search/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/search/validation";
 
 import { Button } from "../foundation/Button";
@@ -17,35 +15,12 @@ interface Props {
   results: Models.Post[];
 }
 
-const SearchInput = ({ input, meta }: WrappedFieldProps) => {
-  const errorMessage = meta.error || meta.submitError;
-  const showError = meta.touched && errorMessage;
-  return (
-    <div className="flex flex-1 flex-col">
-      <input
-        {...input}
-        className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
-          showError
-            ? "border-cax-danger focus:border-cax-danger"
-            : "border-cax-border focus:border-cax-brand-strong"
-        }`}
-        placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
-        type="text"
-      />
-      {showError && (
-        <span className="text-cax-danger mt-1 text-xs">{errorMessage}</span>
-      )}
-    </div>
-  );
-};
-
-const SearchPageComponent = ({
-  query,
-  results,
-  handleSubmit,
-}: Props & InjectedFormProps<SearchFormData, Props>) => {
+export const SearchPage = ({ query, results }: Props) => {
   const navigate = useNavigate();
   const [isNegative, setIsNegative] = useState(false);
+  const [searchText, setSearchText] = useState(query);
+  const [touched, setTouched] = useState(false);
+  const [error, setError] = useState<string | undefined>(undefined);
 
   const parsed = parseSearchQuery(query);
 
@@ -88,21 +63,46 @@ const SearchPageComponent = ({
     return parts.join(" ");
   }, [parsed]);
 
-  const onSubmit = (values: SearchFormData) => {
-    const errors = validate(values);
-    if (Object.keys(errors).length > 0) {
-      throw new SubmissionError(errors);
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    setTouched(true);
+    const errors = validate({ searchText });
+    if (errors.searchText) {
+      setError(errors.searchText);
+      return;
     }
-    const sanitizedText = sanitizeSearchText(values.searchText.trim());
+    setError(undefined);
+    const sanitizedText = sanitizeSearchText(searchText.trim());
     navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
   };
+
+  const showError = touched && error;
 
   return (
     <div className="flex flex-col gap-4">
       <div className="bg-cax-surface p-4 shadow">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit}>
           <div className="flex gap-2">
-            <Field name="searchText" component={SearchInput} />
+            <div className="flex flex-1 flex-col">
+              <input
+                className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
+                  showError
+                    ? "border-cax-danger focus:border-cax-danger"
+                    : "border-cax-border focus:border-cax-brand-strong"
+                }`}
+                placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
+                type="text"
+                value={searchText}
+                onChange={(e) => {
+                  setSearchText(e.target.value);
+                  setError(undefined);
+                }}
+                onBlur={() => setTouched(true)}
+              />
+              {showError && (
+                <span className="text-cax-danger mt-1 text-xs">{error}</span>
+              )}
+            </div>
             <Button variant="primary" type="submit">
               検索
             </Button>
@@ -142,9 +142,3 @@ const SearchPageComponent = ({
     </div>
   );
 };
-
-export const SearchPage = reduxForm<SearchFormData, Props>({
-  form: "search",
-  enableReinitialize: true,
-  validate,
-})(SearchPageComponent);
