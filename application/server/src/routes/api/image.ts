@@ -38,12 +38,13 @@ imageRouter.post("/images", async (req, res) => {
 
   // Generate resized variants for srcset
   const metadata = await sharp(webpBuffer).metadata();
+  const origWidth = metadata.width ?? 0;
   await Promise.all(
-    POST_IMAGE_WIDTHS.filter((w) => (metadata.width ?? 0) > w).map((w) =>
-      sharp(webpBuffer)
-        .resize(w)
-        .webp({ quality: 80 })
-        .toFile(path.resolve(imagesDir, `${imageId}_w${w}.${EXTENSION}`)),
+    POST_IMAGE_WIDTHS.map((w) =>
+      (origWidth > w
+        ? sharp(webpBuffer).resize(w).webp({ quality: 80 })
+        : sharp(webpBuffer).webp({ quality: 80 })
+      ).toFile(path.resolve(imagesDir, `${imageId}_w${w}.${EXTENSION}`)),
     ),
   );
 
