@@ -30,7 +30,7 @@ RUN rm -rf client/src client/types client/rspack.config.js client/tsconfig.json 
 
 FROM base
 
-COPY --link --from=build /app /app
+COPY --from=build /app /app
 
 EXPOSE 8080
 CMD [ "pnpm", "start" ]
