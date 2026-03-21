@@ -3,6 +3,7 @@ import { MouseEvent, useCallback, useId } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
+import { showDialog } from "@web-speed-hackathon-2026/client/src/utils/dialog";
 
 interface Props {
   src: string;
@@ -34,9 +35,10 @@ export const CoveredImage = ({ src, alt, isLcpCandidate = true }: Props) => {
 
       <button
         className="border-cax-border bg-cax-surface-raised/90 text-cax-text-muted hover:bg-cax-surface absolute right-1 bottom-1 rounded-full border px-2 py-1 text-center text-xs"
-        type="button"
         command="show-modal"
         commandfor={dialogId}
+        onClick={() => showDialog(dialogId)}
+        type="button"
       >
         ALT を表示する
       </button>

@@ -81,6 +81,36 @@ export const AppContainer = () => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
+  useEffect(() => {
+    if (activeUser == null) {
+      return;
+    }
+
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+    let idleHandle: number | undefined;
+    const preload = () => {
+      void import("@web-speed-hackathon-2026/client/src/containers/CrokContainer");
+      void import("@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer");
+      void import("@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer");
+      void import("@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage");
+    };
+
+    if (typeof requestIdleCallback !== "undefined") {
+      idleHandle = requestIdleCallback(preload, { timeout: 2000 });
+    } else {
+      timeoutHandle = setTimeout(preload, 300);
+    }
+
+    return () => {
+      if (idleHandle !== undefined && typeof cancelIdleCallback !== "undefined") {
+        cancelIdleCallback(idleHandle);
+      }
+      if (timeoutHandle !== undefined) {
+        clearTimeout(timeoutHandle);
+      }
+    };
+  }, [activeUser]);
+
   // サーバーからプリロードされた /api/v1/me データがあれば初期状態に反映する
   const _preloadedMe = (() => {
     const p = typeof window !== "undefined"

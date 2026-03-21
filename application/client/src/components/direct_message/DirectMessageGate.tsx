@@ -1,5 +1,7 @@
 import { Helmet } from "react-helmet";
 
+import { showDialog } from "@web-speed-hackathon-2026/client/src/utils/dialog";
+
 interface Props {
   headline: string;
   description?: string;
@@ -23,9 +25,10 @@ export const DirectMessageGate = ({
         {description !== "" ? <p className="text-cax-text-muted text-sm">{description}</p> : null}
         <button
           className="bg-cax-brand text-cax-surface-raised hover:bg-cax-brand-strong inline-flex items-center justify-center rounded-full px-6 py-2 shadow"
-          type="button"
           command="show-modal"
           commandfor={authModalId}
+          onClick={() => showDialog(authModalId)}
+          type="button"
         >
           {buttonLabel}
         </button>
