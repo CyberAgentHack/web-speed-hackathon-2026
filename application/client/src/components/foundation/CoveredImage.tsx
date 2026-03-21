@@ -1,5 +1,12 @@
 import { MouseEvent, useCallback, useEffect, useId, useState } from "react";
 
+// モジュールレベルで piexifjs を共有: 複数の CoveredImage インスタンスが同時にマウントされても
+// dynamic import は1回だけ実行されるため、並列 Long Task の発生を抑制する
+let _piexifjsPromise: Promise<typeof import("piexifjs")> | null = null;
+function getPiexifjs() {
+  return (_piexifjsPromise ??= import("piexifjs"));
+}
+
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { fetchBinaryCached } from "@web-speed-hackathon-2026/client/src/utils/fetch_binary_cached";
@@ -47,7 +54,7 @@ export const CoveredImage = ({ src }: Props) => {
       .then((data) => {
         return new Promise<string>((resolve) => {
           const doWork = async () => {
-            const { load, ImageIFD } = await import("piexifjs");
+            const { load, ImageIFD } = await getPiexifjs();
             resolve(extractAlt(data, load, ImageIFD));
           };
           if (typeof requestIdleCallback !== "undefined") {

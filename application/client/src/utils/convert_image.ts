@@ -1,50 +1,47 @@
-import { initializeImageMagick, ImageMagick, MagickFormat } from "@imagemagick/magick-wasm";
-import { dump, insert, ImageIFD } from "piexifjs";
-
 interface Options {
   extension: string;
 }
 
-let magickInitPromise: Promise<void> | null = null;
+let worker: Worker | null = null;
+let nextId = 0;
+const pending = new Map<number, { resolve: (blob: Blob) => void; reject: (err: Error) => void }>();
 
-function ensureMagickInitialized(): Promise<void> {
-  if (!magickInitPromise) {
-    magickInitPromise = initializeImageMagick(new URL("/magick.wasm", location.href));
+function getImageMagickWorker(): Worker {
+  if (!worker) {
+    worker = new Worker(
+      /* webpackChunkName: "image-magick-worker" */
+      new URL("./image_magick.worker", import.meta.url),
+      { type: "module" },
+    );
+    worker.onmessage = (ev: MessageEvent) => {
+      const { id, result, error } = ev.data as { id: number; result?: Uint8Array; error?: string };
+      const p = pending.get(id);
+      if (!p) return;
+      pending.delete(id);
+      if (error != null) {
+        p.reject(new Error(error));
+      } else {
+        p.resolve(new Blob([result!]));
+      }
+    };
+    worker.onerror = (ev) => {
+      for (const [id, p] of pending) {
+        p.reject(new Error(`Worker error: ${ev.message}`));
+        pending.delete(id);
+      }
+    };
   }
-  return magickInitPromise;
+  return worker;
 }
 
 export async function convertImage(file: File, options: Options): Promise<Blob> {
-  await ensureMagickInitialized();
-
   const byteArray = new Uint8Array(await file.arrayBuffer());
+  const id = nextId++;
 
-  return new Promise((resolve) => {
-    ImageMagick.read(byteArray, (img) => {
-      img.format = options.extension as MagickFormat;
-
-      const comment = img.comment;
-
-      img.write((output) => {
-        if (comment == null) {
-          resolve(new Blob([output as Uint8Array<ArrayBuffer>]));
-          return;
-        }
-
-        // ImageMagick では EXIF の ImageDescription フィールドに保存されているデータが
-        // 非標準の Comment フィールドに移されてしまうため
-        // piexifjs を使って ImageDescription フィールドに書き込む
-        const binary = Array.from(output as Uint8Array<ArrayBuffer>)
-          .map((b) => String.fromCharCode(b))
-          .join("");
-        const descriptionBinary = Array.from(new TextEncoder().encode(comment))
-          .map((b) => String.fromCharCode(b))
-          .join("");
-        const exifStr = dump({ "0th": { [ImageIFD.ImageDescription]: descriptionBinary } });
-        const outputWithExif = insert(exifStr, binary);
-        const bytes = Uint8Array.from(outputWithExif.split("").map((c) => c.charCodeAt(0)));
-        resolve(new Blob([bytes]));
-      });
-    });
+  return new Promise<Blob>((resolve, reject) => {
+    pending.set(id, { resolve, reject });
+    getImageMagickWorker().postMessage({ byteArray, extension: options.extension, id }, [
+      byteArray.buffer,
+    ]);
   });
 }

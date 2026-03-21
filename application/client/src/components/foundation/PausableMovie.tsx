@@ -82,14 +82,13 @@ export const PausableMovie = ({ src }: Props) => {
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
       <div ref={containerRef} className="relative h-full w-full">
-        {/* Thumbnail before lazy load triggers */}
-        {!isNearViewport && (
-          <img
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover"
-            src={thumbSrc}
-          />
-        )}
+        {/* Thumbnail: always rendered as LCP candidate */}
+        <img
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+          src={thumbSrc}
+        />
+        {/* Canvas animation on top when near viewport (masked by dynamicMediaMask in VRT) */}
         {isNearViewport && (
           <button
             aria-label="動画プレイヤー"

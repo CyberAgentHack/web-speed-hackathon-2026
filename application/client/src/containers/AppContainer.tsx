@@ -98,7 +98,11 @@ export const AppContainer = () => {
         : null}
 
       <main>
-        <Suspense fallback={null}>
+        <Suspense fallback={
+          <div style={{ alignItems: "center", display: "flex", inset: 0, justifyContent: "center", pointerEvents: "none", position: "fixed" }}>
+            <p className="text-cax-text-muted text-lg">読込中...</p>
+          </div>
+        }>
           <Routes>
             <Route element={<TimelineContainer />} path="/" />
             <Route
