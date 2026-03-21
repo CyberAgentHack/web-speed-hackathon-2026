@@ -45,11 +45,13 @@ function encodeBinaryString(value: string): string {
   return Array.from(bytes, (byte) => String.fromCharCode(byte)).join("");
 }
 
-async function getImageDescription(file: File): Promise<string | null> {
+export async function getImageDescription(file: File): Promise<string | null> {
   try {
+    console.log("Loading image description for", file.name);
     const dataUrl = await blobToDataUrl(file);
     const exif = load(dataUrl);
     const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
+    console.log("raw description:", raw);
     return typeof raw === "string" ? decodeBinaryString(raw) : null;
   } catch {
     return null;
@@ -69,6 +71,7 @@ export async function convertImage(file: File, options: Options): Promise<Blob> 
 
   try {
     const [image, description] = await Promise.all([loadImage(imageUrl), getImageDescription(file)]);
+    console.log("original description:", description,image);
     const canvas = document.createElement("canvas");
     canvas.width = image.naturalWidth;
     canvas.height = image.naturalHeight;
@@ -85,6 +88,7 @@ export async function convertImage(file: File, options: Options): Promise<Blob> 
       return converted;
     };
 
+    console.log("description:", description);
     return attachImageDescription(converted, description);
   } finally {
     URL.revokeObjectURL(imageUrl);

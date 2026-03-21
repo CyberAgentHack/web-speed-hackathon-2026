@@ -34,7 +34,7 @@ crokRouter.get("/crok", async (req, res) => {
   let messageId = 0;
 
   // TTFT (Time to First Token)
-  await sleep(3000);
+  // await sleep(3000);
 
   const chunkSize = 20
   const result = [];

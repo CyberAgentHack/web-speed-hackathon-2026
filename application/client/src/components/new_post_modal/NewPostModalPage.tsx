@@ -26,6 +26,10 @@ interface Props {
   onSubmit: (params: SubmitParams) => void;
 }
 
+function isTiffFile(file: File): boolean {
+  return file.type === "image/tiff" || /\.tiff?$/i.test(file.name);
+}
+
 export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubmit }: Props) => {
   const [params, setParams] = useState<SubmitParams>({
     images: [],
@@ -54,15 +58,16 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       setIsConverting(true);
 
       Promise.all(
-        files.map((file) =>
-          // convertImage(file, { extension: MagickFormat.Jpg }).then(
-         convertImage(file, { extension: "image/webp" }).then(
-            (blob) => new File([blob], "converted.webp  ", { type: "image/webp" }),
-          ),
-        ),
+        files.map(async (file) => {
+          if (isTiffFile(file)) {
+            return file;
+          }
+
+          const blob = await convertImage(file, { extension: "image/webp" });
+          return new File([blob], "converted.webp", { type: "image/webp" });
+        }),
       )
         .then((convertedFiles) => {
-          console.log("convertedFiles:", convertedFiles.map((file) => ({ name: file.name, size: file.size, type: file.type })));
           setParams((params) => ({
             ...params,
             images: convertedFiles,
