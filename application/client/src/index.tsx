@@ -10,11 +10,12 @@ declare global {
   }
 }
 
-window.addEventListener("load", () => {
+window.addEventListener("DOMContentLoaded", () => {
   const rootElement = document.getElementById("app")!;
 
   // サーバー側から埋め込まれたSWRキャッシュを取得
-  const swrCache = window.__SWR_CACHE__ ?? {};
+  const cacheStr = document.getElementById('swr-cache')?.textContent;
+  const swrCache = cacheStr ? JSON.parse(cacheStr) : {};
 
   const app = (
     <SWRConfig

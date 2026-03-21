@@ -230,9 +230,9 @@ staticRouter.use(async (req: Request, res: Response, next) => {
     });
 
     // SWR キャッシュの初期化スクリプトを埋め込む
-    const swrCacheScript = `<script>
-      window.__SWR_CACHE__ = ${safeJsonForInlineScript(swrFallback)};
-    </script>`;
+    const swrCacheScript = `<script id="swr-cache" type="application/json">${
+      safeJsonForInlineScript(swrFallback)
+    }</script>`;
 
     const html = replaceAppRoot(indexHtml, appHtml, swrCacheScript);
 
