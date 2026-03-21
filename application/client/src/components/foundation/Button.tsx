@@ -14,7 +14,13 @@ export const Button = forwardRef<HTMLButtonElement, Props>(
         const dialog = document.getElementById(props.commandfor) as HTMLDialogElement | null;
         if (dialog && typeof dialog.showModal === "function") {
           if (props.command === "show-modal") {
-            dialog.showModal();
+            if (!dialog.open) {
+              try {
+                dialog.showModal();
+              } catch (err) {
+                console.error("Failed to open dialog:", err);
+              }
+            }
           } else if (props.command === "close") {
             dialog.close();
           }

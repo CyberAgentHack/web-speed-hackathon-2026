@@ -19,7 +19,13 @@ export const NavigationItem = ({ badge, href, icon, command, commandfor, text }:
     if (command === "show-modal" && commandfor) {
       const dialog = document.getElementById(commandfor) as HTMLDialogElement | null;
       if (dialog && typeof dialog.showModal === "function") {
-        dialog.showModal();
+        if (!dialog.open) {
+          try {
+            dialog.showModal();
+          } catch (err) {
+            console.error("Failed to open dialog:", err);
+          }
+        }
       }
     }
   };
