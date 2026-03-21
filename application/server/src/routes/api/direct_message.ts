@@ -8,6 +8,7 @@ import {
   DirectMessageConversation,
   User,
 } from "@web-speed-hackathon-2026/server/src/models";
+import { countUnreadDirectMessagesForUser } from "@web-speed-hackathon-2026/server/src/models/DirectMessage";
 
 export const directMessageRouter = Router();
 
@@ -75,22 +76,7 @@ directMessageRouter.ws("/dm/unread", async (req, _res) => {
     eventhub.off(`dm:unread/${req.session.userId}`, handler);
   });
 
-  const unreadCount = await DirectMessage.count({
-    distinct: true,
-    where: {
-      senderId: { [Op.ne]: req.session.userId },
-      isRead: false,
-    },
-    include: [
-      {
-        association: "conversation",
-        where: {
-          [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
-        },
-        required: true,
-      },
-    ],
-  });
+  const unreadCount = await countUnreadDirectMessagesForUser(req.session.userId);
 
   eventhub.emit(`dm:unread/${req.session.userId}`, { unreadCount });
 });
@@ -200,13 +186,30 @@ directMessageRouter.post("/dm/:conversationId/read", async (req, res) => {
       ? conversation.initiatorId
       : conversation.memberId;
 
-  await DirectMessage.update(
+  const [updatedCount] = await DirectMessage.update(
     { isRead: true },
     {
       where: { conversationId: conversation.id, senderId: peerId, isRead: false },
-      individualHooks: true,
     },
   );
+
+  if (updatedCount > 0) {
+    const unreadCount = await countUnreadDirectMessagesForUser(req.session.userId);
+    eventhub.emit(`dm:unread/${req.session.userId}`, { unreadCount });
+
+    const latestReadMessage = await DirectMessage.findOne({
+      where: {
+        conversationId: conversation.id,
+        senderId: peerId,
+        isRead: true,
+      },
+      order: [["createdAt", "DESC"]],
+    });
+
+    if (latestReadMessage != null) {
+      eventhub.emit(`dm:conversation/${conversation.id}:message`, latestReadMessage);
+    }
+  }
 
   return res.status(200).type("application/json").send({});
 });
