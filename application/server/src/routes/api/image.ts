@@ -29,15 +29,15 @@ imageRouter.get("/images/alt", async (req, res) => {
     }
 
     const safeSrc = src.split("?")[0]!.split("#")[0]!;
-    const normalizedSrc = safeSrc.startsWith("/update/")
-        ? safeSrc.slice("/update".length)
+    const normalizedSrc = safeSrc.startsWith("/upload/")
+        ? safeSrc.slice("/upload".length)
         : safeSrc;
     if (!normalizedSrc.startsWith("/images/")) {
         throw new httpErrors.BadRequest("Invalid src");
     }
 
     const publicRoot = path.resolve(PUBLIC_PATH);
-    const updateRoot = path.resolve(publicRoot, "../update");
+    const uploadRoot = path.resolve(UPLOAD_PATH);
 
     const candidateEntries = [
         {
@@ -49,8 +49,8 @@ imageRouter.get("/images/alt", async (req, res) => {
             absolutePath: path.resolve(publicRoot, `.${normalizedSrc}`),
         },
         {
-            root: updateRoot,
-            absolutePath: path.resolve(updateRoot, `.${normalizedSrc}`),
+            root: uploadRoot,
+            absolutePath: path.resolve(uploadRoot, `.${normalizedSrc}`),
         },
     ];
 
