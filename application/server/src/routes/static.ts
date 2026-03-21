@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import history from "connect-history-api-fallback";
 import path from "path";
 import { Router } from "express";
@@ -8,8 +9,29 @@ import {
   PUBLIC_PATH,
   UPLOAD_PATH,
 } from "@web-speed-hackathon-2026/server/src/paths";
+import { renderTermsPage } from "@web-speed-hackathon-2026/server/src/routes/terms_page";
 
 export const staticRouter = Router();
+
+// Terms page SSR: pre-render HTML to reduce client-side TBT
+let termsHtmlCache: string | null = null;
+staticRouter.get("/terms", (_req, res, next) => {
+  try {
+    if (termsHtmlCache === null) {
+      const indexPath = path.resolve(CLIENT_DIST_PATH, "index.html");
+      if (!fs.existsSync(indexPath)) {
+        return next();
+      }
+      const baseHtml = fs.readFileSync(indexPath, "utf-8");
+      termsHtmlCache = renderTermsPage(baseHtml);
+    }
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+    res.send(termsHtmlCache);
+  } catch {
+    next();
+  }
+});
 
 const LONG_CACHE = "public, max-age=31536000, immutable";
 const REVALIDATE_CACHE = "public, max-age=0, must-revalidate";
