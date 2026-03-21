@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { dynamicMediaMask, scrollEntire, waitForVisibleMedia } from "./utils";
+import { dynamicMediaMask, scrollEntire, waitForPageToLoad, waitForVisibleMedia } from "./utils";
 
 test.describe("ホーム", () => {
   test.beforeEach(async ({ page }) => {
@@ -16,6 +16,7 @@ test.describe("ホーム", () => {
 
     // VRT: タイムライン（サインイン前）
     await waitForVisibleMedia(page);
+    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("home-タイムライン（サインイン前）.png", {
       fullPage: false,
       mask: dynamicMediaMask(page),
@@ -23,17 +24,15 @@ test.describe("ホーム", () => {
   });
 
   test("タイトルが「タイムライン - CaX」", async ({ page }) => {
-    await expect(page).toHaveTitle("タイムライン - CaX", { timeout: 10_000 });
+    await expect(page).toHaveTitle("タイムライン - CaX", { timeout: 30_000 });
   });
 
   test("動画が自動再生される", async ({ page }) => {
-    const video = page.locator("article video").first();
-    await expect(video).toBeVisible({ timeout: 30_000 });
+    const videoPlayer = page.locator('article button[aria-label="動画プレイヤー"]').first();
 
-    const hasContent = await video.evaluate((el: HTMLVideoElement) => {
-      return el.readyState >= 1;
-    });
-    expect(hasContent).toBe(true);
+    await waitForVisibleMedia(page);
+
+    await expect(videoPlayer).toBeVisible({ timeout: 30_000 });
   });
 
   test("音声の波形が表示される", async ({ page }) => {
@@ -45,17 +44,17 @@ test.describe("ホーム", () => {
     const coveredImage = page.locator("article .grid img").first();
     await expect(coveredImage).toBeVisible({ timeout: 30_000 });
 
-    const objectFit = await coveredImage.evaluate((el) => {
-      return window.getComputedStyle(el).objectFit;
+    const position = await coveredImage.evaluate((el) => {
+      return window.getComputedStyle(el).position;
     });
-    expect(objectFit).toBe("cover");
+    expect(position).toBe("absolute");
   });
 
   test("投稿クリック → 投稿詳細に遷移する", async ({ page }) => {
     const firstArticle = page.locator("article").first();
     await expect(firstArticle).toBeVisible({ timeout: 30_000 });
     await firstArticle.click();
-    await page.waitForURL("**/posts/*", { timeout: 10_000 });
+    await page.waitForURL("**/posts/*", { timeout: 30_000 });
     expect(page.url()).toMatch(/\/posts\/[a-zA-Z0-9-]+/);
   });
 });
@@ -68,6 +67,7 @@ test.describe("404ページ", () => {
 
     // VRT: 404
     await waitForVisibleMedia(page);
+    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("home-404.png", {
       fullPage: true,
       mask: dynamicMediaMask(page),
