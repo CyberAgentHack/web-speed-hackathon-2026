@@ -76,3 +76,7 @@ export function getSoundSources(soundId: string): MediaSource[] {
 export function getProfileImagePath(profileImageId: string, size: number): string {
   return `/images/profiles/${profileImageId}.jpg?w=${size}&h=${size}`;
 }
+
+export function getWaveformPath(soundId: string): string {
+  return `/waveforms/${soundId}.json`;
+}
