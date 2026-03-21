@@ -14,16 +14,46 @@ interface ReturnValues<T> {
   fetchMore: () => void;
 }
 
+declare global {
+  var __SSG_INITIAL_DATA__: { apiPath: string; data: unknown[] } | undefined;
+}
+
+function consumeInitialData<T>(apiPath: string): T[] | null {
+  if (typeof globalThis.__SSG_INITIAL_DATA__ !== "undefined") {
+    const ssgData = globalThis.__SSG_INITIAL_DATA__;
+    if (ssgData.apiPath === apiPath) {
+      globalThis.__SSG_INITIAL_DATA__ = undefined;
+      return ssgData.data as T[];
+    }
+  }
+  if (typeof document === "undefined") return null;
+  const el = document.getElementById("__INITIAL_DATA__");
+  if (el === null) return null;
+  try {
+    const parsed = JSON.parse(el.textContent ?? "") as Record<string, unknown>;
+    if (parsed["apiPath"] !== apiPath) return null;
+    el.remove();
+    return parsed["data"] as T[];
+  } catch {
+    return null;
+  }
+}
+
 export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
 ): ReturnValues<T> {
-  const internalRef = useRef({ isLoading: false, offset: 0, hasMore: true });
+  const initialData = useRef(consumeInitialData<T>(apiPath));
+  const internalRef = useRef({
+    isLoading: false,
+    offset: initialData.current !== null ? initialData.current.length : 0,
+    hasMore: initialData.current !== null ? initialData.current.length >= LIMIT : true,
+  });
 
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
-    data: [],
+    data: initialData.current ?? [],
     error: null,
-    isLoading: true,
+    isLoading: initialData.current === null,
   });
 
   const fetchMore = useCallback(() => {
@@ -72,7 +102,13 @@ export function useInfiniteFetch<T>(
     );
   }, [apiPath, fetcher]);
 
+  const didUseInitialData = useRef(initialData.current !== null);
+
   useEffect(() => {
+    if (didUseInitialData.current) {
+      didUseInitialData.current = false;
+      return;
+    }
     setResult(() => ({
       data: [],
       error: null,

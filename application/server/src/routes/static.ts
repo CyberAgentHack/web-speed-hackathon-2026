@@ -11,17 +11,26 @@ import {
   UPLOAD_PATH,
 } from "@web-speed-hackathon-2026/server/src/paths";
 
-const termsHtmlPath = path.join(CLIENT_DIST_PATH, "terms.html");
-const termsHtml = fs.existsSync(termsHtmlPath) ? fs.readFileSync(termsHtmlPath, "utf-8") : null;
+function loadSsgHtml(filename: string): string | null {
+  const filePath = path.join(CLIENT_DIST_PATH, filename);
+  return fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf-8") : null;
+}
+
+const ssgPages: Record<string, string | null> = {
+  "/terms": loadSsgHtml("terms.html"),
+  "/": loadSsgHtml("home.html"),
+};
 
 export const staticRouter = Router();
 
-if (termsHtml !== null) {
-  staticRouter.get("/terms", (_req, res) => {
-    res.setHeader("Content-Type", "text/html; charset=utf-8");
-    res.setHeader("Cache-Control", "no-cache");
-    res.send(termsHtml);
-  });
+for (const [routePath, html] of Object.entries(ssgPages)) {
+  if (html !== null) {
+    staticRouter.get(routePath, (_req, res) => {
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.setHeader("Cache-Control", "no-cache");
+      res.send(html);
+    });
+  }
 }
 
 // SPA 対応のため、ファイルが存在しないときに index.html を返す
