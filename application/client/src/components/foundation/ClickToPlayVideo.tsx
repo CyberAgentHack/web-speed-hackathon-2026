@@ -7,22 +7,19 @@ import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/
 interface Props {
   src: string;
   fallbackImage?: string;
+  poster?: string;
 }
 
-export const ClickToPlayVideo = ({ src, fallbackImage }: Props) => {
+export const ClickToPlayVideo = ({ src, fallbackImage, poster }: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const prefersReduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const [isPlaying, setIsPlaying] = useState(!prefersReduceMotion);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [isFallbackImage, setIsFallbackImage] = useState(false);
 
   useEffect(() => {
-    const el = videoRef.current;
-    if (!el || isFallbackImage) return;
     if (prefersReduceMotion) {
-      el.pause();
       setIsPlaying(false);
-    } else {
-      el.play().catch(() => setIsPlaying(false));
+      videoRef.current?.pause();
     }
   }, [prefersReduceMotion]);
 
@@ -30,19 +27,21 @@ export const ClickToPlayVideo = ({ src, fallbackImage }: Props) => {
     if (isFallbackImage) return;
     const el = videoRef.current;
     if (!el) return;
-    if (isPlaying) {
+    if (el.paused) {
+      el
+        .play()
+        .then(() => setIsPlaying(true))
+        .catch(() => setIsPlaying(false));
+    } else {
       el.pause();
       setIsPlaying(false);
-    } else {
-      el.play().catch(() => setIsPlaying(false));
-      setIsPlaying(true);
     }
-  }, [isPlaying]);
+  }, [isFallbackImage]);
 
   const handleError = useCallback(() => {
     if (fallbackImage) {
       setIsFallbackImage(true);
-      setIsPlaying(false);
+      setIsPlaying(true);
     }
   }, [fallbackImage]);
 
@@ -55,7 +54,13 @@ export const ClickToPlayVideo = ({ src, fallbackImage }: Props) => {
         type="button"
       >
         {isFallbackImage ? (
-          <img className="h-full w-full object-contain" src={fallbackImage} alt="" loading="lazy" decoding="async" />
+          <img
+            className="h-full w-full object-contain"
+            src={fallbackImage}
+            alt=""
+            loading="lazy"
+            decoding="async"
+          />
         ) : (
           <video
             ref={videoRef}
@@ -64,6 +69,7 @@ export const ClickToPlayVideo = ({ src, fallbackImage }: Props) => {
             muted
             playsInline
             preload="metadata"
+            poster={poster || fallbackImage}
             src={src}
             onError={handleError}
           />
