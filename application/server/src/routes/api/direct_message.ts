@@ -26,7 +26,31 @@ directMessageRouter.get("/dm", async (req, res) => {
     order: [[col("messages.createdAt"), "DESC"]],
   });
 
-  return res.status(200).type("application/json").send(conversations);
+  // Trim messages: only keep lastMessage + 1 unread from peer (reduces payload MB→KB)
+  const trimmed = conversations.map((conv) => {
+    const plain = conv.toJSON() as any;
+    const msgs: any[] = plain.messages ?? [];
+    if (msgs.length === 0) return plain;
+
+    // lastMessage = most recent by createdAt
+    const lastMessage = msgs.reduce((a: any, b: any) =>
+      new Date(a.createdAt) >= new Date(b.createdAt) ? a : b,
+    );
+
+    // 1 unread message from peer (not sent by me)
+    const unreadFromPeer = msgs.find(
+      (m: any) => !m.isRead && m.senderId !== req.session.userId,
+    );
+
+    const kept = [lastMessage];
+    if (unreadFromPeer && unreadFromPeer.id !== lastMessage.id) {
+      kept.push(unreadFromPeer);
+    }
+    plain.messages = kept;
+    return plain;
+  });
+
+  return res.status(200).type("application/json").send(trimmed);
 });
 
 directMessageRouter.post("/dm", async (req, res) => {

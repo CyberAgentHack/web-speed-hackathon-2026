@@ -232,3 +232,6 @@ analysis2.md
 # Font subsetting backups
 *.woff2.bak
 subset-chars.txt
+
+# Claude Code local settings
+.claude/settings.local.json
