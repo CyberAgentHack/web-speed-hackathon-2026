@@ -7,22 +7,18 @@ interface Props {
 }
 
 export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
-  const prevReachedRef = useRef(false);
+  const latestItem = items[items.length - 1];
 
-  // 🔥 最新のitemsをrefで持つ（依存を消すため）
-  const itemsRef = useRef(items);
-  useEffect(() => {
-    itemsRef.current = items;
-  }, [items]);
+  const prevReachedRef = useRef(false);
 
   useEffect(() => {
     const handler = () => {
-      const hasReached =
-        window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
+      const hasReached =window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
 
+      // 画面最下部にスクロールしたタイミングで、登録したハンドラを呼び出す
       if (hasReached && !prevReachedRef.current) {
-        // 🔥 最新データを参照
-        if (itemsRef.current.length > 0) {
+        // アイテムがないときは追加で読み込まない
+        if (latestItem !== undefined) {
           console.log("🚀 reached bottom, fetching more...");
           fetchMore();
         }
@@ -31,12 +27,15 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
       prevReachedRef.current = hasReached;
     };
 
-    document.addEventListener("scroll", handler, { passive: true });
+    // 最初は実行されないので手動で呼び出す
+    prevReachedRef.current = false;
+    handler();
 
+    document.addEventListener("scroll", handler, { passive: false });
     return () => {
       document.removeEventListener("scroll", handler);
     };
-  }, [fetchMore]); // ←依存最小限
+  }, [latestItem, fetchMore]);
 
   return <>{children}</>;
 };

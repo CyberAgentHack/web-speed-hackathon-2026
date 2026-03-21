@@ -1,4 +1,3 @@
-import classNames from "classnames";
 import { MouseEvent, useCallback, useEffect, useId, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -23,7 +22,6 @@ export const CoveredImage = ({ src, loading = "lazy", fetchPriority = "auto" }: 
 
   const [alt, setAlt] = useState("");
   const [shouldParseExif, setShouldParseExif] = useState(false);
-  const [isExifParsed, setIsExifParsed] = useState(false);
 
   // useEffect(() => {
   //   if (!shouldParseExif || isExifParsed) return;
