@@ -58,7 +58,9 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   useEffect(() => {
     void loadConversation();
-    void sendRead();
+    requestIdleCallback(() => {
+      void sendRead();
+    });
   }, [loadConversation, sendRead]);
 
   const handleSubmit = useCallback(
