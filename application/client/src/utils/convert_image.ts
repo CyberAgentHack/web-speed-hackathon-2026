@@ -2,7 +2,7 @@ import { initializeImageMagick, ImageMagick, MagickFormat } from "@imagemagick/m
 import { dump, insert, ImageIFD } from "piexifjs";
 
 interface Options {
-  extension: MagickFormat;
+  extension: string;
 }
 
 let magickInitPromise: Promise<void> | null = null;
@@ -21,7 +21,7 @@ export async function convertImage(file: File, options: Options): Promise<Blob> 
 
   return new Promise((resolve) => {
     ImageMagick.read(byteArray, (img) => {
-      img.format = options.extension;
+      img.format = options.extension as MagickFormat;
 
       const comment = img.comment;
 

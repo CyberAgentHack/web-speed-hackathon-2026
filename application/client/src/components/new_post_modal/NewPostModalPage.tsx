@@ -1,13 +1,9 @@
-import { MagickFormat } from "@imagemagick/magick-wasm";
 import { ChangeEventHandler, FormEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/components/modal/ModalErrorMessage";
 import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/components/modal/ModalSubmitButton";
 import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/AttachFileInputButton";
-import { convertImage } from "@web-speed-hackathon-2026/client/src/utils/convert_image";
-import { convertMovie } from "@web-speed-hackathon-2026/client/src/utils/convert_movie";
-import { convertSound } from "@web-speed-hackathon-2026/client/src/utils/convert_sound";
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
@@ -62,9 +58,9 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     Promise.all(
       files.map((file) => {
         if (file.type === "image/jpeg") return Promise.resolve(file);
-        return convertImage(file, { extension: MagickFormat.Jpg }).then(
-          (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
-        );
+        return import("@web-speed-hackathon-2026/client/src/utils/convert_image")
+          .then(({ convertImage }) => convertImage(file, { extension: "Jpg" }))
+          .then((blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }));
       }),
     )
       .then((convertedFiles) => {
@@ -87,16 +83,18 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     if (isValid) {
       setIsConverting(true);
 
-      convertSound(file, { extension: "mp3" }).then((converted) => {
-        setParams((params) => ({
-          ...params,
-          images: [],
-          movie: undefined,
-          sound: new File([converted], "converted.mp3", { type: "audio/mpeg" }),
-        }));
+      import("@web-speed-hackathon-2026/client/src/utils/convert_sound")
+        .then(({ convertSound }) => convertSound(file, { extension: "mp3" }))
+        .then((converted) => {
+          setParams((params) => ({
+            ...params,
+            images: [],
+            movie: undefined,
+            sound: new File([converted], "converted.mp3", { type: "audio/mpeg" }),
+          }));
 
-        setIsConverting(false);
-      });
+          setIsConverting(false);
+        });
     }
   }, []);
 
@@ -108,7 +106,8 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     if (isValid) {
       setIsConverting(true);
 
-      convertMovie(file, { extension: "gif", size: undefined })
+      import("@web-speed-hackathon-2026/client/src/utils/convert_movie")
+        .then(({ convertMovie }) => convertMovie(file, { extension: "gif", size: undefined }))
         .then((converted) => {
           setParams((params) => ({
             ...params,
