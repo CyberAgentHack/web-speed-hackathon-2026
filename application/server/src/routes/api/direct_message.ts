@@ -11,12 +11,34 @@ import {
 
 export const directMessageRouter = Router();
 
+const CONVERSATION_PARTICIPANTS_INCLUDE = [
+  { association: "initiator" as const, include: [{ association: "profileImage" as const }] },
+  { association: "member" as const, include: [{ association: "profileImage" as const }] },
+];
+
+const MESSAGES_WITH_SENDER_INCLUDE = {
+  association: "messages" as const,
+  include: [{ association: "sender" as const, include: [{ association: "profileImage" as const }] }],
+  order: [["createdAt", "ASC"]] as [string, string][],
+  required: false,
+};
+
+const SENDER_INCLUDE = [
+  { association: "sender" as const, include: [{ association: "profileImage" as const }] },
+];
+
+const CONVERSATION_MINIMAL_ATTRIBUTES = ["id", "initiatorId", "memberId"];
+
 directMessageRouter.get("/dm", async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
   }
 
   const conversations = await DirectMessageConversation.findAll({
+    include: [
+      ...CONVERSATION_PARTICIPANTS_INCLUDE,
+      MESSAGES_WITH_SENDER_INCLUDE,
+    ],
     where: {
       [Op.and]: [
         { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
@@ -56,7 +78,9 @@ directMessageRouter.post("/dm", async (req, res) => {
       memberId: peer.id,
     },
   });
-  await conversation.reload();
+  await conversation.reload({
+    include: [...CONVERSATION_PARTICIPANTS_INCLUDE],
+  });
 
   return res.status(200).type("application/json").send(conversation);
 });
@@ -101,6 +125,10 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
   }
 
   const conversation = await DirectMessageConversation.findOne({
+    include: [
+      ...CONVERSATION_PARTICIPANTS_INCLUDE,
+      MESSAGES_WITH_SENDER_INCLUDE,
+    ],
     where: {
       id: req.params.conversationId,
       [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
@@ -119,6 +147,7 @@ directMessageRouter.ws("/dm/:conversationId", async (req, _res) => {
   }
 
   const conversation = await DirectMessageConversation.findOne({
+    attributes: [...CONVERSATION_MINIMAL_ATTRIBUTES],
     where: {
       id: req.params.conversationId,
       [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
@@ -161,6 +190,7 @@ directMessageRouter.post("/dm/:conversationId/messages", async (req, res) => {
   }
 
   const conversation = await DirectMessageConversation.findOne({
+    attributes: [...CONVERSATION_MINIMAL_ATTRIBUTES],
     where: {
       id: req.params.conversationId,
       [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
@@ -175,7 +205,9 @@ directMessageRouter.post("/dm/:conversationId/messages", async (req, res) => {
     conversationId: conversation.id,
     senderId: req.session.userId,
   });
-  await message.reload();
+  await message.reload({
+    include: [...SENDER_INCLUDE],
+  });
 
   return res.status(201).type("application/json").send(message);
 });
@@ -186,6 +218,7 @@ directMessageRouter.post("/dm/:conversationId/read", async (req, res) => {
   }
 
   const conversation = await DirectMessageConversation.findOne({
+    attributes: [...CONVERSATION_MINIMAL_ATTRIBUTES],
     where: {
       id: req.params.conversationId,
       [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
@@ -216,7 +249,9 @@ directMessageRouter.post("/dm/:conversationId/typing", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversation = await DirectMessageConversation.findByPk(req.params.conversationId);
+  const conversation = await DirectMessageConversation.findByPk(req.params.conversationId, {
+    attributes: [...CONVERSATION_MINIMAL_ATTRIBUTES],
+  });
   if (conversation === null) {
     throw new httpErrors.NotFound();
   }
