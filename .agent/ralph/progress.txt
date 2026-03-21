@@ -379,3 +379,55 @@ Quality Checks:
 Commit:
 - Hash: pending post-commit
 - Message: `feat: [US-018] - 動画/音声の preload 明示設定`
+
+## 2026-03-21 - US-019 AuthModalPage の redux-form → useState 化
+
+Implementation:
+- `application/client/src/components/auth_modal/AuthModalPage.tsx` から `reduxForm` HOC / `Field` / `formValueSelector` を除去し、`useState` ベースのローカルフォーム状態と軽量な `AuthInputField` 実装へ置換
+- submit 可否は必須入力の有無だけで判定しつつ、`validate()` の詳細チェックは `blur` と submit 時にのみ走るよう変更し、毎キー入力での Unicode 正規表現評価を排除
+- `application/client/src/containers/AuthModalContainer.tsx` の `resetKey` 更新をモーダル close 時のみに絞り、open 直後の再マウントでローカル state が巻き戻らないよう調整
+- `application/client/src/containers/AuthModalContainer.tsx` の submit エラー処理を `Error` throw ベースへ変更し、ページ側のローカル `submitError` 表示へ接続
+- `application/client/src/auth/validation.ts` から `redux-form` 型依存を除去し、`AuthFormErrors` を返す純粋関数へ整理
+- `application/e2e/src/auth.test.ts` に username/password の blur 時エラー表示確認を追加し、signup/signin/signout の既存認証フローも production build + start 上で再確認
+- 別 Codex エージェント (`Galileo`) にレビューを依頼し、`No findings` を確認
+
+Acceptance Criteria Verification:
+- AC: AuthModalPage から reduxForm HOC が除去されている
+  Test case: `rg -n "reduxForm|Field|formValueSelector|InjectedFormProps" application/client/src/components/auth_modal/AuthModalPage.tsx -S`
+  Result: no matches。`AuthModalPage.tsx` は `useState` ベースのローカル state 管理へ置換されていることを確認
+- AC: フォーム状態が useState で管理されている
+  Test case: `sed -n '1,260p' application/client/src/components/auth_modal/AuthModalPage.tsx`
+  Result: `values` / `touchedFields` / `errors` / `submitError` / `submitting` を `useState` で保持し、`onChange` / `onBlur` / submit で更新する実装になっていることを確認
+- AC: バリデーションが onBlur 時のみ実行される（毎キー入力での実行を排除）
+  Test case: `sed -n '1,260p' application/client/src/components/auth_modal/AuthModalPage.tsx`; `curl -s -o /dev/null -w '%{http_code}\n' -X POST http://127.0.0.1:3011/api/v1/initialize`; `CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/auth.test.ts --grep '日本語ユーザー名のエラーはblur時に表示される|パスワードのエラーはblur時に表示される'`
+  Result: source 上で `validate(values)` が `handleInputBlur` と submit 内でのみ呼ばれ、`onChange` では呼ばれていないことを確認。production E2E でも username/password ともに入力中はエラー非表示、blur 後に表示されることを確認
+- AC: ユーザー登録フローが正常に動作する（入力→バリデーション→送信）
+  Test case: `curl -s -o /dev/null -w '%{http_code}\n' -X POST http://127.0.0.1:3011/api/v1/initialize`; `CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/auth.test.ts --grep '新規登録ができる|既に使われているユーザー名で登録するとエラーが表示される|未入力の場合はボタンが無効化されている'`
+  Result: production build + start サーバー上で signup 成功、重複ユーザー名エラー、必須入力不足時の submit 無効化がすべて通過
+- AC: サインインフローが正常に動作する
+  Test case: `curl -s -o /dev/null -w '%{http_code}\n' -X POST http://127.0.0.1:3011/api/v1/initialize`; `CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/auth.test.ts --grep 'サインインに失敗するとエラーが表示される|サインアウトが成功するとサイドバーにサインインボタンが出現する'`
+  Result: production build + start サーバー上で signin failure 時のエラー表示と、既存ユーザーの login/logout 導線が通過
+- AC: 該当箇所のE2Eテストが通っていること。E2Eは常に build & start したサーバーに対して実行する（pnpm e2e 参考）
+  Test case: `curl -s -o /dev/null -w '%{http_code}\n' -X POST http://127.0.0.1:3011/api/v1/initialize`; `CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/auth.test.ts`
+  Result: `7 passed (8.3s)`。`E2E_BASE_URL=http://127.0.0.1:3011` の production サーバー上で auth suite 全件が通過
+- AC: codex skill で review を受けること。自己レビューではなく必ず新しい codex を起動して移譲し、feedback は適宜修正判断を行う
+  Test case: spawned Codex agent `Galileo` にレビュー依頼
+  Result: no findings。補足として password blur と modal reopen reset の明示テスト不足が残留リスクとして挙がり、password blur E2E を追加して再確認
+- AC: Typecheck passes
+  Test case: `cd application && mise exec -- pnpm typecheck`
+  Result: passed
+
+Quality Checks:
+- `cd application && mise trust` -> passed (`No untrusted config files found.`)
+- `cd application && mise install` -> passed (`mise all tools are installed`)
+- `cd application && mise exec -- pnpm build` -> passed (Rspack asset size warning のみ)
+- `cd application && mise exec -- pnpm typecheck` -> passed
+- `cd application && rg -n "reduxForm|Field|formValueSelector|InjectedFormProps" client/src/components/auth_modal/AuthModalPage.tsx -S` -> passed (no matches)
+- `curl -s -o /dev/null -w '%{http_code}\n' -X POST http://127.0.0.1:3011/api/v1/initialize` -> passed (`200`)
+- `cd application && CI=1 E2E_BASE_URL=http://127.0.0.1:3011 mise exec -- pnpm --filter @web-speed-hackathon-2026/e2e test src/auth.test.ts` -> passed (`7 passed (8.3s)`)
+- `npx agent-browser@latest open http://127.0.0.1:3011/not-found && npx agent-browser@latest wait --load networkidle && npx agent-browser@latest click 'nav button[command="show-modal"]' && npx agent-browser@latest wait 500 && npx agent-browser@latest screenshot --full` -> passed (production サーバーで認証モーダルを開いた状態のスクリーンショットを保存: `/Users/yuito_watanabe/.agent-browser/tmp/screenshots/screenshot-2026-03-21T06-55-29-235Z-hnmrwp.png`)
+- Review by spawned Codex agent `Galileo` -> no findings
+
+Commit:
+- Hash: pending post-commit
+- Message: `feat: [US-019] - AuthModalPage の redux-form → useState 化`

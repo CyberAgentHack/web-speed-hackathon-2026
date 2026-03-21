@@ -304,7 +304,7 @@
         "Typecheck passes"
       ],
       "priority": 18,
-      "passes": false,
+      "passes": true,
       "notes": "対象: AuthModalPage.tsx, validation.ts。unicode 正規表現 /^(?:[^\\P{Letter}&&\\P{Number}]*){16,}$/v が毎キー入力で実行されメインスレッドをブロック。onBlur 化で scoring tool の pressSequentially({ delay: 10 }) による高速入力時のブロックを回避。期待効果: TBT +15-20点、INP +10-14点。"
     },
     {

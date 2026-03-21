@@ -28,20 +28,39 @@ test.describe("サインイン・新規登録", () => {
     await page.getByRole("link", { name: "Crok" }).waitFor({ timeout: 30_000 });
   });
 
-  test("日本語ユーザー名で登録するとエラーが表示される", async ({ page }) => {
+  test("日本語ユーザー名のエラーはblur時に表示される", async ({ page }) => {
     await page.getByRole("button", { name: "初めての方はこちら" }).click();
     await page.getByRole("heading", { name: "新規登録" }).waitFor({ timeout: 30_000 });
 
-    await page.getByRole("textbox", { name: "ユーザー名" }).pressSequentially("テストユーザー");
-    await page.getByRole("textbox", { name: "名前" }).pressSequentially("テスト");
-    await page.getByRole("textbox", { name: "パスワード" }).pressSequentially("testpass-123");
+    const usernameInput = page.getByRole("textbox", { name: "ユーザー名" });
+    const nameInput = page.getByRole("textbox", { name: "名前" });
+    const errorMessage = page.getByText(
+      "ユーザー名に使用できるのは英数字とアンダースコア(_)のみです",
+    );
 
-    // エラーメッセージが表示される
-    await expect(
-      page.getByText("ユーザー名に使用できるのは英数字とアンダースコア(_)のみです"),
-    ).toBeVisible({
-      timeout: 30_000,
-    });
+    await usernameInput.pressSequentially("テストユーザー");
+    await expect(errorMessage).not.toBeVisible();
+
+    await nameInput.click();
+    await expect(errorMessage).toBeVisible({ timeout: 30_000 });
+  });
+
+  test("パスワードのエラーはblur時に表示される", async ({ page }) => {
+    await page.getByRole("button", { name: "初めての方はこちら" }).click();
+    await page.getByRole("heading", { name: "新規登録" }).waitFor({ timeout: 30_000 });
+
+    const usernameInput = page.getByRole("textbox", { name: "ユーザー名" });
+    const nameInput = page.getByRole("textbox", { name: "名前" });
+    const passwordInput = page.getByRole("textbox", { name: "パスワード" });
+    const errorMessage = page.getByText("パスワードには記号を含める必要があります");
+
+    await usernameInput.pressSequentially("test_user");
+    await nameInput.pressSequentially("テスト");
+    await passwordInput.pressSequentially("abcdefgh");
+    await expect(errorMessage).not.toBeVisible();
+
+    await usernameInput.click();
+    await expect(errorMessage).toBeVisible({ timeout: 30_000 });
   });
 
   test("既に使われているユーザー名で登録するとエラーが表示される", async ({ page }) => {
