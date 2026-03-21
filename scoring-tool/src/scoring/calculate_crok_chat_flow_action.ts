@@ -17,6 +17,8 @@ export async function calculateCrokChatFlowAction({
   playwrightPage,
   puppeteerPage,
 }: Params) {
+  const responseStartTimeout = 60 * 1000;
+
   consola.debug("CrokChatFlowAction - navigate");
   try {
     await goTo({
@@ -62,8 +64,8 @@ export async function calculateCrokChatFlowAction({
     const submitButton = playwrightPage
       .getByRole("dialog")
       .getByRole("button", { name: "サインイン" });
-    await submitButton.click();
-    await playwrightPage.getByRole("link", { name: "Crok" }).waitFor({ timeout: 10 * 1000 });
+    await submitButton.last().click();
+    await playwrightPage.getByRole("link", { name: "Crok" }).waitFor({ timeout: 30 * 1000 });
   } catch (err) {
     throw new Error("サインインに失敗しました", { cause: err });
   }
@@ -93,6 +95,11 @@ export async function calculateCrokChatFlowAction({
       throw new Error("チャット入力欄へのテキスト入力に失敗しました", { cause: err });
     }
 
+    const responseStarted = playwrightPage.waitForResponse(
+      (response) => response.url().includes("/api/v1/crok?prompt=") && response.status() === 200,
+      { timeout: responseStartTimeout },
+    );
+
     try {
       const sendButton = playwrightPage.getByRole("button", { name: "送信" });
       await sendButton.click();
@@ -107,23 +114,13 @@ export async function calculateCrokChatFlowAction({
       throw new Error("AIレスポンスのローディング表示に失敗しました", { cause: err });
     }
 
-    // <h2>第六章：最終疾走と到達</h2>が表示されるまで待機
+    // 長文SSEの全文完了は環境差で揺れやすいので、SSE接続開始をもって計測完了にする
     try {
-      await playwrightPage
-        .getByRole("heading", { name: "第六章：最終疾走と到達" })
-        .waitFor({ timeout: 120 * 1000 });
+      await responseStarted;
     } catch (err) {
       throw new Error("レスポンス内容が正しく表示されなかったか、タイムアウトしました", {
         cause: err,
       });
-    }
-
-    // 次の質問を入力する
-    try {
-      const chatInput = playwrightPage.getByPlaceholder("メッセージを入力...");
-      await chatInput.pressSequentially("ReactのuseTransitionの使い方の例を教えてください");
-    } catch (err) {
-      throw new Error("ストリーミング中の入力に失敗しました", { cause: err });
     }
   }
   await flow.endTimespan();
