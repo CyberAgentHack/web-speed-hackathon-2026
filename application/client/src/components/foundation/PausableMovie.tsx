@@ -6,12 +6,13 @@ import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components
 
 interface Props {
   src: string;
+  poster?: string;
 }
 
 /**
  * クリックすると再生・一時停止を切り替えます。
  */
-export const PausableMovie = ({ src }: Props) => {
+export const PausableMovie = ({ src, poster }: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
 
@@ -34,7 +35,7 @@ export const PausableMovie = ({ src }: Props) => {
         onClick={handleClick}
         type="button"
       >
-        <video ref={videoRef} src={src} autoPlay loop muted playsInline className="w-full" />
+        <video ref={videoRef} src={src} poster={poster} autoPlay loop muted playsInline className="w-full" />
         <div
           className={classNames(
             "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",

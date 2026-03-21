@@ -7,6 +7,8 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
+import sharp from "sharp";
+
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
 const EXTENSION = "mp4";
@@ -44,6 +46,19 @@ movieRouter.post("/movies", async (req, res) => {
   }
 
   await fs.unlink(tmpInput).catch(() => {});
+
+  // poster画像を生成
+  const postersDir = path.resolve(moviesDir, "posters");
+  await fs.mkdir(postersDir, { recursive: true });
+  try {
+    const pngBuffer = execSync(
+      `ffmpeg -i "${outputPath}" -vframes 1 -f image2pipe -c:v png -`,
+      { stdio: ["pipe", "pipe", "pipe"], maxBuffer: 50 * 1024 * 1024 },
+    );
+    await sharp(pngBuffer).webp({ quality: 80 }).toFile(path.resolve(postersDir, `${movieId}.webp`));
+  } catch {
+    // poster生成失敗は致命的ではないので無視
+  }
 
   return res.status(200).type("application/json").send({ id: movieId });
 });
