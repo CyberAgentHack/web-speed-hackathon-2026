@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useParams } from "react-router";
 import useSWR from "swr";
 import useSWRInfinite from "swr/infinite";
@@ -8,6 +8,16 @@ import { createInfiniteKey, swrFetcher } from "@web-speed-hackathon-2026/client/
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
 import { PostPage } from "@web-speed-hackathon-2026/client/src/components/post/PostPage";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
+
+function useDocumentTitle(title: string | undefined) {
+  useEffect(() => {
+    if (title && typeof document !== "undefined") {
+      document.title = title;
+    }
+  }, [title]);
+}
+
+const PAGE_SIZE = 30;
 
 const PostContainerContent = ({ postId }: { postId: string }) => {
   const ssrRef = useRef(getSSRData());
@@ -22,18 +32,32 @@ const PostContainerContent = ({ postId }: { postId: string }) => {
       : undefined,
   );
 
-  const PAGE_SIZE = 30;
   const getKey = createInfiniteKey(`/api/v1/posts/${postId}/comments`);
   const { data, setSize, isValidating } = useSWRInfinite<Models.Comment[]>(getKey, {
     revalidateFirstPage: false,
+    initialSize: ssrComments ? 1 : 0,
     ...(ssrComments ? { fallbackData: [ssrComments], revalidateOnMount: false } : {}),
   });
 
   const comments = data ? data.flat() : (ssrComments ?? []);
-  const hasMore = data ? (data[data.length - 1]?.length ?? 0) >= PAGE_SIZE : true;
+  const hasMore = data ? (data[data.length - 1]?.length ?? 0) >= PAGE_SIZE : !data;
+
+  const pageTitle = post
+    ? `${post.user.name} さんのつぶやき - CaX`
+    : isLoadingPost
+      ? "読込中 - CaX"
+      : undefined;
+  useDocumentTitle(pageTitle);
 
   if (isLoadingPost) {
-    return <title>読込中 - CaX</title>;
+    return (
+      <>
+        <title>読込中 - CaX</title>
+        <article className="px-1 sm:px-4">
+          <div className="border-cax-border border-b px-4 pt-4 pb-4" />
+        </article>
+      </>
+    );
   }
 
   if (post === null) {

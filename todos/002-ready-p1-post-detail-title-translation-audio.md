@@ -1,5 +1,5 @@
 ---
-status: ready
+status: complete
 priority: p1
 issue_id: "002"
 tags: [e2e, post-detail, translation, audio, alt]

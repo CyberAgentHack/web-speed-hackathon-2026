@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import useSWR from "swr";
 
@@ -103,28 +103,35 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     );
   }
 
+  const peer =
+    conversation != null
+      ? conversation.initiator.id !== activeUser?.id
+        ? conversation.initiator
+        : conversation.member
+      : null;
+
+  useEffect(() => {
+    if (peer != null) {
+      document.title = `${peer.name} さんとのダイレクトメッセージ - CaX`;
+    }
+  }, [peer]);
+
   if (conversation == null) {
     if (conversationError != null) {
       return <NotFoundContainer />;
     }
-    return null;
+    return <title>ダイレクトメッセージ - CaX</title>;
   }
 
-  const peer =
-    conversation.initiator.id !== activeUser?.id ? conversation.initiator : conversation.member;
-
   return (
-    <>
-      <title>{peer.name} さんとのダイレクトメッセージ - CaX</title>
-      <DirectMessagePage
-        conversationError={conversationError ?? null}
-        conversation={conversation}
-        activeUser={activeUser}
-        onTyping={handleTyping}
-        isPeerTyping={isPeerTyping}
-        isSubmitting={isSubmitting}
-        onSubmit={handleSubmit}
-      />
-    </>
+    <DirectMessagePage
+      conversationError={conversationError ?? null}
+      conversation={conversation}
+      activeUser={activeUser}
+      onTyping={handleTyping}
+      isPeerTyping={isPeerTyping}
+      isSubmitting={isSubmitting}
+      onSubmit={handleSubmit}
+    />
   );
 };

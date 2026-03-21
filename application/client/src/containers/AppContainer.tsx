@@ -29,11 +29,7 @@ const NotFoundContainer = React.lazy(() =>
     default: m.NotFoundContainer,
   })),
 );
-const PostContainer = React.lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/PostContainer").then((m) => ({
-    default: m.PostContainer,
-  })),
-);
+import { PostContainer } from "@web-speed-hackathon-2026/client/src/containers/PostContainer";
 const SearchContainer = React.lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/SearchContainer").then((m) => ({
     default: m.SearchContainer,

@@ -90,7 +90,6 @@ function planSSRFetches(urlPath: string): Record<string, string> | null {
     const postId = postMatch[1]!;
     return {
       post: `/api/v1/posts/${postId}`,
-      comments: `/api/v1/posts/${postId}/comments?limit=30&offset=0`,
     };
   }
 
@@ -121,8 +120,8 @@ function planSSRFetches(urlPath: string): Record<string, string> | null {
     return {};
   }
 
-  // /dm, /crok 等 → CSR フォールバック
-  return null;
+  // /dm, /crok 等 → empty shell SSR（データなし、シェルのみ）
+  return {};
 }
 
 async function fetchSSRData(urlPath: string, cookie?: string): Promise<SSRData | null> {
