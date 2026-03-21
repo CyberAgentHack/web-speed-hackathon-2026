@@ -126,11 +126,7 @@ const config = {
       url: false,
     },
   },
-  optimization: {
-    splitChunks: {
-      chunks: "all",
-    },
-  },
+  optimization: {},
   cache: false,
   ignoreWarnings: [
     {
