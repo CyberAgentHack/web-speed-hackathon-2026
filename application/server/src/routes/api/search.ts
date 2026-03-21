@@ -39,6 +39,8 @@ searchRouter.get("/search", async (req, res) => {
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
   const postsByText = await Post.findAll({
+    limit,
+    offset,
     where: {
       ...textWhere,
       ...dateWhere,
@@ -66,6 +68,8 @@ searchRouter.get("/search", async (req, res) => {
         { association: "movie" },
         { association: "sound" },
       ],
+      limit,
+      offset,
       where: dateWhere,
     });
   }
