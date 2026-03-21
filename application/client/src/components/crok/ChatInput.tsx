@@ -91,8 +91,12 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   }, [suggestions, showSuggestions]);
 
-  // 初回にkuromojiトークナイザーを構築
+  // kuromojiトークナイザーの構築を初回入力時まで遅延
+  const tokenizerInitRef = useRef(false);
   useEffect(() => {
+    if (!inputValue.trim() || tokenizerInitRef.current) return;
+    tokenizerInitRef.current = true;
+
     let mounted = true;
 
     const init = async () => {
@@ -111,7 +115,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [inputValue]);
 
   useEffect(() => {
     let cancelled = false;
