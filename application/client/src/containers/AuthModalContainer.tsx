@@ -6,12 +6,13 @@ import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Mod
 import { store } from "@web-speed-hackathon-2026/client/src/store";
 import { sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
+const loadAuthModalPage = () =>
+  import("@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage");
+
 const AuthModalPage = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage").then(
-    (module) => ({
-      default: module.AuthModalPage,
-    }),
-  ),
+  loadAuthModalPage().then((module) => ({
+    default: module.AuthModalPage,
+  })),
 );
 
 interface Props {
@@ -121,3 +122,7 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
     </Modal>
   );
 };
+
+export function preloadAuthModalResources() {
+  void loadAuthModalPage();
+}

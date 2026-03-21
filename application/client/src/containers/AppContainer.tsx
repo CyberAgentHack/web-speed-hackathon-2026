@@ -3,7 +3,10 @@ import { HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
-import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
+import {
+  AuthModalContainer,
+  preloadAuthModalResources,
+} from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
 import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
@@ -111,6 +114,30 @@ export const AppContainer = () => {
     setActiveUser(null);
     navigate("/");
   }, [navigate]);
+
+  useEffect(() => {
+    const idleCallbackId =
+      "requestIdleCallback" in window
+        ? window.requestIdleCallback(() => {
+            preloadAuthModalResources();
+          })
+        : null;
+    const timeoutId =
+      idleCallbackId == null
+        ? window.setTimeout(() => {
+            preloadAuthModalResources();
+          }, 0)
+        : null;
+
+    return () => {
+      if (idleCallbackId != null) {
+        window.cancelIdleCallback(idleCallbackId);
+      }
+      if (timeoutId != null) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, []);
 
   const preloadCrok = useCallback(() => {
     void loadCrokContainer().then((module) => {
