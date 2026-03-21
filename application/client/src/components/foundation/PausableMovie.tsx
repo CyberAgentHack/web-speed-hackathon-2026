@@ -5,6 +5,7 @@ import { RefCallback, useCallback, useEffect, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
+import { useInViewOnce } from "@web-speed-hackathon-2026/client/src/hooks/use_in_view_once";
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
  * クリックすると再生・一時停止を切り替えます。
  */
 export const PausableMovie = ({ src }: Props) => {
+  const [buttonRef, isInView] = useInViewOnce<HTMLButtonElement>();
   const animatorRef = useRef<Animator>(null);
   const [binary, setBinary] = useState<ArrayBuffer | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -36,7 +38,7 @@ export const PausableMovie = ({ src }: Props) => {
   }, [src]);
 
   useEffect(() => {
-    if (binary !== null || isLoading || hasError) {
+    if (!isInView || binary !== null || isLoading || hasError) {
       return;
     }
 
@@ -53,7 +55,7 @@ export const PausableMovie = ({ src }: Props) => {
         setIsLoading(false);
       },
     );
-  }, [binary, hasError, isLoading, src]);
+  }, [binary, hasError, isInView, isLoading, src]);
 
   const canvasCallbackRef = useCallback<RefCallback<HTMLCanvasElement>>(
     (el) => {
@@ -108,6 +110,7 @@ export const PausableMovie = ({ src }: Props) => {
       <button
         aria-label="動画プレイヤー"
         className="group relative block h-full w-full overflow-hidden"
+        ref={buttonRef}
         onClick={handleClick}
         type="button"
       >

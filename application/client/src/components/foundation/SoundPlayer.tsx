@@ -2,6 +2,7 @@ import { ReactEventHandler, useCallback, useEffect, useRef, useState } from "rea
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { SoundWaveSVG } from "@web-speed-hackathon-2026/client/src/components/foundation/SoundWaveSVG";
+import { useInViewOnce } from "@web-speed-hackathon-2026/client/src/hooks/use_in_view_once";
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getSoundPath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export const SoundPlayer = ({ sound }: Props) => {
+  const [containerRef, isInView] = useInViewOnce<HTMLDivElement>();
   const soundPath = getSoundPath(sound.id);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [currentTimeRatio, setCurrentTimeRatio] = useState(0);
@@ -19,6 +21,10 @@ export const SoundPlayer = ({ sound }: Props) => {
   const [hasWaveError, setHasWaveError] = useState(false);
 
   useEffect(() => {
+    if (!isInView) {
+      return;
+    }
+
     let active = true;
 
     setSoundData(null);
@@ -40,7 +46,7 @@ export const SoundPlayer = ({ sound }: Props) => {
     return () => {
       active = false;
     };
-  }, [soundPath]);
+  }, [isInView, soundPath]);
 
   const handleLoadedMetadata = useCallback<ReactEventHandler<HTMLAudioElement>>(() => {
     setIsReady(true);
@@ -78,7 +84,7 @@ export const SoundPlayer = ({ sound }: Props) => {
   }, []);
 
   return (
-    <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
+    <div ref={containerRef} className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
       <audio
         ref={audioRef}
         src={soundPath}
