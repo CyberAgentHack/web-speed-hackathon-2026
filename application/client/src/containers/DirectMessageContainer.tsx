@@ -19,7 +19,7 @@ interface DmTypingEvent {
 }
 
 const TYPING_INDICATOR_DURATION_MS = 10 * 1000;
-const TYPING_EVENT_THROTTLE_MS = 1500;
+const TYPING_SIGNAL_THROTTLE_MS = 1500;
 
 function mergeConversationMessage(
   conversation: Models.DirectMessageConversation | null,
@@ -87,7 +87,8 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastTypingSentAtRef = useRef(0);
+  const typingSignalTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastTypingSignalAtRef = useRef(0);
 
   const loadConversation = useCallback(async () => {
     if (activeUser == null) {
@@ -137,13 +138,52 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     [activeUser, conversationId],
   );
 
-  const handleTyping = useCallback(async () => {
-    const now = Date.now();
-    if (now - lastTypingSentAtRef.current < TYPING_EVENT_THROTTLE_MS) {
-      return;
-    }
-    lastTypingSentAtRef.current = now;
+  const sendTypingSignal = useCallback(() => {
+    lastTypingSignalAtRef.current = Date.now();
     void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
+  }, [conversationId]);
+
+  const handleTyping = useCallback(
+    (text: string) => {
+      if (text.trim().length === 0) {
+        if (typingSignalTimeoutRef.current !== null) {
+          clearTimeout(typingSignalTimeoutRef.current);
+          typingSignalTimeoutRef.current = null;
+        }
+        return;
+      }
+
+      const elapsedMs = Date.now() - lastTypingSignalAtRef.current;
+      if (elapsedMs >= TYPING_SIGNAL_THROTTLE_MS) {
+        if (typingSignalTimeoutRef.current !== null) {
+          clearTimeout(typingSignalTimeoutRef.current);
+          typingSignalTimeoutRef.current = null;
+        }
+        sendTypingSignal();
+        return;
+      }
+
+      if (typingSignalTimeoutRef.current !== null) {
+        return;
+      }
+
+      const waitMs = TYPING_SIGNAL_THROTTLE_MS - elapsedMs;
+      typingSignalTimeoutRef.current = setTimeout(() => {
+        typingSignalTimeoutRef.current = null;
+        sendTypingSignal();
+      }, waitMs);
+    },
+    [sendTypingSignal],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (typingSignalTimeoutRef.current !== null) {
+        clearTimeout(typingSignalTimeoutRef.current);
+        typingSignalTimeoutRef.current = null;
+      }
+      lastTypingSignalAtRef.current = 0;
+    };
   }, [conversationId]);
 
   useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {
