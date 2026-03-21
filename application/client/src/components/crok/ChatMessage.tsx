@@ -23,6 +23,19 @@ interface Props {
   message: Models.ChatMessage;
 }
 
+// ストリーミング中の軽量Markdownレンダラー（見出しのみHTML化）
+const SimpleMarkdown = ({ content }: { content: string }) => {
+  const html = content
+    .replace(/^######\s+(.+)$/gm, "<h6>$1</h6>")
+    .replace(/^#####\s+(.+)$/gm, "<h5>$1</h5>")
+    .replace(/^####\s+(.+)$/gm, "<h4>$1</h4>")
+    .replace(/^###\s+(.+)$/gm, "<h3>$1</h3>")
+    .replace(/^##\s+(.+)$/gm, "<h2>$1</h2>")
+    .replace(/^#\s+(.+)$/gm, "<h1>$1</h1>")
+    .replace(/\n/g, "<br/>");
+  return <div dangerouslySetInnerHTML={{ __html: html }} />;
+};
+
 const UserMessage = ({ content }: { content: string }) => {
   return (
     <div className="mb-6 flex justify-end">
@@ -35,9 +48,24 @@ const UserMessage = ({ content }: { content: string }) => {
 
 const AssistantMessage = ({ content }: { content: string }) => {
   const [loadedPlugins, setLoadedPlugins] = React.useState(plugins);
+  const [isComplete, setIsComplete] = React.useState(false);
+  const prevContentRef = React.useRef("");
+
   React.useEffect(() => {
     if (!loadedPlugins) getPlugins().then(setLoadedPlugins);
   }, []);
+
+  // content が変化しなくなったら完了とみなす
+  React.useEffect(() => {
+    prevContentRef.current = content;
+    const timer = setTimeout(() => {
+      if (prevContentRef.current === content && content.length > 0) {
+        setIsComplete(true);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [content]);
+
   return (
     <div className="mb-6 flex gap-4">
       <div className="h-8 w-8 shrink-0">
@@ -46,8 +74,8 @@ const AssistantMessage = ({ content }: { content: string }) => {
       <div className="min-w-0 flex-1">
         <div className="text-cax-text mb-1 text-sm font-medium">Crok</div>
         <div className="markdown text-cax-text max-w-none">
-          {content && loadedPlugins ? (
-            <Suspense fallback={<TypingIndicator />}>
+          {content && isComplete && loadedPlugins ? (
+            <Suspense fallback={<SimpleMarkdown content={content} />}>
               <Markdown
                 components={{ pre: CodeBlock }}
                 rehypePlugins={loadedPlugins.rehypePlugins}
@@ -56,6 +84,8 @@ const AssistantMessage = ({ content }: { content: string }) => {
                 {content}
               </Markdown>
             </Suspense>
+          ) : content ? (
+            <SimpleMarkdown content={content} />
           ) : (
             <TypingIndicator />
           )}
