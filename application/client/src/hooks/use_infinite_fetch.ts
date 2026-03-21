@@ -49,9 +49,9 @@ export function useInfiniteFetch<T>(
   });
 
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
-    data: [],
+    data: initialData ?? [],
     error: null,
-    isLoading: true,
+    isLoading: initialData ? false : true,
   });
 
   const fetchMore = useCallback(() => {
@@ -99,6 +99,12 @@ export function useInfiniteFetch<T>(
   }, [apiPath, fetcher, limit]);
 
   useEffect(() => {
+    // Skip initial fetch if we consumed bootstrap data
+    if (initialData != null) {
+      bootstrapRef.current = null;
+      return;
+    }
+
     setResult(() => ({
       data: [],
       error: null,
