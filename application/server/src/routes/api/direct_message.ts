@@ -188,7 +188,8 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
     .type("application/json")
     .send({
       ...json,
-      messages,
+      // Sequelizeモデルを事前にプレーン化してJSON.stringifyのコストを削減
+      messages: messages.map((m) => m.toJSON()),
       hasMore,
     });
 });
