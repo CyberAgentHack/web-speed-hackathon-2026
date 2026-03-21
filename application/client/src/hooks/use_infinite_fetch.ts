@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const LIMIT = 30;
+const INITIAL_LIMIT = 3;
+const LIMIT = 10;
 
 interface ReturnValues<T> {
   data: Array<T>;
@@ -37,8 +38,9 @@ export function useInfiniteFetch<T>(
       hasMore: internalRef.current.hasMore,
     };
 
+    const currentLimit = offset === 0 ? INITIAL_LIMIT : LIMIT;
     const separator = apiPath.includes("?") ? "&" : "?";
-    const paginatedUrl = `${apiPath}${separator}limit=${LIMIT}&offset=${offset}`;
+    const paginatedUrl = `${apiPath}${separator}limit=${currentLimit}&offset=${offset}`;
 
     void fetcher(paginatedUrl).then(
       (pageData) => {
@@ -49,8 +51,8 @@ export function useInfiniteFetch<T>(
         }));
         internalRef.current = {
           isLoading: false,
-          offset: offset + LIMIT,
-          hasMore: pageData.length >= LIMIT,
+          offset: offset + currentLimit,
+          hasMore: pageData.length >= currentLimit,
         };
       },
       (error) => {
