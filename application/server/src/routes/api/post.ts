@@ -1,7 +1,16 @@
+import { randomUUID } from "node:crypto";
+
 import { Router } from "express";
 import httpErrors from "http-errors";
 
-import { Comment, Post } from "@web-speed-hackathon-2026/server/src/models";
+import {
+  Comment,
+  Image,
+  Movie,
+  Post,
+  PostsImagesRelation,
+  Sound,
+} from "@web-speed-hackathon-2026/server/src/models";
 
 export const postRouter = Router();
 
@@ -40,23 +49,51 @@ postRouter.post("/posts", async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
   }
+  const userId = req.session.userId;
 
-  const post = await Post.create(
-    {
-      ...req.body,
-      userId: req.session.userId,
-    },
-    {
-      include: [
-        {
-          association: "images",
-          through: { attributes: [] },
-        },
-        { association: "movie" },
-        { association: "sound" },
-      ],
-    },
-  );
+  const postId = await Post.sequelize!.transaction(async (transaction) => {
+    const images: Array<{ alt: string; id: string }> = Array.isArray(req.body.images)
+      ? req.body.images
+      : [];
+    const movie = req.body.movie;
+    const sound = req.body.sound;
+
+    if (images.length > 0) {
+      await Image.bulkCreate(images, { transaction });
+    }
+    if (movie != null) {
+      await Movie.create(movie, { transaction });
+    }
+    if (sound != null) {
+      await Sound.create(sound, { transaction });
+    }
+
+    const post = await Post.create(
+      {
+        id: randomUUID(),
+        movieId: movie?.id,
+        soundId: sound?.id,
+        text: req.body.text,
+        userId,
+      },
+      { transaction },
+    );
+
+    if (images.length > 0) {
+      await PostsImagesRelation.bulkCreate(
+        images.map((image) => ({ imageId: image.id, postId: post.id })),
+        { transaction },
+      );
+    }
+
+    return post.id;
+  });
+
+  const post = await Post.findByPk(postId);
+
+  if (post == null) {
+    throw new httpErrors.InternalServerError();
+  }
 
   return res.status(200).type("application/json").send(post);
 });

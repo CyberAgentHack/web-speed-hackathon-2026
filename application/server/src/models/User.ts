@@ -22,6 +22,7 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   declare password: string;
   declare profileImageId: ForeignKey<ProfileImage["id"]>;
   declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
 
   declare posts?: NonAttribute<Post>[];
   declare profileImage?: NonAttribute<ProfileImage>;
@@ -82,6 +83,10 @@ export function initUser(sequelize: Sequelize) {
         },
       },
       createdAt: {
+        allowNull: false,
+        type: DataTypes.DATE,
+      },
+      updatedAt: {
         allowNull: false,
         type: DataTypes.DATE,
       },

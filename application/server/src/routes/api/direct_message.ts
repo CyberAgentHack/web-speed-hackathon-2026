@@ -1,6 +1,6 @@
 import { Router } from "express";
 import httpErrors from "http-errors";
-import { col, where, Op } from "sequelize";
+import { literal, Op } from "sequelize";
 
 import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
 import {
@@ -16,22 +16,54 @@ directMessageRouter.get("/dm", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversations = await DirectMessageConversation.findAll({
+  const hasMessages = literal(`EXISTS (
+    SELECT 1
+      FROM "DirectMessages" AS "DirectMessage"
+     WHERE "DirectMessage"."conversationId" = "DirectMessageConversation"."id"
+  )`);
+  const latestMessageCreatedAt = literal(`(
+    SELECT MAX("DirectMessage"."createdAt")
+      FROM "DirectMessages" AS "DirectMessage"
+     WHERE "DirectMessage"."conversationId" = "DirectMessageConversation"."id"
+  )`);
+
+  const conversations = await DirectMessageConversation.unscoped().findAll({
     where: {
       [Op.and]: [
-        { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
-        where(col("messages.id"), { [Op.not]: null }),
+        {
+          [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
+        },
+        hasMessages,
       ],
     },
-    order: [[col("messages.createdAt"), "DESC"]],
+    order: [[latestMessageCreatedAt, "DESC"]],
+    include: [
+      {
+        association: "initiator",
+        attributes: ["id", "description", "name", "username", "createdAt", "updatedAt"],
+        include: [{ association: "profileImage", attributes: ["id", "alt"] }],
+      },
+      {
+        association: "member",
+        attributes: ["id", "description", "name", "username", "createdAt", "updatedAt"],
+        include: [{ association: "profileImage", attributes: ["id", "alt"] }],
+      },
+      {
+        association: "messages",
+        attributes: ["id", "body", "isRead", "createdAt", "updatedAt", "senderId"],
+        include: [{ association: "sender", attributes: ["id"] }],
+        limit: 1,
+        order: [["createdAt", "DESC"]],
+        required: false,
+        separate: true,
+      },
+    ],
   });
 
-  const sorted = conversations.map((c) => ({
-    ...c.toJSON(),
-    messages: c.messages?.reverse(),
-  }));
-
-  return res.status(200).type("application/json").send(sorted);
+  return res
+    .status(200)
+    .type("application/json")
+    .send(conversations.map((c) => c.toJSON()));
 });
 
 directMessageRouter.post("/dm", async (req, res) => {
@@ -75,8 +107,7 @@ directMessageRouter.ws("/dm/unread", async (req, _res) => {
     eventhub.off(`dm:unread/${req.session.userId}`, handler);
   });
 
-  const unreadCount = await DirectMessage.count({
-    distinct: true,
+  const unreadCount = await DirectMessage.unscoped().count({
     where: {
       senderId: { [Op.ne]: req.session.userId },
       isRead: false,
@@ -84,6 +115,7 @@ directMessageRouter.ws("/dm/unread", async (req, _res) => {
     include: [
       {
         association: "conversation",
+        attributes: [],
         where: {
           [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
         },
@@ -105,6 +137,15 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
       id: req.params.conversationId,
       [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
+    include: [
+      {
+        association: "messages",
+        include: [{ association: "sender", include: [{ association: "profileImage" }] }],
+        order: [["createdAt", "ASC"]],
+        required: false,
+        separate: true,
+      },
+    ],
   });
   if (conversation === null) {
     throw new httpErrors.NotFound();
@@ -118,7 +159,8 @@ directMessageRouter.ws("/dm/:conversationId", async (req, _res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversation = await DirectMessageConversation.findOne({
+  const conversation = await DirectMessageConversation.unscoped().findOne({
+    attributes: ["id", "initiatorId", "memberId"],
     where: {
       id: req.params.conversationId,
       [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
@@ -160,7 +202,8 @@ directMessageRouter.post("/dm/:conversationId/messages", async (req, res) => {
     throw new httpErrors.BadRequest();
   }
 
-  const conversation = await DirectMessageConversation.findOne({
+  const conversation = await DirectMessageConversation.unscoped().findOne({
+    attributes: ["id"],
     where: {
       id: req.params.conversationId,
       [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
@@ -185,7 +228,8 @@ directMessageRouter.post("/dm/:conversationId/read", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversation = await DirectMessageConversation.findOne({
+  const conversation = await DirectMessageConversation.unscoped().findOne({
+    attributes: ["id", "initiatorId", "memberId"],
     where: {
       id: req.params.conversationId,
       [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
@@ -203,7 +247,11 @@ directMessageRouter.post("/dm/:conversationId/read", async (req, res) => {
   await DirectMessage.update(
     { isRead: true },
     {
-      where: { conversationId: conversation.id, senderId: peerId, isRead: false },
+      where: {
+        conversationId: conversation.id,
+        senderId: peerId,
+        isRead: false,
+      },
       individualHooks: true,
     },
   );
@@ -216,7 +264,13 @@ directMessageRouter.post("/dm/:conversationId/typing", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversation = await DirectMessageConversation.findByPk(req.params.conversationId);
+  const conversation = await DirectMessageConversation.unscoped().findOne({
+    attributes: ["id"],
+    where: {
+      id: req.params.conversationId,
+      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
+    },
+  });
   if (conversation === null) {
     throw new httpErrors.NotFound();
   }
