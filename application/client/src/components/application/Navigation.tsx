@@ -1,3 +1,5 @@
+import { useCallback } from "react";
+
 import { AccountMenu } from "@web-speed-hackathon-2026/client/src/components/application/AccountMenu";
 import { NavigationItem } from "@web-speed-hackathon-2026/client/src/components/application/NavigationItem";
 import { DirectMessageNotificationBadge } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageNotificationBadge";
@@ -12,6 +14,15 @@ interface Props {
 }
 
 export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }: Props) => {
+  const handleOpenAuthModal = useCallback(() => {
+    const dialog = document.getElementById(authModalId) as HTMLDialogElement | null;
+    dialog?.showModal();
+  }, [authModalId]);
+
+  const handleOpenNewPostModal = useCallback(() => {
+    const dialog = document.getElementById(newPostModalId) as HTMLDialogElement | null;
+    dialog?.showModal();
+  }, [newPostModalId]);
   return (
     <nav className="border-cax-border bg-cax-surface fixed right-0 bottom-0 left-0 z-10 h-12 border-t lg:relative lg:h-full lg:w-48 lg:border-t-0 lg:border-r">
       <div className="relative grid grid-flow-col items-center justify-evenly lg:fixed lg:flex lg:h-full lg:w-48 lg:flex-col lg:justify-between lg:p-2">
@@ -37,8 +48,7 @@ export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }
           {activeUser !== null ? (
             <NavigationItem
               icon={<FontAwesomeIcon iconType="edit" styleType="solid" />}
-              command="show-modal"
-              commandfor={newPostModalId}
+              onClick={handleOpenNewPostModal}
               text="投稿する"
             />
           ) : null}
@@ -53,8 +63,7 @@ export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }
             <NavigationItem
               icon={<FontAwesomeIcon iconType="sign-in-alt" styleType="solid" />}
               text="サインイン"
-              command="show-modal"
-              commandfor={authModalId}
+              onClick={handleOpenAuthModal}
             />
           ) : null}
           {activeUser !== null ? (
