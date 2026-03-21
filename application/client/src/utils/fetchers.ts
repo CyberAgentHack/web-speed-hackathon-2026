@@ -1,12 +1,3 @@
-export const fetchBinary = async (url: string): Promise<ArrayBuffer> => {
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`Failed to fetch ${url}: ${res.status}`);
-  }
-
-  return res.arrayBuffer();
-};
-
 export const fetchJSON = async <T>(url: string): Promise<T> => {
   const res = await fetch(url);
   if (!res.ok) {

@@ -1,50 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 
+import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+
 interface ParsedData {
   max: number;
   peaks: number[];
 }
 
-const mean = (arr: (number | undefined)[]): number => {
-  let sum = 0;
-  let count = 0;
-  for (const v of arr) {
-    if (v != null) {
-      sum += v;
-      count++;
-    }
-  }
-  return count === 0 ? 0 : sum / count;
-};
-
-const chunk = <T,>(arr: T[], size: number): T[][] => {
-  const result: T[][] = [];
-  for (let i = 0; i < arr.length; i += size) {
-    result.push(arr.slice(i, i + size));
-  }
-  return result;
-};
-
-const calculate = async (data: ArrayBuffer): Promise<ParsedData> => {
-  const audioCtx = new AudioContext();
-
-  const buffer = await audioCtx.decodeAudioData(data.slice(0));
-  const leftData = Array.from(buffer.getChannelData(0), Math.abs);
-  const rightData = Array.from(buffer.getChannelData(1), Math.abs);
-
-  const normalized = leftData.map((l, i) => mean([l, rightData[i]]));
-  const chunks = chunk(normalized, Math.ceil(normalized.length / 100));
-  const peaks = chunks.map(mean);
-  const max = Math.max(...peaks);
-
-  return { max, peaks };
-};
-
 interface Props {
-  soundData: ArrayBuffer;
+  soundId: string;
 }
 
-export const SoundWaveSVG = ({ soundData }: Props) => {
+export const SoundWaveSVG = ({ soundId }: Props) => {
   const uniqueIdRef = useRef(Math.random().toString(16));
   const containerRef = useRef<SVGSVGElement>(null);
   const [{ max, peaks }, setPeaks] = useState<ParsedData>({
@@ -68,10 +35,16 @@ export const SoundWaveSVG = ({ soundData }: Props) => {
 
   useEffect(() => {
     if (!isVisible) return;
-    calculate(soundData).then(({ max, peaks }) => {
-      setPeaks({ max, peaks });
+    let cancelled = false;
+    fetchJSON<ParsedData>(`/api/v1/sounds/${soundId}/peaks`).then((data) => {
+      if (!cancelled) {
+        setPeaks(data);
+      }
     });
-  }, [soundData, isVisible]);
+    return () => {
+      cancelled = true;
+    };
+  }, [soundId, isVisible]);
 
   return (
     <svg ref={containerRef} className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1">
