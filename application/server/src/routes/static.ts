@@ -63,7 +63,7 @@ staticRouter.use("*", async (c, next) => {
     const result = await tryServeFile(dir, urlPath);
     if (result) {
       return c.newResponse(result.content, 200, {
-        "Cache-Control": "public, max-age=60",
+        "Cache-Control": "public, max-age=3600",
         "Content-Type": result.mimeType,
       });
     }
