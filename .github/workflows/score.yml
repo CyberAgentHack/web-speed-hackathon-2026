@@ -8,16 +8,17 @@ on:
 
 jobs:
     score:
-        name: Build & Score
+        name: Build & Score (run ${{ matrix.run_index }} of 3)
         runs-on: ubuntu-24.04
-        # Scoring can take up to 20 minutes. Allow generous headroom for
-        # Docker build and scoring time on top of that.
         timeout-minutes: 45
+
+        strategy:
+            fail-fast: false
+            matrix:
+                run_index: [1, 2, 3]
 
         permissions:
             contents: read
-            issues: write
-            pull-requests: write
 
         steps:
             # ------------------------------------------------------------------ #
@@ -113,44 +114,139 @@ jobs:
               run: npx playwright install chrome --with-deps
 
             # ------------------------------------------------------------------ #
-            # 10. Run the scoring tool
+            # 10. Run scoring tool
             # ------------------------------------------------------------------ #
             - name: Run scoring tool
-              id: scoring
               working-directory: scoring-tool
               run: |
                   set -o pipefail
                   env -u GITHUB_ACTIONS pnpm start --applicationUrl http://localhost:8080 \
-                    2>&1 | tee /tmp/score-output.txt
+                    2>&1 | tee /tmp/score.txt || true
 
             # ------------------------------------------------------------------ #
-            # 11. Post score results
+            # 11. Upload score output as artifact
+            # ------------------------------------------------------------------ #
+            - name: Upload score artifact
+              if: always()
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              with:
+                  name: score-run-${{ matrix.run_index }}
+                  path: /tmp/score.txt
+                  retention-days: 14
+                  if-no-files-found: warn
+
+            # ------------------------------------------------------------------ #
+            # 12. Stop the application container
+            # ------------------------------------------------------------------ #
+            - name: Stop application container
+              if: always()
+              run: docker rm -f wsh-app >/dev/null 2>&1 || true
+
+    report:
+        name: Report Scores
+        runs-on: ubuntu-24.04
+        needs: score
+        if: always()
+        timeout-minutes: 15
+
+        permissions:
+            contents: read
+            issues: write
+            pull-requests: write
+            actions: read
+
+        steps:
+            # ------------------------------------------------------------------ #
+            # 1. Checkout (needed for generate-score-comment.mjs)
+            # ------------------------------------------------------------------ #
+            - name: Checkout repository
+              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+            # ------------------------------------------------------------------ #
+            # 2. Download all score run artifacts
+            # ------------------------------------------------------------------ #
+            - name: Download score-run-1
+              uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+              with:
+                  name: score-run-1
+                  path: /tmp/runs/1
+              continue-on-error: true
+
+            - name: Download score-run-2
+              uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+              with:
+                  name: score-run-2
+                  path: /tmp/runs/2
+              continue-on-error: true
+
+            - name: Download score-run-3
+              uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+              with:
+                  name: score-run-3
+                  path: /tmp/runs/3
+              continue-on-error: true
+
+            - name: Collect run files
+              run: |
+                  for i in 1 2 3; do
+                    if [ -s "/tmp/runs/${i}/score.txt" ]; then
+                      cp "/tmp/runs/${i}/score.txt" "/tmp/score-${i}.txt"
+                    fi
+                  done
+
+            # ------------------------------------------------------------------ #
+            # 3. Download baseline scores from latest main branch run
+            # ------------------------------------------------------------------ #
+            - name: Download baseline scores artifact
+              if: github.event_name == 'pull_request'
+              uses: dawidd6/action-download-artifact@07ab29fd4a977ae4d2b275087cf67563dfdf0295 # v9
+              with:
+                  name: score-baseline
+                  branch: main
+                  workflow: score.yml
+                  path: /tmp/baseline
+                  if_no_artifact_found: warn
+              continue-on-error: true
+
+            # ------------------------------------------------------------------ #
+            # 4. Generate rich score comment
+            # ------------------------------------------------------------------ #
+            - name: Generate score comment
+              run: |
+                  RUN_FILES=""
+                  for i in 1 2 3; do
+                    if [ -s "/tmp/score-${i}.txt" ]; then
+                      RUN_FILES="${RUN_FILES},/tmp/score-${i}.txt"
+                    fi
+                  done
+                  RUN_FILES="${RUN_FILES#,}"
+
+                  BASELINE_ARG=""
+                  if [ -f "/tmp/baseline/scores.json" ]; then
+                    BASELINE_ARG="--baseline /tmp/baseline/scores.json"
+                  fi
+
+                  node .github/scripts/generate-score-comment.mjs \
+                    --runs "${RUN_FILES}" \
+                    ${BASELINE_ARG} \
+                    --commit "${{ github.sha }}" \
+                    --output /tmp/comment.md \
+                    --json-output /tmp/scores.json
+
+            # ------------------------------------------------------------------ #
+            # 5. Post score comment on PR / summary on push
             # ------------------------------------------------------------------ #
             - name: Post score results
               if: always()
               env:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
-                  SCORE_BODY="$(cat /tmp/score-output.txt 2>/dev/null || echo 'Score output not available')"
                   COMMENT_MARKER="<!-- wsh-score-result -->"
+                  COMMENT_BODY="$(cat /tmp/comment.md 2>/dev/null || echo 'Score output not available')"
 
                   if [ "${{ github.event_name }}" = "pull_request" ]; then
                     PR_NUMBER="${{ github.event.pull_request.number }}"
                     REPO="${{ github.repository }}"
-
-                    COMMENT_BODY="${COMMENT_MARKER}
-                  ## Web Speed Hackathon 2026 - Score Results
-
-                  <details>
-                  <summary>View score report</summary>
-
-                  \`\`\`
-                  ${SCORE_BODY}
-                  \`\`\`
-
-                  </details>
-
-                  Commit: \`${{ github.sha }}\`"
 
                     EXISTING_COMMENT_ID=$(gh api \
                       "repos/${REPO}/issues/${PR_NUMBER}/comments" \
@@ -171,36 +267,34 @@ jobs:
                     fi
 
                   else
-                    echo "## Web Speed Hackathon 2026 - Score Results" >> $GITHUB_STEP_SUMMARY
-                    echo "" >> $GITHUB_STEP_SUMMARY
-                    echo "Commit: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-                    echo "" >> $GITHUB_STEP_SUMMARY
-                    echo "<details>" >> $GITHUB_STEP_SUMMARY
-                    echo "<summary>View score report</summary>" >> $GITHUB_STEP_SUMMARY
-                    echo "" >> $GITHUB_STEP_SUMMARY
-                    echo '```' >> $GITHUB_STEP_SUMMARY
-                    cat /tmp/score-output.txt >> $GITHUB_STEP_SUMMARY
-                    echo '```' >> $GITHUB_STEP_SUMMARY
-                    echo "" >> $GITHUB_STEP_SUMMARY
-                    echo "</details>" >> $GITHUB_STEP_SUMMARY
+                    cat /tmp/comment.md >> $GITHUB_STEP_SUMMARY
                   fi
 
             # ------------------------------------------------------------------ #
-            # 12. Upload debug logs on failure
+            # 6. Save scores as baseline artifact (main branch only)
             # ------------------------------------------------------------------ #
-            - name: Upload debug logs
-              if: failure()
+            - name: Save baseline scores artifact
+              if: github.event_name == 'push' && github.ref == 'refs/heads/main'
               uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
               with:
-                  name: debug-logs-${{ github.run_id }}-${{ github.run_attempt }}
-                  path: |
-                      /tmp/score-output.txt
-                  retention-days: 7
-                  if-no-files-found: ignore
+                  name: score-baseline
+                  path: /tmp/scores.json
+                  retention-days: 30
+                  if-no-files-found: warn
 
             # ------------------------------------------------------------------ #
-            # 13. Stop the application container
+            # 7. Upload all raw score files as artifact (for debugging)
             # ------------------------------------------------------------------ #
-            - name: Stop application container
+            - name: Upload raw score logs
               if: always()
-              run: docker rm -f wsh-app >/dev/null 2>&1 || true
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              with:
+                  name: score-logs-${{ github.run_id }}-${{ github.run_attempt }}
+                  path: |
+                      /tmp/score-1.txt
+                      /tmp/score-2.txt
+                      /tmp/score-3.txt
+                      /tmp/scores.json
+                      /tmp/comment.md
+                  retention-days: 14
+                  if-no-files-found: ignore
