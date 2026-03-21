@@ -5,8 +5,10 @@ import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components
 import { SoundWaveSVG } from "@web-speed-hackathon-2026/client/src/components/foundation/SoundWaveSVG";
 import { getSoundPath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
+type SoundWithWaveform = Models.Sound & { waveform?: { max: number; peaks: number[] } };
+
 interface Props {
-  sound: Models.Sound;
+  sound: SoundWithWaveform;
 }
 
 export const SoundPlayer = ({ sound }: Props) => {
@@ -54,7 +56,7 @@ export const SoundPlayer = ({ sound }: Props) => {
           <AspectRatioBox aspectHeight={1} aspectWidth={10}>
             <div className="relative h-full w-full">
               <div className="absolute inset-0 h-full w-full">
-                <SoundWaveSVG soundUrl={soundUrl} />
+                <SoundWaveSVG soundId={sound.id} waveform={sound.waveform} />
               </div>
               <div
                 className="bg-cax-surface-subtle absolute inset-0 h-full w-full opacity-75"

@@ -2,9 +2,18 @@ import { lazy, Suspense, useCallback, useEffect, useId, useState } from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
-import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
-import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+
+const AuthModalContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/AuthModalContainer").then((m) => ({
+    default: m.AuthModalContainer,
+  })),
+);
+const NewPostModalContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer").then((m) => ({
+    default: m.NewPostModalContainer,
+  })),
+);
 
 const TimelineContainer = lazy(
   () => import("@web-speed-hackathon-2026/client/src/containers/TimelineContainer"),
@@ -98,8 +107,12 @@ export const AppContainer = () => {
         </Suspense>
       </AppPage>
 
-      <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
-      <NewPostModalContainer id={newPostModalId} />
+      <Suspense fallback={null}>
+        <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
+      </Suspense>
+      <Suspense fallback={null}>
+        <NewPostModalContainer id={newPostModalId} />
+      </Suspense>
     </>
   );
 };
