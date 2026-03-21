@@ -43,7 +43,19 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
       const data = await fetchJSON<Models.DirectMessageConversation>(
         `/api/v1/dm/${conversationId}`,
       );
-      setConversation(data);
+      // 楽観的メッセージを保持: サーバーレスポンスに含まれない optimistic- メッセージを末尾に追加
+      setConversation((prev) => {
+        if (!prev) return data;
+        const optimisticMessages = prev.messages.filter(
+          (m) => typeof m.id === "string" && m.id.startsWith("optimistic-"),
+        );
+        if (optimisticMessages.length === 0) return data;
+        // サーバーが返したメッセージに楽観的メッセージの body が含まれていなければ保持
+        const serverBodies = new Set(data.messages.map((m) => m.body));
+        const remaining = optimisticMessages.filter((m) => !serverBodies.has(m.body));
+        if (remaining.length === 0) return data;
+        return { ...data, messages: [...data.messages, ...remaining] };
+      });
       setConversationError(null);
     } catch (error) {
       setConversation(null);
@@ -64,17 +76,20 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     async (params: DirectMessageFormData) => {
       setIsSubmitting(true);
       try {
-        // 楽観的更新: 送信したメッセージを即座にローカルstateに追加
-        if (activeUser && conversation) {
+        // 楽観的更新: functional update で常に最新の conversation を参照
+        if (activeUser) {
           const optimisticMessage: Models.DirectMessage = {
             id: `optimistic-${Date.now()}`,
             body: params.body,
             sender: activeUser,
             createdAt: new Date().toISOString(),
           };
-          setConversation({
-            ...conversation,
-            messages: [...conversation.messages, optimisticMessage],
+          setConversation((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              messages: [...prev.messages, optimisticMessage],
+            };
           });
         }
 
@@ -87,7 +102,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
         setIsSubmitting(false);
       }
     },
-    [conversationId, loadConversation, activeUser, conversation],
+    [conversationId, loadConversation, activeUser],
   );
 
   const handleTyping = useCallback(async () => {
