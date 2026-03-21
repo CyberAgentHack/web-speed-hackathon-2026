@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-import { PUBLIC_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+import { PUBLIC_PATH, UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
 interface WaveformData {
   peaks: number[];
@@ -35,15 +35,19 @@ function calculateWaveformFromBuffer(buffer: Buffer): WaveformData {
 }
 
 export function precomputeWaveforms(): void {
-  const soundsDir = path.join(PUBLIC_PATH, "sounds");
-  if (!fs.existsSync(soundsDir)) return;
+  const dirs = [path.join(PUBLIC_PATH, "sounds"), path.join(UPLOAD_PATH, "sounds")];
 
-  const files = fs.readdirSync(soundsDir).filter((f) => f.endsWith(".mp3"));
-  for (const file of files) {
-    const soundId = path.basename(file, ".mp3");
-    const filePath = path.join(soundsDir, file);
-    const buffer = fs.readFileSync(filePath);
-    cache.set(soundId, calculateWaveformFromBuffer(buffer));
+  for (const soundsDir of dirs) {
+    if (!fs.existsSync(soundsDir)) continue;
+
+    const files = fs.readdirSync(soundsDir).filter((f) => f.endsWith(".mp3"));
+    for (const file of files) {
+      const soundId = path.basename(file, ".mp3");
+      if (cache.has(soundId)) continue;
+      const filePath = path.join(soundsDir, file);
+      const buffer = fs.readFileSync(filePath);
+      cache.set(soundId, calculateWaveformFromBuffer(buffer));
+    }
   }
 }
 
