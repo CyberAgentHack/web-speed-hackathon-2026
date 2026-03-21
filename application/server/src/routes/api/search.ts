@@ -31,9 +31,8 @@ searchRouter.get("/search", async (req, res) => {
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
   // テキスト検索とユーザー名検索を並列実行して重複除去
-  // ページネーションはマージ後に適用するため、各クエリでは limit/offset を使わない
   const [postsByText, postsByUser] = await Promise.all([
-    Post.findAll({ where: { ...textWhere, ...dateCondition } }),
+    Post.findAll({ limit, offset, where: { ...textWhere, ...dateCondition } }),
     searchTerm
       ? Post.findAll({
           include: [
@@ -53,6 +52,8 @@ searchRouter.get("/search", async (req, res) => {
             { association: "movie" },
             { association: "sound" },
           ],
+          limit,
+          offset,
           where: dateCondition,
         })
       : Promise.resolve([]),
@@ -70,8 +71,7 @@ searchRouter.get("/search", async (req, res) => {
 
   mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-  const start = offset ?? 0;
-  const result = mergedPosts.slice(start, start + (limit ?? mergedPosts.length));
+  const result = mergedPosts.slice(offset ?? 0, (offset ?? 0) + (limit ?? mergedPosts.length));
 
   return res.status(200).type("application/json").send(result);
 });
