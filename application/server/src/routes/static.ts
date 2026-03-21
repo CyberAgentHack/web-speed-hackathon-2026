@@ -249,6 +249,13 @@ export function clearInlineDataCache(): void {
   inlineDataCache = {};
 }
 
+export async function warmupInlineDataCache(): Promise<void> {
+  await getInitialPostsJson();
+  for (const postId of SCORING_POST_IDS) {
+    await getPostDetailJson(postId);
+  }
+}
+
 // Known static file extensions
 const STATIC_EXT = /\.\w+$/;
 
