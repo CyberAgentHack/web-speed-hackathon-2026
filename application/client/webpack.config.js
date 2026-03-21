@@ -68,9 +68,7 @@ const config = {
     clean: true,
   },
   plugins: [
-    new webpack.ProvidePlugin({
-      Buffer: ["buffer", "Buffer"],
-    }),
+    new webpack.ProvidePlugin({}),
     new webpack.DefinePlugin({
       "process.env.BUILD_DATE": JSON.stringify(new Date().toISOString()),
       "process.env.COMMIT_HASH": JSON.stringify(process.env.SOURCE_VERSION || ""),
