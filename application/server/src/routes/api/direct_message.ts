@@ -130,7 +130,9 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
 
   const json = conversation.toJSON();
   if (json.messages) {
-    json.messages.reverse();
+    json.messages.sort((a: { createdAt: string }, b: { createdAt: string }) => {
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    });
   }
 
   return res.status(200).type("application/json").send(json);
