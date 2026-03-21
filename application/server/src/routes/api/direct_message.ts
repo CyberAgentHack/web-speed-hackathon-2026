@@ -1,6 +1,6 @@
 import { Router } from "express";
 import httpErrors from "http-errors";
-import { col, where, Op } from "sequelize";
+import { Op } from "sequelize";
 
 import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
 import {
@@ -11,46 +11,70 @@ import {
 
 export const directMessageRouter = Router();
 
+const senderInclude = [{ association: "sender", include: [{ association: "profileImage" }] }];
+
 directMessageRouter.get("/dm", async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversations = await DirectMessageConversation.scope("withMessages").findAll({
+  // 1) 대화 목록만 (default scope: initiator/member + profileImage, 메시지 없음)
+  const conversations = await DirectMessageConversation.findAll({
     where: {
-      [Op.and]: [
-        { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
-        where(col("messages.id"), { [Op.not]: null }),
-      ],
+      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
-    order: [[col("messages.createdAt"), "DESC"]],
   });
 
-  // Trim messages: only keep lastMessage + 1 unread from peer (reduces payload MB→KB)
-  const trimmed = conversations.map((conv) => {
-    const plain = conv.toJSON() as any;
-    const msgs: any[] = plain.messages ?? [];
-    if (msgs.length === 0) return plain;
+  if (conversations.length === 0) {
+    return res.status(200).type("application/json").send([]);
+  }
 
-    // lastMessage = most recent by createdAt
-    const lastMessage = msgs.reduce((a: any, b: any) =>
-      new Date(a.createdAt) >= new Date(b.createdAt) ? a : b,
-    );
+  // 2) 각 대화별로 마지막 메시지 1개 + 미읽은 메시지 1개만 쿼리
+  //    ※ DirectMessage의 default scope에 order ASC가 있으므로 반드시 unscoped() 사용
+  const result = await Promise.all(
+    conversations.map(async (conv) => {
+      const plain = conv.toJSON() as any;
 
-    // 1 unread message from peer (not sent by me)
-    const unreadFromPeer = msgs.find(
-      (m: any) => !m.isRead && m.senderId !== req.session.userId,
-    );
+      // 마지막 메시지 1개 (unscoped + sender 수동 include)
+      const lastMessage = await DirectMessage.unscoped().findOne({
+        where: { conversationId: conv.id },
+        include: senderInclude,
+        order: [["createdAt", "DESC"]],
+      });
 
-    const kept = [lastMessage];
-    if (unreadFromPeer && unreadFromPeer.id !== lastMessage.id) {
-      kept.push(unreadFromPeer);
-    }
-    plain.messages = kept;
-    return plain;
-  });
+      if (!lastMessage) return null; // 메시지 없는 대화 제외
 
-  return res.status(200).type("application/json").send(trimmed);
+      // peer로부터의 미읽은 메시지 1개
+      const peerId = conv.initiatorId !== req.session.userId ? conv.initiatorId : conv.memberId;
+      const unreadMsg = await DirectMessage.unscoped().findOne({
+        where: {
+          conversationId: conv.id,
+          senderId: peerId,
+          isRead: false,
+        },
+        include: senderInclude,
+        order: [["createdAt", "ASC"]],
+      });
+
+      const messages = [lastMessage.toJSON()];
+      if (unreadMsg && unreadMsg.id !== lastMessage.id) {
+        messages.push(unreadMsg.toJSON());
+      }
+      plain.messages = messages;
+      return plain;
+    }),
+  );
+
+  // null 제거 + 마지막 메시지 시간순 내림차순 정렬
+  const filtered = result
+    .filter((r): r is NonNullable<typeof r> => r !== null)
+    .sort((a: any, b: any) => {
+      const aTime = new Date(a.messages[0].createdAt).getTime();
+      const bTime = new Date(b.messages[0].createdAt).getTime();
+      return bTime - aTime;
+    });
+
+  return res.status(200).type("application/json").send(filtered);
 });
 
 directMessageRouter.post("/dm", async (req, res) => {
