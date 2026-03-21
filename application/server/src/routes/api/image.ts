@@ -1,13 +1,20 @@
 import { promises as fs } from "fs";
+import { createRequire } from "module";
 import path from "path";
 
 import { Router } from "express";
 import { fileTypeFromBuffer } from "file-type";
 import httpErrors from "http-errors";
-import { ImageIFD, load } from "piexifjs";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+
+const require = createRequire(import.meta.url);
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+const piexif = require("piexifjs") as {
+  load: (binary: string) => Record<string, Record<number, unknown>>;
+  ImageIFD: Record<string, number>;
+};
 
 // 変換した画像の拡張子
 const EXTENSION = "jpg";
@@ -35,8 +42,8 @@ imageRouter.post("/images", async (req, res) => {
 
   let alt = "";
   try {
-    const exif = load((req.body as Buffer).toString("binary"));
-    const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
+    const exif = piexif.load((req.body as Buffer).toString("binary"));
+    const raw = exif?.["0th"]?.[0x010e]; // ImageIFD.ImageDescription = 270
     if (raw != null) {
       alt = new TextDecoder().decode(Buffer.from(raw as string, "binary"));
     }
