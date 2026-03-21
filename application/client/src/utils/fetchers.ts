@@ -24,7 +24,7 @@ export async function fetchJSON<T>(url: string): Promise<T> {
 
 export async function sendFile<T>(url: string, file: File): Promise<T> {
   const result = await $.ajax({
-    async: false,
+    async: true,
     data: file,
     dataType: "json",
     headers: {
