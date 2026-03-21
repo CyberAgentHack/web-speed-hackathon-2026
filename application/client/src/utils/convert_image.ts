@@ -4,7 +4,10 @@ interface Options {
   extension: string;
 }
 
-export async function convertImage(file: File, options: Options): Promise<Blob> {
+export async function convertImage(
+  file: File,
+  options: Options,
+): Promise<{ blob: Blob; alt: string }> {
   const { initializeImageMagick, ImageMagick } = await import("@imagemagick/magick-wasm");
   const { default: magickWasm } = await import("@imagemagick/magick-wasm/magick.wasm?binary");
   await initializeImageMagick(magickWasm);
@@ -19,7 +22,7 @@ export async function convertImage(file: File, options: Options): Promise<Blob> 
 
       img.write((output) => {
         if (comment == null) {
-          resolve(new Blob([output as Uint8Array<ArrayBuffer>]));
+          resolve({ blob: new Blob([output as Uint8Array<ArrayBuffer>]), alt: "" });
           return;
         }
 
@@ -35,7 +38,7 @@ export async function convertImage(file: File, options: Options): Promise<Blob> 
         const exifStr = dump({ "0th": { [ImageIFD.ImageDescription]: descriptionBinary } });
         const outputWithExif = insert(exifStr, binary);
         const bytes = Uint8Array.from(outputWithExif.split("").map((c) => c.charCodeAt(0)));
-        resolve(new Blob([bytes]));
+        resolve({ blob: new Blob([bytes]), alt: comment });
       });
     });
   });

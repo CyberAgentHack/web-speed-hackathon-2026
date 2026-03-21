@@ -12,6 +12,7 @@ const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
 interface SubmitParams {
   images: File[];
+  imageAlts: string[];
   movie: File | undefined;
   sound: File | undefined;
   text: string;
@@ -28,6 +29,7 @@ interface Props {
 export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubmit }: Props) => {
   const [params, setParams] = useState<SubmitParams>({
     images: [],
+    imageAlts: [],
     movie: undefined,
     sound: undefined,
     text: "",
@@ -52,17 +54,16 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     if (isValid) {
       setIsConverting(true);
 
-      Promise.all(
-        files.map((file) =>
-          convertImage(file, { extension: "Jpg" }).then(
-            (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
-          ),
-        ),
-      )
-        .then((convertedFiles) => {
+      Promise.all(files.map((file) => convertImage(file, { extension: "Jpg" })))
+        .then((results) => {
+          const convertedFiles = results.map(
+            ({ blob }) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
+          );
+          const alts = results.map(({ alt }) => alt);
           setParams((params) => ({
             ...params,
             images: convertedFiles,
+            imageAlts: alts,
             movie: undefined,
             sound: undefined,
           }));

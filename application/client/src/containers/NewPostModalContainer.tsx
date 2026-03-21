@@ -7,16 +7,30 @@ import { sendFile, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/f
 
 interface SubmitParams {
   images: File[];
+  imageAlts: string[];
   movie: File | undefined;
   sound: File | undefined;
   text: string;
 }
 
-async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promise<Models.Post> {
+async function sendNewPost({
+  images,
+  imageAlts,
+  movie,
+  sound,
+  text,
+}: SubmitParams): Promise<Models.Post> {
+  const uploadedImages = images
+    ? await Promise.all(
+        images.map(async (image, i) => {
+          const result = await sendFile<{ id: string }>("/api/v1/images", image);
+          return { id: result.id, alt: imageAlts[i] ?? "" };
+        }),
+      )
+    : [];
+
   const payload = {
-    images: images
-      ? await Promise.all(images.map((image) => sendFile("/api/v1/images", image)))
-      : [],
+    images: uploadedImages,
     movie: movie ? await sendFile("/api/v1/movies", movie) : undefined,
     sound: sound ? await sendFile("/api/v1/sounds", sound) : undefined,
     text,
