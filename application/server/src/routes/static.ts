@@ -16,19 +16,19 @@ const HASHED_ASSET_PATTERN = /\.[0-9a-f]{8,}\./i;
 
 function setCacheHeaders(res: Parameters<NonNullable<Parameters<typeof serveStatic>[1]>["setHeaders"]>[0], filePath: string) {
   if (filePath.endsWith(".html")) {
-    res.setHeader("Cache-Control", "no-cache, no-transform");
+    res.setHeader("Cache-Control", "no-cache");
     return;
   }
 
   if (HASHED_ASSET_PATTERN.test(filePath)) {
     res.setHeader(
       "Cache-Control",
-      `public, max-age=${ONE_YEAR_SECONDS}, immutable, no-transform`,
+      `public, max-age=${ONE_YEAR_SECONDS}, immutable`,
     );
     return;
   }
 
-  res.setHeader("Cache-Control", `public, max-age=${ONE_HOUR_SECONDS}, no-transform`);
+  res.setHeader("Cache-Control", `public, max-age=${ONE_HOUR_SECONDS}`);
 }
 
 // SPA 対応のため、ファイルが存在しないときに index.html を返す
