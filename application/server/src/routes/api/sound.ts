@@ -6,6 +6,7 @@ import httpErrors from "http-errors";
 import { OfflineAudioContext } from "node-web-audio-api";
 import { v4 as uuidv4 } from "uuid";
 
+import { Sound } from "@web-speed-hackathon-2026/server/src/models";
 import { copyMetadataWithExiftool } from "@web-speed-hackathon-2026/server/src/utils/exiftool";
 import { extractMetadataFromSound } from "@web-speed-hackathon-2026/server/src/utils/extract_metadata_from_sound";
 import { runFfmpeg } from "@web-speed-hackathon-2026/server/src/utils/ffmpeg";
@@ -101,8 +102,12 @@ soundRouter.post("/sounds", async (req, res) => {
     await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds"), { recursive: true });
     await fs.writeFile(filePath, req.body);
 
-    return res
-        .status(200)
-        .type("application/json")
-        .send({ artist, id: soundId, title, peaks });
+    await Sound.create({
+        id: soundId,
+        artist,
+        peaks,
+        title,
+    });
+
+    return res.status(200).type("application/json").send({ id: soundId });
 });

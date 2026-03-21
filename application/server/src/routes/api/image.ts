@@ -1,4 +1,4 @@
-import fs from "node:fs/promises";
+import fs, { stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { Router } from "express";
@@ -10,7 +10,10 @@ import {
     PUBLIC_PATH,
     UPLOAD_PATH,
 } from "@web-speed-hackathon-2026/server/src/paths";
-import { copyMetadataWithExiftool } from "@web-speed-hackathon-2026/server/src/utils/exiftool";
+import {
+    copyMetadataWithExiftool,
+    getImageDimensions,
+} from "@web-speed-hackathon-2026/server/src/utils/exiftool";
 import { extractAltFromImage } from "@web-speed-hackathon-2026/server/src/utils/extract_metadata_from_image";
 import { runFfmpeg } from "@web-speed-hackathon-2026/server/src/utils/ffmpeg";
 
@@ -57,6 +60,11 @@ imageRouter.post("/images", async (req, res) => {
     const imageId = uuidv4();
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "image-upload-"));
 
+    const filePath = path.resolve(
+        UPLOAD_PATH,
+        `./images/${imageId}.${EXTENSION}`,
+    );
+
     let output: Buffer;
 
     try {
@@ -85,10 +93,6 @@ imageRouter.post("/images", async (req, res) => {
 
         output = await fs.readFile(outputPath);
 
-        const filePath = path.resolve(
-            UPLOAD_PATH,
-            `./images/${imageId}.${EXTENSION}`,
-        );
         await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), {
             recursive: true,
         });
@@ -99,21 +103,33 @@ imageRouter.post("/images", async (req, res) => {
         await fs.rm(tempDir, { recursive: true, force: true });
     }
 
-    const sizeBytes = output.length;
+    let sizeBytes: number | null = null;
+    let width: number | null = null;
+    let height: number | null = null;
+    try {
+        const [fileStats, dimensions] = await Promise.all([
+            stat(filePath),
+            getImageDimensions(filePath),
+        ]);
+        sizeBytes = fileStats.size;
+        width = dimensions.width;
+        height = dimensions.height;
+    } catch (err) {
+        console.warn(`Failed to get metadata for image ${imageId}`, err);
+    }
 
     // Save image metadata to database
     try {
         await Image.create({
             id: imageId,
             alt: "",
-            width: null,
-            height: null,
+            width,
+            height,
             sizeBytes,
         });
     } catch (err) {
         console.error("Failed to save image metadata to database", err);
         // Continue even if database save fails
     }
-
     return res.status(200).type("application/json").send({ id: imageId });
 });

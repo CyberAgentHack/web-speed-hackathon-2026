@@ -6,6 +6,7 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
+import { Movie } from "@web-speed-hackathon-2026/server/src/models";
 import { copyMetadataWithExiftool } from "@web-speed-hackathon-2026/server/src/utils/exiftool";
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import { runFfmpeg } from "@web-speed-hackathon-2026/server/src/utils/ffmpeg";
@@ -77,6 +78,8 @@ movieRouter.post("/movies", async (req, res) => {
     } finally {
         await fs.rm(tempDir, { recursive: true, force: true });
     }
+
+    await Movie.create({ id });
 
     return res.status(200).type("application/json").send({ id });
 });
