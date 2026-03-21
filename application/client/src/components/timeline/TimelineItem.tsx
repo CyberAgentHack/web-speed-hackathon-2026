@@ -41,10 +41,21 @@ const isClickedInteractiveElement = (
 interface Props {
   post: Models.Post;
   prioritizeMedia?: boolean;
+  prioritizeRendering?: boolean;
 }
 
-export const TimelineItem = ({ post, prioritizeMedia = false }: Props) => {
+export const TimelineItem = ({
+  post,
+  prioritizeMedia = false,
+  prioritizeRendering = false,
+}: Props) => {
   const navigate = useNavigate();
+  const visibilityStyle = prioritizeRendering
+    ? undefined
+    : {
+        containIntrinsicSize: "auto 24rem",
+        contentVisibility: "auto" as const,
+      };
 
   /**
    * ボタンやリンク以外の箇所をクリックしたとき かつ 文字が選択されてないとき、投稿詳細ページに遷移する
@@ -60,7 +71,7 @@ export const TimelineItem = ({ post, prioritizeMedia = false }: Props) => {
   );
 
   return (
-    <article className="hover:bg-cax-surface-subtle px-1 sm:px-4" onClick={handleClick}>
+    <article className="hover:bg-cax-surface-subtle px-1 sm:px-4" onClick={handleClick} style={visibilityStyle}>
       <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
         <div className="shrink-0 grow-0 pr-2 sm:pr-4">
           <Link
@@ -104,7 +115,7 @@ export const TimelineItem = ({ post, prioritizeMedia = false }: Props) => {
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
+              <MovieArea interactive={false} movie={post.movie} priority={prioritizeMedia} />
             </div>
           ) : null}
           {post.sound ? (

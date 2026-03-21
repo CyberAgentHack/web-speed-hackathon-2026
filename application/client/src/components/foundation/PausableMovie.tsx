@@ -2,9 +2,13 @@ import { useCallback, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { useNearViewport } from "@web-speed-hackathon-2026/client/src/hooks/use_near_viewport";
+import { MediaSource } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
-  src: string;
+  interactive?: boolean;
+  posterSrc?: string;
+  prioritizeLoad?: boolean;
+  sources: MediaSource[];
 }
 
 const MOVIE_POSTER_DATA_URI =
@@ -13,7 +17,12 @@ const MOVIE_POSTER_DATA_URI =
 /**
  * クリックすると再生・一時停止を切り替えます。
  */
-export const PausableMovie = ({ src }: Props) => {
+export const PausableMovie = ({
+  interactive = true,
+  posterSrc,
+  prioritizeLoad = false,
+  sources,
+}: Props) => {
   const movieRef = useRef<HTMLVideoElement>(null);
   const readyCanvasRef = useRef<HTMLCanvasElement>(null);
   const { isNearViewport, targetRef } = useNearViewport<HTMLButtonElement>({
@@ -32,6 +41,10 @@ export const PausableMovie = ({ src }: Props) => {
 
   const [isMovieReady, setIsMovieReady] = useState(false);
   const handleClick = useCallback(() => {
+    if (!interactive) {
+      return;
+    }
+
     const movie = movieRef.current;
     if (!isMovieReady || movie == null) {
       return;
@@ -41,7 +54,7 @@ export const PausableMovie = ({ src }: Props) => {
       return;
     }
     movie.pause();
-  }, [isMovieReady]);
+  }, [interactive, isMovieReady]);
 
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
@@ -50,6 +63,7 @@ export const PausableMovie = ({ src }: Props) => {
         className="relative block h-full w-full"
         onClick={handleClick}
         ref={targetRef}
+        tabIndex={interactive ? undefined : -1}
         type="button"
       >
         <canvas
@@ -63,12 +77,17 @@ export const PausableMovie = ({ src }: Props) => {
           className="h-full w-full object-cover"
           loop={true}
           muted={true}
-          poster={MOVIE_POSTER_DATA_URI}
+          poster={posterSrc ?? MOVIE_POSTER_DATA_URI}
           playsInline={true}
-          preload="metadata"
+          preload={prioritizeLoad ? "metadata" : "none"}
           onLoadedMetadata={handleLoadMovie}
-          src={isNearViewport ? src : undefined}
-        />
+        >
+          {isNearViewport
+            ? sources.map((source) => {
+                return <source key={source.src} src={source.src} type={source.type} />;
+              })
+            : null}
+        </video>
       </button>
     </AspectRatioBox>
   );
