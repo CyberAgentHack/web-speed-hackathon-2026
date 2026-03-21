@@ -9,16 +9,12 @@ interface ReturnValues<T> {
   fetchMore: () => void;
 }
 
-function buildPagedApiPath(apiPath: string, limit: number, offset: number): string {
-  const separator = apiPath.includes("?") ? "&" : "?";
-  return `${apiPath}${separator}limit=${limit}&offset=${offset}`;
-}
-
 export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
 ): ReturnValues<T> {
   const internalRef = useRef({ isLoading: false, offset: 0, hasMore: true });
+  const cachedDataRef = useRef<T[] | null>(null);
 
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
     data: [],
@@ -42,19 +38,24 @@ export function useInfiniteFetch<T>(
       hasMore,
     };
 
-    const pagedApiPath = buildPagedApiPath(apiPath, LIMIT, offset);
+    const loadAllData = cachedDataRef.current
+      ? Promise.resolve(cachedDataRef.current)
+      : fetcher(apiPath);
 
-    void fetcher(pagedApiPath).then(
-      (pageData) => {
+    void loadAllData.then(
+      (allData) => {
+        cachedDataRef.current = allData;
+        const pageData = allData.slice(offset, offset + LIMIT);
         setResult((cur) => ({
           ...cur,
           data: [...cur.data, ...pageData],
           isLoading: false,
         }));
+        const nextOffset = offset + pageData.length;
         internalRef.current = {
           isLoading: false,
-          offset: offset + pageData.length,
-          hasMore: pageData.length === LIMIT,
+          offset: nextOffset,
+          hasMore: nextOffset < allData.length,
         };
       },
       (error) => {
@@ -83,6 +84,7 @@ export function useInfiniteFetch<T>(
       offset: 0,
       hasMore: true,
     };
+    cachedDataRef.current = null;
 
     fetchMore();
   }, [fetchMore]);
