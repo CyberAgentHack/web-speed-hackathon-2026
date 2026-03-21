@@ -1,4 +1,4 @@
-import classNames from "classnames";
+import { clsx } from "clsx";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { CoveredImage } from "@web-speed-hackathon-2026/client/src/components/foundation/CoveredImage";
@@ -17,7 +17,7 @@ export const ImageArea = ({ images }: Props) => {
             <div
               key={image.id}
               // CSS Grid で表示領域を指定する
-              className={classNames("bg-cax-surface-subtle", {
+              className={clsx("bg-cax-surface-subtle", {
                 "col-span-1": images.length !== 1,
                 "col-span-2": images.length === 1,
                 "row-span-1": images.length > 2 && (images.length !== 3 || idx !== 0),

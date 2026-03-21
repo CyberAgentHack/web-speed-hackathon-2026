@@ -1,4 +1,4 @@
-import classNames from "classnames";
+import { clsx } from "clsx";
 import { ComponentPropsWithRef, ReactNode } from "react";
 
 interface Props extends ComponentPropsWithRef<"button"> {
@@ -17,7 +17,7 @@ export const Button = ({
 }: Props) => {
   return (
     <button
-      className={classNames(
+      className={clsx(
         "flex items-center justify-center gap-2 rounded-full px-4 py-2 border",
         "disabled:opacity-50 disabled:cursor-not-allowed",
         {

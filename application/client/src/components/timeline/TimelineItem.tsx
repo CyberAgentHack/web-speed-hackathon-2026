@@ -1,4 +1,3 @@
-import moment from "moment";
 import { MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
@@ -6,6 +5,7 @@ import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/
 import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
 import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
+import { formatDateLong } from "@web-speed-hackathon-2026/client/src/utils/date_format";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Element): boolean => {
@@ -77,8 +77,8 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={new Date(post.createdAt).toISOString()}>
+                {formatDateLong(post.createdAt)}
               </time>
             </Link>
           </p>
