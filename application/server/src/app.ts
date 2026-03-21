@@ -16,10 +16,19 @@ app.use(bodyParser.raw({ limit: "10mb", type: "application/octet-stream" }));
 app.use(bodyParser.json());
 
 app.use((_req, res, next) => {
-  res.header({
-    "Cache-Control": "max-age=0, no-transform",
-    Connection: "close",
-  });
+  // API エンドポイントはキャッシュしない
+  if (_req.path.startsWith("/api/")) {
+    res.header({
+      "Cache-Control": "max-age=0, no-transform",
+      Connection: "close",
+    });
+  } else {
+    // 静的ファイル（画像、動画、JS、CSS）は長期キャッシュ
+    res.header({
+      "Cache-Control": "public, max-age=31536000, immutable",
+      Connection: "close",
+    });
+  }
   return next();
 });
 
