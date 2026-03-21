@@ -27,12 +27,16 @@ export const UserProfileHeader = ({ user }: Props) => {
         className={`h-32 ${averageColor ? `bg-[${averageColor}]` : "bg-cax-surface-subtle"}`}
       ></div>
       <div className="border-cax-border bg-cax-surface-subtle absolute left-2/4 m-0 h-28 w-28 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border sm:h-32 sm:w-32">
+        {/* --- ここを修正：width と height を追加 --- */}
         <img
           alt=""
           crossOrigin="anonymous"
           onLoad={handleLoadImage}
           src={getProfileImagePath(user.profileImage.id)}
+          width={128} // sm:w-32 は 128px です
+          height={128} // sm:h-32 は 128px です
         />
+        {/* -------------------------------------- --- */}
       </div>
       <div className="px-4 pt-20">
         <h1 className="text-2xl font-bold">{user.name}</h1>
@@ -52,4 +56,4 @@ export const UserProfileHeader = ({ user }: Props) => {
       </div>
     </header>
   );
-};
+};　　　　　　
