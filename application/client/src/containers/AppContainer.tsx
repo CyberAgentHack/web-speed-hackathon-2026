@@ -62,6 +62,10 @@ const UserProfileContainer = lazy(() =>
   })),
 );
 
+function requiresActiveUserImmediately(pathname: string): boolean {
+  return pathname === "/crok" || pathname.startsWith("/dm");
+}
+
 export const AppContainer = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -69,13 +73,29 @@ export const AppContainer = () => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
+  const needsImmediate = requiresActiveUserImmediately(pathname);
+
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
   useEffect(() => {
-    void fetchJSON<Models.User>("/api/v1/me")
-      .then((user) => {
-        setActiveUser(user);
-      })
-      .catch(() => undefined);
+    const loadUser = () => {
+      void fetchJSON<Models.User>("/api/v1/me")
+        .then((user) => {
+          setActiveUser(user);
+        })
+        .catch(() => undefined);
+    };
+
+    if (needsImmediate) {
+      loadUser();
+      return;
+    }
+    if ("requestIdleCallback" in window) {
+      const id = window.requestIdleCallback(loadUser, { timeout: 1500 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = setTimeout(loadUser, 250);
+    return () => clearTimeout(id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleLogout = useCallback(async () => {
