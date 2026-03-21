@@ -49,37 +49,12 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
     setHasFileError(isValid !== true);
     if (isValid) {
-      setIsConverting(true);
-
-      Promise.all([
-        import(/* webpackChunkName: "ImageMagick" */ "@imagemagick/magick-wasm"),
-        import(
-          /* webpackChunkName: "ImageMagick" */ "@web-speed-hackathon-2026/client/src/utils/convert_image"
-        ),
-      ])
-        .then(([{ MagickFormat }, { convertImage }]) =>
-          Promise.all(
-            files.map((file) =>
-              convertImage(file, { extension: MagickFormat.Jpg }).then(
-                (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
-              ),
-            ),
-          ),
-        )
-        .then((convertedFiles) => {
-          setParams((params) => ({
-            ...params,
-            images: convertedFiles,
-            movie: undefined,
-            sound: undefined,
-          }));
-
-          setIsConverting(false);
-        })
-        .catch((err) => {
-          console.error(err);
-          setIsConverting(false);
-        });
+      setParams((params) => ({
+        ...params,
+        images: files,
+        movie: undefined,
+        sound: undefined,
+      }));
     }
   }, []);
 
@@ -112,13 +87,13 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     if (isValid) {
       setIsConverting(true);
 
-      convertMovie(file, { extension: "gif", size: undefined })
+      convertMovie(file, { extension: "mp4", size: undefined })
         .then((converted) => {
           setParams((params) => ({
             ...params,
             images: [],
-            movie: new File([converted], "converted.gif", {
-              type: "image/gif",
+            movie: new File([converted], "converted.mp4", {
+              type: "video/mp4",
             }),
             sound: undefined,
           }));

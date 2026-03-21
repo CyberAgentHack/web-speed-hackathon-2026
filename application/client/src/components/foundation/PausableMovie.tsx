@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { RefCallback, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -12,42 +12,26 @@ interface Props {
  * クリックすると再生・一時停止を切り替えます。
  */
 export const PausableMovie = ({ src }: Props) => {
-  const workerRef = useRef<Worker | null>(null);
-  const canvasElRef = useRef<HTMLCanvasElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
 
-  // WebWorkerでデコードと描画をする
-  const canvasCallbackRef = useCallback<RefCallback<HTMLCanvasElement>>((el) => {
-    canvasElRef.current = el;
-    if (el === null) {
-      workerRef.current?.terminate();
-      workerRef.current = null;
-      return;
-    }
-    const worker = new Worker(new URL("../../workers/gif_worker.ts", import.meta.url));
-    worker.onmessage = ({ data }: MessageEvent<{ type: string; isPlaying: boolean }>) => {
-      if (data.type === "ready") {
-        setIsLoading(false);
-        setIsPlaying(data.isPlaying);
-      }
-    };
-    workerRef.current = worker;
-    const offscreen = el.transferControlToOffscreen();
-    worker.postMessage({ type: "init", canvas: offscreen }, [offscreen]);
-  }, []);
-
   // IntersectionObserverで画面に入ったときに動画の読み込みを開始する
   useEffect(() => {
-    const el = canvasElRef.current;
-    if (!el || !workerRef.current) return;
+    const el = videoRef.current;
+    if (!el) return;
 
-    const worker = workerRef.current;
-    const autoPlay = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const observer = new IntersectionObserver((entries) => {
       if (entries[0]?.isIntersecting) {
-        worker.postMessage({ type: "load", url: src, autoPlay });
+        el.src = src;
+        el.load();
+        if (!prefersReducedMotion) {
+          el.play().catch(() => {});
+        } else {
+          setIsPlaying(false);
+        }
         observer.disconnect();
       }
     });
@@ -55,11 +39,20 @@ export const PausableMovie = ({ src }: Props) => {
     return () => observer.disconnect();
   }, [src]);
 
+  const handleCanPlay = useCallback(() => {
+    setIsLoading(false);
+  }, []);
+
   const handleClick = useCallback(() => {
-    setIsPlaying((prev) => {
-      workerRef.current?.postMessage({ type: prev ? "pause" : "play" });
-      return !prev;
-    });
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      video.play().catch(() => {});
+      setIsPlaying(true);
+    } else {
+      video.pause();
+      setIsPlaying(false);
+    }
   }, []);
 
   return (
@@ -73,7 +66,15 @@ export const PausableMovie = ({ src }: Props) => {
         aria-busy={isLoading || undefined}
         type="button"
       >
-        <canvas ref={canvasCallbackRef} className="h-full w-full object-cover object-center" />
+        <video
+          ref={videoRef}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="h-full w-full object-cover object-center"
+          onCanPlay={handleCanPlay}
+        />
         <div
           className={classNames(
             "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",

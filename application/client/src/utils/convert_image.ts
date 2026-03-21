@@ -4,6 +4,9 @@ import { dump, insert, ImageIFD } from "piexifjs";
 
 interface Options {
   extension: MagickFormat;
+  maxWidth?: number;
+  maxHeight?: number;
+  quality?: number;
 }
 
 export async function convertImage(file: File, options: Options): Promise<Blob> {
@@ -13,12 +16,31 @@ export async function convertImage(file: File, options: Options): Promise<Blob> 
 
   return new Promise((resolve) => {
     ImageMagick.read(byteArray, (img) => {
+      // アスペクト比を維持したまま最大サイズに収まるようリサイズ
+      if (options.maxWidth != null && options.maxHeight != null) {
+        const scale = Math.min(options.maxWidth / img.width, options.maxHeight / img.height, 1);
+        if (scale < 1) {
+          img.resize(Math.round(img.width * scale), Math.round(img.height * scale));
+        }
+      }
+
       img.format = options.extension;
+
+      if (options.quality != null) {
+        img.quality = options.quality;
+      }
 
       const comment = img.comment;
 
       img.write((output) => {
         if (comment == null) {
+          resolve(new Blob([output as Uint8Array<ArrayBuffer>]));
+          return;
+        }
+
+        // piexifjs は JPEG のみ対応のため、WebP の場合は ImageMagick の出力をそのまま返す
+        // （ImageMagick が EXIF メタデータを WebP の RIFF チャンクに保持する）
+        if (options.extension === MagickFormat.WebP) {
           resolve(new Blob([output as Uint8Array<ArrayBuffer>]));
           return;
         }
