@@ -24,11 +24,7 @@ const DirectMessageListContainer = React.lazy(() =>
     (m) => ({ default: m.DirectMessageListContainer }),
   ),
 );
-const NotFoundContainer = React.lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/NotFoundContainer").then((m) => ({
-    default: m.NotFoundContainer,
-  })),
-);
+import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { PostContainer } from "@web-speed-hackathon-2026/client/src/containers/PostContainer";
 const SearchContainer = React.lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/SearchContainer").then((m) => ({
