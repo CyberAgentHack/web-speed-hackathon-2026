@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { MouseEventHandler, useCallback, useEffect, useRef, useState } from "react";
+import { memo, MouseEventHandler, useCallback, useEffect, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -12,62 +12,47 @@ interface Props {
  * クリックすると再生・一時停止を切り替えます。
  * 自動再生は維持します。
  */
-export const PausableMovie = ({ src }: Props) => {
+const PausableMovieComponent = ({ src }: Props) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(true);
 
   useEffect(() => {
     const video = videoRef.current;
-    if (video == null) {
-      return;
+    if (!video) return;
+
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    const applyMotionPreference = () => {
+      if (mediaQuery.matches) {
+        video.pause();
+      }
+    };
+
+    applyMotionPreference();
+
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", applyMotionPreference);
+      return () => {
+        mediaQuery.removeEventListener("change", applyMotionPreference);
+      };
     }
 
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    if (prefersReducedMotion) {
-      video.pause();
-      setIsPlaying(false);
-      return;
-    }
-
-    const playPromise = video.play();
-
-    if (playPromise != null) {
-      void playPromise
-        .then(() => {
-          setIsPlaying(true);
-        })
-        .catch(() => {
-          setIsPlaying(false);
-        });
-    }
+    mediaQuery.addListener(applyMotionPreference);
+    return () => {
+      mediaQuery.removeListener(applyMotionPreference);
+    };
   }, [src]);
 
   const handleClick = useCallback<MouseEventHandler<HTMLButtonElement>>(() => {
     const video = videoRef.current;
-
-    if (video == null) {
-      return;
-    }
+    if (!video) return;
 
     if (video.paused) {
-      const playPromise = video.play();
-
-      if (playPromise != null) {
-        void playPromise
-          .then(() => {
-            setIsPlaying(true);
-          })
-          .catch(() => {
-            setIsPlaying(false);
-          });
-      }
-
+      void video.play().catch(() => {});
       return;
     }
 
     video.pause();
-    setIsPlaying(false);
   }, []);
 
   const handlePlay = useCallback(() => {
@@ -98,12 +83,11 @@ export const PausableMovie = ({ src }: Props) => {
           onPause={handlePause}
           onPlay={handlePlay}
         />
+
         <div
           className={classNames(
-            "absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-cax-overlay/50 text-3xl text-cax-surface-raised",
-            {
-              "opacity-0 group-hover:opacity-100": isPlaying,
-            },
+            "pointer-events-none absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-cax-overlay/50 text-3xl text-cax-surface-raised transition-opacity",
+            isPlaying ? "opacity-0 group-hover:opacity-100" : "opacity-100",
           )}
         >
           <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
@@ -112,3 +96,5 @@ export const PausableMovie = ({ src }: Props) => {
     </AspectRatioBox>
   );
 };
+
+export const PausableMovie = memo(PausableMovieComponent);
