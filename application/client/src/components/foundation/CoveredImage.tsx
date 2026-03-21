@@ -5,13 +5,14 @@ import { Button } from "@web-speed-hackathon-2026/client/src/components/foundati
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 
 interface Props {
+  alt?: string;
   src: string;
 }
 
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
-export const CoveredImage = ({ src }: Props) => {
+export const CoveredImage = ({ alt = "", src }: Props) => {
   const dialogId = useId();
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
     ev.stopPropagation();
@@ -19,7 +20,6 @@ export const CoveredImage = ({ src }: Props) => {
 
   const [imageRatio, setImageRatio] = useState<number | null>(null);
   const [containerRatio, setContainerRatio] = useState<number | null>(null);
-  const [alt, setAlt] = useState("");
 
   const containerCallbackRef = useCallback((el: HTMLDivElement | null) => {
     if (el) {
@@ -30,7 +30,6 @@ export const CoveredImage = ({ src }: Props) => {
   const handleLoad = useCallback((ev: React.SyntheticEvent<HTMLImageElement>) => {
     const img = ev.currentTarget;
     setImageRatio(img.naturalHeight / img.naturalWidth);
-    setAlt(img.getAttribute("data-exif-alt") ?? "");
   }, []);
 
   const isWide = imageRatio != null && containerRatio != null && containerRatio > imageRatio;
