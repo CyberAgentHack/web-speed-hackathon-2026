@@ -70,47 +70,68 @@ async function copyFileWithParent(sourcePath: string, outputPath: string): Promi
 }
 
 async function runFfmpeg(args: string[]): Promise<void> {
-  const binaryPath = ffmpegPath;
-  if (binaryPath == null) {
-    throw new Error("ffmpeg-static binary is unavailable");
+  const binaryCandidates = [ffmpegPath, "ffmpeg"].filter(
+    (binaryPath): binaryPath is string => typeof binaryPath === "string" && binaryPath.length > 0,
+  );
+  if (binaryCandidates.length === 0) {
+    throw new Error("ffmpeg binary is unavailable");
   }
 
-  await new Promise<void>((resolve, reject) => {
-    const child = spawn(
-      binaryPath,
-      ["-hide_banner", "-loglevel", "error", "-nostdin", "-y", ...args],
-      {
-        stdio: ["ignore", "ignore", "pipe"],
-      },
-    ) as import("node:child_process").ChildProcess;
+  let lastError: unknown = undefined;
+  for (const binaryPath of binaryCandidates) {
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const child = spawn(
+          binaryPath,
+          ["-hide_banner", "-loglevel", "error", "-nostdin", "-y", ...args],
+          {
+            stdio: ["ignore", "ignore", "pipe"],
+          },
+        ) as import("node:child_process").ChildProcess;
 
-    const stderr = child.stderr;
-    if (stderr === null) {
-      reject(new Error("ffmpeg stderr stream is unavailable"));
+        const stderr = child.stderr;
+        if (stderr === null) {
+          reject(new Error("ffmpeg stderr stream is unavailable"));
+          return;
+        }
+
+        let stderrOutput = "";
+        stderr.setEncoding("utf8");
+        stderr.on("data", (chunk: string) => {
+          stderrOutput += chunk;
+        });
+        child.on("error", reject);
+        child.on("close", (code: number | null) => {
+          if (code === 0) {
+            resolve();
+            return;
+          }
+
+          reject(
+            new Error(
+              `ffmpeg exited with code ${code ?? "null"}${
+                stderrOutput ? `: ${stderrOutput.trim()}` : ""
+              }`,
+            ),
+          );
+        });
+      });
       return;
-    }
-
-    let stderrOutput = "";
-    stderr.setEncoding("utf8");
-    stderr.on("data", (chunk: string) => {
-      stderrOutput += chunk;
-    });
-    child.on("error", reject);
-    child.on("close", (code: number | null) => {
-      if (code === 0) {
-        resolve();
-        return;
+    } catch (error: unknown) {
+      lastError = error;
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        (error as { code: unknown }).code === "ENOENT"
+      ) {
+        continue;
       }
+      throw error;
+    }
+  }
 
-      reject(
-        new Error(
-          `ffmpeg exited with code ${code ?? "null"}${
-            stderrOutput ? `: ${stderrOutput.trim()}` : ""
-          }`,
-        ),
-      );
-    });
-  });
+  throw new Error("ffmpeg binary is unavailable", { cause: lastError });
 }
 
 async function createImageVariant(
@@ -145,6 +166,7 @@ async function createMovieVariant(
     await copyFileWithParent(sourcePath, outputPath);
     return;
   }
+  await fs.mkdir(path.dirname(outputPath), { recursive: true });
 
   const baseArgs = [
     "-i",
@@ -198,6 +220,7 @@ async function createSoundVariant(
     await copyFileWithParent(sourcePath, outputPath);
     return;
   }
+  await fs.mkdir(path.dirname(outputPath), { recursive: true });
 
   const metadataArgs: string[] = [];
   if (metadata.artist !== undefined) {

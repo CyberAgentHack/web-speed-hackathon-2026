@@ -57,11 +57,21 @@ function isAcceptableImage(file: File): boolean {
 }
 
 function isAcceptableSound(file: File): boolean {
-  return file.type === "audio/mpeg" || hasExtension(file, ["mp3"]);
+  return (
+    file.type === "audio/mpeg" ||
+    file.type === "audio/wav" ||
+    file.type === "audio/wave" ||
+    file.type === "audio/x-wav" ||
+    hasExtension(file, ["mp3", "wav", "wave"])
+  );
 }
 
 function isAcceptableMovie(file: File): boolean {
-  return file.type === "video/mp4" || hasExtension(file, ["mp4"]);
+  return (
+    file.type === "video/mp4" ||
+    file.type === "video/x-matroska" ||
+    hasExtension(file, ["mp4", "mkv"])
+  );
 }
 
 export const NewPostModalPage = ({
