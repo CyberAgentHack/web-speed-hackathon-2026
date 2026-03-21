@@ -6,6 +6,7 @@ import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/componen
 import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/AttachFileInputButton";
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
+const MOVIE_CONVERT_SIZE = 640;
 
 let magickModulePromise: Promise<typeof import("@imagemagick/magick-wasm")> | null = null;
 let convertImageModulePromise: Promise<
@@ -165,7 +166,10 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       void (async () => {
         try {
           const { convertMovie } = await loadConvertMovieModule();
-          const converted = await convertMovie(file, { extension: "gif", size: undefined });
+          const converted = await convertMovie(file, {
+            extension: "gif",
+            size: MOVIE_CONVERT_SIZE,
+          });
           setParams((params) => ({
             ...params,
             images: [],

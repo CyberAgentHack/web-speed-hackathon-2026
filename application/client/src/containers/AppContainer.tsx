@@ -4,10 +4,7 @@ import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
-import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
-import { PostContainer } from "@web-speed-hackathon-2026/client/src/containers/PostContainer";
-import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 const CrokContainer = lazy(() =>
@@ -32,6 +29,21 @@ const DirectMessageListContainer = lazy(() =>
 const SearchContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/SearchContainer").then((module) => ({
     default: module.SearchContainer,
+  })),
+);
+const TimelineContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/TimelineContainer").then((module) => ({
+    default: module.TimelineContainer,
+  })),
+);
+const PostContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/PostContainer").then((module) => ({
+    default: module.PostContainer,
+  })),
+);
+const NewPostModalContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer").then((module) => ({
+    default: module.NewPostModalContainer,
   })),
 );
 const TermContainer = lazy(() =>
@@ -75,13 +87,54 @@ export const AppContainer = () => {
   const authModalId = useId();
   const newPostModalId = useId();
   const isResolvingActiveUser = !hasResolvedActiveUser;
+  const [shouldMountNewPostModal, setShouldMountNewPostModal] = useState(false);
+  const [shouldOpenNewPostModal, setShouldOpenNewPostModal] = useState(false);
+
+  useEffect(() => {
+    if (activeUser === null) {
+      setShouldMountNewPostModal(false);
+      setShouldOpenNewPostModal(false);
+    }
+  }, [activeUser]);
+
+  const handleOpenNewPostModal = useCallback(() => {
+    setShouldMountNewPostModal(true);
+    setShouldOpenNewPostModal(true);
+  }, []);
+
+  useEffect(() => {
+    if (!shouldMountNewPostModal || !shouldOpenNewPostModal) {
+      return;
+    }
+
+    let frameId = 0;
+
+    const openModal = () => {
+      const dialog = document.getElementById(newPostModalId);
+      if (!(dialog instanceof HTMLDialogElement)) {
+        frameId = window.requestAnimationFrame(openModal);
+        return;
+      }
+
+      if (!dialog.open) {
+        dialog.showModal();
+      }
+      setShouldOpenNewPostModal(false);
+    };
+
+    openModal();
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [newPostModalId, shouldMountNewPostModal, shouldOpenNewPostModal]);
 
   return (
     <HelmetProvider>
       <AppPage
         activeUser={activeUser}
         authModalId={authModalId}
-        newPostModalId={newPostModalId}
+        onOpenNewPostModal={handleOpenNewPostModal}
         onLogout={handleLogout}
       >
         <Suspense
@@ -138,7 +191,11 @@ export const AppContainer = () => {
       </AppPage>
 
       <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
-      <NewPostModalContainer id={newPostModalId} />
+      {activeUser !== null && shouldMountNewPostModal ? (
+        <Suspense fallback={null}>
+          <NewPostModalContainer id={newPostModalId} />
+        </Suspense>
+      ) : null}
     </HelmetProvider>
   );
 };
