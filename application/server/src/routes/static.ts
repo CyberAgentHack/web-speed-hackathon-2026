@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
+
 import history from "connect-history-api-fallback";
 import { Router } from "express";
 import serveStatic from "serve-static";
@@ -8,7 +11,18 @@ import {
   UPLOAD_PATH,
 } from "@web-speed-hackathon-2026/server/src/paths";
 
+const termsHtmlPath = path.join(CLIENT_DIST_PATH, "terms.html");
+const termsHtml = fs.existsSync(termsHtmlPath) ? fs.readFileSync(termsHtmlPath, "utf-8") : null;
+
 export const staticRouter = Router();
+
+if (termsHtml !== null) {
+  staticRouter.get("/terms", (_req, res) => {
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.setHeader("Cache-Control", "no-cache");
+    res.send(termsHtml);
+  });
+}
 
 // SPA 対応のため、ファイルが存在しないときに index.html を返す
 staticRouter.use(history());

@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "build": "NODE_ENV=production webpack",
+    "generate-ssg": "tsx --tsconfig tsconfig.json scripts/generate-ssg.tsx",
     "dev": "webpack serve",
     "typecheck": "tsc"
   },
@@ -79,6 +80,7 @@
     "react-markdown": "10.1.0",
     "style-loader": "4.0.0",
     "tailwindcss": "^4.2.2",
+    "tsx": "4.20.6",
     "typescript": "5.9.3",
     "webpack": "5.102.1",
     "webpack-bundle-analyzer": "5.2.0",

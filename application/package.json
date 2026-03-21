@@ -5,7 +5,7 @@
   "author": "CyberAgent, Inc.",
   "type": "module",
   "scripts": {
-    "build": "pnpm --filter @web-speed-hackathon-2026/client build",
+    "build": "pnpm --filter @web-speed-hackathon-2026/client build && pnpm --filter @web-speed-hackathon-2026/client generate-ssg",
     "start": "pnpm --filter @web-speed-hackathon-2026/server start",
     "dev": "pnpm --parallel --filter @web-speed-hackathon-2026/server --filter @web-speed-hackathon-2026/client dev",
     "typecheck": "pnpm run --recursive typecheck",
