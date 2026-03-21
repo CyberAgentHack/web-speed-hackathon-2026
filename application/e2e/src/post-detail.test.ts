@@ -11,7 +11,7 @@ test.describe("投稿詳細", () => {
     await page.goto("/");
     const firstArticle = page.locator("article").first();
     await expect(firstArticle).toBeVisible({ timeout: 30_000 });
-    await firstArticle.click();
+    await firstArticle.locator("time").first().click();
     await page.waitForURL("**/posts/*", { timeout: 30_000 });
 
     const article = page.locator("article").first();
@@ -29,7 +29,7 @@ test.describe("投稿詳細", () => {
     await page.goto("/");
     const firstArticle = page.locator("article").first();
     await expect(firstArticle).toBeVisible({ timeout: 30_000 });
-    await firstArticle.click();
+    await firstArticle.locator("time").first().click();
     await page.waitForURL("**/posts/*", { timeout: 30_000 });
 
     await expect(page).toHaveTitle(/さんのつぶやき - CaX/, { timeout: 30_000 });
