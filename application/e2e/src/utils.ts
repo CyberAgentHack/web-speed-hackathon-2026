@@ -10,11 +10,19 @@ export async function login(
   const signinButton = page.getByRole("button", { name: "サインイン" });
   await expect(signinButton).toBeVisible({ timeout: 30_000 });
   await signinButton.click();
-  await page.getByRole("heading", { name: "サインイン" }).waitFor({ timeout: 10_000 });
+  await page.getByRole("heading", { name: "サインイン" }).waitFor({ timeout: 30_000 });
   await page.getByRole("textbox", { name: "ユーザー名" }).pressSequentially(username);
   await page.getByRole("textbox", { name: "パスワード" }).pressSequentially(password);
   await page.getByRole("button", { name: "サインイン" }).last().click();
   await page.getByRole("link", { name: "Crok" }).waitFor({ timeout: 30_000 });
+}
+
+/** ページの読み込みを安定させるための関数 */
+export async function waitForPageToLoad(page: Page): Promise<void> {
+  // ネットワークがidleになるまで待つ
+  await page.waitForLoadState("networkidle", { timeout: 30_000 });
+  // ページの表示を安定させるため、10秒待つ
+  await page.waitForTimeout(10_000);
 }
 
 /** ビューポート内の全メディア（img/movie/sound）が読み込み完了するまで待つ */

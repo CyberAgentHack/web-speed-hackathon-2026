@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { dynamicMediaMask, waitForVisibleMedia } from "./utils";
+import { dynamicMediaMask, waitForPageToLoad, waitForVisibleMedia } from "./utils";
 
 test.describe("レスポンシブ", () => {
   test("スマホ表示で表示が崩れない", async ({ page }) => {
@@ -20,6 +20,7 @@ test.describe("レスポンシブ", () => {
 
     // VRT: スマホ表示
     await waitForVisibleMedia(page);
+    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("responsive-スマホ.png", {
       fullPage: false,
       mask: dynamicMediaMask(page),
@@ -47,6 +48,7 @@ test.describe("レスポンシブ", () => {
 
     // VRT: デスクトップ表示
     await waitForVisibleMedia(page);
+    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("responsive-デスクトップ.png", {
       fullPage: false,
       mask: dynamicMediaMask(page),

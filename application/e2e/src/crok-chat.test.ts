@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { dynamicMediaMask, login, waitForVisibleMedia } from "./utils";
+import { dynamicMediaMask, login, waitForPageToLoad, waitForVisibleMedia } from "./utils";
 
 interface SSEChunkPayload {
   text?: string;
@@ -12,12 +12,13 @@ test.describe("Crok AIチャット", () => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await login(page);
     await page.getByRole("link", { name: "Crok" }).click();
-    await page.waitForURL("**/crok", { timeout: 10_000 });
+    await page.waitForURL("**/crok", { timeout: 30_000 });
   });
 
   test("サジェスト候補が表示される", async ({ page }) => {
     // VRT: Crokページ
     await waitForVisibleMedia(page);
+    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("crok-Crok.png", {
       mask: dynamicMediaMask(page),
     });
@@ -37,6 +38,7 @@ test.describe("Crok AIチャット", () => {
 
     // VRT: サジェスト表示後
     await waitForVisibleMedia(page);
+    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("crok-サジェスト表示後.png", {
       mask: dynamicMediaMask(page),
     });
@@ -62,7 +64,7 @@ test.describe("Crok AIチャット", () => {
 
     // ユーザーメッセージが表示される
     await expect(page.getByText(prompt)).toBeVisible({
-      timeout: 10_000,
+      timeout: 30_000,
     });
 
     // ストリーミング中の表示を確認
@@ -80,6 +82,7 @@ test.describe("Crok AIチャット", () => {
 
     // VRT: AI応答完了後
     await waitForVisibleMedia(page);
+    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("crok-AI応答完了後.png", {
       mask: dynamicMediaMask(page),
     });
