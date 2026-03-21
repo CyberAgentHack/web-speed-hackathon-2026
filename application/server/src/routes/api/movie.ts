@@ -15,7 +15,7 @@ import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import type { SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
 
 const execFileAsync = promisify(execFile);
-const EXTENSION = "gif";
+const EXTENSION = "mp4";
 
 export const movieRouter = new Hono<SessionEnv>().post(
   "/movies",
@@ -39,26 +39,30 @@ export const movieRouter = new Hono<SessionEnv>().post(
     try {
       await fs.writeFile(inputPath, buffer);
 
-      // Convert to GIF: first 5 seconds, 10fps, square crop, no audio
+      // Convert to MP4: first 5 seconds, square crop, no audio
       await execFileAsync("ffmpeg", [
         "-i",
         inputPath,
         "-t",
         "5",
-        "-r",
-        "10",
         "-vf",
         "crop='min(iw,ih)':'min(iw,ih)'",
         "-an",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "ultrafast",
+        "-movflags",
+        "+faststart",
         "-y",
         outputPath,
       ]);
 
-      const gifBuffer = await fs.readFile(outputPath);
+      const mp4Buffer = await fs.readFile(outputPath);
 
       const filePath = path.resolve(UPLOAD_PATH, `./movies/${movieId}.${EXTENSION}`);
       await fs.mkdir(path.resolve(UPLOAD_PATH, "movies"), { recursive: true });
-      await fs.writeFile(filePath, gifBuffer);
+      await fs.writeFile(filePath, mp4Buffer);
     } catch {
       throw new HTTPException(400, { message: "Invalid video file" });
     } finally {

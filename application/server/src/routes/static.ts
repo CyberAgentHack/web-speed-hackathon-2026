@@ -163,6 +163,19 @@ staticRouter.use("/fonts/*", publicPreCompressedStatic);
 staticRouter.use("/sprites/*", publicPreCompressedStatic);
 staticRouter.use("/movies/*", publicPreCompressedStatic);
 
+// Uploaded media fallback (new uploads go to UPLOAD_PATH, not PUBLIC_PATH)
+for (const prefix of ["/movies/*", "/sounds/*", "/images/*"]) {
+  staticRouter.use(
+    prefix,
+    serveStatic({
+      root: path.relative(process.cwd(), UPLOAD_PATH),
+      onFound: (_path, c) => {
+        c.header("Cache-Control", "public, max-age=86400");
+      },
+    }),
+  );
+}
+
 // Public assets (images, etc.) - cache for 1 day (must be after specific routes above)
 staticRouter.use(
   "/*",

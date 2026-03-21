@@ -1,4 +1,4 @@
-import { ReactEventHandler, useCallback, useRef, useState } from "react";
+import { type Ref, ReactEventHandler, forwardRef, useCallback, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -12,7 +12,7 @@ interface Props {
  * Static waveform placeholder that visually approximates the original SoundWaveSVG.
  * Uses a deterministic pattern based on the sound ID to produce a consistent waveform shape.
  */
-const StaticWaveform = ({ soundId }: { soundId: string }) => {
+const StaticWaveform = forwardRef(({ soundId }: { soundId: string }, ref: Ref<SVGSVGElement>) => {
   // Generate a deterministic waveform from the sound ID
   const bars = Array.from({ length: 100 }, (_, i) => {
     // Simple hash-like function from soundId + index
@@ -25,12 +25,12 @@ const StaticWaveform = ({ soundId }: { soundId: string }) => {
   });
 
   return (
-    <svg className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1">
+    <svg ref={ref} className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1">
       {/* Using index as key is safe here: bars is a static-length computed array of primitives with no stable ID */}
       {bars.map((ratio, idx) => (
         <rect
           key={idx}
-          fill="var(--color-cax-accent)"
+          fill="var(--color-cax-text-muted)"
           height={ratio}
           width="1"
           x={idx}
@@ -39,18 +39,42 @@ const StaticWaveform = ({ soundId }: { soundId: string }) => {
       ))}
     </svg>
   );
-};
+});
 
 export const SoundPlayer = ({ sound }: Props) => {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const prevBoundaryRef = useRef(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTimeRatio, setCurrentTimeRatio] = useState(0);
 
   const soundSrc = getSoundPath(sound.id);
 
   const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>((ev) => {
     const el = ev.currentTarget;
-    setCurrentTimeRatio(el.currentTime / el.duration);
+    const ratio = el.currentTime / el.duration;
+    const boundary = Math.floor(ratio * 100);
+
+    if (boundary === prevBoundaryRef.current) return;
+
+    const svg = svgRef.current;
+    if (!svg) return;
+    const rects = svg.querySelectorAll("rect");
+
+    const oldBoundary = prevBoundaryRef.current;
+    const accentColor = "var(--color-cax-accent)";
+    const mutedColor = "var(--color-cax-text-muted)";
+
+    if (boundary > oldBoundary) {
+      for (let i = oldBoundary; i < boundary; i++) {
+        rects[i]?.setAttribute("fill", accentColor);
+      }
+    } else {
+      for (let i = boundary; i < oldBoundary; i++) {
+        rects[i]?.setAttribute("fill", mutedColor);
+      }
+    }
+
+    prevBoundaryRef.current = boundary;
   }, []);
 
   const handleTogglePlaying = useCallback(() => {
@@ -66,7 +90,13 @@ export const SoundPlayer = ({ sound }: Props) => {
 
   const handleEnded = useCallback(() => {
     setIsPlaying(false);
-    setCurrentTimeRatio(0);
+    const svg = svgRef.current;
+    if (svg) {
+      svg.querySelectorAll("rect").forEach((rect) => {
+        rect.setAttribute("fill", "var(--color-cax-text-muted)");
+      });
+    }
+    prevBoundaryRef.current = 0;
   }, []);
 
   return (
@@ -97,15 +127,7 @@ export const SoundPlayer = ({ sound }: Props) => {
         </p>
         <div className="pt-2">
           <AspectRatioBox aspectHeight={1} aspectWidth={10}>
-            <div className="relative h-full w-full">
-              <div className="absolute inset-0 h-full w-full">
-                <StaticWaveform soundId={sound.id} />
-              </div>
-              <div
-                className="bg-cax-surface-subtle absolute inset-0 h-full w-full opacity-75"
-                style={{ left: `${currentTimeRatio * 100}%` }}
-              ></div>
-            </div>
+            <StaticWaveform ref={svgRef} soundId={sound.id} />
           </AspectRatioBox>
         </div>
       </div>

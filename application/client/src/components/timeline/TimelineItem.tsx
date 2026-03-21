@@ -22,10 +22,6 @@ const isClickedAnchor = (target: EventTarget | null, currentTarget: Element): bo
   return false;
 };
 
-/**
- * @typedef {object} Props
- * @property {Models.Post} post
- */
 interface Props {
   post: Models.Post;
   priority?: boolean;
@@ -34,9 +30,6 @@ interface Props {
 export const TimelineItem = ({ post, priority }: Props) => {
   const navigate = useNavigate();
 
-  /**
-   * ボタンやリンク以外の箇所をクリックしたとき かつ 文字が選択されてないとき、投稿詳細ページに遷移する
-   */
   const handleClick = useCallback<MouseEventHandler>(
     (ev) => {
       const isSelectedText = document.getSelection()?.isCollapsed === false;
@@ -61,10 +54,10 @@ export const TimelineItem = ({ post, priority }: Props) => {
 
   return (
     <article
-      className="hover:bg-cax-surface-subtle px-1 sm:px-4"
+      className="hover:bg-cax-surface-subtle cursor-pointer px-1 sm:px-4"
       onClick={handleClick}
       onKeyDown={handleKeyDown}
-      role="button"
+      role="link"
       tabIndex={0}
     >
       <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
