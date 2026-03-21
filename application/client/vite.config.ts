@@ -10,6 +10,28 @@ export default defineConfig({
   build: {
     outDir: "../../dist",
     emptyOutDir: true,
+    modulePreload: false,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules/react-markdown")) {
+            return "markdown";
+          }
+          if (id.includes("node_modules/remark-") || id.includes("node_modules/rehype-")) {
+            return "markdown";
+          }
+          if (id.includes("node_modules/react-syntax-highlighter")) {
+            return "syntax-highlighter";
+          }
+          if (id.includes("node_modules/lowlight") || id.includes("node_modules/highlight.js")) {
+            return "syntax-highlighter";
+          }
+          if (id.includes("node_modules/katex")) {
+            return "katex";
+          }
+        },
+      },
+    },
   },
   define: {
     "process.env": JSON.stringify({
