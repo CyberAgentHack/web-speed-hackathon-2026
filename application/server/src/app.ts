@@ -24,9 +24,9 @@ app.use(
     }),
 );
 
-app.use((_req, res, next) => {
+app.use("/api/v1", (_req, res, next) => {
     res.header({
-        "Cache-Control": "max-age=0",
+        "Cache-Control": "no-store",
     });
     return next();
 });
