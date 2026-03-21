@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(python3:*)",
-      "Bash(wc -c /Users/mitsunagahiroka/git/hackathon/web-speed-hackathon-2026/application/dist/scripts/main.js)"
+      "Bash(wc -c /Users/mitsunagahiroka/git/hackathon/web-speed-hackathon-2026/application/dist/scripts/main.js)",
+      "Bash(head -c 2000 \"/Users/mitsunagahiroka/git/hackathon/web-speed-hackathon-2026/lighthouse-reports/20260321_125616/home.html\")",
+      "Read(//tmp/**)"
     ]
   }
 }
