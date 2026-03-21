@@ -8,9 +8,10 @@ import { TranslatableText } from "@web-speed-hackathon-2026/client/src/component
 import { formatLL } from "@web-speed-hackathon-2026/client/src/utils/format_date";
 import { getProfileImagePath, getProfileImageSrcSet } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
-const isClickedAnchor = (target: EventTarget | null, currentTarget: Element): boolean => {
+const isClickedInteractive = (target: EventTarget | null, currentTarget: Element): boolean => {
   while (target !== null && target instanceof Element) {
-    if (target.tagName.toLowerCase() === "a") {
+    const tag = target.tagName.toLowerCase();
+    if (tag === "a" || tag === "button") {
       return true;
     }
     if (currentTarget === target) {
@@ -39,7 +40,7 @@ export const TimelineItem = ({ post, isFirst }: Props) => {
   const handleClick = useCallback<MouseEventHandler>(
     (ev) => {
       const isSelectedText = document.getSelection()?.isCollapsed === false;
-      if (!isClickedAnchor(ev.target, ev.currentTarget) && !isSelectedText) {
+      if (!isClickedInteractive(ev.target, ev.currentTarget) && !isSelectedText) {
         navigate(`/posts/${post.id}`);
       }
     },
