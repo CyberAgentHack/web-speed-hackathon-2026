@@ -126,13 +126,17 @@ prefetchRouter.use(async (req, res, next) => {
   try {
     loadHtmlParts();
 
-    // Check cache
+    res.setHeader("Content-Type", "text/html");
+    res.setHeader("Cache-Control", "no-cache");
+
+    // キャッシュヒット: 即座に返却
     const cached = htmlCache.get(req.path);
     if (cached) {
-      res.setHeader("Content-Type", "text/html");
-      res.setHeader("Cache-Control", "no-cache");
       return res.send(cached);
     }
+
+    // キャッシュミス: head を先にストリーミングしてブラウザにCSS/JSダウンロードを開始させる
+    res.write(headPart);
 
     const prefetchData = await getPrefetchData(req.path, req.session.userId);
     const lcpPreloads = extractLcpPreloads(prefetchData, req.path);
@@ -154,19 +158,23 @@ prefetchRouter.use(async (req, res, next) => {
       }
     }
 
-    const fullHtml = headPart + lcpPreloads +
+    const tailHtml = lcpPreloads +
       (Object.keys(prefetchData).length > 0
         ? `<script>window.__PREFETCH__=${JSON.stringify(prefetchData)}</script>`
         : "") +
       heroImgTag +
       bodyPart;
 
-    htmlCache.set(req.path, fullHtml);
+    res.write(tailHtml);
+    res.end();
 
-    res.setHeader("Content-Type", "text/html");
-    res.setHeader("Cache-Control", "no-cache");
-    return res.send(fullHtml);
+    // 次回リクエスト用にキャッシュ保存
+    htmlCache.set(req.path, headPart + tailHtml);
   } catch {
+    if (res.headersSent) {
+      res.write(bodyPart);
+      return res.end();
+    }
     return next();
   }
 });
