@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
-
-import { Navigation } from "@web-speed-hackathon-2026/client/src/components/application/Navigation";
+import { Navigation } from "./Navigation";
 
 interface Props {
   activeUser: Models.User | null;
