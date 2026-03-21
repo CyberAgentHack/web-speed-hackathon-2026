@@ -21,6 +21,7 @@ interface DmTypingEvent {
 }
 
 const TYPING_INDICATOR_DURATION_MS = 10 * 1000;
+const TYPING_EVENT_THROTTLE_MS = 300;
 
 interface Props {
   activeUser: Models.User | null;
@@ -36,6 +37,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastTypingSentAtRef = useRef(0);
 
   const {
     data: conversation,
@@ -74,6 +76,11 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   );
 
   const handleTyping = useCallback(async () => {
+    const now = Date.now();
+    if (now - lastTypingSentAtRef.current < TYPING_EVENT_THROTTLE_MS) {
+      return;
+    }
+    lastTypingSentAtRef.current = now;
     void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
   }, [conversationId]);
 
