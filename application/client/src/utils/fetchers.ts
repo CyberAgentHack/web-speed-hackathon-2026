@@ -28,7 +28,7 @@ export async function sendFile<T>(url: string, file: File): Promise<T> {
   const response = await fetch(url, {
     method: "POST",
     body: file,
-    headers: { "Content-Type": "application/octet-stream" },
+    headers: { "Content-Type": file.type || "application/octet-stream" },
   });
   if (!response.ok) {
     const error: FetchError = new Error(response.statusText) as FetchError;
