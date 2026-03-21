@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -14,13 +14,48 @@ interface Props {
 export const PausableMovie = ({ src }: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const userPausedRef = useRef(false);
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video === null || prefersReducedMotion) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry) {
+          return;
+        }
+
+        if (entry.isIntersecting) {
+          if (!userPausedRef.current) {
+            video.play();
+          }
+        } else {
+          video.pause();
+        }
+      },
+      { threshold: 0.25 },
+    );
+    observer.observe(video);
+    return () => {
+      observer.disconnect();
+    };
+  }, [prefersReducedMotion]);
 
   const handleClick = useCallback(() => {
     const video = videoRef.current;
-    if (!video) return;
+    if (video === null) {
+      return;
+    }
+
     if (video.paused) {
+      userPausedRef.current = false;
       video.play();
     } else {
+      userPausedRef.current = true;
       video.pause();
     }
   }, []);
@@ -35,14 +70,13 @@ export const PausableMovie = ({ src }: Props) => {
       >
         <video
           ref={videoRef}
-          autoPlay={!window.matchMedia("(prefers-reduced-motion: reduce)").matches}
           className="h-full w-full object-cover"
           loop
           muted
           onPause={() => setIsPlaying(false)}
           onPlay={() => setIsPlaying(true)}
           playsInline
-          preload="metadata"
+          preload="none"
           src={src}
         />
         <div
