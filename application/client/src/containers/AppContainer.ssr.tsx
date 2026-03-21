@@ -4,13 +4,12 @@
  * SSR ビルドが単一ファイルになり module 変数を全コンポーネントで共有できる。
  * クライアント側は AppContainer.tsx (React.lazy 版) を使う。
  */
-import { useCallback, useRef } from "react";
-
+import { useCallback } from "react";
 import { Route, Routes, useNavigate } from "react-router";
 import useSWR, { useSWRConfig } from "swr";
 
 import { apiClient } from "@web-speed-hackathon-2026/client/src/api/client";
-import { getSSRData } from "@web-speed-hackathon-2026/client/src/api/ssr-data";
+import { useSSRData } from "@web-speed-hackathon-2026/client/src/api/ssr-context";
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
 import { CrokContainer } from "@web-speed-hackathon-2026/client/src/containers/CrokContainer";
@@ -35,8 +34,8 @@ const activeUserFetcher = async (_key: string): Promise<Models.User | null> => {
 export const AppContainer = () => {
   const navigate = useNavigate();
   const { mutate } = useSWRConfig();
-  const ssrRef = useRef(getSSRData());
-  const ssrActiveUser = ssrRef.current?.activeUser;
+  const ssrData = useSSRData();
+  const ssrActiveUser = ssrData?.activeUser;
 
   const { data: activeUser, isLoading: isLoadingActiveUser } = useSWR<
     Models.User | null,

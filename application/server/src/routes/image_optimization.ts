@@ -1,9 +1,13 @@
+import { execFile } from "node:child_process";
 import fs from "node:fs";
 import { promises as fsp } from "node:fs";
+import os from "node:os";
 import path from "node:path";
+import { promisify } from "node:util";
 
 import { Hono } from "hono";
-import sharp from "sharp";
+
+const execFileAsync = promisify(execFile);
 
 import { PUBLIC_PATH, UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import type { SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
@@ -66,12 +70,30 @@ imageOptimizationRouter.get("*", async (c, next) => {
   }
 
   try {
-    const avifBuffer = await sharp(originalPath).avif({ quality: 63, effort: 4 }).toBuffer();
-    avifCache.set(requestPath, avifBuffer);
-    c.header("Content-Type", "image/avif");
-    c.header("Cache-Control", "public, max-age=86400");
-    c.header("Vary", "Accept");
-    return c.body(new Uint8Array(avifBuffer));
+    const tmpDir = await fsp.mkdtemp(path.join(os.tmpdir(), "avif-"));
+    const tmpOut = path.join(tmpDir, "output.avif");
+    try {
+      await execFileAsync("ffmpeg", [
+        "-i",
+        originalPath,
+        "-c:v",
+        "libaom-av1",
+        "-crf",
+        "30",
+        "-cpu-used",
+        "6",
+        "-y",
+        tmpOut,
+      ]);
+      const avifBuffer = await fsp.readFile(tmpOut);
+      avifCache.set(requestPath, avifBuffer as Buffer);
+      c.header("Content-Type", "image/avif");
+      c.header("Cache-Control", "public, max-age=86400");
+      c.header("Vary", "Accept");
+      return c.body(new Uint8Array(avifBuffer));
+    } finally {
+      await fsp.rm(tmpDir, { recursive: true, force: true });
+    }
   } catch {
     return next();
   }

@@ -1,9 +1,9 @@
-import path from "node:path";
 import { createRequire } from "node:module";
+import path from "node:path";
 
+import { Hono } from "hono";
 import type { Tokenizer, IpadicFeatures } from "kuromoji";
 import analyze from "negaposi-analyzer-ja";
-import { Hono } from "hono";
 
 import type { SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
 

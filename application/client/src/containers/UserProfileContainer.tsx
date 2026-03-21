@@ -1,9 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useParams } from "react-router";
 import useSWR from "swr";
 import useSWRInfinite from "swr/infinite";
 
-import { getSSRData } from "@web-speed-hackathon-2026/client/src/api/ssr-data";
+import { useSSRData } from "@web-speed-hackathon-2026/client/src/api/ssr-context";
 import { createInfiniteKey, swrFetcher } from "@web-speed-hackathon-2026/client/src/api/swr";
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
 import { UserProfilePage } from "@web-speed-hackathon-2026/client/src/components/user_profile/UserProfilePage";
@@ -11,9 +11,9 @@ import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containe
 
 export const UserProfileContainer = () => {
   const { username } = useParams();
-  const ssrRef = useRef(getSSRData());
-  const ssrUser = ssrRef.current?.user;
-  const ssrUserPosts = ssrRef.current?.userPosts;
+  const ssrData = useSSRData();
+  const ssrUser = ssrData?.user;
+  const ssrUserPosts = ssrData?.userPosts;
 
   const { data: user, isLoading: isLoadingUser } = useSWR<Models.User | null, Error, string>(
     `/api/v1/users/${username}`,

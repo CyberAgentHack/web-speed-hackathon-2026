@@ -1,11 +1,16 @@
 import classNames from "classnames";
-import { type ComponentPropsWithRef, useCallback } from "react";
+import { type ComponentPropsWithRef, useCallback, useEffect, useState } from "react";
 
 interface Props extends ComponentPropsWithRef<"dialog"> {
   closedby?: "any" | "closerequest" | "none";
 }
 
 export const Modal = ({ className, children, ref: forwardedRef, closedby, ...props }: Props) => {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const mergedRef = useCallback(
     (el: HTMLDialogElement | null) => {
       if (typeof forwardedRef === "function") {
@@ -29,7 +34,7 @@ export const Modal = ({ className, children, ref: forwardedRef, closedby, ...pro
       )}
       {...props}
     >
-      {children}
+      {mounted ? children : null}
     </dialog>
   );
 };

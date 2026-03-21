@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+
 import { Hono } from "hono";
 
 import { app } from "@web-speed-hackathon-2026/server/src/app";

@@ -1,8 +1,8 @@
+import { Database } from "bun:sqlite";
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
 
-import { Database } from "bun:sqlite";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 
 import { DATABASE_PATH } from "@web-speed-hackathon-2026/server/src/paths";

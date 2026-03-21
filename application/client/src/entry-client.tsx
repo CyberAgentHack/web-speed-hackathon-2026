@@ -5,39 +5,48 @@ import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router";
 import { SWRConfig } from "swr";
 
-import { clearSSRData, getSSRData } from "@web-speed-hackathon-2026/client/src/api/ssr-data";
+import { SSRDataProvider } from "@web-speed-hackathon-2026/client/src/api/ssr-context";
 import { swrConfig } from "@web-speed-hackathon-2026/client/src/api/swr";
-import { AppContainer } from "@web-speed-hackathon-2026/client/src/containers/AppContainer";
+import {
+  AppContainer,
+  type SSRData,
+} from "@web-speed-hackathon-2026/client/src/containers/AppContainer";
 import { Document } from "@web-speed-hackathon-2026/client/src/Document";
 import { store } from "@web-speed-hackathon-2026/client/src/store";
 
-const ssrData = getSSRData();
+const ssrData: SSRData | null = ((window as any).__SSR_DATA__ as SSRData | undefined) ?? null;
 const cssHref = (window as any).__CSS_HREF__ as string | undefined;
 
 if (ssrData) {
   hydrateRoot(
     document,
-    <Provider store={store}>
-      <SWRConfig value={swrConfig}>
-        <BrowserRouter unstable_useTransitions={false}>
-          <Document cssHref={cssHref}>
-            <AppContainer />
-          </Document>
-        </BrowserRouter>
-      </SWRConfig>
-    </Provider>,
+    <SSRDataProvider value={ssrData}>
+      <Provider store={store}>
+        <SWRConfig value={swrConfig}>
+          <BrowserRouter unstable_useTransitions={false}>
+            <Document cssHref={cssHref}>
+              <AppContainer />
+            </Document>
+          </BrowserRouter>
+        </SWRConfig>
+      </Provider>
+    </SSRDataProvider>,
     { onRecoverableError: () => {} },
   );
-  setTimeout(clearSSRData, 0);
+  setTimeout(() => {
+    delete (window as any).__SSR_DATA__;
+  }, 0);
 } else {
   const appEl = document.getElementById("app")!;
   createRoot(appEl).render(
-    <Provider store={store}>
-      <SWRConfig value={swrConfig}>
-        <BrowserRouter unstable_useTransitions={false}>
-          <AppContainer />
-        </BrowserRouter>
-      </SWRConfig>
-    </Provider>,
+    <SSRDataProvider value={null}>
+      <Provider store={store}>
+        <SWRConfig value={swrConfig}>
+          <BrowserRouter unstable_useTransitions={false}>
+            <AppContainer />
+          </BrowserRouter>
+        </SWRConfig>
+      </Provider>
+    </SSRDataProvider>,
   );
 }

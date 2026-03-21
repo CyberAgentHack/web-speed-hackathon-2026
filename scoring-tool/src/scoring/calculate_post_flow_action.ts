@@ -260,6 +260,21 @@ export async function calculatePostFlowAction({ baseUrl, playwrightPage, puppete
     steps: [result],
   } = await flow.createFlowResult();
 
+  // Debug: log raw metric values
+  const tbtAudit = result!.lhr.audits["total-blocking-time"];
+  const inpAudit = result!.lhr.audits["interaction-to-next-paint"];
+  consola.info(
+    "PostFlowAction raw metrics — TBT:",
+    tbtAudit?.numericValue,
+    "ms (score:",
+    tbtAudit?.score,
+    ") INP:",
+    inpAudit?.numericValue,
+    "ms (score:",
+    inpAudit?.score,
+    ")",
+  );
+
   const { breakdown, scoreX100 } = calculateHackathonScore(result!.lhr.audits, {
     isUserflow: true,
   });

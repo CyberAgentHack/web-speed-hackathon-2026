@@ -4,6 +4,9 @@ import { useNavigate } from "react-router";
 import { apiClient } from "@web-speed-hackathon-2026/client/src/api/client";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { NewPostModalPage } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage";
+import { compressAudio } from "@web-speed-hackathon-2026/client/src/utils/compress-audio";
+import { compressImage } from "@web-speed-hackathon-2026/client/src/utils/compress-image";
+import { compressVideo } from "@web-speed-hackathon-2026/client/src/utils/compress-video";
 import { sendFile } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface SubmitParams {
@@ -15,11 +18,24 @@ interface SubmitParams {
 
 async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promise<Models.Post> {
   const payload = {
-    images: images
-      ? await Promise.all(images.map((image) => sendFile("/api/v1/images", image)))
-      : [],
-    movie: movie ? await sendFile("/api/v1/movies", movie) : undefined,
-    sound: sound ? await sendFile("/api/v1/sounds", sound) : undefined,
+    images: await Promise.all(
+      images.map(async (image) => {
+        const { file, alt } = await compressImage(image);
+        const params = alt ? `?alt=${encodeURIComponent(alt)}` : "";
+        return sendFile(`/api/v1/images${params}`, file);
+      }),
+    ),
+    movie: movie ? await sendFile("/api/v1/movies", await compressVideo(movie)) : undefined,
+    sound: sound
+      ? await (async () => {
+          const { file, title, artist } = await compressAudio(sound);
+          const params = new URLSearchParams();
+          if (title) params.set("title", title);
+          if (artist) params.set("artist", artist);
+          const qs = params.toString();
+          return sendFile(`/api/v1/sounds${qs ? `?${qs}` : ""}`, file);
+        })()
+      : undefined,
     text,
   };
 

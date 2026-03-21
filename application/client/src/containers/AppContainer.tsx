@@ -1,10 +1,9 @@
-import React, { Suspense, useCallback, useEffect, useRef } from "react";
-
+import React, { Suspense, useCallback, useEffect } from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 import useSWR, { useSWRConfig } from "swr";
 
 import { apiClient } from "@web-speed-hackathon-2026/client/src/api/client";
-import { getSSRData } from "@web-speed-hackathon-2026/client/src/api/ssr-data";
+import { useSSRData } from "@web-speed-hackathon-2026/client/src/api/ssr-context";
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
 import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
@@ -67,8 +66,8 @@ export const AppContainer = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { mutate } = useSWRConfig();
-  const ssrRef = useRef(getSSRData());
-  const ssrActiveUser = ssrRef.current?.activeUser;
+  const ssrData = useSSRData();
+  const ssrActiveUser = ssrData?.activeUser;
 
   useEffect(() => {
     window.scrollTo(0, 0);

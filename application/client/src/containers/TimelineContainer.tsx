@@ -1,7 +1,6 @@
-import { useRef } from "react";
 import useSWRInfinite from "swr/infinite";
 
-import { getSSRData } from "@web-speed-hackathon-2026/client/src/api/ssr-data";
+import { useSSRData } from "@web-speed-hackathon-2026/client/src/api/ssr-context";
 import { createInfiniteKey } from "@web-speed-hackathon-2026/client/src/api/swr";
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
 import { TimelinePage } from "@web-speed-hackathon-2026/client/src/components/timeline/TimelinePage";
@@ -11,8 +10,8 @@ const getKey = createInfiniteKey("/api/v1/posts");
 const PAGE_SIZE = 30;
 
 export const TimelineContainer = () => {
-  const ssrRef = useRef(getSSRData());
-  const ssrPosts = ssrRef.current?.posts;
+  const ssrData = useSSRData();
+  const ssrPosts = ssrData?.posts;
 
   const { data, setSize, isValidating } = useSWRInfinite<Models.Post[]>(getKey, {
     revalidateFirstPage: false,

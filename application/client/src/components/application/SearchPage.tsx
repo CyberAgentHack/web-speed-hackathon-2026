@@ -8,7 +8,7 @@ import {
   WrappedFieldProps,
 } from "redux-form";
 
-import { getSSRData } from "@web-speed-hackathon-2026/client/src/api/ssr-data";
+import { useSSRData } from "@web-speed-hackathon-2026/client/src/api/ssr-context";
 import { Timeline } from "@web-speed-hackathon-2026/client/src/components/timeline/Timeline";
 import {
   parseSearchQuery,
@@ -52,7 +52,8 @@ const SearchPageComponent = ({
   const parsed = parseSearchQuery(query);
 
   // SSR で事前取得された sentiment があれば初期値として使う
-  const ssrSentimentRef = useRef(getSSRData()?.sentiment);
+  const ssrData = useSSRData();
+  const ssrSentimentRef = useRef(ssrData?.sentiment);
   const [isNegative, setIsNegative] = useState(() => {
     const ssrSentiment = ssrSentimentRef.current;
     if (ssrSentiment) return ssrSentiment.label === "negative";

@@ -1,9 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useParams } from "react-router";
 import useSWR from "swr";
 import useSWRInfinite from "swr/infinite";
 
-import { getSSRData } from "@web-speed-hackathon-2026/client/src/api/ssr-data";
+import { useSSRData } from "@web-speed-hackathon-2026/client/src/api/ssr-context";
 import { createInfiniteKey, swrFetcher } from "@web-speed-hackathon-2026/client/src/api/swr";
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
 import { PostPage } from "@web-speed-hackathon-2026/client/src/components/post/PostPage";
@@ -20,9 +20,9 @@ function useDocumentTitle(title: string | undefined) {
 const PAGE_SIZE = 30;
 
 const PostContainerContent = ({ postId }: { postId: string }) => {
-  const ssrRef = useRef(getSSRData());
-  const ssrPost = ssrRef.current?.post;
-  const ssrComments = ssrRef.current?.comments;
+  const ssrData = useSSRData();
+  const ssrPost = ssrData?.post;
+  const ssrComments = ssrData?.comments;
 
   const { data: post, isLoading: isLoadingPost } = useSWR<Models.Post | null, Error, string>(
     `/api/v1/posts/${postId}`,

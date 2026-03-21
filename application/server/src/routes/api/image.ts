@@ -1,10 +1,12 @@
+import { execFile } from "child_process";
 import { promises as fs } from "fs";
+import os from "os";
 import path from "path";
+import { promisify } from "util";
 
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { HTTPException } from "hono/http-exception";
-import sharp from "sharp";
 import { v4 as uuidv4 } from "uuid";
 
 import { getDb } from "@web-speed-hackathon-2026/server/src/db";
@@ -12,6 +14,7 @@ import { images } from "@web-speed-hackathon-2026/server/src/db/schema";
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import type { SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
 
+const execFileAsync = promisify(execFile);
 const EXTENSION = "jpg";
 
 /** Parse TIFF IFD to extract ImageDescription tag (0x010e). */
@@ -56,25 +59,34 @@ export const imageRouter = new Hono<SessionEnv>().post(
     const imageId = uuidv4();
     const now = new Date().toISOString();
 
-    // Extract alt text from TIFF IFD ImageDescription tag (0x010e)
-    let alt = "";
-    try {
-      alt = extractTiffDescription(buffer);
-    } catch {
-      // metadata extraction failure is non-fatal
+    // Alt text: prefer query parameter (from client-side extraction), fallback to TIFF IFD
+    let alt = c.req.query("alt") || "";
+    if (!alt) {
+      try {
+        alt = extractTiffDescription(buffer);
+      } catch {
+        // metadata extraction failure is non-fatal
+      }
     }
 
-    // Convert any image format to JPEG using sharp, preserving EXIF metadata
-    let jpegBuffer: Buffer;
+    // Convert any image format to JPEG using ffmpeg (avoids sharp native module crash on Bun)
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "image-"));
+    const inputPath = path.join(tmpDir, "input");
+    const outputPath = path.join(tmpDir, `output.${EXTENSION}`);
+
     try {
-      jpegBuffer = await sharp(buffer).keepExif().jpeg().toBuffer();
+      await fs.writeFile(inputPath, buffer);
+      await execFileAsync("ffmpeg", ["-i", inputPath, "-q:v", "2", "-y", outputPath]);
+      const jpegBuffer = await fs.readFile(outputPath);
+
+      const filePath = path.resolve(UPLOAD_PATH, `./images/${imageId}.${EXTENSION}`);
+      await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
+      await fs.writeFile(filePath, jpegBuffer);
     } catch {
       throw new HTTPException(400, { message: "Invalid image file" });
+    } finally {
+      await fs.rm(tmpDir, { recursive: true, force: true });
     }
-
-    const filePath = path.resolve(UPLOAD_PATH, `./images/${imageId}.${EXTENSION}`);
-    await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
-    await fs.writeFile(filePath, jpegBuffer);
 
     // Insert image record into database
     const db = getDb();

@@ -1,6 +1,5 @@
 import "katex/dist/katex.min.css";
 import "highlight.js/styles/atom-one-light.css";
-
 import { TypingIndicator } from "@web-speed-hackathon-2026/client/src/components/crok/TypingIndicator";
 import { CrokLogo } from "@web-speed-hackathon-2026/client/src/components/foundation/CrokLogo";
 

@@ -32,8 +32,19 @@ export const soundRouter = new Hono<SessionEnv>().post(
       throw new HTTPException(400);
     }
 
-    // Extract metadata from original file before conversion
-    const { artist, title } = await extractMetadataFromSound(buffer);
+    // Metadata: prefer query parameters (from client-side extraction), fallback to file parsing
+    const qTitle = c.req.query("title");
+    const qArtist = c.req.query("artist");
+    let title: string | undefined;
+    let artist: string | undefined;
+    if (qTitle || qArtist) {
+      title = qTitle || undefined;
+      artist = qArtist || undefined;
+    } else {
+      const meta = await extractMetadataFromSound(buffer);
+      title = meta.title;
+      artist = meta.artist;
+    }
 
     const soundId = uuidv4();
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "sound-"));

@@ -1,5 +1,5 @@
-import { upgradeWebSocket, websocket } from "hono/bun";
 import { Hono } from "hono";
+import { upgradeWebSocket, websocket } from "hono/bun";
 
 import { brotliCompress } from "@web-speed-hackathon-2026/server/src/middleware/compress";
 import { sessionMiddleware, type SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
