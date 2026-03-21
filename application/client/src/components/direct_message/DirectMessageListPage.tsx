@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import moment from "moment";
+import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
-import { formatRelativeTimeJa } from "@web-speed-hackathon-2026/client/src/utils/date";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
@@ -13,47 +13,27 @@ interface Props {
   newDmModalId: string;
 }
 
-const INITIAL_CONVERSATIONS_RETRY_COUNT = 5;
-const INITIAL_CONVERSATIONS_RETRY_DELAY_MS = 200;
-
-function sleep(ms: number) {
-  return new Promise((resolve) => window.setTimeout(resolve, ms));
-}
-
 export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
   const [conversations, setConversations] =
     useState<Array<Models.DirectMessageConversation> | null>(null);
   const [error, setError] = useState<Error | null>(null);
-  const hasLoadedConversationsRef = useRef(false);
 
   const loadConversations = useCallback(async () => {
     if (activeUser == null) {
       return;
     }
 
-    const maxAttempts = hasLoadedConversationsRef.current ? 1 : INITIAL_CONVERSATIONS_RETRY_COUNT;
-
-    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-      try {
-        const conversations = await fetchJSON<Array<Models.DirectMessageConversation>>("/api/v1/dm");
-        hasLoadedConversationsRef.current = true;
-        setConversations(conversations);
-        setError(null);
-        return;
-      } catch (error) {
-        if (attempt === maxAttempts) {
-          setConversations(null);
-          setError(error as Error);
-          return;
-        }
-
-        await sleep(INITIAL_CONVERSATIONS_RETRY_DELAY_MS);
-      }
+    try {
+      const conversations = await fetchJSON<Array<Models.DirectMessageConversation>>("/api/v1/dm");
+      setConversations(conversations);
+      setError(null);
+    } catch (error) {
+      setConversations(null);
+      setError(error as Error);
     }
   }, [activeUser]);
 
   useEffect(() => {
-    hasLoadedConversationsRef.current = false;
     void loadConversations();
   }, [loadConversations]);
 
@@ -62,31 +42,11 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
   });
 
   if (conversations == null) {
-    if (error == null) {
-      return (
-        <section>
-          <header className="border-cax-border flex flex-col gap-4 border-b px-4 pt-6 pb-4">
-            <h1 className="text-2xl font-bold">ダイレクトメッセージ</h1>
-            <div className="flex flex-wrap items-center gap-4">
-              <Button
-                command="show-modal"
-                commandfor={newDmModalId}
-                leftItem={<FontAwesomeIcon iconType="paper-plane" styleType="solid" />}
-              >
-                新しくDMを始める
-              </Button>
-            </div>
-          </header>
-          <p className="text-cax-text-muted px-4 py-6 text-center">DM一覧を読み込んでいます…</p>
-        </section>
-      );
-    }
-
     return null;
   }
 
   return (
-    <section>
+    <section className="bg-cax-surface flex h-[calc(100vh-(--spacing(12)))] flex-col overflow-hidden lg:h-screen">
       <header className="border-cax-border flex flex-col gap-4 border-b px-4 pt-6 pb-4">
         <h1 className="text-2xl font-bold">ダイレクトメッセージ</h1>
         <div className="flex flex-wrap items-center gap-4">
@@ -100,65 +60,68 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
         </div>
       </header>
 
-      {error != null ? (
-        <p className="text-cax-danger px-4 py-6 text-center text-sm">DMの取得に失敗しました</p>
-      ) : conversations.length === 0 ? (
-        <p className="text-cax-text-muted px-4 py-6 text-center">
-          まだDMで会話した相手がいません。
-        </p>
-      ) : (
-        <ul data-testid="dm-list">
-          {conversations.map((conversation) => {
-            const { messages } = conversation;
-            const peer =
-              conversation.initiator.id !== activeUser.id
-                ? conversation.initiator
-                : conversation.member;
+      <div className="flex-1 overflow-y-auto">
+        {error != null ? (
+          <p className="text-cax-danger px-4 py-6 text-center text-sm">DMの取得に失敗しました</p>
+        ) : conversations.length === 0 ? (
+          <p className="text-cax-text-muted px-4 py-6 text-center">
+            まだDMで会話した相手がいません。
+          </p>
+        ) : (
+          <ul data-testid="dm-list">
+            {conversations.map((conversation) => {
+              const { messages } = conversation;
+              const peer =
+                conversation.initiator.id !== activeUser.id
+                  ? conversation.initiator
+                  : conversation.member;
 
-            const lastMessage = messages.at(-1);
-            const hasUnread = messages
-              .filter((m) => m.sender.id === peer.id)
-              .some((m) => !m.isRead);
+              const lastMessage = messages.at(-1);
+              const hasUnread = messages
+                .filter((m) => m.sender.id === peer.id)
+                .some((m) => !m.isRead);
 
-            return (
-              <li className="grid" key={conversation.id}>
-                <Link className="hover:bg-cax-surface-subtle px-4" to={`/dm/${conversation.id}`}>
-                  <div className="border-cax-border flex gap-4 border-b px-4 pt-2 pb-4">
-                    <img
-                      alt={peer.profileImage.alt}
-                      className="w-12 shrink-0 self-start rounded-full"
-                      loading="lazy"
-                      src={getProfileImagePath(peer.profileImage.id)}
-                    />
-                    <div className="flex flex-1 flex-col">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-bold">{peer.name}</p>
-                          <p className="text-cax-text-muted text-xs">@{peer.username}</p>
+              return (
+                <li className="grid" key={conversation.id}>
+                  <Link className="hover:bg-cax-surface-subtle px-4" to={`/dm/${conversation.id}`}>
+                    <div className="border-cax-border flex gap-4 border-b px-4 pt-2 pb-4">
+                      <img
+                        alt={peer.profileImage.alt}
+                        className="w-12 shrink-0 self-start rounded-full"
+                        src={getProfileImagePath(peer.profileImage.id)}
+                      />
+                      <div className="flex flex-1 flex-col">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-bold">{peer.name}</p>
+                            <p className="text-cax-text-muted text-xs">@{peer.username}</p>
+                          </div>
+                          {lastMessage != null && (
+                            <time
+                              className="text-cax-text-subtle text-xs"
+                              dateTime={lastMessage.createdAt}
+                            >
+                              {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            </time>
+                          )}
                         </div>
-                        {lastMessage != null && (
-                          <time
-                            className="text-cax-text-subtle text-xs"
-                            dateTime={lastMessage.createdAt}
-                          >
-                            {formatRelativeTimeJa(lastMessage.createdAt)}
-                          </time>
-                        )}
+                        <p className="mt-1 line-clamp-2 text-sm wrap-anywhere">
+                          {lastMessage?.body}
+                        </p>
+                        {hasUnread ? (
+                          <span className="bg-cax-brand-soft text-cax-brand mt-2 inline-flex w-fit rounded-full px-3 py-0.5 text-xs">
+                            未読
+                          </span>
+                        ) : null}
                       </div>
-                      <p className="mt-1 line-clamp-2 text-sm wrap-anywhere">{lastMessage?.body}</p>
-                      {hasUnread ? (
-                        <span className="bg-cax-brand-soft text-cax-brand mt-2 inline-flex w-fit rounded-full px-3 py-0.5 text-xs">
-                          未読
-                        </span>
-                      ) : null}
                     </div>
-                  </div>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
     </section>
   );
 };

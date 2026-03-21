@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { dynamicMediaMask, scrollEntire, waitForVisibleMedia } from "./utils";
+import { dynamicMediaMask, scrollEntire, waitForPageToLoad, waitForVisibleMedia } from "./utils";
 
 test.describe("検索ページ", () => {
   test("検索ページが表示される", async ({ page }) => {
@@ -10,6 +10,7 @@ test.describe("検索ページ", () => {
 
     // VRT: 検索ページ
     await waitForVisibleMedia(page);
+    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("search-検索ページ.png", {
       fullPage: true,
       mask: dynamicMediaMask(page),
@@ -104,6 +105,7 @@ test.describe("検索ページ", () => {
 
     // VRT: 検索結果
     await waitForVisibleMedia(page);
+    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("search-検索結果.png", {
       mask: dynamicMediaMask(page),
     });

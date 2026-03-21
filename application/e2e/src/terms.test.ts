@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { dynamicMediaMask, scrollEntire, waitForVisibleMedia } from "./utils";
+import { dynamicMediaMask, scrollEntire, waitForPageToLoad, waitForVisibleMedia } from "./utils";
 
 test.describe("利用規約", () => {
   test.beforeEach(async ({ page }) => {
@@ -16,6 +16,7 @@ test.describe("利用規約", () => {
     // VRT: 利用規約
     await scrollEntire(page);
     await waitForVisibleMedia(page);
+    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("terms-利用規約.png", {
       fullPage: true,
       mask: dynamicMediaMask(page),

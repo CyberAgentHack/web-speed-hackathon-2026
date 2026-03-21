@@ -5,20 +5,10 @@ import { SubmissionError } from "redux-form";
 import { NewDirectMessageModalPage } from "@web-speed-hackathon-2026/client/src/components/direct_message/NewDirectMessageModalPage";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { NewDirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
-import { sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
   id: string;
-}
-
-interface CreateConversationResponse {
-  id: string;
-}
-
-function waitForNextFrame() {
-  return new Promise<void>((resolve) => {
-    window.requestAnimationFrame(() => resolve());
-  });
 }
 
 export const NewDirectMessageModalContainer = ({ id }: Props) => {
@@ -29,9 +19,7 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
     const element = ref.current;
 
     const handleToggle = () => {
-      if (!element.open) {
-        setResetKey((key) => key + 1);
-      }
+      setResetKey((key) => key + 1);
     };
     element.addEventListener("toggle", handleToggle);
     return () => {
@@ -44,12 +32,10 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
   const handleSubmit = useCallback(
     async (values: NewDirectMessageFormData) => {
       try {
-        const normalizedUsername = values.username.trim().replace(/^@/, "");
-        const conversation = await sendJSON<CreateConversationResponse>(`/api/v1/dm`, {
-          username: normalizedUsername,
+        const user = await fetchJSON<Models.User>(`/api/v1/users/${values.username}`);
+        const conversation = await sendJSON<Models.DirectMessageConversation>(`/api/v1/dm`, {
+          peerId: user.id,
         });
-        ref.current?.close();
-        await waitForNextFrame();
         navigate(`/dm/${conversation.id}`);
       } catch {
         throw new SubmissionError({
@@ -57,7 +43,7 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
         });
       }
     },
-    [navigate, ref],
+    [navigate],
   );
 
   return (
