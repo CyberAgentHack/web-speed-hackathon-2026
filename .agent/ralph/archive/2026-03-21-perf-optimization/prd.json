@@ -1,526 +1,223 @@
 {
-  "project": "CaX パフォーマンス改善",
-  "branchName": "ralph/perf-optimization",
-  "description": "架空SNS「CaX」のLighthouse計測スコアを最大化するパフォーマンス改善。表示900点+操作250点の合計1150点中、まず表示300点超えを目指し段階的に改善する。E2Eテストは全件実行ではなく、変更に関連するテストファイルのみ実行すればよい（例: pnpm test src/search.test.ts）。",
+  "project": "CaX パフォーマンス改善 Phase 2",
+  "branchName": "ralph/perf-phase2",
+  "description": "Phase 1（ビルド最適化・アセット圧縮・遅延削除・コード分割・再レンダリング抑制等）完了後の、DB/API/フロントエンド最適化。Lighthouse 操作スコア（TBT/INP）とAPI応答速度の改善が主目標。",
   "userStories": [
     {
       "id": "US-001",
-      "title": "Webpack本番モード有効化とソースマップ除去",
-      "description": "開発者として、Webpackのビルド設定を本番向けに最適化し、バンドルサイズを大幅に削減したい。現在108MBのmain.jsを実用的なサイズにする。",
+      "title": "SQLite インデックス追加",
+      "description": "開発者として、頻繁にクエリされるカラムにインデックスを追加し、API応答速度を改善したい。98MBのSQLiteでフルテーブルスキャンが発生している。",
       "acceptanceCriteria": [
-        "webpack.config.js の mode が 'production' に変更されている",
-        "devtool が 'inline-source-map' から false に変更されている",
-        "optimization.minimize が true に変更されている",
-        "optimization.splitChunks が有効化されている（false → 削除 or { chunks: 'all' }）",
-        "optimization.concatenateModules, usedExports, providedExports, sideEffects がすべて削除または true に変更されている",
-        "output.chunkFormat: false が削除されている",
-        "cache: false が削除されている",
-        "pnpm build が正常に完了する",
-        "ビルド後の main.js が 10MB 未満である",
-        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "Post モデルに userId, createdAt のインデックスが追加されている",
+        "Comment モデルに postId のインデックスが追加されている",
+        "DirectMessage モデルに conversationId, isRead のインデックスが追加されている",
+        "DirectMessageConversation モデルに initiatorId, memberId のインデックスが追加されている",
+        "sequelize.sync() または同等の方法でインデックスが DB に反映される",
+        "POST /api/v1/initialize 後もインデックスが有効である",
+        "該当箇所のE2Eテストが通っていること。E2Eは常に build & start したサーバーに対して実行する（pnpm e2e 参考）",
+        "codex skill で review を受けること。自己レビューではなく必ず新しい codex を起動して移譲し、feedback は適宜修正判断を行う",
         "Typecheck passes"
       ],
       "priority": 1,
       "passes": true,
-      "notes": "2026-03-20 完了。main.js 244KiB, vendor chunk 73MB (web-llm/ffmpeg等の大型依存が含まれる)。NODE_ENV conflict warning は US-002 で対応。"
-    },
-    {
-      "id": "US-001b",
-      "title": "Webpack → Rspack 移行",
-      "description": "開発者として、バンドラーを Webpack から Rspack に移行し、ビルド速度を大幅に向上させたい。",
-      "acceptanceCriteria": [
-        "webpack.config.js が rspack.config.js（または同等）に移行されている",
-        "pnpm build が Rspack で正常に完了する",
-        "ビルド出力が Webpack 時と同等に動作する",
-        "Typecheck passes"
-      ],
-      "priority": 1,
-      "passes": true,
-      "notes": "完了済み。Webpack から Rspack へ移行完了。"
+      "notes": "Sequelize のモデル定義に indexes を追加する。initialize 時に DB がリセットされるため、sync 時にインデックスが再作成される仕組みが必要。"
     },
     {
       "id": "US-002",
-      "title": "Babel設定の本番向け最適化とポリフィル削除",
-      "description": "開発者として、IE11向けポリフィルを削除しモダンブラウザ向けにBabelを設定することで、不要なコード生成を削減したい。",
+      "title": "DirectMessageConversation の全メッセージ eager load 廃止",
+      "description": "開発者として、DirectMessageConversation の defaultScope から全 messages の eager load を除去し、DM一覧取得時のレスポンスサイズとクエリ負荷を大幅に削減したい。",
       "acceptanceCriteria": [
-        "babel.config.js の targets が 'ie 11' からモダンブラウザ向け（例: '> 0.5%, not dead'）に変更されている",
-        "babel.config.js の modules が 'commonjs' から false に変更されている",
-        "babel.config.js の preset-react の development が false に変更されている",
-        "webpack.config.js のエントリから 'core-js' と 'regenerator-runtime/runtime' が削除されている",
-        "package.json の build script が NODE_ENV=production になっている",
-        "webpack.config.js の EnvironmentPlugin で NODE_ENV のデフォルトが 'production' になっている",
-        "pnpm build が正常に完了する",
-        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "DirectMessageConversation の defaultScope から messages の include が除去されている",
+        "GET /dm（会話一覧）で全メッセージがロードされない（最新メッセージのみ or メッセージなし）",
+        "GET /dm/:conversationId/messages 等の個別エンドポイントでメッセージを取得する設計になっている",
+        "DM一覧ページで会話リストが正しく表示される",
+        "DM個別ページでメッセージが正しく表示される",
+        "該当箇所のE2Eテストが通っていること。E2Eは常に build & start したサーバーに対して実行する（pnpm e2e 参考）",
+        "codex skill で review を受けること。自己レビューではなく必ず新しい codex を起動して移譲し、feedback は適宜修正判断を行う",
         "Typecheck passes"
       ],
       "priority": 2,
       "passes": true,
-      "notes": "2026-03-20 完了。core-js/regenerator-runtime 削除でバンドルサイズ約2MB削減。modules: false で webpack tree-shaking が有効に。"
+      "notes": "現在の defaultScope は initiator+member+profileImage+全messages+sender+profileImage を常時ロード。DM一覧で数千メッセージがレスポンスに含まれる可能性がある。server/src/models/DirectMessageConversation.ts:49-62 参照。"
     },
     {
       "id": "US-003",
-      "title": "サーバーHTTPヘッダーとキャッシュ設定の修正",
-      "description": "開発者として、Cache-Control・Connection ヘッダーと静的ファイルのETag/LastModifiedを適切に設定し、ブラウザキャッシュを有効化したい。",
+      "title": "DirectMessage afterSave フック N+1 修正",
+      "description": "開発者として、DirectMessage の afterSave フックで発生する N+1 クエリ（保存直後の findByPk + 未読カウント）を最適化したい。",
       "acceptanceCriteria": [
-        "app.ts のグローバルミドルウェアから Cache-Control: max-age=0 と Connection: close が削除されている",
-        "静的アセット（dist/, public/）に長期キャッシュ（例: max-age=86400 以上）が設定されている",
-        "static.ts の serveStatic で etag: true, lastModified: true に変更されている（または etag/lastModified オプションを削除してデフォルトに戻している）",
-        "サーバーが正常に起動する（cd application && pnpm start）",
-        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "DirectMessage.ts の afterSave フックで保存直後の findByPk が削除または最適化されている",
+        "未読メッセージカウントのクエリが効率化されている",
+        "DM でメッセージ送受信が正常に動作する",
+        "WebSocket 経由の未読通知が正しく動作する",
+        "該当箇所のE2Eテストが通っていること。E2Eは常に build & start したサーバーに対して実行する（pnpm e2e 参考）",
+        "codex skill で review を受けること。自己レビューではなく必ず新しい codex を起動して移譲し、feedback は適宜修正判断を行う",
         "Typecheck passes"
       ],
       "priority": 3,
       "passes": true,
-      "notes": "2026-03-20 完了。Cache-Control: max-age=0 と Connection: close を削除。静的ファイルに長期キャッシュ設定。etag/lastModified をデフォルト有効に。"
+      "notes": "server/src/models/DirectMessage.ts:75-107 の afterSave で findByPk + 複雑な include 付き count を実行。メッセージ送信ごとに最低2回の追加クエリ。"
     },
     {
       "id": "US-004",
-      "title": "レスポンス圧縮ミドルウェアの追加",
-      "description": "開発者として、サーバーレスポンスにgzip/brotli圧縮を追加し、転送サイズを70-80%削減したい。",
+      "title": "CLS 改善（画像・動画の width/height 明示）",
+      "description": "開発者として、img/video タグに width/height を明示し、レイアウトシフトをゼロに近づけたい。プロフィール画像が AspectRatioBox でカバーされておらず CLS を引き起こしている。",
       "acceptanceCriteria": [
-        "compression パッケージがサーバーの依存に追加されている",
-        "app.ts で compression ミドルウェアが適用されている",
-        "HTML/JS/CSS/JSON のレスポンスが圧縮されている（Content-Encoding ヘッダーで確認可能）",
-        "サーバーが正常に起動する",
-        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "CoveredImage の img タグに width/height（または aspect-ratio）が明示されている",
+        "PausableMovie の video タグに width/height（または aspect-ratio）が明示されている",
+        "PostItem, CommentItem, AccountMenu, DirectMessagePage, DirectMessageListPage, UserProfileHeader のプロフィール画像に width/height が明示されている",
+        "ホームページの画像が正しく表示される",
+        "該当箇所のE2Eテストが通っていること。E2Eは常に build & start したサーバーに対して実行する（pnpm e2e 参考）",
+        "codex skill で review を受けること。自己レビューではなく必ず新しい codex を起動して移譲し、feedback は適宜修正判断を行う",
         "Typecheck passes"
       ],
       "priority": 4,
       "passes": true,
-      "notes": "2026-03-20 完了。compression ミドルウェア追加。HTML/JS/CSS/JSON が gzip 圧縮される。"
+      "notes": "AspectRatioBox でカバーされているコンテンツ画像/動画は CSS aspect-ratio が効いているが、プロフィール画像（丸アイコン）は Tailwind クラスのみで width/height 属性が未指定。"
     },
     {
       "id": "US-005",
-      "title": "HTML最適化とレンダリング開始タイミング改善",
-      "description": "開発者として、scriptタグにdefer属性を追加し、Reactのレンダリング開始をloadイベント待ちから即座実行に変更することで、FCP/LCPを改善したい。",
+      "title": "React.memo によるリスト再レンダリング抑制",
+      "description": "開発者として、TimelineItem・CommentItem・DM会話リスト項目を React.memo でラップし、親コンポーネントの再レンダリング時の不要な子コンポーネント再描画を防ぎたい。",
       "acceptanceCriteria": [
-        "index.html の script タグに defer 属性が追加されている",
-        "index.tsx の window.addEventListener('load', ...) が削除され、即座に createRoot().render() が実行される",
-        "ホームページ（/）にブラウザでアクセスしてタイムラインが表示される",
-        "E2Eテスト（cd application/e2e && pnpm test）が通る",
-        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "TimelineItem コンポーネントが React.memo でラップされている",
+        "CommentItem コンポーネントが React.memo でラップされている",
+        "DirectMessageListPage の会話リスト項目が React.memo でラップされている（または別コンポーネントに抽出してラップ）",
+        "タイムラインの無限スクロールが正しく動作する",
+        "コメントの表示・投稿が正しく動作する",
+        "該当箇所のE2Eテストが通っていること。E2Eは常に build & start したサーバーに対して実行する（pnpm e2e 参考）",
+        "codex skill で review を受けること。自己レビューではなく必ず新しい codex を起動して移譲し、feedback は適宜修正判断を行う",
         "Typecheck passes"
       ],
       "priority": 5,
       "passes": true,
-      "notes": "2026-03-20 完了。defer属性追加、load イベント待ち削除で即座レンダリング。"
+      "notes": "タイムラインで投稿が追加されるたびに全 TimelineItem が再レンダリングされている。React.memo でプロップスが変わらない項目の再描画をスキップする。"
     },
     {
       "id": "US-006",
-      "title": "jQuery → fetch API 置換",
-      "description": "開発者として、jQuery AJAXラッパー（同期XHR）をネイティブfetch APIに置き換えることで、~90KBの依存を削除しメインスレッドブロックを解消したい。",
+      "title": "FastAverageColor のメインスレッドブロック修正",
+      "description": "開発者として、UserProfileHeader で FastAverageColor の precision モード画像処理がメインスレッドをブロックしている問題を修正したい。",
       "acceptanceCriteria": [
-        "fetchers.ts が fetch API を使用するように書き換えられている",
-        "async: false（同期XHR）が完全に排除されている",
-        "fetchBinary が fetch + arrayBuffer() を使用している",
-        "fetchJSON が fetch + json() を使用している",
-        "sendJSON が fetch + gzip 圧縮（pako）を使用している",
-        "sendFile が fetch を使用している",
-        "webpack.config.js の ProvidePlugin から $ と window.jQuery が削除されている",
-        "webpack.config.js のエントリから jquery-binarytransport が削除されている",
-        "package.json から jquery と jquery-binarytransport が削除されている",
-        "ホームページにアクセスしてタイムラインが正常に表示される",
-        "E2Eテスト（cd application/e2e && pnpm test）が通る",
-        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "FastAverageColor の mode が 'speed' に変更されている、または Web Worker で実行されている、または CSS のデフォルト色で代替されている",
+        "ユーザープロフィールページのヘッダー背景色が正しく表示される",
+        "プロフィールページ表示時にメインスレッドが長時間ブロックされない",
+        "該当箇所のE2Eテストが通っていること。E2Eは常に build & start したサーバーに対して実行する（pnpm e2e 参考）",
+        "codex skill で review を受けること。自己レビューではなく必ず新しい codex を起動して移譲し、feedback は適宜修正判断を行う",
         "Typecheck passes"
       ],
       "priority": 6,
       "passes": true,
-      "notes": "2026-03-20 完了。jQuery → fetch API 置換完了。pako gzip は sendJSON で維持。ProvidePlugin から $ と window.jQuery 削除。エントリから jquery-binarytransport 削除。"
+      "notes": "client/src/components/user_profile/UserProfileHeader.tsx:17-22 で FastAverageColor({ mode: 'precision' }) を実行。画像ピクセル全走査でメインスレッドを数十ms ブロック。"
     },
     {
       "id": "US-007",
-      "title": "lodash → ネイティブ Array メソッド置換",
-      "description": "開発者として、lodash の全体インポートをネイティブ Array メソッドに置き換え、~70KBの依存を削除したい。",
+      "title": "ChatMessage Markdown の key={content} リマウント修正",
+      "description": "開発者として、ChatMessage の Markdown コンポーネントに key={content} が設定されているためストリーミング時に毎回リマウントされる問題を修正したい。",
       "acceptanceCriteria": [
-        "bm25_search.ts から lodash インポートが削除され、ネイティブメソッドで実装されている",
-        "SoundWaveSVG.tsx から lodash インポートが削除され、ネイティブメソッドで実装されている",
-        "package.json から lodash と @types/lodash が削除されている",
-        "音声波形が正しく表示される（SoundWaveSVG の動作確認）",
-        "E2Eテスト（cd application/e2e && pnpm test）が通る",
-        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "ChatMessage.tsx の Markdown コンポーネントから key={content} が削除されている",
+        "Crok チャットでストリーミングレスポンスが正しく表示される",
+        "数式（KaTeX）やコードブロック（syntax highlighting）が正しくレンダリングされる",
+        "該当箇所のE2Eテストが通っていること。E2Eは常に build & start したサーバーに対して実行する（pnpm e2e 参考）",
+        "codex skill で review を受けること。自己レビューではなく必ず新しい codex を起動して移譲し、feedback は適宜修正判断を行う",
         "Typecheck passes"
       ],
       "priority": 7,
       "passes": true,
-      "notes": "2026-03-20 完了。lodash → ネイティブ Array メソッドに置換。bm25_search.ts と SoundWaveSVG.tsx の2ファイル。"
+      "notes": "client/src/components/crok/ChatMessage.tsx:37 で key={content} が設定されているため、SSE でテキストが1文字増えるたびに Markdown コンポーネント全体がアンマウント→再マウントされる。"
     },
     {
       "id": "US-008",
-      "title": "InfiniteScroll の 2^18 ループ修正",
-      "description": "開発者として、InfiniteScrollのスクロール判定で262,144回ループする処理をIntersectionObserverに置き換え、TBTを大幅に改善したい。",
+      "title": "splitChunks ベンダーチャンク分離",
+      "description": "開発者として、react/react-dom 等の変更頻度の低いベンダーライブラリを専用チャンクに分離し、キャッシュ効率を向上させたい。",
       "acceptanceCriteria": [
-        "InfiniteScroll.tsx の Array.from(Array(2 ** 18), ...) が削除されている",
-        "IntersectionObserver を使用した底部検出に書き換えられている",
-        "wheel/touchmove/resize/scroll の手動イベントリスナーが削除されている",
-        "タイムラインで下にスクロールすると追加投稿が読み込まれる",
-        "E2Eテスト（cd application/e2e && pnpm test）が通る",
-        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "rspack.config.js の splitChunks.cacheGroups に vendor グループが追加されている",
+        "react, react-dom, react-router 等が vendor チャンクに分離されている",
+        "ビルド後に vendor-[contenthash].js が生成されている",
+        "pnpm build が正常に完了する",
+        "ホームページにアクセスしてタイムラインが正しく表示される",
+        "該当箇所のE2Eテストが通っていること。E2Eは常に build & start したサーバーに対して実行する（pnpm e2e 参考）",
+        "codex skill で review を受けること。自己レビューではなく必ず新しい codex を起動して移譲し、feedback は適宜修正判断を行う",
         "Typecheck passes"
       ],
       "priority": 8,
       "passes": true,
-      "notes": "2026-03-20 完了。2^18 ループを IntersectionObserver に置換。wheel/touchmove/resize/scroll リスナー削除。"
+      "notes": "現在は splitChunks で CSS のみ cacheGroup 定義があり、JS ベンダーライブラリは自動分割に任せている。明示的に vendor チャンクを分離すればデプロイ時のキャッシュヒット率が向上。"
     },
     {
       "id": "US-009",
-      "title": "画像の WebP 変換とリサイズ",
-      "description": "開発者として、public/images/ の JPEG 画像を WebP に変換・リサイズし、89MB→数MBに削減したい。",
+      "title": "standardized-audio-context ポリフィル削除",
+      "description": "開発者として、standardized-audio-context（77KB+）を削除し、ブラウザネイティブの AudioContext を使用してバンドルサイズを削減したい。",
       "acceptanceCriteria": [
-        "public/images/ 内の JPEG ファイルが WebP に変換されている",
-        "画像が適切なサイズにリサイズされている（最大幅 1200px 程度）",
-        "変換後の画像合計サイズが元の 20% 以下である",
-        "サーバー側で画像パスの拡張子を適切に返すようになっている（または同名で置き換え）",
-        "ホームページの画像が正しく表示される",
-        "E2Eテスト（cd application/e2e && pnpm test）が通る",
-        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "standardized-audio-context が package.json から削除されている",
+        "rspack.config の ProvidePlugin から AudioContext のエイリアスが削除されている（またはネイティブ AudioContext に置換）",
+        "AudioContext を使用している箇所がブラウザネイティブ API で動作する",
+        "音声再生機能（Sound 投稿など）が正しく動作する",
+        "該当箇所のE2Eテストが通っていること",
         "Typecheck passes"
       ],
       "priority": 9,
-      "passes": true,
-      "notes": "2026-03-20 完了。images/ 86MB → 3.8MB (4.4%), profiles/ 3.2MB → 208KB (6.5%)。品質80 WebP、最大幅1200px(images)/200px(profiles)にリサイズ。get_path.ts を .webp に変更、サーバーimage.tsのEXTENSION変更、CoveredImageのpiexifjs互換性修正。VRTスナップショット更新済み。"
+      "passes": false,
+      "notes": "rspack.config.js の ProvidePlugin で AudioContext をグローバル注入している。モダンブラウザではネイティブ AudioContext が使えるため、ポリフィルは不要な可能性が高い。buffer ポリフィルも同様に検討。"
     },
     {
       "id": "US-010",
-      "title": "GIF → MP4/WebM 変換と video タグ化",
-      "description": "開発者として、movies/ の GIF ファイルを MP4/WebM に変換し、PausableMovie を video タグ表示に変更することで、179MBのアセットと gifler/omggif の依存を削減したい。",
+      "title": "react-syntax-highlighter を軽量代替に置換",
+      "description": "開発者として、react-syntax-highlighter（全言語定義を含む巨大バンドル）を軽量な代替（prism-react-renderer 等）に置換するか、使用言語を限定してバンドルサイズを大幅に削減したい。",
       "acceptanceCriteria": [
-        "public/movies/ 内の GIF ファイルが MP4 または WebM に変換されている",
-        "変換後の動画合計サイズが元の 20% 以下である",
-        "PausableMovie.tsx が <video> タグを使用して動画を直接表示するように書き換えられている",
-        "gifler と omggif の依存が package.json から削除されている",
-        "動画が自動で再生される",
-        "動画をクリックすると再生・一時停止が切り替わる",
-        "prefers-reduced-motion: reduce の場合は自動再生しない",
-        "E2Eテスト（cd application/e2e && pnpm test）が通る",
-        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "react-syntax-highlighter が軽量代替に置換されている、または使用言語のみのインポートに変更されている",
+        "Crok AI チャットのコードブロックが正しくシンタックスハイライトされる",
+        "バンドルサイズが削減されている（ビルド出力で確認）",
+        "該当箇所のE2Eテストが通っていること",
         "Typecheck passes"
       ],
       "priority": 10,
-      "passes": true,
-      "notes": "2026-03-20 完了。GIF 179MB → MP4 2.4MB (1.3%)。PausableMovie を gifler/canvas から <video> タグに書き換え。gifler/omggif/gifler.d.ts 削除。E2Eテスト canvas→video 更新、VRTスナップショット更新。"
+      "passes": false,
+      "notes": "client/src/components/crok/CodeBlock.tsx で使用。react-syntax-highlighter は全言語定義を含むため非常に大きい。prism-react-renderer や shiki 等の軽量代替、または dynamic import による遅延読み込みを検討。"
     },
     {
       "id": "US-011",
-      "title": "フォントの WOFF2 変換と font-display: swap",
-      "description": "開発者として、13MBのOTFフォントをWOFF2に変換し、font-displayをswapにすることで、フォント読み込みによるFCP/LCPへの影響を軽減したい。",
+      "title": "Crok 関連ライブラリの dynamic import 化",
+      "description": "開発者として、react-markdown・rehype-katex・remark-gfm・remark-math を dynamic import にして初期バンドルから除外し、Crok チャットページアクセス時にのみロードされるようにしたい。",
       "acceptanceCriteria": [
-        "public/fonts/ の OTF ファイルが WOFF2 に変換されている",
-        "変換後のフォント合計サイズが元の 50% 以下である",
-        "index.css の @font-face で font-display: block が font-display: swap に変更されている",
-        "index.css の @font-face の src が WOFF2 ファイルを参照している",
-        "利用規約ページ（/terms）のフォント表示が正しい",
-        "E2Eテスト（cd application/e2e && pnpm test）が通る",
-        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "react-markdown, rehype-katex, remark-gfm, remark-math が dynamic import（React.lazy または手動 import()）で読み込まれている",
+        "初期バンドル（main chunk）にこれらのライブラリが含まれていない",
+        "Crok チャットページでマークダウン・数式・GFM が正しくレンダリングされる",
+        "該当箇所のE2Eテストが通っていること",
         "Typecheck passes"
       ],
       "priority": 11,
-      "passes": true,
-      "notes": "2026-03-20 完了。OTF 13MB → WOFF2 46KB (0.35%)。見出し96文字のみのサブセット。font-display: swap。VRTスナップショット更新済み。"
+      "passes": false,
+      "notes": "すべて client/src/components/crok/ChatMessage.tsx のみで使用。Crok ページは全ユーザーがアクセスするわけではないため、遅延読み込みの効果が高い。"
     },
     {
       "id": "US-012",
-      "title": "CoveredImage のバイナリ取得廃止と直接 img 表示",
-      "description": "開発者として、CoveredImageがjQueryで同期バイナリ取得→Blob URL化している処理を、直接 <img src> での表示に変更し、TBTとLCPを改善したい。",
+      "title": "classnames を軽量ユーティリティ関数に置換",
+      "description": "開発者として、classnames ライブラリを数行のユーティリティ関数に置き換え、依存を1つ減らしたい。",
       "acceptanceCriteria": [
-        "CoveredImage.tsx が fetchBinary を使わず、直接 <img src={src}> で表示している",
-        "alt テキストがサーバー API（画像モデル）から取得されるか、props 経由で渡されている",
-        "image-size パッケージのクライアント側インポートが不要になっている",
-        "写真が枠を覆う形で拡縮している（object-fit: cover 相当）",
-        "「ALT を表示する」ボタンが機能する",
-        "E2Eテスト（cd application/e2e && pnpm test）が通る",
-        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "classnames パッケージが package.json から削除されている",
+        "classnames の全使用箇所（9ファイル）が軽量ユーティリティ関数に置換されている",
+        "条件付きクラス名の結合が正しく動作する（object syntax、配列、文字列のケースすべて）",
+        "該当箇所のE2Eテストが通っていること",
         "Typecheck passes"
       ],
       "priority": 12,
-      "passes": true,
-      "notes": "2026-03-20 完了。fetchBinary+image-size+BlobURL+手動cover計算を、直接<img src>+object-fit:coverに置換。database.sqliteのalt未反映バグも修正。E2Eテスト position:absolute→object-fit:cover チェックに更新。"
+      "passes": false,
+      "notes": "9ファイルで使用。`(...args) => args.flat().filter(Boolean).join(' ')` 程度の関数で代替可能。ただしobject syntax（{className: boolean}）を使っている箇所がある場合はその対応も必要。"
     },
     {
       "id": "US-013",
-      "title": "SoundPlayer のバイナリ取得廃止と直接 audio 表示",
-      "description": "開発者として、SoundPlayerが音声をバイナリ取得→Blob URL化している処理を、直接 <audio src> に変更したい。",
+      "title": "react-helmet を React 19 ネイティブに移行",
+      "description": "開発者として、react-helmet（@dr.pogodin/react-helmet）を React 19 のネイティブ <title> / <meta> コンポーネントに移行し、依存を削減したい。",
       "acceptanceCriteria": [
-        "SoundPlayer.tsx が fetchBinary を使わず、直接 <audio src={url}> で音声を表示している",
-        "音声の再生・一時停止ボタンが機能する",
-        "音声の波形（SoundWaveSVG）が表示される",
-        "音声の再生位置が波形で表示される",
-        "E2Eテスト（cd application/e2e && pnpm test）が通る",
-        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
+        "react-helmet パッケージが package.json から削除されている",
+        "HelmetProvider が AppContainer から削除されている",
+        "全12ファイルの Helmet 使用箇所が React 19 の <title>, <meta>, <link> コンポーネントに置換されている",
+        "各ページのタイトルが正しく設定される",
+        "該当箇所のE2Eテストが通っていること",
         "Typecheck passes"
       ],
       "priority": 13,
-      "passes": true,
-      "notes": "2026-03-20 完了。fetchBinary+BlobURL廃止→直接<audio src={url}>に変更。SoundWaveSVGはsoundUrl propを受け取り内部でfetch+decodeAudioDataで波形計算。E2Eテスト14/14全通過。"
-    },
-    {
-      "id": "US-014",
-      "title": "Tailwind CSS CDN → ビルド時生成",
-      "description": "開発者として、Tailwind CSSのCDN版をビルド時生成に切り替え、ランタイムCSS生成によるFCP/LCPへの影響を排除したい。",
-      "acceptanceCriteria": [
-        "index.html から Tailwind CDN の script タグが削除されている",
-        "Tailwind CSS v4 がビルド時に CSS を生成するよう設定されている",
-        "index.html 内の <style type='text/tailwindcss'> が通常の CSS として出力される",
-        "全ページのスタイルが正しく適用されている",
-        "E2Eテスト（cd application/e2e && pnpm test）が通る",
-        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
-        "Typecheck passes"
-      ],
-      "priority": 14,
-      "passes": true,
-      "notes": "2026-03-20 完了。CDN script + <style type=text/tailwindcss> を削除し、index.css に @import 'tailwindcss' + @theme/@utility/@layer を移動。postcss.config.js を @tailwindcss/postcss に変更。rspack conditionNames から 'import' 削除で ESM/CJS interop バグも修正。E2E 27テスト全通過。"
-    },
-    {
-      "id": "US-015",
-      "title": "ルート単位のコード分割（React.lazy + Suspense）",
-      "description": "開発者として、AppContainer の全ルートを React.lazy で遅延ロードし、初期バンドルサイズを削減したい。",
-      "acceptanceCriteria": [
-        "AppContainer.tsx の各ルートコンテナが React.lazy + dynamic import で読み込まれている",
-        "Suspense の fallback が設定されている",
-        "各ページに直接アクセスして正しく表示される（/, /search, /posts/:id, /users/:username, /terms, /crok, /dm）",
-        "E2Eテスト（cd application/e2e && pnpm test）が通る",
-        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
-        "Typecheck passes"
-      ],
-      "priority": 15,
-      "passes": true,
-      "notes": "2026-03-20 完了。8ルートコンテナ（Timeline, Post, Term, Crok, DM, DMList, UserProfile, NotFound）をReact.lazy+dynamic importに変更。各ルートに個別のSuspense fallback={null}を設定。SearchContainerはredux-formとReact.lazy/Suspenseの互換性問題（フォームsubmit時にvalidationが発火しない）のため静的インポートに維持。AuthModalContainer/NewPostModalContainerはグローバルモーダルのため静的インポート。初期バンドル main.js が大幅縮小。E2E 40/44 passed（4件は全て pre-existing failures）。"
-    },
-    {
-      "id": "US-016",
-      "title": "useInfiniteFetch のサーバーサイドページネーション",
-      "description": "開発者として、useInfiniteFetchが全データを毎回取得してクライアントでsliceしている処理を、APIにoffset/limitパラメータを渡すサーバーサイドページネーションに変更したい。",
-      "acceptanceCriteria": [
-        "useInfiniteFetch がAPIリクエストに offset と limit パラメータを付与している",
-        "サーバー側の POST /api/v1/posts が offset/limit に対応している",
-        "毎回全データを取得するのではなく、必要なページ分だけ取得している",
-        "タイムラインの無限スクロールが正しく動作する",
-        "E2Eテスト（cd application/e2e && pnpm test）が通る",
-        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
-        "Typecheck passes"
-      ],
-      "priority": 16,
-      "passes": true,
-      "notes": "2026-03-20 完了。useInfiniteFetch が ?limit=30&offset=N をAPIに付与。全データ取得+クライアントsliceを廃止。全エンドポイント（posts, comments, search, user/posts）が既にlimit/offset対応済み。"
-    },
-    {
-      "id": "US-017",
-      "title": "画像 lazy loading 追加",
-      "description": "開発者として、全 img タグに loading='lazy' を追加し、ビューポート外の画像読み込みを遅延させたい。",
-      "acceptanceCriteria": [
-        "TimelineItem, PostItem, CommentItem のプロフィール画像に loading='lazy' が追加されている",
-        "CoveredImage の img タグに loading='lazy' が追加されている",
-        "DirectMessageListPage のプロフィール画像に loading='lazy' が追加されている",
-        "ホームページの画像が正しく表示される",
-        "E2Eテスト（cd application/e2e && pnpm test）が通る",
-        "Codex レビュー完了（観点: パフォーマンス改善の妥当性、ロジック・UI のリグレッションがないこと）",
-        "Typecheck passes"
-      ],
-      "priority": 17,
-      "passes": true,
-      "notes": "2026-03-20 完了。TimelineItem, PostItem, CommentItem, CoveredImage, DirectMessageListPage の全 img タグに loading='lazy' を追加。ビューポート外の画像読み込みを遅延させることで初期ロード性能を改善。E2E: home 6/7 PASS (1件 navigation timeout = pre-existing), post-detail 5/7 PASS (2件 navigation timeout = pre-existing), search 17/17 PASS。"
-    },
-    {
-      "id": "US-018",
-      "title": "SSE crok エンドポイントの意図的遅延削減",
-      "description": "開発者として、crok チャットの SSE レスポンスに含まれる sleep(3000) の TTFT 遅延と sleep(10) の文字間遅延を削減し、操作スコアを改善したい。",
-      "acceptanceCriteria": [
-        "server/src/routes/api/crok.ts の TTFT 遅延（sleep(3000)）が大幅に削減されている（例: 100ms以下）",
-        "server/src/routes/api/crok.ts の文字間遅延（sleep(10)）が削減されている（例: 1-2ms）",
-        "SSE プロトコル自体は変更されていない（レギュレーション遵守）",
-        "crok チャットページで質問を送信するとレスポンスが表示される",
-        "E2Eテスト（cd application/e2e && pnpm test）が通る",
-        "Typecheck passes"
-      ],
-      "priority": 18,
-      "passes": true,
-      "notes": "2026-03-20 完了。sleep(3000)とsleep(10)を両方削除。SSEストリームをcompression対象から除外してバッファリングを防止。commit: c1cf221"
-    },
-    {
-      "id": "US-019",
-      "title": "bluebird → native Promise 置換",
-      "description": "開発者として、bluebird (~45KB) を native Promise/async-await に置き換え、バンドルサイズを削減したい。",
-      "acceptanceCriteria": [
-        "negaposi_analyzer.ts から bluebird インポートが削除され、native Promise で実装されている",
-        "ChatInput.tsx から bluebird インポートが削除され、native Promise で実装されている",
-        "package.json から bluebird が削除されている",
-        "crok チャットの感情分析が正しく動作する",
-        "検索機能が正しく動作する",
-        "E2Eテスト（cd application/e2e && pnpm test）が通る",
-        "Typecheck passes"
-      ],
-      "priority": 19,
-      "passes": true,
-      "notes": "2026-03-20 完了。Bluebird.promisifyAll → new Promise ラッパーに置換。negaposi_analyzer.ts は未使用（US-023でサーバーサイド化済み）のため削除。negaposi-analyzer-ja もクライアントから削除。"
-    },
-    {
-      "id": "US-020",
-      "title": "kuromoji を dynamic import に変更",
-      "description": "開発者として、kuromoji（日本語形態解析）を静的 import から dynamic import に変更し、初期バンドルから分離したい。",
-      "acceptanceCriteria": [
-        "ChatInput.tsx の kuromoji が dynamic import で読み込まれている",
-        "bm25_search.ts の kuromoji が dynamic import で読み込まれている",
-        "negaposi_analyzer.ts の kuromoji が dynamic import で読み込まれている",
-        "検索機能が正しく動作する",
-        "crok チャットが正しく動作する",
-        "E2Eテスト（cd application/e2e && pnpm test）が通る",
-        "Typecheck passes"
-      ],
-      "priority": 20,
-      "passes": true,
-      "notes": "2026-03-20 完了。ChatInput.tsx の static import → dynamic import(`await import('kuromoji')`)に変更。bm25_search.ts は type-only import のため変更不要。negaposi_analyzer.ts は US-019 で削除済み。kuromoji は crok ページアクセス時にのみ動的ロードされ、初期バンドルから分離。"
-    },
-    {
-      "id": "US-021",
-      "title": "AspectRatioBox の setTimeout 廃止と CSS 化",
-      "description": "開発者として、AspectRatioBox の setTimeout(500) による遅延計算を CSS aspect-ratio または ResizeObserver に置き換え、レンダリング遅延を排除したい。",
-      "acceptanceCriteria": [
-        "AspectRatioBox.tsx の setTimeout(500) が削除されている",
-        "CSS aspect-ratio プロパティまたは ResizeObserver で代替されている",
-        "画像・動画のアスペクト比が正しく維持されている",
-        "E2Eテスト（cd application/e2e && pnpm test）が通る",
-        "Typecheck passes"
-      ],
-      "priority": 21,
-      "passes": true,
-      "notes": "2026-03-20 完了。setTimeout(500)・useEffect・useRef・useState・window resize リスナーを全削除。CSS aspect-ratio プロパティで置換。子要素の条件付きレンダリングも廃止し即座にレンダリング。E2Eテスト（動画・音声波形・写真cover）全通過。Codex レビュー Approved（重大な指摘なし、パフォーマンス改善妥当、リグレッションなし）。"
-    },
-    {
-      "id": "US-023",
-      "title": "感情分析のサーバーサイド化",
-      "description": "開発者として、検索キーワードの感情分析（kuromoji + negaposi-analyzer-ja）をブラウザからサーバーに移動し、クライアントバンドルからkuromoji辞書と形態素解析ライブラリを除去したい。",
-      "acceptanceCriteria": [
-        "サーバーに感情分析エンドポイント（例: GET /api/v1/sentiment?text=...）が追加されている、または検索APIのレスポンスに感情ラベルが含まれている",
-        "クライアントの negaposi_analyzer.ts から kuromoji と negaposi-analyzer-ja のインポートが削除されている",
-        "SearchPage.tsx がサーバーから感情判定結果を取得して「どしたん話聞こうか?」を表示している",
-        "ネガティブ判定のE2Eテスト（search.test.ts のネガティブ判定テスト群）が通る",
-        "E2Eテスト（cd application/e2e && pnpm test）が通る",
-        "Typecheck passes"
-      ],
-      "priority": 23,
-      "passes": true,
-      "notes": "2026-03-20 完了。GET /api/v1/sentiment?text=... エンドポイント追加。kuromoji+negaposi-analyzer-jaをサーバーに追加。SearchPageがサーバーAPIから感情判定を取得。トークナイザーはシングルトンでキャッシュ。クライアントのnegaposi_analyzer.tsインポートを削除。"
-    },
-    {
-      "id": "US-024",
-      "title": "検索APIクエリ一本化と構造化パラメータ化",
-      "description": "開発者として、検索APIの2回クエリ（テキスト検索+ユーザー名検索）を1回のSQLに統合し、FEから構造化パラメータ（keywords, since, until）を送ることでBE側のparseSearchQueryを廃止したい。",
-      "acceptanceCriteria": [
-        "FEのSearchContainerがAPIに q=keywords&since=YYYY-MM-DD&until=YYYY-MM-DD の構造化パラメータを送っている",
-        "サーバー側search.tsのparseSearchQueryインポートが削除されている",
-        "サーバー側のテキスト検索とユーザー名検索が1つのSQLクエリ（OR条件）に統合されている",
-        "JS上でのマージ・重複排除・ソートが不要になっている",
-        "検索結果が正しく表示される（キーワード検索、日付範囲検索、組み合わせ検索）",
-        "検索条件テキスト（「写真」2026-01-01 以降 の検索結果）が正しく表示される",
-        "E2Eテスト（cd application/e2e && pnpm test）が通る",
-        "Typecheck passes"
-      ],
-      "priority": 24,
-      "passes": true,
-      "notes": "2026-03-20 完了。FEがparseSearchQueryの結果をkeywords/since/untilパラメータとしてAPIに送信。BE側parseSearchQuery廃止。ユーザーIDを先に取得→Post.findAllでtext LIKE OR userId IN条件で1クエリ化。createdAt DESCソートはJSで実行（Sequelize subQuery+多対多JOINとの互換性のため）。"
-    },
-    {
-      "id": "US-022",
-      "title": "静的アセットの immutable キャッシュ強化",
-      "description": "開発者として、ハッシュ付き静的アセットに Cache-Control: immutable を追加し、304 往復も排除してキャッシュ効率を最大化したい。",
-      "acceptanceCriteria": [
-        "dist/ 配下のハッシュ付きアセット（chunk-[contenthash].js 等）に Cache-Control: public, max-age=31536000, immutable が設定されている",
-        "index.html 等のエントリファイルには短めのキャッシュ（例: no-cache または max-age=0）が設定されている",
-        "サーバーが正常に起動する",
-        "E2Eテスト（cd application/e2e && pnpm test）が通る",
-        "Typecheck passes"
-      ],
-      "priority": 22,
-      "passes": true,
-      "notes": "2026-03-20 完了。chunk-[contenthash].js に immutable キャッシュ設定。index.html に no-cache 設定。その他は 7日キャッシュ。"
-    },
-    {
-      "id": "US-025",
-      "title": "音声波形の事前計算とクライアント fetch 廃止",
-      "description": "開発者として、音声波形（peaks）をサーバーサイドで事前計算し、クライアントでの音声バイナリ fetch + decodeAudioData を完全に廃止したい。",
-      "acceptanceCriteria": [
-        "Sound モデルに peaks カラム（JSON配列）が追加されている",
-        "シード生成時に ffmpeg/ffprobe で peak 配列を計算し、seed データに含まれている",
-        "音声アップロード時にサーバーサイドで peak 検出が行われ、peaks カラムに保存される",
-        "SoundWaveSVG が props で peaks を受け取り、fetch や decodeAudioData を行わない",
-        "音声の波形が正しく表示される",
-        "E2Eテスト（cd application/e2e && pnpm test）が通る",
-        "Typecheck passes"
-      ],
-      "priority": 25,
-      "passes": true,
-      "notes": "2026-03-21 完了。Sound モデルに peaks カラム追加、シード生成時に ffmpeg で PCM 変換→100チャンク平均振幅を事前計算。SoundWaveSVG からクライアント fetch + decodeAudioData を完全廃止し、props で peaks を受け取るのみに。"
-    },
-    {
-      "id": "US-026",
-      "title": "web-llm 翻訳のサーバーサイド移行とクライアント依存除去",
-      "description": "開発者として、@mlc-ai/web-llm（~50MB）によるブラウザ内翻訳をサーバーサイド API に移行し、クライアントバンドルから web-llm・common-tags・json-repair-js・langs を完全に除去したい。",
-      "acceptanceCriteria": [
-        "サーバーに翻訳エンドポイント（例: POST /api/v1/translate）が追加されている",
-        "サーバー側で翻訳処理が実行される（LLM ライブラリまたは代替手段）",
-        "クライアントの create_translator.ts から @mlc-ai/web-llm のインポートが削除されている",
-        "TranslatableText.tsx がサーバー API 経由で翻訳結果を取得している",
-        "package.json から @mlc-ai/web-llm が削除されている",
-        "rspack.config.js の @ffmpeg alias のみ残り、web-llm 関連設定が不要になっている",
-        "翻訳ボタンを押すと翻訳結果が表示される",
-        "dist/scripts/ の最大チャンクサイズが 5MB 未満である",
-        "E2Eテスト（cd application/e2e && pnpm test）が通る",
-        "Typecheck passes",
-        "codex skillでreviewが通っている"
-      ],
-      "priority": 26,
-      "passes": true,
-      "notes": "2026-03-21 完了。POST /api/v1/translate エンドポイント追加。TranslatableText.tsx を sendJSON 経由でサーバー API に変更。create_translator.ts 削除。@mlc-ai/web-llm, common-tags, json-repair-js, langs, @types/common-tags, @types/langs をクライアントから削除。json-repair-js.d.ts 削除。最大チャンクサイズ 1.3MB (< 5MB)。E2E 67/77 passed（10件は DM WebSocket/VRT の既存失敗）。"
-    },
-    {
-      "id": "US-027",
-      "title": "CSS チャンク分割による FOUC 修正",
-      "description": "開発者として、splitChunks による CSS チャンク分割で発生している FOUC（Flash of Unstyled Content）を修正し、全ページでスタイルが即座に適用されるようにしたい。",
-      "acceptanceCriteria": [
-        "dist/styles/ に出力される CSS ファイルが main.css のみ（または全 CSS がレンダーブロッキングで読み込まれる）",
-        "サインインモーダル表示時にスタイル未適用の瞬間が発生しない",
-        "ページ遷移時にスタイル未適用の瞬間が発生しない",
-        "E2Eテスト（cd application/e2e && pnpm test）が通る",
-        "Typecheck passes",
-        "codex skillでreviewが通っている"
-      ],
-      "priority": 27,
-      "passes": true,
-      "notes": "2026-03-21 完了。KaTeX CSS の import を ChatMessage.tsx（async chunk）から index.css（エントリポイント）に移動。main.css のみに統合（72KB、gzip ~10KB）。async CSS チャンク（123.css）が解消され FOUC 不可に。前回の cacheGroups アプローチと異なり、明示的なエントリ import で対象を限定。"
-    },
-    {
-      "id": "US-028",
-      "title": "CLS 改善（画像・動画の width/height 明示）",
-      "description": "開発者として、img/video タグに width/height を明示し、レイアウトシフトをゼロに近づけたい。",
-      "acceptanceCriteria": [
-        "CoveredImage の img タグに width/height（または aspect-ratio）が明示されている",
-        "PausableMovie の video タグに width/height（または aspect-ratio）が明示されている",
-        "プロフィール画像の img タグに width/height が明示されている",
-        "Lighthouse の CLS スコアが 0.1 未満である",
-        "E2Eテスト（cd application/e2e && pnpm test）が通る",
-        "Typecheck passes",
-        "codex skillでreviewが通っている"
-      ],
-      "priority": 28,
-      "passes": true,
-      "notes": "2026-03-21 完了。CoveredImage, PausableMovie, 全プロフィール画像（7箇所）に width/height 追加。CSS制御は維持しデザイン変更なし。"
-    },
-    {
-      "id": "US-029",
-      "title": "再レンダリング抑制と TBT/INP 改善",
-      "description": "開発者として、不要な再レンダリングを抑制し、TBT（Total Blocking Time）と INP（Interaction to Next Paint）を改善したい。",
-      "acceptanceCriteria": [
-        "redux-form の状態更新が不要なコンポーネントの再レンダリングを引き起こしていない",
-        "スクロール・ポインター追跡などの高頻度イベントが適切にデバウンス/スロットルされている",
-        "React DevTools Profiler で不要な再レンダリングが確認されない",
-        "Lighthouse の TBT が 500ms 未満である",
-        "E2Eテスト（cd application/e2e && pnpm test）が通る",
-        "Typecheck passes",
-        "codex skillでreviewが通っている"
-      ],
-      "priority": 29,
-      "passes": true,
-      "notes": "2026-03-21 完了。3つの1msポーリングループ廃止: DirectMessagePage setInterval→MutationObserver, use_has_content_below scheduler.postTask→IntersectionObserver, use_search_params scheduler.postTask→React Router useSearchParams。ChatInput サジェストAPI 300msデバウンス追加。SoundPlayer onTimeUpdate を useState→ref直接DOM更新に変更。E2E 63/77 passed (14件は既存失敗)。"
+      "passes": false,
+      "notes": "12ファイルで使用。React 19 では JSX 内で直接 <title>, <meta>, <link> を返すことでドキュメントヘッドを管理できる。HelmetProvider も不要になる。リファクタ範囲は広いが各ファイルの変更は小さい。"
     }
   ]
 }
