@@ -64,5 +64,4 @@ export interface DirectMessageConversationResponse {
   initiator: UserResponse;
   member: UserResponse;
   messages: DirectMessageResponse[];
-  hasUnread?: boolean;
 }

@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, inArray, like, ne, or, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, like, ne, or, type SQL } from "drizzle-orm";
 
 import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
 
@@ -81,84 +81,12 @@ export async function findConversations(userId: string) {
   });
 }
 
-/**
- * DM一覧用の軽量クエリ。全メッセージではなく最新1件+未読フラグのみ取得。
- */
-export async function findConversationsForList(userId: string) {
+export async function findConversationWithRelations(where: SQL) {
   const db = getDb();
-
-  // 1. 会話 + initiator/member + 最新メッセージ1件のみ
-  const conversations = await db.query.directMessageConversations.findMany({
-    where: or(
-      eq(directMessageConversations.initiatorId, userId),
-      eq(directMessageConversations.memberId, userId),
-    ),
-    with: {
-      initiator: userWithProfileImage,
-      member: userWithProfileImage,
-      messages: {
-        with: { sender: userWithProfileImage },
-        orderBy: (fields: any, { desc: descFn }: any) => [descFn(fields.createdAt)],
-        limit: 1,
-      },
-    },
-  });
-
-  // メッセージのない会話を除外
-  const withMessages = conversations.filter((c) => c.messages.length > 0);
-  if (withMessages.length === 0) return [];
-
-  // 2. 未読メッセージがある会話IDをバッチ取得
-  const convIds = withMessages.map((c) => c.id);
-  const unreadRows = db
-    .select({ conversationId: directMessages.conversationId })
-    .from(directMessages)
-    .where(
-      and(
-        inArray(directMessages.conversationId, convIds),
-        ne(directMessages.senderId, userId),
-        eq(directMessages.isRead, false),
-      ),
-    )
-    .groupBy(directMessages.conversationId)
-    .all();
-  const unreadSet = new Set(unreadRows.map((r) => r.conversationId));
-
-  // 3. 最新メッセージ日時でソート（降順）
-  const sorted = withMessages.sort((a, b) => {
-    const aDate = a.messages[0]!.createdAt;
-    const bDate = b.messages[0]!.createdAt;
-    return bDate.localeCompare(aDate);
-  });
-
-  return sorted.map((conv) => ({
-    ...conv,
-    hasUnread: unreadSet.has(conv.id),
-  }));
-}
-
-export async function findConversationWithRelations(where: SQL, messageLimit?: number) {
-  const db = getDb();
-  const withOpts = messageLimit
-    ? {
-        initiator: userWithProfileImage,
-        member: userWithProfileImage,
-        messages: {
-          with: { sender: userWithProfileImage },
-          orderBy: (fields: any, { desc: descFn }: any) => [descFn(fields.createdAt)],
-          limit: messageLimit,
-        },
-      }
-    : conversationFullWith();
-  const result = await db.query.directMessageConversations.findFirst({
+  return await db.query.directMessageConversations.findFirst({
     where,
-    with: withOpts,
+    with: conversationFullWith(),
   });
-  if (result && messageLimit) {
-    // DESC取得した結果をASC（古い順）に戻す
-    result.messages = result.messages.reverse();
-  }
-  return result;
 }
 
 export function countUnreadMessages(receiverId: string): number {

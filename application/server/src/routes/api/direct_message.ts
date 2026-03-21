@@ -10,7 +10,7 @@ import {
   countUnreadMessages,
   emitDmNotifications,
   findConversationWithRelations,
-  findConversationsForList,
+  findConversations,
   findUserWithProfile,
 } from "@web-speed-hackathon-2026/server/src/db/queries";
 import {
@@ -149,14 +149,21 @@ export const directMessageRouter = new Hono<SessionEnv>()
       throw new HTTPException(401);
     }
 
-    const conversations = await findConversationsForList(userId);
+    const conversations = await findConversations(userId);
 
-    const result = conversations.map((conv) => ({
+    const filtered = conversations
+      .filter((conv) => conv.messages.length > 0)
+      .sort((a, b) => {
+        const aLast = a.messages[a.messages.length - 1]!.createdAt;
+        const bLast = b.messages[b.messages.length - 1]!.createdAt;
+        return bLast.localeCompare(aLast);
+      });
+
+    const result = filtered.map((conv) => ({
       ...serializeConversation(conv as Parameters<typeof serializeConversation>[0]),
       messages: conv.messages.map((m) =>
         serializeDirectMessage(m as Parameters<typeof serializeDirectMessage>[0]),
       ),
-      hasUnread: conv.hasUnread,
     }));
 
     return c.json(result as unknown as DirectMessageConversationResponse[]);
@@ -334,8 +341,6 @@ export const directMessageRouter = new Hono<SessionEnv>()
     }
 
     const conversationId = c.req.param("conversationId");
-    const limitParam = c.req.query("limit");
-    const messageLimit = limitParam ? Math.min(parseInt(limitParam, 10), 500) : 50;
     const conversation = await findConversationWithRelations(
       and(
         eq(directMessageConversations.id, conversationId),
@@ -344,7 +349,6 @@ export const directMessageRouter = new Hono<SessionEnv>()
           eq(directMessageConversations.memberId, userId),
         ),
       )!,
-      messageLimit,
     );
     if (!conversation) {
       throw new HTTPException(404);

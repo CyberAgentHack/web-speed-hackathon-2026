@@ -61,7 +61,6 @@ declare namespace Models {
     initiator: User;
     member: User;
     messages: DirectMessage[];
-    hasUnread?: boolean;
   }
 
   interface ChatMessage {
