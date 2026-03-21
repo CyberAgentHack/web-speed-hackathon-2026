@@ -6,11 +6,24 @@ import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/par
 
 export const searchRouter = Router();
 
+// 簡易的なキャッシュ
+const searchCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL_MS = 5000;
+
 searchRouter.get("/search", async (req, res) => {
   const query = req.query["q"];
 
   if (typeof query !== "string" || query.trim() === "") {
     return res.status(200).type("application/json").send([]);
+  }
+
+  const limit = req.query["limit"] != null ? Number(req.query["limit"]) : undefined;
+  const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
+
+  const cacheKey = `search:${query}:${limit}:${offset}`;
+  const cached = searchCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return res.status(200).type("application/json").send(cached.data);
   }
 
   const { keywords, sinceDate, untilDate } = parseSearchQuery(query);
@@ -21,8 +34,6 @@ searchRouter.get("/search", async (req, res) => {
   }
 
   const searchTerm = keywords ? `%${keywords}%` : null;
-  const limit = req.query["limit"] != null ? Number(req.query["limit"]) : undefined;
-  const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
 
   // 日付条件を構築
   const dateConditions: Record<symbol, Date>[] = [];
@@ -39,7 +50,6 @@ searchRouter.get("/search", async (req, res) => {
     include: [
       {
         association: "user",
-        attributes: { exclude: ["profileImageId"] },
         include: [{ association: "profileImage" }],
         required: true,
         where: searchTerm
@@ -61,11 +71,14 @@ searchRouter.get("/search", async (req, res) => {
     ],
     limit,
     offset,
+    subQuery: false,
     order: [["createdAt", "DESC"]],
     where: {
       ...dateWhere,
     },
   });
+
+  searchCache.set(cacheKey, { data: posts, timestamp: Date.now() });
 
   return res.status(200).type("application/json").send(posts);
 });

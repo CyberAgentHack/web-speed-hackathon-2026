@@ -33,21 +33,25 @@ crokRouter.get("/crok", async (req, res) => {
 
   let messageId = 0;
 
+  const send = (data: any) => {
+    res.write(`id: ${messageId++}\ndata: ${JSON.stringify(data)}\n\n`);
+    // compression ミドルウェアを使用している場合、flush() しないとブラウザに届かない
+    if ((res as any).flush) {
+      (res as any).flush();
+    }
+  };
+
   // TTFT (Time to First Token)
   await sleep(3000);
 
   for (const char of response) {
     if (res.closed) break;
-
-    const data = JSON.stringify({ text: char, done: false });
-    res.write(`event: message\nid: ${messageId++}\ndata: ${data}\n\n`);
-
+    send({ text: char, done: false });
     await sleep(10);
   }
 
   if (!res.closed) {
-    const data = JSON.stringify({ text: "", done: true });
-    res.write(`event: message\nid: ${messageId}\ndata: ${data}\n\n`);
+    send({ text: "", done: true });
   }
 
   res.end();

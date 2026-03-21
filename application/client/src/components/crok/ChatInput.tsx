@@ -21,7 +21,31 @@ interface Props {
   onSendMessage: (message: string) => void;
 }
 
-// ... (highlightMatchByTokens function)
+/**
+ * サジェスト内のトークンに一致する部分をハイライトします
+ */
+const highlightMatchByTokens = (text: string, tokens: string[]) => {
+  if (tokens.length === 0) return text;
+
+  // トークンを長い順にソートして、正規表現でのマッチングを確実にする
+  const sortedTokens = [...tokens].sort((a, b) => b.length - a.length);
+  const pattern = new RegExp(`(${sortedTokens.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi');
+  
+  const parts = text.split(pattern);
+  return (
+    <>
+      {parts.map((part, i) => (
+        pattern.test(part) ? (
+          <span key={i} className="text-cax-brand font-bold bg-cax-highlight/30">
+            {part}
+          </span>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      ))}
+    </>
+  );
+};
 
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -131,8 +155,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     setShowSuggestions(false);
   };
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
+  const sendCurrentMessage = () => {
     if (inputValue.trim() && !isStreaming) {
       onSendMessage(inputValue.trim());
       setInputValue("");
@@ -143,10 +166,15 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   };
 
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    sendCurrentMessage();
+  };
+
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
-      handleSubmit(e);
+      sendCurrentMessage();
     }
   };
 

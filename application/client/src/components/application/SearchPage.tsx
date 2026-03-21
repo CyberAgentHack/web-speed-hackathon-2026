@@ -53,12 +53,13 @@ const SearchPageComponent = ({
     }
 
     let isMounted = true;
-    // 初期化時の負荷を避けるため、少し待ってから実行
+    // 初期化時の負荷を避けるため、わずかに待ってから実行
     const timer = setTimeout(() => {
       analyzeSentiment(parsed.keywords)
-        .then((result) => {
+        .then((score) => {
           if (isMounted) {
-            setIsNegative(result.label === "negative");
+            // しきい値を -0.1 に設定して判定を安定させる
+            setIsNegative(score < -0.1);
           }
         })
         .catch(() => {
@@ -66,7 +67,7 @@ const SearchPageComponent = ({
             setIsNegative(false);
           }
         });
-    }, 500);
+    }, 100);
 
     return () => {
       isMounted = false;

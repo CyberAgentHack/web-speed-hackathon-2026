@@ -2,6 +2,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const LIMIT = 30;
 
+// クライアント側でのメモリキャッシュ
+const globalCache = new Map<string, any[]>();
+
 interface ReturnValues<T> {
   data: Array<T>;
   error: Error | null;
@@ -14,18 +17,27 @@ export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
 ): ReturnValues<T> {
-  const internalRef = useRef({ isLoading: false, offset: 0, hasMore: true });
+  // キャッシュがあればそれを初期値にする
+  const cachedData = apiPath ? globalCache.get(apiPath) || [] : [];
+  
+  const internalRef = useRef({ 
+    isLoading: false, 
+    offset: cachedData.length, 
+    hasMore: true 
+  });
 
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
-    data: [],
+    data: cachedData,
     error: null,
-    isLoading: true,
+    isLoading: cachedData.length === 0, // キャッシュがあればロード中ではない
     hasMore: true,
   });
 
-  const fetchMore = useCallback(() => {
+  const fetchMore = useCallback((isInitial = false) => {
     const { isLoading, offset, hasMore } = internalRef.current;
-    if (isLoading || !hasMore) {
+    
+    // 初回フェッチ以外で、ロード中またはこれ以上データがない場合はスキップ
+    if (!isInitial && (isLoading || !hasMore)) {
       return;
     }
 
@@ -33,27 +45,33 @@ export function useInfiniteFetch<T>(
       ...cur,
       isLoading: true,
     }));
-    internalRef.current = {
-      ...internalRef.current,
-      isLoading: true,
-    };
+    internalRef.current.isLoading = true;
 
-    // サーバーに limit と offset を伝えて必要な分だけ取得する
+    const currentOffset = isInitial ? 0 : offset;
     const separator = apiPath.includes("?") ? "&" : "?";
-    const paginatedPath = `${apiPath}${separator}limit=${LIMIT}&offset=${offset}`;
+    const paginatedPath = `${apiPath}${separator}limit=${LIMIT}&offset=${currentOffset}`;
 
     void fetcher(paginatedPath).then(
       (newData) => {
         const nextHasMore = newData.length === LIMIT;
-        setResult((cur) => ({
-          ...cur,
-          data: [...cur.data, ...newData], // クライアントでの slice は不要
-          isLoading: false,
-          hasMore: nextHasMore,
-        }));
+        
+        setResult((cur) => {
+          const combinedData = isInitial ? newData : [...cur.data, ...newData];
+          // キャッシュを更新
+          if (apiPath) {
+            globalCache.set(apiPath, combinedData);
+          }
+          return {
+            ...cur,
+            data: combinedData,
+            isLoading: false,
+            hasMore: nextHasMore,
+          };
+        });
+
         internalRef.current = {
           isLoading: false,
-          offset: offset + LIMIT,
+          offset: currentOffset + LIMIT,
           hasMore: nextHasMore,
         };
       },
@@ -63,29 +81,20 @@ export function useInfiniteFetch<T>(
           error,
           isLoading: false,
         }));
-        internalRef.current = {
-          ...internalRef.current,
-          isLoading: false,
-        };
+        internalRef.current.isLoading = false;
       },
     );
   }, [apiPath, fetcher]);
 
-  // 初回マウント時、または apiPath が変わった時にリセットしてフェッチ
   useEffect(() => {
-    setResult({
-      data: [],
-      error: null,
-      isLoading: true,
-      hasMore: true,
-    });
+    // 既にデータがある場合（キャッシュヒット時）でも、最新を確認するために一度フェッチする
+    // ただし、画面がチラつかないように裏側で実行される
     internalRef.current = {
       isLoading: false,
       offset: 0,
       hasMore: true,
     };
-
-    fetchMore();
+    fetchMore(true);
   }, [fetchMore]);
 
   return {

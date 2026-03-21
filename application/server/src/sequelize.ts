@@ -49,9 +49,11 @@ export async function initializeSequelize() {
     // Enable WAL mode for better performance
     await _sequelize.query("PRAGMA journal_mode = WAL;");
     await _sequelize.query("PRAGMA synchronous = NORMAL;");
-    await _sequelize.query("PRAGMA cache_size = -10000;"); // 10MB cache
+    await _sequelize.query("PRAGMA cache_size = -64000;"); // 64MB cache に増量
+    await _sequelize.query("PRAGMA mmap_size = 268435456;"); // 256MB mmap
 
     // Add indexes
+    await _sequelize.query("CREATE INDEX IF NOT EXISTS idx_posts_id_desc ON Posts(id DESC);");
     await _sequelize.query("CREATE INDEX IF NOT EXISTS idx_posts_userId ON Posts(userId);");
     await _sequelize.query("CREATE INDEX IF NOT EXISTS idx_posts_createdAt ON Posts(createdAt);");
     await _sequelize.query("CREATE INDEX IF NOT EXISTS idx_users_name ON Users(name);");

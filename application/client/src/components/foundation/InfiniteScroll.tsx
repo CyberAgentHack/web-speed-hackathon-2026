@@ -27,7 +27,7 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
         }
       },
       {
-        rootMargin: "200px", // 200px 手前で読み込みを開始する
+        rootMargin: "1000px", // 1000px 手前で読み込みを開始する
       }
     );
 
