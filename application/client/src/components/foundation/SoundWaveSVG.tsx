@@ -5,33 +5,54 @@ interface ParsedData {
   peaks: number[];
 }
 
+const workerRef = new Worker(new URL("./calculate.worker.ts", import.meta.url));
+
 async function calculate(data: ArrayBuffer): Promise<ParsedData> {
-  const audioCtx = new (window as any).AudioContext();
+  return new Promise((resolve) => {
+    const audioCtx = new (window as any).AudioContext();
 
-  // 音声をデコードする
-  const buffer = await audioCtx.decodeAudioData(data.slice(0));
-  // 左の音声データの絶対値を取る
-  const leftData = Array.from(buffer.getChannelData(0)).map(Math.abs);
-  // 右の音声データの絶対値を取る
-  const rightChannelData = buffer.getChannelData(1);
-  const rightData = rightChannelData ? Array.from(rightChannelData).map(Math.abs) : leftData;
+    audioCtx.decodeAudioData(data.slice(0), (buffer) => {
+      // 左の音声データの絶対値を取る（Float32Array のまま保持）
+      const leftChannelData = buffer.getChannelData(0);
+      const leftData = new Float32Array(leftChannelData.length);
+      for (let i = 0; i < leftChannelData.length; i++) {
+        leftData[i] = Math.abs(leftChannelData[i]);
+      }
 
-  // 左右の音声データの平均を取る
-  const normalized = leftData.map((l, i) => (l + (rightData[i] ?? 0)) / 2);
-  // 100 個の chunk に分ける
-  const chunkSize = Math.ceil(normalized.length / 100);
-  const chunks: number[][] = [];
-  for (let i = 0; i < normalized.length; i += chunkSize) {
-    chunks.push(normalized.slice(i, i + chunkSize));
-  }
-  // chunk ごとに平均を取る
-  const peaks = chunks.map((chunk) =>
-    chunk.reduce((sum, v) => sum + v, 0) / chunk.length
-  );
-  // chunk の平均の中から最大値を取る
-  const max = peaks.length > 0 ? Math.max(...peaks) : 0;
+      // 右の音声データの絶対値を取る
+      const rightChannelData = buffer.getChannelData(1);
+      const rightData = rightChannelData
+        ? (() => {
+            const right = new Float32Array(rightChannelData.length);
+            for (let i = 0; i < rightChannelData.length; i++) {
+              right[i] = Math.abs(rightChannelData[i]);
+            }
+            return right;
+          })()
+        : null;
 
-  return { max, peaks };
+      // Worker に処理を委譲
+      const messageHandler = (event: MessageEvent<ParsedData>) => {
+        workerRef.removeEventListener("message", messageHandler);
+        resolve(event.data);
+      };
+
+      workerRef.addEventListener("message", messageHandler);
+
+      // Construct transfer list
+      const transferList = [leftData.buffer];
+      const messageData: any = {
+        left: leftData,
+        right: rightData,
+      };
+
+      if (rightData) {
+        transferList.push(rightData.buffer);
+      }
+
+      workerRef.postMessage(messageData, transferList);
+    });
+  });
 }
 
 interface Props {
