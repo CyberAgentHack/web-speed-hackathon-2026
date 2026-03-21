@@ -1,9 +1,9 @@
-import { useCallback, useMemo, useState } from "react";
-import { Helmet } from "react-helmet";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { CrokGate } from "@web-speed-hackathon-2026/client/src/components/crok/CrokGate";
 import { CrokPage } from "@web-speed-hackathon-2026/client/src/components/crok/CrokPage";
 import { useSSE } from "@web-speed-hackathon-2026/client/src/hooks/use_sse";
+import { setPageTitle } from "@web-speed-hackathon-2026/client/src/utils/set_page_title";
 
 type Props = {
   activeUser: Models.User | null;
@@ -70,6 +70,10 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
     [isStreaming, start],
   );
 
+  useEffect(() => {
+    setPageTitle("Crok - CaX");
+  }, []);
+
   if (!activeUser) {
     return (
       <CrokGate headline="Crokを利用するにはサインインしてください" authModalId={authModalId} />
@@ -77,11 +81,6 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
   }
 
   return (
-    <>
-      <Helmet>
-        <title>Crok - CaX</title>
-      </Helmet>
-      <CrokPage isStreaming={isStreaming} messages={displayMessages} onSendMessage={sendMessage} />
-    </>
+    <CrokPage isStreaming={isStreaming} messages={displayMessages} onSendMessage={sendMessage} />
   );
 };

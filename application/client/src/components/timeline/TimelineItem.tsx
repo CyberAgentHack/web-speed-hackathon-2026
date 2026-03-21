@@ -1,12 +1,13 @@
-import moment from "moment";
 import { MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
+import { formatDate } from "@web-speed-hackathon-2026/client/src/utils/date_formatter";
+
+import { AvatarImage } from "@web-speed-hackathon-2026/client/src/components/foundation/AvatarImage";
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
 import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
 import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Element): boolean => {
   while (target !== null && target instanceof Element) {
@@ -28,9 +29,10 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
  */
 interface Props {
   post: Models.Post;
+  isFirstItem?: boolean;
 }
 
-export const TimelineItem = ({ post }: Props) => {
+export const TimelineItem = ({ post, isFirstItem = false }: Props) => {
   const navigate = useNavigate();
 
   /**
@@ -40,7 +42,11 @@ export const TimelineItem = ({ post }: Props) => {
     (ev) => {
       const isSelectedText = document.getSelection()?.isCollapsed === false;
       if (!isClickedAnchorOrButton(ev.target, ev.currentTarget) && !isSelectedText) {
+        console.log("[TimelineItem] Before navigate:", window.location.pathname);
         navigate(`/posts/${post.id}`);
+        setTimeout(() => {
+          console.log("[TimelineItem] After navigate (100ms):", window.location.pathname);
+        }, 100);
       }
     },
     [post, navigate],
@@ -54,10 +60,7 @@ export const TimelineItem = ({ post }: Props) => {
             className="border-cax-border bg-cax-surface-subtle block h-12 w-12 overflow-hidden rounded-full border hover:opacity-75 sm:h-16 sm:w-16"
             to={`/users/${post.user.username}`}
           >
-            <img
-              alt={post.user.profileImage.alt}
-              src={getProfileImagePath(post.user.profileImage.id)}
-            />
+            <AvatarImage height={64} profileImage={post.user.profileImage} width={64} fetchPriority={isFirstItem ? "high" : "auto"} />
           </Link>
         </div>
         <div className="min-w-0 shrink grow">
@@ -76,8 +79,8 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={new Date(post.createdAt).toISOString()}>
+                {formatDate(post.createdAt)}
               </time>
             </Link>
           </p>
@@ -86,7 +89,7 @@ export const TimelineItem = ({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea images={post.images} fetchPriority={isFirstItem ? "high" : "auto"} />
             </div>
           ) : null}
           {post.movie ? (

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Field, InjectedFormProps, reduxForm, WrappedFieldProps } from "redux-form";
 
@@ -18,23 +18,41 @@ interface Props {
   results: Models.Post[];
 }
 
-const SearchInput = ({ input, meta }: WrappedFieldProps) => (
-  <div className="flex flex-1 flex-col">
-    <input
-      {...input}
-      className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
-        meta.touched && meta.error
-          ? "border-cax-danger focus:border-cax-danger"
-          : "border-cax-border focus:border-cax-brand-strong"
-      }`}
-      placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
-      type="text"
-    />
-    {meta.touched && meta.error && (
-      <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>
-    )}
-  </div>
-);
+const SearchInput = (
+  props: WrappedFieldProps & {
+    forcedError?: string | null;
+    clearForcedError?: () => void;
+  },
+) => {
+  const { input, meta, forcedError, clearForcedError } = props;
+  const errorMessage = forcedError || meta.error;
+  const showError = Boolean(errorMessage && (forcedError || meta.touched || meta.submitFailed));
+
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    if (forcedError) {
+      clearForcedError?.();
+    }
+    input.onChange(event);
+  };
+
+  return (
+    <div className="flex flex-1 flex-col">
+      <input
+        {...input}
+        onChange={handleChange}
+        aria-label="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
+        className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
+          showError
+            ? "border-cax-danger focus:border-cax-danger"
+            : "border-cax-border focus:border-cax-brand-strong"
+        }`}
+        placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
+        type="text"
+      />
+      {showError && <span className="text-cax-danger mt-1 text-xs">{errorMessage}</span>}
+    </div>
+  );
+};
 
 const SearchPageComponent = ({
   query,
@@ -43,6 +61,7 @@ const SearchPageComponent = ({
 }: Props & InjectedFormProps<SearchFormData, Props>) => {
   const navigate = useNavigate();
   const [isNegative, setIsNegative] = useState(false);
+  const [forcedError, setForcedError] = useState<string | null>(null);
 
   const parsed = parseSearchQuery(query);
 
@@ -89,12 +108,33 @@ const SearchPageComponent = ({
     navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
   };
 
+  const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.currentTarget);
+    const searchText = String(formData.get("searchText") ?? "");
+    const errors = validate({ searchText });
+    const error = errors.searchText;
+
+    if (typeof error === "string") {
+      setForcedError(error);
+      return;
+    }
+
+    setForcedError(null);
+    void handleSubmit(onSubmit)(e);
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <div className="bg-cax-surface p-4 shadow">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleFormSubmit}>
           <div className="flex gap-2">
-            <Field name="searchText" component={SearchInput} />
+            <Field
+              name="searchText"
+              component={SearchInput}
+              props={{ forcedError, clearForcedError: () => setForcedError(null) }}
+            />
             <Button variant="primary" type="submit">
               検索
             </Button>

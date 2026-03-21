@@ -220,3 +220,8 @@ $RECYCLE.BIN/
 application/upload/**
 !application/upload/**/
 !application/upload/**/.gitkeep
+
+# Claude Code guidelines (local only)
+CLAUDE.md
+.claude/settings.local.json
+*.claude

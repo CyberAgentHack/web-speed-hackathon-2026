@@ -1,19 +1,21 @@
-import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 
+import { formatRelativeTime } from "@web-speed-hackathon-2026/client/src/utils/date_formatter";
+
+import { AvatarImage } from "@web-speed-hackathon-2026/client/src/components/foundation/AvatarImage";
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   activeUser: Models.User;
   newDmModalId: string;
+  onOpenNewDm?: () => void;
 }
 
-export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
+export const DirectMessageListPage = ({ activeUser, newDmModalId, onOpenNewDm }: Props) => {
   const [conversations, setConversations] =
     useState<Array<Models.DirectMessageConversation> | null>(null);
   const [error, setError] = useState<Error | null>(null);
@@ -51,8 +53,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
         <h1 className="text-2xl font-bold">ダイレクトメッセージ</h1>
         <div className="flex flex-wrap items-center gap-4">
           <Button
-            command="show-modal"
-            commandfor={newDmModalId}
+            onClick={onOpenNewDm}
             leftItem={<FontAwesomeIcon iconType="paper-plane" styleType="solid" />}
           >
             新しくDMを始める
@@ -84,10 +85,11 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
               <li className="grid" key={conversation.id}>
                 <Link className="hover:bg-cax-surface-subtle px-4" to={`/dm/${conversation.id}`}>
                   <div className="border-cax-border flex gap-4 border-b px-4 pt-2 pb-4">
-                    <img
-                      alt={peer.profileImage.alt}
-                      className="w-12 shrink-0 self-start rounded-full"
-                      src={getProfileImagePath(peer.profileImage.id)}
+                    <AvatarImage
+                      className="h-12 w-12 shrink-0 self-start rounded-full"
+                      height={48}
+                      profileImage={peer.profileImage}
+                      width={48}
                     />
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-center justify-between">
@@ -100,7 +102,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {formatRelativeTime(lastMessage.createdAt)}
                           </time>
                         )}
                       </div>

@@ -1,9 +1,10 @@
 import { FastAverageColor } from "fast-average-color";
-import moment from "moment";
 import { ReactEventHandler, useCallback, useState } from "react";
 
+import { formatDate } from "@web-speed-hackathon-2026/client/src/utils/date_formatter";
+
+import { AvatarImage } from "@web-speed-hackathon-2026/client/src/components/foundation/AvatarImage";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   user: Models.User;
@@ -24,14 +25,17 @@ export const UserProfileHeader = ({ user }: Props) => {
   return (
     <header className="relative">
       <div
-        className={`h-32 ${averageColor ? `bg-[${averageColor}]` : "bg-cax-surface-subtle"}`}
+        className={`h-32 ${!averageColor ? "bg-cax-surface-subtle" : ""}`}
+        style={averageColor ? { backgroundColor: averageColor } : undefined}
       ></div>
       <div className="border-cax-border bg-cax-surface-subtle absolute left-2/4 m-0 h-28 w-28 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border sm:h-32 sm:w-32">
-        <img
+        <AvatarImage
           alt=""
           crossOrigin="anonymous"
+          height={128}
           onLoad={handleLoadImage}
-          src={getProfileImagePath(user.profileImage.id)}
+          profileImage={user.profileImage}
+          width={128}
         />
       </div>
       <div className="px-4 pt-20">
@@ -43,8 +47,8 @@ export const UserProfileHeader = ({ user }: Props) => {
             <FontAwesomeIcon iconType="calendar-alt" styleType="regular" />
           </span>
           <span>
-            <time dateTime={moment(user.createdAt).toISOString()}>
-              {moment(user.createdAt).locale("ja").format("LL")}
+            <time dateTime={new Date(user.createdAt).toISOString()}>
+              {formatDate(user.createdAt)}
             </time>
             からサービスを利用しています
           </span>

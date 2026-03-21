@@ -1,58 +1,57 @@
-import $ from "jquery";
-import { gzip } from "pako";
+interface FetchError extends Error {
+  response: Response;
+  responseJSON?: unknown;
+}
 
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "binary",
-    method: "GET",
-    responseType: "arraybuffer",
-    url,
-  });
-  return result;
+  const response = await fetch(url);
+  if (!response.ok) {
+    const error: FetchError = new Error(response.statusText) as FetchError;
+    error.response = response;
+    throw error;
+  }
+  return response.arrayBuffer();
 }
 
 export async function fetchJSON<T>(url: string): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "json",
-    method: "GET",
-    url,
-  });
-  return result;
+  const response = await fetch(url);
+  if (!response.ok) {
+    const error: FetchError = new Error(response.statusText) as FetchError;
+    error.response = response;
+    error.responseJSON = await response.json().catch(() => null);
+    throw error;
+  }
+  return response.json() as T;
 }
 
 export async function sendFile<T>(url: string, file: File): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    data: file,
-    dataType: "json",
-    headers: {
-      "Content-Type": "application/octet-stream",
-    },
+  const response = await fetch(url, {
     method: "POST",
-    processData: false,
-    url,
+    body: file,
+    headers: { "Content-Type": "application/octet-stream" },
   });
-  return result;
+  if (!response.ok) {
+    const error: FetchError = new Error(response.statusText) as FetchError;
+    error.response = response;
+    error.responseJSON = await response.json().catch(() => null);
+    throw error;
+  }
+  return response.json() as T;
 }
 
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
-  const jsonString = JSON.stringify(data);
-  const uint8Array = new TextEncoder().encode(jsonString);
-  const compressed = gzip(uint8Array);
-
-  const result = await $.ajax({
-    async: false,
-    data: compressed,
-    dataType: "json",
+  const response = await fetch(url, {
+    method: "POST",
+    body: JSON.stringify(data),
     headers: {
-      "Content-Encoding": "gzip",
       "Content-Type": "application/json",
     },
-    method: "POST",
-    processData: false,
-    url,
   });
-  return result;
+  if (!response.ok) {
+    const error: FetchError = new Error(response.statusText) as FetchError;
+    error.response = response;
+    error.responseJSON = await response.json().catch(() => null);
+    throw error;
+  }
+  return response.json() as T;
 }
