@@ -1,5 +1,5 @@
-import type { Tokenizer, IpadicFeatures } from "kuromoji";
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -15,7 +15,6 @@ import {
   filterSuggestionsBM25,
 } from "@web-speed-hackathon-2026/client/src/utils/bm25_search";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
-import { buildTokenizer } from "@web-speed-hackathon-2026/client/src/utils/kuromoji";
 
 interface Props {
   isStreaming: boolean;
@@ -91,11 +90,9 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
-  const [allSuggestions, setAllSuggestions] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [queryTokens, setQueryTokens] = useState<string[]>([]);
+  const [queryText, setQueryText] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   // サジェストが更新されたら一番下にスクロール
@@ -105,44 +102,45 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   }, [suggestions, showSuggestions]);
 
-  // 初回にkuromojiトークナイザーを構築
-  useEffect(() => {
-    let mounted = true;
+  const loadSuggestionDependencies = useCallback(async () => {
+    const [{ buildTokenizer }, suggestionsData] = await Promise.all([
+      import("@web-speed-hackathon-2026/client/src/utils/kuromoji"),
+      getSuggestions(),
+    ]);
 
-    const init = async () => {
-      const [nextTokenizer, cachedSuggestions] = await Promise.all([
-        buildTokenizer(),
-        getSuggestions(),
-      ]);
-      if (!mounted) {
-        return;
-      }
-
-      setTokenizer(nextTokenizer);
-      setAllSuggestions(cachedSuggestions);
-    };
-    init();
-
-    return () => {
-      mounted = false;
-    };
+    const tokenizer = await buildTokenizer();
+    return { suggestionsData, tokenizer };
   }, []);
 
   useEffect(() => {
-    if (!tokenizer || !inputValue.trim() || allSuggestions.length === 0) {
+    const normalizedInput = inputValue.trim();
+    if (!normalizedInput) {
       setSuggestions([]);
-      setQueryTokens([]);
+      setQueryText("");
       setShowSuggestions(false);
       return;
     }
 
-    const tokens = extractTokens(tokenizer.tokenize(inputValue));
-    const results = filterSuggestionsBM25(tokenizer, allSuggestions, tokens);
+    let cancelled = false;
+    const timeoutId = window.setTimeout(() => {
+      void loadSuggestionDependencies().then(({ suggestionsData, tokenizer }) => {
+        if (cancelled) {
+          return;
+        }
 
-    setQueryTokens(tokens);
-    setSuggestions(results);
-    setShowSuggestions(results.length > 0);
-  }, [allSuggestions, inputValue, tokenizer]);
+        const tokens = extractTokens(tokenizer.tokenize(normalizedInput));
+        const results = filterSuggestionsBM25(tokenizer, suggestionsData, tokens);
+        setQueryText(normalizedInput.toLowerCase());
+        setSuggestions(results);
+        setShowSuggestions(results.length > 0);
+      });
+    }, 120);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [inputValue, loadSuggestionDependencies]);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
@@ -167,7 +165,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const handleSuggestionClick = (suggestion: string) => {
     setInputValue(suggestion);
     setSuggestions([]);
-    setQueryTokens([]);
+    setQueryText("");
     setShowSuggestions(false);
   };
 
@@ -177,7 +175,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
       onSendMessage(inputValue.trim());
       setInputValue("");
       setSuggestions([]);
-      setQueryTokens([]);
+      setQueryText("");
       setShowSuggestions(false);
       resetTextareaHeight();
     }
@@ -207,7 +205,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
                 className="border-cax-border text-cax-text-muted hover:bg-cax-surface-subtle w-full border-b px-4 py-2 text-left text-sm last:border-b-0"
                 onClick={() => handleSuggestionClick(suggestion)}
               >
-                {highlightMatchByTokens(suggestion, queryTokens)}
+                {highlightMatchByTokens(suggestion, queryText ? [queryText] : [])}
               </button>
             ))}
           </div>

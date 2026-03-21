@@ -1,17 +1,19 @@
-import { MagickFormat } from "@imagemagick/magick-wasm";
 import { ChangeEventHandler, FormEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/components/modal/ModalErrorMessage";
 import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/components/modal/ModalSubmitButton";
 import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/AttachFileInputButton";
-import { convertImage } from "@web-speed-hackathon-2026/client/src/utils/convert_image";
-import { convertSound } from "@web-speed-hackathon-2026/client/src/utils/convert_sound";
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
+interface SubmitImage {
+  file: File;
+  alt: string;
+}
+
 interface SubmitParams {
-  images: File[];
+  images: SubmitImage[];
   movie: File | undefined;
   sound: File | undefined;
   text: string;
@@ -36,6 +38,19 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
   const [fileErrorMessage, setFileErrorMessage] = useState<string | null>(null);
   const [isConverting, setIsConverting] = useState(false);
 
+  const convertImageOnDemand = useCallback(async (file: File) => {
+    const [{ MagickFormat }, { convertImage }] = await Promise.all([
+      import("@imagemagick/magick-wasm"),
+      import("@web-speed-hackathon-2026/client/src/utils/convert_image"),
+    ]);
+    return convertImage(file, { extension: MagickFormat.Avif });
+  }, []);
+
+  const convertSoundOnDemand = useCallback(async (file: File) => {
+    const { convertSound } = await import("@web-speed-hackathon-2026/client/src/utils/convert_sound");
+    return convertSound(file, { extension: "mp3" });
+  }, []);
+
   const handleChangeText = useCallback<ChangeEventHandler<HTMLTextAreaElement>>((ev) => {
     const value = ev.currentTarget.value;
     setParams((params) => ({
@@ -54,8 +69,11 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
       Promise.all(
         files.map((file) =>
-          convertImage(file, { extension: MagickFormat.Avif }).then(
-            (blob) => new File([blob], "converted.avif", { type: "image/avif" }),
+          convertImageOnDemand(file).then(
+            ({ blob, alt }) => ({
+              file: new File([blob], "converted.avif", { type: "image/avif" }),
+              alt,
+            }),
           ),
         ),
       )
@@ -85,7 +103,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     if (isValid) {
       setIsConverting(true);
 
-      convertSound(file, { extension: "mp3" })
+      convertSoundOnDemand(file)
         .then((converted) => {
           setParams((params) => ({
             ...params,
@@ -102,7 +120,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
           setFileErrorMessage("音声の変換に失敗しました");
         });
     }
-  }, []);
+  }, [convertSoundOnDemand]);
 
   const handleChangeMovie = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
     const file = Array.from(ev.currentTarget.files ?? [])[0]!;

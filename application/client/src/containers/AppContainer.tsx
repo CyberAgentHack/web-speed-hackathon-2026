@@ -53,6 +53,14 @@ const NotFoundContainer = lazy(async () => ({
     .NotFoundContainer,
 }));
 
+const RouteLoadingFallback = () => (
+  <section className="px-4 py-6">
+    <div className="bg-cax-surface-subtle h-5 w-40 rounded" />
+    <div className="bg-cax-surface-subtle mt-4 h-4 w-full rounded" />
+    <div className="bg-cax-surface-subtle mt-2 h-4 w-5/6 rounded" />
+  </section>
+);
+
 export const AppContainer = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -87,7 +95,7 @@ export const AppContainer = () => {
         newPostModalId={newPostModalId}
         onLogout={handleLogout}
       >
-        <Suspense fallback={null}>
+        <Suspense fallback={<RouteLoadingFallback />}>
           <Routes>
             <Route element={<TimelineContainer />} path="/" />
             <Route
@@ -113,7 +121,7 @@ export const AppContainer = () => {
         </Suspense>
       </AppPage>
 
-      <Suspense fallback={null}>
+      <Suspense fallback={<></>}>
         <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
         <NewPostModalContainer id={newPostModalId} />
       </Suspense>

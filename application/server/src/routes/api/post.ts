@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
 
-import { Comment, Post } from "@web-speed-hackathon-2026/server/src/models";
+import { Comment, Image, Post } from "@web-speed-hackathon-2026/server/src/models";
 
 export const postRouter = new Hono();
 
@@ -77,6 +77,31 @@ postRouter.post("/posts", async (c: Context) => {
   }
 
   const body = c.get("body" as never) || (await c.req.json());
+  const rawImages: unknown = body?.images;
+
+  if (Array.isArray(rawImages)) {
+    const imageUpdates = rawImages
+      .map((image): { id: string; alt: string } | null => {
+        if (typeof image !== "object" || image == null) {
+          return null;
+        }
+        const id = "id" in image ? image.id : undefined;
+        const alt = "alt" in image ? image.alt : undefined;
+        if (typeof id !== "string" || typeof alt !== "string") {
+          return null;
+        }
+        return { id, alt };
+      })
+      .filter((image): image is { id: string; alt: string } => image !== null);
+
+    if (imageUpdates.length > 0) {
+      await Promise.all(
+        imageUpdates.map(async ({ id, alt }) => {
+          await Image.update({ alt }, { where: { id } });
+        }),
+      );
+    }
+  }
 
   const post = await Post.create(
     {

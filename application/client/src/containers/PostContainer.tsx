@@ -22,9 +22,16 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
 
   if (isLoadingPost) {
     return (
-      <Helmet>
-        <title>読込中 - CaX</title>
-      </Helmet>
+      <>
+        <Helmet>
+          <title>読込中 - CaX</title>
+        </Helmet>
+        <section className="px-4 py-6">
+          <div className="bg-cax-surface-subtle h-5 w-48 rounded" />
+          <div className="bg-cax-surface-subtle mt-4 h-4 w-full rounded" />
+          <div className="bg-cax-surface-subtle mt-2 h-4 w-5/6 rounded" />
+        </section>
+      </>
     );
   }
 
