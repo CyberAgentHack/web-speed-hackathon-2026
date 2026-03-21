@@ -5,12 +5,15 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const webpack = require("webpack");
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
+const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 
 const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
-const isProduction = true;
+const isProduction = process.env.NODE_ENV === "production";
+const shouldAnalyze = process.env.BUNDLE_ANALYZE === "true";
 
 /** @type {import('webpack').Configuration} */
 const config = {
@@ -28,7 +31,11 @@ const config = {
   },
   devtool: isProduction ? false : "inline-source-map",
   entry: {
-    main: [path.resolve(SRC_PATH, "./index.css"), path.resolve(SRC_PATH, "./buildinfo.ts"), path.resolve(SRC_PATH, "./index.tsx")],
+    main: [
+      path.resolve(SRC_PATH, "./index.css"),
+      path.resolve(SRC_PATH, "./buildinfo.ts"),
+      path.resolve(SRC_PATH, "./index.tsx"),
+    ],
   },
   mode: isProduction ? "production" : "development",
   module: {
@@ -86,6 +93,17 @@ const config = {
       scriptLoading: "defer",
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
+    ...(shouldAnalyze
+      ? [
+          new BundleAnalyzerPlugin({
+            analyzerMode: "static",
+            openAnalyzer: false,
+            reportFilename: path.resolve(__dirname, "../bundle-report.html"),
+            generateStatsFile: true,
+            statsFilename: path.resolve(__dirname, "../bundle-stats.json"),
+          }),
+        ]
+      : []),
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
@@ -120,7 +138,8 @@ const config = {
     },
   },
   optimization: {
-    minimize: true,
+    minimize: isProduction,
+    minimizer: ["...", new CssMinimizerPlugin()],
     runtimeChunk: "single",
     splitChunks: {
       chunks: "all",
