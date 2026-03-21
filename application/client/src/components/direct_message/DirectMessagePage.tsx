@@ -1,14 +1,14 @@
 import classNames from "classnames";
-import moment from "moment";
 import {
   ChangeEvent,
+  FormEvent,
+  KeyboardEvent,
   useCallback,
+  useEffect,
   useId,
+  useMemo,
   useRef,
   useState,
-  KeyboardEvent,
-  FormEvent,
-  useEffect,
 } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -25,6 +25,14 @@ interface Props {
   onSubmit: (params: DirectMessageFormData) => Promise<void>;
 }
 
+function formatTime(value: string): string {
+  return new Date(value).toLocaleTimeString("ja-JP", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
+
 export const DirectMessagePage = ({
   conversationError,
   conversation,
@@ -36,6 +44,7 @@ export const DirectMessagePage = ({
 }: Props) => {
   const formRef = useRef<HTMLFormElement>(null);
   const textAreaId = useId();
+  const messageListEndRef = useRef<HTMLDivElement | null>(null);
 
   const peer =
     conversation.initiator.id !== activeUser.id ? conversation.initiator : conversation.member;
@@ -43,7 +52,6 @@ export const DirectMessagePage = ({
   const [text, setText] = useState("");
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
-  const scrollHeightRef = useRef(0);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -53,19 +61,17 @@ export const DirectMessagePage = ({
     [onTyping],
   );
 
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLTextAreaElement>) => {
-      if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
-        event.preventDefault();
-        formRef.current?.requestSubmit();
-      }
-    },
-    [formRef],
-  );
+  const handleKeyDown = useCallback((event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+      event.preventDefault();
+      formRef.current?.requestSubmit();
+    }
+  }, []);
 
   const handleSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
+
       void onSubmit({ body: text.trim() }).then(() => {
         setText("");
       });
@@ -74,16 +80,26 @@ export const DirectMessagePage = ({
   );
 
   useEffect(() => {
-    const id = setInterval(() => {
-      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
-      if (height !== scrollHeightRef.current) {
-        scrollHeightRef.current = height;
-        window.scrollTo(0, height);
-      }
-    }, 1);
+    messageListEndRef.current?.scrollIntoView({
+      behavior: "auto",
+      block: "end",
+    });
+  }, [conversation.messages.length, isPeerTyping]);
 
-    return () => clearInterval(id);
-  }, []);
+  const renderedMessages = useMemo(() => {
+    return conversation.messages.map((message) => {
+      const isActiveUserSend = message.sender.id === activeUser.id;
+
+      return {
+        id: message.id,
+        isActiveUserSend,
+        isRead: message.isRead,
+        body: message.body,
+        createdAt: message.createdAt,
+        createdAtLabel: formatTime(message.createdAt),
+      };
+    });
+  }, [activeUser.id, conversation.messages]);
 
   if (conversationError != null) {
     return (
@@ -99,8 +115,13 @@ export const DirectMessagePage = ({
         <img
           alt={peer.profileImage.alt}
           className="h-12 w-12 rounded-full object-cover"
-          src={getProfileImagePath(peer.profileImage.id)}
+          decoding="async"
+          height={48}
+          loading="lazy"
+          src={getProfileImagePath(peer.profileImage.id, "thumb")}
+          width={48}
         />
+
         <div className="min-w-0">
           <h1 className="overflow-hidden text-xl font-bold text-ellipsis whitespace-nowrap">
             {peer.name}
@@ -119,31 +140,31 @@ export const DirectMessagePage = ({
         )}
 
         <ul className="grid gap-3" data-testid="dm-message-list">
-          {conversation.messages.map((message) => {
-            const isActiveUserSend = message.sender.id === activeUser.id;
-
+          {renderedMessages.map((message) => {
             return (
               <li
                 className={classNames(
-                  "flex flex-col w-full",
-                  isActiveUserSend ? "items-end" : "items-start",
+                  "flex w-full flex-col",
+                  message.isActiveUserSend ? "items-end" : "items-start",
                 )}
+                key={message.id}
               >
                 <p
                   className={classNames(
                     "max-w-3/4 rounded-xl border px-4 py-2 text-sm whitespace-pre-wrap leading-relaxed wrap-anywhere",
-                    isActiveUserSend
+                    message.isActiveUserSend
                       ? "rounded-br-sm border-transparent bg-cax-brand text-cax-surface-raised"
                       : "rounded-bl-sm border-cax-border bg-cax-surface text-cax-text",
                   )}
                 >
                   {message.body}
                 </p>
+
                 <div className="flex gap-1 text-xs">
-                  <time dateTime={message.createdAt}>
-                    {moment(message.createdAt).locale("ja").format("HH:mm")}
+                  <time dateTime={new Date(message.createdAt).toISOString()}>
+                    {message.createdAtLabel}
                   </time>
-                  {isActiveUserSend && message.isRead && (
+                  {message.isActiveUserSend && message.isRead && (
                     <span className="text-cax-text-muted">既読</span>
                   )}
                 </div>
@@ -151,6 +172,8 @@ export const DirectMessagePage = ({
             );
           })}
         </ul>
+
+        <div ref={messageListEndRef} />
       </div>
 
       <div className="sticky bottom-12 z-10 lg:bottom-0">
@@ -172,13 +195,14 @@ export const DirectMessagePage = ({
             <textarea
               id={textAreaId}
               className="border-cax-border placeholder-cax-text-subtle focus:outline-cax-brand w-full resize-none rounded-xl border px-3 py-2 focus:outline-2 focus:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              value={text}
+              disabled={isSubmitting}
               onChange={handleChange}
               onKeyDown={handleKeyDown}
               rows={textAreaRows}
-              disabled={isSubmitting}
+              value={text}
             />
           </div>
+
           <button
             className="bg-cax-brand text-cax-surface-raised hover:bg-cax-brand-strong rounded-full px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={isInvalid || isSubmitting}

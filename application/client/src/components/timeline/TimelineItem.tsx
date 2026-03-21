@@ -1,4 +1,3 @@
-import moment from "moment";
 import { MouseEventHandler, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router";
 
@@ -45,10 +44,15 @@ export const TimelineItem = ({ post }: Props) => {
   );
 
   const createdAt = useMemo(() => {
-    const date = moment(post.createdAt);
+    const date = new Date(post.createdAt);
+
     return {
       iso: date.toISOString(),
-      label: date.locale("ja").format("LL"),
+      label: date.toLocaleDateString("ja-JP", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
     };
   }, [post.createdAt]);
 

@@ -1,4 +1,4 @@
-import moment from "moment";
+import { useMemo } from "react";
 
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
@@ -9,6 +9,19 @@ interface Props {
 }
 
 export const CommentItem = ({ comment }: Props) => {
+  const createdAt = useMemo(() => {
+    const date = new Date(comment.createdAt);
+
+    return {
+      iso: date.toISOString(),
+      label: date.toLocaleDateString("ja-JP", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+    };
+  }, [comment.createdAt]);
+
   return (
     <article className="hover:bg-cax-surface-subtle px-1 sm:px-4">
       <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
@@ -19,10 +32,16 @@ export const CommentItem = ({ comment }: Props) => {
           >
             <img
               alt={comment.user.profileImage.alt}
-              src={getProfileImagePath(comment.user.profileImage.id)}
+              className="h-full w-full object-cover"
+              decoding="async"
+              height={48}
+              loading="lazy"
+              src={getProfileImagePath(comment.user.profileImage.id, "thumb")}
+              width={48}
             />
           </Link>
         </div>
+
         <div className="min-w-0 shrink grow">
           <p className="overflow-hidden text-xs text-ellipsis whitespace-nowrap">
             <Link
@@ -31,6 +50,7 @@ export const CommentItem = ({ comment }: Props) => {
             >
               {comment.user.name}
             </Link>
+
             <Link
               className="text-cax-text-muted pr-1 hover:underline"
               to={`/users/${comment.user.username}`}
@@ -38,13 +58,13 @@ export const CommentItem = ({ comment }: Props) => {
               @{comment.user.username}
             </Link>
           </p>
+
           <div className="text-cax-text text-sm leading-relaxed">
             <TranslatableText text={comment.text} />
           </div>
+
           <p className="text-cax-text-muted pt-1 text-xs">
-            <time dateTime={moment(comment.createdAt).toISOString()}>
-              {moment(comment.createdAt).locale("ja").format("LL")}
-            </time>
+            <time dateTime={createdAt.iso}>{createdAt.label}</time>
           </p>
         </div>
       </div>

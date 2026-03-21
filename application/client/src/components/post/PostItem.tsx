@@ -1,4 +1,4 @@
-import moment from "moment";
+import { useMemo } from "react";
 
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
@@ -12,6 +12,19 @@ interface Props {
 }
 
 export const PostItem = ({ post }: Props) => {
+  const createdAt = useMemo(() => {
+    const date = new Date(post.createdAt);
+
+    return {
+      iso: date.toISOString(),
+      label: date.toLocaleDateString("ja-JP", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+    };
+  }, [post.createdAt]);
+
   return (
     <article className="px-1 sm:px-4">
       <div className="border-cax-border border-b px-4 pt-4 pb-4">
@@ -23,10 +36,16 @@ export const PostItem = ({ post }: Props) => {
             >
               <img
                 alt={post.user.profileImage.alt}
-                src={getProfileImagePath(post.user.profileImage.id)}
+                className="h-full w-full object-cover"
+                decoding="async"
+                height={64}
+                loading="lazy"
+                src={getProfileImagePath(post.user.profileImage.id, "thumb")}
+                width={64}
               />
             </Link>
           </div>
+
           <div className="min-w-0 shrink grow overflow-hidden text-ellipsis whitespace-nowrap">
             <p>
               <Link
@@ -36,6 +55,7 @@ export const PostItem = ({ post }: Props) => {
                 {post.user.name}
               </Link>
             </p>
+
             <p>
               <Link
                 className="text-cax-text-muted hover:underline"
@@ -46,30 +66,33 @@ export const PostItem = ({ post }: Props) => {
             </p>
           </div>
         </div>
+
         <div className="pt-2 sm:pt-4">
           <div className="text-cax-text text-xl leading-relaxed">
             <TranslatableText text={post.text} />
           </div>
+
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
               <ImageArea images={post.images} />
             </div>
           ) : null}
+
           {post.movie ? (
             <div className="relative mt-2 w-full">
               <MovieArea movie={post.movie} />
             </div>
           ) : null}
+
           {post.sound ? (
             <div className="relative mt-2 w-full">
               <SoundArea sound={post.sound} />
             </div>
           ) : null}
+
           <p className="mt-2 text-sm sm:mt-4">
             <Link className="text-cax-text-muted hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
-              </time>
+              <time dateTime={createdAt.iso}>{createdAt.label}</time>
             </Link>
           </p>
         </div>
