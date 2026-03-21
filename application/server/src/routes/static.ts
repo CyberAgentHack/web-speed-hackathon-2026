@@ -10,9 +10,6 @@ import {
 
 export const staticRouter = Router();
 
-// SPA 対応のため、ファイルが存在しないときに index.html を返す
-staticRouter.use(history());
-
 staticRouter.use(
   serveStatic(UPLOAD_PATH, {
     etag: false,
@@ -33,3 +30,6 @@ staticRouter.use(
     lastModified: false,
   }),
 );
+
+// SPA 対応のため、ファイルが存在しないときに index.html を返す
+staticRouter.use(history());

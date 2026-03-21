@@ -1,6 +1,11 @@
-node_modules
+**/node_modules
 .git
-*.log
+**/.git
+.github
+**/dist
+**/build
+**/.next
+**/.nuxt
 
 application/server/seeds
 application/server/upload
