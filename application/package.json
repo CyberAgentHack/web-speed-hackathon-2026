@@ -13,7 +13,7 @@
     "format": "pnpm run format:oxlint && pnpm run format:oxfmt",
     "format:oxlint": "oxlint --fix",
     "format:oxfmt": "oxfmt",
-    "initialize": "curl -I http://localhost:3000/api/v1/initialize"
+    "initialize": "curl -I -X 'POST' http://localhost:3000/api/v1/initialize"
   },
   "devDependencies": {
     "oxfmt": "0.36.0",
