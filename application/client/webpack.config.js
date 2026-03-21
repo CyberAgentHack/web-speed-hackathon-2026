@@ -130,7 +130,7 @@ const config = {
       new TerserPlugin({
         parallel: false,
         terserOptions: {
-          compress: { passes: 1 },
+          compress: { passes: 2 },
         },
       }),
     ],
