@@ -99,7 +99,7 @@ export const AppContainer = () => {
         newPostModalId={newPostModalId}
         onLogout={handleLogout}
       >
-        <Suspense fallback={<title>読込中 - CaX</title>}>
+        <Suspense fallback={null}>
           <Routes>
             <Route element={<TimelineContainer />} path="/" />
             <Route
