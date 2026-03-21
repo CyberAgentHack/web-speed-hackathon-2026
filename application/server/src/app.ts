@@ -1,3 +1,5 @@
+import zlib from "node:zlib";
+
 import bodyParser from "body-parser";
 import compression from "compression";
 import Express from "express";
@@ -10,7 +12,13 @@ export const app = Express();
 
 app.set("trust proxy", true);
 
-app.use(compression());
+app.use(compression({
+  brotli: {
+    params: {
+      [zlib.constants.BROTLI_PARAM_QUALITY]: 6,
+    },
+  },
+}));
 
 app.use(sessionMiddleware);
 app.use(bodyParser.json());
