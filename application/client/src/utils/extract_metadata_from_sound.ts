@@ -22,8 +22,8 @@ export async function extractMetadataFromSound(data: File): Promise<SoundMetadat
     await ffmpeg.exec(["-i", "file", "-f", "ffmetadata", exportFile]);
 
     const output = (await ffmpeg.readFile(exportFile)) as Uint8Array<ArrayBuffer>;
-
-    ffmpeg.terminate();
+    await ffmpeg.deleteFile("file").catch(() => {});
+    await ffmpeg.deleteFile(exportFile).catch(() => {});
 
     const outputUtf8 = Encoding.convert(output, {
       to: "UNICODE",
