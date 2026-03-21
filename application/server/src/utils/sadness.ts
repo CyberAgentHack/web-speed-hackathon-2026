@@ -1,9 +1,10 @@
 import Bluebird from "bluebird";
 import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
 import analyze from "negaposi-analyzer-ja";
+import { DICTS_PATH } from "../paths";
 
 async function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
-  const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
+  const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: DICTS_PATH }));
   return await builder.buildAsync();
 }
 

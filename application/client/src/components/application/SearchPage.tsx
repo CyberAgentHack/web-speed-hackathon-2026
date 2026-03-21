@@ -9,9 +9,9 @@ import {
 } from "@web-speed-hackathon-2026/client/src/search/services";
 import { SearchFormData } from "@web-speed-hackathon-2026/client/src/search/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/search/validation";
-import { analyzeSentiment } from "@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer";
 
 import { Button } from "../foundation/Button";
+import { fetchJSON } from "../../utils/fetchers";
 
 interface Props {
   query: string;
@@ -52,22 +52,8 @@ const SearchPageComponent = ({
       return;
     }
 
-    let isMounted = true;
-    analyzeSentiment(parsed.keywords)
-      .then((result) => {
-        if (isMounted) {
-          setIsNegative(result.label === "negative");
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setIsNegative(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
+    fetchJSON<{ sad: boolean }>("/api/v1/sad", { q: parsed.keywords })
+      .then(({ sad }) => { setIsNegative(sad); });
   }, [parsed.keywords]);
 
   const searchConditionText = useMemo(() => {
