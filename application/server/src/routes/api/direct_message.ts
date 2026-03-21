@@ -19,7 +19,16 @@ directMessageRouter.get("/dm", async (c) => {
   }
 
   const conversations = await DirectMessageConversation.findAll({
-    include: [{ association: "messages", required: true }],
+    // messages の defaultScope（sender + profileImage）を unscoped で上書きし、
+    // sender は id のみ取得する（一覧で必要なのは sender.id と body/isRead/createdAt のみ）
+    include: [
+      {
+        model: DirectMessage.unscoped(),
+        as: "messages",
+        required: true,
+        include: [{ association: "sender", attributes: ["id"] }],
+      },
+    ],
     where: {
       [Op.or]: [{ initiatorId: c.get("session").userId }, { memberId: c.get("session").userId }],
     },
@@ -222,7 +231,9 @@ directMessageRouter.post("/dm/:conversationId/read", async (c) => {
   }
 
   const userId = c.get("session").userId!;
-  const conversation = await DirectMessageConversation.findOne({
+  // peerId の導出に必要な id/initiatorId/memberId のみ取得（defaultScope の全件ロードを回避）
+  const conversation = await DirectMessageConversation.unscoped().findOne({
+    attributes: ["id", "initiatorId", "memberId"],
     where: {
       id: c.req.param("conversationId"),
       [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
@@ -251,14 +262,21 @@ directMessageRouter.post("/dm/:conversationId/typing", async (c) => {
     throw new HTTPException(401);
   }
 
-  const conversation = await DirectMessageConversation.findByPk(
-    c.req.param("conversationId"),
-  );
+  const userId = c.get("session").userId!;
+  // イベント発火に必要な id のみ取得（defaultScope の全件ロードを回避）
+  // 参加者チェックも同時に行う
+  const conversation = await DirectMessageConversation.unscoped().findOne({
+    attributes: ["id"],
+    where: {
+      id: c.req.param("conversationId"),
+      [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
+    },
+  });
   if (conversation === null) {
     throw new HTTPException(404);
   }
 
-  eventhub.emit(`dm:conversation/${conversation.id}:typing/${c.get("session").userId}`, {});
+  eventhub.emit(`dm:conversation/${conversation.id}:typing/${userId}`, {});
 
   return c.json({}, 200);
 });

@@ -73,8 +73,15 @@ export function initDirectMessage(sequelize: Sequelize) {
   );
 
   DirectMessage.addHook("afterSave", "onDmSaved", async (message) => {
-    const directMessage = await DirectMessage.findByPk(message.get().id);
-    const conversation = await DirectMessageConversation.findByPk(directMessage?.conversationId);
+    // sender + profileImage が必要な directMessage と、id/initiatorId/memberId のみ必要な
+    // conversation を並列フェッチする。conversation は defaultScope を使わず最小カラムのみ取得。
+    const [directMessage, conversation] = await Promise.all([
+      DirectMessage.findByPk(message.get().id),
+      DirectMessageConversation.unscoped().findOne({
+        attributes: ["id", "initiatorId", "memberId"],
+        where: { id: message.get().conversationId },
+      }),
+    ]);
 
     if (directMessage == null || conversation == null) {
       return;
