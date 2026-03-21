@@ -137,6 +137,5 @@ const SearchPageComponent = ({
 
 export const SearchPage = reduxForm<SearchFormData, Props>({
   form: "search",
-  enableReinitialize: true,
   validate,
 })(SearchPageComponent);
