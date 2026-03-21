@@ -9,10 +9,6 @@ const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 const IMAGE_MAX_SIZE = 1280;
 const MOVIE_EXPORT_SIZE = 512;
 
-function logNewPost(event: string, payload?: Record<string, unknown>) {
-  console.info("[new-post]", event, payload ?? {});
-}
-
 interface SubmitParams {
   images: Array<{ alt: string; file: File }>;
   movie: File | undefined;
@@ -54,10 +50,6 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     setHasFileError(isValid !== true);
     if (isValid) {
       setIsConverting(true);
-      logNewPost("imageConvert:start", {
-        count: files.length,
-        files: files.map((file) => ({ name: file.name, size: file.size, type: file.type })),
-      });
 
       import("@web-speed-hackathon-2026/client/src/utils/convert_image")
         .then(({ convertImage }) =>
@@ -74,14 +66,6 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
           ),
         )
         .then((convertedFiles) => {
-          logNewPost("imageConvert:success", {
-            count: convertedFiles.length,
-            files: convertedFiles.map((file) => ({
-              altLength: file.alt.length,
-              size: file.file.size,
-              type: file.file.type,
-            })),
-          });
           setParams((params) => ({
             ...params,
             images: convertedFiles,
@@ -91,8 +75,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
           setIsConverting(false);
         })
-        .catch((error: unknown) => {
-          console.error("[new-post] imageConvert:failure", error);
+        .catch(() => {
           setHasFileError(true);
           setIsConverting(false);
         });
@@ -106,12 +89,10 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     setHasFileError(isValid !== true);
     if (isValid) {
       setIsConverting(true);
-      logNewPost("soundConvert:start", { name: file.name, size: file.size, type: file.type });
 
       import("@web-speed-hackathon-2026/client/src/utils/convert_sound")
         .then(({ convertSound }) => convertSound(file, { extension: "mp3" }))
         .then((converted) => {
-          logNewPost("soundConvert:success", { size: converted.size, type: "audio/mpeg" });
           setParams((params) => ({
             ...params,
             images: [],
@@ -121,8 +102,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
           setIsConverting(false);
         })
-        .catch((error: unknown) => {
-          console.error("[new-post] soundConvert:failure", error);
+        .catch(() => {
           setHasFileError(true);
           setIsConverting(false);
         });
@@ -136,12 +116,10 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     setHasFileError(isValid !== true);
     if (isValid) {
       setIsConverting(true);
-      logNewPost("movieConvert:start", { name: file.name, size: file.size, type: file.type });
 
       import("@web-speed-hackathon-2026/client/src/utils/convert_movie")
         .then(({ convertMovie }) => convertMovie(file, { extension: "webm", size: MOVIE_EXPORT_SIZE }))
         .then((converted) => {
-          logNewPost("movieConvert:success", { size: converted.size, type: "video/webm" });
           setParams((params) => ({
             ...params,
             images: [],
@@ -153,8 +131,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
           setIsConverting(false);
         })
-        .catch((error: unknown) => {
-          console.error("[new-post] movieConvert:failure", error);
+        .catch(() => {
           setHasFileError(true);
           setIsConverting(false);
         });

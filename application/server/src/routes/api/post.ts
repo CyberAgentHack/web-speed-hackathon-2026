@@ -38,20 +38,9 @@ postRouter.get("/posts/:postId/comments", async (req, res) => {
 });
 
 postRouter.post("/posts", async (req, res) => {
-  const startedAt = Date.now();
-
   if (req.session.userId === undefined) {
-    console.warn("[api/posts] unauthorized");
     throw new httpErrors.Unauthorized();
   }
-
-  console.info("[api/posts] start", {
-    imageCount: Array.isArray(req.body?.images) ? req.body.images.length : 0,
-    movieId: req.body?.movie?.id,
-    soundId: req.body?.sound?.id,
-    textLength: typeof req.body?.text === "string" ? req.body.text.length : 0,
-    userId: req.session.userId,
-  });
 
   const post = await Post.create(
     {
@@ -69,13 +58,6 @@ postRouter.post("/posts", async (req, res) => {
       ],
     },
   );
-
-  console.info("[api/posts] success", {
-    elapsedMs: Date.now() - startedAt,
-    imageCount: post.images?.length ?? 0,
-    postId: post.id,
-    userId: req.session.userId,
-  });
 
   return res.status(200).type("application/json").send(serializePost(post));
 });

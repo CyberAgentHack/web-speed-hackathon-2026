@@ -22,9 +22,6 @@ directMessageRouter.get("/dm", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const debugConversationId =
-    typeof req.query["debugConversationId"] === "string" ? req.query["debugConversationId"] : null;
-
   const conversations = await DirectMessageConversation.unscoped().findAll({
     where: {
       [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
@@ -52,33 +49,6 @@ directMessageRouter.get("/dm", async (req, res) => {
     }),
   );
   const latestMessageByConversationId = new Map(latestMessages);
-
-  if (debugConversationId != null) {
-    const debugMessages = await DirectMessage.unscoped().findAll({
-      attributes: ["id", "createdAt", "conversationId", "senderId"],
-      order: [
-        ["createdAt", "ASC"],
-        ["id", "ASC"],
-      ],
-      raw: true,
-      where: {
-        conversationId: debugConversationId,
-      },
-    });
-    const latestMessage = latestMessageByConversationId.get(debugConversationId) ?? null;
-
-    console.info("[api/dm/list] debugConversation", {
-      conversationId: debugConversationId,
-      latestMessageCreatedAt: latestMessage?.createdAt ?? null,
-      latestMessageId: latestMessage?.id ?? null,
-      latestMessageSenderId: latestMessage?.senderId ?? null,
-      messages: debugMessages.map((message) => ({
-        createdAt: message.createdAt,
-        id: message.id,
-        senderId: message.senderId,
-      })),
-    });
-  }
 
   const unreadRows: UnreadRow[] =
     conversationIds.length > 0
@@ -116,17 +86,6 @@ directMessageRouter.get("/dm", async (req, res) => {
       messages: [latestMessageByConversationId.get(conversation.id)].filter(Boolean),
       hasUnread: unreadByConversationId.get(conversation.id) ?? false,
     }));
-
-  console.info(
-    "[api/dm/list] sorted",
-    sorted.map((conversation) => ({
-      conversationId: conversation.id,
-      hasUnread: conversation.hasUnread,
-      latestMessageCreatedAt: conversation.messages[0]?.createdAt ?? null,
-      latestMessageId: conversation.messages[0]?.id ?? null,
-      latestMessageSenderId: conversation.messages[0]?.sender?.id ?? null,
-    })),
-  );
 
   return res.status(200).type("application/json").send(sorted);
 });
@@ -265,18 +224,6 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
         })) > 0
       : false;
 
-  console.info("[api/dm/detail] fetch", {
-    before,
-    conversationId: conversation.id,
-    hasOlderMessages,
-    messageCount: orderedMessages.length,
-    newestMessageCreatedAt: orderedMessages[orderedMessages.length - 1]?.createdAt ?? null,
-    newestMessageId: orderedMessages[orderedMessages.length - 1]?.id ?? null,
-    oldestMessageCreatedAt: orderedMessages[0]?.createdAt ?? null,
-    oldestMessageId: orderedMessages[0]?.id ?? null,
-    userId: req.session.userId,
-  });
-
   return res.status(200).type("application/json").send({
     ...conversation.toJSON(),
     hasOlderMessages,
@@ -347,14 +294,6 @@ directMessageRouter.post("/dm/:conversationId/messages", async (req, res) => {
     senderId: req.session.userId,
   });
   await message.reload();
-
-  console.info("[api/dm/messages] created", {
-    bodyLength: message.body.length,
-    conversationId: conversation.id,
-    createdAt: message.createdAt,
-    messageId: message.id,
-    senderId: req.session.userId,
-  });
 
   return res.status(201).type("application/json").send(message);
 });
