@@ -8,6 +8,12 @@ interface Props {
 }
 
 export const ImageArea = ({ images }: Props) => {
+  const isFullWidth = images.length === 1;
+  const sizes = isFullWidth
+    ? "(max-width: 640px) 100vw, 600px"
+    : "(max-width: 640px) 50vw, 300px";
+  const widths = isFullWidth ? [400, 600, 800] : [200, 300, 400];
+
   return (
     <AspectRatioBox aspectHeight={9} aspectWidth={16}>
       <div className="border-cax-border grid h-full w-full grid-cols-2 grid-rows-2 gap-1 overflow-hidden rounded-lg border">
@@ -25,7 +31,7 @@ export const ImageArea = ({ images }: Props) => {
                   images.length <= 2 || (images.length === 3 && idx === 0),
               })}
             >
-              <CoveredImage image={image} />
+              <CoveredImage image={image} sizes={sizes} widths={widths} />
             </div>
           );
         })}

@@ -8,17 +8,26 @@ import { getImagePath } from "../../utils/get_path";
 
 interface Props {
   image: Models.Image;
+  sizes?: string;
+  widths?: number[];
 }
 
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
-export const CoveredImage = ({ image }: Props) => {
+export const CoveredImage = ({ image, sizes, widths }: Props) => {
   const dialogId = useId();
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
     ev.stopPropagation();
   }, []);
+
+  const resolvedWidths = widths ?? [400, 800];
+  const resolvedSizes = sizes ?? "400px";
+
+  const srcSet = resolvedWidths
+    .map((w) => `${getImagePath(image.id, { w, format: "webp" })} ${w}w`)
+    .join(", ");
 
   return (
     <div className="relative h-full w-full overflow-hidden">
@@ -30,7 +39,9 @@ export const CoveredImage = ({ image }: Props) => {
         className={classNames(
           "absolute left-1/2 top-1/2 max-w-none -translate-x-1/2 -translate-y-1/2 object-cover w-full h-full",
         )}
-        src={getImagePath(image.id)}
+        src={getImagePath(image.id, { w: resolvedWidths[0], format: "webp" })}
+        srcSet={srcSet}
+        sizes={resolvedSizes}
       />
 
       <button
