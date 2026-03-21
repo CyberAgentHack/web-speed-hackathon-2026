@@ -1,13 +1,13 @@
-import history from 'connect-history-api-fallback';
-import { Router } from 'express';
-import serveStatic from 'serve-static';
+import history from "connect-history-api-fallback";
+import { Router } from "express";
+import serveStatic from "serve-static";
 
 import {
   CLIENT_DIST_PATH,
   PUBLIC_PATH,
   UPLOAD_PATH,
-} from '@web-speed-hackathon-2026/server/src/paths';
-import { imageServeRouter } from '@web-speed-hackathon-2026/server/src/routes/image_serve';
+} from "@web-speed-hackathon-2026/server/src/paths";
+import { imageServeRouter } from "@web-speed-hackathon-2026/server/src/routes/image_serve";
 
 export const staticRouter = Router();
 

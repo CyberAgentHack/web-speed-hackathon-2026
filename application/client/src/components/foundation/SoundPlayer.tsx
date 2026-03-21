@@ -1,4 +1,4 @@
-import { ReactEventHandler, useCallback, useEffect, useRef, useState } from "react";
+import { ReactEventHandler, useCallback, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -7,14 +7,12 @@ import { getSoundPath } from "@web-speed-hackathon-2026/client/src/utils/get_pat
 
 interface Props {
   sound: Models.Sound;
-  priority?: boolean;
 }
 
-export const SoundPlayer = ({ sound, priority = false }: Props) => {
+export const SoundPlayer = ({ sound }: Props) => {
   const soundPath = getSoundPath(sound.id);
 
   const [currentTimeRatio, setCurrentTimeRatio] = useState(0);
-  const [isVisible, setIsVisible] = useState(priority);
   const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>((ev) => {
     const el = ev.currentTarget;
     setCurrentTimeRatio(el.currentTime / el.duration);
@@ -33,30 +31,9 @@ export const SoundPlayer = ({ sound, priority = false }: Props) => {
     });
   }, []);
 
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (priority) return;
-    const el = containerRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting) {
-        setIsVisible(true);
-        observer.disconnect();
-      }
-    });
-
-    observer.observe(el);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [priority]);
-
   return (
-    <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center" ref={containerRef}>
-      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} preload="none" src={isVisible ? soundPath : undefined} />
+    <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
+      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} src={soundPath} />
       <div className="p-2">
         <button
           className="bg-cax-accent text-cax-surface-raised flex h-8 w-8 items-center justify-center rounded-full text-sm hover:opacity-75"
@@ -77,7 +54,7 @@ export const SoundPlayer = ({ sound, priority = false }: Props) => {
           <AspectRatioBox aspectHeight={1} aspectWidth={10}>
             <div className="relative h-full w-full">
               <div className="absolute inset-0 h-full w-full">
-                {isVisible && <SoundWaveSVG src={soundPath} />}
+                <SoundWaveSVG src={soundPath} />
               </div>
               <div
                 className="bg-cax-surface-subtle absolute inset-0 h-full w-full opacity-75"
