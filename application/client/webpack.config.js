@@ -56,11 +56,6 @@ const config = {
       },
     ],
   },
-  optimization: {
-    splitChunks: {
-      chunks: "all",
-    },
-  },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
     filename: "scripts/[name].[contenthash].js",
@@ -89,7 +84,7 @@ const config = {
     }),
     new HtmlWebpackPlugin({
       inject: "head",
-      scriptLoading: "defer",
+      scriptLoading: "blocking",
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
     ...(process.env.ANALYZE === "true" ? [new BundleAnalyzerPlugin()] : []),
