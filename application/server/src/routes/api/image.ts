@@ -2,11 +2,11 @@ import { promises as fs } from "fs";
 import path from "path";
 
 import { Router } from "express";
-import { fileTypeFromBuffer } from "file-type";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+import { convertImage } from "@web-speed-hackathon-2026/server/src/utils/convert_image";
 import { extractAltFromExif } from "@web-speed-hackathon-2026/server/src/utils/extract_alt_from_exif";
 
 // 変換した画像の拡張子
@@ -22,18 +22,20 @@ imageRouter.post("/images", async (req, res) => {
     throw new httpErrors.BadRequest();
   }
 
-  const type = await fileTypeFromBuffer(req.body);
-  if (type === undefined || type.ext !== EXTENSION) {
-    throw new httpErrors.BadRequest("Invalid file type");
+  let converted: Buffer;
+  try {
+    converted = await convertImage(req.body);
+  } catch {
+    return res.status(400).send("Invalid image");
   }
 
-  const alt = extractAltFromExif(req.body);
+  const alt = extractAltFromExif(converted);
 
   const imageId = uuidv4();
 
   const filePath = path.resolve(UPLOAD_PATH, `./images/${imageId}.${EXTENSION}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
-  await fs.writeFile(filePath, req.body);
+  await fs.writeFile(filePath, converted);
 
   return res.status(200).type("application/json").send({ id: imageId, alt });
 });
