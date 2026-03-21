@@ -26,7 +26,7 @@ export const PostItem = memo(function PostItem({ post }: Props) {
                 alt={post.user.profileImage.alt}
                 className="h-full w-full object-cover"
                 src={getProfileImagePath(post.user.profileImage.id)}
-                loading="lazy"
+                loading="eager"
                 width={64}
                 height={64}
               />
