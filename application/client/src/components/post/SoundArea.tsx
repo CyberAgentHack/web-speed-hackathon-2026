@@ -14,7 +14,20 @@ export const SoundArea = ({ sound }: Props) => {
       data-sound-area
       ref={targetRef}
     >
-      {isActive ? <SoundPlayer sound={sound} /> : null}
+      {isActive ? (
+        <SoundPlayer sound={sound} />
+      ) : (
+        <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center p-2">
+          <div className="flex h-full min-w-0 shrink grow flex-col pt-2">
+            <p className="overflow-hidden text-sm font-bold text-ellipsis whitespace-nowrap">
+              {sound.title}
+            </p>
+            <p className="text-cax-text-muted overflow-hidden text-sm text-ellipsis whitespace-nowrap">
+              {sound.artist}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,14 +1,15 @@
-import Bluebird from "bluebird";
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
 import {
-  useEffect,
   useLayoutEffect,
+  useEffect,
+  useMemo,
   useRef,
   useState,
   type ChangeEvent,
   type FormEvent,
   type KeyboardEvent,
 } from "react";
+import Bluebird from "bluebird";
+import type { Tokenizer, IpadicFeatures } from "kuromoji";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import {
@@ -20,6 +21,19 @@ import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 interface Props {
   isStreaming: boolean;
   onSendMessage: (message: string) => void;
+}
+
+const SUGGESTION_DEBOUNCE_MS = 300;
+
+let tokenizerPromise: Promise<Tokenizer<IpadicFeatures>> | null = null;
+async function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
+  tokenizerPromise ??= (async () => {
+    const { default: kuromoji } = await import("kuromoji");
+    const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
+    return await builder.buildAsync();
+  })();
+
+  return await tokenizerPromise;
 }
 
 // トークン単位でハイライト
@@ -79,11 +93,11 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionsCacheRef = useRef<string[] | null>(null);
 
   // サジェストが更新されたら一番下にスクロール
   useLayoutEffect(() => {
@@ -92,43 +106,34 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   }, [suggestions, showSuggestions]);
 
-  // 初回にkuromojiトークナイザーを構築
-  useEffect(() => {
-    let mounted = true;
-
-    const init = async () => {
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
-      if (mounted) {
-        setTokenizer(nextTokenizer);
-      }
-    };
-    init();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  const normalizedInput = useMemo(() => inputValue.trim(), [inputValue]);
 
   useEffect(() => {
     let cancelled = false;
+    let debounceId: ReturnType<typeof setTimeout> | null = null;
 
     const updateSuggestions = async () => {
-      if (isStreaming || !tokenizer || !inputValue.trim()) {
+      if (isStreaming || !normalizedInput) {
         setSuggestions([]);
         setQueryTokens([]);
         setShowSuggestions(false);
         return;
       }
 
-      const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-        "/api/v1/crok/suggestions",
-      );
+      const [tokenizer, candidates] = await Promise.all([
+        getTokenizer(),
+        suggestionsCacheRef.current == null
+          ? fetchJSON<{ suggestions: string[] }>("/api/v1/crok/suggestions").then((response) => {
+              suggestionsCacheRef.current = response.suggestions;
+              return response.suggestions;
+            })
+          : Promise.resolve(suggestionsCacheRef.current),
+      ]);
       if (cancelled) {
         return;
       }
 
-      const tokens = extractTokens(tokenizer.tokenize(inputValue));
+      const tokens = extractTokens(tokenizer.tokenize(normalizedInput));
       const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
 
       if (cancelled) {
@@ -140,12 +145,17 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
       setShowSuggestions(results.length > 0);
     };
 
-    void updateSuggestions();
+    debounceId = setTimeout(() => {
+      void updateSuggestions();
+    }, SUGGESTION_DEBOUNCE_MS);
 
     return () => {
       cancelled = true;
+      if (debounceId !== null) {
+        clearTimeout(debounceId);
+      }
     };
-  }, [inputValue, isStreaming, tokenizer]);
+  }, [normalizedInput, isStreaming]);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;

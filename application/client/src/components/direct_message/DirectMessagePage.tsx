@@ -1,5 +1,4 @@
 import classNames from "classnames";
-import moment from "moment";
 import {
   ChangeEvent,
   memo,
@@ -33,6 +32,12 @@ type ConversationBodyProps = {
   isPeerTyping: boolean;
   peer: Models.User | null;
 };
+
+const timeFormatter = new Intl.DateTimeFormat("ja-JP", {
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
 
 const ConversationBody = memo(
   ({ activeUser, conversation, conversationError, isPeerTyping, peer }: ConversationBodyProps) => {
@@ -94,7 +99,7 @@ const ConversationBody = memo(
                   </p>
                   <div className="flex gap-1 text-xs">
                     <time dateTime={message.createdAt}>
-                      {moment(message.createdAt).locale("ja").format("HH:mm")}
+                      {timeFormatter.format(new Date(message.createdAt))}
                     </time>
                     {isActiveUserSend && message.isRead && (
                       <span className="text-cax-text-muted">既読</span>
@@ -163,8 +168,14 @@ export const DirectMessagePage = ({
   const handleSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      void onSubmit({ body: text.trim() }).then(() => {
-        setText("");
+      const body = text.trim();
+      if (body.length === 0) {
+        return;
+      }
+
+      setText("");
+      void onSubmit({ body }).catch(() => {
+        setText(body);
       });
     },
     [onSubmit, text],

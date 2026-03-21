@@ -18,7 +18,7 @@ interface DmTypingEvent {
 }
 
 const TYPING_INDICATOR_DURATION_MS = 10 * 1000;
-const TYPING_EVENT_THROTTLE_MS = 1000;
+const TYPING_EVENT_THROTTLE_MS = TYPING_INDICATOR_DURATION_MS;
 const INITIAL_CONVERSATION_RETRY_COUNT = 5;
 const INITIAL_CONVERSATION_RETRY_DELAY_MS = 200;
 
@@ -83,16 +83,50 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   const handleSubmit = useCallback(
     async (params: DirectMessageFormData) => {
       setIsSubmitting(true);
+      const optimisticId = activeUser == null ? null : crypto.randomUUID();
+
+      if (activeUser != null) {
+        setConversation((prev) => {
+          if (prev == null) return prev;
+          return {
+            ...prev,
+            messages: [
+              ...prev.messages,
+              {
+                id: optimisticId!,
+                conversationId,
+                senderId: activeUser.id,
+                body: params.body,
+                isRead: false,
+                sender: activeUser,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              } as Models.DirectMessage,
+            ],
+          };
+        });
+      }
+
       try {
         await sendJSON(`/api/v1/dm/${conversationId}/messages`, {
           body: params.body,
         });
-        loadConversation();
+      } catch (error) {
+        if (optimisticId != null) {
+          setConversation((prev) => {
+            if (prev == null) return prev;
+            return {
+              ...prev,
+              messages: prev.messages.filter((message) => message.id !== optimisticId),
+            };
+          });
+        }
+        throw error;
       } finally {
         setIsSubmitting(false);
       }
     },
-    [conversationId, loadConversation],
+    [conversationId, loadConversation, activeUser],
   );
 
   const handleTyping = useCallback(async () => {
@@ -116,14 +150,16 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     `/api/v1/dm/${conversationId}`,
     (event: DmUpdateEvent | DmTypingEvent) => {
       if (event.type === "dm:conversation:message") {
+        if (event.payload.sender.id === activeUser?.id) {
+          return;
+        }
+
         void loadConversation().then(() => {
-          if (event.payload.sender.id !== activeUser?.id) {
-            setIsPeerTyping(false);
-            if (peerTypingTimeoutRef.current !== null) {
-              clearTimeout(peerTypingTimeoutRef.current);
-            }
-            peerTypingTimeoutRef.current = null;
+          setIsPeerTyping(false);
+          if (peerTypingTimeoutRef.current !== null) {
+            clearTimeout(peerTypingTimeoutRef.current);
           }
+          peerTypingTimeoutRef.current = null;
         });
         void sendRead();
       } else if (event.type === "dm:conversation:typing") {
