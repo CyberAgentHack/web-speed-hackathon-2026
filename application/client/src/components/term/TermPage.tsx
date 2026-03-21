@@ -1,4 +1,13 @@
+import { useEffect, useState } from "react";
+
 export const TermPage = () => {
+  const [showRest, setShowRest] = useState(false);
+
+  useEffect(() => {
+    const id = requestIdleCallback(() => setShowRest(true));
+    return () => cancelIdleCallback(id);
+  }, []);
+
   return (
     <article className="px-2 pb-16 leading-relaxed md:px-4 md:pt-2">
       <h1 className="mt-4 mb-2 font-[Rei_no_Are_Mincho] text-3xl leading-[normal] font-bold">
@@ -68,6 +77,7 @@ export const TermPage = () => {
         </li>
       </ol>
 
+      {showRest && (<>
       <h2 className="mt-4 mb-2 font-[Rei_no_Are_Mincho] text-2xl leading-[normal] font-bold">
         第5条（禁止事項）
       </h2>
@@ -243,6 +253,7 @@ export const TermPage = () => {
       </ol>
 
       <p className="text-right">以上</p>
+      </>)}
     </article>
   );
 };

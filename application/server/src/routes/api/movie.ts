@@ -40,7 +40,7 @@ movieRouter.post("/movies", async (req, res) => {
       "-movflags", "+faststart",
       "-pix_fmt", "yuv420p",
       "-c:v", "libx264",
-      "-preset", "fast",
+      "-preset", "ultrafast",
       "-crf", "28",
       "-an",
       tmpOutput,

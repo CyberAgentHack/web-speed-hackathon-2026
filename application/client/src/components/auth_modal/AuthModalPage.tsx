@@ -1,4 +1,4 @@
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
 
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/auth/validation";
@@ -23,30 +23,33 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | undefined>(undefined);
 
-  const errors = validate(values);
+  const deferredValues = useDeferredValue(values);
+  const errors = useMemo(() => validate(deferredValues), [deferredValues]);
   const invalid = Object.keys(errors).length > 0;
 
   const type = values.type;
 
-  const handleChange = (field: keyof AuthFormData) => (e: ChangeEvent<HTMLInputElement>) => {
+  const handleChange = useCallback((field: keyof AuthFormData) => (e: ChangeEvent<HTMLInputElement>) => {
     setValues((prev) => ({ ...prev, [field]: e.target.value }));
-  };
+  }, []);
 
-  const handleBlur = (field: string) => () => {
+  const handleBlur = useCallback((field: string) => () => {
     setTouched((prev) => ({ ...prev, [field]: true }));
-  };
+  }, []);
 
-  const handleToggleType = () => {
+  const handleToggleType = useCallback(() => {
     setValues((prev) => ({
       ...prev,
       type: prev.type === "signin" ? "signup" : "signin",
     }));
-  };
+  }, []);
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = useCallback(async (e: FormEvent) => {
     e.preventDefault();
+    const currentErrors = validate(values);
+    const isInvalid = Object.keys(currentErrors).length > 0;
     setTouched({ username: true, name: true, password: true });
-    if (invalid) return;
+    if (isInvalid) return;
 
     setSubmitting(true);
     setServerError(undefined);
@@ -58,7 +61,7 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
     } finally {
       setSubmitting(false);
     }
-  };
+  }, [onSubmit, values]);
 
   return (
     <form className="grid gap-y-6" onSubmit={handleSubmit}>

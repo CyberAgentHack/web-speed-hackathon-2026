@@ -42,12 +42,16 @@ export const SoundWaveSVG = ({ soundUrl }: Props) => {
     const peaksUrl = soundUrl.replace(/\.mp3$/, ".peaks.json");
 
     fetch(peaksUrl)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`Failed to fetch peaks: ${res.status}`);
+        return res.json();
+      })
       .then((data: ParsedData) => {
         if (!cancelled) {
           setPeaks(data);
         }
-      });
+      })
+      .catch(() => {});
 
     return () => {
       cancelled = true;

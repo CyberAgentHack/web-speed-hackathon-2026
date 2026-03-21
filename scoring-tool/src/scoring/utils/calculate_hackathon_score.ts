@@ -30,7 +30,9 @@ export function calculateHackathonScore(
   if (isUserflow) {
     consola.debug({
       ["interaction-to-next-paint"]: audits["interaction-to-next-paint"]?.score,
+      ["interaction-to-next-paint-ms"]: audits["interaction-to-next-paint"]?.numericValue,
       ["total-blocking-time"]: audits["total-blocking-time"]?.score,
+      ["total-blocking-time-ms"]: audits["total-blocking-time"]?.numericValue,
     });
     const breakdown: MetricScoreBreakdown[] = [
       {

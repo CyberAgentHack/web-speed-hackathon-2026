@@ -6,6 +6,13 @@ import { BM25 } from "bayesian-bm25";
 import { Router } from "express";
 import httpErrors from "http-errors";
 import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
+import rehypeKatex from "rehype-katex";
+import rehypeStringify from "rehype-stringify";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import remarkParse from "remark-parse";
+import remarkRehype from "remark-rehype";
+import { unified } from "unified";
 
 import { QaSuggestion } from "@web-speed-hackathon-2026/server/src/models";
 
@@ -13,6 +20,23 @@ export const crokRouter = Router();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-8");
+
+let cachedRenderedHtml: string | null = null;
+async function getRenderedHtml(): Promise<string> {
+  if (cachedRenderedHtml) return cachedRenderedHtml;
+  const result = await unified()
+    .use(remarkParse)
+    .use(remarkGfm)
+    .use(remarkMath)
+    .use(remarkRehype)
+    .use(rehypeKatex)
+    .use(rehypeStringify)
+    .process(response);
+  cachedRenderedHtml = String(result);
+  return cachedRenderedHtml;
+}
+// Pre-render at startup
+getRenderedHtml();
 
 let cachedTokenizer: Tokenizer<IpadicFeatures> | null = null;
 function getCrokTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
@@ -99,7 +123,8 @@ crokRouter.get("/crok", async (req, res) => {
   }
 
   if (!res.closed) {
-    const data = JSON.stringify({ text: "", done: true });
+    const html = await getRenderedHtml();
+    const data = JSON.stringify({ text: "", done: true, html });
     res.write(`event: message\nid: ${messageId}\ndata: ${data}\n\n`);
   }
 

@@ -20,10 +20,15 @@ export const Timeline = ({ timeline }: Props) => {
     return () => cancelIdleCallback(id);
   }, [visibleCount, timeline.length]);
 
+  const visible = timeline.slice(0, visibleCount);
+  let eagerWeight = 0;
+
   return (
     <section>
-      {timeline.slice(0, visibleCount).map((post, idx) => {
-        return <TimelineItem key={post.id} loading={idx < 2 ? "eager" : "lazy"} post={post} />;
+      {visible.map((post) => {
+        const isEager = eagerWeight < 10;
+        eagerWeight += (post.images?.length > 0 || post.movie) ? 3 : 1;
+        return <TimelineItem key={post.id} loading={isEager ? "eager" : "lazy"} post={post} />;
       })}
     </section>
   );

@@ -7,10 +7,22 @@ import { getLoaderContext } from "@web-speed-hackathon-2026/client/src/utils/ser
 import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
 
+function postWeight(post: Models.Post): number {
+	return (post.images?.length > 0 || post.movie) ? 3 : 1;
+}
+
 export async function loader({ context }: LoaderFunctionArgs) {
 	const ctx = getLoaderContext(context);
-	const posts = await ctx.getPosts(5, 0) as Models.Post[];
-	return { posts };
+	const posts = await ctx.getPosts(10, 0) as Models.Post[];
+	let weight = 0;
+	const ssrPosts: Models.Post[] = [];
+	for (const post of posts) {
+		const w = postWeight(post);
+		if (weight + w > 5) break;
+		weight += w;
+		ssrPosts.push(post);
+	}
+	return { posts: ssrPosts };
 }
 
 export default function Timeline() {

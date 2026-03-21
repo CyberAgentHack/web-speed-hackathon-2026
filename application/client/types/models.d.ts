@@ -68,10 +68,12 @@ declare namespace Models {
   interface ChatMessage {
     role: "user" | "assistant";
     content: string;
+    html?: string;
   }
 
   interface SSEChunk {
     text?: string;
     done?: boolean;
+    html?: string;
   }
 }

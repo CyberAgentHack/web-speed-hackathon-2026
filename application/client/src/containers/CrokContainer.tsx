@@ -17,11 +17,11 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
         return prevContent + (data.text ?? "");
       },
       onDone: (data: Models.SSEChunk) => data.done === true,
-      onComplete: (finalContent: string) => {
+      onComplete: (finalContent: string, doneData: Models.SSEChunk) => {
         setMessages((prev) => {
           const lastMessage = prev[prev.length - 1];
           if (lastMessage?.role === "assistant") {
-            return [...prev.slice(0, -1), { ...lastMessage, content: finalContent }];
+            return [...prev.slice(0, -1), { ...lastMessage, content: finalContent, html: doneData.html }];
           }
           return prev;
         });
