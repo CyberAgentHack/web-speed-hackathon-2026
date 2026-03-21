@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 
+import bodyParser from "body-parser";
 import { Router } from "express";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
@@ -13,7 +14,7 @@ const EXTENSION = "mp3";
 
 export const soundRouter = Router();
 
-soundRouter.post("/sounds", async (req, res) => {
+soundRouter.post("/sounds", bodyParser.raw({ limit: "10mb" }), async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
   }

@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 
+import bodyParser from "body-parser";
 import { Router } from "express";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
@@ -12,7 +13,7 @@ const EXTENSION = "mp4";
 
 export const movieRouter = Router();
 
-movieRouter.post("/movies", async (req, res) => {
+movieRouter.post("/movies", bodyParser.raw({ limit: "10mb" }), async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
   }

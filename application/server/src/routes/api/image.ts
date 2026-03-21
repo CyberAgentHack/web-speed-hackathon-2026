@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 
+import bodyParser from "body-parser";
 import { Router } from "express";
 import { fileTypeFromBuffer } from "file-type";
 import httpErrors from "http-errors";
@@ -13,7 +14,7 @@ const EXTENSION = "jpg";
 
 export const imageRouter = Router();
 
-imageRouter.post("/images", async (req, res) => {
+imageRouter.post("/images", bodyParser.raw({ limit: "10mb" }), async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
   }
