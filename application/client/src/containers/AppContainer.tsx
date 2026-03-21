@@ -8,39 +8,46 @@ import { AppPage } from "@web-speed-hackathon-2026/client/src/components/applica
  * サインインフロー（4フロー最大200点に影響）と投稿フローの安定性を確保するため、
  * モーダルのチャンクロード待ちによるタイムアウトを排除する。
  */
+/**
+ * AuthModalContainer / NewPostModalContainer のみ lazy() から外して直接importする。
+ * サインインフロー（4フロー最大200点に影響）と投稿フローの安定性を確保するため。
+ * 他のコンテナはfly.ioのshared CPUではメインバンドル肥大化でTBT悪化するためlazy維持。
+ */
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
-/**
- * DM関連コンテナもlazy()から外す。
- * fly.ioのCPU制約でチャンクロード+パースがTBTを悪化させるため。
- */
-import { DirectMessageContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer";
-import { DirectMessageListContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer";
 import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
-/**
- * TimelineContainerもlazy()から外す。
- * ホームは最頻アクセスページで、チャンクロード排除によりTBT/LCP改善を狙う。
- */
-/**
- * 重い依存を持たないコンテナはlazy()から外して初期バンドルに含める。
- * fly.ioのCPU制約でチャンクロード+パースがTBTを悪化させるため。
- */
-import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
-import { TermContainer } from "@web-speed-hackathon-2026/client/src/containers/TermContainer";
-import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
-import { UserProfileContainer } from "@web-speed-hackathon-2026/client/src/containers/UserProfileContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 /**
- * 重い依存（kuromoji, katex, react-markdown等）を持つページのみlazy。
+ * 各ルートコンテナをReact.lazyで遅延ロードする。
+ * fly.ioのshared CPU 1コアではメインバンドル肥大化がTBTを悪化させるため、
+ * AuthModal/NewPostModal以外は全てlazyにする。
  */
+const TimelineContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/TimelineContainer").then((m) => ({ default: m.TimelineContainer })),
+);
+const DirectMessageListContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer").then((m) => ({ default: m.DirectMessageListContainer })),
+);
+const DirectMessageContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer").then((m) => ({ default: m.DirectMessageContainer })),
+);
 const SearchContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/SearchContainer").then((m) => ({ default: m.SearchContainer })),
+);
+const UserProfileContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/UserProfileContainer").then((m) => ({ default: m.UserProfileContainer })),
 );
 const PostContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/PostContainer").then((m) => ({ default: m.PostContainer })),
 );
+const TermContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/TermContainer").then((m) => ({ default: m.TermContainer })),
+);
 const CrokContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/CrokContainer").then((m) => ({ default: m.CrokContainer })),
+);
+const NotFoundContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/NotFoundContainer").then((m) => ({ default: m.NotFoundContainer })),
 );
 export const AppContainer = () => {
   const { pathname } = useLocation();
