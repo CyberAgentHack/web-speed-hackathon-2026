@@ -7,7 +7,7 @@ import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
-import { convertVideoToGif } from "@web-speed-hackathon-2026/server/src/utils/convert_video_to_gif";
+import { convertVideoToMp4 } from "@web-speed-hackathon-2026/server/src/utils/convert_video_to_mp4";
 
 const ACCEPTED_VIDEO_TYPES = ["mp4", "webm", "mov", "avi", "mkv", "3gp"];
 
@@ -26,13 +26,13 @@ movieRouter.post("/movies", async (req, res) => {
     throw new httpErrors.BadRequest("Invalid file type");
   }
 
-  const gifBuffer = await convertVideoToGif(req.body);
+  const mp4Buffer = await convertVideoToMp4(req.body);
 
   const movieId = uuidv4();
 
-  const filePath = path.resolve(UPLOAD_PATH, `./movies/${movieId}.gif`);
+  const filePath = path.resolve(UPLOAD_PATH, `./movies/${movieId}.mp4`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "movies"), { recursive: true });
-  await fs.writeFile(filePath, gifBuffer);
+  await fs.writeFile(filePath, mp4Buffer);
 
   return res.status(200).type("application/json").send({ id: movieId });
 });

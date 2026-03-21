@@ -36,9 +36,6 @@ importers:
       fast-average-color:
         specifier: 9.5.0
         version: 9.5.0
-      gifler:
-        specifier: github:themadcreator/gifler#v0.3.0
-        version: https://codeload.github.com/themadcreator/gifler/tar.gz/89484cb3db174c584a3138e89664f0167a7760c1
       katex:
         specifier: 0.16.25
         version: 0.16.25
@@ -48,9 +45,6 @@ importers:
       moment:
         specifier: 2.30.1
         version: 2.30.1
-      omggif:
-        specifier: 1.0.10
-        version: 1.0.10
       react:
         specifier: ^19.2.4
         version: 19.2.4
@@ -112,9 +106,6 @@ importers:
       '@types/node':
         specifier: ^24.12.0
         version: 24.12.0
-      '@types/omggif':
-        specifier: 1.0.5
-        version: 1.0.5
       '@types/react':
         specifier: ^19.2.14
         version: 19.2.14
@@ -1390,9 +1381,6 @@ packages:
   '@types/node@24.12.0':
     resolution: {integrity: sha512-GYDxsZi3ChgmckRT9HPU0WEhKLP08ev/Yfcq2AstjrDASOYCSXeyjDsHg4v5t4jOj7cyDX3vmprafKlWIG9MXQ==}
 
-  '@types/omggif@1.0.5':
-    resolution: {integrity: sha512-gDQJflz1rOgEcUXkMAl80bDGN46f5mp8GbcM5dyvq+zsFV6YRBRtmNxlJJ5mjY77T7BRkRFzdIBVmK90QYhCxA==}
-
   '@types/prismjs@1.26.5':
     resolution: {integrity: sha512-AUZTa7hQ2KY5L7AmtSiqxlhWxb4ina0yd8hNbl4TWuqnv/pFP0nDMb3YrfSBf4hJVGLh2YEIBfKaBW/9UEl6IQ==}
 
@@ -2213,10 +2201,6 @@ packages:
   get-tsconfig@4.13.0:
     resolution: {integrity: sha512-1VKTZJCwBrvbd+Wn3AOgQP/2Av+TfTCOlE4AcRJE72W1ksZXbAx8PPBR9RzgTeSPzlPMHrbANMH3LbltH73wxQ==}
 
-  gifler@https://codeload.github.com/themadcreator/gifler/tar.gz/89484cb3db174c584a3138e89664f0167a7760c1:
-    resolution: {tarball: https://codeload.github.com/themadcreator/gifler/tar.gz/89484cb3db174c584a3138e89664f0167a7760c1}
-    version: 0.3.0
-
   github-from-package@0.0.0:
     resolution: {integrity: sha512-SyHy3T1v2NUXn29OsWdxmK6RwHD+vkj3v8en8AOBZ1wBQ/hCAQ5bAQTD02kW4W9tUp/3Qh6J8r9EvntiyCmOOw==}
 
@@ -2959,9 +2943,6 @@ packages:
 
   ogg-opus-decoder@1.7.3:
     resolution: {integrity: sha512-w47tiZpkLgdkpa+34VzYD8mHUj8I9kfWVZa82mBbNwDvB1byfLXSSzW/HxA4fI3e9kVlICSpXGFwMLV1LPdjwg==}
-
-  omggif@1.0.10:
-    resolution: {integrity: sha512-LMJTtvgc/nugXj0Vcrrs68Mn2D1r0zf630VNtqtpI1FEO7e+O9FP4gqs9AcnBaSEeoHIPm28u6qgPR0oyEpGSw==}
 
   on-finished@2.4.1:
     resolution: {integrity: sha512-oVlzkg3ENAhCk2zdv7IJwd/QUD4z2RxRwpkcGY8psCVcCYZNq4wYnVWALHM+brtuJjePWiYF/ClmuDr8Ch5+kg==}
@@ -4741,8 +4722,6 @@ snapshots:
     dependencies:
       undici-types: 7.16.0
 
-  '@types/omggif@1.0.5': {}
-
   '@types/prismjs@1.26.5': {}
 
   '@types/qs@6.14.0': {}
@@ -5678,11 +5657,6 @@ snapshots:
   get-tsconfig@4.13.0:
     dependencies:
       resolve-pkg-maps: 1.0.0
-
-  gifler@https://codeload.github.com/themadcreator/gifler/tar.gz/89484cb3db174c584a3138e89664f0167a7760c1:
-    dependencies:
-      bluebird: 3.7.2
-      omggif: 1.0.10
 
   github-from-package@0.0.0: {}
 
@@ -6686,8 +6660,6 @@ snapshots:
       '@wasm-audio-decoders/opus-ml': 0.0.2
       codec-parser: 2.5.0
       opus-decoder: 0.7.11
-
-  omggif@1.0.10: {}
 
   on-finished@2.4.1:
     dependencies:
