@@ -42,7 +42,20 @@ export const PausableMovie = ({ src, poster, isLCP }: Props) => {
       video.pause();
       setIsPlaying(false);
     } else {
-      void video.play().then(() => setIsPlaying(true));
+      const startPlay = () => {
+        void video.play().then(() => setIsPlaying(true));
+      };
+      const id =
+        "requestIdleCallback" in window
+          ? window.requestIdleCallback(startPlay, { timeout: 3000 })
+          : window.setTimeout(startPlay, 1000);
+      return () => {
+        if ("requestIdleCallback" in window) {
+          window.cancelIdleCallback(id);
+        } else {
+          clearTimeout(id);
+        }
+      };
     }
   }, [isVisible]);
 
