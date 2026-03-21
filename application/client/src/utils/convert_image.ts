@@ -23,6 +23,13 @@ export async function convertImage(file: File, options: Options): Promise<Blob> 
           return;
         }
 
+        // piexifjs は JPEG のみ対応のため、WebP の場合は ImageMagick の出力をそのまま返す
+        // （ImageMagick が EXIF メタデータを WebP の RIFF チャンクに保持する）
+        if (options.extension === MagickFormat.WebP) {
+          resolve(new Blob([output as Uint8Array<ArrayBuffer>]));
+          return;
+        }
+
         // ImageMagick では EXIF の ImageDescription フィールドに保存されているデータが
         // 非標準の Comment フィールドに移されてしまうため
         // piexifjs を使って ImageDescription フィールドに書き込む

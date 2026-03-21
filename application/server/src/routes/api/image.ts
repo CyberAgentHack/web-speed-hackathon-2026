@@ -1,8 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 
-// @ts-expect-error 型定義がない
-import exif from "exif-parser";
+import exifr from "exifr";
 import { Router } from "express";
 import { fileTypeFromBuffer } from "file-type";
 import httpErrors from "http-errors";
@@ -11,7 +10,7 @@ import { v4 as uuidv4 } from "uuid";
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
 // 変換した画像の拡張子
-const EXTENSION = "jpg";
+const EXTENSION = "webp";
 
 export const imageRouter = Router();
 
@@ -34,9 +33,15 @@ imageRouter.post("/images", async (req, res) => {
   await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
   await fs.writeFile(filePath, req.body);
 
-  const parser = exif.create(req.body);
-  const exifData = parser.parse();
-  const alt = exifData?.tags?.ImageDescription || "";
+  // exifr は WebP の EXIF にも対応
+  // ImageMagick が ImageDescription を Comment に移すため、両方確認する
+  let alt = "";
+  try {
+    const exifData = await exifr.parse(req.body);
+    alt = exifData?.ImageDescription || exifData?.Comment || "";
+  } catch {
+    // EXIF データがない場合は空文字
+  }
 
   return res.status(200).type("application/json").send({ id: imageId, alt });
 });
