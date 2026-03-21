@@ -1,85 +1,35 @@
-interface Options {
-  extension: string;
-}
+// import { extractMetadataFromSound } from "@web-speed-hackathon-2026/client/src/utils/extract_metadata_from_sound";
+// import { loadFFmpeg } from "@web-speed-hackathon-2026/client/src/utils/load_ffmpeg";
 
-export async function convertSound(file: File, options: Options): Promise<Blob> {
-  if (options.extension !== "mp3") {
-    throw new Error(`Unsupported extension: ${options.extension}`);
-  }
+// interface Options {
+//   extension: string;
+// }
 
-  const arrayBuffer = await file.arrayBuffer();
-  const audioContext = new AudioContext();
+// export async function convertSound(file: File, options: Options): Promise<Blob> {
+//   const ffmpeg = await loadFFmpeg();
 
-  try {
-    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer.slice(0));
+//   const exportFile = `export.${options.extension}`;
 
-    const { Mp3Encoder } = await import("lamejs");
-    const encoded = encodeAudioBufferToMp3(audioBuffer, Mp3Encoder, 128);
-    const encodedBytes = Uint8Array.from(encoded);
+//   await ffmpeg.writeFile("file", new Uint8Array(await file.arrayBuffer()));
 
-    return new Blob([encodedBytes.buffer], { type: "audio/mpeg" });
-  } finally {
-    await audioContext.close();
-  }
-}
+//   // 文字化けを防ぐためにメタデータを抽出して付与し直す
+//   const metadata = await extractMetadataFromSound(file);
 
-function encodeAudioBufferToMp3(
-  audioBuffer: AudioBuffer,
-  Mp3Encoder: new (channels: number, sampleRate: number, kbps: number) => {
-    encodeBuffer(left: Int16Array, right?: Int16Array): Int8Array;
-    flush(): Int8Array;
-  },
-  kbps: number,
-): Uint8Array {
-  const channels = Math.min(audioBuffer.numberOfChannels, 2);
-  const encoder = new Mp3Encoder(channels, audioBuffer.sampleRate, kbps);
-  const blockSize = 1152;
+//   await ffmpeg.exec([
+//     "-i",
+//     "file",
+//     "-metadata",
+//     `artist=${metadata.artist}`,
+//     "-metadata",
+//     `title=${metadata.title}`,
+//     "-vn",
+//     exportFile,
+//   ]);
 
-  const leftChannel = audioBuffer.getChannelData(0);
-  const rightChannel = channels === 2 ? audioBuffer.getChannelData(1) : undefined;
+//   const output = (await ffmpeg.readFile(exportFile)) as Uint8Array<ArrayBuffer>;
 
-  const chunks: Uint8Array[] = [];
-  for (let index = 0; index < audioBuffer.length; index += blockSize) {
-    const leftChunk = float32ToInt16(leftChannel.subarray(index, index + blockSize));
+//   ffmpeg.terminate();
 
-    const encodedChunk =
-      channels === 2 && rightChannel
-        ? encoder.encodeBuffer(leftChunk, float32ToInt16(rightChannel.subarray(index, index + blockSize)))
-        : encoder.encodeBuffer(leftChunk);
-
-    if (encodedChunk.length > 0) {
-      chunks.push(new Uint8Array(encodedChunk.buffer.slice(0)));
-    }
-  }
-
-  const tail = encoder.flush();
-  if (tail.length > 0) {
-    chunks.push(new Uint8Array(tail.buffer.slice(0)));
-  }
-
-  return mergeUint8Arrays(chunks);
-}
-
-function float32ToInt16(input: Float32Array): Int16Array {
-  const output = new Int16Array(input.length);
-
-  for (let i = 0; i < input.length; i += 1) {
-    const sample = Math.max(-1, Math.min(1, input[i]!));
-    output[i] = sample < 0 ? sample * 32768 : sample * 32767;
-  }
-
-  return output;
-}
-
-function mergeUint8Arrays(chunks: Uint8Array[]): Uint8Array {
-  const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
-  const merged = new Uint8Array(totalLength);
-
-  let offset = 0;
-  for (const chunk of chunks) {
-    merged.set(chunk, offset);
-    offset += chunk.length;
-  }
-
-  return merged;
-}
+//   const blob = new Blob([output]);
+//   return blob;
+// }
