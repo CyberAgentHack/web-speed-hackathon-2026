@@ -103,11 +103,14 @@ function extractLcpPreloads(data: Record<string, unknown>, urlPath: string): str
     }
   }
 
-  // Post detail: the post's first image
+  // Post detail: movie poster or first image
   const postMatch = urlPath.match(/^\/posts\/([^/]+)$/);
   if (postMatch) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const post = data[`/api/v1/posts/${postMatch[1]}`] as any;
+    if (post?.movie) {
+      links.push(`<link rel="preload" as="image" href="/movies/${post.movie.id}.poster.avif" fetchpriority="high">`);
+    }
     const postImg = post?.images?.[0];
     if (postImg) {
       links.push(`<link rel="preload" as="image" href="/images/${postImg.id}.avif" fetchpriority="high">`);
@@ -142,14 +145,17 @@ prefetchRouter.use(async (req, res, next) => {
     // /terms: Full SSR with no JS — eliminates TBT entirely
     if (req.path === "/terms") {
       const ssrContent = getTermsSSRHtml();
-      // Strip all <script> tags from body to prevent JS execution (TBT=0)
-      const noScriptBody = bodyPart!
+      // Strip all <script> and modulepreload tags from BOTH head and body
+      const stripScripts = (html: string) => html
         .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")
+        .replace(/<link\b[^>]*rel=["']modulepreload["'][^>]*>/gi, "");
+      const cleanHead = stripScripts(headPart!);
+      const cleanBody = stripScripts(bodyPart!)
         .replace(/<div id="app-loader"[^>]*>[^<]*<\/div>/, ssrContent);
-      const tailHtml = noScriptBody;
-      res.write(tailHtml);
+      const fullHtml = cleanHead + cleanBody;
+      res.write(fullHtml);
       res.end();
-      htmlCache.set(req.path, headPart + tailHtml);
+      htmlCache.set(req.path, fullHtml);
       return;
     }
 
