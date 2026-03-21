@@ -59,7 +59,7 @@ ssrRouter.use("{*path}", async (req: Request, res: Response) => {
   try {
     const depth = req.originalUrl.split("/").filter(Boolean).length;
     if (depth === 0) {
-      const posts = await Post.findAll({ limit: 10, offset: 0 });
+      const posts = await Post.findAll({ limit: 5, offset: 0 });
       const postsJson = JSON.stringify(posts);
       const timelineHtml = buildTimelineHtml(posts);
       const script = `<script>window.__INITIAL_POSTS__=${postsJson};</script>`;
