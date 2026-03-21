@@ -53,10 +53,14 @@ postRouter.post("/posts", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
+  const { sound, movie, ...rest } = req.body;
+
   const post = await Post.create(
     {
-      ...req.body,
+      ...rest,
       userId: req.session.userId,
+      soundId: sound?.id,
+      movieId: movie?.id,
     },
     {
       include: [
@@ -64,8 +68,6 @@ postRouter.post("/posts", async (req, res) => {
           association: "images",
           through: { attributes: [] },
         },
-        { association: "movie" },
-        { association: "sound" },
       ],
     },
   );
