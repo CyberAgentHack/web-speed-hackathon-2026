@@ -1,6 +1,6 @@
 import { CreateMLCEngine } from "@mlc-ai/web-llm";
 import { stripIndents } from "common-tags";
-import * as JSONRepairJS from "json-repair-js";
+import { loads } from "json-repair-js";
 import langs from "langs";
 import invariant from "tiny-invariant";
 
@@ -46,7 +46,7 @@ export async function createTranslator(params: Params): Promise<Translator> {
       const content = reply.choices[0]!.message.content;
       invariant(content, "No content in the reply from the translation engine.");
 
-      const parsed = JSONRepairJS.loads(content);
+      const parsed = loads(content);
       invariant(
         parsed != null && "result" in parsed,
         "The translation result is missing in the reply.",
