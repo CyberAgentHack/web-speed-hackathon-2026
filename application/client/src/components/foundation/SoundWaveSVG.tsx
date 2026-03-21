@@ -5,32 +5,44 @@ interface ParsedData {
   peaks: number[];
 }
 
+let sharedAudioContext: AudioContext | null = null;
+
+function getAudioContext() {
+  if (sharedAudioContext == null) {
+    sharedAudioContext = new AudioContext();
+  }
+  return sharedAudioContext;
+}
+
 async function calculate(data: ArrayBuffer): Promise<ParsedData> {
-  const audioCtx = new AudioContext();
+  const audioCtx = getAudioContext();
 
   // 音声をデコードする
   const buffer = await audioCtx.decodeAudioData(data.slice(0));
-  const leftData = buffer.getChannelData(0);
-  const rightData = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : leftData;
+  const leftChannel = buffer.getChannelData(0);
+  const rightChannel = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : leftChannel;
+  const numPeaks = 100;
+  const chunkSize = Math.max(1, Math.floor(buffer.length / numPeaks));
+  const peaks = new Array<number>(numPeaks).fill(0);
+  let max = 0;
 
-  const normalized = new Array<number>(leftData.length);
-  for (let index = 0; index < leftData.length; index += 1) {
-    normalized[index] = (Math.abs(leftData[index] ?? 0) + Math.abs(rightData[index] ?? 0)) / 2;
-  }
-
-  const chunkSize = Math.max(1, Math.ceil(normalized.length / 100));
-  const peaks: number[] = [];
-  for (let start = 0; start < normalized.length; start += chunkSize) {
+  for (let peakIndex = 0; peakIndex < numPeaks; peakIndex += 1) {
+    const start = peakIndex * chunkSize;
+    const end = Math.min(start + chunkSize, buffer.length);
     let total = 0;
-    let count = 0;
-    for (let index = start; index < Math.min(start + chunkSize, normalized.length); index += 1) {
-      total += normalized[index] ?? 0;
-      count += 1;
-    }
-    peaks.push(count === 0 ? 0 : total / count);
-  }
 
-  const max = peaks.reduce((currentMax, peak) => Math.max(currentMax, peak), 0);
+    for (let sampleIndex = start; sampleIndex < end; sampleIndex += 1) {
+      const left = leftChannel[sampleIndex] ?? 0;
+      const right = rightChannel[sampleIndex] ?? 0;
+      total += (Math.abs(left) + Math.abs(right)) / 2;
+    }
+
+    const average = total / Math.max(1, end - start);
+    peaks[peakIndex] = average;
+    if (average > max) {
+      max = average;
+    }
+  }
 
   return { max, peaks };
 }
@@ -47,15 +59,23 @@ export const SoundWaveSVG = ({ soundData }: Props) => {
   });
 
   useEffect(() => {
-    calculate(soundData).then(({ max, peaks }) => {
-      setPeaks({ max, peaks });
+    let isCancelled = false;
+
+    calculate(soundData).then((result) => {
+      if (!isCancelled) {
+        setPeaks(result);
+      }
     });
+
+    return () => {
+      isCancelled = true;
+    };
   }, [soundData]);
 
   return (
     <svg className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1">
       {peaks.map((peak, idx) => {
-        const ratio = peak / max;
+        const ratio = max > 0 ? peak / max : 0;
         return (
           <rect
             key={`${uniqueIdRef.current}#${idx}`}

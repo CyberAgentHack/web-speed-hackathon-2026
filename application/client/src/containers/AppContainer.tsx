@@ -8,6 +8,7 @@ import { DirectMessageContainer } from "@web-speed-hackathon-2026/client/src/con
 import { DirectMessageListContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer";
 import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
+import { PostLoadingPlaceholder } from "@web-speed-hackathon-2026/client/src/containers/PostContainer";
 import { SearchContainer } from "@web-speed-hackathon-2026/client/src/containers/SearchContainer";
 import { TermContainer } from "@web-speed-hackathon-2026/client/src/containers/TermContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
@@ -100,7 +101,7 @@ export const AppContainer = () => {
           />
           <Route
             element={
-              <Suspense fallback={null}>
+              <Suspense fallback={<PostLoadingPlaceholder />}>
                 <PostContainer />
               </Suspense>
             }

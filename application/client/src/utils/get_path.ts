@@ -3,11 +3,11 @@ export function getImagePath(imageId: string): string {
 }
 
 export function getMoviePath(movieId: string): string {
-  return `/movies/${movieId}.gif`;
+  return `/movies/${movieId}.mp4`;
 }
 
 export function getSoundPath(soundId: string): string {
-  return `/sounds/${soundId}.mp3`;
+  return `/sounds/${soundId}.ogg`;
 }
 
 export function getProfileImagePath(profileImageId: string): string {

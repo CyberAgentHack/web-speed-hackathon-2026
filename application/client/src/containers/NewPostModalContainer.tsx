@@ -6,13 +6,14 @@ import { NewPostModalPage } from "@web-speed-hackathon-2026/client/src/component
 import { sendFile, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface SubmitParams {
-  images: { alt: string; file: File }[];
+  images: File[];
   movie: File | undefined;
   sound: File | undefined;
   text: string;
 }
 
 interface UploadedImage {
+  alt: string;
   id: string;
 }
 
@@ -20,11 +21,7 @@ async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promis
   const payload = {
     images: images
       ? await Promise.all(
-          images.map(async (image) => {
-            const { id } = await sendFile<UploadedImage>("/api/v1/images", image.file);
-
-            return { id, alt: image.alt };
-          }),
+          images.map(async (image) => sendFile<UploadedImage>("/api/v1/images", image)),
         )
       : [],
     movie: movie ? await sendFile("/api/v1/movies", movie) : undefined,
@@ -53,8 +50,6 @@ export const NewPostModalContainer = ({ id }: Props) => {
       if (element.open) {
         // モーダルが開いた時にWASMモジュールを事前ロード
         import("@imagemagick/magick-wasm").catch(() => {});
-        import("@web-speed-hackathon-2026/client/src/utils/convert_movie").catch(() => {});
-        import("@web-speed-hackathon-2026/client/src/utils/convert_sound").catch(() => {});
       } else {
         // 閉じた時だけフォームをリセットし、オープン直後の再マウントを避ける
         setResetKey((key) => key + 1);

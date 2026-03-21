@@ -21,6 +21,7 @@ const TYPING_INDICATOR_DURATION_MS = 10 * 1000;
 const TYPING_EVENT_THROTTLE_MS = TYPING_INDICATOR_DURATION_MS;
 const INITIAL_CONVERSATION_RETRY_COUNT = 5;
 const INITIAL_CONVERSATION_RETRY_DELAY_MS = 200;
+const SELF_MESSAGE_SYNC_DELAY_MS = 1_000;
 
 function sleep(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
@@ -40,6 +41,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const selfMessageSyncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTypingSentAtRef = useRef(0);
   const hasLoadedConversationRef = useRef(false);
 
@@ -142,6 +144,10 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   useEffect(() => {
     lastTypingSentAtRef.current = 0;
     hasLoadedConversationRef.current = false;
+    if (selfMessageSyncTimeoutRef.current !== null) {
+      clearTimeout(selfMessageSyncTimeoutRef.current);
+      selfMessageSyncTimeoutRef.current = null;
+    }
     setConversation(null);
     setConversationError(null);
   }, [conversationId]);
@@ -151,6 +157,13 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     (event: DmUpdateEvent | DmTypingEvent) => {
       if (event.type === "dm:conversation:message") {
         if (event.payload.sender.id === activeUser?.id) {
+          if (selfMessageSyncTimeoutRef.current !== null) {
+            clearTimeout(selfMessageSyncTimeoutRef.current);
+          }
+          selfMessageSyncTimeoutRef.current = setTimeout(() => {
+            selfMessageSyncTimeoutRef.current = null;
+            void loadConversation();
+          }, SELF_MESSAGE_SYNC_DELAY_MS);
           return;
         }
 
