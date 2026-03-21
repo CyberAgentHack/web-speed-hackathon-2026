@@ -173,5 +173,11 @@
   </head>
   <body class="bg-cax-canvas text-cax-text">
     <div id="app">Loading...</div>
+    <% for (const js of htmlWebpackPlugin.files.js) { %>
+    <script src="<%= js %>" defer></script>
+    <% } %>
+    <% for (const css of htmlWebpackPlugin.files.css) { %>
+    <link rel="stylesheet" href="<%= css %>">
+    <% } %>
   </body>
 </html>
