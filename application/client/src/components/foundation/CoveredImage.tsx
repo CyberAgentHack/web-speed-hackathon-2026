@@ -80,6 +80,7 @@ export const CoveredImage = ({
             "w-full h-auto": containerRatio <= imageRatio,
           },
         )}
+        style={{ visibility: isLoaded ? "visible" : "hidden" }}
         sizes={sizes}
         src={src}
         srcSet={srcSet}
