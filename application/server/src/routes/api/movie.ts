@@ -1,15 +1,50 @@
+import { execFile } from "child_process";
 import { promises as fs } from "fs";
+import os from "os";
 import path from "path";
+import { promisify } from "util";
 
 import { Router } from "express";
+import ffmpegPath from "ffmpeg-static";
 import { fileTypeFromBuffer } from "file-type";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
-// 変換した動画の拡張子
+const execFileAsync = promisify(execFile);
+
+/** 変換した動画の拡張子 */
 const EXTENSION = "mp4";
+
+/**
+ * サーバーサイドでffmpegを使い動画を変換する。
+ * クライアントのFFmpeg WASM変換（120秒タイムアウト超過の原因）を不要にする。
+ * 変換内容: 先頭5秒・正方形クロップ・10fps・無音・MP4
+ */
+async function convertMovie(inputBuffer: Buffer): Promise<Buffer> {
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "movie-"));
+  const inputPath = path.join(tmpDir, "input");
+  const outputPath = path.join(tmpDir, `output.${EXTENSION}`);
+
+  try {
+    await fs.writeFile(inputPath, inputBuffer);
+
+    await execFileAsync(ffmpegPath!, [
+      "-i", inputPath,
+      "-t", "5",
+      "-r", "10",
+      "-vf", "crop='min(iw,ih)':'min(iw,ih)'",
+      "-an",
+      "-y",
+      outputPath,
+    ], { timeout: 30_000 });
+
+    return await fs.readFile(outputPath);
+  } finally {
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  }
+}
 
 export const movieRouter = Router();
 
@@ -22,15 +57,18 @@ movieRouter.post("/movies", async (req, res) => {
   }
 
   const type = await fileTypeFromBuffer(req.body);
-  if (type === undefined || type.ext !== EXTENSION) {
+  // クライアントから生の動画ファイル（mp4/webm等）を受け取り、サーバーで変換する
+  if (type === undefined || !["mp4", "webm", "mov", "avi", "gif"].includes(type.ext)) {
     throw new httpErrors.BadRequest("Invalid file type");
   }
 
   const movieId = uuidv4();
 
+  const converted = await convertMovie(req.body);
+
   const filePath = path.resolve(UPLOAD_PATH, `./movies/${movieId}.${EXTENSION}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "movies"), { recursive: true });
-  await fs.writeFile(filePath, req.body);
+  await fs.writeFile(filePath, converted);
 
   return res.status(200).type("application/json").send({ id: movieId });
 });

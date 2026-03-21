@@ -6,7 +6,6 @@ import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/componen
 import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/components/modal/ModalSubmitButton";
 import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/AttachFileInputButton";
 import { convertImage } from "@web-speed-hackathon-2026/client/src/utils/convert_image";
-import { convertMovie } from "@web-speed-hackathon-2026/client/src/utils/convert_movie";
 import { convertSound } from "@web-speed-hackathon-2026/client/src/utils/convert_sound";
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
@@ -103,31 +102,19 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     }
   }, []);
 
+  // 動画変換はサーバーサイドで行う（クライアントFFmpeg WASMはタイムアウトの原因）
   const handleChangeMovie = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
     const file = Array.from(ev.currentTarget.files ?? [])[0]!;
     const isValid = file.size <= MAX_UPLOAD_BYTES_LIMIT;
 
     setHasFileError(isValid !== true);
     if (isValid) {
-      setIsConverting(true);
-
-      convertMovie(file, { extension: "mp4", size: undefined })
-        .then((converted) => {
-          setParams((params) => ({
-            ...params,
-            images: [],
-            movie: new File([converted], "converted.mp4", {
-              type: "video/mp4",
-            }),
-            sound: undefined,
-          }));
-
-          setIsConverting(false);
-        })
-        .catch((err) => {
-          console.error(err);
-          setIsConverting(false);
-        });
+      setParams((params) => ({
+        ...params,
+        images: [],
+        movie: file,
+        sound: undefined,
+      }));
     }
   }, []);
 
