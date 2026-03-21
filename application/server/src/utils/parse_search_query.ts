@@ -34,8 +34,8 @@ export function parseSearchQuery(query: string): ParsedSearchQuery {
   }
 
   const keywords = query
-    .replace(/since:\d{4}-\d{2}-\d{2}/g, "")
-    .replace(/until:\d{4}-\d{2}-\d{2}/g, "")
+    .replace(/since:\S*/g, "")
+    .replace(/until:\S*/g, "")
     .trim()
     .replace(/\s+/g, " ");
 
