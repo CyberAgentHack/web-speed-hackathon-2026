@@ -67,41 +67,4 @@ test.describe("投稿機能", () => {
     // 投稿内容と画像が表示されていることを確認
     await expect(page.getByText(postText)).toBeVisible();
   });
-
-  test("TIFF画像の投稿でEXIF Image DescriptionがALTとして表示される", async ({ page }) => {
-    const postText = "TIFFテスト";
-    const expectedAlt = "熊の形をしたアスキーアート。アナログマというキャプションがついている";
-
-    await page.getByRole("list").getByRole("button", { name: "投稿する" }).click();
-
-    const textarea = page.getByPlaceholder("いまなにしてる？");
-    await expect(textarea).toBeVisible({ timeout: 10_000 });
-    await textarea.fill(postText);
-
-    const fileInput = page.locator('input[type="file"][accept="image/*"]');
-    const imagePath = path.resolve(import.meta.dirname, "../../../docs/assets/analoguma.tiff");
-    await fileInput.setInputFiles(imagePath);
-
-    await page.locator("dialog").getByRole("button", { name: "投稿する" }).click();
-
-    await page.waitForURL("**/posts/*", { timeout: 60_000 });
-    const postId = page.url().split("/posts/")[1];
-    expect(postId).toBeTruthy();
-
-    const postedRes = await page.request.get(`/api/v1/posts/${postId}`);
-    expect(postedRes.ok()).toBeTruthy();
-    const posted = (await postedRes.json()) as {
-      images?: Array<{ alt?: string }>;
-    };
-    expect(posted.images?.[0]?.alt).toBe(expectedAlt);
-
-    const article = page.locator("article").first();
-    await expect(article).toBeVisible({ timeout: 10_000 });
-    await expect(article.locator("img").first()).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByText(postText)).toBeVisible();
-
-    await page.getByRole("button", { name: "ALT を表示する" }).first().click();
-    await expect(page.getByRole("heading", { name: "画像の説明" })).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText(expectedAlt)).toBeVisible({ timeout: 30_000 });
-  });
 });

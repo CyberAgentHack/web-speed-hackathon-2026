@@ -28,6 +28,6 @@ jobs:
               uses: docker/build-push-action@v6
               with:
                   context: .
-                  file: Dockerfile
+                  file: Dockerfile.build
                   push: true
                   tags: ghcr.io/shion1305/web-speed-hackathon-2026:latest

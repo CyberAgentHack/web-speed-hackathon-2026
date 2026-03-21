@@ -41,8 +41,8 @@ FROM node:${NODE_VERSION}-slim AS production
 
 LABEL fly_launch_runtime="Node.js"
 
-# Install dumb-init and nginx for reverse proxy/static delivery
-RUN apt-get update && apt-get install -y --no-install-recommends dumb-init nginx && rm -rf /var/lib/apt/lists/*
+# Install dumb-init for proper signal handling
+RUN apt-get update && apt-get install -y --no-install-recommends dumb-init && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for security
 RUN groupadd -r nodejs && useradd -r -g nodejs nodejs
@@ -59,13 +59,6 @@ COPY --from=build --chown=nodejs:nodejs /app/client/package.json ./client/packag
 COPY --from=build --chown=nodejs:nodejs /app/dist ./dist
 COPY --from=build --chown=nodejs:nodejs /app/public ./public
 COPY --from=build --chown=nodejs:nodejs /app/node_modules ./node_modules
-COPY --chown=nodejs:nodejs ./docker/nginx.conf /etc/nginx/nginx.conf
-COPY --chown=nodejs:nodejs ./docker/start-production.sh /app/docker/start-production.sh
-
-RUN chmod +x /app/docker/start-production.sh && \
-    mkdir -p /app/upload/images /app/upload/movies /app/upload/sounds && \
-    mkdir -p /tmp/nginx_cache /tmp/client_temp /tmp/proxy_temp /tmp/fastcgi_temp /tmp/uwsgi_temp /tmp/scgi_temp && \
-    chown -R nodejs:nodejs /app /tmp/nginx_cache /tmp/client_temp /tmp/proxy_temp /tmp/fastcgi_temp /tmp/uwsgi_temp /tmp/scgi_temp
 
 # Set production environment
 ENV NODE_ENV=production
@@ -76,5 +69,5 @@ USER nodejs
 
 EXPOSE 8080
 
-# Use dumb-init to run node + nginx and handle signals properly
-CMD ["dumb-init", "/app/docker/start-production.sh"]
+# Use dumb-init to handle signals properly and prevent zombie processes
+CMD ["dumb-init", "pnpm", "start"]
