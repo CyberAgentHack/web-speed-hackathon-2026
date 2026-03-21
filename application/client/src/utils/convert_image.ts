@@ -5,63 +5,35 @@ interface Options {
 }
 
 export async function convertImage(file: File, options: Options): Promise<Blob> {
-  const [
-    { initializeImageMagick, ImageMagick, MagickFormat },
-    { default: magickWasm },
-    { dump, insert, ImageIFD },
-  ] = await Promise.all([
-    import("@imagemagick/magick-wasm"),
-    import("@imagemagick/magick-wasm/magick.wasm?url"),
-    import("piexifjs"),
-  ]);
-
-  const fmt =
-    options.extension === "jpg" ? MagickFormat.Jpg
-    : options.extension === "png" ? MagickFormat.Png
-    : MagickFormat.Gif;
-
-  await initializeImageMagick(magickWasm);
-
-  const byteArray = new Uint8Array(await file.arrayBuffer());
+  const mimeType =
+    options.extension === "jpg" ? "image/jpeg"
+    : options.extension === "png" ? "image/png"
+    : "image/gif";
 
   return new Promise((resolve, reject) => {
-    try {
-      ImageMagick.read(byteArray, (img) => {
-        try {
-          img.format = fmt;
-
-          const comment = img.comment ?? img.getAttribute("exif:ImageDescription");
-
-          img.write((output) => {
-            try {
-              if (comment == null) {
-                resolve(new Blob([output as Uint8Array<ArrayBuffer>]));
-                return;
-              }
-
-              // ImageMagick では EXIF の ImageDescription フィールドに保存されているデータが
-              // 非標準の Comment フィールドに移されてしまうため
-              // piexifjs を使って ImageDescription フィールドに書き込む
-              const binary = Array.from(output as Uint8Array<ArrayBuffer>)
-                .map((b) => String.fromCharCode(b))
-                .join("");
-              const descriptionBinary = Array.from(new TextEncoder().encode(comment))
-                .map((b) => String.fromCharCode(b))
-                .join("");
-              const exifStr = dump({ "0th": { [ImageIFD.ImageDescription]: descriptionBinary } });
-              const outputWithExif = insert(exifStr, binary);
-              const bytes = Uint8Array.from(outputWithExif.split("").map((c) => c.charCodeAt(0)));
-              resolve(new Blob([bytes]));
-            } catch (e) {
-              reject(e);
-            }
-          });
-        } catch (e) {
-          reject(e);
-        }
-      });
-    } catch (e) {
-      reject(e);
-    }
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Canvas context unavailable"));
+        return;
+      }
+      ctx.drawImage(img, 0, 0);
+      canvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error("Canvas toBlob failed"));
+        },
+        mimeType,
+        0.92,
+      );
+    };
+    img.onerror = reject;
+    img.src = url;
   });
 }
