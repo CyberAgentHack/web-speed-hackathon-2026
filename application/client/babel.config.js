@@ -5,7 +5,7 @@ module.exports = {
       "@babel/preset-env",
       {
         targets: {"chrome": "145"},
-        corejs: "3",
+        // corejs: "3",
         modules: "commonjs",
         useBuiltIns: false,
       },
