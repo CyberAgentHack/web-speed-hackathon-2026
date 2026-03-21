@@ -141,7 +141,41 @@ function isSpaRoute(urlPath: string): boolean {
   return true;
 }
 
+// Serve pre-compressed (.br / .gz) files from CLIENT_DIST_PATH
+const COMPRESSIBLE_EXT = /\.(js|css)$/;
+const ENCODING_EXT: Record<string, string> = { br: ".br", gzip: ".gz" };
+const CONTENT_TYPE: Record<string, string> = {
+  ".js": "application/javascript",
+  ".css": "text/css",
+};
+
+function servePreCompressed(req: import("express").Request, res: import("express").Response, next: import("express").NextFunction) {
+  if (req.method !== "GET" && req.method !== "HEAD") return next();
+  if (!COMPRESSIBLE_EXT.test(req.path)) return next();
+
+  const acceptEncoding = req.headers["accept-encoding"] || "";
+  const encodings: Array<[string, string]> = [["br", ".br"], ["gzip", ".gz"]];
+
+  for (const [enc, ext] of encodings) {
+    if (!acceptEncoding.includes(enc)) continue;
+    const filePath = path.join(CLIENT_DIST_PATH, req.path + ext);
+    if (!fs.existsSync(filePath)) continue;
+
+    const originalExt = path.extname(req.path);
+    res.setHeader("Content-Encoding", enc);
+    res.setHeader("Content-Type", CONTENT_TYPE[originalExt] || "application/octet-stream");
+    res.setHeader("Cache-Control", `public, max-age=${ONE_YEAR / 1000}, immutable`);
+    res.setHeader("Vary", "Accept-Encoding");
+    return res.sendFile(filePath);
+  }
+
+  return next();
+}
+
 export const staticRouter = Router();
+
+// Serve pre-compressed static assets before anything else
+staticRouter.use(servePreCompressed);
 
 // First: handle SPA routes by serving index.html with preload hints
 staticRouter.use((req, res, next) => {
