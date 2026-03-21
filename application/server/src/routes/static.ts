@@ -63,7 +63,7 @@ staticRouter.use("*", async (c, next) => {
     const result = await tryServeFile(dir, urlPath);
     if (result) {
       return c.newResponse(result.content, 200, {
-        "Cache-Control": "public, max-age=3600",
+        "Cache-Control": "public, max-age=31536000, immutable",
         "Content-Type": result.mimeType,
       });
     }
@@ -73,7 +73,7 @@ staticRouter.use("*", async (c, next) => {
   try {
     const content = await fs.readFile(path.join(CLIENT_DIST_PATH, "index.html"));
     return c.newResponse(content, 200, {
-      "Cache-Control": "no-cache",
+      "Cache-Control": "public, max-age=3600",
       "Content-Type": "text/html; charset=utf-8",
     });
   } catch {
