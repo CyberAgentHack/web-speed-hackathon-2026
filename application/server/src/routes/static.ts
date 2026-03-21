@@ -9,6 +9,8 @@ import {
   PUBLIC_PATH,
   UPLOAD_PATH,
 } from "@web-speed-hackathon-2026/server/src/paths";
+import { Post } from "@web-speed-hackathon-2026/server/src/models";
+import { getWaveform } from "@web-speed-hackathon-2026/server/src/utils/waveform_cache";
 
 const ONE_YEAR = 365 * 24 * 60 * 60 * 1000;
 
@@ -125,6 +127,32 @@ function getTermsHtml(): string {
   return html;
 }
 
+// Inline data cache for initial page loads
+let inlineDataCache: Record<string, string> = {};
+
+function attachWaveform(postJson: any): any {
+  if (postJson.sound && postJson.sound.id) {
+    const waveform = getWaveform(postJson.sound.id);
+    if (waveform) {
+      postJson.sound.waveform = waveform;
+    }
+  }
+  return postJson;
+}
+
+async function getInitialPostsJson(): Promise<string> {
+  if (inlineDataCache["posts"]) return inlineDataCache["posts"];
+  const posts = await Post.findAll({ limit: 2, offset: 0 });
+  const postsJson = posts.map((p) => attachWaveform(p.toJSON()));
+  const json = JSON.stringify(postsJson);
+  inlineDataCache["posts"] = json;
+  return json;
+}
+
+export function clearInlineDataCache(): void {
+  inlineDataCache = {};
+}
+
 // Known static file extensions
 const STATIC_EXT = /\.\w+$/;
 
@@ -178,7 +206,7 @@ export const staticRouter = Router();
 staticRouter.use(servePreCompressed);
 
 // First: handle SPA routes by serving index.html with preload hints
-staticRouter.use((req, res, next) => {
+staticRouter.use(async (req, res, next) => {
   const urlPath = req.path;
 
   if (!isSpaRoute(urlPath)) {
@@ -198,6 +226,12 @@ staticRouter.use((req, res, next) => {
 
   if (preloadLinks) {
     html = html.replace("</head>", `${preloadLinks}\n</head>`);
+  }
+
+  // Inject inline data for home page
+  if (urlPath === "/") {
+    const postsJson = await getInitialPostsJson();
+    html = html.replace("</body>", `<script type="application/json" id="initial-posts">${postsJson}</script>\n</body>`);
   }
 
   res.setHeader("Content-Type", "text/html; charset=utf-8");

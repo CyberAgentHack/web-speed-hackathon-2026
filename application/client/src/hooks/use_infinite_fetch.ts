@@ -13,13 +13,15 @@ interface ReturnValues<T> {
 export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
+  initialData?: T[] | null,
 ): ReturnValues<T> {
-  const internalRef = useRef({ isLoading: false, offset: 0, isFirstFetch: true });
+  const hasInitialData = initialData != null && initialData.length > 0;
+  const internalRef = useRef({ isLoading: false, offset: hasInitialData ? initialData.length : 0, isFirstFetch: !hasInitialData });
 
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
-    data: [],
+    data: hasInitialData ? initialData : [],
     error: null,
-    isLoading: true,
+    isLoading: !hasInitialData,
   });
 
   const fetchMore = useCallback(() => {
@@ -71,7 +73,13 @@ export function useInfiniteFetch<T>(
     );
   }, [apiPath, fetcher]);
 
+  const initialDataUsedRef = useRef(hasInitialData);
+
   useEffect(() => {
+    if (initialDataUsedRef.current) {
+      initialDataUsedRef.current = false;
+      return;
+    }
     setResult(() => ({
       data: [],
       error: null,
