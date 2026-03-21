@@ -1,6 +1,6 @@
 import { Router } from "express";
 import httpErrors from "http-errors";
-import { col, where, Op } from "sequelize";
+import { Op } from "sequelize";
 
 import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
 import {
@@ -16,22 +16,50 @@ directMessageRouter.get("/dm", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversations = await DirectMessageConversation.findAll({
+  const conversations = await DirectMessageConversation.unscoped().findAll({
     where: {
-      [Op.and]: [
-        { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
-        where(col("messages.id"), { [Op.not]: null }),
-      ],
+      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
-    order: [[col("messages.createdAt"), "DESC"]],
+    include: [
+      { association: "initiator", include: [{ association: "profileImage" }] },
+      { association: "member", include: [{ association: "profileImage" }] },
+    ],
   });
 
-  const sorted = conversations.map((c) => ({
-    ...c.toJSON(),
-    messages: c.messages?.reverse(),
-  }));
+  const result = await Promise.all(
+    conversations.map(async (conv) => {
+      const peerId = conv.initiatorId !== req.session.userId ? conv.initiatorId : conv.memberId;
 
-  return res.status(200).type("application/json").send(sorted);
+      const [lastMessage, unreadCount] = await Promise.all([
+        DirectMessage.findOne({
+          where: { conversationId: conv.id },
+          order: [["createdAt", "DESC"]],
+        }),
+        DirectMessage.count({
+          where: { conversationId: conv.id, senderId: peerId, isRead: false },
+        }),
+      ]);
+
+      if (lastMessage == null) return null;
+
+      return {
+        ...conv.toJSON(),
+        messages: [lastMessage.toJSON()],
+        hasUnread: unreadCount > 0,
+        totalMessages: 0,
+      };
+    }),
+  );
+
+  const filtered = result
+    .filter((c) => c != null)
+    .sort(
+      (a, b) =>
+        new Date(b!.messages[0]!.createdAt).getTime() -
+        new Date(a!.messages[0]!.createdAt).getTime(),
+    );
+
+  return res.status(200).type("application/json").send(filtered);
 });
 
 directMessageRouter.post("/dm", async (req, res) => {
@@ -100,17 +128,41 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversation = await DirectMessageConversation.findOne({
+  const limit = Math.min(Number(req.query["limit"]) || 50, 100);
+  const offset = Number(req.query["offset"]) || 0;
+
+  const conversation = await DirectMessageConversation.unscoped().findOne({
     where: {
       id: req.params.conversationId,
       [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
+    include: [
+      { association: "initiator", include: [{ association: "profileImage" }] },
+      { association: "member", include: [{ association: "profileImage" }] },
+    ],
   });
   if (conversation === null) {
     throw new httpErrors.NotFound();
   }
 
-  return res.status(200).type("application/json").send(conversation);
+  const [totalMessages, messages] = await Promise.all([
+    DirectMessage.count({
+      where: { conversationId: conversation.id },
+    }),
+    DirectMessage.findAll({
+      where: { conversationId: conversation.id },
+      order: [["createdAt", "DESC"]],
+      limit,
+      offset,
+    }),
+  ]);
+  messages.reverse();
+
+  return res.status(200).type("application/json").send({
+    ...conversation.toJSON(),
+    messages: messages.map((m) => m.toJSON()),
+    totalMessages,
+  });
 });
 
 directMessageRouter.ws("/dm/:conversationId", async (req, _res) => {
