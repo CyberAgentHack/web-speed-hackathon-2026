@@ -99,6 +99,10 @@ export const DirectMessagePage = ({
           alt={peer.profileImage?.alt ?? ""}
           className="h-12 w-12 rounded-full object-cover"
           src={peer.profileImage ? getProfileImagePath(peer.profileImage.id) : ""}
+          loading="lazy"
+          width={48}
+          height={48}
+          decoding="async"
         />
         <div className="min-w-0">
           <h1 className="overflow-hidden text-xl font-bold text-ellipsis whitespace-nowrap">
@@ -130,7 +134,7 @@ export const DirectMessagePage = ({
               >
                 <p
                   className={classNames(
-                    "max-w-3/4 rounded-xl border px-4 py-2 text-sm whitespace-pre-wrap leading-relaxed wrap-anywhere",
+                    "max-w-[75%] rounded-xl border px-4 py-2 text-sm whitespace-pre-wrap leading-relaxed break-words",
                     isActiveUserSend
                       ? "rounded-br-sm border-transparent bg-cax-brand text-cax-surface-raised"
                       : "rounded-bl-sm border-cax-border bg-cax-surface text-cax-text",

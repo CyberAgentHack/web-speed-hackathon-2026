@@ -87,6 +87,10 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                       alt={peer.profileImage?.alt ?? ""}
                       className="w-12 shrink-0 self-start rounded-full"
                       src={peer.profileImage ? getProfileImagePath(peer.profileImage.id) : ""}
+                      loading="lazy"
+                      width={48}
+                      height={48}
+                      decoding="async"
                     />
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-center justify-between">
@@ -103,7 +107,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                           </time>
                         )}
                       </div>
-                      <p className="mt-1 line-clamp-2 text-sm wrap-anywhere">{lastMessage?.body}</p>
+                      <p className="mt-1 line-clamp-2 text-sm break-words">{lastMessage?.body}</p>
                       {hasUnread ? (
                         <span className="bg-cax-brand-soft text-cax-brand mt-2 inline-flex w-fit rounded-full px-3 py-0.5 text-xs">
                           未読
