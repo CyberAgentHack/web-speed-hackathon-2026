@@ -13,15 +13,18 @@ app.use(sessionMiddleware);
 app.use(bodyParser.json());
 app.use(bodyParser.raw({ limit: "10mb" }));
 
-app.use((_req, res, next) => {
+// 静的ファイルを先に処理（キャッシュヘッダーを有効にするため）
+app.use(staticRouter);
+
+// API用のキャッシュ無効化ヘッダー（静的ファイルには適用されない）
+app.use("/api/v1", (_req, res, next) => {
   res.header({
-    "Cache-Control": "max-age=0, no-transform", // ← これは維持（HTMLのみ）
+    "Cache-Control": "max-age=0, no-transform",
     Connection: "close",
   });
   return next();
 });
 
 app.use("/api/v1", apiRouter);
-app.use(staticRouter);
 
 app.get("/favicon.ico", (_req, res) => res.status(204).end());
