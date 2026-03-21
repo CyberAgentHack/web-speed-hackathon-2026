@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import { Router } from "express";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+import { apiCache } from "@web-speed-hackathon-2026/server/src/utils/api_cache";
 
 import { initializeSequelize } from "../../sequelize";
 import { sessionStore } from "../../session";
@@ -14,6 +15,8 @@ initializeRouter.post("/initialize", async (_req, res) => {
   await initializeSequelize();
   // sessionStoreをクリア
   sessionStore.clear();
+  // APIキャッシュをクリア
+  apiCache.clear();
   // uploadディレクトリをクリア
   await fs.rm(UPLOAD_PATH, { force: true, recursive: true });
 
