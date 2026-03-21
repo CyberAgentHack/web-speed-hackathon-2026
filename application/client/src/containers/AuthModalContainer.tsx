@@ -5,9 +5,9 @@ import { type AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/typ
 import { AuthModalPage } from "@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { AUTH_MODAL_ID } from "../utils/constants";
 
 interface Props {
-  id: string;
   onUpdateActiveUser: (user: Models.User) => void;
 }
 
@@ -16,29 +16,19 @@ const ERROR_MESSAGES: Record<string, string> = {
   USERNAME_TAKEN: "ユーザー名が使われています",
 };
 
-function getErrorCode(
-  err: JQuery.jqXHR<unknown>,
-  type: "signin" | "signup",
-): string {
-  const responseJSON = err.responseJSON;
-  if (
-    typeof responseJSON !== "object" ||
-    responseJSON === null ||
-    !("code" in responseJSON) ||
-    typeof responseJSON.code !== "string" ||
-    !Object.keys(ERROR_MESSAGES).includes(responseJSON.code)
-  ) {
-    if (type === "signup") {
-      return "登録に失敗しました";
-    } else {
-      return "パスワードが異なります";
-    }
+function getErrorCode(err: unknown, type: "signin" | "signup"): string {
+  try {
+    const code = JSON.parse((err as Error).message).code;
+    return (
+      ERROR_MESSAGES[code] ??
+      (type === "signup" ? "登録に失敗しました" : "パスワードが異なります")
+    );
+  } catch (e) {
+    return type === "signup" ? "登録に失敗しました" : "パスワードが異なります";
   }
-
-  return ERROR_MESSAGES[responseJSON.code]!;
 }
 
-export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
+export const AuthModalContainer = ({ onUpdateActiveUser }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
   useEffect(() => {
@@ -71,7 +61,7 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
         }
         handleRequestCloseModal();
       } catch (err: unknown) {
-        const error = getErrorCode(err as JQuery.jqXHR<unknown>, values.type);
+        const error = getErrorCode(err, values.type);
         throw new SubmissionError({
           _error: error,
         });
@@ -81,7 +71,7 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   );
 
   return (
-    <Modal id={id} ref={ref} closedby="any">
+    <Modal id={AUTH_MODAL_ID} ref={ref} closedby="any">
       <AuthModalPage
         key={resetKey}
         onRequestCloseModal={handleRequestCloseModal}

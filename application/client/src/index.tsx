@@ -1,17 +1,37 @@
-import { createRoot } from "react-dom/client";
+import ReactDOM from "react-dom/client";
+import { RouterProvider, createRouter } from "@tanstack/react-router";
+import { routeTree } from "./routeTree.gen";
 import { Provider } from "react-redux";
-import { BrowserRouter } from "react-router";
+import { store } from "./store";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import { AppContainer } from "@web-speed-hackathon-2026/client/src/containers/AppContainer";
-import { store } from "@web-speed-hackathon-2026/client/src/store";
+const queryClient = new QueryClient();
 
-createRoot(document.getElementById("app")!).render(
-  <Provider store={store}>
-    <BrowserRouter>
-      <AppContainer />
-    </BrowserRouter>
-  </Provider>,
-);
+const router = createRouter({
+  routeTree,
+  context: { queryClient },
+  scrollRestoration: true,
+  defaultPreload: "viewport",
+});
+
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router;
+  }
+}
+
+const rootElement = document.getElementById("app")!;
+
+if (!rootElement.innerHTML) {
+  const root = ReactDOM.createRoot(rootElement);
+  root.render(
+    <QueryClientProvider client={queryClient}>
+      <Provider store={store}>
+        <RouterProvider router={router} />
+      </Provider>
+    </QueryClientProvider>,
+  );
+}
 
 declare global {
   var __BUILD_INFO__: {
@@ -25,5 +45,3 @@ window.__BUILD_INFO__ = {
   BUILD_DATE: import.meta.env["BUILD_DATE"],
   COMMIT_HASH: import.meta.env["COMMIT_HASH"],
 };
-
-export {};

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
@@ -42,39 +42,21 @@ export const AppContainer = () => {
     navigate("/");
   }, [navigate]);
 
-  const authModalId = useId();
-  const newPostModalId = useId();
-
   if (isLoadingActiveUser) {
     return <title>読込中 - CaX</title>;
   }
 
   return (
     <>
-      <AppPage
-        activeUser={activeUser}
-        authModalId={authModalId}
-        newPostModalId={newPostModalId}
-        onLogout={handleLogout}
-      >
+      <AppPage activeUser={activeUser} onLogout={handleLogout}>
         <Routes>
           <Route element={<TimelineContainer />} path="/" />
           <Route
-            element={
-              <DirectMessageListContainer
-                activeUser={activeUser}
-                authModalId={authModalId}
-              />
-            }
+            element={<DirectMessageListContainer activeUser={activeUser} />}
             path="/dm"
           />
           <Route
-            element={
-              <DirectMessageContainer
-                activeUser={activeUser}
-                authModalId={authModalId}
-              />
-            }
+            element={<DirectMessageContainer activeUser={activeUser} />}
             path="/dm/:conversationId"
           />
           <Route element={<SearchContainer />} path="/search" />
@@ -82,20 +64,15 @@ export const AppContainer = () => {
           <Route element={<PostContainer />} path="/posts/:postId" />
           <Route element={<TermContainer />} path="/terms" />
           <Route
-            element={
-              <CrokContainer
-                activeUser={activeUser}
-                authModalId={authModalId}
-              />
-            }
+            element={<CrokContainer activeUser={activeUser} />}
             path="/crok"
           />
           <Route element={<NotFoundContainer />} path="*" />
         </Routes>
       </AppPage>
 
-      <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
-      <NewPostModalContainer id={newPostModalId} />
+      <AuthModalContainer onUpdateActiveUser={setActiveUser} />
+      <NewPostModalContainer />
     </>
   );
 };

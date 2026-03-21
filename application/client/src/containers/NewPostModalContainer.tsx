@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { useNavigate } from "react-router";
 
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import {
@@ -7,6 +6,8 @@ import {
   sendJSON,
 } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { NewPostModalPage } from "../components/new_post_modal/NewPostModalPage";
+import { NEW_POST_MODAL_ID } from "../utils/constants";
+import { useNavigate } from "@tanstack/react-router";
 
 interface SubmitParams {
   images: File[];
@@ -37,11 +38,7 @@ async function sendNewPost({
   return sendJSON("/api/v1/posts", payload);
 }
 
-interface Props {
-  id: string;
-}
-
-export const NewPostModalContainer = ({ id }: Props) => {
+export const NewPostModalContainer = () => {
   const dialogId = useId();
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
@@ -76,7 +73,9 @@ export const NewPostModalContainer = ({ id }: Props) => {
         setIsLoading(true);
         const post = await sendNewPost(params);
         ref.current?.close();
-        navigate(`/posts/${post.id}`);
+        navigate({
+          to: `/posts/${post.id}`,
+        });
       } catch {
         setHasError(true);
       } finally {
@@ -87,7 +86,12 @@ export const NewPostModalContainer = ({ id }: Props) => {
   );
 
   return (
-    <Modal aria-labelledby={dialogId} id={id} ref={ref} closedby="any">
+    <Modal
+      aria-labelledby={dialogId}
+      id={NEW_POST_MODAL_ID}
+      ref={ref}
+      closedby="any"
+    >
       <NewPostModalPage
         key={resetKey}
         id={dialogId}

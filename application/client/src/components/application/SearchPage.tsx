@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router";
+import { useMemo, useState } from "react";
 import {
   Field,
   type InjectedFormProps,
@@ -18,8 +17,10 @@ import { validate } from "@web-speed-hackathon-2026/client/src/search/validation
 import { Button } from "../foundation/Button";
 import { useDebounceEffect } from "../../hooks/use_debounce_effect";
 import { fetchNegaposi } from "../../utils/fetch_with_cache";
+import { useNavigate } from "@tanstack/react-router";
 
 interface Props {
+  total: number;
   query: string;
   results: Models.Post[];
 }
@@ -45,6 +46,7 @@ const SearchInput = ({ input, meta }: WrappedFieldProps) => (
 const SearchPageComponent = ({
   query,
   results,
+  total,
   handleSubmit,
 }: Props & InjectedFormProps<SearchFormData, Props>) => {
   const navigate = useNavigate();
@@ -97,7 +99,12 @@ const SearchPageComponent = ({
 
   const onSubmit = (values: SearchFormData) => {
     const sanitizedText = sanitizeSearchText(values.searchText.trim());
-    navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
+    navigate({
+      to: "/search",
+      search: {
+        q: sanitizedText,
+      },
+    });
   };
 
   return (
@@ -119,7 +126,7 @@ const SearchPageComponent = ({
       {query && (
         <div className="px-4">
           <h2 className="text-lg font-bold">
-            {searchConditionText} の検索結果 ({results.length} 件)
+            {searchConditionText} の検索結果 ({total} 件)
           </h2>
         </div>
       )}

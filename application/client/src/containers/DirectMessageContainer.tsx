@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useParams } from "react-router";
 
 import { DirectMessageGate } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageGate";
 import { DirectMessagePage } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessagePage";
@@ -11,6 +10,7 @@ import {
   sendJSON,
 } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { useThrottleCallback } from "../utils/use_throttle_callback";
+import { AUTH_MODAL_ID } from "../utils/constants";
 
 interface DmUpdateEvent {
   type: "dm:conversation:message";
@@ -24,13 +24,14 @@ interface DmTypingEvent {
 const TYPING_INDICATOR_DURATION_MS = 10 * 1000;
 
 interface Props {
+  conversationId: string;
   activeUser: Models.User | null;
-  authModalId: string;
 }
 
-export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
-  const { conversationId = "" } = useParams<{ conversationId: string }>();
-
+export const DirectMessageContainer = ({
+  conversationId,
+  activeUser,
+}: Props) => {
   const [conversation, setConversation] =
     useState<Models.DirectMessageConversation | null>(null);
   const [conversationError, setConversationError] = useState<Error | null>(
@@ -119,7 +120,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     return (
       <DirectMessageGate
         headline="DMを利用するにはサインインしてください"
-        authModalId={authModalId}
+        authModalId={AUTH_MODAL_ID}
       />
     );
   }

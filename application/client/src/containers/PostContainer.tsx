@@ -1,5 +1,3 @@
-import { useParams } from "react-router";
-
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
 import { PostPage } from "@web-speed-hackathon-2026/client/src/components/post/PostPage";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
@@ -36,7 +34,6 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
   );
 };
 
-export const PostContainer = () => {
-  const { postId } = useParams();
+export const PostContainer = ({ postId }: { postId: string }) => {
   return <PostContainerContent key={postId} postId={postId} />;
 };

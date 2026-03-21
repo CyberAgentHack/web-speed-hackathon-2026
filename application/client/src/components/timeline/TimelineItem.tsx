@@ -1,5 +1,4 @@
 import { type MouseEventHandler, useCallback } from "react";
-import { Link, useNavigate } from "react-router";
 
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
 import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
@@ -7,6 +6,7 @@ import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 import { formatDate } from "../../utils/format-date";
+import { Link, useNavigate } from "@tanstack/react-router";
 
 const isClickedAnchorOrButton = (
   target: EventTarget | null,
@@ -47,7 +47,12 @@ export const TimelineItem = ({ post, isFv }: Props) => {
         !isClickedAnchorOrButton(ev.target, ev.currentTarget) &&
         !isSelectedText
       ) {
-        navigate(`/posts/${post.id}`);
+        navigate({
+          to: "/posts/$postId",
+          params: {
+            postId: post.id,
+          },
+        });
       }
     },
     [post, navigate],
@@ -62,13 +67,18 @@ export const TimelineItem = ({ post, isFv }: Props) => {
         <div className="shrink-0 grow-0 pr-2 sm:pr-4">
           <Link
             className="border-cax-border bg-cax-surface-subtle block h-12 w-12 overflow-hidden rounded-full border hover:opacity-75 sm:h-16 sm:w-16"
-            to={`/users/${post.user.username}`}
+            to="/users/$username"
+            params={{
+              username: post.user.username,
+            }}
           >
             <img
               src={getProfileImagePath(post.user.profileImage.id)}
               alt={post.user.profileImage.alt}
               loading={isFv ? "eager" : "lazy"}
               decoding="async"
+              width={62}
+              height={62}
             />
           </Link>
         </div>
@@ -76,20 +86,29 @@ export const TimelineItem = ({ post, isFv }: Props) => {
           <p className="overflow-hidden text-sm text-ellipsis whitespace-nowrap">
             <Link
               className="text-cax-text pr-1 font-bold hover:underline"
-              to={`/users/${post.user.username}`}
+              to="/users/$username"
+              params={{
+                username: post.user.username,
+              }}
             >
               {post.user.name}
             </Link>
             <Link
               className="text-cax-text-muted pr-1 hover:underline"
-              to={`/users/${post.user.username}`}
+              to="/users/$username"
+              params={{
+                username: post.user.username,
+              }}
             >
               @{post.user.username}
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link
               className="text-cax-text-muted pr-1 hover:underline"
-              to={`/posts/${post.id}`}
+              to="/posts/$postId"
+              params={{
+                postId: post.id,
+              }}
             >
               <time dateTime={new Date(post.createdAt).toISOString()}>
                 {formatDate(post.createdAt, "yyyy年M月d日")}

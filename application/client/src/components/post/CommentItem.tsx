@@ -14,7 +14,11 @@ export const CommentItem = ({ comment }: Props) => {
         <div className="shrink-0 grow-0 pr-2 sm:pr-4">
           <Link
             className="border-cax-border bg-cax-surface-subtle block h-8 w-8 overflow-hidden rounded-full border hover:opacity-75 sm:h-12 sm:w-12"
-            to={`/users/${comment.user.username}`}
+            to="/users/$username"
+            params={{
+              // @ts-expect-error
+              username: comment.user.username,
+            }}
           >
             <img
               alt={comment.user.profileImage.alt}
@@ -26,13 +30,21 @@ export const CommentItem = ({ comment }: Props) => {
           <p className="overflow-hidden text-xs text-ellipsis whitespace-nowrap">
             <Link
               className="text-cax-text pr-1 font-bold hover:underline"
-              to={`/users/${comment.user.username}`}
+              to="/users/$username"
+              params={{
+                // @ts-expect-error
+                username: comment.user.username,
+              }}
             >
               {comment.user.name}
             </Link>
             <Link
               className="text-cax-text-muted pr-1 hover:underline"
-              to={`/users/${comment.user.username}`}
+              to="/users/$username"
+              params={{
+                // @ts-expect-error
+                username: comment.user.username,
+              }}
             >
               @{comment.user.username}
             </Link>

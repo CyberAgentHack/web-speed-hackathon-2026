@@ -54,7 +54,7 @@ export async function sendJSON<T>(url: string, data: object): Promise<T> {
     credentials: "include",
   });
   if (!result.ok) {
-    throw new Error(`Failed to fetch: ${result.status} ${result.statusText}`);
+    throw new Error(JSON.stringify(await result.json()));
   }
   return result.json() as Promise<T>;
 }

@@ -1,12 +1,8 @@
-import { type To, Link as RrLink } from "react-router";
+import { Link as TrLink } from "@tanstack/react-router";
+import type { ComponentProps } from "react";
 
-type Props = {
-  to: To;
-  children: React.ReactNode;
-  className?: string;
-  onClick?: () => void;
-};
+type Props = ComponentProps<typeof TrLink>;
 
-export const Link = ({ to, ...props }: Props) => {
-  return <RrLink to={to} {...props} />;
+export const Link = ({ ...props }: Props) => {
+  return <TrLink {...props} />;
 };
