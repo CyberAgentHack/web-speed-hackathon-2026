@@ -10,9 +10,6 @@ interface Props {
   src: string;
 }
 
-/**
- * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
- */
 export const CoveredImage = ({ src }: Props) => {
   const dialogId = useId();
   const [shouldLoadAlt, setShouldLoadAlt] = useState(false);
@@ -21,19 +18,23 @@ export const CoveredImage = ({ src }: Props) => {
     ev.stopPropagation();
   }, []);
 
-  const { data } = useFetch(shouldLoadAlt ? src : null, fetchBinary);
+  const { data } = useFetch(src, fetchBinary);
 
   const alt = useMemo(() => {
-    if (data == null) return "";
+    if (!shouldLoadAlt || data == null) return "";
 
     try {
-      const exif = load(Buffer.from(data).toString("binary"));
-      const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
+      const binary = Buffer.from(data).toString("binary");
+      const exif = load(binary) as {
+        "0th"?: Record<number, string>;
+      };
+
+      const raw = exif["0th"]?.[ImageIFD.ImageDescription];
       return raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
     } catch {
       return "";
     }
-  }, [data]);
+  }, [data, shouldLoadAlt]);
 
   const handleOpenAlt = useCallback(() => {
     setShouldLoadAlt(true);
@@ -62,9 +63,7 @@ export const CoveredImage = ({ src }: Props) => {
       <Modal id={dialogId} closedby="any" onClick={handleDialogClick}>
         <div className="grid gap-y-6">
           <h1 className="text-center text-2xl font-bold">画像の説明</h1>
-
           <p className="text-sm">{alt}</p>
-
           <Button variant="secondary" command="close" commandfor={dialogId}>
             閉じる
           </Button>
