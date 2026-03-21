@@ -2,6 +2,7 @@ import { loadFFmpeg } from "@web-speed-hackathon-2026/client/src/utils/load_ffmp
 
 interface Options {
   extension: string;
+  fps?: number | undefined;
   size?: number | undefined;
 }
 
@@ -10,6 +11,7 @@ interface Options {
  */
 export async function convertMovie(file: File, options: Options): Promise<Blob> {
   const ffmpeg = await loadFFmpeg();
+  const fps = options.fps ?? 10;
 
   const cropOptions = [
     "'min(iw,ih)':'min(iw,ih)'",
@@ -27,7 +29,7 @@ export async function convertMovie(file: File, options: Options): Promise<Blob> 
     "-t",
     "5",
     "-r",
-    "10",
+    String(fps),
     "-vf",
     `crop=${cropOptions}`,
     "-an",
