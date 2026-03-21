@@ -117,7 +117,11 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
           setIsConverting(false);
         })
-        .catch(console.error);
+        .catch((err) => {
+          console.error(err);
+          setIsConverting(false);
+          setHasFileError(true);
+        });
     }
   }, []);
 
