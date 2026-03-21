@@ -1,23 +1,32 @@
 import { BM25 } from "bayesian-bm25";
-import type { Tokenizer, IpadicFeatures } from "kuromoji";
 import _ from "lodash";
 
-const STOP_POS = new Set(["助詞", "助動詞", "記号"]);
+const STOP_WORDS = new Set([
+  "の", "は", "が", "を", "に", "で", "と", "も", "へ", "や",
+  "か", "な", "よ", "ね", "わ", "だ", "て", "た", "する", "ある",
+  "いる", "この", "その", "あの", "どの", "こと", "もの", "ため",
+]);
+
+const segmenter = new Intl.Segmenter("ja", { granularity: "word" });
 
 /**
- * 形態素解析で内容語トークン（名詞、動詞、形容詞など）を抽出
+ * Intl.Segmenter で内容語トークンを抽出
  */
-export function extractTokens(tokens: IpadicFeatures[]): string[] {
-  return tokens
-    .filter((t) => t.surface_form !== "" && t.pos !== "" && !STOP_POS.has(t.pos))
-    .map((t) => t.surface_form.toLowerCase());
+export function extractTokensFromText(text: string): string[] {
+  const segments = segmenter.segment(text);
+  const tokens: string[] = [];
+  for (const seg of segments) {
+    if (seg.isWordLike && !STOP_WORDS.has(seg.segment)) {
+      tokens.push(seg.segment.toLowerCase());
+    }
+  }
+  return tokens;
 }
 
 /**
  * BM25で候補をスコアリングして、クエリと類似度の高い上位10件を返す
  */
 export function filterSuggestionsBM25(
-  tokenizer: Tokenizer<IpadicFeatures>,
   candidates: string[],
   queryTokens: string[],
 ): string[] {
@@ -25,7 +34,7 @@ export function filterSuggestionsBM25(
 
   const bm25 = new BM25({ k1: 1.2, b: 0.75 });
 
-  const tokenizedCandidates = candidates.map((c) => extractTokens(tokenizer.tokenize(c)));
+  const tokenizedCandidates = candidates.map((c) => extractTokensFromText(c));
   bm25.index(tokenizedCandidates);
 
   const results = _.zipWith(candidates, bm25.getScores(queryTokens), (text, score) => {
