@@ -3,6 +3,7 @@ import {
   ChangeEvent,
   useCallback,
   useId,
+  useMemo,
   useRef,
   useState,
   KeyboardEvent,
@@ -86,15 +87,18 @@ export const DirectMessagePage = ({
     [onSubmit],
   );
 
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const scrollToBottom = () => {
-      window.scrollTo(0, document.body.scrollHeight);
-    };
-    scrollToBottom();
-    const observer = new ResizeObserver(scrollToBottom);
-    observer.observe(document.body);
-    return () => observer.disconnect();
-  }, []);
+    messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+  }, [conversation.messages.length]);
+
+  const sortedMessages = useMemo(
+    () =>
+      [...conversation.messages].sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      ),
+    [conversation.messages],
+  );
 
   if (conversationError != null) {
     return (
@@ -130,7 +134,7 @@ export const DirectMessagePage = ({
         )}
 
         <ul className="grid gap-3" data-testid="dm-message-list">
-          {[...conversation.messages].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()).map((message) => {
+          {sortedMessages.map((message) => {
             const isActiveUserSend = message.sender.id === activeUser.id;
 
             return (
@@ -162,6 +166,7 @@ export const DirectMessagePage = ({
             );
           })}
         </ul>
+        <div ref={messagesEndRef} />
       </div>
 
       <div className="sticky bottom-12 z-10 lg:bottom-0">

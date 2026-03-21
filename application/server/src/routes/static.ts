@@ -122,7 +122,7 @@ staticRouter.use(async (req, res, next) => {
     } else {
       const [baseHtml, initialPosts] = await Promise.all([
         fs.readFile(htmlPath, "utf-8"),
-        Post.findAll({ limit: 30, offset: 0 }),
+        Post.findAll({ limit: 5, offset: 0 }),
       ]);
       const json = JSON.stringify(initialPosts)
         .replace(/<\/script>/gi, "<\\/script>")

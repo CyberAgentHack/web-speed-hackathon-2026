@@ -47,29 +47,18 @@ export const CoveredImage = ({ src }: Props) => {
   const [isLoadingAlt, setIsLoadingAlt] = useState(false);
 
   // マウント時に自動的にalt textをロードする（スコアリングツールのgetByAltText対応）
-  // piexifjs処理はアイドル時に実行してTBTへの影響を最小化
   useEffect(() => {
     let isMounted = true;
-    fetchBinaryCached(src)
-      .then((data) => {
-        return new Promise<string>((resolve) => {
-          const doWork = async () => {
-            const { load, ImageIFD } = await getPiexifjs();
-            resolve(extractAlt(data, load, ImageIFD));
-          };
-          if (typeof requestIdleCallback !== "undefined") {
-            requestIdleCallback(() => void doWork(), { timeout: 5000 });
-          } else {
-            setTimeout(() => void doWork(), 0);
-          }
-        });
-      })
-      .then((alt) => {
+    void (async () => {
+      try {
+        const data = await fetchBinaryCached(src);
+        const { load, ImageIFD } = await getPiexifjs();
+        const alt = extractAlt(data, load, ImageIFD);
         if (isMounted) setAlt(alt);
-      })
-      .catch(() => {
+      } catch {
         if (isMounted) setAlt("");
-      });
+      }
+    })();
     return () => {
       isMounted = false;
     };

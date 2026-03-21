@@ -18,7 +18,7 @@ const CrokContainer = lazy(() =>
   })),
 );
 const DirectMessageContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer").then((m) => ({
+  import(/* webpackPrefetch: true */ "@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer").then((m) => ({
     default: m.DirectMessageContainer,
   })),
 );
