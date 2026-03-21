@@ -1,4 +1,4 @@
-import fs from "node:fs";
+import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -10,7 +10,15 @@ import { QaSuggestion } from "@web-speed-hackathon-2026/server/src/models";
 export const crokRouter = Router();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-8");
+const responsePath = path.join(__dirname, "crok-response.md");
+let cachedResponse: string | null = null;
+
+async function getResponse(): Promise<string> {
+  if (cachedResponse === null) {
+    cachedResponse = await fs.readFile(responsePath, "utf-8");
+  }
+  return cachedResponse;
+}
 
 crokRouter.get("/crok/suggestions", async (_req, res) => {
   const suggestions = await QaSuggestion.findAll({ logging: false });
@@ -30,6 +38,8 @@ crokRouter.get("/crok", async (req, res) => {
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
   res.flushHeaders();
+
+  const response = await getResponse();
 
   let messageId = 0;
 
