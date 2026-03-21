@@ -22,6 +22,25 @@ export async function fetchJSON<T>(url: string): Promise<T> {
   return result;
 }
 
+export async function fetchPaginatedJSON<T>(
+  url: string,
+  offset: number,
+  limit: number,
+): Promise<T[]> {
+  const separator = url.includes("?") ? "&" : "?";
+  const requestUrl = `${url}${separator}offset=${offset}&limit=${limit}`;
+
+  console.log("fetchPaginatedJSON", requestUrl);
+
+  const result = await $.ajax({
+    dataType: "json",
+    method: "GET",
+    url: requestUrl,
+  });
+
+  return result;
+}
+
 export async function sendFile<T>(url: string, file: File): Promise<T> {
   const result = await $.ajax({
     async: false,
