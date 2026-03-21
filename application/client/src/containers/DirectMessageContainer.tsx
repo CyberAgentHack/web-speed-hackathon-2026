@@ -116,7 +116,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     if (conversationError != null) {
       return <NotFoundContainer />;
     }
-    return <div className="p-4">読込中...</div>;
+    return null;
   }
 
   const peer =

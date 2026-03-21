@@ -21,12 +21,9 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
 
   if (isLoadingPost) {
     return (
-      <>
-        <Helmet>
-          <title>読込中 - CaX</title>
-        </Helmet>
-        <div className="p-4">読込中...</div>
-      </>
+      <Helmet>
+        <title>読込中 - CaX</title>
+      </Helmet>
     );
   }
 
