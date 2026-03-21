@@ -168,7 +168,7 @@ const config = {
       name: "runtime",
     },
     splitChunks: {
-      chunks: "all",
+      chunks: "initial",
       cacheGroups: {
         polyfills: {
           name: "polyfills",
@@ -177,12 +177,34 @@ const config = {
           chunks: "initial",
           enforce: true,
         },
+        webLlm: {
+          name: "web-llm",
+          test: /[\\/]node_modules[\\/]@mlc-ai[\\/]/,
+          priority: 48,
+          chunks: "all",
+          enforce: true,
+        },
         framework: {
           name: "framework",
           test: /[\\/]node_modules[\\/](react|react-dom|react-router|react-redux|redux|scheduler)[\\/]/,
           priority: 40,
           chunks: "all",
           enforce: true,
+        },
+        kuromoji: {
+          name: "kuromoji",
+          test: /[\\/]node_modules[\\/](kuromoji|bluebird)[\\/]/,
+          priority: 38,
+          chunks: "all",
+          enforce: true,
+        },
+        mainVendors: {
+          name: "main-vendors",
+          test: /[\\/]node_modules[\\/]/,
+          chunks: (chunk) => chunk.name === "main",
+          priority: 30,
+          enforce: true,
+          reuseExistingChunk: true,
         },
         vendors: {
           name: "vendors",
