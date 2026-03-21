@@ -1,5 +1,6 @@
 import classNames from "classnames";
 
+import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { CoveredImage } from "@web-speed-hackathon-2026/client/src/components/foundation/CoveredImage";
 import { getImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
@@ -9,7 +10,7 @@ interface Props {
 
 export const ImageArea = ({ images }: Props) => {
   return (
-    <div className="w-full" style={{ aspectRatio: "16 / 9" }}>
+    <AspectRatioBox aspectRatio="16 / 9">
       <div className="border-cax-border grid h-full w-full grid-cols-2 grid-rows-2 gap-1 overflow-hidden rounded-lg border">
         {images.map((image, idx) => {
           return (
@@ -23,11 +24,14 @@ export const ImageArea = ({ images }: Props) => {
                 "row-span-2": images.length <= 2 || (images.length === 3 && idx === 0),
               })}
             >
-              <CoveredImage src={getImagePath(image.id)} />
+              <CoveredImage
+                alt={image.alt || `Image ${idx + 1} of ${images.length}`}
+                src={getImagePath(image.id)}
+              />
             </div>
           );
         })}
       </div>
-    </div>
+    </AspectRatioBox>
   );
 };
