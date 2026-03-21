@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -12,10 +12,21 @@ interface Props {
  * クリックすると再生・一時停止を切り替えます。
  */
 export const PausableMovie = ({ src }: Props) => {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const handleClick = useCallback(() => {
     setIsPlaying((cur) => !cur);
   }, []);
+  const playbackSrc = `${src}#t=0.1`;
+  useEffect(() => {
+    const el = videoRef.current;
+    if (el == null) return;
+    if (isPlaying) {
+      void el.play().catch(() => undefined);
+    } else {
+      el.pause();
+    }
+  }, [isPlaying]);
 
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
@@ -25,11 +36,15 @@ export const PausableMovie = ({ src }: Props) => {
         onClick={handleClick}
         type="button"
       >
-        <img
-          alt=""
+        <video
+          ref={videoRef}
           className="h-full w-full object-cover"
-          loading="lazy"
-          src={src}
+          autoPlay={isPlaying}
+          loop={true}
+          muted={true}
+          playsInline={true}
+          preload="metadata"
+          src={playbackSrc}
         />
         <div
           className={classNames(
