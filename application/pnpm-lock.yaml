@@ -62,7 +62,7 @@ importers:
         version: 9.5.0
       gifler:
         specifier: github:themadcreator/gifler#v0.3.0
-        version: https://codeload.github.com/themadcreator/gifler/tar.gz/c3259b071c7782f85d4928a5f03d0b378ed003b5
+        version: https://codeload.github.com/themadcreator/gifler/tar.gz/89484cb3db174c584a3138e89664f0167a7760c1
       jquery:
         specifier: 3.7.1
         version: 3.7.1
