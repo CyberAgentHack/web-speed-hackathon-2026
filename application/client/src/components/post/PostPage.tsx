@@ -1,16 +1,12 @@
-import { CommentList } from "@web-speed-hackathon-2026/client/src/components/post/CommentList";
-import { PostItem } from "@web-speed-hackathon-2026/client/src/components/post/PostItem";
+import React from "react";
+import { PostItem } from "./PostItem";
 
-interface Props {
-  comments: Models.Comment[];
-  post: Models.Post;
-}
-
-export const PostPage = ({ comments, post }: Props) => {
+export const PostPage = ({ posts }) => {
   return (
-    <>
-      <PostItem post={post} />
-      <CommentList comments={comments} />
-    </>
+    <div>
+      {posts.map((post) => (
+        <PostItem key={post.id} post={post} />
+      ))}
+    </div>
   );
 };
