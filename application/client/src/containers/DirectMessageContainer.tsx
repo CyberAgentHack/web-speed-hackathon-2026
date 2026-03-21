@@ -6,7 +6,10 @@ import { DirectMessagePage } from "@web-speed-hackathon-2026/client/src/componen
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
-import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import {
+  fetchJSON,
+  sendJSON,
+} from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { setPageTitle } from "@web-speed-hackathon-2026/client/src/utils/set_page_title";
 
 interface DmUpdateEvent {
@@ -20,24 +23,6 @@ interface DmTypingEvent {
 
 const TYPING_INDICATOR_DURATION_MS = 10 * 1000;
 
-function mergeMessages(
-  current: Models.DirectMessage[] = [],
-  incoming: Models.DirectMessage[] = [],
-): Models.DirectMessage[] {
-  const messagesById = new Map<string, Models.DirectMessage>();
-
-  for (const message of current) {
-    messagesById.set(message.id, message);
-  }
-  for (const message of incoming) {
-    messagesById.set(message.id, message);
-  }
-
-  return Array.from(messagesById.values()).sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-  );
-}
-
 interface Props {
   activeUser: Models.User | null;
   authModalId: string;
@@ -46,12 +31,17 @@ interface Props {
 export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   const { conversationId = "" } = useParams<{ conversationId: string }>();
 
-  const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(null);
-  const [conversationError, setConversationError] = useState<Error | null>(null);
+  const [conversation, setConversation] =
+    useState<Models.DirectMessageConversation | null>(null);
+  const [conversationError, setConversationError] = useState<Error | null>(
+    null,
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [isPeerTyping, setIsPeerTyping] = useState(false);
-  const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   const loadConversation = useCallback(async () => {
     if (activeUser == null) {
@@ -62,16 +52,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
       const data = await fetchJSON<Models.DirectMessageConversation>(
         `/api/v1/dm/${conversationId}`,
       );
-      setConversation((prev) => {
-        if (prev == null) {
-          return data;
-        }
-
-        return {
-          ...data,
-          messages: mergeMessages(prev.messages, data.messages),
-        };
-      });
+      setConversation(data);
       setConversationError(null);
     } catch (error) {
       setConversation(null);
@@ -99,14 +80,10 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
           },
         );
         setConversation((prev) => {
-          if (prev == null) {
-            return prev;
-          }
-
-          return {
-            ...prev,
-            messages: mergeMessages(prev.messages, [newMessage]),
-          };
+          if (prev == null) return prev;
+          const exists = prev.messages?.some((m) => m.id === newMessage.id);
+          if (exists) return prev;
+          return { ...prev, messages: [...(prev.messages ?? []), newMessage] };
         });
       } finally {
         setIsSubmitting(false);
@@ -115,59 +92,47 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     [conversationId],
   );
 
-  const appendIncomingMessage = useCallback((message: Models.DirectMessage) => {
-    setConversation((prev) => {
-      if (prev == null) {
-        return prev;
-      }
-
-      return {
-        ...prev,
-        messages: mergeMessages(prev.messages, [message]),
-      };
-    });
-  }, []);
-
-  const clearPeerTyping = useCallback(() => {
-    setIsPeerTyping(false);
-    if (peerTypingTimeoutRef.current !== null) {
-      clearTimeout(peerTypingTimeoutRef.current);
-      peerTypingTimeoutRef.current = null;
-    }
-  }, []);
-
-  const showPeerTyping = useCallback(() => {
-    setIsPeerTyping(true);
-    if (peerTypingTimeoutRef.current !== null) {
-      clearTimeout(peerTypingTimeoutRef.current);
-    }
-    peerTypingTimeoutRef.current = setTimeout(() => {
-      setIsPeerTyping(false);
-    }, TYPING_INDICATOR_DURATION_MS);
-  }, []);
-
   const handleTyping = useCallback(async () => {
     void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
   }, [conversationId]);
 
-  useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {
-    if (event.type === "dm:conversation:message") {
-      appendIncomingMessage(event.payload);
-
-      if (event.payload.sender.id !== activeUser?.id) {
-        clearPeerTyping();
-        void loadConversation();
+  useWs(
+    `/api/v1/dm/${conversationId}`,
+    (event: DmUpdateEvent | DmTypingEvent) => {
+      if (event.type === "dm:conversation:message") {
+        void loadConversation().then(() => {
+          if (event.payload.sender.id !== activeUser?.id) {
+            setIsPeerTyping(false);
+            if (peerTypingTimeoutRef.current !== null) {
+              clearTimeout(peerTypingTimeoutRef.current);
+            }
+            peerTypingTimeoutRef.current = null;
+          }
+        });
+        void sendRead();
+      } else if (event.type === "dm:conversation:typing") {
+        setIsPeerTyping(true);
+        if (peerTypingTimeoutRef.current !== null) {
+          clearTimeout(peerTypingTimeoutRef.current);
+        }
+        peerTypingTimeoutRef.current = setTimeout(() => {
+          setIsPeerTyping(false);
+        }, TYPING_INDICATOR_DURATION_MS);
       }
+    },
+  );
 
-      void sendRead();
-      return;
-    }
-
-    showPeerTyping();
-  });
+  if (activeUser === null) {
+    return (
+      <DirectMessageGate
+        headline="DMを利用するにはサインインしてください"
+        authModalId={authModalId}
+      />
+    );
+  }
 
   const peer =
-    activeUser != null && conversation != null
+    conversation != null
       ? conversation.initiator.id !== activeUser.id
         ? conversation.initiator
         : conversation.member
@@ -179,15 +144,6 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     }
     setPageTitle(`${peer.name} さんとのダイレクトメッセージ - CaX`);
   }, [peer]);
-
-  if (activeUser === null) {
-    return (
-      <DirectMessageGate
-        headline="DMを利用するにはサインインしてください"
-        authModalId={authModalId}
-      />
-    );
-  }
 
   if (conversation == null) {
     if (conversationError != null) {
