@@ -15,10 +15,11 @@ export const UserProfileContainer = () => {
     `/api/v1/users/${username}`,
     fetchJSON,
   );
-  const { data: posts, fetchMore, hasMore } = useInfiniteFetch<Models.Post>(
-    `/api/v1/users/${username}/posts`,
-    fetchJSON,
-  );
+  const {
+    data: posts,
+    fetchMore,
+    hasMore,
+  } = useInfiniteFetch<Models.Post>(`/api/v1/users/${username}/posts`, fetchJSON);
 
   if (isLoadingUser) {
     return (

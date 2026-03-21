@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { Field, InjectedFormProps, reduxForm, WrappedFieldProps } from "redux-form";
+import {
+  Field,
+  InjectedFormProps,
+  SubmissionError,
+  reduxForm,
+  WrappedFieldProps,
+} from "redux-form";
 
 import { Timeline } from "@web-speed-hackathon-2026/client/src/components/timeline/Timeline";
 import {
@@ -18,19 +24,23 @@ interface Props {
   results: Models.Post[];
 }
 
-const SearchInput = ({ input, meta }: WrappedFieldProps) => (
+const SearchInput = ({
+  input,
+  meta,
+  submitFailed,
+}: WrappedFieldProps & { submitFailed?: boolean }) => (
   <div className="flex flex-1 flex-col">
     <input
       {...input}
       className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
-        meta.touched && meta.error
+        (submitFailed || meta.touched) && meta.error
           ? "border-cax-danger focus:border-cax-danger"
           : "border-cax-border focus:border-cax-brand-strong"
       }`}
       placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
       type="text"
     />
-    {meta.touched && meta.error && (
+    {(submitFailed || meta.touched) && meta.error && (
       <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>
     )}
   </div>
@@ -40,6 +50,7 @@ const SearchPageComponent = ({
   query,
   results,
   handleSubmit,
+  submitFailed,
 }: Props & InjectedFormProps<SearchFormData, Props>) => {
   const navigate = useNavigate();
   const [isNegative, setIsNegative] = useState(false);
@@ -85,7 +96,12 @@ const SearchPageComponent = ({
   }, [parsed]);
 
   const onSubmit = (values: SearchFormData) => {
-    const sanitizedText = sanitizeSearchText(values.searchText.trim());
+    const sanitizedText = sanitizeSearchText((values.searchText ?? "").trim());
+    if (sanitizedText.length === 0) {
+      throw new SubmissionError({
+        searchText: "検索キーワードを入力してください",
+      });
+    }
     navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
   };
 
@@ -94,7 +110,7 @@ const SearchPageComponent = ({
       <div className="bg-cax-surface p-4 shadow">
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="flex gap-2">
-            <Field name="searchText" component={SearchInput} />
+            <Field name="searchText" component={SearchInput} submitFailed={submitFailed} />
             <Button variant="primary" type="submit">
               検索
             </Button>
@@ -124,7 +140,7 @@ const SearchPageComponent = ({
         </article>
       )}
 
-      {query && results.length === 0 ? (
+      {query.trim() !== "" && results.length === 0 ? (
         <div className="text-cax-text-muted flex items-center justify-center p-8">
           検索結果が見つかりませんでした
         </div>

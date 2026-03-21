@@ -25,7 +25,7 @@ export const CoveredImage = ({ alt, src }: Props) => {
     <div className="relative h-full w-full overflow-hidden">
       <img
         alt={alt}
-        className={classNames("h-full w-full object-cover")}
+        className={classNames("absolute inset-0 h-full w-full object-cover")}
         decoding="async"
         loading="lazy"
         src={src}

@@ -1,5 +1,5 @@
 import type { Context } from "hono";
-import { getCookie } from "hono/cookie";
+import { getCookie, setCookie } from "hono/cookie";
 
 class MemoryStore {
   private store: Map<string, Record<string, unknown>> = new Map();
@@ -43,6 +43,11 @@ export const createSessionMiddleware = () => {
       const newSessionId = `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       c.set("session" as never, {} as never);
       c.set("session_id" as never, newSessionId as never);
+      setCookie(c, "session_id", newSessionId, {
+        httpOnly: true,
+        path: "/",
+        sameSite: "Lax",
+      });
     } else {
       const session = new Promise<Record<string, unknown> | null>((resolve) => {
         sessionStore.get(sessionId, (_err, sess) => {

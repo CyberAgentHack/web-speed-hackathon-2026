@@ -1,12 +1,13 @@
+import { promises as fs } from "fs";
+import path from "path";
+
+import { fileTypeFromBuffer } from "file-type";
 import { Hono } from "hono";
 import type { Context } from "hono";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
-import { fileTypeFromBuffer } from "file-type";
-import { promises as fs } from "fs";
-import path from "path";
 
-const EXTENSION = "jpg";
+const EXTENSION = "avif";
 
 export const imageRouter = new Hono();
 

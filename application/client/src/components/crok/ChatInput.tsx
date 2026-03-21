@@ -22,6 +22,18 @@ interface Props {
   onSendMessage: (message: string) => void;
 }
 
+let suggestionsPromise: Promise<string[]> | null = null;
+
+async function getSuggestions(): Promise<string[]> {
+  if (suggestionsPromise == null) {
+    suggestionsPromise = fetchJSON<{ suggestions: string[] }>("/api/v1/crok/suggestions").then(
+      (result) => result.suggestions,
+    );
+  }
+
+  return suggestionsPromise;
+}
+
 // トークン単位でハイライト
 function highlightMatchByTokens(text: string, queryTokens: string[]): React.ReactNode {
   if (queryTokens.length === 0) return text;
@@ -80,6 +92,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
+  const [allSuggestions, setAllSuggestions] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
@@ -97,10 +110,16 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     let mounted = true;
 
     const init = async () => {
-      const nextTokenizer = await buildTokenizer();
-      if (mounted) {
-        setTokenizer(nextTokenizer);
+      const [nextTokenizer, cachedSuggestions] = await Promise.all([
+        buildTokenizer(),
+        getSuggestions(),
+      ]);
+      if (!mounted) {
+        return;
       }
+
+      setTokenizer(nextTokenizer);
+      setAllSuggestions(cachedSuggestions);
     };
     init();
 
@@ -110,41 +129,20 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
+    if (!tokenizer || !inputValue.trim() || allSuggestions.length === 0) {
+      setSuggestions([]);
+      setQueryTokens([]);
+      setShowSuggestions(false);
+      return;
+    }
 
-    const updateSuggestions = async () => {
-      if (!tokenizer || !inputValue.trim()) {
-        setSuggestions([]);
-        setQueryTokens([]);
-        setShowSuggestions(false);
-        return;
-      }
+    const tokens = extractTokens(tokenizer.tokenize(inputValue));
+    const results = filterSuggestionsBM25(tokenizer, allSuggestions, tokens);
 
-      const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-        "/api/v1/crok/suggestions",
-      );
-      if (cancelled) {
-        return;
-      }
-
-      const tokens = extractTokens(tokenizer.tokenize(inputValue));
-      const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
-
-      if (cancelled) {
-        return;
-      }
-
-      setQueryTokens(tokens);
-      setSuggestions(results);
-      setShowSuggestions(results.length > 0);
-    };
-
-    void updateSuggestions();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [inputValue, tokenizer]);
+    setQueryTokens(tokens);
+    setSuggestions(results);
+    setShowSuggestions(results.length > 0);
+  }, [allSuggestions, inputValue, tokenizer]);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;

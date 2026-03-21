@@ -9,6 +9,11 @@ interface Props {
 
 export const InfiniteScroll = ({ children, fetchMore, hasMore, items }: Props) => {
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const hasRequestedAtCurrentLengthRef = useRef(false);
+
+  useEffect(() => {
+    hasRequestedAtCurrentLengthRef.current = false;
+  }, [items.length]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -18,7 +23,11 @@ export const InfiniteScroll = ({ children, fetchMore, hasMore, items }: Props) =
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
+        if (
+          entries.some((entry) => entry.isIntersecting)
+          && !hasRequestedAtCurrentLengthRef.current
+        ) {
+          hasRequestedAtCurrentLengthRef.current = true;
           fetchMore();
         }
       },

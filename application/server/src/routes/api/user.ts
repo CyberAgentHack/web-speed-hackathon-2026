@@ -56,7 +56,7 @@ userRouter.put("/me", async (c: Context) => {
     return c.json({ message: "Not Found" }, 404);
   }
 
-  const body = c.get("body" as never) || await c.req.json();
+  const body = c.get("body" as never) || (await c.req.json());
   Object.assign(user, body);
   await user.save();
 

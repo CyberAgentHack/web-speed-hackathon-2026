@@ -1,6 +1,6 @@
 import { BM25 } from "bayesian-bm25";
-import type { Tokenizer, IpadicFeatures } from "kuromoji";
 import { zipWith, sortBy } from "es-toolkit";
+import type { Tokenizer, IpadicFeatures } from "kuromoji";
 
 const STOP_POS = new Set(["助詞", "助動詞", "記号"]);
 
@@ -35,7 +35,7 @@ export function filterSuggestionsBM25(
   // スコアが高い（＝類似度が高い）ものが下に来るように、上位10件を取得する
   return sortBy(
     results.filter((s) => s.score > 0),
-    [(s: { text: string; score: number }) => s.score]
+    [(s: { text: string; score: number }) => s.score],
   )
     .slice(-10)
     .map((s) => s.text);

@@ -1,9 +1,10 @@
+import { promises as fs } from "fs";
 import { spawn } from "node:child_process";
+import path from "path";
+
+import { fileTypeFromBuffer } from "file-type";
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { fileTypeFromBuffer } from "file-type";
-import { promises as fs } from "fs";
-import path from "path";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 

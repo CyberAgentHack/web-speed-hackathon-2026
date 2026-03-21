@@ -76,7 +76,7 @@ postRouter.post("/posts", async (c: Context) => {
     return c.json({ message: "Unauthorized" }, 401);
   }
 
-  const body = c.get("body" as never) || await c.req.json();
+  const body = c.get("body" as never) || (await c.req.json());
 
   const post = await Post.create(
     {

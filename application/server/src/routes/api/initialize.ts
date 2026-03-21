@@ -1,8 +1,11 @@
 import fs from "node:fs/promises";
+
 import { Hono } from "hono";
 import type { Context } from "hono";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+import { clearCrokSuggestionCache } from "@web-speed-hackathon-2026/server/src/routes/api/crok";
+
 import { initializeSequelize } from "../../sequelize";
 import { sessionStore } from "../../session";
 
@@ -15,6 +18,8 @@ initializeRouter.post("/initialize", async (c: Context) => {
   await new Promise<void>((resolve) => {
     sessionStore.clear(() => resolve());
   });
+  // crok候補キャッシュをクリア
+  clearCrokSuggestionCache();
   // uploadディレクトリをクリア
   await fs.rm(UPLOAD_PATH, { force: true, recursive: true });
 

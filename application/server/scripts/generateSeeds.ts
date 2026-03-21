@@ -26,7 +26,7 @@ const seedsDir = path.resolve(__dirname, "../seeds");
 // ========== Existing Asset IDs from public directory ==========
 // These IDs correspond to actual files in the public directory
 
-// public/images/*.jpg (30 files)
+// public/images/*.avif (30 files)
 const EXISTING_IMAGE_IDS = [
   "029b4b75-bbcc-4aa5-8bd7-e4bb12a33cd3",
   "078c4d42-12e3-4c1d-823c-9ba552f6b066",
@@ -110,7 +110,7 @@ const EXISTING_SOUNDS = [
   { id: "93b848fe-24c8-4597-a515-463a910f6ceb", title: "Midnight Jazz", artist: "Blue Note" },
 ];
 
-// public/images/profiles/*.jpg (30 files)
+// public/images/profiles/*.avif (30 files)
 const EXISTING_PROFILE_IMAGE_IDS = [
   "09d52cbb-28a2-4413-b220-1f8c9e80a440",
   "0aba06a6-1b56-4ebd-8218-951aaba173af",

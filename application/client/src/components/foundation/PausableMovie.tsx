@@ -13,6 +13,7 @@ interface Props {
  */
 export const PausableMovie = ({ src }: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
@@ -36,6 +37,30 @@ export const PausableMovie = ({ src }: Props) => {
         setIsPlaying(false);
       },
     );
+  }, [src]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (video == null || canvas == null) {
+      return;
+    }
+
+    const syncCanvasSize = () => {
+      const width = Math.max(video.videoWidth, 1);
+      const height = Math.max(video.videoHeight, 1);
+      canvas.width = width;
+      canvas.height = height;
+    };
+
+    syncCanvasSize();
+    video.addEventListener("loadedmetadata", syncCanvasSize);
+    video.addEventListener("loadeddata", syncCanvasSize);
+
+    return () => {
+      video.removeEventListener("loadedmetadata", syncCanvasSize);
+      video.removeEventListener("loadeddata", syncCanvasSize);
+    };
   }, [src]);
 
   const handleClick = useCallback(() => {
@@ -72,6 +97,7 @@ export const PausableMovie = ({ src }: Props) => {
           preload="metadata"
           src={src}
         />
+        <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 h-full w-full opacity-0" />
         <div
           className={classNames(
             "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",

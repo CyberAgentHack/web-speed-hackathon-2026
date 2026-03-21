@@ -56,6 +56,8 @@ export const TimelineItem = ({ post }: Props) => {
           >
             <img
               alt={post.user.profileImage.alt}
+              decoding="async"
+              loading="lazy"
               src={getProfileImagePath(post.user.profileImage.id)}
             />
           </Link>
@@ -76,9 +78,7 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={toIsoDateTime(post.createdAt)}>
-                {formatLongDate(post.createdAt)}
-              </time>
+              <time dateTime={toIsoDateTime(post.createdAt)}>{formatLongDate(post.createdAt)}</time>
             </Link>
           </p>
           <div className="text-cax-text leading-relaxed">

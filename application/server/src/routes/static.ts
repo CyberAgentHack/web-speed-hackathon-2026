@@ -1,8 +1,8 @@
-import path from "node:path";
 import { existsSync } from "node:fs";
+import path from "node:path";
 
-import { Hono } from "hono";
 import { serveStatic } from "@hono/node-server/serve-static";
+import { Hono } from "hono";
 
 import {
   CLIENT_DIST_PATH,
@@ -14,24 +14,30 @@ export const staticRouter = new Hono();
 
 // Serve uploads
 if (existsSync(UPLOAD_PATH)) {
-  staticRouter.use(serveStatic({
-    root: UPLOAD_PATH,
-    rewriteRequestPath: (path) => path,
-  }));
+  staticRouter.use(
+    serveStatic({
+      root: UPLOAD_PATH,
+      rewriteRequestPath: (path) => path,
+    }),
+  );
 }
 
 // Serve public
-staticRouter.use(serveStatic({
-  root: PUBLIC_PATH,
-  rewriteRequestPath: (path) => path,
-}));
+staticRouter.use(
+  serveStatic({
+    root: PUBLIC_PATH,
+    rewriteRequestPath: (path) => path,
+  }),
+);
 
 // Serve client dist with SPA fallback
 if (existsSync(CLIENT_DIST_PATH)) {
-  staticRouter.use(serveStatic({
-    root: CLIENT_DIST_PATH,
-    rewriteRequestPath: (requestPath) => requestPath,
-  }));
+  staticRouter.use(
+    serveStatic({
+      root: CLIENT_DIST_PATH,
+      rewriteRequestPath: (requestPath) => requestPath,
+    }),
+  );
 
   const serveClientIndex = serveStatic({
     root: CLIENT_DIST_PATH,

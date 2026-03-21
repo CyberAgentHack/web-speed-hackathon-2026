@@ -27,9 +27,7 @@ export async function initializeSequelize() {
   });
   initModels(_sequelize);
   await Promise.all([
-    _sequelize.query(
-      "CREATE INDEX IF NOT EXISTS idx_posts_created_at ON Posts(createdAt DESC);",
-    ),
+    _sequelize.query("CREATE INDEX IF NOT EXISTS idx_posts_created_at ON Posts(createdAt DESC);"),
     _sequelize.query(
       "CREATE INDEX IF NOT EXISTS idx_posts_user_created_at ON Posts(userId, createdAt DESC);",
     ),

@@ -19,9 +19,8 @@ const DirectMessageListContainer = lazy(async () => ({
 }));
 
 const DirectMessageContainer = lazy(async () => ({
-  default: (
-    await import("@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer")
-  ).DirectMessageContainer,
+  default: (await import("@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer"))
+    .DirectMessageContainer,
 }));
 
 const SearchContainer = lazy(async () => ({
@@ -68,6 +67,9 @@ export const AppContainer = () => {
       .then((user) => {
         setActiveUser(user);
       })
+      .catch(() => {
+        setActiveUser(null);
+      })
       .finally(() => {
         setIsLoadingActiveUser(false);
       });
@@ -109,9 +111,7 @@ export const AppContainer = () => {
               path="/dm"
             />
             <Route
-              element={
-                <DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />
-              }
+              element={<DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />}
               path="/dm/:conversationId"
             />
             <Route element={<SearchContainer />} path="/search" />

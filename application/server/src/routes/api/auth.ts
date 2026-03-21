@@ -8,7 +8,7 @@ export const authRouter = new Hono();
 
 authRouter.post("/signup", async (c: Context) => {
   try {
-    const body = c.get("body" as never) || await c.req.json();
+    const body = c.get("body" as never) || (await c.req.json());
     const { id: userId } = await User.create(body);
     const user = await User.findByPk(userId);
 
@@ -29,7 +29,7 @@ authRouter.post("/signup", async (c: Context) => {
 });
 
 authRouter.post("/signin", async (c: Context) => {
-  const body = c.get("body" as never) || await c.req.json();
+  const body = c.get("body" as never) || (await c.req.json());
   const user = await User.findOne({
     where: {
       username: body.username,

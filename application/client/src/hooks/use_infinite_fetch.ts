@@ -101,7 +101,7 @@ export function useInfiniteFetch<T>(
     };
 
     fetchMore();
-  }, [fetchMore]);
+  }, [apiPath, fetchMore]);
 
   return {
     ...result,

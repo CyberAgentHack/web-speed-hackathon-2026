@@ -30,6 +30,8 @@ export const UserProfileHeader = ({ user }: Props) => {
         <img
           alt=""
           crossOrigin="anonymous"
+          decoding="async"
+          loading="lazy"
           onLoad={handleLoadImage}
           src={getProfileImagePath(user.profileImage.id)}
         />
@@ -43,9 +45,7 @@ export const UserProfileHeader = ({ user }: Props) => {
             <FontAwesomeIcon iconType="calendar-alt" styleType="regular" />
           </span>
           <span>
-            <time dateTime={toIsoDateTime(user.createdAt)}>
-              {formatLongDate(user.createdAt)}
-            </time>
+            <time dateTime={toIsoDateTime(user.createdAt)}>{formatLongDate(user.createdAt)}</time>
             からサービスを利用しています
           </span>
         </p>

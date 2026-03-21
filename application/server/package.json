@@ -14,20 +14,22 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.14.0",
-    "bcrypt": "6.0.0",
     "@web-speed-hackathon-2026/server": "workspace:*",
+    "bcrypt": "6.0.0",
     "file-type": "21.3.3",
     "hono": "^4.7.3",
     "music-metadata": "11.12.3",
     "sequelize": "6.37.8",
     "sqlite3": "5.1.7",
-    "tsx": "4.21.0"
+    "tsx": "4.21.0",
+    "ws": "8.19.0"
   },
   "devDependencies": {
     "@faker-js/faker": "10.3.0",
     "@tsconfig/strictest": "2.0.8",
     "@types/bcrypt": "6.0.0",
     "@types/node": "22.18.8",
+    "@types/ws": "8.18.1",
     "typescript": "5.9.3"
   },
   "engines": {

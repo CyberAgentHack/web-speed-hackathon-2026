@@ -1,9 +1,9 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-
-import { Post } from "@web-speed-hackathon-2026/server/src/models";
-import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 import { Op } from "sequelize";
+
+import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
+import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 
 export const searchRouter = new Hono();
 
@@ -47,8 +47,10 @@ searchRouter.get("/search", async (c: Context) => {
   }
 
   const searchTerm = keywords ? `%${keywords}%` : null;
-  const limit = parseLimit(c.req.query("limit"));
+  const limit = parseLimit(c.req.query("limit")) ?? 30;
   const offset = parseOffset(c.req.query("offset"));
+  const mergedOffset = offset ?? 0;
+  const fetchSize = Math.min(limit + mergedOffset, 100);
 
   const dateConditions: Record<symbol, Date>[] = [];
   if (sinceDate) {
@@ -63,8 +65,8 @@ searchRouter.get("/search", async (c: Context) => {
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
   const postsByText = await Post.findAll({
-    limit,
-    offset,
+    limit: fetchSize,
+    offset: 0,
     where: {
       ...textWhere,
       ...dateWhere,
@@ -73,28 +75,24 @@ searchRouter.get("/search", async (c: Context) => {
 
   let postsByUser: typeof postsByText = [];
   if (searchTerm) {
-    postsByUser = await Post.findAll({
-      include: [
-        {
-          association: "user",
-          attributes: { exclude: ["profileImageId"] },
-          include: [{ association: "profileImage" }],
-          required: true,
-          where: {
-            [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
-          },
-        },
-        {
-          association: "images",
-          through: { attributes: [] },
-        },
-        { association: "movie" },
-        { association: "sound" },
-      ],
-      limit,
-      offset,
-      where: dateWhere,
+    const matchedUsers = await User.unscoped().findAll({
+      attributes: ["id"],
+      where: {
+        [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
+      },
     });
+    const matchedUserIds = matchedUsers.map((user) => user.id);
+
+    if (matchedUserIds.length > 0) {
+      postsByUser = await Post.findAll({
+        limit: fetchSize,
+        offset: 0,
+        where: {
+          ...dateWhere,
+          userId: { [Op.in]: matchedUserIds },
+        },
+      });
+    }
   }
 
   const postIdSet = new Set<string>();
@@ -109,7 +107,7 @@ searchRouter.get("/search", async (c: Context) => {
 
   mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-  const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
+  const result = mergedPosts.slice(mergedOffset, mergedOffset + limit);
 
   return c.json(result, 200);
 });

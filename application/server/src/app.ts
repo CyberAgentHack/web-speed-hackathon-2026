@@ -1,8 +1,8 @@
 import { Hono } from "hono";
-import { createSessionMiddleware } from "@web-speed-hackathon-2026/server/src/session";
 
-import { apiRouter } from "@web-speed-hackathon-2026/server/src/routes/api.ts";
+import { apiRouter } from "@web-speed-hackathon-2026/server/src/routes/api";
 import { staticRouter } from "@web-speed-hackathon-2026/server/src/routes/static";
+import { createSessionMiddleware } from "@web-speed-hackathon-2026/server/src/session";
 
 export const app = new Hono();
 
@@ -13,8 +13,8 @@ app.use(createSessionMiddleware());
 app.use(async (c, next) => {
   const contentType = c.req.header("content-type") || "";
   if (
-    (c.req.method === "POST" || c.req.method === "PUT" || c.req.method === "PATCH")
-    && contentType.includes("application/json")
+    (c.req.method === "POST" || c.req.method === "PUT" || c.req.method === "PATCH") &&
+    contentType.includes("application/json")
   ) {
     try {
       const body = await c.req.json();
@@ -30,8 +30,8 @@ app.use(async (c, next) => {
 app.use(async (c, next) => {
   const contentType = c.req.header("content-type") || "";
   if (
-    (c.req.method === "POST" || c.req.method === "PUT")
-    && contentType.includes("application/octet-stream")
+    (c.req.method === "POST" || c.req.method === "PUT") &&
+    contentType.includes("application/octet-stream")
   ) {
     const buf = await c.req.arrayBuffer();
     c.set("rawBody" as never, Buffer.from(buf) as never);

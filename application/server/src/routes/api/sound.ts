@@ -1,8 +1,9 @@
-import { Hono } from "hono";
-import type { Context } from "hono";
-import { fileTypeFromBuffer } from "file-type";
 import { promises as fs } from "fs";
 import path from "path";
+
+import { fileTypeFromBuffer } from "file-type";
+import { Hono } from "hono";
+import type { Context } from "hono";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import { extractMetadataFromSound } from "@web-speed-hackathon-2026/server/src/utils/extract_metadata_from_sound";

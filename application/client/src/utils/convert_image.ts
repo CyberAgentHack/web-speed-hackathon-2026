@@ -11,7 +11,7 @@ interface Options {
 }
 
 async function getImageMagickWasm(): Promise<ArrayBuffer> {
-  const response = await fetch('/wasm/magick.wasm');
+  const response = await fetch("/wasm/magick.wasm");
   return response.arrayBuffer();
 }
 
