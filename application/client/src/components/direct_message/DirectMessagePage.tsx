@@ -59,9 +59,22 @@ export const DirectMessagePage = ({
   }, []);
 
   const scrollToBottom = useCallback(() => {
-    bottomAnchorRef.current?.scrollIntoView({
-      block: "end",
-    });
+    const viewport = messagesViewportRef.current;
+    const list = messagesListRef.current;
+    if (viewport == null || list == null) {
+      return;
+    }
+
+    const items = list.querySelectorAll("li");
+    const tailWindowSize = 8;
+    if (items.length >= tailWindowSize) {
+      items[items.length - tailWindowSize]?.scrollIntoView({
+        block: "start",
+      });
+      return;
+    }
+
+    viewport.scrollTop = viewport.scrollHeight;
   }, []);
 
   const handleChange = useCallback(

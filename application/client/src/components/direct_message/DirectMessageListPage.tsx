@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -16,25 +16,45 @@ interface Props {
   newDmModalId: string;
 }
 
+interface DirectMessageConversationSummary extends Models.DirectMessageConversation {
+  hasUnread?: boolean;
+}
+
 export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
-  const [conversations, setConversations] =
-    useState<Array<Models.DirectMessageConversation> | null>(null);
+  const [conversations, setConversations] = useState<Array<DirectMessageConversationSummary> | null>(
+    null,
+  );
   const [error, setError] = useState<Error | null>(null);
+  const isLoadingRef = useRef(false);
+  const shouldReloadRef = useRef(false);
 
   const loadConversations = useCallback(async () => {
     if (activeUser == null) {
       return;
     }
 
+    if (isLoadingRef.current) {
+      shouldReloadRef.current = true;
+      return;
+    }
+
+    isLoadingRef.current = true;
+
     try {
-      const conversations = await fetchJSON<Array<Models.DirectMessageConversation>>("/api/v1/dm");
+      const conversations = await fetchJSON<Array<DirectMessageConversationSummary>>("/api/v1/dm");
       setConversations(conversations);
       setError(null);
     } catch (error) {
       setConversations(null);
       setError(error as Error);
+    } finally {
+      isLoadingRef.current = false;
+      if (shouldReloadRef.current) {
+        shouldReloadRef.current = false;
+        void loadConversations();
+      }
     }
-  }, [activeUser]);
+  }, [activeUser, isLoadingRef, shouldReloadRef]);
 
   useEffect(() => {
     void loadConversations();
@@ -86,9 +106,9 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                 : conversation.member;
 
             const lastMessage = messages.at(-1);
-            const hasUnread = messages
-              .filter((m) => m.sender.id === peer.id)
-              .some((m) => !m.isRead);
+            const hasUnread =
+              conversation.hasUnread ??
+              messages.filter((m) => m.sender.id === peer.id).some((m) => !m.isRead);
 
             return (
               <li className="grid" key={conversation.id}>
