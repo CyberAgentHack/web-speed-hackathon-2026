@@ -13,7 +13,7 @@ const WORKERS = process.env["E2E_WORKERS"]
 export default defineConfig({
   globalSetup: "./globalSetup.ts",
   expect: {
-    timeout: 60_000_000,
+    timeout: 60_000,
     toHaveScreenshot: {
       maxDiffPixelRatio: 0.03,
     },
@@ -30,12 +30,12 @@ export default defineConfig({
   reporter: "list",
   retries: 1,
   testDir: "./src",
-  timeout: 300_000_000,
+  timeout: 300_000,
   use: {
     baseURL: BASE_URL,
     headless: true,
     trace: "off",
-    navigationTimeout: 30_000_000,
-    actionTimeout: 30_000_000,
+    navigationTimeout: 30_000,
+    actionTimeout: 30_000,
   },
 });
