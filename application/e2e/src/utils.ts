@@ -9,8 +9,7 @@ export async function login(
   await page.goto("/not-found", { waitUntil: "domcontentloaded" });
   const signinButton = page.getByRole("button", { name: "サインイン" });
   await expect(signinButton).toBeVisible({ timeout: 30_000 });
-  await signinButton.scrollIntoViewIfNeeded();
-  await signinButton.click({ force: true });
+  await signinButton.click();
   await page.getByRole("heading", { name: "サインイン" }).waitFor({ timeout: 30_000 });
   await page.getByRole("textbox", { name: "ユーザー名" }).pressSequentially(username);
   await page.getByRole("textbox", { name: "パスワード" }).pressSequentially(password);
@@ -21,11 +20,7 @@ export async function login(
 /** ページの読み込みを安定させるための関数 */
 export async function waitForPageToLoad(page: Page): Promise<void> {
   // ネットワークがidleになるまで待つ
-  try {
-    await page.waitForLoadState("networkidle", { timeout: 30_000 });
-  } catch {
-    await page.waitForLoadState("domcontentloaded");
-  }
+  await page.waitForLoadState("networkidle", { timeout: 30_000 });
   // ページの表示を安定させるため、10秒待つ
   await page.waitForTimeout(10_000);
 }
