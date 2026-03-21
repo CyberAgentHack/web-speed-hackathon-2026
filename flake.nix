@@ -45,6 +45,9 @@
             export PUPPETEER_EXECUTABLE_PATH="${pkgs.google-chrome}/bin/google-chrome-stable"
             export PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH="${pkgs.google-chrome}/bin/google-chrome-stable"
 
+            # Ensure system-ui / ui-sans-serif resolve to Noto Sans CJK JP (not HackGen)
+            export FONTCONFIG_FILE="$PWD/fontconfig/fonts.conf"
+
             # actrun (GitHub Actions 互換ローカルランナー)
             export npm_config_prefix="$PWD/.npm-global"
             export PATH="$npm_config_prefix/bin:$PATH"
