@@ -20,6 +20,10 @@ async function fetchAltTexts(url: string): Promise<Record<string, string>> {
   return data;
 }
 
+export function invalidateAltTextsCache() {
+  altTextsCache = null;
+}
+
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
