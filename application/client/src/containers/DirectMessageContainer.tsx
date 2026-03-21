@@ -110,6 +110,13 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
   }, [conversationId]);
 
+  const peer =
+    conversation != null && activeUser != null
+      ? (conversation.initiator.id !== activeUser.id ? conversation.initiator : conversation.member)
+      : null;
+
+  useTitle(peer ? `${peer.name} さんとのダイレクトメッセージ - CaX` : "ダイレクトメッセージ - CaX");
+
   useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {
     if (event.type === "dm:conversation:message") {
       void loadConversation().then(() => {
@@ -148,11 +155,6 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     }
     return null;
   }
-
-  const peer =
-    conversation.initiator.id !== activeUser?.id ? conversation.initiator : conversation.member;
-
-  useTitle(`${peer.name} さんとのダイレクトメッセージ - CaX`);
 
   return (
     <>
