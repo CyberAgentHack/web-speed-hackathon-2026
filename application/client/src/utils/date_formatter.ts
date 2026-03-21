@@ -1,25 +1,71 @@
+// Cache for formatted strings to avoid repeated Intl.DateTimeFormat instantiation
+const dateFormatCache = new Map<string, string>();
+const timeFormatCache = new Map<string, string>();
+
+// Cached formatters to reduce TBT
+const dateFormatters = new Map<string, Intl.DateTimeFormat>();
+const timeFormatters = new Map<string, Intl.DateTimeFormat>();
+
+function getDateFormatter(locale: string): Intl.DateTimeFormat {
+  if (!dateFormatters.has(locale)) {
+    dateFormatters.set(
+      locale,
+      new Intl.DateTimeFormat(locale, {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+    );
+  }
+  return dateFormatters.get(locale)!;
+}
+
+function getTimeFormatter(locale: string): Intl.DateTimeFormat {
+  if (!timeFormatters.has(locale)) {
+    timeFormatters.set(
+      locale,
+      new Intl.DateTimeFormat(locale, {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }),
+    );
+  }
+  return timeFormatters.get(locale)!;
+}
+
 /**
  * Format date to locale-specific format (e.g., "2026年3月21日")
  */
 export function formatDate(date: string | Date, locale: string = "ja-JP"): string {
+  const dateString = typeof date === "string" ? date : date.toISOString();
+  const cacheKey = `${dateString}:${locale}`;
+
+  if (dateFormatCache.has(cacheKey)) {
+    return dateFormatCache.get(cacheKey)!;
+  }
+
   const dateObj = typeof date === "string" ? new Date(date) : date;
-  return new Intl.DateTimeFormat(locale, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  }).format(dateObj);
+  const formatted = getDateFormatter(locale).format(dateObj);
+  dateFormatCache.set(cacheKey, formatted);
+  return formatted;
 }
 
 /**
  * Format time to HH:mm format
  */
 export function formatTime(date: string | Date, locale: string = "ja-JP"): string {
+  const dateString = typeof date === "string" ? date : date.toISOString();
+  const cacheKey = `${dateString}:${locale}`;
+
+  if (timeFormatCache.has(cacheKey)) {
+    return timeFormatCache.get(cacheKey)!;
+  }
+
   const dateObj = typeof date === "string" ? new Date(date) : date;
-  return new Intl.DateTimeFormat(locale, {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(dateObj);
+  const formatted = getTimeFormatter(locale).format(dateObj);
+  timeFormatCache.set(cacheKey, formatted);
+  return formatted;
 }
 
 /**

@@ -10,14 +10,15 @@ interface Props {
 }
 
 export const ImageArea = ({ images, fetchPriority = "auto" }: Props) => {
+  const sizes =
+    images.length === 1
+      ? "(max-width: 640px) calc(100vw - 32px), 640px"
+      : "(max-width: 640px) calc((100vw - 36px) / 2), 320px";
+
   return (
     <AspectRatioBox aspectHeight={9} aspectWidth={16}>
       <div className="border-cax-border grid h-full w-full grid-cols-2 grid-rows-2 gap-1 overflow-hidden rounded-lg border">
         {images.map((image, idx) => {
-          const sizes =
-            images.length === 1
-              ? "(max-width: 640px) calc(100vw - 32px), 640px"
-              : "(max-width: 640px) calc((100vw - 36px) / 2), 320px";
 
           // Use default dimensions if width/height are 0
           const width = image.width || 600;
