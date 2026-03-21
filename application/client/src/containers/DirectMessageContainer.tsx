@@ -80,12 +80,11 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
             messages: [...current.messages, message],
           };
         });
-        await loadConversation();
       } finally {
         setIsSubmitting(false);
       }
     },
-    [conversationId, loadConversation],
+    [conversationId],
   );
 
   const handleTyping = useCallback(async () => {
