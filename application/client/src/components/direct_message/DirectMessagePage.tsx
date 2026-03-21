@@ -45,13 +45,17 @@ export const DirectMessagePage = ({
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
   const scrollHeightRef = useRef(0);
+  const [isTyping, setIsTyping] = useState(false);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
       setText(event.target.value);
-      onTyping();
+      if(!isTyping) {
+        onTyping();
+        setIsTyping(true)
+      }
     },
-    [onTyping],
+    [isTyping],
   );
 
   const handleKeyDown = useCallback(
@@ -81,7 +85,8 @@ export const DirectMessagePage = ({
         scrollHeightRef.current = height;
         window.scrollTo(0, height);
       }
-    }, 1);
+      setIsTyping(false);
+    }, 5000);
 
     return () => clearInterval(id);
   }, []);
