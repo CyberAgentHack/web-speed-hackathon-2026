@@ -1,3 +1,6 @@
+// Preload pako so it's ready when sendJSON is first called
+const pakoPromise = import("pako");
+
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {
   const response = await fetch(url);
   if (!response.ok) {
@@ -29,7 +32,7 @@ export async function sendFile<T>(url: string, file: File): Promise<T> {
 }
 
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
-  const { gzip } = await import("pako");
+  const { gzip } = await pakoPromise;
   const jsonString = JSON.stringify(data);
   const uint8Array = new TextEncoder().encode(jsonString);
   const compressed = gzip(uint8Array);
