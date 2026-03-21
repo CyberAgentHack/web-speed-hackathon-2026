@@ -8,6 +8,7 @@ import {
   PUBLIC_PATH,
   UPLOAD_PATH,
 } from "@web-speed-hackathon-2026/server/src/paths";
+import { redirectToWebp } from "@web-speed-hackathon-2026/server/src/middleware/webpRedirect";
 
 const IMMUTABLE_CACHE_CONTROL = "public, max-age=31536000, immutable";
 const SHORT_CACHE_CONTROL = "public, max-age=3600";
@@ -18,6 +19,7 @@ const compress = compression({ threshold: 0 });
 // SPA 対応のため、ファイルが存在しないときに index.html を返す
 staticRouter.use(history());
 staticRouter.use(compress);
+staticRouter.use(redirectToWebp(PUBLIC_PATH));
 
 staticRouter.use(
   serveStatic(UPLOAD_PATH, {
