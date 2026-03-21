@@ -65,7 +65,7 @@
   - `run = ["pnpm build", "pnpm start"]` 配列形式は mise が直列実行・失敗時停止を保証する
 - [x] **E2E 対応②** DM一覧 VRT スナップショット更新
   - `playwright test --update-snapshots --grep "DM一覧が表示される"` で更新済み
-- [ ] `crok.ts`: `sleep(10)` × 文字数 を**削除** → Crok AIチャット（50 点）が採点対象になる（運営許可済み 2026-03-21）**← 1行変更、今すぐやる**
+- [x] `crok.ts`: `sleep(10)` × 文字数 を**削除** → Crok AIチャット（50 点）が採点対象になる（運営許可済み 2026-03-21）
 - [ ] DM送信フロー計測不能の修正 → DM送信（50点）解禁
   - 原因: `DirectMessageListPage.tsx` が `conversations === null` 中に `return null` しているため、「新しくDMを始める」ボタンが採点ツールのクリック時に DOM に存在しない可能性
   - 対策: ローディング中でもボタンを表示するよう修正
@@ -74,10 +74,11 @@
   - `<style type="text/tailwindcss">` の `@theme` / `@utility` ブロックを `index.css` に移動
   - `@tailwindcss/postcss` を `postcss.config.js` に追加してビルド時に静的 CSS を生成
   - 全ページの TBT が 15〜25 点残っている主因と推定。解決で ~100点改善見込み
-- [ ] Crok の Markdown レンダリングをストリーミング中/完了後で切り替える
-  - ストリーミング中: plain text 表示のみ（文字追加ごとの Markdown パース・syntax highlight コストをゼロに）
-  - ストリーム完了後: react-markdown + react-syntax-highlighter でレンダリング切り替え
-  - `sleep(10)` 削除と組み合わせることで完了が早くなり、かつ中間コストも消える（運営確認済み: 完了後にレンダリングされていれば OK）
+- [x] Crok の Markdown レンダリングをストリーミング中/完了後で切り替える
+  - ストリーミング中: `<p className="whitespace-pre-wrap">` で plain text 表示（Markdown パース・KaTeX コストをゼロに）
+  - ストリーム完了後: react-markdown + rehype-katex でレンダリング切り替え
+  - `key={content}` も除去（毎 character ごとの Markdown アンマウントが消える）
+  - `CrokPage.tsx`: 最後のメッセージに `isStreaming` prop を渡す形で実装
 - [ ] **Phase 4 ④** 画像最適化
   - **① `CoveredImage` のサーバー移行（LCP 改善・バンドル削減）**
     - 現状: クライアントが画像バイナリ全体を JS で fetch → piexifjs で EXIF 読む → image-size でサイズ取得 → blob URL 化 → やっと表示。バイナリ完全ダウンロードまで表示されないため LCP が死ぬ

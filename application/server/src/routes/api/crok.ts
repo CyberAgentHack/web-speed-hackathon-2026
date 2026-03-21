@@ -64,8 +64,6 @@ crokRouter.get("/crok", async (req, res) => {
 
     const data = JSON.stringify({ text: char, done: false });
     res.write(`event: message\nid: ${messageId++}\ndata: ${data}\n\n`);
-
-    await sleep(10);
   }
 
   if (!res.closed) {
