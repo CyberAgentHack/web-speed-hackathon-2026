@@ -14,8 +14,6 @@ RUN --mount=type=cache,target=/root/.npm npm install -g pnpm@${PNPM_VERSION}
 
 FROM base AS build
 
-RUN apt-get update -qq && apt-get install -y --no-install-recommends build-essential python3 && rm -rf /var/lib/apt/lists/*
-
 COPY ./application/package.json ./application/pnpm-lock.yaml ./application/pnpm-workspace.yaml ./
 COPY ./application/client/package.json ./client/package.json
 COPY ./application/server/package.json ./server/package.json
