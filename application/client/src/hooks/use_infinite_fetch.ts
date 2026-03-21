@@ -1,6 +1,21 @@
 import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 
-const LIMIT = 30;
+const LIMIT = 10;
+
+declare global {
+  interface Window {
+    __PRELOADED_POSTS__?: unknown[];
+  }
+}
+
+function consumePreloadedData<T>(apiPath: string): T[] | null {
+  if (apiPath === "/api/v1/posts" && window.__PRELOADED_POSTS__ != null) {
+    const data = window.__PRELOADED_POSTS__ as T[];
+    delete window.__PRELOADED_POSTS__;
+    return data;
+  }
+  return null;
+}
 
 interface ReturnValues<T> {
   data: Array<T>;
@@ -13,12 +28,26 @@ export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
 ): ReturnValues<T> {
-  const internalRef = useRef({ hasMore: true, isLoading: false, offset: 0 });
+  const preloaded = useRef(consumePreloadedData<T>(apiPath));
+  const internalRef = useRef({
+    hasMore: true,
+    isLoading: false,
+    offset: preloaded.current?.length ?? 0,
+  });
 
-  const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
-    data: [],
-    error: null,
-    isLoading: true,
+  const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>(() => {
+    if (preloaded.current != null) {
+      return {
+        data: preloaded.current,
+        error: null,
+        isLoading: false,
+      };
+    }
+    return {
+      data: [],
+      error: null,
+      isLoading: true,
+    };
   });
 
   const fetchMore = useCallback(() => {
@@ -84,6 +113,12 @@ export function useInfiniteFetch<T>(
         isLoading: false,
         offset: 0,
       };
+      return;
+    }
+
+    // プリロードデータがある場合はfetchをスキップ
+    if (preloaded.current != null) {
+      preloaded.current = null;
       return;
     }
 
