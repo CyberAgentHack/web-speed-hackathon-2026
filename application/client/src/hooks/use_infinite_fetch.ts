@@ -13,6 +13,7 @@ export function useInfiniteFetch<T>(
   apiPath: string | null,
   fetcher: (apiPath: string) => Promise<T[]>,
   initialData?: T[],
+  pageSize: number = LIMIT,
 ): ReturnValues<T> {
   const hasInitialData = (initialData?.length ?? 0) > 0;
   const internalRef = useRef({ isLoading: false, offset: hasInitialData ? (initialData?.length ?? 0) : 0 });
@@ -40,7 +41,7 @@ export function useInfiniteFetch<T>(
     };
 
     const separator = apiPath.includes("?") ? "&" : "?";
-    void fetcher(`${apiPath}${separator}offset=${offset}&limit=${LIMIT}`).then(
+    void fetcher(`${apiPath}${separator}offset=${offset}&limit=${pageSize}`).then(
       (pageData) => {
         setResult((cur) => ({
           ...cur,
@@ -49,7 +50,7 @@ export function useInfiniteFetch<T>(
         }));
         internalRef.current = {
           isLoading: false,
-          offset: offset + LIMIT,
+          offset: offset + pageSize,
         };
       },
       (error) => {
@@ -64,7 +65,7 @@ export function useInfiniteFetch<T>(
         };
       },
     );
-  }, [apiPath, fetcher]);
+  }, [apiPath, fetcher, pageSize]);
 
   useEffect(() => {
     setResult(() => ({
