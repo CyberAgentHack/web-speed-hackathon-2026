@@ -44,7 +44,7 @@ directMessageRouter.post("/dm", async (req, res) => {
     throw new httpErrors.NotFound();
   }
 
-  const [conversation] = await DirectMessageConversation.findOrCreate({
+  const [conversation] = await DirectMessageConversation.unscoped().findOrCreate({
     where: {
       [Op.or]: [
         { initiatorId: req.session.userId, memberId: peer.id },
@@ -56,7 +56,6 @@ directMessageRouter.post("/dm", async (req, res) => {
       memberId: peer.id,
     },
   });
-  await conversation.reload();
 
   return res.status(200).type("application/json").send(conversation);
 });
