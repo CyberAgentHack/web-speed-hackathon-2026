@@ -1,4 +1,4 @@
-import { RefObject, useEffect, useState } from "react";
+import { RefObject, useCallback, useEffect, useState } from "react";
 
 /**
  * contentEndRef の要素が boundaryRef の要素より下にあるかを監視する。
@@ -13,24 +13,28 @@ export function useHasContentBelow(
 ): boolean {
   const [hasContentBelow, setHasContentBelow] = useState(false);
 
-  useEffect(() => {
-    let active = true;
-    const check = () => {
-      if (!active) return;
-      const endEl = contentEndRef.current;
-      const barEl = boundaryRef.current;
-      if (endEl && barEl) {
-        const endRect = endEl.getBoundingClientRect();
-        const barRect = barEl.getBoundingClientRect();
-        setHasContentBelow(endRect.top > barRect.top);
-      }
-      scheduler.postTask(check, { priority: "user-blocking", delay: 1 });
-    };
-    scheduler.postTask(check, { priority: "user-blocking", delay: 1 });
-    return () => {
-      active = false;
-    };
+  const check = useCallback(() => {
+    const endEl = contentEndRef.current;
+    const barEl = boundaryRef.current;
+    if (endEl && barEl) {
+      const endRect = endEl.getBoundingClientRect();
+      const barRect = barEl.getBoundingClientRect();
+      setHasContentBelow(endRect.top > barRect.top);
+    }
   }, [contentEndRef, boundaryRef]);
+
+  useEffect(() => {
+    // 初回チェック
+    check();
+
+    window.addEventListener("scroll", check, { passive: true });
+    window.addEventListener("resize", check, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", check);
+      window.removeEventListener("resize", check);
+    };
+  }, [check]);
 
   return hasContentBelow;
 }
