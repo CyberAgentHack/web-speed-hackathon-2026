@@ -10,7 +10,7 @@ export const SearchContainer = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
 
-  const { data: posts, fetchMore, hasMore, totalCount } = useInfiniteSearch<Models.Post>(
+  const { data: posts, fetchMore, hasMore, isLoading, totalCount } = useInfiniteSearch<Models.Post>(
     query ? `/api/v1/search?q=${encodeURIComponent(query)}` : "",
     fetchJSON,
   );
@@ -20,7 +20,7 @@ export const SearchContainer = () => {
       <Helmet>
         <title>検索 - CaX</title>
       </Helmet>
-      <SearchPage query={query} results={posts} totalCount={totalCount} />
+      <SearchPage isLoading={isLoading} query={query} results={posts} totalCount={totalCount} />
     </InfiniteScroll>
   );
 };

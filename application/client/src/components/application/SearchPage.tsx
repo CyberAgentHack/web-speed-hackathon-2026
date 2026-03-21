@@ -12,6 +12,7 @@ import { analyzeSentiment } from "@web-speed-hackathon-2026/client/src/utils/neg
 import { Button } from "../foundation/Button";
 
 interface Props {
+  isLoading: boolean;
   query: string;
   results: Models.Post[];
   totalCount: number;
@@ -81,7 +82,7 @@ const SearchForm = ({ query }: Pick<Props, "query">) => {
   );
 };
 
-export const SearchPage = ({ query, results, totalCount }: Props) => {
+export const SearchPage = ({ isLoading, query, results, totalCount }: Props) => {
   const [isNegative, setIsNegative] = useState(false);
 
   const parsed = parseSearchQuery(query);
@@ -133,7 +134,7 @@ export const SearchPage = ({ query, results, totalCount }: Props) => {
         </p>
       </div>
 
-      {query && (
+      {query && (results.length > 0 || !isLoading) && (
         <div className="px-4">
           <h2 className="text-lg font-bold">
             {searchConditionText} の検索結果 ({totalCount} 件)
@@ -152,7 +153,7 @@ export const SearchPage = ({ query, results, totalCount }: Props) => {
         </article>
       )}
 
-      {query && results.length === 0 ? (
+      {query && !isLoading && results.length === 0 ? (
         <div className="text-cax-text-muted flex items-center justify-center p-8">
           検索結果が見つかりませんでした
         </div>
