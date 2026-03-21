@@ -60,7 +60,7 @@ const minifyCss = (css) => {
       continue;
     }
 
-    if (char === "'" || char === "\"") {
+    if (char === "'" || char === '"') {
       if (
         pendingSpace &&
         result.length > 0 &&
@@ -92,9 +92,7 @@ const minifyCss = (css) => {
     result += char;
   }
 
-  return result
-    .replace(/\s*([{}:;,>~,])\s*/g, "$1")
-    .replace(/;}/g, "}");
+  return result.replace(/\s*([{}:;,>~,])\s*/g, "$1").replace(/;}/g, "}");
 };
 
 class CssMinifyPlugin {
@@ -225,18 +223,6 @@ const config = {
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
-    alias: {
-      "bayesian-bm25$": _resolve(
-        __dirname,
-        "node_modules",
-        "bayesian-bm25/dist/index.js",
-      ),
-      ["kuromoji$"]: _resolve(
-        __dirname,
-        "node_modules",
-        "kuromoji/build/kuromoji.js",
-      ),
-    },
     fallback: {
       fs: false,
       path: false,

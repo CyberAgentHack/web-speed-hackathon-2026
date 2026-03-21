@@ -732,6 +732,13 @@ paths:
         - Crok
       summary: チャット候補取得
       operationId: getCrokSuggestions
+      parameters:
+        - name: q
+          in: query
+          required: false
+          description: 絞り込みクエリ。省略時は全件返却。
+          schema:
+            type: string
       responses:
         "200":
           description: OK
