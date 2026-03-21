@@ -4,21 +4,11 @@ import { Route, Routes, useLocation, useNavigate } from "react-router";
 import { lazy } from "react";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
+import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
+import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
 import { HttpError, fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
-
-const loadAuthModalContainer = () =>
-  import("@web-speed-hackathon-2026/client/src/containers/AuthModalContainer").then((m) => ({
-    default: m.AuthModalContainer,
-  }));
-const LazyAuthModalContainer = lazy(loadAuthModalContainer);
-
-const loadNewPostModalContainer = () =>
-  import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer").then((m) => ({
-    default: m.NewPostModalContainer,
-  }));
-const LazyNewPostModalContainer = lazy(loadNewPostModalContainer);
 
 const CrokContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/CrokContainer").then((m) => ({
@@ -91,18 +81,6 @@ export const AppContainer = () => {
 
   const authModalId = useId();
   const newPostModalId = useId();
-  const [shouldRenderAuthModal, setShouldRenderAuthModal] = useState(false);
-  const [shouldRenderNewPostModal, setShouldRenderNewPostModal] = useState(false);
-
-  const handleNeedAuthModal = useCallback(() => {
-    setShouldRenderAuthModal(true);
-    void loadAuthModalContainer();
-  }, []);
-
-  const handleNeedNewPostModal = useCallback(() => {
-    setShouldRenderNewPostModal(true);
-    void loadNewPostModalContainer();
-  }, []);
 
   if (isLoadingActiveUser) {
     return (
@@ -121,8 +99,6 @@ export const AppContainer = () => {
         authModalId={authModalId}
         newPostModalId={newPostModalId}
         onLogout={handleLogout}
-        onNeedAuthModal={handleNeedAuthModal}
-        onNeedNewPostModal={handleNeedNewPostModal}
       >
         <Suspense fallback={<div />}>
           <Routes>
@@ -150,16 +126,8 @@ export const AppContainer = () => {
         </Suspense>
       </AppPage>
 
-      {shouldRenderAuthModal ? (
-        <Suspense fallback={null}>
-          <LazyAuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
-        </Suspense>
-      ) : null}
-      {shouldRenderNewPostModal ? (
-        <Suspense fallback={null}>
-          <LazyNewPostModalContainer id={newPostModalId} />
-        </Suspense>
-      ) : null}
+      <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
+      <NewPostModalContainer id={newPostModalId} />
     </HelmetProvider>
   );
 };

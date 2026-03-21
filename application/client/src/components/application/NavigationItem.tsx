@@ -10,9 +10,6 @@ interface Props {
   href?: string;
   command?: string;
   commandfor?: string;
-  onButtonPointerDown?: () => void;
-  onButtonMouseEnter?: () => void;
-  onButtonFocus?: () => void;
 }
 
 export const NavigationItem = ({
@@ -22,9 +19,6 @@ export const NavigationItem = ({
   command,
   commandfor,
   text,
-  onButtonPointerDown,
-  onButtonMouseEnter,
-  onButtonFocus,
 }: Props) => {
   const location = useLocation();
   const isActive = location.pathname === href;
@@ -50,9 +44,6 @@ export const NavigationItem = ({
           type="button"
           command={command}
           commandfor={commandfor}
-          onPointerDown={onButtonPointerDown}
-          onMouseEnter={onButtonMouseEnter}
-          onFocus={onButtonFocus}
         >
           <span className="relative text-xl lg:pr-2 lg:text-3xl">
             {icon}

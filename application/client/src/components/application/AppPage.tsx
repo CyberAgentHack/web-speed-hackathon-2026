@@ -8,8 +8,6 @@ interface Props {
   authModalId: string;
   newPostModalId: string;
   onLogout: () => void;
-  onNeedAuthModal: () => void;
-  onNeedNewPostModal: () => void;
 }
 
 export const AppPage = ({
@@ -18,8 +16,6 @@ export const AppPage = ({
   authModalId,
   newPostModalId,
   onLogout,
-  onNeedAuthModal,
-  onNeedNewPostModal,
 }: Props) => {
   return (
     <div className="relative z-0 flex justify-center font-sans">
@@ -30,8 +26,6 @@ export const AppPage = ({
             authModalId={authModalId}
             newPostModalId={newPostModalId}
             onLogout={onLogout}
-            onNeedAuthModal={onNeedAuthModal}
-            onNeedNewPostModal={onNeedNewPostModal}
           />
         </aside>
         <main className="relative z-0 w-screen max-w-screen-sm min-w-0 shrink pb-12 lg:pb-0">
