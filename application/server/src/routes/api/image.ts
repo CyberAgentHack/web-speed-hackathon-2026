@@ -10,8 +10,16 @@ import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
 // 変換した画像の拡張子
 const EXTENSION = "jpg";
+const ALT_MAX_LENGTH = 500;
 
 export const imageRouter = Router();
+
+function normalizeAlt(value: unknown): string {
+  if (typeof value !== "string") {
+    return "";
+  }
+  return value.replace(/\u0000/g, "").trim().slice(0, ALT_MAX_LENGTH);
+}
 
 imageRouter.post("/images", async (req, res) => {
   if (req.session.userId === undefined) {
@@ -27,10 +35,11 @@ imageRouter.post("/images", async (req, res) => {
   }
 
   const imageId = uuidv4();
+  const alt = normalizeAlt(req.query["alt"]);
 
   const filePath = path.resolve(UPLOAD_PATH, `./images/${imageId}.${EXTENSION}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
   await fs.writeFile(filePath, req.body);
 
-  return res.status(200).type("application/json").send({ id: imageId });
+  return res.status(200).type("application/json").send({ id: imageId, alt });
 });

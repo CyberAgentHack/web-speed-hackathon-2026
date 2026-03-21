@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { NewPostModalPage } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage";
+import { extractImageAlt } from "@web-speed-hackathon-2026/client/src/utils/extract_image_alt";
 import { sendFile, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface SubmitParams {
@@ -12,11 +13,32 @@ interface SubmitParams {
   text: string;
 }
 
+interface UploadedImage {
+  alt: string;
+  id: string;
+}
+
+const ALT_MAX_LENGTH = 500;
+
+function normalizeAlt(alt: string): string {
+  return alt.replace(/\u0000/g, "").trim().slice(0, ALT_MAX_LENGTH);
+}
+
+async function uploadImage(file: File): Promise<UploadedImage> {
+  const parsedAlt = normalizeAlt(await extractImageAlt(file));
+  const path =
+    parsedAlt === "" ? "/api/v1/images" : `/api/v1/images?alt=${encodeURIComponent(parsedAlt)}`;
+  const uploaded = await sendFile<{ id: string; alt?: string }>(path, file);
+
+  return {
+    id: uploaded.id,
+    alt: normalizeAlt(uploaded.alt ?? parsedAlt),
+  };
+}
+
 async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promise<Models.Post> {
   const payload = {
-    images: images
-      ? await Promise.all(images.map((image) => sendFile("/api/v1/images", image)))
-      : [],
+    images: images ? await Promise.all(images.map((image) => uploadImage(image))) : [],
     movie: movie ? await sendFile("/api/v1/movies", movie) : undefined,
     sound: sound ? await sendFile("/api/v1/sounds", sound) : undefined,
     text,
