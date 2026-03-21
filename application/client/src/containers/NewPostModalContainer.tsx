@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useId, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { sendFile, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
@@ -49,29 +49,61 @@ export const NewPostModalContainer = ({ id }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
   const [hasLoadedPage, setHasLoadedPage] = useState(false);
   const [resetKey, setResetKey] = useState(0);
+  const [pendingDestinationPath, setPendingDestinationPath] = useState<string | null>(null);
   useEffect(() => {
     const element = ref.current;
-    if (element == null) {
+    const appShell = document.querySelector<HTMLElement>("[data-app-shell]");
+    if (element == null || appShell == null) {
       return;
     }
+
+    const previousAriaHidden = appShell.getAttribute("aria-hidden");
+    const previousInert = appShell.inert;
+
+    const toggleBackgroundAccessibility = (isOpen: boolean) => {
+      appShell.inert = isOpen;
+      if (isOpen) {
+        appShell.setAttribute("aria-hidden", "true");
+        return;
+      }
+
+      appShell.inert = previousInert;
+      if (previousAriaHidden == null) {
+        appShell.removeAttribute("aria-hidden");
+      } else {
+        appShell.setAttribute("aria-hidden", previousAriaHidden);
+      }
+    };
 
     const handleToggle = () => {
       if (element.open) {
         setHasLoadedPage(true);
       }
+      toggleBackgroundAccessibility(element.open);
       // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
       setResetKey((key) => key + 1);
     };
     element.addEventListener("toggle", handleToggle);
     return () => {
+      toggleBackgroundAccessibility(false);
       element.removeEventListener("toggle", handleToggle);
     };
   }, []);
 
+  const { pathname } = useLocation();
   const navigate = useNavigate();
 
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (pendingDestinationPath == null || pathname !== pendingDestinationPath) {
+      return;
+    }
+
+    ref.current?.close();
+    setPendingDestinationPath(null);
+  }, [pathname, pendingDestinationPath]);
 
   const handleResetError = useCallback(() => {
     setHasError(false);
@@ -82,9 +114,11 @@ export const NewPostModalContainer = ({ id }: Props) => {
       try {
         setIsLoading(true);
         const post = await sendNewPost(params);
-        ref.current?.close();
-        navigate(`/posts/${post.id}`);
+        const destinationPath = `/posts/${post.id}`;
+        setPendingDestinationPath(destinationPath);
+        navigate(destinationPath);
       } catch {
+        setPendingDestinationPath(null);
         setHasError(true);
       } finally {
         setIsLoading(false);

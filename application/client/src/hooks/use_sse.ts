@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 
-const FLUSH_INTERVAL_MS = 50;
+const FLUSH_INTERVAL_MS = 150;
 
 interface SSEOptions<T> {
   onMessage: (data: T, prevContent: string) => string;
