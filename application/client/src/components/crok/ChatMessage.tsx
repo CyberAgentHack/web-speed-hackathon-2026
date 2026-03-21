@@ -50,7 +50,6 @@ const AssistantMessage = ({ content }: { content: string }) => {
             <Suspense fallback={<TypingIndicator />}>
               <Markdown
                 components={{ pre: CodeBlock }}
-                key={content}
                 rehypePlugins={loadedPlugins.rehypePlugins}
                 remarkPlugins={loadedPlugins.remarkPlugins}
               >
