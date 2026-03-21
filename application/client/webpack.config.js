@@ -118,7 +118,7 @@ const config = {
 // ✅ 修正後（デプロイ環境では無効化）
     new BundleAnalyzerPlugin({
       analyzerMode: process.env.NODE_ENV === 'production' ? 'disabled' : 'server',
-      openAnalyzer: true,
+      openAnalyzer: false,
     }),
   ],
   resolve: {

@@ -79,7 +79,7 @@ export const DirectMessagePage = ({
         scrollHeightRef.current = height;
         window.scrollTo(0, height);
       }
-    }, 1);
+    }, 100);
 
     return () => clearInterval(id);
   }, []);
