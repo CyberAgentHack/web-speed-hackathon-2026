@@ -21,9 +21,6 @@ importers:
 
   client:
     dependencies:
-      '@mlc-ai/web-llm':
-        specifier: 0.2.80
-        version: 0.2.80
       '@web-speed-hackathon-2026/client':
         specifier: workspace:*
         version: 'link:'
@@ -36,9 +33,6 @@ importers:
       classnames:
         specifier: 2.5.1
         version: 2.5.1
-      common-tags:
-        specifier: 1.8.2
-        version: 1.8.2
       core-js:
         specifier: 3.45.1
         version: 3.45.1
@@ -54,18 +48,12 @@ importers:
       jquery-binarytransport:
         specifier: 1.0.0
         version: 1.0.0
-      json-repair-js:
-        specifier: 1.0.0
-        version: 1.0.0
       katex:
         specifier: 0.16.25
         version: 0.16.25
       kuromoji:
         specifier: 0.1.2
         version: 0.1.2
-      langs:
-        specifier: 2.0.0
-        version: 2.0.0
       negaposi-analyzer-ja:
         specifier: 1.0.1
         version: 1.0.1
@@ -133,18 +121,12 @@ importers:
       '@tsconfig/strictest':
         specifier: 2.0.8
         version: 2.0.8
-      '@types/common-tags':
-        specifier: 1.8.4
-        version: 1.8.4
       '@types/encoding-japanese':
         specifier: 2.2.1
         version: 2.2.1
       '@types/kuromoji':
         specifier: 0.1.3
         version: 0.1.3
-      '@types/langs':
-        specifier: 2.0.5
-        version: 2.0.5
       '@types/lodash':
         specifier: 4.17.20
         version: 4.17.20
@@ -1580,9 +1562,6 @@ packages:
   '@leichtgewicht/ip-codec@2.0.5':
     resolution: {integrity: sha512-Vo+PSpZG2/fmgmiNzYK9qWRh8h/CHrwD0mo1h1DzL4yzHNSfWYujGTYsWGreD000gcgmZ7K4Ys6Tx9TxtsKdDw==}
 
-  '@mlc-ai/web-llm@0.2.80':
-    resolution: {integrity: sha512-Hwy1OCsK5cOU4nKr2wIJ2qA1g595PENtO5f2d9Wd/GgFsj5X04uxfaaJfqED8eFAJOpQpn/DirogdEY/yp5jQg==}
-
   '@npmcli/fs@1.1.1':
     resolution: {integrity: sha512-8KG5RD0GVP4ydEzRn/I4BNDuxDtqVbOdm8675T49OIG/NGhaK0pjPX7ZcDlvKYbA+ulvVK3ztfcF4uBdOxuJbQ==}
 
@@ -1910,9 +1889,6 @@ packages:
   '@types/bonjour@3.5.13':
     resolution: {integrity: sha512-z9fJ5Im06zvUL548KvYNecEVlA7cVDkGUi6kZusb04mpyEFKCIZJvloCcmpmLaIahDpOQGHaHmG6imtPMmPXGQ==}
 
-  '@types/common-tags@1.8.4':
-    resolution: {integrity: sha512-S+1hLDJPjWNDhcGxsxEbepzaxWqURP/o+3cP4aa2w7yBXgdcmKGQtZzP8JbyfOd0m+33nh+8+kvxYE2UJtBDkg==}
-
   '@types/compression@1.8.1':
     resolution: {integrity: sha512-kCFuWS0ebDbmxs0AXYn6e2r2nrGAb5KwQhknjSPSPgJcGd8+HVSILlUyFhGqML2gk39HcG7D1ydW9/qpYkN00Q==}
 
@@ -1981,9 +1957,6 @@ packages:
 
   '@types/kuromoji@0.1.3':
     resolution: {integrity: sha512-u+YwX6eJj6Fmm0F5qunsyA+X8HSiyRNNE5ON3itD3tERax4meq9tv+S7bjTMXkPjqbdBGUmH2maGDCuEvpODwg==}
-
-  '@types/langs@2.0.5':
-    resolution: {integrity: sha512-DIUKT4mkbTBxSrX6lmnQR888ObeFVVo1uNEqBH5/ddQHpnG4CA24DibpK7aO8QAcJEZUTcIx0F96TWuzVT9Z4g==}
 
   '@types/lodash@4.17.20':
     resolution: {integrity: sha512-H3MHACvFUEiujabxhaI/ImO6gUrd8oOurg7LQtS7mbwIXA/cUqWrvBsaeJ23aZEPk1TAYkurjfMbSELfoCXlGA==}
@@ -2494,10 +2467,6 @@ packages:
   commander@8.3.0:
     resolution: {integrity: sha512-OkTL9umf+He2DZkUq8f8J9of7yL6RJKI24dVITBmNfZBmri9zYZQrKkuXiKhyfPSu8tUhnVBB1iKXevvnlR4Ww==}
     engines: {node: '>= 12'}
-
-  common-tags@1.8.2:
-    resolution: {integrity: sha512-gk/Z852D2Wtb//0I+kRFNKKE9dIIVirjoqPoA1wJU+XePVXZfGeBpk45+A1rKO4Q43prqWBNY/MiIeRLbPWUaA==}
-    engines: {node: '>=4.0.0'}
 
   compressible@2.0.18:
     resolution: {integrity: sha512-AF3r7P5dWxL8MxyITRMlORQNaOA2IkAFaTr4k7BUumjPtRpGDTZpl0Pb1XCO6JeDCBdp126Cgs9sMxqSjgYyRg==}
@@ -3415,9 +3384,6 @@ packages:
   json-parse-even-better-errors@2.3.1:
     resolution: {integrity: sha512-xyFwyhro/JEof6Ghe2iz2NcXoj2sloNsWr/XsERDK/oiPCfaNhl5ONfp+jQdAZRQQ0IJWNzH9zIZF7li91kh2w==}
 
-  json-repair-js@1.0.0:
-    resolution: {integrity: sha512-OtJiP3CQSubLdbViPVufKMFw5b2soz6aNILz3QJZMyGWMxEFLppeN7MRONODr4pMusc+ByYhQRlDQZME3vMPJw==}
-
   json-schema-traverse@1.0.0:
     resolution: {integrity: sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug==}
 
@@ -3442,9 +3408,6 @@ packages:
 
   kuromojin@1.5.1:
     resolution: {integrity: sha512-tzt3UUqWqzwHMsahchyrcs9kgbn6OM7xP4QRCd0w5vqE0lA/cjCH0OxjLaekz5cnxGmcy8RfN7La3xOxZOvJ1w==}
-
-  langs@2.0.0:
-    resolution: {integrity: sha512-v4pxOBEQVN1WBTfB1crhTtxzNLZU9HPWgadlwzWKISJtt6Ku/CnpBrwVy+jFv8StjxsPfwPFzO0CMwdZLJ0/BA==}
 
   launch-editor@2.11.1:
     resolution: {integrity: sha512-SEET7oNfgSaB6Ym0jufAdCeo3meJVeCaaDyzRygy0xsp2BFKCprcfHljTq4QkzTLUxEKkFK6OK4811YM2oSrRg==}
@@ -3543,10 +3506,6 @@ packages:
 
   lodash@4.17.21:
     resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
-
-  loglevel@1.9.2:
-    resolution: {integrity: sha512-HgMmCqIJSAKqo68l0rS2AanEWfkxaZ5wNiEFb5ggm08lDs9Xl2KxBlX3PTcaD2chBM1gXAYf491/M2Rv8Jwayg==}
-    engines: {node: '>= 0.6.0'}
 
   long@4.0.0:
     resolution: {integrity: sha512-XsP+KhQif4bjX1kbuSiySJFNAehNxgLb6hPRGJ9QsUr8ajHkuXGdrHmFUTUUXhDwVX2R5bY4JNZEwbUiMhV+MA==}
@@ -6517,10 +6476,6 @@ snapshots:
 
   '@leichtgewicht/ip-codec@2.0.5': {}
 
-  '@mlc-ai/web-llm@0.2.80':
-    dependencies:
-      loglevel: 1.9.2
-
   '@npmcli/fs@1.1.1':
     dependencies:
       '@gar/promisify': 1.1.3
@@ -6739,8 +6694,6 @@ snapshots:
     dependencies:
       '@types/node': 22.18.8
 
-  '@types/common-tags@1.8.4': {}
-
   '@types/compression@1.8.1':
     dependencies:
       '@types/express': 5.0.3
@@ -6833,8 +6786,6 @@ snapshots:
   '@types/kuromoji@0.1.3':
     dependencies:
       '@types/doublearray': 0.0.32
-
-  '@types/langs@2.0.5': {}
 
   '@types/lodash@4.17.20': {}
 
@@ -7414,8 +7365,6 @@ snapshots:
   commander@7.2.0: {}
 
   commander@8.3.0: {}
-
-  common-tags@1.8.2: {}
 
   compressible@2.0.18:
     dependencies:
@@ -8391,8 +8340,6 @@ snapshots:
 
   json-parse-even-better-errors@2.3.1: {}
 
-  json-repair-js@1.0.0: {}
-
   json-schema-traverse@1.0.0: {}
 
   json5@2.2.3: {}
@@ -8418,8 +8365,6 @@ snapshots:
   kuromojin@1.5.1:
     dependencies:
       kuromoji: 0.1.1
-
-  langs@2.0.0: {}
 
   launch-editor@2.11.1:
     dependencies:
@@ -8490,8 +8435,6 @@ snapshots:
   lodash.debounce@4.0.8: {}
 
   lodash@4.17.21: {}
-
-  loglevel@1.9.2: {}
 
   long@4.0.0: {}
 
