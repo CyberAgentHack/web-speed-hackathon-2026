@@ -22,6 +22,10 @@ import type {
     SoundSeed,
     UserSeed,
 } from "../src/types/seed";
+import {
+    createMovieThumbnail,
+    MOVIE_THUMBNAIL_EXTENSION,
+} from "../src/utils/movie_thumbnail";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const seedsDir = path.resolve(__dirname, "../seeds");
@@ -361,8 +365,25 @@ async function generateImages(): Promise<ImageSeed[]> {
     return images;
 }
 
-function generateMovies(): MovieSeed[] {
-    // Use existing movie IDs from public/movies/
+async function generateMovies(): Promise<MovieSeed[]> {
+    // Use existing movie IDs from public/movies/ and generate thumbnails into public/movies/thumbnails/
+    const thumbnailsDir = path.join(publicDir, "movies", "thumbnails");
+    await mkdir(thumbnailsDir, { recursive: true });
+
+    for (const id of EXISTING_MOVIE_IDS) {
+        const moviePath = path.join(publicDir, "movies", `${id}.webm`);
+        const thumbnailPath = path.join(
+            thumbnailsDir,
+            `${id}.${MOVIE_THUMBNAIL_EXTENSION}`,
+        );
+
+        try {
+            await createMovieThumbnail(moviePath, thumbnailPath);
+        } catch (err) {
+            console.warn(`Failed to generate thumbnail for movie ${id}`, err);
+        }
+    }
+
     return EXISTING_MOVIE_IDS.map((id) => ({
         id,
     }));
@@ -940,7 +961,7 @@ async function main() {
     const images = await generateImages();
 
     console.log("4. Generating Movies (using existing assets)...");
-    const movies = generateMovies();
+    const movies = await generateMovies();
 
     console.log(
         "5. Generating Sounds (using existing assets and computing peaks)...",

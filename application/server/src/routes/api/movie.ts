@@ -1,8 +1,6 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { promises as fs } from "fs";
-import path from "path";
 
 import { Router } from "express";
 import httpErrors from "http-errors";
@@ -11,6 +9,10 @@ import { v4 as uuidv4 } from "uuid";
 import { copyMetadataWithExiftool } from "@web-speed-hackathon-2026/server/src/utils/exiftool";
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import { runFfmpeg } from "@web-speed-hackathon-2026/server/src/utils/ffmpeg";
+import {
+    createMovieThumbnail,
+    MOVIE_THUMBNAIL_EXTENSION,
+} from "@web-speed-hackathon-2026/server/src/utils/movie_thumbnail";
 
 // 変換した動画の拡張子
 const EXTENSION = "webm";
@@ -31,6 +33,10 @@ movieRouter.post("/movies", async (req, res) => {
     try {
         const inputPath = path.join(tempDir, "input");
         const outputPath = path.join(tempDir, `output.${EXTENSION}`);
+        const outputThumbnailPath = path.join(
+            tempDir,
+            `thumbnail.${MOVIE_THUMBNAIL_EXTENSION}`,
+        );
 
         await fs.writeFile(inputPath, req.body);
 
@@ -51,11 +57,23 @@ movieRouter.post("/movies", async (req, res) => {
 
         await copyMetadataWithExiftool(inputPath, outputPath);
 
-        const output = await fs.readFile(outputPath);
+        await createMovieThumbnail(outputPath, outputThumbnailPath);
 
-        const filePath = path.resolve(UPLOAD_PATH, `./movies/${id}.${EXTENSION}`);
-        await fs.mkdir(path.resolve(UPLOAD_PATH, "movies"), { recursive: true });
-        await fs.writeFile(filePath, req.body);
+        const output = await fs.readFile(outputPath);
+        const thumbnail = await fs.readFile(outputThumbnailPath);
+
+        const moviesDir = path.resolve(UPLOAD_PATH, "movies");
+        const thumbnailsDir = path.resolve(moviesDir, "thumbnails");
+        const moviePath = path.resolve(moviesDir, `${id}.${EXTENSION}`);
+        const thumbnailPath = path.resolve(
+            thumbnailsDir,
+            `${id}.${MOVIE_THUMBNAIL_EXTENSION}`,
+        );
+
+        await fs.mkdir(moviesDir, { recursive: true });
+        await fs.mkdir(thumbnailsDir, { recursive: true });
+        await fs.writeFile(moviePath, output);
+        await fs.writeFile(thumbnailPath, thumbnail);
     } finally {
         await fs.rm(tempDir, { recursive: true, force: true });
     }
