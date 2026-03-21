@@ -3,7 +3,8 @@ export function getImagePath(imageId: string): string {
 }
 
 export function getMoviePath(movieId: string): string {
-  return `/movies/${movieId}.mp4`;
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  return `https://res.cloudinary.com/dbxv9wm0r/video/fetch/q_auto,f_auto/${origin}/movies/${movieId}.mp4`;
 }
 
 export function getSoundPath(soundId: string): string {
