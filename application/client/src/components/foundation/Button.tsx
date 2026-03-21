@@ -13,8 +13,22 @@ export const Button = ({
   rightItem,
   className,
   children,
+  onClick,
   ...props
 }: Props) => {
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const command = (props as Record<string, unknown>)["command"] as string | undefined;
+    const commandfor = (props as Record<string, unknown>)["commandfor"] as string | undefined;
+    if (commandfor) {
+      const el = document.getElementById(commandfor) as HTMLDialogElement | null;
+      if (el) {
+        if (command === "show-modal" && !el.open) el.showModal();
+        else if (command === "close" && el.open) el.close();
+      }
+    }
+    onClick?.(e);
+  };
+
   return (
     <button
       className={classNames(
@@ -29,6 +43,7 @@ export const Button = ({
         className,
       )}
       type="button"
+      onClick={handleClick}
       {...props}
     >
       {leftItem}

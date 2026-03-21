@@ -99,9 +99,7 @@ const config = {
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
     alias: {
-      "bayesian-bm25$": path.resolve(__dirname, "node_modules", "bayesian-bm25/dist/index.js"),
-      ["kuromoji$"]: path.resolve(__dirname, "node_modules", "kuromoji/build/kuromoji.js"),
-      "bluebird$": path.resolve(SRC_PATH, "./shims/bluebird.js"),
+"bluebird$": path.resolve(SRC_PATH, "./shims/bluebird.js"),
       "react/jsx-runtime": path.resolve(__dirname, "node_modules", "preact/jsx-runtime"),
       "react/jsx-dev-runtime": path.resolve(__dirname, "node_modules", "preact/jsx-runtime"),
       "react-dom/test-utils": path.resolve(__dirname, "node_modules", "preact/test-utils"),
@@ -139,13 +137,6 @@ const config = {
           name: 'vendor-crok',
           chunks: 'async',
           priority: 22,
-          enforce: true,
-        },
-        heavy: {
-          test: /[\\/]node_modules[\\/](kuromoji|bayesian-bm25)[\\/]/,
-          name: 'vendor-heavy',
-          chunks: 'async',
-          priority: 20,
           enforce: true,
         },
         vendors: {
