@@ -45,7 +45,7 @@ soundRouter.post("/sounds", async (req, res) => {
   }
 
   const type = await fileTypeFromBuffer(req.body);
-  if (type === undefined || type.ext !== EXTENSION) {
+  if (type === undefined || type.ext !== "mp3") {
     throw new httpErrors.BadRequest("Invalid file type");
   }
 
