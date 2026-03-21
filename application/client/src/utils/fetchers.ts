@@ -1,9 +1,28 @@
-import { gzip } from "pako";
+// import { gzip } from "pako";
 
 export interface FetcherHttpError {
   responseJSON?: unknown;
   status: number;
 }
+
+// async function gzipJSONBody(data: object): Promise<Uint8Array> {
+//   const jsonString = JSON.stringify(data);
+//   const uint8Array = new TextEncoder().encode(jsonString);
+
+//   // Prefer native async compression to avoid blocking the main thread.
+//   if (typeof CompressionStream !== "undefined") {
+//     try {
+//       const compressedBuffer = await new Response(
+//         new Blob([uint8Array]).stream().pipeThrough(new CompressionStream("gzip")),
+//       ).arrayBuffer();
+//       return new Uint8Array(compressedBuffer);
+//     } catch {
+//       // Fall through to pako if native compression fails.
+//     }
+//   }
+
+//   return gzip(uint8Array);
+// }
 
 function createFetcherHttpError(status: number, responseJSON?: unknown): FetcherHttpError {
   return {
@@ -66,14 +85,18 @@ export async function sendFile<T>(url: string, file: File): Promise<T> {
 }
 
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
-  const jsonString = JSON.stringify(data);
-  const uint8Array = new TextEncoder().encode(jsonString);
-  const compressed = gzip(uint8Array);
+  // 非圧縮に
+  // const compressed = await gzipJSONBody(data);
+  // const body = compressed.buffer.slice(
+  //   compressed.byteOffset,
+  //   compressed.byteOffset + compressed.byteLength,
+  // ) as ArrayBuffer;
+  const body = JSON.stringify(data);
 
   const response = await fetch(url, {
-    body: compressed,
+    body,
     headers: {
-      "Content-Encoding": "gzip",
+      // "Content-Encoding": "gzip",
       "Content-Type": "application/json",
     },
     method: "POST",
