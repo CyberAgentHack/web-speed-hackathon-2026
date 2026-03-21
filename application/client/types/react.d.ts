@@ -4,6 +4,6 @@ declare namespace React {
     commandfor?: string;
   }
   interface ImgHTMLAttributes<T> extends HTMLAttributes<T> {
-    fetchpriority?: 'high' | 'low' | 'auto';
+    fetchpriority?: "high" | "low" | "auto";
   }
 }

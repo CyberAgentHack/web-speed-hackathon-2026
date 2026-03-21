@@ -13,15 +13,15 @@ export const parseSearchQuery = (query: string) => {
   const sincePattern = /since:([\d-]+)$/;
   const untilPattern = /until:([\d-]+)$/;
 
-  const sincePart = query.match(/since:[^\s]*/)?.[0] || '';
-  const untilPart = query.match(/until:[^\s]*/)?.[0] || '';
+  const sincePart = query.match(/since:[^\s]*/)?.[0] || "";
+  const untilPart = query.match(/until:[^\s]*/)?.[0] || "";
 
   const sinceMatch = sincePattern.exec(sincePart);
   const untilMatch = untilPattern.exec(untilPart);
 
   const keywords = query
-    .replace(/since:.*(\d{4}-\d{2}-\d{2}).*/g, '')
-    .replace(/until:.*(\d{4}-\d{2}-\d{2}).*/g, '')
+    .replace(/since:.*(\d{4}-\d{2}-\d{2}).*/g, "")
+    .replace(/until:.*(\d{4}-\d{2}-\d{2}).*/g, "")
     .trim();
 
   const extractDate = (s: string | null) => {

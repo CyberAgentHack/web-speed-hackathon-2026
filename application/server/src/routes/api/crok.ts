@@ -7,7 +7,10 @@ import httpErrors from "http-errors";
 import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
 
 import { QaSuggestion } from "@web-speed-hackathon-2026/server/src/models";
-import { extractTokens, filterSuggestionsBM25 } from "@web-speed-hackathon-2026/server/src/utils/bm25_search";
+import {
+  extractTokens,
+  filterSuggestionsBM25,
+} from "@web-speed-hackathon-2026/server/src/utils/bm25_search";
 
 export const crokRouter = Router();
 

@@ -53,7 +53,5 @@ imageServeRouter.get(/^\/images\//, async (req, res, next) => {
     cache.set(cacheKey, outputBuffer);
   }
 
-  res
-    .type("image/webp")
-    .send(outputBuffer);
+  res.type("image/webp").send(outputBuffer);
 });
