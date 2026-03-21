@@ -30,22 +30,7 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
     [],
   );
 
-  const { content, isStreaming, start } = useSSE<Models.SSEChunk>(sseOptions);
-
-  const currentAssistantContent = isStreaming || content ? content : null;
-
-  const displayMessages = useMemo(() => {
-    if (currentAssistantContent !== null) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage?.role === "assistant") {
-        return [
-          ...messages.slice(0, -1),
-          { role: "assistant" as const, content: currentAssistantContent },
-        ];
-      }
-    }
-    return messages;
-  }, [messages, currentAssistantContent]);
+  const { contentRef, isStreaming, start } = useSSE<Models.SSEChunk>(sseOptions);
 
   const sendMessage = useCallback(
     (userInput: string) => {
@@ -77,7 +62,7 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
   return (
     <>
       <title>Crok - CaX</title>
-      <CrokPage isStreaming={isStreaming} messages={displayMessages} onSendMessage={sendMessage} />
+      <CrokPage isStreaming={isStreaming} messages={messages} streamingContentRef={contentRef} onSendMessage={sendMessage} />
     </>
   );
 };

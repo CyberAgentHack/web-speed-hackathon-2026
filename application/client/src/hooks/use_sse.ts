@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { type RefObject, useCallback, useRef, useState } from "react";
 
 interface SSEOptions<T> {
   onMessage: (data: T, prevContent: string) => string;
@@ -7,7 +7,7 @@ interface SSEOptions<T> {
 }
 
 interface ReturnValues {
-  content: string;
+  contentRef: RefObject<string>;
   isStreaming: boolean;
   start: (url: string) => void;
   stop: () => void;
@@ -15,48 +15,27 @@ interface ReturnValues {
 }
 
 export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
-  const [content, setContent] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const contentRef = useRef("");
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const flushContent = useCallback(() => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    setContent(contentRef.current);
-  }, []);
 
   const stop = useCallback(() => {
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
     }
-    flushContent();
     setIsStreaming(false);
-  }, [flushContent]);
+  }, []);
 
   const reset = useCallback(() => {
     stop();
-    setContent("");
     contentRef.current = "";
   }, [stop]);
-
-  const scheduleFlush = useCallback(() => {
-    if (timerRef.current) return;
-    timerRef.current = setTimeout(() => {
-      timerRef.current = null;
-      setContent(contentRef.current);
-    }, 100);
-  }, []);
 
   const start = useCallback(
     (url: string) => {
       stop();
       contentRef.current = "";
-      setContent("");
       setIsStreaming(true);
 
       const eventSource = new EventSource(url);
@@ -67,7 +46,6 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
 
         const isDone = options.onDone?.(data) ?? false;
         if (isDone) {
-          flushContent();
           options.onComplete?.(contentRef.current, data);
           stop();
           return;
@@ -75,7 +53,6 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
 
         const newContent = options.onMessage(data, contentRef.current);
         contentRef.current = newContent;
-        scheduleFlush();
       };
 
       eventSource.onerror = (error) => {
@@ -83,8 +60,8 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
         stop();
       };
     },
-    [options, stop, flushContent, scheduleFlush],
+    [options, stop],
   );
 
-  return { content, isStreaming, start, stop, reset };
+  return { contentRef, isStreaming, start, stop, reset };
 }

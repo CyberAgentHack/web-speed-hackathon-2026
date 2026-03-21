@@ -224,3 +224,5 @@ application/upload/**
 .direnv
 
 build
+
+.react-router

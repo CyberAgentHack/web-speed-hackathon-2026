@@ -167,13 +167,25 @@ export function createLoaderContext(req: Request): LoaderContext {
 
     async getDmConversation(conversationId: string) {
       if (!userId) return null;
-      const conversation = await DirectMessageConversation.scope("withMessages").findOne({
+      const conversation = await DirectMessageConversation.findOne({
         where: {
           id: conversationId,
           [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
         },
       });
-      return conversation ? conversation.toJSON() : null;
+      if (!conversation) return null;
+
+      const messages = await DirectMessage.unscoped().findAll({
+        where: { conversationId: conversation.id },
+        include: [{ association: "sender", include: [{ association: "profileImage" }] }],
+        order: [["createdAt", "DESC"]],
+        limit: 30,
+      });
+
+      return {
+        ...conversation.toJSON(),
+        messages: messages.reverse().map((m) => m.toJSON()),
+      };
     },
   };
 }

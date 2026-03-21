@@ -84,14 +84,14 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   useEffect(() => {
     let cancelled = false;
 
-    const updateSuggestions = async () => {
-      if (!inputValue.trim()) {
-        setSuggestions([]);
-        setQueryTokens([]);
-        setShowSuggestions(false);
-        return;
-      }
+    if (!inputValue.trim()) {
+      setSuggestions([]);
+      setQueryTokens([]);
+      setShowSuggestions(false);
+      return;
+    }
 
+    const timerId = setTimeout(async () => {
       try {
         const result = await sendJSON<{ suggestions: string[]; queryTokens: string[] }>(
           "/api/v1/crok/suggestions/filter",
@@ -110,12 +110,11 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
           setShowSuggestions(false);
         }
       }
-    };
-
-    void updateSuggestions();
+    }, 300);
 
     return () => {
       cancelled = true;
+      clearTimeout(timerId);
     };
   }, [inputValue]);
 

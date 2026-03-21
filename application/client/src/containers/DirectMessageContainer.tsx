@@ -18,6 +18,7 @@ interface DmTypingEvent {
 }
 
 const TYPING_INDICATOR_DURATION_MS = 10 * 1000;
+const DM_MESSAGE_LIMIT = 30;
 
 interface Props {
   activeUser: Models.User | null;
@@ -28,6 +29,8 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   const { conversationId = "" } = useParams<{ conversationId: string }>();
 
   const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(null);
+  const [messages, setMessages] = useState<Models.DirectMessage[]>([]);
+  const [hasMore, setHasMore] = useState(false);
   const [conversationError, setConversationError] = useState<Error | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -45,11 +48,30 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
       );
       setConversation(data);
       setConversationError(null);
+
+      const msgs = await fetchJSON<Models.DirectMessage[]>(
+        `/api/v1/dm/${conversationId}/messages?limit=${DM_MESSAGE_LIMIT}&offset=0`,
+      );
+      setMessages(msgs);
+      setHasMore(msgs.length >= DM_MESSAGE_LIMIT);
     } catch (error) {
       setConversation(null);
       setConversationError(error as Error);
     }
   }, [activeUser, conversationId]);
+
+  const fetchOlderMessages = useCallback(async () => {
+    const currentCount = messages.length;
+    const msgs = await fetchJSON<Models.DirectMessage[]>(
+      `/api/v1/dm/${conversationId}/messages?limit=${DM_MESSAGE_LIMIT}&offset=${currentCount}`,
+    );
+    if (msgs.length > 0) {
+      setMessages((prev) => [...msgs, ...prev]);
+    }
+    if (msgs.length < DM_MESSAGE_LIMIT) {
+      setHasMore(false);
+    }
+  }, [conversationId, messages.length]);
 
   const sendRead = useCallback(async () => {
     await sendJSON(`/api/v1/dm/${conversationId}/read`, {});
@@ -64,15 +86,16 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     async (params: DirectMessageFormData) => {
       setIsSubmitting(true);
       try {
-        await sendJSON(`/api/v1/dm/${conversationId}/messages`, {
-          body: params.body,
-        });
-        loadConversation();
+        const message = await sendJSON<Models.DirectMessage>(
+          `/api/v1/dm/${conversationId}/messages`,
+          { body: params.body },
+        );
+        setMessages((prev) => [...prev, message]);
       } finally {
         setIsSubmitting(false);
       }
     },
-    [conversationId, loadConversation],
+    [conversationId],
   );
 
   const handleTyping = useCallback(async () => {
@@ -81,15 +104,17 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {
     if (event.type === "dm:conversation:message") {
-      void loadConversation().then(() => {
-        if (event.payload.sender.id !== activeUser?.id) {
-          setIsPeerTyping(false);
-          if (peerTypingTimeoutRef.current !== null) {
-            clearTimeout(peerTypingTimeoutRef.current);
-          }
-          peerTypingTimeoutRef.current = null;
-        }
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === event.payload.id)) return prev;
+        return [...prev, event.payload];
       });
+      if (event.payload.sender.id !== activeUser?.id) {
+        setIsPeerTyping(false);
+        if (peerTypingTimeoutRef.current !== null) {
+          clearTimeout(peerTypingTimeoutRef.current);
+        }
+        peerTypingTimeoutRef.current = null;
+      }
       void sendRead();
     } else if (event.type === "dm:conversation:typing") {
       setIsPeerTyping(true);
@@ -127,6 +152,9 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
       <DirectMessagePage
         conversationError={conversationError}
         conversation={conversation}
+        messages={messages}
+        hasMore={hasMore}
+        onLoadMore={fetchOlderMessages}
         activeUser={activeUser}
         onTyping={handleTyping}
         isPeerTyping={isPeerTyping}

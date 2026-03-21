@@ -23,6 +23,7 @@ interface DmTypingEvent {
 }
 
 const TYPING_INDICATOR_DURATION_MS = 10 * 1000;
+const DM_MESSAGE_LIMIT = 30;
 
 export async function loader({ context, params }: LoaderFunctionArgs) {
 	const ctx = getLoaderContext(context);
@@ -38,6 +39,12 @@ export default function Dm() {
 
 	const [conversation, setConversation] =
 		useState<Models.DirectMessageConversation | null>(initialConversation);
+	const [messages, setMessages] = useState<Models.DirectMessage[]>(
+		initialConversation?.messages ?? [],
+	);
+	const [hasMore, setHasMore] = useState(
+		(initialConversation?.messages?.length ?? 0) >= DM_MESSAGE_LIMIT,
+	);
 	const [conversationError, setConversationError] = useState<Error | null>(
 		null,
 	);
@@ -59,11 +66,30 @@ export default function Dm() {
 			);
 			setConversation(data);
 			setConversationError(null);
+
+			const msgs = await fetchJSON<Models.DirectMessage[]>(
+				`/api/v1/dm/${conversationId}/messages?limit=${DM_MESSAGE_LIMIT}&offset=0`,
+			);
+			setMessages(msgs);
+			setHasMore(msgs.length >= DM_MESSAGE_LIMIT);
 		} catch (error) {
 			setConversation(null);
 			setConversationError(error as Error);
 		}
 	}, [activeUser, conversationId]);
+
+	const fetchOlderMessages = useCallback(async () => {
+		const currentCount = messages.length;
+		const msgs = await fetchJSON<Models.DirectMessage[]>(
+			`/api/v1/dm/${conversationId}/messages?limit=${DM_MESSAGE_LIMIT}&offset=${currentCount}`,
+		);
+		if (msgs.length > 0) {
+			setMessages((prev) => [...msgs, ...prev]);
+		}
+		if (msgs.length < DM_MESSAGE_LIMIT) {
+			setHasMore(false);
+		}
+	}, [conversationId, messages.length]);
 
 	const sendRead = useCallback(async () => {
 		await sendJSON(`/api/v1/dm/${conversationId}/read`, {});
@@ -85,15 +111,16 @@ export default function Dm() {
 		async (params: DirectMessageFormData) => {
 			setIsSubmitting(true);
 			try {
-				await sendJSON(`/api/v1/dm/${conversationId}/messages`, {
-					body: params.body,
-				});
-				loadConversation();
+				const message = await sendJSON<Models.DirectMessage>(
+					`/api/v1/dm/${conversationId}/messages`,
+					{ body: params.body },
+				);
+				setMessages((prev) => [...prev, message]);
 			} finally {
 				setIsSubmitting(false);
 			}
 		},
-		[conversationId, loadConversation],
+		[conversationId],
 	);
 
 	const handleTyping = useCallback(async () => {
@@ -104,15 +131,17 @@ export default function Dm() {
 		`/api/v1/dm/${conversationId}`,
 		(event: DmUpdateEvent | DmTypingEvent) => {
 			if (event.type === "dm:conversation:message") {
-				void loadConversation().then(() => {
-					if (event.payload.sender.id !== activeUser?.id) {
-						setIsPeerTyping(false);
-						if (peerTypingTimeoutRef.current !== null) {
-							clearTimeout(peerTypingTimeoutRef.current);
-						}
-						peerTypingTimeoutRef.current = null;
-					}
+				setMessages((prev) => {
+					if (prev.some((m) => m.id === event.payload.id)) return prev;
+					return [...prev, event.payload];
 				});
+				if (event.payload.sender.id !== activeUser?.id) {
+					setIsPeerTyping(false);
+					if (peerTypingTimeoutRef.current !== null) {
+						clearTimeout(peerTypingTimeoutRef.current);
+					}
+					peerTypingTimeoutRef.current = null;
+				}
 				void sendRead();
 			} else if (event.type === "dm:conversation:typing") {
 				setIsPeerTyping(true);
@@ -153,6 +182,9 @@ export default function Dm() {
 			<DirectMessagePage
 				conversationError={conversationError}
 				conversation={conversation}
+				messages={messages}
+				hasMore={hasMore}
+				onLoadMore={fetchOlderMessages}
 				activeUser={activeUser}
 				onTyping={handleTyping}
 				isPeerTyping={isPeerTyping}
