@@ -76,9 +76,47 @@ export const AppContainer = () => {
 
     const [activeUser, setActiveUser] = useState<Models.User | null>(null);
     useEffect(() => {
-        void fetchJSON<Models.User>("/api/v1/me").then((user) => {
-            setActiveUser(user);
-        });
+        let isActive = true;
+        let timeoutId: ReturnType<typeof setTimeout> | null = null;
+        let idleId: number | null = null;
+
+        const loadMe = () => {
+            void fetchJSON<Models.User>("/api/v1/me")
+                .then((user) => {
+                    if (isActive) {
+                        setActiveUser(user);
+                    }
+                })
+                .catch(() => {
+                    if (isActive) {
+                        setActiveUser(null);
+                    }
+                });
+        };
+
+        const requestIdleCallback = window.requestIdleCallback?.bind(window);
+        const cancelIdleCallback = window.cancelIdleCallback?.bind(window);
+
+        if (requestIdleCallback !== undefined) {
+            idleId = requestIdleCallback(
+                () => {
+                    loadMe();
+                },
+                { timeout: 2000 },
+            );
+        } else {
+            timeoutId = setTimeout(loadMe, 1200);
+        }
+
+        return () => {
+            isActive = false;
+            if (idleId !== null && cancelIdleCallback !== undefined) {
+                cancelIdleCallback(idleId);
+            }
+            if (timeoutId !== null) {
+                clearTimeout(timeoutId);
+            }
+        };
     }, [setActiveUser]);
     const handleLogout = useCallback(async () => {
         await sendJSON("/api/v1/signout", {});
