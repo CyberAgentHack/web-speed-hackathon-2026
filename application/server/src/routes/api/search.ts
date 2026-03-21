@@ -39,8 +39,6 @@ searchRouter.get("/search", async (req, res) => {
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
   const postsByText = await Post.findAll({
-    limit,
-    offset,
     where: {
       ...textWhere,
       ...dateWhere,
@@ -48,14 +46,13 @@ searchRouter.get("/search", async (req, res) => {
   });
 
   // ユーザー名/名前での検索（キーワードがある場合のみ）
-  // Post.unscoped() でdefaultScopeのincludeとの競合を回避
   let postsByUser: typeof postsByText = [];
   if (searchTerm) {
-    postsByUser = await Post.unscoped().findAll({
+    postsByUser = await Post.findAll({
       include: [
         {
           association: "user",
-          attributes: ["id", "username", "name", "description", "createdAt", "profileImageId"],
+          attributes: { exclude: ["profileImageId"] },
           include: [{ association: "profileImage" }],
           required: true,
           where: {
@@ -69,8 +66,6 @@ searchRouter.get("/search", async (req, res) => {
         { association: "movie" },
         { association: "sound" },
       ],
-      limit,
-      offset,
       where: dateWhere,
     });
   }
@@ -87,5 +82,7 @@ searchRouter.get("/search", async (req, res) => {
 
   mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-  return res.status(200).type("application/json").send(mergedPosts);
+  const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
+
+  return res.status(200).type("application/json").send(result);
 });
