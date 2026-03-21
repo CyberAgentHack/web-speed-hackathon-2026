@@ -1,4 +1,5 @@
-import moment from "moment";
+import { formatDistanceToNow } from "date-fns";
+import { ja } from "date-fns/locale";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -98,7 +99,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {formatDistanceToNow(new Date(lastMessage.createdAt), { addSuffix: true, locale: ja })}
                           </time>
                         )}
                       </div>

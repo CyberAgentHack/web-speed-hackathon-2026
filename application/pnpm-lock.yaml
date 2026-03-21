@@ -42,6 +42,9 @@ importers:
       core-js:
         specifier: 3.45.1
         version: 3.45.1
+      date-fns:
+        specifier: 4.1.0
+        version: 4.1.0
       encoding-japanese:
         specifier: 2.2.0
         version: 2.2.0
@@ -66,9 +69,6 @@ importers:
       lodash:
         specifier: 4.17.21
         version: 4.17.21
-      moment:
-        specifier: 2.30.1
-        version: 2.30.1
       normalize.css:
         specifier: 8.0.1
         version: 8.0.1
@@ -2102,6 +2102,9 @@ packages:
   data-uri-to-buffer@4.0.1:
     resolution: {integrity: sha512-0R9ikRb668HB7QDxT1vkpuUBtqc53YyAwMwGeUFKRojY/NWKvdZ+9UYtRfGmhqNbRkTSVpMbmyhXipFFv2cb/A==}
     engines: {node: '>= 12'}
+
+  date-fns@4.1.0:
+    resolution: {integrity: sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg==}
 
   debounce@1.2.1:
     resolution: {integrity: sha512-XRRe6Glud4rd/ZGQfiV1ruXSfbvfJedlV9Y6zOlP+2K04vBYiJEte6stfFkCP03aMnY5tsipamumUjL14fofug==}
@@ -6246,6 +6249,8 @@ snapshots:
   csv-parse@1.3.3: {}
 
   data-uri-to-buffer@4.0.1: {}
+
+  date-fns@4.1.0: {}
 
   debounce@1.2.1: {}
 
