@@ -73,6 +73,9 @@ export const AppContainer = () => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
+  // Skip revalidation on static pages where auth state is not needed
+  const isStaticPage = pathname === "/terms" || pathname === "/crok";
+
   const { data: activeUser, isLoading: isLoadingActiveUser } = useSWR<
     Models.User | null,
     Error,
@@ -82,7 +85,9 @@ export const AppContainer = () => {
     activeUserFetcher,
     ssrActiveUser !== undefined
       ? { fallbackData: ssrActiveUser ?? null, revalidateOnMount: false }
-      : undefined,
+      : isStaticPage
+        ? { revalidateOnMount: false, revalidateOnFocus: false, revalidateOnReconnect: false }
+        : undefined,
   );
 
   const setActiveUser = useCallback(
