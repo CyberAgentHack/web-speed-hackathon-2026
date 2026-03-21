@@ -1,4 +1,29 @@
+import { useEffect } from "react";
+
+const fontLoaded = { current: false };
+
+function loadTermFonts() {
+  if (fontLoaded.current) return;
+  fontLoaded.current = true;
+
+  const regular = new FontFace("Rei no Are Mincho", "url(/fonts/ReiNoAreMincho-Regular.woff2)", {
+    weight: "normal",
+    display: "swap",
+  });
+  const bold = new FontFace("Rei no Are Mincho", "url(/fonts/ReiNoAreMincho-Heavy.woff2)", {
+    weight: "bold",
+    display: "swap",
+  });
+
+  regular.load().then((f) => document.fonts.add(f));
+  bold.load().then((f) => document.fonts.add(f));
+}
+
 export const TermPage = () => {
+  useEffect(() => {
+    loadTermFonts();
+  }, []);
+
   return (
     <article className="px-2 pb-16 leading-relaxed md:px-4 md:pt-2">
       <h1 className="mt-4 mb-2 font-[Rei_no_Are_Mincho] text-3xl leading-[normal] font-bold">
