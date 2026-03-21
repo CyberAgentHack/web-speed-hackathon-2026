@@ -19,7 +19,7 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
   const [isStreaming, setIsStreaming] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const contentRef = useRef("");
-  const rafIdRef = useRef<number>(0);
+  const timerIdRef = useRef<ReturnType<typeof setTimeout> | 0>(0);
   const pendingUpdateRef = useRef(false);
 
   const stop = useCallback(() => {
@@ -27,9 +27,9 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
     }
-    if (rafIdRef.current) {
-      cancelAnimationFrame(rafIdRef.current);
-      rafIdRef.current = 0;
+    if (timerIdRef.current) {
+      clearTimeout(timerIdRef.current);
+      timerIdRef.current = 0;
     }
     pendingUpdateRef.current = false;
     setIsStreaming(false);
@@ -44,10 +44,10 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
   const scheduleUpdate = useCallback(() => {
     if (pendingUpdateRef.current) return;
     pendingUpdateRef.current = true;
-    rafIdRef.current = requestAnimationFrame(() => {
+    timerIdRef.current = setTimeout(() => {
       pendingUpdateRef.current = false;
       setContent(contentRef.current);
-    });
+    }, 500);
   }, []);
 
   const start = useCallback(
@@ -65,9 +65,9 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
 
         const isDone = options.onDone?.(data) ?? false;
         if (isDone) {
-          if (rafIdRef.current) {
-            cancelAnimationFrame(rafIdRef.current);
-            rafIdRef.current = 0;
+          if (timerIdRef.current) {
+            clearTimeout(timerIdRef.current);
+            timerIdRef.current = 0;
           }
           pendingUpdateRef.current = false;
           setContent(contentRef.current);

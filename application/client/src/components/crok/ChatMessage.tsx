@@ -39,22 +39,16 @@ const AssistantMessage = ({
         <div className="text-cax-text mb-1 text-sm font-medium">Crok</div>
         <div className="markdown text-cax-text max-w-none">
           {content ? (
-            isLastStreaming ? (
-              <Markdown remarkPlugins={[remarkGfm]}>
-                {content}
-              </Markdown>
-            ) : (
-              <Markdown
-                components={{ pre: CodeBlock }}
-                rehypePlugins={[rehypeKatex]}
-                remarkPlugins={[remarkMath, remarkGfm]}
-              >
-                {content}
-              </Markdown>
-            )
-          ) : (
+            <Markdown
+              components={{ pre: CodeBlock }}
+              rehypePlugins={[rehypeKatex]}
+              remarkPlugins={[remarkMath, remarkGfm]}
+            >
+              {content}
+            </Markdown>
+          ) : isLastStreaming ? (
             <TypingIndicator />
-          )}
+          ) : null}
         </div>
       </div>
     </div>
