@@ -37,7 +37,8 @@ const plugins = [
     ],
   }),
   new HtmlWebpackPlugin({
-    inject: "body",
+    inject: true,
+    scriptLoading: "defer",
     template: path.resolve(SRC_PATH, "./index.html"),
   }),
   new HTMLInlineCSSWebpackPlugin({ leaveCSSFile: true }),
@@ -70,7 +71,7 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "source-map",
+  devtool: false,
   entry: {
     main: [
       path.resolve(SRC_PATH, "./index.css"),
@@ -107,10 +108,6 @@ const config = {
   plugins,
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
-    alias: {
-      "bayesian-bm25$": path.resolve(__dirname, "node_modules", "bayesian-bm25/dist/index.js"),
-      ["kuromoji$"]: path.resolve(__dirname, "node_modules", "kuromoji/build/kuromoji.js"),
-    },
     fallback: {
       fs: false,
       path: false,
