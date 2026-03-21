@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from "uuid";
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
 // 変換した画像の拡張子
-const EXTENSION = "jpg";
+const EXTENSION = "avif";
 
 export const imageRouter = Router();
 
@@ -23,8 +23,7 @@ imageRouter.post("/images", async (req, res) => {
 
   const jpg = await sharp(req.body)
     .resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
-    .jpeg({ quality: 85 })
-    .withMetadata()
+    .avif({ quality: 60 })
     .toBuffer();
 
   const imageId = uuidv4();
