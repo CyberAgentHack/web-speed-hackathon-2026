@@ -3,11 +3,15 @@
 ARG NODE_VERSION=24.14.0
 ARG PNPM_VERSION=10.32.1
 
+FROM mwader/static-ffmpeg:8.0.1 AS ffmpeg
+
 FROM node:${NODE_VERSION}-slim AS base
 
 LABEL fly_launch_runtime="Node.js"
 
 ENV PNPM_HOME=/pnpm
+
+COPY --from=ffmpeg /ffmpeg /usr/local/bin/
 
 WORKDIR /app
 RUN --mount=type=cache,target=/root/.npm npm install -g pnpm@${PNPM_VERSION}
