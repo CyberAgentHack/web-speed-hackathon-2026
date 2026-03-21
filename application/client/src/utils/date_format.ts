@@ -1,22 +1,4 @@
-let llFormatter: Intl.DateTimeFormat;
-let hmFormatter: Intl.DateTimeFormat;
 let rtf: Intl.RelativeTimeFormat;
-
-function getLLFormatter() {
-  return (llFormatter ??= new Intl.DateTimeFormat("ja-JP", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  }));
-}
-
-function getHMFormatter() {
-  return (hmFormatter ??= new Intl.DateTimeFormat("ja-JP", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }));
-}
 
 function getRTF() {
   return (rtf ??= new Intl.RelativeTimeFormat("ja", { numeric: "always" }));
@@ -32,11 +14,13 @@ const DIVISIONS: { amount: number; unit: Intl.RelativeTimeFormatUnit }[] = [
 ];
 
 export const formatLL = (date: string | Date): string => {
-  return getLLFormatter().format(new Date(date));
+  const d = new Date(date);
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
 };
 
 export const formatHM = (date: string | Date): string => {
-  return getHMFormatter().format(new Date(date));
+  const d = new Date(date);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 };
 
 export const formatFromNow = (date: string | Date): string => {
