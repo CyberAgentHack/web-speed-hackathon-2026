@@ -128,7 +128,7 @@ const config = {
     },
   },
   optimization: {
-    minimize: true,
+    minimize: false,
     splitChunks: {
       chunks: "all",
       cacheGroups: {
