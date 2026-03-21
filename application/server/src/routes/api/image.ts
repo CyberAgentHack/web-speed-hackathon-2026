@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
-const OUTPUT_EXTENSION = "jpg";
+const OUTPUT_EXTENSION = "avif";
 
 export const imageRouter = Router();
 
@@ -34,12 +34,12 @@ imageRouter.post("/images", async (req, res) => {
     // No EXIF or parse error
   }
 
-  // Convert any image format (TIFF, PNG, WebP, etc.) to JPEG using sharp
-  const jpegBuffer = await sharp(req.body).jpeg({ quality: 85 }).toBuffer();
+  // Convert any image format (TIFF, PNG, WebP, etc.) to AVIF using sharp
+  const avifBuffer = await sharp(req.body).avif({ quality: 50 }).toBuffer();
 
   const filePath = path.resolve(UPLOAD_PATH, `./images/${imageId}.${OUTPUT_EXTENSION}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
-  await fs.writeFile(filePath, jpegBuffer);
+  await fs.writeFile(filePath, avifBuffer);
 
   return res.status(200).type("application/json").send({ id: imageId, alt });
 });
