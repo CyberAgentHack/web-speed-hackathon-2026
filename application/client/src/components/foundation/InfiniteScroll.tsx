@@ -16,6 +16,8 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
   const prevReachedRef = useRef(false);
 
   useEffect(() => {
+    prevReachedRef.current = false;
+
     const handler = () => {
       const hasReached = window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
 
@@ -28,15 +30,16 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
       prevReachedRef.current = hasReached;
     };
 
-    handler();
+    // DOMの更新を待ってからチェック
+    requestAnimationFrame(() => handler());
 
     document.addEventListener("scroll", handler, { passive: true });
-    document.addEventListener("resize", handler, { passive: true });
+    window.addEventListener("resize", handler, { passive: true });
     return () => {
       document.removeEventListener("scroll", handler);
-      document.removeEventListener("resize", handler);
+      window.removeEventListener("resize", handler);
     };
-  }, []);
+  }, [items.length]);
 
   return <>{children}</>;
 };
