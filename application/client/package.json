@@ -17,15 +17,12 @@
     "encoding-japanese": "2.2.0",
     "fast-average-color": "9.5.0",
     "katex": "0.16.25",
+    "marked": "17.0.5",
     "normalize.css": "8.0.1",
     "piexifjs": "1.0.6",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "react-router": "7.9.4",
-    "react-syntax-highlighter": "16.1.0",
-    "rehype-katex": "7.0.1",
-    "remark-gfm": "4.0.1",
-    "remark-math": "6.0.0"
+    "react-router": "7.9.4"
   },
   "devDependencies": {
     "@babel/core": "7.28.4",
@@ -39,7 +36,6 @@
     "@types/piexifjs": "1.0.0",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.1",
-    "@types/react-syntax-highlighter": "15.5.13",
     "babel-loader": "10.0.0",
     "compression-webpack-plugin": "12.0.0",
     "copy-webpack-plugin": "13.0.1",
@@ -50,7 +46,6 @@
     "postcss-import": "16.1.1",
     "postcss-loader": "8.2.0",
     "postcss-preset-env": "10.4.0",
-    "react-markdown": "10.1.0",
     "tailwindcss": "4.2.2",
     "typescript": "5.9.3",
     "webpack": "5.102.1",
