@@ -1,6 +1,19 @@
 import { expect } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 
+/**
+ * 投稿モーダルを開き、toggle イベントによる React 再マウントが完了するまで待つ。
+ * dialog の toggle イベントで resetKey がインクリメントされコンポーネントが再マウントされるため、
+ * visible 直後に fill() すると再マウントでテキストが消える race condition がある。
+ */
+export async function openPostModal(page: Page): Promise<void> {
+  await page.getByRole("list").getByRole("button", { name: "投稿する" }).click();
+  const textarea = page.getByPlaceholder("いまなにしてる？");
+  await expect(textarea).toBeVisible({ timeout: 10_000 });
+  // toggle イベント + React 再マウントの完了を待つ
+  await page.waitForTimeout(200);
+}
+
 export async function login(
   page: Page,
   username: string = "o6yq16leo",

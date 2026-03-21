@@ -2,7 +2,7 @@ import path from "node:path";
 
 import { expect, test } from "@playwright/test";
 
-import { dynamicMediaMask, login, waitForPageToLoad, waitForVisibleMedia } from "./utils";
+import { dynamicMediaMask, login, openPostModal, waitForPageToLoad, waitForVisibleMedia } from "./utils";
 
 test.describe("投稿機能", () => {
   test.beforeEach(async ({ page }) => {
@@ -13,12 +13,8 @@ test.describe("投稿機能", () => {
   test("テキストの投稿ができる", async ({ page }) => {
     const postText = "テスト投稿";
 
-    // 投稿モーダルを開く
-    await page.getByRole("list").getByRole("button", { name: "投稿する" }).click();
-
-    const textarea = page.getByPlaceholder("いまなにしてる？");
-    await expect(textarea).toBeVisible({ timeout: 30_000 });
-    await textarea.fill(postText);
+    await openPostModal(page);
+    await page.getByPlaceholder("いまなにしてる？").fill(postText);
 
     // VRT: 投稿モーダル（テキスト入力後）
     await waitForVisibleMedia(page);
@@ -41,11 +37,8 @@ test.describe("投稿機能", () => {
   test("画像の投稿ができる", async ({ page }) => {
     const postText = "画像テスト";
 
-    await page.getByRole("list").getByRole("button", { name: "投稿する" }).click();
-
-    const textarea = page.getByPlaceholder("いまなにしてる？");
-    await expect(textarea).toBeVisible({ timeout: 30_000 });
-    await textarea.fill(postText);
+    await openPostModal(page);
+    await page.getByPlaceholder("いまなにしてる？").fill(postText);
 
     // 画像ファイルを添付
     const fileInput = page.locator('input[type="file"][accept="image/*"]');
@@ -79,11 +72,8 @@ test.describe("投稿機能 - TIFF画像", () => {
   test("TIFF形式の画像を投稿できる", async ({ page }) => {
     const postText = "TIFF画像テスト";
 
-    await page.getByRole("list").getByRole("button", { name: "投稿する" }).click();
-
-    const textarea = page.getByPlaceholder("いまなにしてる？");
-    await expect(textarea).toBeVisible({ timeout: 10_000 });
-    await textarea.fill(postText);
+    await openPostModal(page);
+    await page.getByPlaceholder("いまなにしてる？").fill(postText);
 
     // TIFF画像ファイルを添付
     const fileInput = page.locator('input[type="file"][accept="image/*"]');
@@ -107,11 +97,8 @@ test.describe("投稿機能 - TIFF画像", () => {
   test("画像のEXIFに埋め込まれたImage DescriptionがALTとして表示される", async ({ page }) => {
     const postText = "EXIF ALTテスト";
 
-    await page.getByRole("list").getByRole("button", { name: "投稿する" }).click();
-
-    const textarea = page.getByPlaceholder("いまなにしてる？");
-    await expect(textarea).toBeVisible({ timeout: 10_000 });
-    await textarea.fill(postText);
+    await openPostModal(page);
+    await page.getByPlaceholder("いまなにしてる？").fill(postText);
 
     // TIFF画像ファイルを添付（EXIFにImage Descriptionが埋め込まれている）
     const fileInput = page.locator('input[type="file"][accept="image/*"]');
@@ -155,14 +142,12 @@ test.describe("投稿機能 - WAV音声", () => {
     await login(page);
   });
 
+  // NOTE: フルスイート実行時、サーバー側 ffmpeg 変換の負荷でタイムアウト失敗する場合がある。失敗時は単体で再実行する
   test("WAV形式の音声を投稿できる", async ({ page }) => {
     const postText = "WAV音声テスト";
 
-    await page.getByRole("list").getByRole("button", { name: "投稿する" }).click();
-
-    const textarea = page.getByPlaceholder("いまなにしてる？");
-    await expect(textarea).toBeVisible({ timeout: 10_000 });
-    await textarea.fill(postText);
+    await openPostModal(page);
+    await page.getByPlaceholder("いまなにしてる？").fill(postText);
 
     // WAV音声ファイルを添付
     const fileInput = page.locator('input[type="file"][accept="audio/*"]');
@@ -191,10 +176,8 @@ test.describe("投稿機能 - WAV音声", () => {
 
   test("Shift_JISで付与された作成者・タイトルのメタデータが文字化けせずに表示される", async ({ page }) => {
     const postText = "Shift_JISメタデータテスト";
-    await page.getByRole("list").getByRole("button", { name: "投稿する" }).click();
-    const textarea = page.getByPlaceholder("いまなにしてる？");
-    await expect(textarea).toBeVisible({ timeout: 10_000 });
-    await textarea.fill(postText);
+    await openPostModal(page);
+    await page.getByPlaceholder("いまなにしてる？").fill(postText);
     const fileInput = page.locator('input[type="file"][accept="audio/*"]');
     const wavPath = path.resolve(import.meta.dirname, "../../../docs/assets/maoudamashii_shining_star.wav");
     await fileInput.setInputFiles(wavPath);
@@ -218,14 +201,12 @@ test.describe("投稿機能 - MKV動画", () => {
     await login(page);
   });
 
+  // NOTE: フルスイート実行時、サーバー側 ffmpeg 変換の負荷でタイムアウト失敗する場合がある。失敗時は単体で再実行する
   test("MKV形式の動画を投稿できる", async ({ page }) => {
     const postText = "MKV動画テスト";
 
-    await page.getByRole("list").getByRole("button", { name: "投稿する" }).click();
-
-    const textarea = page.getByPlaceholder("いまなにしてる？");
-    await expect(textarea).toBeVisible({ timeout: 10_000 });
-    await textarea.fill(postText);
+    await openPostModal(page);
+    await page.getByPlaceholder("いまなにしてる？").fill(postText);
 
     // MKV動画ファイルを添付
     const fileInput = page.locator('input[type="file"][accept="video/*"]');
@@ -253,10 +234,8 @@ test.describe("投稿機能 - MKV動画", () => {
 
   test("投稿した動画が先頭から5秒間のみに切り抜かれる", async ({ page }) => {
     const postText = "動画5秒テスト";
-    await page.getByRole("list").getByRole("button", { name: "投稿する" }).click();
-    const textarea = page.getByPlaceholder("いまなにしてる？");
-    await expect(textarea).toBeVisible({ timeout: 10_000 });
-    await textarea.fill(postText);
+    await openPostModal(page);
+    await page.getByPlaceholder("いまなにしてる？").fill(postText);
     const fileInput = page.locator('input[type="file"][accept="video/*"]');
     const mkvPath = path.resolve(import.meta.dirname, "../../../docs/assets/pixabay_326739_kanenori_himejijo.mkv");
     await fileInput.setInputFiles(mkvPath);
@@ -286,11 +265,8 @@ test.describe("投稿機能 - MKV動画", () => {
   test("投稿した動画が正方形に切り抜かれる", async ({ page }) => {
     const postText = "動画正方形テスト";
 
-    await page.getByRole("list").getByRole("button", { name: "投稿する" }).click();
-
-    const textarea = page.getByPlaceholder("いまなにしてる？");
-    await expect(textarea).toBeVisible({ timeout: 10_000 });
-    await textarea.fill(postText);
+    await openPostModal(page);
+    await page.getByPlaceholder("いまなにしてる？").fill(postText);
 
     // MKV動画ファイルを添付
     const fileInput = page.locator('input[type="file"][accept="video/*"]');
