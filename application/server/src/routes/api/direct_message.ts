@@ -1,6 +1,6 @@
 import { Router } from "express";
 import httpErrors from "http-errors";
-import { col, where, Op } from "sequelize";
+import { Op } from "sequelize";
 
 import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
 import {
@@ -16,22 +16,35 @@ directMessageRouter.get("/dm", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversations = await DirectMessageConversation.findAll({
+  const conversations = await DirectMessageConversation.unscoped().findAll({
+    include: [
+      { association: "initiator", include: [{ association: "profileImage" }] },
+      { association: "member", include: [{ association: "profileImage" }] },
+      {
+        association: "messages",
+        include: [{ association: "sender", include: [{ association: "profileImage" }] }],
+        limit: 1,
+        separate: true,
+        order: [["createdAt", "DESC"]],
+        required: false,
+      },
+    ],
     where: {
-      [Op.and]: [
-        { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
-        where(col("messages.id"), { [Op.not]: null }),
-      ],
+      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
-    order: [[col("messages.createdAt"), "DESC"]],
+    order: [
+      [
+        DirectMessageConversation.sequelize!.literal(
+          `(SELECT MAX("createdAt") FROM "DirectMessages" WHERE "conversationId" = "DirectMessageConversation"."id")`,
+        ),
+        "DESC",
+      ],
+    ],
   });
 
-  const sorted = conversations.map((c) => ({
-    ...c.toJSON(),
-    messages: c.messages?.reverse(),
-  }));
+  const withMessages = conversations.filter((c) => c.messages && c.messages.length > 0);
 
-  return res.status(200).type("application/json").send(sorted);
+  return res.status(200).type("application/json").send(withMessages);
 });
 
 directMessageRouter.post("/dm", async (req, res) => {
