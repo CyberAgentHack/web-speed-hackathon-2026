@@ -1,4 +1,4 @@
-import "katex/dist/katex.min.css";
+import "@web-speed-hackathon-2026/client/src/styles/katex-fonts.css";
 import Markdown from "react-markdown";
 import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";

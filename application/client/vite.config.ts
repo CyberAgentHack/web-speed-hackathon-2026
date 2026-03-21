@@ -5,7 +5,6 @@ import react from "@vitejs/plugin-react";
 import postcssImport from "postcss-import";
 import postcssPresetEnv from "postcss-preset-env";
 import { defineConfig } from "vite";
-import { viteStaticCopy } from "vite-plugin-static-copy";
 
 const SRC_PATH = path.resolve(__dirname, "./src");
 
@@ -53,14 +52,6 @@ export default defineConfig({
       babel: {
         plugins: [["babel-plugin-react-compiler", {}]],
       },
-    }),
-    viteStaticCopy({
-      targets: [
-        {
-          src: path.resolve(__dirname, "node_modules/katex/dist/fonts/*"),
-          dest: "styles/fonts",
-        },
-      ],
     }),
   ],
 
