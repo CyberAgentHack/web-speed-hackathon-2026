@@ -11,6 +11,9 @@ export const crokRouter = Router();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-8");
+const TTFT_MS = 120;
+const CHUNK_INTERVAL_MS = 8;
+const CHUNK_SIZE = 24;
 
 crokRouter.get("/crok/suggestions", async (_req, res) => {
   const suggestions = await QaSuggestion.findAll({ logging: false });
@@ -19,6 +22,17 @@ crokRouter.get("/crok/suggestions", async (_req, res) => {
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function chunkResponse(content: string, chunkSize: number): string[] {
+  const chars = [...content];
+  const chunks: string[] = [];
+
+  for (let index = 0; index < chars.length; index += chunkSize) {
+    chunks.push(chars.slice(index, index + chunkSize).join(""));
+  }
+
+  return chunks;
 }
 
 crokRouter.get("/crok", async (req, res) => {
@@ -34,15 +48,15 @@ crokRouter.get("/crok", async (req, res) => {
   let messageId = 0;
 
   // TTFT (Time to First Token)
-  await sleep(3000);
+  await sleep(TTFT_MS);
 
-  for (const char of response) {
+  for (const chunk of chunkResponse(response, CHUNK_SIZE)) {
     if (res.closed) break;
 
-    const data = JSON.stringify({ text: char, done: false });
+    const data = JSON.stringify({ text: chunk, done: false });
     res.write(`event: message\nid: ${messageId++}\ndata: ${data}\n\n`);
 
-    await sleep(10);
+    await sleep(CHUNK_INTERVAL_MS);
   }
 
   if (!res.closed) {
