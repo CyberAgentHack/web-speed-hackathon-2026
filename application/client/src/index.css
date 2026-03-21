@@ -26,7 +26,3 @@
   width: 1em;
 }
 
-/* Hide static fallback nav once React portal renders the React nav */
-#ccss-nav-root:has(nav + nav) > nav:first-child {
-  display: none;
-}

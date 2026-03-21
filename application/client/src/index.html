@@ -14,37 +14,7 @@
     <div id="ccss-shell-root" class="relative z-0 flex justify-center font-sans">
       <div class="bg-cax-surface text-cax-text flex min-h-screen max-w-full">
         <aside id="ccss-nav-root" class="relative z-10">
-          <!-- Static fallback nav: visible before JS loads (FCP improvement). React Portal replaces this. -->
-          <nav class="border-cax-border bg-cax-surface fixed right-0 bottom-0 left-0 z-10 h-12 border-t lg:relative lg:h-full lg:w-48 lg:border-t-0 lg:border-r">
-            <div class="relative grid grid-flow-col items-center justify-evenly lg:fixed lg:flex lg:h-full lg:w-48 lg:flex-col lg:justify-between lg:p-2">
-              <ul class="grid grid-flow-col items-center justify-evenly lg:grid-flow-row lg:auto-rows-min lg:justify-start lg:gap-2">
-                <li>
-                  <a class="flex flex-col items-center justify-center w-12 h-12 hover:bg-cax-brand-soft rounded-full sm:px-2 sm:w-24 sm:h-auto sm:rounded-sm lg:flex-row lg:justify-start lg:px-4 lg:py-2 lg:w-auto lg:h-auto lg:rounded-full" href="/">
-                    <span class="relative text-xl lg:pr-2 lg:text-3xl">
-                      <svg class="font-awesome inline-block fill-current leading-none"><use href="/sprites/font-awesome/solid.svg#home" /></svg>
-                    </span>
-                    <span class="hidden sm:inline sm:text-sm lg:text-xl lg:font-bold">ホーム</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="flex flex-col items-center justify-center w-12 h-12 hover:bg-cax-brand-soft rounded-full sm:px-2 sm:w-24 sm:h-auto sm:rounded-sm lg:flex-row lg:justify-start lg:px-4 lg:py-2 lg:w-auto lg:h-auto lg:rounded-full" href="/search">
-                    <span class="relative text-xl lg:pr-2 lg:text-3xl">
-                      <svg class="font-awesome inline-block fill-current leading-none"><use href="/sprites/font-awesome/solid.svg#search" /></svg>
-                    </span>
-                    <span class="hidden sm:inline sm:text-sm lg:text-xl lg:font-bold">検索</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="flex flex-col items-center justify-center w-12 h-12 hover:bg-cax-brand-soft rounded-full sm:px-2 sm:w-24 sm:h-auto sm:rounded-sm lg:flex-row lg:justify-start lg:px-4 lg:py-2 lg:w-auto lg:h-auto lg:rounded-full" href="/terms">
-                    <span class="relative text-xl lg:pr-2 lg:text-3xl">
-                      <svg class="font-awesome inline-block fill-current leading-none"><use href="/sprites/font-awesome/solid.svg#balance-scale" /></svg>
-                    </span>
-                    <span class="hidden sm:inline sm:text-sm lg:text-xl lg:font-bold">利用規約</span>
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </nav>
+          <!-- React Portal renders Navigation component here -->
         </aside>
         <div id="app" class="relative z-0 w-screen max-w-screen-sm min-w-0 shrink pb-12 lg:pb-0">
           <!-- React content rendered here -->

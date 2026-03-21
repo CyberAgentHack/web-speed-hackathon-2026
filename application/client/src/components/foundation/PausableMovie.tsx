@@ -10,13 +10,14 @@ interface Props {
 
 /**
  * クリックすると再生・一時停止を切り替えます。
+ * アニメーションWebPをcanvasに描画して表示します。
  */
 export const PausableMovie = ({ src }: Props) => {
   const thumbSrc = src.replace(".webp", "_thumb.jpg");
   const containerRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const stateRef = useRef({ playing: true, animId: 0 });
   const [isNearViewport, setIsNearViewport] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
 
   useEffect(() => {
@@ -35,25 +36,57 @@ export const PausableMovie = ({ src }: Props) => {
     return () => observer.disconnect();
   }, []);
 
+  // canvas にアニメーションWebPを描画する
+  useEffect(() => {
+    if (!isNearViewport) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const img = new Image();
+    const state = stateRef.current;
+
+    const draw = () => {
+      if (!state.playing) return;
+      const ctx = canvas.getContext("2d");
+      if (ctx) ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      state.animId = requestAnimationFrame(draw);
+    };
+
+    img.onload = () => {
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      if (state.playing) {
+        state.animId = requestAnimationFrame(draw);
+      } else {
+        const ctx = canvas.getContext("2d");
+        if (ctx) ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      }
+    };
+    img.src = src;
+
+    return () => {
+      cancelAnimationFrame(state.animId);
+      img.src = "";
+    };
+  }, [isNearViewport, src]);
+
   const handleClick = useCallback(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    if (isPlaying) {
-      video.pause();
-    } else {
-      void video.play();
+    const state = stateRef.current;
+    state.playing = !state.playing;
+    if (!state.playing) {
+      cancelAnimationFrame(state.animId);
     }
     setIsPlaying((p) => !p);
-  }, [isPlaying]);
+  }, []);
 
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
       <div ref={containerRef} className="relative h-full w-full">
-        {/* Thumbnail: LCP element shown immediately before video is ready */}
-        {!isLoaded && (
+        {/* Thumbnail before lazy load triggers */}
+        {!isNearViewport && (
           <img
             alt=""
-            className="absolute inset-0 h-full w-full object-cover z-10"
+            className="absolute inset-0 h-full w-full object-cover"
             src={thumbSrc}
           />
         )}
@@ -64,15 +97,9 @@ export const PausableMovie = ({ src }: Props) => {
             onClick={handleClick}
             type="button"
           >
-            <video
-              ref={videoRef}
-              autoPlay
-              loop
-              muted
-              playsInline
+            <canvas
+              ref={canvasRef}
               className="h-full w-full object-cover"
-              src={src}
-              onLoadedMetadata={() => setIsLoaded(true)}
             />
             <div
               className={classNames(
