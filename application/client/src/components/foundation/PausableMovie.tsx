@@ -15,9 +15,11 @@ export const PausableMovie = ({ src }: Props) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
 
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const isInViewportRef = useRef(true);
 
   const stopDrawing = useCallback(() => {
     if (animationFrameRef.current !== null) {
@@ -50,10 +52,15 @@ export const PausableMovie = ({ src }: Props) => {
     stopDrawing();
 
     const render = () => {
+      if (!isInViewportRef.current) {
+        animationFrameRef.current = null;
+        return;
+      }
+
       drawFrame();
 
       const video = videoRef.current;
-      if (video !== null && !video.paused && !video.ended) {
+      if (video !== null && !video.paused && !video.ended && isInViewportRef.current) {
         animationFrameRef.current = window.requestAnimationFrame(render);
       } else {
         animationFrameRef.current = null;
@@ -70,6 +77,50 @@ export const PausableMovie = ({ src }: Props) => {
     },
     [drawFrame],
   );
+
+  const buttonCallbackRef = useCallback<RefCallback<HTMLButtonElement>>((el) => {
+    buttonRef.current = el;
+  }, []);
+
+  useEffect(() => {
+    const target = buttonRef.current;
+    if (target === null || typeof window.IntersectionObserver === "undefined") {
+      isInViewportRef.current = true;
+      return;
+    }
+
+    const observer = new window.IntersectionObserver((entries) => {
+      const [entry] = entries;
+      if (entry === undefined) {
+        return;
+      }
+
+      const isInViewport = entry.isIntersecting;
+      if (isInViewportRef.current === isInViewport) {
+        return;
+      }
+
+      isInViewportRef.current = isInViewport;
+
+      if (!isInViewport) {
+        stopDrawing();
+        return;
+      }
+
+      const video = videoRef.current;
+      if (video !== null && !video.paused && !video.ended) {
+        startDrawing();
+      } else {
+        drawFrame();
+      }
+    });
+
+    observer.observe(target);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [drawFrame, startDrawing, stopDrawing]);
 
   useEffect(() => {
     stopDrawing();
@@ -173,6 +224,7 @@ export const PausableMovie = ({ src }: Props) => {
           "animate-pulse": !hasMovie,
         })}
         onClick={handleClick}
+        ref={buttonCallbackRef}
         type="button"
       >
         <canvas ref={canvasCallbackRef} className="w-full" />
