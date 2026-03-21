@@ -1,35 +1,44 @@
-import { extractMetadataFromSound } from "@web-speed-hackathon-2026/client/src/utils/extract_metadata_from_sound";
-import { loadFFmpeg } from "@web-speed-hackathon-2026/client/src/utils/load_ffmpeg";
+import { Mp3Encoder } from "lamejs";
 
 interface Options {
   extension: string;
 }
 
-export async function convertSound(file: File, options: Options): Promise<Blob> {
-  const ffmpeg = await loadFFmpeg();
+export async function convertSound(file: File, _options: Options): Promise<Blob> {
+  const audioContext = new AudioContext();
+  const arrayBuffer = await file.arrayBuffer();
+  const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
-  const exportFile = `export.${options.extension}`;
+  const channels = audioBuffer.numberOfChannels;
+  const sampleRate = audioBuffer.sampleRate;
+  const encoder = new Mp3Encoder(channels, sampleRate, 128);
 
-  await ffmpeg.writeFile("file", new Uint8Array(await file.arrayBuffer()));
+  const left = floatTo16Bit(audioBuffer.getChannelData(0));
+  const right = channels > 1 ? floatTo16Bit(audioBuffer.getChannelData(1)) : undefined;
 
-  // 文字化けを防ぐためにメタデータを抽出して付与し直す
-  const metadata = await extractMetadataFromSound(file);
+  const mp3Data: ArrayBuffer[] = [];
+  const blockSize = 1152;
 
-  await ffmpeg.exec([
-    "-i",
-    "file",
-    "-metadata",
-    `artist=${metadata.artist}`,
-    "-metadata",
-    `title=${metadata.title}`,
-    "-vn",
-    exportFile,
-  ]);
+  for (let i = 0; i < left.length; i += blockSize) {
+    const leftChunk = left.subarray(i, i + blockSize);
+    const rightChunk = right?.subarray(i, i + blockSize);
+    const buf = encoder.encodeBuffer(leftChunk, rightChunk);
+    if (buf.length > 0) mp3Data.push(buf.buffer as ArrayBuffer);
+  }
 
-  const output = (await ffmpeg.readFile(exportFile)) as Uint8Array<ArrayBuffer>;
+  const flush = encoder.flush();
+  if (flush.length > 0) mp3Data.push(flush.buffer as ArrayBuffer);
 
-  ffmpeg.terminate();
+  void audioContext.close();
 
-  const blob = new Blob([output]);
-  return blob;
+  return new Blob(mp3Data, { type: "audio/mpeg" });
+}
+
+function floatTo16Bit(float32: Float32Array): Int16Array {
+  const int16 = new Int16Array(float32.length);
+  for (let i = 0; i < float32.length; i++) {
+    const s = Math.max(-1, Math.min(1, float32[i]!));
+    int16[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+  }
+  return int16;
 }
