@@ -5,6 +5,7 @@ import { useTitle } from "@web-speed-hackathon-2026/client/src/hooks/use_title";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
 
 const AuthModalContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/AuthModalContainer").then((m) => ({
@@ -50,11 +51,6 @@ const SearchContainer = lazy(() =>
 const TermContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/TermContainer").then((m) => ({
     default: m.TermContainer,
-  })),
-);
-const TimelineContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/TimelineContainer").then((m) => ({
-    default: m.TimelineContainer,
   })),
 );
 const UserProfileContainer = lazy(() =>
