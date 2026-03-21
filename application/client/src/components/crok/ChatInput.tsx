@@ -137,7 +137,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   useEffect(() => {
     let cancelled = false;
     const updateSuggestions = async () => {
-      if (!tokenizer || trimmedInputValue.length < 2) {
+      if (!tokenizer || trimmedInputValue.length < 8) {
         setSuggestions([]);
         setQueryTokens([]);
         setShowSuggestions(false);
@@ -165,7 +165,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
 
     const timeoutId = window.setTimeout(() => {
       void updateSuggestions();
-    }, 200);
+    }, 600);
 
     return () => {
       cancelled = true;
