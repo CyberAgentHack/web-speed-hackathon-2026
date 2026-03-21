@@ -52,7 +52,11 @@ const TermContainer = lazy(() =>
     default: m.TermContainer,
   })),
 );
-import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
+const TimelineContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/TimelineContainer").then((m) => ({
+    default: m.TimelineContainer,
+  })),
+);
 const UserProfileContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/UserProfileContainer").then((m) => ({
     default: m.UserProfileContainer,
