@@ -42,7 +42,22 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
   });
 
   if (conversations == null) {
-    return null;
+    return (
+      <section>
+        <header className="border-cax-border flex flex-col gap-4 border-b px-4 pt-6 pb-4">
+          <h1 className="text-2xl font-bold">ダイレクトメッセージ</h1>
+          <div className="flex flex-wrap items-center gap-4">
+            <Button
+              command="show-modal"
+              commandfor={newDmModalId}
+              leftItem={<FontAwesomeIcon iconType="paper-plane" styleType="solid" />}
+            >
+              新しくDMを始める
+            </Button>
+          </div>
+        </header>
+      </section>
+    );
   }
 
   return (
