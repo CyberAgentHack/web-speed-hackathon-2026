@@ -1,12 +1,18 @@
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`fetchBinary failed: ${res.status}`);
+  if (!res.ok) {
+    await res.body?.cancel();
+    throw new Error(`fetchBinary failed: ${res.status}`);
+  }
   return res.arrayBuffer();
 }
 
 export async function fetchJSON<T>(url: string): Promise<T> {
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`fetchJSON failed: ${res.status}`);
+  if (!res.ok) {
+    await res.body?.cancel();
+    throw new Error(`fetchJSON failed: ${res.status}`);
+  }
   return res.json() as Promise<T>;
 }
 
