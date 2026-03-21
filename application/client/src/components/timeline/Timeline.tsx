@@ -7,8 +7,9 @@ interface Props {
 export const Timeline = ({ timeline }: Props) => {
   return (
     <section>
-      {timeline.map((post) => {
-        return <TimelineItem key={post.id} post={post} />;
+      {timeline.map((post, idx) => {
+        // 最初の5件はlazy loadingせず優先的に読み込む
+        return <TimelineItem key={post.id} post={post} priority={idx < 5} />;
       })}
     </section>
   );

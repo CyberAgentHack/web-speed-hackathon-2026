@@ -1,5 +1,8 @@
-export function getImagePath(imageId: string): string {
-  return `/images/${imageId}.webp`;
+export type ImageSize = "s" | "m" | "l";
+
+export function getImagePath(imageId: string, size?: ImageSize): string {
+  const q = size != null ? `?q=${size}` : "";
+  return `/images/${imageId}.webp${q}`;
 }
 
 export function getMoviePath(movieId: string): string {
@@ -11,5 +14,5 @@ export function getSoundPath(soundId: string): string {
 }
 
 export function getProfileImagePath(profileImageId: string): string {
-  return `/images/profiles/${profileImageId}.webp`;
+  return `/images/profiles/${profileImageId}.webp?q=s`;
 }
