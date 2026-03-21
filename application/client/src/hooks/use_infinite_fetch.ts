@@ -11,7 +11,7 @@ interface ReturnValues<T> {
 
 export function useInfiniteFetch<T>(
   apiPath: string,
-  fetcher: (apiPath: string) => Promise<T[]>,
+  fetcher: (apiPath: string, offset: number, limit: number) => Promise<T[]>,
 ): ReturnValues<T> {
   const internalRef = useRef({ isLoading: false, offset: 0 });
 
@@ -36,11 +36,11 @@ export function useInfiniteFetch<T>(
       offset,
     };
 
-    void fetcher(apiPath).then(
-      (allData) => {
+    void fetcher(apiPath, offset, LIMIT).then(
+      (data) => {
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...data],
           isLoading: false,
         }));
         internalRef.current = {

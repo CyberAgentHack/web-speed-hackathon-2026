@@ -6,7 +6,7 @@ import { UserProfilePage } from "@web-speed-hackathon-2026/client/src/components
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
-import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { fetchJSON, fetchJSONList } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 export const UserProfileContainer = () => {
   const { username } = useParams();
@@ -17,7 +17,7 @@ export const UserProfileContainer = () => {
   );
   const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>(
     `/api/v1/users/${username}/posts`,
-    fetchJSON,
+    fetchJSONList,
   );
 
   if (isLoadingUser) {

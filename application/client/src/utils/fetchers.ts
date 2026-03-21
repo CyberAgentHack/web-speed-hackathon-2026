@@ -22,6 +22,18 @@ export async function fetchJSON<T>(url: string): Promise<T> {
   return json;
 }
 
+export async function fetchJSONList<T>(url: string, offset: number, limit: number): Promise<T> {
+  const paginatedUrl = `${url}?offset=${offset}&limit=${limit}`;
+  const response = await fetch(paginatedUrl);
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch ${paginatedUrl}: ${response.status} ${response.statusText}`,
+    );
+  }
+  const json = await response.json();
+  return json;
+}
+
 export async function sendFile<T>(url: string, file: File): Promise<T> {
   const response = await fetch(url, {
     method: "POST",
