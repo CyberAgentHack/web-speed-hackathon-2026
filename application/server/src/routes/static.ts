@@ -16,7 +16,7 @@ staticRouter.use(history());
 staticRouter.use(
   serveStatic(UPLOAD_PATH, {
     setHeaders: (res) => {
-      res.setHeader("Cache-Control", "public, max-age=86400");
+      res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
     },
   }),
 );
@@ -24,7 +24,7 @@ staticRouter.use(
 staticRouter.use(
   serveStatic(PUBLIC_PATH, {
     setHeaders: (res) => {
-      res.setHeader("Cache-Control", "public, max-age=86400");
+      res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
     },
   }),
 );
