@@ -52,29 +52,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
         movie: undefined,
         sound: undefined,
       }));
-      setIsConverting(true);
-
-      Promise.all(
-        files.map(async (file) => {
-          const { convertImage } =
-            await import("@web-speed-hackathon-2026/client/src/utils/convert_image");
-          return convertImage(file, { extension: "Jpg" }).then(
-            (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
-          );
-        }),
-      )
-        .then((convertedFiles) => {
-          setParams((params) => ({
-            ...params,
-            images: convertedFiles,
-            movie: undefined,
-            sound: undefined,
-          }));
-        })
-        .catch(console.error)
-        .finally(() => {
-          setIsConverting(false);
-        });
+      setIsConverting(false);
     }
   }, []);
 
