@@ -50,16 +50,7 @@ const VideoMovie = ({
       return;
     }
 
-    const promise = videoRef.current?.play();
-    if (promise != null) {
-      void promise.catch(() => {
-        setIsPlaying(false);
-      });
-    }
-  }, [prefersReducedMotion]);
-
-  useEffect(() => {
-    if (prefersReducedMotion) {
+    if (!interactive) {
       return;
     }
 
@@ -69,7 +60,20 @@ const VideoMovie = ({
         setIsPlaying(false);
       });
     }
-  }, [prefersReducedMotion, src]);
+  }, [prefersReducedMotion]);
+
+  useEffect(() => {
+    if (prefersReducedMotion || !interactive) {
+      return;
+    }
+
+    const promise = videoRef.current?.play();
+    if (promise != null) {
+      void promise.catch(() => {
+        setIsPlaying(false);
+      });
+    }
+  }, [interactive, prefersReducedMotion, src]);
 
   const handleClick = useCallback(() => {
     setIsPlaying((current) => {
@@ -107,7 +111,7 @@ const VideoMovie = ({
             onLoadedData={handleLoadedData}
             poster={posterSrc}
             playsInline={true}
-            preload={interactive || prioritizeLoad ? "auto" : "metadata"}
+            preload={interactive || prioritizeLoad ? "auto" : "none"}
             src={src}
           />
           <div
@@ -138,7 +142,7 @@ const VideoMovie = ({
             onLoadedData={handleLoadedData}
             poster={posterSrc}
             playsInline={true}
-            preload={interactive || prioritizeLoad ? "auto" : "metadata"}
+            preload={interactive || prioritizeLoad ? "auto" : "none"}
             src={src}
           />
         </button>

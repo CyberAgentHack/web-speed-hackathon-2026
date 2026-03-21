@@ -11,6 +11,8 @@ function hasRenderableMedia(post: Models.Post) {
   return (post.images?.length ?? 0) > 0 || post.movie != null || post.sound != null;
 }
 
+const INITIAL_VISIBLE_TIMELINE_ITEMS = 3;
+
 export const Timeline = ({ timeline }: Props) => {
   const prioritizedMediaIndex = timeline.findIndex(hasRenderableMedia);
 
@@ -22,7 +24,9 @@ export const Timeline = ({ timeline }: Props) => {
             key={post.id}
             post={post}
             prioritizeMedia={idx === prioritizedMediaIndex}
-            prioritizeRendering={idx === 0 || idx === prioritizedMediaIndex}
+            prioritizeRendering={
+              idx < INITIAL_VISIBLE_TIMELINE_ITEMS || idx === prioritizedMediaIndex
+            }
           />
         );
       })}

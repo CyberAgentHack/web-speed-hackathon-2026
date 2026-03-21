@@ -46,10 +46,39 @@ function requiresResolvedActiveUser(pathname: string) {
 }
 
 function scheduleDeferredTask(task: () => void) {
-  if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-    const callbackId = window.requestIdleCallback(task, { timeout: 1500 });
+  if (typeof window !== "undefined") {
+    let timeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
+    let callbackId: number | null = null;
+    let disposed = false;
+
+    const scheduleTask = () => {
+      if (disposed) {
+        return;
+      }
+
+      if ("requestIdleCallback" in window) {
+        callbackId = window.requestIdleCallback(task, { timeout: 3000 });
+        return;
+      }
+
+      timeoutId = globalThis.setTimeout(task, 1000);
+    };
+
+    if (document.readyState === "complete") {
+      scheduleTask();
+    } else {
+      window.addEventListener("load", scheduleTask, { once: true });
+    }
+
     return () => {
-      window.cancelIdleCallback(callbackId);
+      disposed = true;
+      window.removeEventListener("load", scheduleTask);
+      if (callbackId !== null) {
+        window.cancelIdleCallback(callbackId);
+      }
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
     };
   }
 
@@ -87,13 +116,13 @@ export const AppContainer = ({ bootstrap = null }: Props) => {
             return;
           }
           if (error instanceof HTTPError && error.status === 401) {
-            setActiveUser(null);
+            setActiveUser((current) => (current == null ? current : null));
             return;
           }
           console.error(error);
         })
         .finally(() => {
-          if (!isDisposed) {
+          if (!isDisposed && shouldResolveActiveUserImmediately) {
             setHasResolvedActiveUser(true);
           }
         });
