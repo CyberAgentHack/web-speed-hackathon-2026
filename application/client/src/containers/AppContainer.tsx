@@ -18,9 +18,7 @@ import {
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 const AuthModalContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/AuthModalContainer").then((m) => ({
-    default: m.AuthModalContainer,
-  })),
+  loadAuthModalContainer().then((m) => ({ default: m.AuthModalContainer })),
 );
 const CrokContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/CrokContainer").then((m) => ({
@@ -28,9 +26,7 @@ const CrokContainer = lazy(() =>
   })),
 );
 const DirectMessageContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer").then((m) => ({
-    default: m.DirectMessageContainer,
-  })),
+  loadDirectMessageContainer().then((m) => ({ default: m.DirectMessageContainer })),
 );
 const DirectMessageListContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer").then(
@@ -70,6 +66,12 @@ const UserProfileContainer = lazy(() =>
   })),
 );
 
+const loadAuthModalContainer = () =>
+  import("@web-speed-hackathon-2026/client/src/containers/AuthModalContainer");
+
+const loadDirectMessageContainer = () =>
+  import("@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer");
+
 function requiresActiveUserImmediately(pathname: string): boolean {
   return pathname === "/crok" || pathname.startsWith("/dm");
 }
@@ -79,6 +81,17 @@ export const AppContainer = () => {
   const navigate = useNavigate();
   useEffect(() => {
     window.scrollTo(0, 0);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (pathname === "/not-found") {
+      void loadAuthModalContainer();
+      void loadDirectMessageContainer();
+      return;
+    }
+    if (pathname === "/dm") {
+      void loadDirectMessageContainer();
+    }
   }, [pathname]);
 
   const needsImmediate = requiresActiveUserImmediately(pathname);
