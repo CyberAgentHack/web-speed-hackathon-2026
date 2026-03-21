@@ -19,13 +19,30 @@ interface SubmitParams {
   text: string;
 }
 
+function logNewPost(event: string, payload?: Record<string, unknown>) {
+  console.info("[new-post]", event, payload ?? {});
+}
+
 async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promise<Models.Post> {
+  logNewPost("submit:start", {
+    imageCount: images.length,
+    hasMovie: movie != null,
+    hasSound: sound != null,
+    textLength: text.length,
+  });
+
   const uploadedImages = images.length
     ? await Promise.all(
-        images.map(async (image, index) => {
+        images.map(async (image) => {
+          logNewPost("imageUpload:start", {
+            altLength: image.alt.length,
+            size: image.file.size,
+            type: image.file.type,
+          });
           const uploaded = await sendFile<{ alt: string; id: string }>("/api/v1/images", image.file, {
             "X-Image-Alt": encodeURIComponent(image.alt),
           });
+          logNewPost("imageUpload:success", uploaded);
           return uploaded;
         }),
       )
@@ -56,7 +73,15 @@ async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promis
     text,
   };
 
-  return sendJSON<Models.Post>("/api/v1/posts", payload);
+  logNewPost("postCreate:start", {
+    imageCount: uploadedImages.length,
+    movieId: uploadedMovie?.id,
+    soundId: uploadedSound?.id,
+    textLength: text.length,
+  });
+  const post = await sendJSON<Models.Post>("/api/v1/posts", payload);
+  logNewPost("postCreate:success", { postId: post.id });
+  return post;
 }
 
 interface Props {
@@ -99,7 +124,8 @@ export const NewPostModalContainer = ({ id }: Props) => {
         const post = await sendNewPost(params);
         ref.current?.close();
         navigate(`/posts/${post.id}`);
-      } catch {
+      } catch (error) {
+        console.error("[new-post] submit:failure", error);
         setHasError(true);
       } finally {
         setIsLoading(false);

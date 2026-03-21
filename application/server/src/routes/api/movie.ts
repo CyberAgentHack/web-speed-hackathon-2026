@@ -29,15 +29,25 @@ async function writePosterFrame(moviePath: string, posterPath: string) {
 export const movieRouter = Router();
 
 movieRouter.post("/movies", async (req, res) => {
+  const startedAt = Date.now();
+
   if (req.session.userId === undefined) {
+    console.warn("[api/movies] unauthorized");
     throw new httpErrors.Unauthorized();
   }
   if (Buffer.isBuffer(req.body) === false) {
+    console.warn("[api/movies] invalid body", { bodyType: typeof req.body });
     throw new httpErrors.BadRequest();
   }
 
+  console.info("[api/movies] start", {
+    bytes: req.body.length,
+    userId: req.session.userId,
+  });
+
   const type = await fileTypeFromBuffer(req.body);
   if (type === undefined || !ALLOWED_EXTENSIONS.has(type.ext)) {
+    console.warn("[api/movies] invalid file type", { type: type?.mime, ext: type?.ext });
     throw new httpErrors.BadRequest("Invalid file type");
   }
 
@@ -53,6 +63,14 @@ movieRouter.post("/movies", async (req, res) => {
       // poster generation is optional; keep upload successful even if ffmpeg is unavailable
     }
   }
+
+  console.info("[api/movies] success", {
+    elapsedMs: Date.now() - startedAt,
+    ext: type.ext,
+    mime: type.mime,
+    movieId,
+    userId: req.session.userId,
+  });
 
   return res.status(200).type("application/json").send({ id: movieId });
 });

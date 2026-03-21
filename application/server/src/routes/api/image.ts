@@ -25,6 +25,7 @@ imageRouter.post("/images", async (req, res) => {
   }
 
   console.info("[api/images] start", {
+    alt,
     altLength: alt.length,
     bytes: req.body.length,
     userId: req.session.userId,
@@ -43,6 +44,7 @@ imageRouter.post("/images", async (req, res) => {
   await writeResponsiveImageVariants(req.body, outputDir, imageId);
 
   console.info("[api/images] success", {
+    alt,
     altLength: alt.length,
     elapsedMs: Date.now() - startedAt,
     imageId,
