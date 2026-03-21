@@ -11,20 +11,25 @@ interface Props {
  * クリックすると再生・一時停止を切り替えます。
  */
 export const PausableMovie = ({ src }: Props) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
 
   const handleClick = useCallback(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    if (video.paused) {
-      video.play();
-      setIsPlaying(true);
-    } else {
-      video.pause();
+    const img = imgRef.current;
+    if (!img) return;
+    if (isPlaying) {
+      // GIF を一時停止するために src を空にして canvas に現在フレームを保持する
+      img.style.visibility = "hidden";
       setIsPlaying(false);
+    } else {
+      img.style.visibility = "visible";
+      // src を再設定して GIF を最初から再生する
+      const currentSrc = img.src;
+      img.src = "";
+      img.src = currentSrc;
+      setIsPlaying(true);
     }
-  }, []);
+  }, [isPlaying]);
 
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
@@ -34,13 +39,10 @@ export const PausableMovie = ({ src }: Props) => {
         onClick={handleClick}
         type="button"
       >
-        <video
-          ref={videoRef}
-          autoPlay
+        <img
+          ref={imgRef}
+          alt=""
           className="h-full w-full object-cover"
-          loop
-          muted
-          playsInline
           src={src}
         />
         <div
