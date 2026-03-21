@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { dynamicMediaMask, waitForVisibleMedia } from "./utils";
+import { dynamicMediaMask, waitForPageToLoad, waitForVisibleMedia } from "./utils";
 
 test.describe("投稿詳細", () => {
   test.beforeEach(async ({ page }) => {
@@ -19,6 +19,7 @@ test.describe("投稿詳細", () => {
 
     // VRT: 投稿詳細
     await waitForVisibleMedia(page);
+    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("post-detail-投稿詳細.png", {
       mask: dynamicMediaMask(page),
     });
@@ -52,6 +53,7 @@ test.describe("投稿詳細 - 動画", () => {
 
     // VRT: 動画再生中
     await waitForVisibleMedia(page);
+    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("post-detail-動画再生中.png", {
       mask: dynamicMediaMask(page),
     });
@@ -81,6 +83,7 @@ test.describe("投稿詳細 - 音声", () => {
 
     // VRT: 音声（再生前）
     await waitForVisibleMedia(page);
+    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("post-detail-音声再生前.png", {
       mask: dynamicMediaMask(page),
     });
@@ -120,6 +123,7 @@ test.describe("投稿詳細 - 写真", () => {
 
     // VRT: 写真投稿詳細
     await waitForVisibleMedia(page);
+    await waitForPageToLoad(page);
     await expect(page).toHaveScreenshot("post-detail-写真.png", {
       mask: dynamicMediaMask(page),
     });
