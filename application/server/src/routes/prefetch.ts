@@ -139,9 +139,6 @@ prefetchRouter.use(async (req, res, next) => {
       return res.send(cached);
     }
 
-    // キャッシュミス: head を先にストリーミングしてブラウザにCSS/JSダウンロードを開始させる
-    res.write(headPart);
-
     // /terms: Full SSR with no JS — eliminates TBT entirely
     if (req.path === "/terms") {
       const ssrContent = getTermsSSRHtml();
@@ -153,11 +150,12 @@ prefetchRouter.use(async (req, res, next) => {
       const cleanBody = stripScripts(bodyPart!)
         .replace(/<div id="app-loader"[^>]*>[^<]*<\/div>/, ssrContent);
       const fullHtml = cleanHead + cleanBody;
-      res.write(fullHtml);
-      res.end();
       htmlCache.set(req.path, fullHtml);
-      return;
+      return res.send(fullHtml);
     }
+
+    // キャッシュミス: head を先にストリーミングしてブラウザにCSS/JSダウンロードを開始させる
+    res.write(headPart);
 
     const prefetchData = await getPrefetchData(req.path, req.session.userId);
     const lcpPreloads = extractLcpPreloads(prefetchData, req.path);
