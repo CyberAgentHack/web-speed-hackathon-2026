@@ -4,6 +4,7 @@ import path from "path";
 import { Router } from "express";
 import { fileTypeFromBuffer } from "file-type";
 import httpErrors from "http-errors";
+import piexif from "piexifjs";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
@@ -12,6 +13,16 @@ import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 const EXTENSION = "webp";
 
 export const imageRouter = Router();
+
+function extractAltFromExif(buffer: Buffer): string {
+  try {
+    const exif = piexif.load(buffer.toString("binary"));
+    const raw = exif?.["0th"]?.[piexif.ImageIFD.ImageDescription];
+    return raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
+  } catch {
+    return "";
+  }
+}
 
 imageRouter.post("/images", async (req, res) => {
   if (req.session.userId === undefined) {
@@ -27,10 +38,11 @@ imageRouter.post("/images", async (req, res) => {
   }
 
   const imageId = uuidv4();
+  const alt = extractAltFromExif(req.body);
 
   const filePath = path.resolve(UPLOAD_PATH, `./images/${imageId}.${EXTENSION}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
   await fs.writeFile(filePath, req.body);
 
-  return res.status(200).type("application/json").send({ id: imageId });
+  return res.status(200).type("application/json").send({ id: imageId, alt });
 });

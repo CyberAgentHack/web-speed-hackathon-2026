@@ -235,6 +235,9 @@ importers:
       music-metadata:
         specifier: 11.10.3
         version: 11.10.3
+      piexifjs:
+        specifier: 1.0.6
+        version: 1.0.6
       sequelize:
         specifier: 6.37.7
         version: 6.37.7(sqlite3@5.1.7)
@@ -281,6 +284,9 @@ importers:
       '@types/node':
         specifier: 22.18.8
         version: 22.18.8
+      '@types/piexifjs':
+        specifier: 1.0.0
+        version: 1.0.0
       '@types/serve-static':
         specifier: 1.15.9
         version: 1.15.9
