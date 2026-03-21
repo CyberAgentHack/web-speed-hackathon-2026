@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { Op, WhereOptions } from "sequelize";
+import { Op, WhereAttributeHash, WhereOptions } from "sequelize";
 
 import { Post } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
@@ -42,12 +42,24 @@ searchRouter.get("/search", async (req, res) => {
     whereConditions.push({ createdAt: { [Op.lte]: untilDate } });
   }
 
-  const posts = await Post.findAll({
+  // images の多対多 JOIN を避けるため unscoped で ID のみ取得（subQuery: false が安全）
+  const matchingIds = await Post.unscoped().findAll({
+    attributes: ["id"],
+    include: [{ association: "user", attributes: [] }],
     subQuery: false,
     where: { [Op.and]: whereConditions },
     order: [["createdAt", "DESC"]],
     limit,
     offset,
+  });
+
+  if (matchingIds.length === 0) {
+    return res.status(200).type("application/json").send([]);
+  }
+
+  const posts = await Post.findAll({
+    where: { id: { [Op.in]: matchingIds.map((p) => p.id) } },
+    order: [["createdAt", "DESC"]],
   });
 
   return res.status(200).type("application/json").send(posts);
