@@ -128,7 +128,7 @@ const config = {
       maxInitialRequests: 15,
       cacheGroups: {
         react: {
-          test: /[\\/]node_modules[\\/](react|react-dom|react-router|scheduler)/,
+          test: /[\\/]node_modules[\\/](react|react-dom|react-router|scheduler)[\\/]/,
           priority: 20,
           name: "react",
           chunks: "all",
