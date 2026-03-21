@@ -9,9 +9,14 @@ import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/
 
 interface Props {
   post: Models.Post;
+  // インデックス番号を受け取れるようにすると、1枚目かどうかが判定できます
+  index?: number;
 }
 
-export const PostItem = ({ post }: Props) => {
+export const PostItem = ({ post, index }: Props) => {
+  // indexが0（1枚目）なら即時読み込み、それ以外は遅延読み込み
+  const isFirstItem = index === 0;
+
   return (
     <article className="px-1 sm:px-4">
       <div className="border-cax-border border-b px-4 pt-4 pb-4">
@@ -26,6 +31,12 @@ export const PostItem = ({ post }: Props) => {
                 src={getProfileImagePath(post.user.profileImage.id)}
                 width={64}
                 height={64}
+                decoding="async"
+                className="h-full w-full object-cover"
+                // 1枚目なら最優先、それ以外は通常
+                fetchpriority={isFirstItem ? "high" : "auto"}
+                // 1枚目なら即時、それ以外は遅延読み込み
+                loading={isFirstItem ? "eager" : "lazy"}
               />
             </Link>
           </div>
@@ -54,6 +65,7 @@ export const PostItem = ({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
+              {/* ImageAreaにもindexを渡すと中身の画像も最適化できます */}
               <ImageArea images={post.images} />
             </div>
           ) : null}

@@ -37,11 +37,15 @@ export const AccountMenu = ({ user, onLogout }: Props) => {
         className="hover:bg-cax-surface-subtle flex w-full items-center gap-3 rounded-full p-2 transition-colors"
         onClick={() => setOpen((prev) => !prev)}
       >
+        {/* --- 修正ポイント：width={40} と height={40} を追加 --- */}
         <img
           alt={user.profileImage.alt}
           className="h-10 w-10 shrink-0 rounded-full object-cover"
           src={getProfileImagePath(user.profileImage.id)}
+          width={40}  // h-10 は 40px です
+          height={40} // w-10 は 40px です
         />
+        {/* ----------------------------------------------- --- */}
         <div className="hidden min-w-0 flex-1 text-left lg:block">
           <div className="text-cax-text truncate text-sm font-bold">{user.name}</div>
           <div className="text-cax-text-muted truncate text-sm">@{user.username}</div>
