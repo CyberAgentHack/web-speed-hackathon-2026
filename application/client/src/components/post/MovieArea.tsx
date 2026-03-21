@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 
+import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { PausableMovie } from "@web-speed-hackathon-2026/client/src/components/foundation/PausableMovie";
 import { useIntersectionObserver } from "@web-speed-hackathon-2026/client/src/hooks/use_intersection_observer";
 import { getMoviePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
@@ -15,12 +16,14 @@ export const MovieArea = ({ movie }: Props) => {
   const src = useMemo(() => getMoviePath(movie.id), [movie.id]);
 
   return (
-    <div
-      ref={ref}
-      className="border-cax-border bg-cax-surface-subtle relative h-full w-full overflow-hidden rounded-lg border"
-      data-movie-area
-    >
-      {isVisible ? <PausableMovie src={src} /> : null}
-    </div>
+    <AspectRatioBox aspectHeight={1} aspectWidth={1}>
+      <div
+        ref={ref}
+        className="border-cax-border bg-cax-surface-subtle relative h-full w-full overflow-hidden rounded-lg border"
+        data-movie-area
+      >
+        {isVisible ? <PausableMovie src={src} /> : null}
+      </div>
+    </AspectRatioBox>
   );
 };
