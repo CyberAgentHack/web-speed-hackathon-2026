@@ -135,7 +135,24 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     if (conversationError != null) {
       return <NotFoundContainer />;
     }
-    return null;
+    const placeholderConversation: Models.DirectMessageConversation = {
+      id: conversationId,
+      initiator: activeUser,
+      member: activeUser,
+      messages: [],
+    };
+
+    return (
+      <DirectMessagePage
+        conversationError={null}
+        conversation={placeholderConversation}
+        activeUser={activeUser}
+        onTyping={handleTyping}
+        isPeerTyping={false}
+        isSubmitting={isSubmitting}
+        onSubmit={handleSubmit}
+      />
+    );
   }
 
   const peer =
