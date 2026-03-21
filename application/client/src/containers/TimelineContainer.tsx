@@ -2,11 +2,11 @@ import { Helmet } from "react-helmet";
 
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
 import { TimelinePage } from "@web-speed-hackathon-2026/client/src/components/timeline/TimelinePage";
-import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
+import { useCursorFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_cursor_fetch";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 export const TimelineContainer = () => {
-  const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>(
+  const { data: posts, fetchMore } = useCursorFetch<Models.Post>(
     "/api/v1/posts",
     fetchJSON,
   );

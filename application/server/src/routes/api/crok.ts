@@ -1,10 +1,12 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { Router } from "express";
 import httpErrors from "http-errors";
 
 import { QaSuggestion } from "@web-speed-hackathon-2026/server/src/models";
 import { filterSuggestionsBM25 } from "@web-speed-hackathon-2026/server/src/utils/bm25_search";
 
-import response from "./crok-response.md";
+const response = readFileSync(resolve(process.cwd(), "src/routes/api/crok-response.md"), "utf-8");
 
 export const crokRouter = Router();
 

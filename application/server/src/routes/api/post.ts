@@ -1,5 +1,6 @@
 import { Router } from "express";
 import httpErrors from "http-errors";
+import { Op } from "sequelize";
 
 import { Comment, Post, PostsImagesRelation } from "@web-speed-hackathon-2026/server/src/models";
 import { getSequelize } from "@web-speed-hackathon-2026/server/src/sequelize";
@@ -7,12 +8,49 @@ import { getSequelize } from "@web-speed-hackathon-2026/server/src/sequelize";
 export const postRouter = Router();
 
 postRouter.get("/posts", async (req, res) => {
+  const limit = req.query["limit"] != null ? Number(req.query["limit"]) : 24;
+  const cursorParam = req.query["cursor"] as string | undefined;
+
+  let cursorCondition = {};
+  if (cursorParam) {
+    try {
+      const parsed = JSON.parse(Buffer.from(cursorParam, "base64url").toString());
+      const { createdAt, id } = parsed;
+      if (typeof createdAt !== "string" || typeof id !== "string") {
+        throw new Error("Invalid cursor fields");
+      }
+      cursorCondition = {
+        [Op.or]: [
+          { createdAt: { [Op.lt]: createdAt } },
+          { createdAt, id: { [Op.lt]: id } },
+        ],
+      };
+    } catch {
+      throw new httpErrors.BadRequest("Invalid cursor");
+    }
+  }
+
   const posts = await Post.findAll({
-    limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
-    offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
+    where: cursorCondition,
+    limit: limit + 1,
   });
 
-  return res.status(200).type("application/json").send(posts);
+  const hasMore = posts.length > limit;
+  const resultPosts = hasMore ? posts.slice(0, limit) : posts;
+
+  let nextCursor: string | null = null;
+  if (hasMore && resultPosts.length > 0) {
+    const last = resultPosts[resultPosts.length - 1]!;
+    nextCursor = Buffer.from(
+      JSON.stringify({ createdAt: last.createdAt, id: last.id }),
+    ).toString("base64url");
+  }
+
+  return res.status(200).type("application/json").send({
+    posts: resultPosts,
+    hasMore,
+    nextCursor,
+  });
 });
 
 postRouter.get("/posts/:postId", async (req, res) => {

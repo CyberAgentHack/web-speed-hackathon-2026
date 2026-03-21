@@ -197,16 +197,19 @@ describe("User", () => {
 // 4. Posts
 // ============================================================
 describe("Posts", () => {
-  it("GET /posts — should return array of posts", async () => {
+  it("GET /posts — should return paginated posts", async () => {
     const res = await fetch(`${baseUrl}/api/v1/posts?limit=5`);
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(Array.isArray(body)).toBe(true);
-    expect(body.length).toBeLessThanOrEqual(5);
-    if (body.length > 0) {
-      expect(body[0]).toHaveProperty("id");
-      expect(body[0]).toHaveProperty("text");
-      expect(body[0]).toHaveProperty("user");
+    expect(body).toHaveProperty("posts");
+    expect(body).toHaveProperty("hasMore");
+    expect(body).toHaveProperty("nextCursor");
+    expect(Array.isArray(body.posts)).toBe(true);
+    expect(body.posts.length).toBeLessThanOrEqual(5);
+    if (body.posts.length > 0) {
+      expect(body.posts[0]).toHaveProperty("id");
+      expect(body.posts[0]).toHaveProperty("text");
+      expect(body.posts[0]).toHaveProperty("user");
     }
   });
 
@@ -229,12 +232,16 @@ describe("Posts", () => {
     }
   });
 
-  it("GET /posts — should support pagination with offset", async () => {
-    const res1 = await fetch(`${baseUrl}/api/v1/posts?limit=2&offset=0`);
-    const res2 = await fetch(`${baseUrl}/api/v1/posts?limit=2&offset=2`);
+  it("GET /posts — should support cursor-based pagination", async () => {
+    const res1 = await fetch(`${baseUrl}/api/v1/posts?limit=2`);
     const body1 = await res1.json();
+    expect(body1.posts.length).toBe(2);
+    expect(body1.hasMore).toBe(true);
+    expect(body1.nextCursor).toBeTruthy();
+
+    const res2 = await fetch(`${baseUrl}/api/v1/posts?limit=2&cursor=${encodeURIComponent(body1.nextCursor)}`);
     const body2 = await res2.json();
-    expect(body1[0].id).not.toBe(body2[0].id);
+    expect(body2.posts[0].id).not.toBe(body1.posts[0].id);
   });
 
   it("GET /posts/:postId — should return a single post", async () => {

@@ -5,9 +5,4 @@ export default defineConfig({
   platform: "node",
   outDir: "dist",
   fixedExtension: false,
-  inputOptions: {
-    moduleTypes: {
-      ".md": "text",
-    },
-  },
 });
