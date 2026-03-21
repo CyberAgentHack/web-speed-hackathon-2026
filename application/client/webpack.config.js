@@ -124,22 +124,7 @@ const config = {
   optimization: {
     minimize: true,
     splitChunks: {
-      chunks: "all",
-      maxSize: 500000, // Split chunks larger than 500KB
-      cacheGroups: {
-        // React and related libraries in separate chunk
-        reactVendor: {
-          test: /[\\/]node_modules[\\/](react|react-dom|react-router-dom|scheduler)[\\/]/,
-          name: "react-vendor",
-          priority: 20,
-        },
-        // Default vendor chunk for other node_modules
-        defaultVendors: {
-          test: /[\\/]node_modules[\\/]/,
-          priority: 10,
-          reuseExistingChunk: true,
-        },
-      },
+      chunks: "async",
     },
     concatenateModules: true,
     usedExports: true,
