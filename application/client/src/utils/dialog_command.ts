@@ -1,4 +1,6 @@
-const MAX_DIALOG_LOOKUP_ATTEMPTS = 60;
+// Lazy-mounted dialogs can take longer to appear under heavy CPU/network load.
+// Keep retrying long enough so command-driven open requests remain reliable.
+const MAX_DIALOG_LOOKUP_ATTEMPTS = 600;
 const DIALOG_OPEN_REQUEST_EVENT_NAME = "cax:dialog-open-request";
 
 interface DialogOpenRequestDetail {
@@ -33,26 +35,30 @@ const dispatchDialogOpenRequest = (dialogId: string): void => {
   );
 };
 
+const scheduleDialogLookupRetry = (dialogId: string, attempts: number): void => {
+  window.setTimeout(() => {
+    showDialogWhenReady(dialogId, attempts);
+  }, 16);
+};
+
 const showDialogWhenReady = (dialogId: string, attempts = 0): void => {
   const dialog = getDialogById(dialogId);
   if (dialog !== null) {
     const opened = showDialog(dialog);
     if (!opened && attempts < MAX_DIALOG_LOOKUP_ATTEMPTS) {
-      requestAnimationFrame(() => {
-        showDialogWhenReady(dialogId, attempts + 1);
-      });
+      scheduleDialogLookupRetry(dialogId, attempts + 1);
     }
     return;
   }
-  if (attempts === 0) {
+  // Listener registration can race with the first command dispatch right after boot.
+  // Re-dispatch periodically until the dialog is mounted to avoid dropping requests.
+  if (attempts % 30 === 0) {
     dispatchDialogOpenRequest(dialogId);
   }
   if (attempts >= MAX_DIALOG_LOOKUP_ATTEMPTS) {
     return;
   }
-  requestAnimationFrame(() => {
-    showDialogWhenReady(dialogId, attempts + 1);
-  });
+  scheduleDialogLookupRetry(dialogId, attempts + 1);
 };
 
 export const runDialogCommand = (command?: string, commandfor?: string) => {

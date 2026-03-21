@@ -2,6 +2,7 @@ import classNames from "classnames";
 import {
   ChangeEvent,
   useCallback,
+  useMemo,
   useId,
   useRef,
   useState,
@@ -36,6 +37,7 @@ export const DirectMessagePage = ({
   onSubmit,
 }: Props) => {
   const formRef = useRef<HTMLFormElement>(null);
+  const scrollHeightRef = useRef(0);
   const textAreaId = useId();
 
   const peer =
@@ -44,7 +46,6 @@ export const DirectMessagePage = ({
   const [text, setText] = useState("");
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
-  const scrollHeightRef = useRef(0);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -87,6 +88,45 @@ export const DirectMessagePage = ({
     return () => observer.disconnect();
   }, []);
 
+  const renderedMessages = useMemo(() => {
+    return conversation.messages.map((message) => {
+      const isActiveUserSend = message.sender.id === activeUser.id;
+
+      return (
+        <li
+          className={classNames(
+            "flex flex-col w-full",
+            isActiveUserSend ? "items-end" : "items-start",
+          )}
+          key={message.id}
+          style={{
+            containIntrinsicSize: "auto 4rem",
+            contentVisibility: "auto",
+          }}
+        >
+          <p
+            className={classNames(
+              "max-w-3/4 rounded-xl border px-4 py-2 text-sm whitespace-pre-wrap leading-relaxed wrap-anywhere",
+              isActiveUserSend
+                ? "rounded-br-sm border-transparent bg-cax-brand text-cax-surface-raised"
+                : "rounded-bl-sm border-cax-border bg-cax-surface text-cax-text",
+            )}
+          >
+            {message.body}
+          </p>
+          <div className="flex gap-1 text-xs">
+            <time dateTime={message.createdAt}>
+              {formatTime(message.createdAt)}
+            </time>
+            {isActiveUserSend && message.isRead && (
+              <span className="text-cax-text-muted">既読</span>
+            )}
+          </div>
+        </li>
+      );
+    });
+  }, [activeUser.id, conversation.messages]);
+
   if (conversationError != null) {
     return (
       <section className="px-6 py-10">
@@ -120,43 +160,7 @@ export const DirectMessagePage = ({
           </p>
         )}
 
-        <ul className="grid gap-3" data-testid="dm-message-list">
-          {conversation.messages.map((message) => {
-            const isActiveUserSend = message.sender.id === activeUser.id;
-
-            return (
-              <li
-                className={classNames(
-                  "flex flex-col w-full",
-                  isActiveUserSend ? "items-end" : "items-start",
-                )}
-                style={{
-                  containIntrinsicSize: "auto 4rem",
-                  contentVisibility: "auto",
-                }}
-              >
-                <p
-                  className={classNames(
-                    "max-w-3/4 rounded-xl border px-4 py-2 text-sm whitespace-pre-wrap leading-relaxed wrap-anywhere",
-                    isActiveUserSend
-                      ? "rounded-br-sm border-transparent bg-cax-brand text-cax-surface-raised"
-                      : "rounded-bl-sm border-cax-border bg-cax-surface text-cax-text",
-                  )}
-                >
-                  {message.body}
-                </p>
-                <div className="flex gap-1 text-xs">
-                  <time dateTime={message.createdAt}>
-                    {formatTime(message.createdAt)}
-                  </time>
-                  {isActiveUserSend && message.isRead && (
-                    <span className="text-cax-text-muted">既読</span>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+        <ul className="grid gap-3" data-testid="dm-message-list">{renderedMessages}</ul>
       </div>
 
       <div className="sticky bottom-12 z-10 lg:bottom-0">
