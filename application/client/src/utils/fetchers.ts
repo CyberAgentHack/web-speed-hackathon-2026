@@ -3,7 +3,19 @@ export async function fetchBinary(url: string): Promise<ArrayBuffer> {
   return response.arrayBuffer();
 }
 
+declare global {
+  interface Window {
+    __PREFETCH__?: Record<string, Promise<unknown>>;
+  }
+}
+
 export async function fetchJSON<T>(url: string): Promise<T> {
+  // プリフェッチ済みデータがあればそれを使う
+  const prefetched = window.__PREFETCH__?.[url];
+  if (prefetched) {
+    delete window.__PREFETCH__![url];
+    return prefetched as Promise<T>;
+  }
   const response = await fetch(url);
   if (!response.ok) throw await response.json().catch(() => new Error(response.statusText));
   return response.json();

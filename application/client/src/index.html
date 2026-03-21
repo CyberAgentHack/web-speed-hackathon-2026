@@ -6,6 +6,10 @@
     <title>CaX</title>
     <link rel="preload" href="/fonts/ReiNoAreMincho-Regular-subset.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/ReiNoAreMincho-Heavy-subset.woff2" as="font" type="font/woff2" crossorigin />
+    <script>
+      // APIプリフェッチ: JSロード前にデータ取得を開始
+      (function(){var p=location.pathname;var c={};if(p==="/"||p===""){c["/api/v1/posts?limit=30&offset=0"]=fetch("/api/v1/posts?limit=30&offset=0").then(function(r){return r.json()})}else if(p.startsWith("/posts/")){var id=p.split("/")[2];if(id){c["/api/v1/posts/"+id]=fetch("/api/v1/posts/"+id).then(function(r){return r.json()});c["/api/v1/posts/"+id+"/comments?limit=30&offset=0"]=fetch("/api/v1/posts/"+id+"/comments?limit=30&offset=0").then(function(r){return r.json()})}}window.__PREFETCH__=c})();
+    </script>
   </head>
   <body class="bg-cax-canvas text-cax-text">
     <div id="app"><div style="display:flex;align-items:center;justify-content:center;min-height:100vh"><p style="color:#78716c;font-size:14px">読込中...</p></div></div>
