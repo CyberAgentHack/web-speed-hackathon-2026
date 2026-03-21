@@ -23,16 +23,22 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
 
   const values: AuthFormData = { type, username, name, password };
   const errors = validate(values);
-  const invalid = Object.keys(errors).length > 0;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const submitValues: AuthFormData = {
+      type,
+      username: String(formData.get("username") || username),
+      name: String(formData.get("name") || name),
+      password: String(formData.get("password") || password),
+    };
     setTouched({ username: true, name: true, password: true });
-    if (invalid) return;
+    if (Object.keys(validate(submitValues)).length > 0) return;
     setSubmitting(true);
     setServerError(null);
     try {
-      await onSubmit(values);
+      await onSubmit(submitValues);
     } catch (err) {
       setServerError((err as Error).message);
     } finally {
@@ -60,7 +66,6 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
         <FormInputField
           name="username"
           label="ユーザー名"
-          value={username}
           onChange={(e) => setUsername(e.target.value)}
           onBlur={() => setTouched((t) => ({ ...t, username: true }))}
           error={errors.username}
@@ -73,7 +78,6 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
           <FormInputField
             name="name"
             label="名前"
-            value={name}
             onChange={(e) => setName(e.target.value)}
             onBlur={() => setTouched((t) => ({ ...t, name: true }))}
             error={errors.name}
@@ -85,7 +89,6 @@ export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
         <FormInputField
           name="password"
           label="パスワード"
-          value={password}
           onChange={(e) => setPassword(e.target.value)}
           onBlur={() => setTouched((t) => ({ ...t, password: true }))}
           error={errors.password}

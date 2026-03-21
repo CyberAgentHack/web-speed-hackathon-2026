@@ -6,7 +6,7 @@ import { Input } from "@web-speed-hackathon-2026/client/src/components/foundatio
 interface Props {
   label: string;
   name: string;
-  value: string;
+  value?: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   error?: string;
