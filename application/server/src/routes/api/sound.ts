@@ -9,6 +9,8 @@ import { bodyLimit } from "hono/body-limit";
 import { HTTPException } from "hono/http-exception";
 import { v4 as uuidv4 } from "uuid";
 
+import { getDb } from "@web-speed-hackathon-2026/server/src/db";
+import { sounds } from "@web-speed-hackathon-2026/server/src/db/schema";
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import type { SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
 import { extractMetadataFromSound } from "@web-speed-hackathon-2026/server/src/utils/extract_metadata_from_sound";
@@ -62,6 +64,18 @@ export const soundRouter = new Hono<SessionEnv>().post(
     } finally {
       await fs.rm(tmpDir, { recursive: true, force: true });
     }
+
+    const now = new Date().toISOString();
+    const db = getDb();
+    db.insert(sounds)
+      .values({
+        id: soundId,
+        title: title || "Unknown",
+        artist: artist || "Unknown",
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run();
 
     return c.json({ artist, id: soundId, title });
   },
