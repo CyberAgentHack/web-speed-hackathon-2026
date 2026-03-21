@@ -1,7 +1,7 @@
 import { createReadStream, createWriteStream, existsSync, readdirSync, statSync } from "node:fs";
 import { resolve, extname, join } from "node:path";
-import { createBrotliCompress, createGzip, constants } from "node:zlib";
 import { pipeline } from "node:stream/promises";
+import { createBrotliCompress, createGzip, constants } from "node:zlib";
 
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";

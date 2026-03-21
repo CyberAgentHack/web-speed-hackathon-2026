@@ -1,6 +1,6 @@
+import { Database } from "bun:sqlite";
 import * as fs from "node:fs/promises";
 
-import { Database } from "bun:sqlite";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 
 import { DATABASE_PATH } from "@web-speed-hackathon-2026/server/src/paths";
