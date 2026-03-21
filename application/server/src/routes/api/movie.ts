@@ -37,7 +37,11 @@ movieRouter.post("/movies", async (req, res) => {
 
   await execFileAsync("ffmpeg", [
     "-y", "-i", inputPath,
-    "-c:v", "libvpx-vp9", "-b:v", "0", "-crf", "33", "-an",
+    "-t", "5",
+    "-r", "10",
+    "-vf", "crop='min(iw,ih)':'min(iw,ih)'",
+    "-an",
+    "-c:v", "libvpx-vp9", "-b:v", "0", "-crf", "33",
     "-deadline", "realtime", "-cpu-used", "8",
     webmPath,
   ]);
