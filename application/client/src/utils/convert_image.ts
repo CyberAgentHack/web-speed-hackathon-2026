@@ -11,7 +11,10 @@ export async function convertImage(file: File, options: Options): Promise<Blob> 
     { dump, insert, ImageIFD },
   ] = await Promise.all([
     import("@imagemagick/magick-wasm"),
-    fetch("/wasm/magick.wasm").then((r) => r.arrayBuffer()),
+    fetch("/wasm/magick.wasm").then((r) => {
+      if (!r.ok) throw new Error(`Failed to fetch magick.wasm: ${r.status}`);
+      return r.arrayBuffer();
+    }),
     import("piexifjs"),
   ]);
 

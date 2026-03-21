@@ -32,7 +32,7 @@ export const SoundWaveSVG = ({ soundId }: Props) => {
   return (
     <svg className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1">
       {waveform?.peaks.map((peak, idx) => {
-        const ratio = peak / waveform.max;
+        const ratio = waveform.max > 0 ? peak / waveform.max : 0;
         return (
           <rect
             key={`${uniqueIdRef.current}#${idx}`}

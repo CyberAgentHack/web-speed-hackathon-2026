@@ -11,6 +11,8 @@ import {
   PUBLIC_PATH,
   UPLOAD_PATH,
 } from "@web-speed-hackathon-2026/server/src/paths";
+import { renderHomeTimeline } from "@web-speed-hackathon-2026/server/src/ssr/render-home";
+import { renderTermsPage } from "@web-speed-hackathon-2026/server/src/ssr/render-terms";
 
 // サーバー起動時に dist/index.html をキャッシュ
 const indexHtmlPath = path.join(CLIENT_DIST_PATH, "index.html");
@@ -49,6 +51,23 @@ staticRouter.use(async (req, res, next) => {
   }
 
   const originalUrl = req.originalUrl?.split("?")[0] || "/";
+
+  // Terms ページ SSR: 静的コンテンツをサーバーサイドレンダリング
+  if (originalUrl === "/terms" && indexHtmlTemplate) {
+    try {
+      const ssrHtml = renderTermsPage();
+      const html = indexHtmlTemplate
+        .replace("<title>CaX</title>", "<title>利用規約 - CaX</title>")
+        .replace('<div id="app"></div>', `<div id="app">${ssrHtml}</div>`);
+
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.setHeader("Cache-Control", "no-cache");
+      return res.send(html);
+    } catch {
+      // フォールバック: CSR
+    }
+  }
+
   if ((originalUrl === "/" || originalUrl === "/index.html") && indexHtmlTemplate) {
     try {
       const posts = await Post.findAll({ limit: 10, offset: 0 });
@@ -65,13 +84,18 @@ staticRouter.use(async (req, res, next) => {
         const postData = firstPost.toJSON() as Record<string, unknown>;
         const images = postData["images"] as Array<{ id: string }> | undefined;
         if (images && images.length > 0) {
-          const imgUrl = `/images/${images[0]!.id}.webp`;
+          const imgUrl = `/images/${encodeURIComponent(images[0]!.id)}.webp`;
           lcpPreload = `<link rel="preload" as="image" href="${imgUrl}" fetchpriority="high">`;
         }
       }
 
+      // ホームページ軽量SSR: 先頭投稿をHTMLとしてプリレンダリング
+      const postsData = posts.map((p) => p.toJSON());
+      const timelineHtml = renderHomeTimeline(postsData);
+
       const html = indexHtmlTemplate
         .replace("</head>", `${lcpPreload}</head>`)
+        .replace('<div id="app"></div>', `<div id="app">${timelineHtml}</div>`)
         .replace("</body>", `${dataScript}</body>`);
 
       res.setHeader("Content-Type", "text/html; charset=utf-8");
