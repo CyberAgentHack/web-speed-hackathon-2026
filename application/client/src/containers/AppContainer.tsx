@@ -64,14 +64,27 @@ export const AppContainer = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   useEffect(() => {
-    window.scrollTo(0, 0);
+    requestAnimationFrame(() => window.scrollTo(0, 0));
   }, [pathname]);
 
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
   useEffect(() => {
-    void fetchJSON<Models.User>("/api/v1/me").then((user) => {
-      setActiveUser(user);
-    });
+    // 初期レンダリング完了後にユーザー情報を取得（TBT削減のため遅延）
+    const fetchUser = () => {
+      void fetchJSON<Models.User>("/api/v1/me").then((user) => {
+        setActiveUser(user);
+      });
+    };
+    const id = "requestIdleCallback" in window
+      ? window.requestIdleCallback(fetchUser, { timeout: 3000 })
+      : window.setTimeout(fetchUser, 100);
+    return () => {
+      if ("requestIdleCallback" in window) {
+        window.cancelIdleCallback(id);
+      } else {
+        clearTimeout(id);
+      }
+    };
   }, [setActiveUser]);
   const handleLogout = useCallback(async () => {
     await sendJSON("/api/v1/signout", {});
