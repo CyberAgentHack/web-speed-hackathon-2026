@@ -4,6 +4,9 @@ import { Op } from "sequelize";
 import { Post } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 
+const DEFAULT_LIMIT = 10;
+const DEFAULT_OFFSET = 0;
+
 export const searchRouter = Router();
 
 searchRouter.get("/search", async (req, res) => {
@@ -21,8 +24,8 @@ searchRouter.get("/search", async (req, res) => {
   }
 
   const searchTerm = keywords ? `%${keywords}%` : null;
-  const limit = req.query["limit"] != null ? Number(req.query["limit"]) : undefined;
-  const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
+  const limit = req.query["limit"] != null ? Number(req.query["limit"]) : DEFAULT_LIMIT;
+  const offset = req.query["offset"] != null ? Number(req.query["offset"]) : DEFAULT_OFFSET;
 
   // 日付条件を構築
   const dateConditions: Record<symbol, Date>[] = [];

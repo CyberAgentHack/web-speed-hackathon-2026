@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useCallback } from "react";
 
 const LIMIT = 10;
 
@@ -13,71 +14,34 @@ export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
 ): ReturnValues<T> {
-  const internalRef = useRef({ isLoading: false, offset: 0 });
-
-  const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
-    data: [],
-    error: null,
-    isLoading: true,
-  });
+  const { data, error, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteQuery<T[]>({
+      queryKey: ["infiniteFetch", apiPath],
+      queryFn: async ({ pageParam }) => {
+        const separator = apiPath.includes("?") ? "&" : "?";
+        const url = `${apiPath}${separator}limit=${LIMIT}&offset=${pageParam}`;
+        return fetcher(url);
+      },
+      initialPageParam: 0,
+      getNextPageParam: (lastPage, _allPages, lastPageParam) => {
+        if (lastPage.length < LIMIT) {
+          return undefined;
+        }
+        return (lastPageParam as number) + LIMIT;
+      },
+      enabled: apiPath !== "",
+    });
 
   const fetchMore = useCallback(() => {
-    const { isLoading, offset } = internalRef.current;
-    if (isLoading) {
-      return;
+    if (hasNextPage && !isFetchingNextPage) {
+      void fetchNextPage();
     }
-
-    setResult((cur) => ({
-      ...cur,
-      isLoading: true,
-    }));
-    internalRef.current = {
-      isLoading: true,
-      offset,
-    };
-
-    void fetcher(apiPath).then(
-      (allData) => {
-        setResult((cur) => ({
-          ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
-          isLoading: false,
-        }));
-        internalRef.current = {
-          isLoading: false,
-          offset: offset + LIMIT,
-        };
-      },
-      (error) => {
-        setResult((cur) => ({
-          ...cur,
-          error,
-          isLoading: false,
-        }));
-        internalRef.current = {
-          isLoading: false,
-          offset,
-        };
-      },
-    );
-  }, [apiPath, fetcher]);
-
-  useEffect(() => {
-    setResult(() => ({
-      data: [],
-      error: null,
-      isLoading: true,
-    }));
-    internalRef.current = {
-      isLoading: false,
-      offset: 0,
-    };
-
-    fetchMore();
-  }, [fetchMore]);
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   return {
-    ...result,
+    data: data?.pages.flat() ?? [],
+    error: error ?? null,
+    isLoading,
     fetchMore,
   };
 }
