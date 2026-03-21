@@ -38,6 +38,6 @@ export default defineConfig({
     },
   },
   ssr: {
-    noExternal: true,
+    noExternal: ["react-router", "@dr.pogodin/react-helmet"],
   },
 });

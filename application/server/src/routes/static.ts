@@ -75,7 +75,7 @@ staticRouter.get(/.*/, async (req, res, next) => {
 
   try {
     const template = await getIndexTemplate();
-    const appHtml = renderAppShell(req.path);
+    const appHtml = await renderAppShell(req.path);
     const html = template.replace('<div id="app"></div>', `<div id="app">${appHtml}</div>`);
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     return res.status(200).send(html);
