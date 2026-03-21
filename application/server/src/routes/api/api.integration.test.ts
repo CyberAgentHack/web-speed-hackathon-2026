@@ -453,13 +453,13 @@ describe("API Integration Tests", () => {
   // SSR
   // =====================================================
   describe("SSR", () => {
-    test("GET / → 200 + contains __SSR_DATA__ and <!doctype html>", async () => {
+    test("GET / → 200 + contains __SSR_DATA__ and <!DOCTYPE html>", async () => {
       await routesReady;
       const res = await app.request("/");
       expect(res.status).toBe(200);
       const html = await res.text();
       expect(html).toContain("__SSR_DATA__");
-      expect(html).toContain("<!doctype html>");
+      expect(html).toContain("<!DOCTYPE html>");
     });
 
     test("GET /terms → 200 + HTML", async () => {
@@ -467,7 +467,7 @@ describe("API Integration Tests", () => {
       const res = await app.request("/terms");
       expect(res.status).toBe(200);
       const html = await res.text();
-      expect(html).toContain("<!doctype html>");
+      expect(html).toContain("<!DOCTYPE html>");
     });
 
     test("GET /users/o6yq16leo → 200 + __SSR_DATA__ with user data", async () => {

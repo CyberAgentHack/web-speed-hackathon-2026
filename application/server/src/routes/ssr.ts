@@ -6,7 +6,6 @@ import { app } from "@web-speed-hackathon-2026/server/src/app";
 import { CLIENT_DIST_PATH, SSR_DIST_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import type { SessionEnv } from "@web-speed-hackathon-2026/server/src/session";
 
-// SSRData: クライアントの AppContainer.SSRData と同じ構造
 interface SSRData {
   activeUser?: unknown;
   posts?: unknown[];
@@ -17,44 +16,44 @@ interface SSRData {
   sentiment?: { score: number; label: string } | null;
 }
 
-// Production で使う index.html テンプレートを起動時に読み込み
-let templateHtml = "";
+// --- 起動時: dist/index.html からアセットパスを抽出 ---
+
+let csrFallbackHtml = "";
+let entryScript = "";
+let cssHref = "";
+
 try {
-  templateHtml = fs.readFileSync(path.resolve(CLIENT_DIST_PATH, "index.html"), "utf-8");
+  const indexHtml = fs.readFileSync(path.resolve(CLIENT_DIST_PATH, "index.html"), "utf-8");
+  csrFallbackHtml = indexHtml;
+
+  const scriptMatch = indexHtml.match(/<script[^>]*type="module"[^>]*src="([^"]+)"[^>]*>/);
+  if (scriptMatch) {
+    entryScript = scriptMatch[1]!;
+  }
+
+  const cssMatch = indexHtml.match(/<link[^>]*rel="stylesheet"[^>]*href="([^"]+)"[^>]*>/);
+  if (cssMatch) {
+    cssHref = cssMatch[1]!;
+  }
+
+  console.log("SSR: assets extracted — script:", entryScript, "css:", cssHref);
 } catch {
   console.warn("SSR: index.html not found in dist, SSR will be disabled");
 }
 
-// Critical CSS inlining: CSS ファイルを読み込んでインライン化
-let inlinedTemplateHtml = templateHtml;
-if (templateHtml) {
-  const cssLinkMatch = templateHtml.match(/<link rel="stylesheet"[^>]*href="([^"]+)"[^>]*>/);
-  if (cssLinkMatch) {
-    const cssHref = cssLinkMatch[1]!;
-    try {
-      const cssPath = path.resolve(CLIENT_DIST_PATH, cssHref.replace(/^\//, ""));
-      const cssContent = fs.readFileSync(cssPath, "utf-8");
-      inlinedTemplateHtml = templateHtml.replace(cssLinkMatch[0], `<style>${cssContent}</style>`);
-    } catch {
-      console.warn("SSR: CSS file not found for inlining, keeping link tag");
-    }
-  }
-  // フォント preload を <head> に追加
-  inlinedTemplateHtml = inlinedTemplateHtml.replace(
-    "</head>",
-    `<link rel="preload" as="font" type="font/woff2" href="/fonts/ReiNoAreMincho-Heavy-subset.woff2" crossorigin>\n</head>`,
-  );
-}
+// --- 起動時: SSR バンドル読み込み ---
 
-// SSR バンドルの読み込み
-type RenderFn = (url: string, ssrData: any) => Promise<ReadableStream>;
+type RenderFn = (options: {
+  url: string;
+  ssrData: unknown;
+  bootstrapModules: string[];
+  cssHref: string;
+}) => Promise<ReadableStream>;
+
 let ssrRender: RenderFn | null = null;
 try {
   const ssrPath = path.resolve(SSR_DIST_PATH, "entry-server.js");
   console.log("SSR: loading from", ssrPath);
-  // NOTE: cache bust (?v=...) は使わない。Bun はクエリ付き import を別モジュール
-  // インスタンスとして扱うため、React.lazy() の chunk が参照する entry-server.js と
-  // module 変数を共有できなくなる（SSR データが渡らない）。
   const ssrModule = await import(ssrPath);
   ssrRender = ssrModule.render;
   console.log("SSR: renderer loaded, type:", typeof ssrRender);
@@ -62,37 +61,12 @@ try {
   console.warn("SSR: failed to load entry-server:", e);
 }
 
-function csrFallbackHtml(): string {
-  return inlinedTemplateHtml.replace("<!--ssr-outlet-->", "").replace("<!--ssr-head-->", "");
-}
-
-function buildPreloadHints(ssrData: SSRData): string {
-  const hints: string[] = [];
-  type PostLike = { images?: Array<{ id: string }>; movie?: { id: string } | null };
-  const posts: PostLike[] = [];
-  if (ssrData.post) posts.push(ssrData.post as PostLike);
-  if (ssrData.posts) posts.push(...(ssrData.posts as PostLike[]));
-  if (ssrData.userPosts) posts.push(...(ssrData.userPosts as PostLike[]));
-  for (const post of posts.slice(0, 5)) {
-    if (post.movie) {
-      hints.push(`<link rel="preload" as="video" href="/movies/${post.movie.id}.mp4">`);
-      break;
-    }
-    if (post.images && post.images.length > 0) {
-      hints.push(
-        `<link rel="preload" as="image" href="/images/${post.images[0]!.id}.jpg" fetchpriority="high">`,
-      );
-      break;
-    }
-  }
-  return hints.join("\n");
-}
-
 export function clearSsrCache() {
   // ストリームベースの SSR ではリクエストごとにレンダリングする
 }
 
-// app.request() で内部 API を叩いて JSON を返す（HTTP オーバーヘッドなし）
+// --- 内部 API フェッチ ---
+
 async function internalFetch(apiPath: string, cookie?: string): Promise<unknown> {
   const headers: Record<string, string> = {};
   if (cookie) headers["Cookie"] = cookie;
@@ -101,7 +75,8 @@ async function internalFetch(apiPath: string, cookie?: string): Promise<unknown>
   return res.json();
 }
 
-// ルートごとに必要な API パスを返す（ルートマッチのみ、データ取得ロジックなし）
+// --- ルートごとの SSR データ計画 ---
+
 function planSSRFetches(urlPath: string): Record<string, string> | null {
   const parsed = new URL(urlPath, "http://localhost");
   const pathname = parsed.pathname;
@@ -130,10 +105,8 @@ function planSSRFetches(urlPath: string): Record<string, string> | null {
 
   if (pathname === "/search") {
     const q = parsed.searchParams.get("q");
-    if (!q) return { posts: "" }; // 空クエリ → 空配列で返す
-    // 検索キーワードの感情分析も並列フェッチ（クライアント側のブロッキング fetch を回避）
+    if (!q) return { posts: "" };
     const encodedQ = encodeURIComponent(q);
-    // q からキーワード部分を抽出（since:/until: を除去）
     const keywords = q.replace(/\b(?:since|until):\S+/g, "").trim();
     const plan: Record<string, string> = {
       posts: `/api/v1/search?q=${encodedQ}&limit=30&offset=0`,
@@ -152,26 +125,22 @@ function planSSRFetches(urlPath: string): Record<string, string> | null {
   return null;
 }
 
-// 全 API を並列で叩き、SSRData を組み立てる
 async function fetchSSRData(urlPath: string, cookie?: string): Promise<SSRData | null> {
   const plan = planSSRFetches(urlPath);
   if (plan === null) return null;
 
-  // activeUser は常に取得（cookie があればログインユーザー情報、なければ null）
   const entries: Array<[string, Promise<unknown>]> = [
     ["activeUser", cookie ? internalFetch("/api/v1/me", cookie) : Promise.resolve(null)],
   ];
 
   for (const [key, apiPath] of Object.entries(plan)) {
     if (!apiPath) {
-      // 空パス（例: search で q なし）→ 空配列
       entries.push([key, Promise.resolve([])]);
     } else {
       entries.push([key, internalFetch(apiPath, cookie)]);
     }
   }
 
-  // 全 Promise を並列解決
   const keys = entries.map(([k]) => k);
   const values = await Promise.all(entries.map(([, p]) => p));
 
@@ -183,55 +152,7 @@ async function fetchSSRData(urlPath: string, cookie?: string): Promise<SSRData |
   return ssrData;
 }
 
-// HTML テンプレートを <!--ssr-outlet--> で分割して前後パーツを事前計算
-let htmlBefore = "";
-let htmlAfter = "";
-if (inlinedTemplateHtml) {
-  const outletMarker = "<!--ssr-outlet-->";
-  const idx = inlinedTemplateHtml.indexOf(outletMarker);
-  if (idx !== -1) {
-    htmlBefore = inlinedTemplateHtml.slice(0, idx);
-    htmlAfter = inlinedTemplateHtml.slice(idx + outletMarker.length);
-  }
-}
-
-function buildSSRStream(reactStream: ReadableStream, ssrData: SSRData): ReadableStream {
-  const encoder = new TextEncoder();
-  const preloadHints = buildPreloadHints(ssrData);
-  const ssrDataScript = `<script>window.__SSR_DATA__=${JSON.stringify(ssrData).replace(/</g, "\\u003c")}</script>`;
-  const before = htmlBefore.replace("</head>", preloadHints + "\n</head>");
-  const after = htmlAfter.replace("<!--ssr-head-->", ssrDataScript);
-
-  let phase: "before" | "react" | "after" | "done" = "before";
-  let reactReader: ReadableStreamDefaultReader<Uint8Array>;
-
-  return new ReadableStream({
-    start() {
-      reactReader = reactStream.getReader();
-    },
-    async pull(controller) {
-      if (phase === "before") {
-        controller.enqueue(encoder.encode(before));
-        phase = "react";
-        return;
-      }
-      if (phase === "react") {
-        const { done, value } = await reactReader.read();
-        if (!done) {
-          controller.enqueue(value);
-          return;
-        }
-        phase = "after";
-      }
-      if (phase === "after") {
-        controller.enqueue(encoder.encode(after));
-        phase = "done";
-        return;
-      }
-      controller.close();
-    },
-  });
-}
+// --- SSR ルーター ---
 
 export const ssrRouter = new Hono<SessionEnv>();
 
@@ -240,32 +161,37 @@ ssrRouter.get("*", async (c) => {
     return c.notFound();
   }
 
-  if (!templateHtml || !ssrRender) {
+  if (!csrFallbackHtml || !ssrRender) {
     c.header("Cache-Control", "no-cache");
-    return c.html(csrFallbackHtml());
+    return c.html(csrFallbackHtml || "<!doctype html><html><body>SSR not available</body></html>");
   }
 
   try {
     const url = new URL(c.req.url);
     const fullPath = url.pathname + url.search;
-
     const cookie = c.req.header("Cookie");
     const ssrData = await fetchSSRData(fullPath, cookie);
 
     if (ssrData === null) {
+      // CSR フォールバック: dist/index.html をそのまま返す
       c.header("Cache-Control", "no-cache");
-      return c.html(csrFallbackHtml());
+      return c.html(csrFallbackHtml);
     }
 
-    const reactStream = await ssrRender!(fullPath, ssrData);
-    const responseStream = buildSSRStream(reactStream, ssrData);
+    // React がフルドキュメントをストリーム出力
+    const reactStream = await ssrRender!({
+      url: fullPath,
+      ssrData,
+      bootstrapModules: [entryScript],
+      cssHref,
+    });
 
     c.header("Content-Type", "text/html; charset=utf-8");
     c.header("Cache-Control", "no-cache");
-    return c.body(responseStream);
+    return c.body(reactStream);
   } catch (error: unknown) {
     console.error("SSR handler error:", error);
     c.header("Cache-Control", "no-cache");
-    return c.html(csrFallbackHtml());
+    return c.html(csrFallbackHtml);
   }
 });
