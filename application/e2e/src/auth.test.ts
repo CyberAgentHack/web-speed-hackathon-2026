@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test.describe("サインイン・新規登録", () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
-    await page.goto("/not-found", { waitUntil: "networkidle" });
+    await page.goto("/not-found", { waitUntil: "domcontentloaded" });
     const signinButton = page.getByRole("button", { name: "サインイン" });
     await expect(signinButton).toBeVisible({ timeout: 3_000 });
     await signinButton.click();

@@ -10,7 +10,7 @@ test.describe("ユーザー詳細", () => {
   test("タイトルが「{ユーザー名} さんのタイムライン - CaX」", async ({ page }) => {
     await page.goto("/users/o6yq16leo");
     await expect(page).toHaveTitle(/さんのタイムライン - CaX/, {
-      timeout: 10_000,
+      timeout: 3_000,
     });
   });
 
@@ -24,9 +24,7 @@ test.describe("ユーザー詳細", () => {
       const bgColor = await headerDiv.evaluate((el) => {
         return window.getComputedStyle(el).backgroundColor;
       });
-      // rgb() or oklch() etc — just verify it's not empty/transparent
-      expect(bgColor).toBeTruthy();
-      expect(bgColor).not.toBe("rgba(0, 0, 0, 0)");
+      expect(bgColor).toMatch(/^rgb/);
     }).toPass({ timeout: 3_000 });
 
     // VRT: ユーザー詳細（無限スクロールがあるため viewport のみ）

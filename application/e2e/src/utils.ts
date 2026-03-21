@@ -6,7 +6,7 @@ export async function login(
   username: string = "o6yq16leo",
   password: string = "wsh-2026",
 ): Promise<void> {
-  await page.goto("/not-found", { waitUntil: "networkidle" });
+  await page.goto("/not-found", { waitUntil: "domcontentloaded" });
   const signinButton = page.getByRole("button", { name: "サインイン" });
   await expect(signinButton).toBeVisible({ timeout: 10_000 });
   await signinButton.click();

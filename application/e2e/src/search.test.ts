@@ -119,7 +119,7 @@ test.describe("検索ページ", () => {
     await input.fill("写真 since:2026-01-01");
     await page.getByRole("button", { name: "検索" }).click();
 
-    await page.waitForURL(/\/search\?/, { timeout: 10_000, waitUntil: "commit" });
+    await page.waitForURL(/\/search\?q=/, { timeout: 3_000, waitUntil: "commit" });
 
     const heading = page.locator("main h2");
     await expect(heading).toContainText("「写真」");
@@ -137,7 +137,7 @@ test.describe("検索ページ", () => {
     await input.fill("写真 since:2026-01-01 until:2026-12-31");
     await page.getByRole("button", { name: "検索" }).click();
 
-    await page.waitForURL(/\/search\?/, { timeout: 10_000, waitUntil: "commit" });
+    await page.waitForURL(/\/search\?q=/, { timeout: 3_000, waitUntil: "commit" });
 
     const heading = page.locator("main h2");
     await expect(heading).toContainText("「写真」");
