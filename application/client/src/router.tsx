@@ -1,7 +1,7 @@
 import { lazy } from "react";
-import { Route, Routes } from "react-router";
+import { createBrowserRouter, Route, Routes } from "react-router";
 
-import { AppLayoutContainer } from "@web-speed-hackathon-2026/client/src/Layout";
+import { Layout } from "@web-speed-hackathon-2026/client/src/Layout";
 
 const CrokContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/CrokContainer").then((module) => ({
@@ -49,20 +49,21 @@ const UserProfileContainer = lazy(() =>
   })),
 );
 
-export const AppContainer = () => {
-  return (
-    <Routes>
-      <Route path="/" element={<AppLayoutContainer />}>
-        <Route element={<TimelineContainer />} index />
-        <Route element={<DirectMessageListContainer />} path="/dm" />
-        <Route element={<DirectMessageContainer />} path="/dm/:conversationId" />
-        <Route element={<SearchContainer />} path="/search" />
-        <Route element={<UserProfileContainer />} path="/users/:username" />
-        <Route element={<PostContainer />} path="/posts/:postId" />
-        <Route element={<TermContainer />} path="/terms" />
-        <Route element={<CrokContainer />} path="/crok" />
-        <Route element={<NotFoundContainer />} path="*" />
-      </Route>
-    </Routes>
-  );
-};
+export const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Layout />,
+    children: [
+      { index: true, element: <TimelineContainer /> },
+      { path: "/dm", element: <DirectMessageListContainer /> },
+      { path: "/dm/:conversationId", element: <DirectMessageContainer /> },
+      { path: "/search", element: <SearchContainer /> },
+      { path: "/users/:username", element: <UserProfileContainer /> },
+      { path: "/posts/:postId", element: <PostContainer /> },
+      { path: "/terms", element: <TermContainer /> },
+      { path: "/crok", element: <CrokContainer /> },
+      { path: "*", element: <NotFoundContainer /> },
+      { path: "*", element: <NotFoundContainer /> },
+    ],
+  },
+]);

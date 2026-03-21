@@ -3,9 +3,9 @@ import "./index.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
-import { BrowserRouter } from "react-router";
+import { RouterProvider } from "react-router";
 
-import { AppContainer } from "@web-speed-hackathon-2026/client/src/App";
+import { router } from "@web-speed-hackathon-2026/client/src/router";
 import { store } from "@web-speed-hackathon-2026/client/src/store";
 
 const queryClient = new QueryClient({
@@ -22,9 +22,7 @@ const queryClient = new QueryClient({
 createRoot(document.getElementById("app")!).render(
   <QueryClientProvider client={queryClient}>
     <Provider store={store}>
-      <BrowserRouter>
-        <AppContainer />
-      </BrowserRouter>
+      <RouterProvider router={router} />
     </Provider>
   </QueryClientProvider>,
 );

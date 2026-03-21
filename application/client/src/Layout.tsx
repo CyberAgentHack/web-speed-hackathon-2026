@@ -1,5 +1,5 @@
-import { lazy, Suspense, useEffect } from "react";
-import { Outlet, useLocation } from "react-router";
+import { lazy, Suspense } from "react";
+import { Outlet, ScrollRestoration } from "react-router";
 
 import { AppLayout } from "@web-speed-hackathon-2026/client/src/components/application/AppLayout";
 
@@ -16,14 +16,10 @@ const NewPostModalContainer = lazy(() =>
   ),
 );
 
-export const AppLayoutContainer = () => {
-  const { pathname } = useLocation();
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
-
+export const Layout = () => {
   return (
     <Suspense fallback={<title>読込中 - CaX</title>}>
+      <ScrollRestoration />
       <AppLayout>
         <Outlet />
       </AppLayout>
