@@ -35,5 +35,5 @@
     "builtin": true
   },
   "globals": {},
-  "ignorePatterns": ["**/*.test.ts", "**/*.test.tsx"]
+  "ignorePatterns": []
 }

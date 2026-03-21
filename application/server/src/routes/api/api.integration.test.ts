@@ -1,3 +1,4 @@
+// @ts-expect-error tsgo (typescript-go) cannot resolve bun: modules
 import { describe, expect, test } from "bun:test";
 
 import { app, routesReady } from "../../app";
