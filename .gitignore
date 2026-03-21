@@ -223,3 +223,4 @@ application/upload/**
 
 .claude/settings.local.json
 .turbo
+application/server/database.sqlite

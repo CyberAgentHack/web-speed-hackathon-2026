@@ -57,6 +57,18 @@ jobs:
                     flyctl apps create ${{ steps.generate-app-name.outputs.app_name }} --org ${{ env.FLY_ORG }}
                   fi
 
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '24.14.0'
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+            - name: Generate database
+              run: |
+                  cd application
+                  pnpm install --frozen-lockfile
+                  cd server
+                  pnpm seed:insert
             - name: Build and push
               uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
               with:
