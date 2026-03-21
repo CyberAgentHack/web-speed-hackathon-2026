@@ -96,22 +96,33 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
         return;
       }
 
-      const result = await fetchJSON<{ suggestions: string[]; queryTokens: string[] }>(
-        `/api/v1/crok/suggestions?query=${encodeURIComponent(inputValue)}`,
-      );
-      if (cancelled) {
-        return;
-      }
+      try {
+        const result = await fetchJSON<{ suggestions: string[]; queryTokens: string[] }>(
+          `/api/v1/crok/suggestions?query=${encodeURIComponent(inputValue)}`,
+        );
+        if (cancelled) {
+          return;
+        }
 
-      setQueryTokens(result.queryTokens ?? []);
-      setSuggestions(result.suggestions);
-      setShowSuggestions(result.suggestions.length > 0);
+        setQueryTokens(result.queryTokens ?? []);
+        setSuggestions(result.suggestions);
+        setShowSuggestions(result.suggestions.length > 0);
+      } catch {
+        if (!cancelled) {
+          setSuggestions([]);
+          setShowSuggestions(false);
+        }
+      }
     };
 
-    void updateSuggestions();
+    // 300ms デバウンス: 連続入力中の無駄なリクエストを減らす
+    const timer = setTimeout(() => {
+      void updateSuggestions();
+    }, 300);
 
     return () => {
       cancelled = true;
+      clearTimeout(timer);
     };
   }, [inputValue]);
 

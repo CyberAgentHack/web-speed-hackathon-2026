@@ -30,7 +30,7 @@ const SearchInput = ({ input, meta }: WrappedFieldProps) => (
       placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
       type="text"
     />
-    {meta.touched && meta.error && (
+    {(meta.touched || meta.submitFailed) && meta.error && (
       <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>
     )}
   </div>

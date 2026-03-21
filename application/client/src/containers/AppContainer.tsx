@@ -6,6 +6,7 @@ import { AppPage } from "@web-speed-hackathon-2026/client/src/components/applica
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
 import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import {TermContainer} from "@web-speed-hackathon-2026/client/src/containers/TermContainer";
 
 const TimelineContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/TimelineContainer").then((m) => ({ default: m.TimelineContainer })),
@@ -24,9 +25,6 @@ const UserProfileContainer = lazy(() =>
 );
 const PostContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/PostContainer").then((m) => ({ default: m.PostContainer })),
-);
-const TermContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/TermContainer").then((m) => ({ default: m.TermContainer })),
 );
 const CrokContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/CrokContainer").then((m) => ({ default: m.CrokContainer })),

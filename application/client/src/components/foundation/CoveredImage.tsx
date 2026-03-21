@@ -8,13 +8,14 @@ import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers
 
 interface Props {
   src: string;
+  loading?: "eager" | "lazy";
 }
 
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します。
  * object-fit: cover を利用してブラウザに cover 計算を委ねます。
  */
-export const CoveredImage = ({ src }: Props) => {
+export const CoveredImage = ({ src, loading = "lazy" }: Props) => {
   const dialogId = useId();
   const latin1Decoder = useMemo(() => new TextDecoder("latin1"), []);
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
@@ -44,6 +45,9 @@ export const CoveredImage = ({ src }: Props) => {
       <img
         alt={alt}
         className="absolute inset-0 h-full w-full object-cover"
+        decoding="async"
+        fetchPriority={loading === "eager" ? "high" : "low"}
+        loading={loading}
         src={src}
       />
 

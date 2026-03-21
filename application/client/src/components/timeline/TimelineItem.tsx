@@ -27,9 +27,10 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
  */
 interface Props {
   post: Models.Post;
+  prioritizeMedia?: boolean;
 }
 
-export const TimelineItem = memo(({ post }: Props) => {
+export const TimelineItem = memo(({ post, prioritizeMedia = false }: Props) => {
   const navigate = useNavigate();
   const createdAt = useMemo(() => new Date(post.createdAt), [post.createdAt]);
 
@@ -57,6 +58,8 @@ export const TimelineItem = memo(({ post }: Props) => {
             <img
               alt={post.user.profileImage.alt}
               className="h-full w-full object-cover"
+              decoding="async"
+              loading="lazy"
               src={getProfileImagePath(post.user.profileImage.id)}
             />
           </Link>
@@ -87,12 +90,12 @@ export const TimelineItem = memo(({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea images={post.images} loading={prioritizeMedia ? "eager" : "lazy"} />
             </div>
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
+              <MovieArea movie={post.movie} loading={prioritizeMedia ? "eager" : "lazy"} disableClick={true} />
             </div>
           ) : null}
           {post.sound ? (

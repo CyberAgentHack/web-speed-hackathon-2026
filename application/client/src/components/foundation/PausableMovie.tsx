@@ -6,13 +6,15 @@ import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components
 
 interface Props {
   src: string;
+  loading?: "eager" | "lazy";
+  disableClick?: boolean;
 }
 
 /**
  * クリックすると再生・一時停止を切り替えます。
  * 再生中はネイティブの img で GIF を表示し、一時停止時だけ canvas に静止フレームを描画します。
  */
-export const PausableMovie = ({ src }: Props) => {
+export const PausableMovie = ({ src, loading = "lazy", disableClick = false }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -61,24 +63,27 @@ export const PausableMovie = ({ src }: Props) => {
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
       <button
         aria-label="動画プレイヤー"
-        className="group relative block h-full w-full"
+        className={classNames("group relative block h-full w-full", {
+          "pointer-events-none": disableClick,
+        })}
         onClick={handleClick}
         type="button"
       >
         <img
           ref={imageRef}
           alt=""
-          className={classNames("h-full w-full object-cover", {
+          className={classNames("absolute inset-0 h-full w-full object-cover", {
             hidden: !isPlaying,
           })}
+          decoding="async"
+          fetchPriority={loading === "eager" ? "high" : "low"}
+          loading={loading}
           onLoad={handleLoad}
           src={src}
         />
         <canvas
           ref={canvasRef}
-          className={classNames("h-full w-full object-cover", {
-            hidden: isPlaying,
-          })}
+          className="absolute inset-0 h-full w-full object-cover"
         />
         <div
           className={classNames(
