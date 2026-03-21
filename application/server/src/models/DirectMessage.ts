@@ -75,29 +75,35 @@ export function initDirectMessage(sequelize: Sequelize) {
       return;
     }
 
+    eventhub.emit(`dm:conversation/${conversation.id}:message`, directMessage);
+
     const receiverId =
       conversation.initiatorId === directMessage.senderId
         ? conversation.memberId
         : conversation.initiatorId;
 
-    const unreadCount = await DirectMessage.count({
-      distinct: true,
-      where: {
-        senderId: { [Op.ne]: receiverId },
-        isRead: false,
-      },
-      include: [
-        {
-          association: "conversation",
+    setImmediate(async () => {
+      try {
+        const unreadCount = await DirectMessage.count({
+          distinct: true,
           where: {
-            [Op.or]: [{ initiatorId: receiverId }, { memberId: receiverId }],
+            senderId: { [Op.ne]: receiverId },
+            isRead: false,
           },
-          required: true,
-        },
-      ],
+          include: [
+            {
+              association: "conversation",
+              where: {
+                [Op.or]: [{ initiatorId: receiverId }, { memberId: receiverId }],
+              },
+              required: true,
+            },
+          ],
+        });
+        eventhub.emit(`dm:unread/${receiverId}`, { unreadCount });
+      } catch {
+        // ignore
+      }
     });
-
-    eventhub.emit(`dm:conversation/${conversation.id}:message`, directMessage);
-    eventhub.emit(`dm:unread/${receiverId}`, { unreadCount });
   });
 }
