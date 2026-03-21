@@ -170,20 +170,26 @@
 @font-face {
   /* Source Han Serif JP Regular の Y 軸を 1/1.43 に縮小した改変フォント */
   font-family: "Rei no Are Mincho";
-  font-display: swap;
+  font-display: optional;
   src:
-    url(/fonts/ReiNoAreMincho-Regular.woff2) format("woff2"),
-    url(/fonts/ReiNoAreMincho-Regular.otf) format("opentype");
+    local("Source Han Serif JP"),
+    local("Source Han Serif"),
+    local("Noto Serif CJK JP"),
+    local("Noto Serif JP"),
+    url(/fonts/ReiNoAreMincho-Regular.woff2) format("woff2");
   font-weight: normal;
 }
 
 @font-face {
   /* Source Han Serif JP Heavy の Y 軸を 1/1.43 に縮小した改変フォント */
   font-family: "Rei no Are Mincho";
-  font-display: swap;
+  font-display: optional;
   src:
-    url(/fonts/ReiNoAreMincho-Heavy.woff2) format("woff2"),
-    url(/fonts/ReiNoAreMincho-Heavy.otf) format("opentype");
+    local("Source Han Serif JP Heavy"),
+    local("Source Han Serif"),
+    local("Noto Serif CJK JP Black"),
+    local("Noto Serif JP Bold"),
+    url(/fonts/ReiNoAreMincho-Heavy.woff2) format("woff2");
   font-weight: bold;
 }
 
