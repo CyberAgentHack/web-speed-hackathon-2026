@@ -36,8 +36,9 @@ export async function convertSoundToMp3(inputBuffer: Buffer): Promise<Buffer> {
       "-y",
       "-i", inputPath,
       "-codec:a", "libmp3lame",
-      "-b:a", "96k",
-      "-ar", "44100",
+      "-b:a", "48k",
+      "-ar", "22050",
+      "-ac", "1",
       "-vn",
       outputPath,
     ]);

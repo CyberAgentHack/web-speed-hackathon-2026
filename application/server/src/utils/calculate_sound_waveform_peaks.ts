@@ -16,7 +16,7 @@ async function withTempInputFile(
   fn: (inputPath: string) => Promise<Buffer>,
 ): Promise<Buffer> {
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wsh-waveform-"));
-  const inputPath = path.join(tmpDir, "input.mp3");
+  const inputPath = path.join(tmpDir, "input.bin");
 
   try {
     await fs.writeFile(inputPath, inputBuffer);
@@ -44,8 +44,11 @@ export async function calculateSoundWaveformPeaks(inputBuffer: Buffer): Promise<
         "f32le",
         "-acodec",
         "pcm_f32le",
+        // 波形表示用なので、軽量な mono / low-rate PCM に落として十分
         "-ac",
-        "2",
+        "1",
+        "-ar",
+        "4000",
         "-",
       ],
       {
@@ -61,22 +64,21 @@ export async function calculateSoundWaveformPeaks(inputBuffer: Buffer): Promise<
   }
 
   const samples = new Float32Array(stdout.buffer, stdout.byteOffset, Math.floor(stdout.byteLength / 4));
-  const stereoFrameCount = Math.floor(samples.length / 2);
-  const chunkSize = Math.max(1, Math.ceil(stereoFrameCount / NUM_SOUND_WAVEFORM_PEAKS));
+  const sampleCount = samples.length;
+  const chunkSize = Math.max(1, Math.ceil(sampleCount / NUM_SOUND_WAVEFORM_PEAKS));
   const peaks = new Array<number>(NUM_SOUND_WAVEFORM_PEAKS).fill(0);
   let maxPeak = 0;
 
   for (let i = 0; i < NUM_SOUND_WAVEFORM_PEAKS; i++) {
     const start = i * chunkSize;
-    const end = Math.min(start + chunkSize, stereoFrameCount);
+    const end = Math.min(start + chunkSize, sampleCount);
     if (start >= end) {
       continue;
     }
 
     let sum = 0;
-    for (let frame = start; frame < end; frame++) {
-      const sampleIndex = frame * 2;
-      sum += (Math.abs(samples[sampleIndex] ?? 0) + Math.abs(samples[sampleIndex + 1] ?? 0)) / 2;
+    for (let sampleIndex = start; sampleIndex < end; sampleIndex++) {
+      sum += Math.abs(samples[sampleIndex] ?? 0);
     }
 
     const average = sum / (end - start);
