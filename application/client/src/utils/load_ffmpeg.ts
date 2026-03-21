@@ -22,6 +22,13 @@ export function loadFFmpeg(): Promise<FFmpeg> {
   return ffmpegPromise;
 }
 
+export function releaseFFmpeg(): void {
+  if (ffmpegPromise != null) {
+    ffmpegPromise.then((ffmpeg) => ffmpeg.terminate()).catch(() => {});
+    ffmpegPromise = null;
+  }
+}
+
 export function warmUpFFmpeg(): Promise<FFmpeg> {
   return loadFFmpeg();
 }

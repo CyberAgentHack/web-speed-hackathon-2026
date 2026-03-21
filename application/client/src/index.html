@@ -9,13 +9,20 @@
     <script>
     !function(){
       var p=location.pathname,s=location.search,q=window.__q={},m;
-      function pf(u){q[u]=fetch(u).then(function(r){return r.ok?r.json():null}).catch(function(){return null});}
+      function pf(u){q[u]=fetch(u).then(function(r){return r.ok?r.json():null}).catch(function(){return null});return q[u];}
+      function pli(u){if(!u)return;var l=document.createElement('link');l.rel='preload';l.as='image';l.href=u;l.fetchPriority='high';document.head.appendChild(l);}
+      function ppm(post,avatarWidth){
+        if(!post)return;
+        if(post.images&&post.images[0]){pli('/images/'+post.images[0].id+'.jpg?width=640');return;}
+        if(post.movie){pli('/movies/'+post.movie.id+'.gif?thumb=1');return;}
+        if(post.user&&post.user.profileImage){pli('/images/profiles/'+post.user.profileImage.id+'.jpg?width='+(avatarWidth||128));}
+      }
       pf('/api/v1/me');
       m=p.match(/^\/posts\/([a-f0-9-]+)/);
-      if(m){pf('/api/v1/posts/'+m[1]);pf('/api/v1/posts/'+m[1]+'/comments?limit=30&offset=0');}
+      if(m){pf('/api/v1/posts/'+m[1]).then(function(post){ppm(post,128);});pf('/api/v1/posts/'+m[1]+'/comments?limit=30&offset=0');}
       m=p.match(/^\/users\/([^/]+)/);
       if(m){pf('/api/v1/users/'+m[1]);pf('/api/v1/users/'+m[1]+'/posts?limit=30&offset=0');}
-      if(p==='/')pf('/api/v1/posts?limit=30&offset=0');
+      if(p==='/')pf('/api/v1/posts?limit=30&offset=0').then(function(posts){ppm(posts&&posts[0],96);});
       if(p==='/search'){m=new URLSearchParams(s).get('q');if(m)pf('/api/v1/search?q='+encodeURIComponent(m)+'&limit=30&offset=0');}
     }();
     </script>

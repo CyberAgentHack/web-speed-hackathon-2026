@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet";
+import { PageTitle } from "@web-speed-hackathon-2026/client/src/components/foundation/PageTitle";
 
 interface Props {
   headline: string;
@@ -15,9 +15,7 @@ export const CrokGate = ({
 }: Props) => {
   return (
     <>
-      <Helmet>
-        <title>Crok - CaX</title>
-      </Helmet>
+      <PageTitle title="Crok - CaX" />
       <section className="space-y-4 px-6 py-12 text-center">
         <p className="text-lg font-bold">{headline}</p>
         {description !== "" ? <p className="text-cax-text-muted text-sm">{description}</p> : null}

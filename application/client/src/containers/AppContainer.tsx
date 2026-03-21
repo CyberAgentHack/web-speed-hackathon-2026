@@ -1,6 +1,5 @@
-import { lazy, Suspense, useCallback, useEffect, useId, useState } from "react";
-import { HelmetProvider } from "react-helmet";
-import { Route, Routes, useLocation, useNavigate } from "react-router";
+import { lazy, Suspense, useCallback, useEffect, useId, useRef, useState } from "react";
+import { Route, Routes, useLocation } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
@@ -57,7 +56,6 @@ const SearchContainer = lazy(() =>
 
 export const AppContainer = () => {
   const { pathname } = useLocation();
-  const navigate = useNavigate();
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
@@ -65,6 +63,11 @@ export const AppContainer = () => {
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
   const [isNewPostModalReady, setIsNewPostModalReady] = useState(false);
   const [isNewPostModalOpen, setIsNewPostModalOpen] = useState(false);
+  const newPostModalLoadPromiseRef = useRef<Promise<void> | null>(null);
+  const activeUserRef = useRef<Models.User | null>(null);
+  useEffect(() => {
+    activeUserRef.current = activeUser;
+  }, [activeUser]);
   useEffect(() => {
     type PrefetchCache = Record<string, Promise<unknown>>;
     const cache = (window as unknown as { __q?: PrefetchCache }).__q;
@@ -84,24 +87,43 @@ export const AppContainer = () => {
         // Not logged in, activeUser stays null
       });
   }, []);
+  const loadNewPostModal = useCallback(async () => {
+    if (activeUserRef.current === null) {
+      return;
+    }
+    if (isNewPostModalReady) {
+      return;
+    }
+    if (newPostModalLoadPromiseRef.current === null) {
+      newPostModalLoadPromiseRef.current = importNewPostModalContainer()
+        .then(() => {
+          if (activeUserRef.current !== null) {
+            setIsNewPostModalReady(true);
+          }
+        })
+        .finally(() => {
+          newPostModalLoadPromiseRef.current = null;
+        });
+    }
+    await newPostModalLoadPromiseRef.current;
+  }, [isNewPostModalReady]);
+
   useEffect(() => {
     if (activeUser === null) {
+      newPostModalLoadPromiseRef.current = null;
       setIsNewPostModalReady(false);
       setIsNewPostModalOpen(false);
       return;
     }
-
-    let isCancelled = false;
-    void importNewPostModalContainer().then(() => {
-      if (!isCancelled) {
-        setIsNewPostModalReady(true);
-      }
-    });
-
-    return () => {
-      isCancelled = true;
-    };
   }, [activeUser]);
+
+  useEffect(() => {
+    if (activeUser === null || pathname !== "/") {
+      return;
+    }
+
+    void loadNewPostModal();
+  }, [activeUser, loadNewPostModal, pathname]);
   useEffect(() => {
     if (activeUser === null || pathname !== "/") {
       return;
@@ -126,7 +148,6 @@ export const AppContainer = () => {
 
     setIsNewPostModalOpen(false);
     setActiveUser(null);
-    navigate("/");
 
     try {
       await sendJSON("/api/v1/signout", {});
@@ -135,10 +156,11 @@ export const AppContainer = () => {
         setActiveUser(previousUser);
       }
     }
-  }, [activeUser, navigate]);
+  }, [activeUser]);
   const handleOpenNewPostModal = useCallback(() => {
     setIsNewPostModalOpen(true);
-  }, []);
+    void loadNewPostModal();
+  }, [loadNewPostModal]);
   const handleCloseNewPostModal = useCallback(() => {
     setIsNewPostModalOpen(false);
   }, []);
@@ -147,11 +169,11 @@ export const AppContainer = () => {
   const newPostModalId = useId();
 
   return (
-    <HelmetProvider>
+    <>
       <AppPage
         activeUser={activeUser}
         authModalId={authModalId}
-        canPost={activeUser !== null && isNewPostModalReady}
+        canPost={activeUser !== null}
         onOpenNewPostModal={handleOpenNewPostModal}
         onLogout={handleLogout}
       >
@@ -187,12 +209,13 @@ export const AppContainer = () => {
       {activeUser !== null && isNewPostModalReady && (
         <Suspense fallback={null}>
           <NewPostModalContainer
+            activeUser={activeUser}
             id={newPostModalId}
             isOpen={isNewPostModalOpen}
             onRequestClose={handleCloseNewPostModal}
           />
         </Suspense>
       )}
-    </HelmetProvider>
+    </>
   );
 };

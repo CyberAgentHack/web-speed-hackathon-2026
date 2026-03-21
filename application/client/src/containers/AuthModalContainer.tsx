@@ -54,6 +54,9 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
     const element = ref.current;
 
     const handleToggle = () => {
+      if (!element.open) {
+        return;
+      }
       setHasOpened(true);
       setResetKey((key) => key + 1);
     };
@@ -67,13 +70,22 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
     ref.current?.close();
   }, [ref]);
 
+  const handleCompleteAuth = useCallback(
+    (user: Models.User) => {
+      handleRequestCloseModal();
+      requestAnimationFrame(() => {
+        onUpdateActiveUser(user);
+      });
+    },
+    [handleRequestCloseModal, onUpdateActiveUser],
+  );
+
   const handleSubmit = useCallback(
     async (values: AuthFormData) => {
       if (values.type === "signup") {
         try {
           const user = await sendJSON<Models.User>("/api/v1/signup", values);
-          onUpdateActiveUser(user);
-          handleRequestCloseModal();
+          handleCompleteAuth(user);
           return;
         } catch (err: unknown) {
           const error = getErrorCode(err as JQuery.jqXHR<unknown>, values.type);
@@ -83,14 +95,13 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
 
       try {
         const user = await sendJSON<Models.User>("/api/v1/signin", values);
-        onUpdateActiveUser(user);
-        handleRequestCloseModal();
+        handleCompleteAuth(user);
       } catch (err: unknown) {
         const error = getErrorCode(err as JQuery.jqXHR<unknown>, values.type);
         throw new Error(error);
       }
     },
-    [handleRequestCloseModal, onUpdateActiveUser],
+    [handleCompleteAuth],
   );
 
   return (

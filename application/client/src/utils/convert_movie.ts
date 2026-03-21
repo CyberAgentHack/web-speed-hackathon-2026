@@ -1,4 +1,4 @@
-import { loadFFmpeg } from "@web-speed-hackathon-2026/client/src/utils/load_ffmpeg";
+import { loadFFmpeg, releaseFFmpeg } from "@web-speed-hackathon-2026/client/src/utils/load_ffmpeg";
 
 interface Options {
   extension: string;
@@ -30,7 +30,7 @@ export async function convertMovie(file: File, options: Options): Promise<Blob> 
       "-t",
       "5",
       "-r",
-      "10",
+      "5",
       "-vf",
       `crop=${cropOptions}`,
       "-an",
@@ -40,6 +40,9 @@ export async function convertMovie(file: File, options: Options): Promise<Blob> 
     const output = (await ffmpeg.readFile(exportFile)) as Uint8Array<ArrayBuffer>;
     return new Blob([output]);
   } finally {
-    await Promise.allSettled([ffmpeg.deleteFile(inputFile), ffmpeg.deleteFile(exportFile)]);
+    await Promise.allSettled([ffmpeg.deleteFile(inputFile).catch(() => {}), ffmpeg.deleteFile(exportFile).catch(() => {})]);
+    // Terminate the ffmpeg worker to free SharedArrayBuffer and web worker resources.
+    // This prevents the worker from throttling subsequent network I/O (fetch uploads).
+    releaseFFmpeg();
   }
 }

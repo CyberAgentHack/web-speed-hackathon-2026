@@ -27,7 +27,7 @@ export const ImageArea = ({ images, priority }: Props) => {
             >
               <CoveredImage
                 alt={image.alt}
-                src={getImagePath(image.id, 800)}
+                src={getImagePath(image.id, 640)}
                 fetchPriority={priority && idx === 0 ? "high" : "auto"}
               />
             </div>

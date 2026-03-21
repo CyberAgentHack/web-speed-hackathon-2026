@@ -17,6 +17,107 @@ export const staticRouter = Router();
 
 // In-memory cache: "filePath:width" → resized JPEG buffer
 const imageCache = new Map<string, Buffer>();
+const imageTaskCache = new Map<string, Promise<Buffer | null>>();
+
+async function resolveStaticFilePath(reqPath: string): Promise<string | null> {
+  const candidatePaths = [
+    path.join(PUBLIC_PATH, reqPath),
+    path.join(UPLOAD_PATH, reqPath),
+  ];
+
+  for (const candidatePath of candidatePaths) {
+    try {
+      await fs.access(candidatePath);
+      return candidatePath;
+    } catch {
+      // not found, try next
+    }
+  }
+
+  return null;
+}
+
+function getOrCreateImageTask(
+  cacheKey: string,
+  factory: () => Promise<Buffer>,
+): Promise<Buffer | null> {
+  const cachedBuffer = imageCache.get(cacheKey);
+  if (cachedBuffer != null) {
+    return Promise.resolve(cachedBuffer);
+  }
+
+  const inFlightTask = imageTaskCache.get(cacheKey);
+  if (inFlightTask != null) {
+    return inFlightTask;
+  }
+
+  const task = factory()
+    .then((buffer) => {
+      imageCache.set(cacheKey, buffer);
+      return buffer;
+    })
+    .catch(() => null)
+    .finally(() => {
+      imageTaskCache.delete(cacheKey);
+    });
+
+  imageTaskCache.set(cacheKey, task);
+  return task;
+}
+
+async function getResizedImageBuffer(filePath: string, width: number): Promise<Buffer | null> {
+  const cacheKey = `${filePath}:${width}`;
+  return getOrCreateImageTask(cacheKey, async () =>
+    sharp(filePath)
+      .resize({ width, withoutEnlargement: true })
+      .jpeg({ quality: 80, progressive: true })
+      .toBuffer(),
+  );
+}
+
+async function getMovieThumbnailBuffer(filePath: string): Promise<Buffer | null> {
+  const cacheKey = `thumb:${filePath}`;
+  return getOrCreateImageTask(cacheKey, async () =>
+    sharp(filePath, { pages: 1 })
+      .resize({ width: 600, withoutEnlargement: true })
+      .jpeg({ quality: 80, progressive: true })
+      .toBuffer(),
+  );
+}
+
+export async function warmResizedImage(reqPath: string, width: number): Promise<void> {
+  if (!reqPath.endsWith(".jpg") || width <= 0 || width > 4000) {
+    return;
+  }
+
+  const filePath = await resolveStaticFilePath(reqPath);
+  if (filePath == null) {
+    return;
+  }
+
+  await getResizedImageBuffer(filePath, width);
+}
+
+export async function warmMovieThumbnail(reqPath: string): Promise<void> {
+  if (!reqPath.startsWith("/movies/") || !reqPath.endsWith(".gif")) {
+    return;
+  }
+
+  const filePath = await resolveStaticFilePath(reqPath);
+  if (filePath == null) {
+    return;
+  }
+
+  await getMovieThumbnailBuffer(filePath);
+}
+
+export function primeResizedImage(reqPath: string, width: number): void {
+  void warmResizedImage(reqPath, width);
+}
+
+export function primeMovieThumbnail(reqPath: string): void {
+  void warmMovieThumbnail(reqPath);
+}
 
 async function soundAliasHandler(req: Request, res: Response, next: NextFunction) {
   if (!req.path.startsWith("/sounds/") || !req.path.endsWith(".mp3")) {
@@ -62,39 +163,14 @@ async function resizeImageHandler(req: Request, res: Response, next: NextFunctio
   }
 
   // Try PUBLIC_PATH first, then UPLOAD_PATH
-  const candidatePaths = [
-    path.join(PUBLIC_PATH, reqPath),
-    path.join(UPLOAD_PATH, reqPath),
-  ];
-
-  let filePath: string | null = null;
-  for (const p of candidatePaths) {
-    try {
-      await fs.access(p);
-      filePath = p;
-      break;
-    } catch {
-      // not found, try next
-    }
-  }
-
+  const filePath = await resolveStaticFilePath(reqPath);
   if (!filePath) {
     return next();
   }
 
-  const cacheKey = `${filePath}:${width}`;
-  let buf = imageCache.get(cacheKey);
-
+  const buf = await getResizedImageBuffer(filePath, width);
   if (!buf) {
-    try {
-      buf = await sharp(filePath)
-        .resize({ width, withoutEnlargement: true })
-        .jpeg({ quality: 80, progressive: true })
-        .toBuffer();
-      imageCache.set(cacheKey, buf);
-    } catch {
-      return next();
-    }
+    return next();
   }
 
   res.setHeader("Content-Type", "image/jpeg");
@@ -113,37 +189,14 @@ async function movieThumbnailHandler(req: Request, res: Response, next: NextFunc
     return next();
   }
 
-  const candidateGifPaths = [
-    path.join(PUBLIC_PATH, reqPath),
-    path.join(UPLOAD_PATH, reqPath),
-  ];
-  let filePath: string | null = null;
-  for (const p of candidateGifPaths) {
-    try {
-      await fs.access(p);
-      filePath = p;
-      break;
-    } catch {
-      // not found, try next
-    }
-  }
+  const filePath = await resolveStaticFilePath(reqPath);
   if (!filePath) {
     return next();
   }
 
-  const cacheKey = `thumb:${filePath}`;
-  let buf = imageCache.get(cacheKey);
-
+  const buf = await getMovieThumbnailBuffer(filePath);
   if (!buf) {
-    try {
-      buf = await sharp(filePath, { pages: 1 })
-        .resize({ width: 600, withoutEnlargement: true })
-        .jpeg({ quality: 80, progressive: true })
-        .toBuffer();
-      imageCache.set(cacheKey, buf);
-    } catch {
-      return next();
-    }
+    return next();
   }
 
   res.setHeader("Content-Type", "image/jpeg");

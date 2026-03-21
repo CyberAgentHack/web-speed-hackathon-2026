@@ -39,7 +39,16 @@ directMessageRouter.post("/dm", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const peer = await User.findByPk(req.body?.peerId);
+  const peerId = typeof req.body?.peerId === "string" ? req.body.peerId : undefined;
+  const peerUsername =
+    typeof req.body?.peerUsername === "string" ? req.body.peerUsername : undefined;
+
+  const peer =
+    peerId !== undefined
+      ? await User.findByPk(peerId)
+      : peerUsername !== undefined
+        ? await User.findOne({ where: { username: peerUsername } })
+        : null;
   if (peer === null) {
     throw new httpErrors.NotFound();
   }

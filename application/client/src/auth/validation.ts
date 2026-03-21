@@ -2,6 +2,25 @@ import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 
 export type AuthFormErrors = Partial<Record<keyof AuthFormData, string>>;
 
+function isAsciiAlphaNumericOnly(value: string) {
+  if (value.length === 0) {
+    return false;
+  }
+
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    const isNumber = code >= 48 && code <= 57;
+    const isUppercase = code >= 65 && code <= 90;
+    const isLowercase = code >= 97 && code <= 122;
+
+    if (!isNumber && !isUppercase && !isLowercase) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 export const validate = (values: AuthFormData): AuthFormErrors => {
   const errors: AuthFormErrors = {};
 
@@ -13,7 +32,7 @@ export const validate = (values: AuthFormData): AuthFormErrors => {
     errors.name = "名前を入力してください";
   }
 
-  if (/^(?:[^\P{Letter}&&\P{Number}]*){16,}$/v.test(normalizedPassword)) {
+  if (isAsciiAlphaNumericOnly(normalizedPassword)) {
     errors.password = "パスワードには記号を含める必要があります";
   }
   if (normalizedPassword.length === 0) {

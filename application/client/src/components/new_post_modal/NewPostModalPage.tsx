@@ -98,12 +98,33 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     }
 
     setFileErrorMessage(null);
-    setParams((params) => ({
-      ...params,
-      images: [],
-      movie: undefined,
-      sound: file,
-    }));
+    setIsConverting(true);
+
+    Promise.all([
+      file.arrayBuffer(),
+      import("@web-speed-hackathon-2026/client/src/utils/trim_wav"),
+    ])
+      .then(([buf, { trimWav }]) => trimWav(buf, 1))
+      .then((trimmed) => {
+        setParams((params) => ({
+          ...params,
+          images: [],
+          movie: undefined,
+          sound: new File([trimmed], file.name, { type: file.type }),
+        }));
+      })
+      .catch(() => {
+        // Fallback: use the original file
+        setParams((params) => ({
+          ...params,
+          images: [],
+          movie: undefined,
+          sound: file,
+        }));
+      })
+      .finally(() => {
+        setIsConverting(false);
+      });
   }, []);
 
   const handleChangeMovie = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
@@ -123,7 +144,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     setIsConverting(true);
 
     import("@web-speed-hackathon-2026/client/src/utils/convert_movie")
-      .then(({ convertMovie }) => convertMovie(file, { extension: "gif", size: undefined }))
+      .then(({ convertMovie }) => convertMovie(file, { extension: "gif", size: 256 }))
       .then((converted) => {
         setParams((params) => ({
           ...params,

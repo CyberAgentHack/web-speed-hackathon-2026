@@ -1,13 +1,10 @@
-import { Helmet } from "react-helmet";
-
+import { PageTitle } from "@web-speed-hackathon-2026/client/src/components/foundation/PageTitle";
 import { NotFoundPage } from "@web-speed-hackathon-2026/client/src/components/application/NotFoundPage";
 
 export const NotFoundContainer = () => {
   return (
     <>
-      <Helmet>
-        <title>ページが見つかりません - CaX</title>
-      </Helmet>
+      <PageTitle title="ページが見つかりません - CaX" />
       <NotFoundPage />
     </>
   );

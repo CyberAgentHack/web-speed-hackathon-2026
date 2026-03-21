@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Helmet } from "react-helmet";
 
 import { SearchPage } from "@web-speed-hackathon-2026/client/src/components/application/SearchPage";
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
+import { PageTitle } from "@web-speed-hackathon-2026/client/src/components/foundation/PageTitle";
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
 import { useSearchParams } from "@web-speed-hackathon-2026/client/src/hooks/use_search_params";
@@ -50,9 +50,7 @@ export const SearchContainer = () => {
 
   return (
     <InfiniteScroll fetchMore={fetchMore} items={posts}>
-      <Helmet>
-        <title>検索 - CaX</title>
-      </Helmet>
+      <PageTitle title="検索 - CaX" />
       <SearchPage
         isNegative={sentiment?.isNegative ?? false}
         onSearch={handleSearch}

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { NewPostModalPage } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage";
-import { sendFile, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { primePrefetchJSON, sendFile, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface SubmitParams {
   images: File[];
@@ -26,12 +26,13 @@ async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promis
 }
 
 interface Props {
+  activeUser: Models.User;
   id: string;
   isOpen: boolean;
   onRequestClose: () => void;
 }
 
-export const NewPostModalContainer = ({ id, isOpen, onRequestClose }: Props) => {
+export const NewPostModalContainer = ({ activeUser, id, isOpen, onRequestClose }: Props) => {
   const dialogId = useId();
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
@@ -60,15 +61,17 @@ export const NewPostModalContainer = ({ id, isOpen, onRequestClose }: Props) => 
       return;
     }
 
-    const handleClose = () => {
+    const handleToggle = () => {
+      if (element.open) {
+        setResetKey((key) => key + 1);
+        return;
+      }
+
       onRequestClose();
-      setResetKey((key) => key + 1);
     };
-    element.addEventListener("close", handleClose);
-    element.addEventListener("cancel", handleClose);
+    element.addEventListener("toggle", handleToggle);
     return () => {
-      element.removeEventListener("close", handleClose);
-      element.removeEventListener("cancel", handleClose);
+      element.removeEventListener("toggle", handleToggle);
     };
   }, [onRequestClose]);
 
@@ -86,15 +89,27 @@ export const NewPostModalContainer = ({ id, isOpen, onRequestClose }: Props) => 
       try {
         setIsLoading(true);
         const post = await sendNewPost(params);
-        onRequestClose();
-        navigate(`/posts/${post.id}`);
+        primePrefetchJSON(`/api/v1/posts/${post.id}`, {
+          ...post,
+          images: post.images ?? [],
+          movie: post.movie,
+          sound: post.sound,
+          user: activeUser,
+        } as Models.Post);
+        primePrefetchJSON(`/api/v1/posts/${post.id}/comments?limit=30&offset=0`, []);
+        if (ref.current?.open) {
+          ref.current.close();
+        } else {
+          onRequestClose();
+        }
+        navigate(`/posts/${post.id}`, { flushSync: true });
       } catch {
         setHasError(true);
       } finally {
         setIsLoading(false);
       }
     },
-    [navigate, onRequestClose],
+    [activeUser, navigate, onRequestClose],
   );
 
   return (
