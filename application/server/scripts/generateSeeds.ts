@@ -246,7 +246,7 @@ async function generateSounds(): Promise<SoundSeed[]> {
   const soundsDir = path.resolve(__dirname, "../../public/sounds");
   const results: SoundSeed[] = [];
   for (const { id, title, artist } of EXISTING_SOUNDS) {
-    const buf = readFileSync(path.join(soundsDir, `${id}.mp3`));
+    const buf = readFileSync(path.join(soundsDir, `${id}.webm`));
     const peaks = await computePeaks(buf);
     results.push({ id, title, artist, peaks });
   }

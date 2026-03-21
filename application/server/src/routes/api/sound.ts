@@ -10,7 +10,7 @@ import { computePeaks } from "@web-speed-hackathon-2026/server/src/utils/compute
 import { convertSound } from "@web-speed-hackathon-2026/server/src/utils/convert_sound";
 import { extractMetadataFromSound } from "@web-speed-hackathon-2026/server/src/utils/extract_metadata_from_sound";
 
-const EXTENSION = "mp3";
+const EXTENSION = "webm";
 
 export const soundRouter = Router();
 

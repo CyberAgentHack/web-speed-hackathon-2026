@@ -14,7 +14,7 @@ interface ConvertSoundOptions {
 export async function convertSound(input: Buffer, options: ConvertSoundOptions): Promise<Buffer> {
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "ffmpeg-sound-"));
   const inputPath = path.join(tmpDir, "input");
-  const outputPath = path.join(tmpDir, "output.mp3");
+  const outputPath = path.join(tmpDir, "output.webm");
 
   try {
     await fs.writeFile(inputPath, input);
@@ -28,7 +28,7 @@ export async function convertSound(input: Buffer, options: ConvertSoundOptions):
       args.push("-metadata", `title=${options.title}`);
     }
 
-    args.push("-vn", outputPath);
+    args.push("-c:a", "libopus", "-b:a", "64k", "-vn", outputPath);
 
     await execFileAsync("ffmpeg", args);
     return await fs.readFile(outputPath);
