@@ -7,31 +7,14 @@ import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/contain
 import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import {TermContainer} from "@web-speed-hackathon-2026/client/src/containers/TermContainer";
-
-const TimelineContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/TimelineContainer").then((m) => ({ default: m.TimelineContainer })),
-);
-const DirectMessageListContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer").then((m) => ({ default: m.DirectMessageListContainer })),
-);
-const DirectMessageContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer").then((m) => ({ default: m.DirectMessageContainer })),
-);
-const SearchContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/SearchContainer").then((m) => ({ default: m.SearchContainer })),
-);
-const UserProfileContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/UserProfileContainer").then((m) => ({ default: m.UserProfileContainer })),
-);
-const PostContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/PostContainer").then((m) => ({ default: m.PostContainer })),
-);
-const CrokContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/CrokContainer").then((m) => ({ default: m.CrokContainer })),
-);
-const NotFoundContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/NotFoundContainer").then((m) => ({ default: m.NotFoundContainer })),
-);
+import {TimelineContainer} from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
+import {DirectMessageListContainer} from "@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer";
+import {DirectMessageContainer} from "@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer";
+import {SearchContainer} from "@web-speed-hackathon-2026/client/src/containers/SearchContainer";
+import {UserProfileContainer} from "@web-speed-hackathon-2026/client/src/containers/UserProfileContainer";
+import {PostContainer} from "@web-speed-hackathon-2026/client/src/containers/PostContainer";
+import {CrokContainer} from "@web-speed-hackathon-2026/client/src/containers/CrokContainer";
+import {NotFoundContainer} from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 
 export const AppContainer = () => {
   const { pathname } = useLocation();

@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { SubmissionError } from "redux-form";
+import { useCallback, useEffect, useRef } from "react";
+import { useDispatch } from "react-redux";
+import { reset, SubmissionError } from "redux-form";
 
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { AuthModalPage } from "@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
+import type { AppDispatch } from "@web-speed-hackathon-2026/client/src/store";
 import { sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
@@ -42,20 +44,22 @@ async function getErrorCode(err: unknown, type: "signin" | "signup"): Promise<st
 
 export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
-  const [resetKey, setResetKey] = useState(0);
+  const dispatch = useDispatch<AppDispatch>();
   useEffect(() => {
     if (!ref.current) return;
     const element = ref.current;
 
     const handleToggle = () => {
-      // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
-      setResetKey((key) => key + 1);
+      // モーダルが閉じた時にredux-formの状態をリセットする
+      if (!element.open) {
+        dispatch(reset("auth"));
+      }
     };
     element.addEventListener("toggle", handleToggle);
     return () => {
       element.removeEventListener("toggle", handleToggle);
     };
-  }, [ref, setResetKey]);
+  }, [dispatch]);
 
   const handleRequestCloseModal = useCallback(() => {
     ref.current?.close();
@@ -85,7 +89,6 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   return (
     <Modal id={id} ref={ref} closedby="any">
       <AuthModalPage
-        key={resetKey}
         onRequestCloseModal={handleRequestCloseModal}
         onSubmit={handleSubmit}
       />

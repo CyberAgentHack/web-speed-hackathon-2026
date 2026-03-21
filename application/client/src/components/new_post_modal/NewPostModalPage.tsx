@@ -1,4 +1,4 @@
-import { ChangeEventHandler, FormEventHandler, useCallback, useState } from "react";
+import { ChangeEventHandler, FormEventHandler, useCallback, useEffect, useRef, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/components/modal/ModalErrorMessage";
@@ -18,11 +18,12 @@ interface Props {
   id: string;
   hasError: boolean;
   isLoading: boolean;
+  resetSignal: number;
   onResetError: () => void;
   onSubmit: (params: SubmitParams) => void;
 }
 
-export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubmit }: Props) => {
+export const NewPostModalPage = ({ id, hasError, isLoading, resetSignal, onResetError, onSubmit }: Props) => {
   const [params, setParams] = useState<SubmitParams>({
     images: [],
     movie: undefined,
@@ -31,6 +32,27 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
   });
 
   const [hasFileError, setHasFileError] = useState(false);
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    setParams({ images: [], movie: undefined, sound: undefined, text: "" });
+    setHasFileError(false);
+    if (textareaRef.current) {
+      textareaRef.current.value = "";
+    }
+  }, [resetSignal]);
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    const id = setInterval(() => {
+      setParams((p) => {
+        if (p.text !== el.value) return { ...p, text: el.value };
+        return p;
+      });
+    }, 100);
+    return () => clearInterval(id);
+  }, []);
 
   const handleChangeText = useCallback<ChangeEventHandler<HTMLTextAreaElement>>((ev) => {
     const value = ev.currentTarget.value;
@@ -101,6 +123,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       </h2>
 
       <textarea
+        ref={textareaRef}
         className="border-cax-border placeholder-cax-text-subtle focus:outline-cax-brand w-full resize-none rounded-xl border px-3 py-2 focus:outline-2 focus:outline-offset-2"
         rows={4}
         onChange={handleChangeText}
