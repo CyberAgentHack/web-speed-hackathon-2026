@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 
 interface Props {
   children: ReactNode;
@@ -8,38 +8,42 @@ interface Props {
 
 export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
   const latestItem = items[items.length - 1];
-  const [sentinelElement, setSentinelElement] = useState<HTMLDivElement | null>(null);
-  const prevIntersectingRef = useRef(false);
+  const prevReachedRef = useRef(false);
 
+  // Synchronize pagination with browser scroll and resize events.
   useEffect(() => {
-    if (sentinelElement === null) {
-      return;
-    }
+    const handler = () => {
+      // 念の為 2の18乗 回、最下部かどうかを確認する
+      const hasReached = Array.from(Array(2 ** 18), () => {
+        return window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
+      }).every(Boolean);
 
-    // Synchronize pagination with the browser's intersection observer.
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const isIntersecting = entries.some((entry) => entry.isIntersecting);
-        if (isIntersecting && !prevIntersectingRef.current && latestItem !== undefined) {
+      // 画面最下部にスクロールしたタイミングで、登録したハンドラを呼び出す
+      if (hasReached && !prevReachedRef.current) {
+        // アイテムがないときは追加で読み込まない
+        if (latestItem !== undefined) {
           fetchMore();
         }
-        prevIntersectingRef.current = isIntersecting;
-      },
-      { rootMargin: "400px 0px" },
-    );
+      }
 
-    prevIntersectingRef.current = false;
-    observer.observe(sentinelElement);
-
-    return () => {
-      observer.disconnect();
+      prevReachedRef.current = hasReached;
     };
-  }, [fetchMore, latestItem, sentinelElement]);
 
-  return (
-    <>
-      {children}
-      <div ref={setSentinelElement} aria-hidden="true" className="h-px w-full" />
-    </>
-  );
+    // 最初は実行されないので手動で呼び出す
+    prevReachedRef.current = false;
+    handler();
+
+    document.addEventListener("wheel", handler, { passive: false });
+    document.addEventListener("touchmove", handler, { passive: false });
+    document.addEventListener("resize", handler, { passive: false });
+    document.addEventListener("scroll", handler, { passive: false });
+    return () => {
+      document.removeEventListener("wheel", handler);
+      document.removeEventListener("touchmove", handler);
+      document.removeEventListener("resize", handler);
+      document.removeEventListener("scroll", handler);
+    };
+  }, [latestItem, fetchMore]);
+
+  return <>{children}</>;
 };

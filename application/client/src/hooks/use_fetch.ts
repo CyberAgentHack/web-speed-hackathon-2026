@@ -16,7 +16,17 @@ export function useFetch<T>(
     isLoading: true,
   });
 
+  // Synchronize the fetched value with the current endpoint.
   useEffect(() => {
+    if (apiPath === "") {
+      setResult(() => ({
+        data: null,
+        error: null,
+        isLoading: false,
+      }));
+      return;
+    }
+
     setResult(() => ({
       data: null,
       error: null,

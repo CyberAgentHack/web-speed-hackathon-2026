@@ -1,18 +1,16 @@
 import { useCallback, useMemo, useState } from "react";
 import { Helmet } from "react-helmet";
 
-import type { AuthStatus } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { CrokGate } from "@web-speed-hackathon-2026/client/src/components/crok/CrokGate";
 import { CrokPage } from "@web-speed-hackathon-2026/client/src/components/crok/CrokPage";
 import { useSSE } from "@web-speed-hackathon-2026/client/src/hooks/use_sse";
 
 type Props = {
   activeUser: Models.User | null;
-  authStatus: AuthStatus;
   authModalId: string;
 };
 
-export const CrokContainer = ({ activeUser, authStatus, authModalId }: Props) => {
+export const CrokContainer = ({ activeUser, authModalId }: Props) => {
   const [messages, setMessages] = useState<Models.ChatMessage[]>([]);
 
   const sseOptions = useMemo(
@@ -71,14 +69,6 @@ export const CrokContainer = ({ activeUser, authStatus, authModalId }: Props) =>
     },
     [isStreaming, start],
   );
-
-  if (authStatus === "loading") {
-    return (
-      <Helmet>
-        <title>読込中 - CaX</title>
-      </Helmet>
-    );
-  }
 
   if (!activeUser) {
     return (

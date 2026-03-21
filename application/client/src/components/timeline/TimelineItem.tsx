@@ -1,3 +1,4 @@
+import moment from "moment";
 import { MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
@@ -29,12 +30,6 @@ interface Props {
   post: Models.Post;
 }
 
-const dateFormatter = new Intl.DateTimeFormat("ja-JP", {
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-});
-
 export const TimelineItem = ({ post }: Props) => {
   const navigate = useNavigate();
 
@@ -60,7 +55,6 @@ export const TimelineItem = ({ post }: Props) => {
             to={`/users/${post.user.username}`}
           >
             <img
-              loading="lazy"
               alt={post.user.profileImage.alt}
               src={getProfileImagePath(post.user.profileImage.id)}
             />
@@ -82,8 +76,8 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={new Date(post.createdAt).toISOString()}>
-                {dateFormatter.format(new Date(post.createdAt))}
+              <time dateTime={moment(post.createdAt).toISOString()}>
+                {moment(post.createdAt).locale("ja").format("LL")}
               </time>
             </Link>
           </p>
@@ -97,7 +91,7 @@ export const TimelineItem = ({ post }: Props) => {
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea interactive={false} movie={post.movie} />
+              <MovieArea movie={post.movie} />
             </div>
           ) : null}
           {post.sound ? (

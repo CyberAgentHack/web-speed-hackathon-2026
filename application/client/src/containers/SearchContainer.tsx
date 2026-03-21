@@ -15,7 +15,7 @@ interface SentimentResult {
 export const SearchContainer = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
-  const sentimentApiPath = `/api/v1/search/sentiment?q=${encodeURIComponent(query)}`;
+  const sentimentApiPath = query ? `/api/v1/search/sentiment?q=${encodeURIComponent(query)}` : "";
 
   const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>(
     query ? `/api/v1/search?q=${encodeURIComponent(query)}` : "",

@@ -2,13 +2,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useParams } from "react-router";
 
-import type { AuthStatus } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { DirectMessageGate } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageGate";
 import { DirectMessagePage } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessagePage";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
-import { fetchJSON, HTTPError, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface DmUpdateEvent {
   type: "dm:conversation:message";
@@ -23,101 +22,44 @@ const TYPING_INDICATOR_DURATION_MS = 10 * 1000;
 
 interface Props {
   activeUser: Models.User | null;
-  authStatus: AuthStatus;
   authModalId: string;
-  onSessionExpired: () => void;
 }
 
-export const DirectMessageContainer = ({
-  activeUser,
-  authStatus,
-  authModalId,
-  onSessionExpired,
-}: Props) => {
+export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   const { conversationId = "" } = useParams<{ conversationId: string }>();
 
   const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(null);
   const [conversationError, setConversationError] = useState<Error | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isRealtimeReady, setIsRealtimeReady] = useState(false);
 
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const latestLoadRequestIdRef = useRef(0);
-  const handleUnauthorized = useCallback(() => {
-    latestLoadRequestIdRef.current += 1;
-    setConversation(null);
-    setConversationError(null);
-    setIsPeerTyping(false);
-    setIsRealtimeReady(false);
-    if (peerTypingTimeoutRef.current !== null) {
-      clearTimeout(peerTypingTimeoutRef.current);
-      peerTypingTimeoutRef.current = null;
-    }
-    onSessionExpired();
-  }, [onSessionExpired]);
 
   const loadConversation = useCallback(async () => {
     if (activeUser == null) {
-      return null;
+      return;
     }
-
-    const requestId = latestLoadRequestIdRef.current + 1;
-    latestLoadRequestIdRef.current = requestId;
 
     try {
       const data = await fetchJSON<Models.DirectMessageConversation>(
         `/api/v1/dm/${conversationId}`,
       );
-      if (requestId !== latestLoadRequestIdRef.current) {
-        return null;
-      }
       setConversation(data);
       setConversationError(null);
-      return data;
     } catch (error) {
-      if (requestId !== latestLoadRequestIdRef.current) {
-        return null;
-      }
-      if (error instanceof HTTPError && error.status === 401) {
-        handleUnauthorized();
-        return null;
-      }
       setConversation(null);
       setConversationError(error as Error);
-      return null;
     }
-  }, [activeUser, conversationId, handleUnauthorized]);
+  }, [activeUser, conversationId]);
 
-  const sendRead = useCallback(
-    async (targetConversation: Models.DirectMessageConversation | null) => {
-      if (activeUser == null || targetConversation == null) {
-        return;
-      }
+  const sendRead = useCallback(async () => {
+    await sendJSON(`/api/v1/dm/${conversationId}/read`, {});
+  }, [conversationId]);
 
-      const hasUnreadPeerMessages = targetConversation.messages.some((message) => {
-        return message.sender.id !== activeUser.id && !message.isRead;
-      });
-      if (!hasUnreadPeerMessages) {
-        return;
-      }
-
-      try {
-        await sendJSON(`/api/v1/dm/${conversationId}/read`, {});
-      } catch (error) {
-        if (error instanceof HTTPError && error.status === 401) {
-          handleUnauthorized();
-        }
-      }
-    },
-    [activeUser, conversationId, handleUnauthorized],
-  );
-
-  // Synchronize the visible DM conversation with the server and mark unread peer messages as read.
+  // Synchronize the visible conversation and read state with the DM API.
   useEffect(() => {
-    void loadConversation().then(async (nextConversation) => {
-      await sendRead(nextConversation);
-    });
+    void loadConversation();
+    void sendRead();
   }, [loadConversation, sendRead]);
 
   const handleSubmit = useCallback(
@@ -127,44 +69,32 @@ export const DirectMessageContainer = ({
         await sendJSON(`/api/v1/dm/${conversationId}/messages`, {
           body: params.body,
         });
-        const nextConversation = await loadConversation();
-        await sendRead(nextConversation);
-      } catch (error) {
-        if (error instanceof HTTPError && error.status === 401) {
-          handleUnauthorized();
-        }
-        throw error;
+        loadConversation();
       } finally {
         setIsSubmitting(false);
       }
     },
-    [conversationId, handleUnauthorized, loadConversation, sendRead],
+    [conversationId, loadConversation],
   );
 
   const handleTyping = useCallback(async () => {
-    try {
-      await sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
-    } catch (error) {
-      if (error instanceof HTTPError && error.status === 401) {
-        handleUnauthorized();
-      }
-    }
-  }, [conversationId, handleUnauthorized]);
+    void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
+  }, [conversationId]);
 
   useWs(
     `/api/v1/dm/${conversationId}`,
     (event: DmUpdateEvent | DmTypingEvent) => {
       if (event.type === "dm:conversation:message") {
-        void loadConversation().then(async (nextConversation) => {
+        void loadConversation().then(() => {
           if (event.payload.sender.id !== activeUser?.id) {
             setIsPeerTyping(false);
             if (peerTypingTimeoutRef.current !== null) {
               clearTimeout(peerTypingTimeoutRef.current);
             }
-            peerTypingTimeoutRef.current = null;
           }
-          await sendRead(nextConversation);
+          peerTypingTimeoutRef.current = null;
         });
+        void sendRead();
       } else if (event.type === "dm:conversation:typing") {
         setIsPeerTyping(true);
         if (peerTypingTimeoutRef.current !== null) {
@@ -175,23 +105,7 @@ export const DirectMessageContainer = ({
         }, TYPING_INDICATOR_DURATION_MS);
       }
     },
-    {
-      onClose: () => {
-        setIsRealtimeReady(false);
-      },
-      onOpen: () => {
-        setIsRealtimeReady(true);
-      },
-    },
   );
-
-  if (authStatus === "loading") {
-    return (
-      <Helmet>
-        <title>読込中 - CaX</title>
-      </Helmet>
-    );
-  }
 
   if (activeUser === null) {
     return (
@@ -203,20 +117,8 @@ export const DirectMessageContainer = ({
   }
 
   if (conversation == null) {
-    if (conversationError instanceof HTTPError && conversationError.status === 404) {
-      return <NotFoundContainer />;
-    }
     if (conversationError != null) {
-      return (
-        <>
-          <Helmet>
-            <title>メッセージの取得に失敗しました - CaX</title>
-          </Helmet>
-          <section className="px-6 py-10">
-            <p className="text-cax-danger text-sm">メッセージの取得に失敗しました</p>
-          </section>
-        </>
-      );
+      return <NotFoundContainer />;
     }
     return null;
   }
@@ -233,7 +135,6 @@ export const DirectMessageContainer = ({
         conversationError={conversationError}
         conversation={conversation}
         activeUser={activeUser}
-        isRealtimeReady={isRealtimeReady}
         onTyping={handleTyping}
         isPeerTyping={isPeerTyping}
         isSubmitting={isSubmitting}

@@ -4,11 +4,11 @@ import {
   ChangeEvent,
   useCallback,
   useId,
-  useLayoutEffect,
   useRef,
   useState,
   KeyboardEvent,
   FormEvent,
+  useEffect,
 } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -19,7 +19,6 @@ interface Props {
   conversationError: Error | null;
   conversation: Models.DirectMessageConversation;
   activeUser: Models.User;
-  isRealtimeReady: boolean;
   isPeerTyping: boolean;
   isSubmitting: boolean;
   onTyping: () => void;
@@ -30,24 +29,21 @@ export const DirectMessagePage = ({
   conversationError,
   conversation,
   activeUser,
-  isRealtimeReady,
   isPeerTyping,
   isSubmitting,
   onTyping,
   onSubmit,
 }: Props) => {
   const formRef = useRef<HTMLFormElement>(null);
-  const messageListContainerRef = useRef<HTMLDivElement>(null);
-  const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const textAreaId = useId();
 
   const peer =
     conversation.initiator.id !== activeUser.id ? conversation.initiator : conversation.member;
 
   const [text, setText] = useState("");
-  const messages = conversation.messages;
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
+  const scrollHeightRef = useRef(0);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -70,47 +66,25 @@ export const DirectMessagePage = ({
   const handleSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      const body = textAreaRef.current?.value.trim() ?? text.trim();
-      if (body.length === 0) {
-        return;
-      }
-
-      textAreaRef.current?.blur();
-      void onSubmit({ body })
-        .then(() => {
-          setText("");
-        })
-        .catch(() => {});
+      void onSubmit({ body: text.trim() }).then(() => {
+        setText("");
+      });
     },
     [onSubmit, text],
   );
 
-  // Synchronize the browser scroll position with the latest DM using window and panel scroll APIs.
-  useLayoutEffect(() => {
-    const syncScrollToLatest = () => {
-      const containerElement = messageListContainerRef.current;
-      const pageScrollHeight = Math.max(
-        document.body.scrollHeight,
-        document.documentElement.scrollHeight,
-      );
-      window.scrollTo(0, pageScrollHeight);
-      if (containerElement != null) {
-        containerElement.scrollTop = containerElement.scrollHeight;
+  // Synchronize the page scroll position with the browser timer while messages grow.
+  useEffect(() => {
+    const id = setInterval(() => {
+      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
+      if (height !== scrollHeightRef.current) {
+        scrollHeightRef.current = height;
+        window.scrollTo(0, height);
       }
-    };
+    }, 1);
 
-    let secondFrameId = 0;
-    syncScrollToLatest();
-    const firstFrameId = window.requestAnimationFrame(() => {
-      syncScrollToLatest();
-      secondFrameId = window.requestAnimationFrame(syncScrollToLatest);
-    });
-
-    return () => {
-      window.cancelAnimationFrame(firstFrameId);
-      window.cancelAnimationFrame(secondFrameId);
-    };
-  }, [conversation.id, conversation.messages.length]);
+    return () => clearInterval(id);
+  }, []);
 
   if (conversationError != null) {
     return (
@@ -122,12 +96,8 @@ export const DirectMessagePage = ({
 
   return (
     <section className="bg-cax-surface flex min-h-[calc(100vh-(--spacing(12)))] flex-col lg:min-h-screen">
-      <p className="sr-only" data-testid="dm-realtime-status">
-        {isRealtimeReady ? "ready" : "connecting"}
-      </p>
       <header className="border-cax-border bg-cax-surface sticky top-0 z-10 flex items-center gap-2 border-b px-4 py-3">
         <img
-          loading="lazy"
           alt={peer.profileImage.alt}
           className="h-12 w-12 rounded-full object-cover"
           src={getProfileImagePath(peer.profileImage.id)}
@@ -142,18 +112,15 @@ export const DirectMessagePage = ({
         </div>
       </header>
 
-      <div
-        ref={messageListContainerRef}
-        className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8"
-      >
-        {messages.length === 0 && (
+      <div className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8">
+        {conversation.messages.length === 0 && (
           <p className="text-cax-text-muted text-center text-sm">
             まだメッセージはありません。最初のメッセージを送信してみましょう。
           </p>
         )}
 
         <ul className="grid gap-3" data-testid="dm-message-list">
-          {messages.map((message) => {
+          {conversation.messages.map((message) => {
             const isActiveUserSend = message.sender.id === activeUser.id;
 
             return (
@@ -205,7 +172,6 @@ export const DirectMessagePage = ({
               内容
             </label>
             <textarea
-              ref={textAreaRef}
               id={textAreaId}
               className="border-cax-border placeholder-cax-text-subtle focus:outline-cax-brand w-full resize-none rounded-xl border px-3 py-2 focus:outline-2 focus:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               value={text}
