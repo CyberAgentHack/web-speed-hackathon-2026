@@ -51,13 +51,13 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
       Promise.all(
         files.map((file) =>
-          import("@imagemagick/magick-wasm").then(({ MagickFormat }) =>
-            import("@web-speed-hackathon-2026/client/src/utils/convert_image").then(
-              ({ convertImage }) =>
-                convertImage(file, { extension: MagickFormat.Jpg }).then(
-                  (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
-                ),
-            ),
+          import("@web-speed-hackathon-2026/client/src/utils/convert_image").then(
+            ({ convertImage }) =>
+              // MagickFormat.Jpg = "JPG" のためリテラルで渡し、@imagemagick/magick-wasm の
+              // 5MB超 JS チャンクをメインスレッドから排除する
+              convertImage(file, { extension: "JPG" }).then(
+                (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
+              ),
           ),
         ),
       )

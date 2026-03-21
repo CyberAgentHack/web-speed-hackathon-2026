@@ -1,41 +1,35 @@
-import { initializeImageMagick, ImageMagick, MagickFormat } from "@imagemagick/magick-wasm";
-import { dump, insert, ImageIFD } from "piexifjs";
+import type { ConvertImageRequest, ConvertImageResponse } from "../workers/convert_image.worker";
 
 interface Options {
-  extension: MagickFormat;
+  extension: string;
 }
 
+// ImageMagick WASM の JS パース（5MB超）と WASM 実行をメインスレッドから分離するため
+// Web Worker に処理を委譲する。
 export async function convertImage(file: File, options: Options): Promise<Blob> {
-  await initializeImageMagick(new URL("/scripts/magick.wasm", location.href));
+  const worker = new Worker(
+    new URL("../workers/convert_image.worker.ts", import.meta.url),
+    { type: "module" },
+  );
 
-  const byteArray = new Uint8Array(await file.arrayBuffer());
+  const buffer = await file.arrayBuffer();
 
-  return new Promise((resolve) => {
-    ImageMagick.read(byteArray, (img) => {
-      img.format = options.extension;
-
-      const comment = img.comment;
-
-      img.write((output) => {
-        if (comment == null) {
-          resolve(new Blob([output as Uint8Array<ArrayBuffer>]));
-          return;
-        }
-
-        // ImageMagick では EXIF の ImageDescription フィールドに保存されているデータが
-        // 非標準の Comment フィールドに移されてしまうため
-        // piexifjs を使って ImageDescription フィールドに書き込む
-        const binary = Array.from(output as Uint8Array<ArrayBuffer>)
-          .map((b) => String.fromCharCode(b))
-          .join("");
-        const descriptionBinary = Array.from(new TextEncoder().encode(comment))
-          .map((b) => String.fromCharCode(b))
-          .join("");
-        const exifStr = dump({ "0th": { [ImageIFD.ImageDescription]: descriptionBinary } });
-        const outputWithExif = insert(exifStr, binary);
-        const bytes = Uint8Array.from(outputWithExif.split("").map((c) => c.charCodeAt(0)));
-        resolve(new Blob([bytes]));
-      });
+  return new Promise<Blob>((resolve, reject) => {
+    worker.addEventListener("message", (event: MessageEvent<ConvertImageResponse>) => {
+      worker.terminate();
+      if (event.data.ok) {
+        resolve(new Blob([event.data.buffer], { type: "image/jpeg" }));
+      } else {
+        reject(new Error(event.data.message));
+      }
     });
+
+    worker.addEventListener("error", (err) => {
+      worker.terminate();
+      reject(err);
+    });
+
+    const request: ConvertImageRequest = { buffer, format: options.extension };
+    worker.postMessage(request, [buffer]);
   });
 }
