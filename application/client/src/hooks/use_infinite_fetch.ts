@@ -23,8 +23,8 @@ export function useInfiniteFetch<T>(
   });
 
   const fetchMore = useCallback(() => {
-    const { isLoading, offset } = internalRef.current;
-    if (isLoading || !apiPath) {
+    const { isLoading, offset, hasMore } = internalRef.current;
+    if (isLoading || !apiPath || !hasMore) {
       return;
     }
 

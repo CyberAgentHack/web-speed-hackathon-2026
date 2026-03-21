@@ -32,7 +32,7 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
 
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, []);
+  }, [items.length]);
 
   return (
     <>
