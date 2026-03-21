@@ -76,9 +76,11 @@ export const DirectMessagePage = ({
       }
 
       textAreaRef.current?.blur();
-      void onSubmit({ body }).then(() => {
-        setText("");
-      });
+      void onSubmit({ body })
+        .then(() => {
+          setText("");
+        })
+        .catch(() => {});
     },
     [onSubmit, text],
   );

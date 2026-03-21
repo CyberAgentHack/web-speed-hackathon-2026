@@ -5,15 +5,16 @@ import { Button } from "@web-speed-hackathon-2026/client/src/components/foundati
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
-import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { fetchJSON, HTTPError } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   activeUser: Models.User;
   newDmModalId: string;
+  onSessionExpired: () => void;
 }
 
-export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
+export const DirectMessageListPage = ({ activeUser, newDmModalId, onSessionExpired }: Props) => {
   const [conversations, setConversations] =
     useState<Array<Models.DirectMessageConversation> | null>(null);
   const [error, setError] = useState<Error | null>(null);
@@ -28,10 +29,16 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
       setConversations(conversations);
       setError(null);
     } catch (error) {
+      if (error instanceof HTTPError && error.status === 401) {
+        setConversations(null);
+        setError(null);
+        onSessionExpired();
+        return;
+      }
       setConversations(null);
       setError(error as Error);
     }
-  }, [activeUser]);
+  }, [activeUser, onSessionExpired]);
 
   useEffect(() => {
     void loadConversations();
@@ -41,9 +48,11 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     void loadConversations();
   });
 
-  if (conversations == null) {
+  const isLoading = conversations == null && error == null;
+  if (isLoading) {
     return null;
   }
+  const loadedConversations = conversations ?? [];
 
   return (
     <section>
@@ -62,13 +71,13 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
 
       {error != null ? (
         <p className="text-cax-danger px-4 py-6 text-center text-sm">DMの取得に失敗しました</p>
-      ) : conversations.length === 0 ? (
+      ) : loadedConversations.length === 0 ? (
         <p className="text-cax-text-muted px-4 py-6 text-center">
           まだDMで会話した相手がいません。
         </p>
       ) : (
         <ul data-testid="dm-list">
-          {conversations.map((conversation) => {
+          {loadedConversations.map((conversation) => {
             const { messages } = conversation;
             const peer =
               conversation.initiator.id !== activeUser.id

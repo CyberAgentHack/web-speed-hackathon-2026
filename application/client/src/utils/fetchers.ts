@@ -44,9 +44,10 @@ export async function fetchBinary(url: string): Promise<ArrayBuffer> {
   return response.arrayBuffer();
 }
 
-export async function fetchJSON<T>(url: string): Promise<T> {
+export async function fetchJSON<T>(url: string, init: RequestInit = {}): Promise<T> {
   const response = await fetch(url, {
     method: "GET",
+    ...init,
   });
 
   return parseJSONResponse<T>(response);

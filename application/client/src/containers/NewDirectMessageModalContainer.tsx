@@ -9,9 +9,10 @@ import { fetchJSON, HTTPError, sendJSON } from "@web-speed-hackathon-2026/client
 
 interface Props {
   id: string;
+  onSessionExpired: () => void;
 }
 
-export const NewDirectMessageModalContainer = ({ id }: Props) => {
+export const NewDirectMessageModalContainer = ({ id, onSessionExpired }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
   // Synchronize the form reset key with the dialog open/close state.
@@ -40,6 +41,11 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
         ref.current?.close();
         navigate(`/dm/${conversation.id}`);
       } catch (error) {
+        if (error instanceof HTTPError && error.status === 401) {
+          ref.current?.close();
+          onSessionExpired();
+          return;
+        }
         const errorMessage =
           error instanceof HTTPError && error.status === 404
             ? "ユーザーが見つかりませんでした"
@@ -49,7 +55,7 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
         });
       }
     },
-    [navigate],
+    [navigate, onSessionExpired],
   );
 
   return (

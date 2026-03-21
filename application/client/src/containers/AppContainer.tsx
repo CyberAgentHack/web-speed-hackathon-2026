@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useId, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useId, useRef, useState } from "react";
 import { HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
@@ -50,6 +50,10 @@ const UserProfileContainer = lazy(async () => {
   return { default: UserProfileContainer };
 });
 
+function isProtectedPath(pathname: string): boolean {
+  return pathname === "/dm" || pathname.startsWith("/dm/") || pathname === "/crok";
+}
+
 export const AppContainer = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -60,19 +64,79 @@ export const AppContainer = () => {
 
   const [authStatus, setAuthStatus] = useState<AuthStatus>("loading");
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
+  const authModalId = useId();
+  const newPostModalId = useId();
+  const latestAuthRequestIdRef = useRef(0);
+  const authStateRef = useRef<{
+    activeUser: Models.User | null;
+    authStatus: AuthStatus;
+  }>({
+    activeUser: null,
+    authStatus: "loading",
+  });
+  authStateRef.current = {
+    activeUser,
+    authStatus,
+  };
 
-  // Synchronize with the server session to resolve the current auth state.
-  useEffect(() => {
-    void fetchJSON<Models.User>("/api/v1/me")
-      .then((user) => {
+  const showAuthModal = useCallback(() => {
+    const dialog = document.getElementById(authModalId);
+    if (dialog instanceof HTMLDialogElement && !dialog.open) {
+      dialog.showModal();
+    }
+  }, [authModalId]);
+  const handleSessionExpired = useCallback(
+    ({ showAuthModal: shouldShowAuthModal = false }: { showAuthModal?: boolean } = {}) => {
+      latestAuthRequestIdRef.current += 1;
+      setActiveUser(null);
+      setAuthStatus("signedOut");
+      if (shouldShowAuthModal) {
+        window.requestAnimationFrame(showAuthModal);
+      }
+    },
+    [showAuthModal],
+  );
+  const handleProtectedSessionExpired = useCallback(() => {
+    handleSessionExpired({
+      showAuthModal: true,
+    });
+  }, [handleSessionExpired]);
+  const syncAuthState = useCallback(
+    async (nextPathname: string) => {
+      const requestId = latestAuthRequestIdRef.current + 1;
+      latestAuthRequestIdRef.current = requestId;
+
+      try {
+        const requestUrl = new URL("/api/v1/me", window.location.origin);
+        requestUrl.searchParams.set("authRequestId", String(requestId));
+        const user = await fetchJSON<Models.User>(`${requestUrl.pathname}${requestUrl.search}`, {
+          cache: "no-store",
+        });
+        if (requestId !== latestAuthRequestIdRef.current) {
+          return;
+        }
         setActiveUser(user);
         setAuthStatus("signedIn");
-      })
-      .catch(() => {
-        setActiveUser(null);
-        setAuthStatus("signedOut");
-      });
-  }, []);
+      } catch {
+        if (requestId !== latestAuthRequestIdRef.current) {
+          return;
+        }
+        const shouldShowAuthModal =
+          authStateRef.current.authStatus === "signedIn" &&
+          authStateRef.current.activeUser !== null &&
+          isProtectedPath(nextPathname);
+        handleSessionExpired({
+          showAuthModal: shouldShowAuthModal,
+        });
+      }
+    },
+    [handleSessionExpired],
+  );
+
+  // Synchronize with the server session whenever the current route changes.
+  useEffect(() => {
+    void syncAuthState(pathname);
+  }, [pathname, syncAuthState]);
   const handleUpdateActiveUser = useCallback((user: Models.User) => {
     setActiveUser(user);
     setAuthStatus("signedIn");
@@ -83,9 +147,6 @@ export const AppContainer = () => {
     setAuthStatus("signedOut");
     navigate("/");
   }, [navigate]);
-
-  const authModalId = useId();
-  const newPostModalId = useId();
 
   return (
     <HelmetProvider>
@@ -105,6 +166,7 @@ export const AppContainer = () => {
                   activeUser={activeUser}
                   authModalId={authModalId}
                   authStatus={authStatus}
+                  onSessionExpired={handleProtectedSessionExpired}
                 />
               }
               path="/dm"
@@ -115,6 +177,7 @@ export const AppContainer = () => {
                   activeUser={activeUser}
                   authModalId={authModalId}
                   authStatus={authStatus}
+                  onSessionExpired={handleProtectedSessionExpired}
                 />
               }
               path="/dm/:conversationId"

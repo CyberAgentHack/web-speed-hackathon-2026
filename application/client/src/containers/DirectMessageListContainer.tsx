@@ -10,9 +10,15 @@ interface Props {
   activeUser: Models.User | null;
   authStatus: AuthStatus;
   authModalId: string;
+  onSessionExpired: () => void;
 }
 
-export const DirectMessageListContainer = ({ activeUser, authStatus, authModalId }: Props) => {
+export const DirectMessageListContainer = ({
+  activeUser,
+  authStatus,
+  authModalId,
+  onSessionExpired,
+}: Props) => {
   const newDmModalId = useId();
 
   if (authStatus === "loading") {
@@ -37,8 +43,12 @@ export const DirectMessageListContainer = ({ activeUser, authStatus, authModalId
       <Helmet>
         <title>ダイレクトメッセージ - CaX</title>
       </Helmet>
-      <DirectMessageListPage activeUser={activeUser} newDmModalId={newDmModalId} />
-      <NewDirectMessageModalContainer id={newDmModalId} />
+      <DirectMessageListPage
+        activeUser={activeUser}
+        newDmModalId={newDmModalId}
+        onSessionExpired={onSessionExpired}
+      />
+      <NewDirectMessageModalContainer id={newDmModalId} onSessionExpired={onSessionExpired} />
     </>
   );
 };
