@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Field, InjectedFormProps, reduxForm, WrappedFieldProps } from "redux-form";
 
@@ -38,6 +38,61 @@ const SearchInput = ({ input, meta }: WrappedFieldProps) => (
   </div>
 );
 
+const SearchResultSection = memo(
+  ({
+    query,
+    results,
+    isNegative,
+  }: Pick<Props, "query" | "results"> & { isNegative: boolean }) => {
+    const parsed = useMemo(() => parseSearchQuery(query), [query]);
+
+    const searchConditionText = useMemo(() => {
+      const parts: string[] = [];
+      if (parsed.keywords) {
+        parts.push(`「${parsed.keywords}」`);
+      }
+      if (parsed.sinceDate) {
+        parts.push(`${parsed.sinceDate} 以降`);
+      }
+      if (parsed.untilDate) {
+        parts.push(`${parsed.untilDate} 以前`);
+      }
+      return parts.join(" ");
+    }, [parsed]);
+
+    return (
+      <>
+        {query && (
+          <div className="px-4">
+            <h2 className="text-lg font-bold">
+              {searchConditionText} の検索結果 ({results.length} 件)
+            </h2>
+          </div>
+        )}
+
+        {isNegative && (
+          <article className="hover:bg-cax-surface-subtle px-1 sm:px-4">
+            <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
+              <div>
+                <p className="text-cax-text text-lg font-bold">どしたん話聞こうか?</p>
+                <p className="text-cax-text-muted">言わなくてもいいけど、言ってもいいよ。</p>
+              </div>
+            </div>
+          </article>
+        )}
+
+        {query && results.length === 0 ? (
+          <div className="text-cax-text-muted flex items-center justify-center p-8">
+            検索結果が見つかりませんでした
+          </div>
+        ) : (
+          <Timeline timeline={results} />
+        )}
+      </>
+    );
+  },
+);
+
 const SearchPageComponent = ({
   query,
   results,
@@ -47,8 +102,6 @@ const SearchPageComponent = ({
 }: Props & InjectedFormProps<SearchFormData, Props>) => {
   const navigate = useNavigate();
   const [isNegative, setIsNegative] = useState(false);
-
-  const parsed = parseSearchQuery(query);
 
   useEffect(() => {
     if (!query) {
@@ -77,24 +130,10 @@ const SearchPageComponent = ({
     };
   }, [query, isLoadingSentiment, sentiment]);
 
-  const searchConditionText = useMemo(() => {
-    const parts: string[] = [];
-    if (parsed.keywords) {
-      parts.push(`「${parsed.keywords}」`);
-    }
-    if (parsed.sinceDate) {
-      parts.push(`${parsed.sinceDate} 以降`);
-    }
-    if (parsed.untilDate) {
-      parts.push(`${parsed.untilDate} 以前`);
-    }
-    return parts.join(" ");
-  }, [parsed]);
-
-  const onSubmit = (values: SearchFormData) => {
+  const onSubmit = useCallback((values: SearchFormData) => {
     const sanitizedText = sanitizeSearchText(values.searchText.trim());
     navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
-  };
+  }, [navigate]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -112,32 +151,7 @@ const SearchPageComponent = ({
         </p>
       </div>
 
-      {query && (
-        <div className="px-4">
-          <h2 className="text-lg font-bold">
-            {searchConditionText} の検索結果 ({results.length} 件)
-          </h2>
-        </div>
-      )}
-
-      {isNegative && (
-        <article className="hover:bg-cax-surface-subtle px-1 sm:px-4">
-          <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
-            <div>
-              <p className="text-cax-text text-lg font-bold">どしたん話聞こうか?</p>
-              <p className="text-cax-text-muted">言わなくてもいいけど、言ってもいいよ。</p>
-            </div>
-          </div>
-        </article>
-      )}
-
-      {query && results.length === 0 ? (
-        <div className="text-cax-text-muted flex items-center justify-center p-8">
-          検索結果が見つかりませんでした
-        </div>
-      ) : (
-        <Timeline timeline={results} />
-      )}
+      <SearchResultSection query={query} results={results} isNegative={isNegative} />
     </div>
   );
 };

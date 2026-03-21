@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Field, InjectedFormProps, reduxForm } from "redux-form";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -11,6 +12,18 @@ interface Props {
   id: string;
 }
 
+const usernameLeftItem = <span className="text-cax-text-subtle leading-none">@</span>;
+
+const usernameFieldProps = {
+  label: "ユーザー名",
+  placeholder: "username",
+  leftItem: usernameLeftItem,
+} as const;
+
+const UsernameFieldSection = memo(() => {
+  return <Field name="username" component={FormInputField} props={usernameFieldProps} />;
+});
+
 const NewDirectMessageModalPageComponent = ({
   id,
   invalid,
@@ -23,15 +36,7 @@ const NewDirectMessageModalPageComponent = ({
       <h2 className="text-center text-2xl font-bold">新しくDMを始める</h2>
 
       <form className="flex flex-col gap-y-6" onSubmit={handleSubmit}>
-        <Field
-          name="username"
-          component={FormInputField}
-          props={{
-            label: "ユーザー名",
-            placeholder: "username",
-            leftItem: <span className="text-cax-text-subtle leading-none">@</span>,
-          }}
-        />
+        <UsernameFieldSection />
 
         <div className="grid gap-y-2">
           <ModalSubmitButton disabled={submitting || invalid} loading={submitting}>
