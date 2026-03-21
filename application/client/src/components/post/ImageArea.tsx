@@ -10,11 +10,10 @@ interface Props {
 export const ImageArea = ({ images }: Props) => {
   return (
     <AspectRatioBox aspectHeight={9} aspectWidth={16}>
-      <div className="border-cax-border grid h-full w-full grid-cols-2 grid-rows-2 gap-1 overflow-hidden rounded-lg border">
+     <div className="border-cax-border grid h-full w-full grid-cols-2 grid-rows-2 gap-1 overflow-hidden rounded-lg border">
         {images.map((image, idx) => (
           <div
             key={image.id}
-            // ↓ これが審査員に評価される「爆速の魔法」です！
             style={{ willChange: 'transform' }}
             className={classNames("bg-cax-surface-subtle", {
               "col-span-1": images.length !== 1,
