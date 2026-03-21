@@ -67,7 +67,7 @@ export const CoveredImage = ({ src, loading = "lazy", fetchPriority = "auto" }: 
         loading={loading}          // eager にして初回描画を高速化
         fetchPriority={fetchPriority} // high で優先的に取得
         decoding="async"
-        className={classNames("absolute inset-0 h-full w-full object-cover")}
+        className="w-full h-full object-cover"
         src={src}
       />
 
