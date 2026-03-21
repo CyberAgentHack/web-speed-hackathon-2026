@@ -98,7 +98,7 @@ export async function insertSeeds(sequelize: Sequelize) {
       await Sound.bulkCreate(batch, { transaction });
     });
     await readJsonlFileBatched<UserSeed>("users.jsonl", async (batch) => {
-      await User.bulkCreate(batch, { transaction });
+      await User.bulkCreate(batch, { individualHooks: true, transaction });
     });
     await readJsonlFileBatched<PostSeed>("posts.jsonl", async (batch) => {
       await Post.bulkCreate(batch, { transaction });
