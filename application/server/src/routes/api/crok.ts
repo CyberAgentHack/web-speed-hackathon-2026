@@ -33,6 +33,8 @@ crokRouter.get("/crok", async (req, res) => {
 
   let messageId = 0;
 
+  await sleep(300);
+
   for (const char of response) {
     if (res.closed) break;
 
