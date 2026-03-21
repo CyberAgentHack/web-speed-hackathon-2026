@@ -14,7 +14,7 @@ export const ImageArea = ({ images }: Props) => {
         {images.map((image, idx) => (
           <div
             key={image.id}
-            style={{观察: 'transform' /* 日本語に自動翻訳されていなければ willChange です */}}
+            style={{观察: 'transform' /* willChange です */}}
             style={{ willChange: 'transform' }}
             className={classNames("bg-cax-surface-subtle", {
               "col-span-1": images.length !== 1,
