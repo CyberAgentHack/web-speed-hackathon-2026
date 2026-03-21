@@ -16,6 +16,69 @@ const avifCache = new Map<string, Buffer>();
 
 export const imageOptimizationRouter = new Hono<SessionEnv>();
 
+// Direct .avif URL access (for <picture> srcset)
+imageOptimizationRouter.get("*", async (c, next) => {
+  if (!/\.avif$/i.test(c.req.path)) {
+    return next();
+  }
+
+  const requestPath = decodeURIComponent(c.req.path);
+  const jpgPath = requestPath.replace(/\.avif$/i, ".jpg");
+
+  // Check in-memory cache (keyed by original jpg path for compat)
+  if (avifCache.has(jpgPath)) {
+    c.header("Content-Type", "image/avif");
+    c.header("Cache-Control", "public, max-age=86400");
+    return c.body(new Uint8Array(avifCache.get(jpgPath)!));
+  }
+
+  // Find original JPEG
+  const jpgCandidates = [path.join(UPLOAD_PATH, jpgPath), path.join(PUBLIC_PATH, jpgPath)];
+  let originalPath: string | null = null;
+  for (const candidate of jpgCandidates) {
+    try {
+      await fsp.access(candidate);
+      originalPath = candidate;
+      break;
+    } catch {
+      // not found
+    }
+  }
+
+  if (originalPath == null) {
+    return next();
+  }
+
+  try {
+    const tmpDir = await fsp.mkdtemp(path.join(os.tmpdir(), "avif-"));
+    const tmpOut = path.join(tmpDir, "output.avif");
+    try {
+      await execFileAsync("ffmpeg", [
+        "-i",
+        originalPath,
+        "-c:v",
+        "libaom-av1",
+        "-crf",
+        "30",
+        "-cpu-used",
+        "6",
+        "-y",
+        tmpOut,
+      ]);
+      const avifBuffer = await fsp.readFile(tmpOut);
+      avifCache.set(jpgPath, avifBuffer as Buffer);
+      c.header("Content-Type", "image/avif");
+      c.header("Cache-Control", "public, max-age=86400");
+      return c.body(new Uint8Array(avifBuffer));
+    } finally {
+      await fsp.rm(tmpDir, { recursive: true, force: true });
+    }
+  } catch {
+    return next();
+  }
+});
+
+// Accept-header based content negotiation (existing behavior)
 imageOptimizationRouter.get("*", async (c, next) => {
   if (!/\.(jpg|jpeg|png)$/i.test(c.req.path)) {
     return next();

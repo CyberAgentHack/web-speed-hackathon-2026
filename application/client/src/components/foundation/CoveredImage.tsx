@@ -40,16 +40,21 @@ export const CoveredImage = ({ alt, src, priority }: Props) => {
 
   return (
     <div className="relative h-full w-full overflow-hidden">
-      <img
-        alt={alt}
-        className="h-full w-full object-cover"
-        decoding="async"
-        {...(priority
-          ? { fetchPriority: "high" as const, loading: "eager" as const }
-          : { loading: "lazy" as const })}
-        src={src}
-        style={{ imageOrientation: "from-image" }}
-      />
+      <picture>
+        {src.endsWith(".jpg") && (
+          <source srcSet={src.replace(/\.jpg$/, ".avif")} type="image/avif" />
+        )}
+        <img
+          alt={alt}
+          className="h-full w-full object-cover"
+          decoding="async"
+          {...(priority
+            ? { fetchPriority: "high" as const, loading: "eager" as const }
+            : { loading: "lazy" as const })}
+          src={src}
+          style={{ imageOrientation: "from-image" }}
+        />
+      </picture>
 
       <button
         ref={showModalRef}
