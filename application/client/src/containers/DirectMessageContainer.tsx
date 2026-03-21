@@ -34,6 +34,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const typingDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadConversation = useCallback(async () => {
     if (activeUser == null) {
@@ -61,6 +62,14 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     void sendRead();
   }, [loadConversation, sendRead]);
 
+  useEffect(() => {
+    return () => {
+      if (typingDebounceRef.current !== null) {
+        clearTimeout(typingDebounceRef.current);
+      }
+    };
+  }, []);
+
   const handleSubmit = useCallback(
     async (params: DirectMessageFormData) => {
       setIsSubmitting(true);
@@ -76,8 +85,14 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     [conversationId],
   );
 
-  const handleTyping = useCallback(async () => {
-    void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
+  const handleTyping = useCallback(() => {
+    if (typingDebounceRef.current !== null) {
+      clearTimeout(typingDebounceRef.current);
+    }
+    typingDebounceRef.current = setTimeout(() => {
+      typingDebounceRef.current = null;
+      void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
+    }, 500);
   }, [conversationId]);
 
   useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {

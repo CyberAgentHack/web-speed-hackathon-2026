@@ -35,6 +35,7 @@ export const DirectMessagePage = ({
   onSubmit,
 }: Props) => {
   const formRef = useRef<HTMLFormElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const textAreaId = useId();
 
   const peer =
@@ -72,12 +73,8 @@ export const DirectMessagePage = ({
   );
 
   useEffect(() => {
-    const ro = new ResizeObserver(() => {
-      window.scrollTo(0, document.body.scrollHeight);
-    });
-    ro.observe(document.body);
-    return () => ro.disconnect();
-  }, []);
+    messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+  }, [conversation.messages.length]);
 
   if (conversationError != null) {
     return (
@@ -120,6 +117,7 @@ export const DirectMessagePage = ({
 
             return (
               <li
+                key={message.id}
                 className={classNames(
                   "flex flex-col w-full",
                   isActiveUserSend ? "items-end" : "items-start",
@@ -147,6 +145,7 @@ export const DirectMessagePage = ({
             );
           })}
         </ul>
+        <div ref={messagesEndRef} />
       </div>
 
       <div className="sticky bottom-12 z-10 lg:bottom-0">
