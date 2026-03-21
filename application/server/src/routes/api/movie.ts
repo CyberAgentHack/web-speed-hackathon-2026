@@ -9,6 +9,7 @@ import httpErrors from "http-errors";
 import sharp from "sharp";
 import { v4 as uuidv4 } from "uuid";
 
+import { Movie } from "@web-speed-hackathon-2026/server/src/models";
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
 const execFileAsync = promisify(execFile);
@@ -72,6 +73,8 @@ movieRouter.post("/movies", async (req, res) => {
   } finally {
     await fs.rm(tmpDir, { recursive: true, force: true });
   }
+
+  await Movie.create({ id: movieId });
 
   return res.status(200).type("application/json").send({ id: movieId });
 });
