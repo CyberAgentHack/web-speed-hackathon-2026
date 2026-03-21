@@ -27,32 +27,43 @@ function extractTiffAlt(buf: ArrayBuffer): string {
   return "";
 }
 
-/** Compress image: resize to max 1920px, output JPEG. Returns { file, alt }.
- *  Falls back to original file if the format is not decodable (e.g. TIFF). */
+let worker: Worker | null = null;
+
+function getWorker(): Worker {
+  if (!worker) {
+    worker = new Worker(new URL("../workers/compress-image.worker.ts", import.meta.url), {
+      type: "module",
+    });
+  }
+  return worker;
+}
+
+/** Compress image off main thread. Returns { file, alt }. */
 export async function compressImage(file: File): Promise<{ file: File; alt: string }> {
   const buf = await file.arrayBuffer();
   const alt = extractTiffAlt(buf);
 
-  let bitmap: ImageBitmap;
   try {
-    bitmap = await createImageBitmap(new Blob([buf]));
+    const w = getWorker();
+    const result = await new Promise<ArrayBuffer | null>((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error("timeout")), 15_000);
+      w.onmessage = (e: MessageEvent<{ buffer: ArrayBuffer | null }>) => {
+        clearTimeout(timeout);
+        resolve(e.data.buffer);
+      };
+      w.onerror = (e) => {
+        clearTimeout(timeout);
+        reject(e);
+      };
+      w.postMessage({ buffer: buf }, [buf]);
+    });
+
+    if (result) {
+      return { file: new File([result], "image.jpg", { type: "image/jpeg" }), alt };
+    }
+    // Worker signaled fallback (e.g. TIFF not decodable)
+    return { file, alt };
   } catch {
-    // Format not supported by browser (e.g. TIFF) — send original file
     return { file, alt };
   }
-
-  const MAX = 1920;
-  let { width, height } = bitmap;
-  if (width > MAX || height > MAX) {
-    const scale = MAX / Math.max(width, height);
-    width = Math.round(width * scale);
-    height = Math.round(height * scale);
-  }
-  const canvas = new OffscreenCanvas(width, height);
-  const ctx = canvas.getContext("2d")!;
-  ctx.drawImage(bitmap, 0, 0, width, height);
-  bitmap.close();
-  const blob = await canvas.convertToBlob({ type: "image/jpeg", quality: 0.85 });
-  const compressed = new File([blob], "image.jpg", { type: "image/jpeg" });
-  return { file: compressed, alt };
 }

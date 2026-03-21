@@ -26,7 +26,6 @@ function extractRiffInfo(buf: ArrayBuffer): { title?: string; artist?: string } 
           const subSize = view.getUint32(subOffset + 4, true);
           const valueEnd = Math.min(subOffset + 8 + subSize, data.length);
           const valueBytes = data.subarray(subOffset + 8, valueEnd);
-          // Strip trailing nulls
           let end = valueBytes.length;
           while (end > 0 && valueBytes[end - 1] === 0) end--;
           const trimmed = valueBytes.subarray(0, end);
@@ -48,67 +47,57 @@ function extractRiffInfo(buf: ArrayBuffer): { title?: string; artist?: string } 
     if (chunkSize % 2 !== 0) offset++;
   }
 
-  return { title, artist } as { title?: string; artist?: string };
+  const result: { title?: string; artist?: string } = {};
+  if (title !== undefined) result.title = title;
+  if (artist !== undefined) result.artist = artist;
+  return result;
 }
 
-/** Encode AudioBuffer as WAV (mono, 16-bit PCM). */
-function encodeWAV(audioBuffer: AudioBuffer): Blob {
-  const numChannels = 1;
-  const sampleRate = audioBuffer.sampleRate;
-  const samples = audioBuffer.getChannelData(0);
-  const bytesPerSample = 2;
-  const dataLength = samples.length * bytesPerSample;
-  const buffer = new ArrayBuffer(44 + dataLength);
-  const view = new DataView(buffer);
+let worker: Worker | null = null;
 
-  const writeString = (offset: number, str: string) => {
-    for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
-  };
-
-  writeString(0, "RIFF");
-  view.setUint32(4, 36 + dataLength, true);
-  writeString(8, "WAVE");
-  writeString(12, "fmt ");
-  view.setUint32(16, 16, true); // subchunk size
-  view.setUint16(20, 1, true); // PCM
-  view.setUint16(22, numChannels, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * numChannels * bytesPerSample, true);
-  view.setUint16(32, numChannels * bytesPerSample, true);
-  view.setUint16(34, bytesPerSample * 8, true);
-  writeString(36, "data");
-  view.setUint32(40, dataLength, true);
-
-  let offset = 44;
-  for (let i = 0; i < samples.length; i++) {
-    const s = Math.max(-1, Math.min(1, samples[i]!));
-    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
-    offset += 2;
+function getWorker(): Worker {
+  if (!worker) {
+    worker = new Worker(new URL("../workers/compress-audio.worker.ts", import.meta.url), {
+      type: "module",
+    });
   }
-
-  return new Blob([buffer], { type: "audio/wav" });
+  return worker;
 }
 
-/** Compress audio: downsample to mono 22050Hz WAV. Returns { file, title, artist }. */
+/** Compress audio off main thread. Returns { file, title, artist }. */
 export async function compressAudio(
   file: File,
 ): Promise<{ file: File; title?: string; artist?: string }> {
   const buf = await file.arrayBuffer();
-  const { title, artist } = extractRiffInfo(buf);
+  const meta = extractRiffInfo(buf);
 
-  const targetRate = 22050;
-  const audioCtx = new AudioContext({ sampleRate: targetRate });
-  const decoded = await audioCtx.decodeAudioData(buf.slice(0));
-  await audioCtx.close();
+  const makeResult = (f: File): { file: File; title?: string; artist?: string } => {
+    const r: { file: File; title?: string; artist?: string } = { file: f };
+    if (meta.title !== undefined) r.title = meta.title;
+    if (meta.artist !== undefined) r.artist = meta.artist;
+    return r;
+  };
 
-  const offline = new OfflineAudioContext(1, Math.ceil(decoded.duration * targetRate), targetRate);
-  const source = offline.createBufferSource();
-  source.buffer = decoded;
-  source.connect(offline.destination);
-  source.start();
-  const rendered = await offline.startRendering();
+  try {
+    const w = getWorker();
+    const result = await new Promise<ArrayBuffer | null>((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error("timeout")), 15_000);
+      w.onmessage = (e: MessageEvent<{ buffer: ArrayBuffer | null }>) => {
+        clearTimeout(timeout);
+        resolve(e.data.buffer);
+      };
+      w.onerror = (e) => {
+        clearTimeout(timeout);
+        reject(e);
+      };
+      w.postMessage({ buffer: buf }, [buf]);
+    });
 
-  const wavBlob = encodeWAV(rendered);
-  const compressed = new File([wavBlob], "audio.wav", { type: "audio/wav" });
-  return { file: compressed, title, artist } as { file: File; title?: string; artist?: string };
+    if (result) {
+      return makeResult(new File([result], "audio.wav", { type: "audio/wav" }));
+    }
+    return makeResult(file);
+  } catch {
+    return makeResult(file);
+  }
 }
