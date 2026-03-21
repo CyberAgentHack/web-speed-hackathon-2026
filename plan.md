@@ -1,4 +1,4 @@
-# 実装計画（application限定）: 投稿詳細系の `NO_FCP` 解消
+実装計画（application限定）: 投稿詳細系の `NO_FCP` 解消
 
 ## 問題
 - 以下ページで `NO_FCP` 判定:
