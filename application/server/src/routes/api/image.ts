@@ -46,8 +46,11 @@ imageRouter.post("/images", async (req, res) => {
     }
   }
 
-  // WebP に変換
-  const webpBuffer = await sharp(req.body).webp({ quality: 80 }).toBuffer();
+  // WebP に変換 + 800px幅にリサイズ
+  const webpBuffer = await sharp(req.body)
+    .resize({ width: 960, withoutEnlargement: true })
+    .webp({ quality: 80 })
+    .toBuffer();
 
   const filePath = path.resolve(
     UPLOAD_PATH,
