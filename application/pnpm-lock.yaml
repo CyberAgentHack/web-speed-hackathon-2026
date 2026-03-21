@@ -38,9 +38,6 @@ importers:
       classnames:
         specifier: 2.5.1
         version: 2.5.1
-      common-tags:
-        specifier: 1.8.2
-        version: 1.8.2
       encoding-japanese:
         specifier: 2.2.0
         version: 2.2.0
@@ -114,9 +111,6 @@ importers:
       '@tsconfig/strictest':
         specifier: 2.0.8
         version: 2.0.8
-      '@types/common-tags':
-        specifier: 1.8.4
-        version: 1.8.4
       '@types/encoding-japanese':
         specifier: 2.2.1
         version: 2.2.1
@@ -1339,9 +1333,6 @@ packages:
   '@types/body-parser@1.19.6':
     resolution: {integrity: sha512-HLFeCYgz89uk22N5Qg3dvGvsv46B8GLvKKo1zKG4NybA8U2DiEO3w9lqGg29t/tfLRJpJ6iQxnVw4OnB7MoM9g==}
 
-  '@types/common-tags@1.8.4':
-    resolution: {integrity: sha512-S+1hLDJPjWNDhcGxsxEbepzaxWqURP/o+3cP4aa2w7yBXgdcmKGQtZzP8JbyfOd0m+33nh+8+kvxYE2UJtBDkg==}
-
   '@types/compression@1.8.1':
     resolution: {integrity: sha512-kCFuWS0ebDbmxs0AXYn6e2r2nrGAb5KwQhknjSPSPgJcGd8+HVSILlUyFhGqML2gk39HcG7D1ydW9/qpYkN00Q==}
 
@@ -1626,10 +1617,6 @@ packages:
   commander@8.3.0:
     resolution: {integrity: sha512-OkTL9umf+He2DZkUq8f8J9of7yL6RJKI24dVITBmNfZBmri9zYZQrKkuXiKhyfPSu8tUhnVBB1iKXevvnlR4Ww==}
     engines: {node: '>= 12'}
-
-  common-tags@1.8.2:
-    resolution: {integrity: sha512-gk/Z852D2Wtb//0I+kRFNKKE9dIIVirjoqPoA1wJU+XePVXZfGeBpk45+A1rKO4Q43prqWBNY/MiIeRLbPWUaA==}
-    engines: {node: '>=4.0.0'}
 
   compressible@2.0.18:
     resolution: {integrity: sha512-AF3r7P5dWxL8MxyITRMlORQNaOA2IkAFaTr4k7BUumjPtRpGDTZpl0Pb1XCO6JeDCBdp126Cgs9sMxqSjgYyRg==}
@@ -4194,8 +4181,6 @@ snapshots:
       '@types/connect': 3.4.38
       '@types/node': 22.18.8
 
-  '@types/common-tags@1.8.4': {}
-
   '@types/compression@1.8.1':
     dependencies:
       '@types/express': 5.0.3
@@ -4514,8 +4499,6 @@ snapshots:
     optional: true
 
   commander@8.3.0: {}
-
-  common-tags@1.8.2: {}
 
   compressible@2.0.18:
     dependencies:
