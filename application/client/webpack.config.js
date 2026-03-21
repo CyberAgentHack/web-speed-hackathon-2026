@@ -1,10 +1,13 @@
 /// <reference types="webpack-dev-server" />
 const path = require("path");
 
+const CompressionPlugin = require("compression-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const Critters = require("critters-webpack-plugin");
 const webpack = require("webpack");
+const zlib = require("zlib");
 
 const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
@@ -28,9 +31,6 @@ const config = {
   devtool: false,
   entry: {
     main: [
-      "core-js",
-      "regenerator-runtime/runtime",
-      "jquery-binarytransport",
       path.resolve(SRC_PATH, "./tailwind.css"),
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
@@ -70,12 +70,6 @@ const config = {
     clean: true,
   },
   plugins: [
-    new webpack.ProvidePlugin({
-      $: "jquery",
-      AudioContext: ["standardized-audio-context", "AudioContext"],
-      Buffer: ["buffer", "Buffer"],
-      "window.jQuery": "jquery",
-    }),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
@@ -98,32 +92,35 @@ const config = {
       scriptLoading: "defer",
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
+    new Critters({
+      preload: "swap",
+      inlineFonts: false,
+      pruneSource: false,
+    }),
+    new CompressionPlugin({
+      filename: "[path][base].gz",
+      algorithm: "gzip",
+      test: /\.(js|css)$/,
+      threshold: 1024,
+      minRatio: 0.8,
+    }),
+    new CompressionPlugin({
+      filename: "[path][base].br",
+      algorithm: "brotliCompress",
+      compressionOptions: {
+        params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 11 },
+      },
+      test: /\.(js|css)$/,
+      threshold: 1024,
+      minRatio: 0.8,
+    }),
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
     alias: {
       "bayesian-bm25$": path.resolve(__dirname, "node_modules", "bayesian-bm25/dist/index.js"),
       ["kuromoji$"]: path.resolve(__dirname, "node_modules", "kuromoji/build/kuromoji.js"),
-      "@ffmpeg/ffmpeg$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/ffmpeg/dist/esm/index.js",
-      ),
-      "@ffmpeg/core$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/core/dist/umd/ffmpeg-core.js",
-      ),
-      "@ffmpeg/core/wasm$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/core/dist/umd/ffmpeg-core.wasm",
-      ),
-      "@imagemagick/magick-wasm/magick.wasm$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@imagemagick/magick-wasm/dist/magick.wasm",
-      ),
+
     },
     fallback: {
       fs: false,
@@ -135,6 +132,22 @@ const config = {
     minimize: true,
     splitChunks: {
       chunks: "all",
+      cacheGroups: {
+        react: {
+          test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
+          name: "vendor-react",
+          chunks: "all",
+          priority: 30,
+          enforce: true,
+        },
+        router: {
+          test: /[\\/]node_modules[\\/](react-router|react-router-dom)[\\/]/,
+          name: "vendor-router",
+          chunks: "all",
+          priority: 20,
+          enforce: true,
+        },
+      },
     },
     concatenateModules: true,
     usedExports: true,
@@ -142,12 +155,7 @@ const config = {
     sideEffects: true,
   },
   cache: false,
-  ignoreWarnings: [
-    {
-      module: /@ffmpeg/,
-      message: /Critical dependency: the request of a dependency is an expression/,
-    },
-  ],
+  ignoreWarnings: [],
 };
 
 module.exports = config;

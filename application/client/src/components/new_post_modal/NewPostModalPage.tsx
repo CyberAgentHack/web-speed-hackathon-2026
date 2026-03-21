@@ -1,4 +1,3 @@
-import { MagickFormat } from "@imagemagick/magick-wasm";
 import { ChangeEventHandler, FormEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -55,7 +54,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
       Promise.all(
         files.map((file) =>
-          convertImage(file, { extension: MagickFormat.Jpg }).then(
+          convertImage(file).then(
             (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
           ),
         ),
@@ -70,7 +69,16 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
           setIsConverting(false);
         })
-        .catch(console.error);
+        .catch((err) => {
+          console.error(err);
+          setParams((params) => ({
+            ...params,
+            images: files,
+            movie: undefined,
+            sound: undefined,
+          }));
+          setIsConverting(false);
+        });
     }
   }, []);
 
@@ -82,16 +90,27 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     if (isValid) {
       setIsConverting(true);
 
-      convertSound(file, { extension: "mp3" }).then((converted) => {
-        setParams((params) => ({
-          ...params,
-          images: [],
-          movie: undefined,
-          sound: new File([converted], "converted.mp3", { type: "audio/mpeg" }),
-        }));
+      convertSound(file, { extension: "mp3" })
+        .then((converted) => {
+          setParams((params) => ({
+            ...params,
+            images: [],
+            movie: undefined,
+            sound: new File([converted], "converted.mp3", { type: "audio/mpeg" }),
+          }));
 
-        setIsConverting(false);
-      });
+          setIsConverting(false);
+        })
+        .catch((err) => {
+          console.error(err);
+          setParams((params) => ({
+            ...params,
+            images: [],
+            movie: undefined,
+            sound: file,
+          }));
+          setIsConverting(false);
+        });
     }
   }, []);
 
@@ -116,7 +135,16 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
           setIsConverting(false);
         })
-        .catch(console.error);
+        .catch((err) => {
+          console.error(err);
+          setParams((params) => ({
+            ...params,
+            images: [],
+            movie: file,
+            sound: undefined,
+          }));
+          setIsConverting(false);
+        });
     }
   }, []);
 

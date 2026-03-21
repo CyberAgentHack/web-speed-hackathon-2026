@@ -6,6 +6,7 @@ import { Comment, Post } from "@web-speed-hackathon-2026/server/src/models";
 export const postRouter = Router();
 
 postRouter.get("/posts", async (req, res) => {
+  res.setHeader("Cache-Control", "public, max-age=30");
   const posts = await Post.findAll({
     limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
     offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
@@ -15,6 +16,7 @@ postRouter.get("/posts", async (req, res) => {
 });
 
 postRouter.get("/posts/:postId", async (req, res) => {
+  res.setHeader("Cache-Control", "public, max-age=60");
   const post = await Post.findByPk(req.params.postId);
 
   if (post === null) {
@@ -25,6 +27,7 @@ postRouter.get("/posts/:postId", async (req, res) => {
 });
 
 postRouter.get("/posts/:postId/comments", async (req, res) => {
+  res.setHeader("Cache-Control", "public, max-age=30");
   const posts = await Comment.findAll({
     limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
     offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,

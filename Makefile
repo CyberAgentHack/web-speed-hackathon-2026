@@ -22,7 +22,7 @@ start:
 # PR を出す前に必ず実行する。自動チェック + 手動確認リストを表示。
 check:
 	@echo "=== [1/3] fly.toml が変更されていないか ==="
-	@git diff upstream/main -- fly.toml | grep -q '.' \
+	@git diff fork-upstream/main -- fly.toml | grep -q '.' \
 		&& echo "❌ fly.toml が変更されています（レギュレーション違反）" && exit 1 \
 		|| echo "✅ fly.toml 変更なし"
 	@echo ""
@@ -63,7 +63,7 @@ pr-fork:
 # upstream の最新を取り込んで fork に反映
 sync:
 	git fetch upstream
-	git merge upstream/main --ff-only
+	git merge fork-upstream/main --ff-only
 	git push origin main
 
 # ── 採点 ────────────────────────────────────────────────────

@@ -29,8 +29,8 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   generateHash(password: string): string {
     return bcrypt.hashSync(password, bcrypt.genSaltSync(8));
   }
-  validPassword(password: string): boolean {
-    return bcrypt.compareSync(password, this.getDataValue("password"));
+  async validPassword(password: string): Promise<boolean> {
+    return bcrypt.compare(password, this.getDataValue("password"));
   }
 }
 
@@ -78,7 +78,6 @@ export function initUser(sequelize: Sequelize) {
     {
       sequelize,
       defaultScope: {
-        attributes: { exclude: ["profileImageId"] },
         include: { association: "profileImage" },
       },
     },

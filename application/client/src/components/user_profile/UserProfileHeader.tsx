@@ -1,5 +1,9 @@
 import { FastAverageColor } from "fast-average-color";
-import moment from "moment";
+import dayjs from "dayjs";
+import "dayjs/locale/ja";
+import localizedFormat from "dayjs/plugin/localizedFormat";
+
+dayjs.extend(localizedFormat);
 import { ReactEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -16,7 +20,7 @@ export const UserProfileHeader = ({ user }: Props) => {
   /** @type {React.ReactEventHandler<HTMLImageElement>} */
   const handleLoadImage = useCallback<ReactEventHandler<HTMLImageElement>>((ev) => {
     const fac = new FastAverageColor();
-    const { rgb } = fac.getColor(ev.currentTarget, { mode: "precision" });
+    const { rgb } = fac.getColor(ev.currentTarget, { mode: "speed" });
     setAverageColor(rgb);
     fac.destroy();
   }, []);
@@ -30,8 +34,10 @@ export const UserProfileHeader = ({ user }: Props) => {
         <img
           alt=""
           crossOrigin="anonymous"
+          height={128}
           onLoad={handleLoadImage}
-          src={getProfileImagePath(user.profileImage.id)}
+          src={user.profileImage ? getProfileImagePath(user.profileImage.id) : ""}
+          width={128}
         />
       </div>
       <div className="px-4 pt-20">
@@ -43,8 +49,8 @@ export const UserProfileHeader = ({ user }: Props) => {
             <FontAwesomeIcon iconType="calendar-alt" styleType="regular" />
           </span>
           <span>
-            <time dateTime={moment(user.createdAt).toISOString()}>
-              {moment(user.createdAt).locale("ja").format("LL")}
+            <time dateTime={dayjs(user.createdAt).toISOString()}>
+              {dayjs(user.createdAt).locale("ja").format("LL")}
             </time>
             からサービスを利用しています
           </span>

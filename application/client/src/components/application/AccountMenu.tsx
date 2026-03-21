@@ -37,11 +37,15 @@ export const AccountMenu = ({ user, onLogout }: Props) => {
         className="hover:bg-cax-surface-subtle flex w-full items-center gap-3 rounded-full p-2 transition-colors"
         onClick={() => setOpen((prev) => !prev)}
       >
-        <img
-          alt={user.profileImage.alt}
-          className="h-10 w-10 shrink-0 rounded-full object-cover"
-          src={getProfileImagePath(user.profileImage.id)}
-        />
+        {user.profileImage != null ? (
+          <img
+            alt={user.profileImage.alt}
+            className="h-10 w-10 shrink-0 rounded-full object-cover"
+            src={getProfileImagePath(user.profileImage.id)}
+          />
+        ) : (
+          <div className="h-10 w-10 shrink-0 rounded-full bg-gray-300" />
+        )}
         <div className="hidden min-w-0 flex-1 text-left lg:block">
           <div className="text-cax-text truncate text-sm font-bold">{user.name}</div>
           <div className="text-cax-text-muted truncate text-sm">@{user.username}</div>
