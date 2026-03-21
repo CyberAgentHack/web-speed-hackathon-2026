@@ -36,11 +36,12 @@ export function useInfiniteFetch<T>(
       offset,
     };
 
-    void fetcher(apiPath).then(
-      (allData) => {
+    const separator = apiPath.includes("?") ? "&" : "?";
+    void fetcher(`${apiPath}${separator}offset=${offset}&limit=${LIMIT}`).then(
+      (pageData) => {
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...pageData],
           isLoading: false,
         }));
         internalRef.current = {
