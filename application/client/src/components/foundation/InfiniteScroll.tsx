@@ -1,5 +1,3 @@
-// FIXME: defensive programming
-
 import { ReactNode, useEffect, useRef } from "react";
 
 interface Props {
