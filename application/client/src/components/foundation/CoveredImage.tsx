@@ -26,6 +26,7 @@ export const CoveredImage = ({ alt, src, lazy }: Props) => {
         className="h-full w-full object-cover"
         src={src}
         loading={lazy ? "lazy" : undefined}
+        fetchPriority={lazy ? undefined : "high"}
       />
 
       <button

@@ -12,12 +12,20 @@ function asyncCssPlugin(): Plugin {
     name: "async-css",
     enforce: "post",
     transformIndexHtml(html) {
-      return html.replace(
+      html = html.replace(
         /<link rel="stylesheet" crossorigin href="(\/assets\/index-[^"]+\.css)">/,
         `<style>body{background-color:#f5f5f4}</style>
     <link rel="preload" as="style" crossorigin href="$1" onload="this.rel='stylesheet'">
     <noscript><link rel="stylesheet" crossorigin href="$1"></noscript>`,
       );
+      // Preload API responses to parallelize with JS evaluation
+      html = html.replace(
+        "</head>",
+        `<link rel="preload" as="fetch" href="/api/v1/posts?limit=10&offset=0" crossorigin>
+    <link rel="preload" as="fetch" href="/api/v1/me" crossorigin>
+    </head>`,
+      );
+      return html;
     },
   };
 }
