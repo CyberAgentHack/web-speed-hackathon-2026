@@ -56,7 +56,7 @@ export const PostItem = ({ post }: Props) => {
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
+              <MovieArea interactive movie={post.movie} />
             </div>
           ) : null}
           {post.sound ? (

@@ -6,12 +6,13 @@ import { faPause, faPlay } from "@fortawesome/free-solid-svg-icons";
 
 interface Props {
   src: string;
+  interactive?: boolean;
 }
 
 /**
  * クリックすると再生・一時停止を切り替えます。
  */
-export const PausableMovie = ({ src }: Props) => {
+export const PausableMovie = ({ src, interactive }: Props) => {
   const [paused, setPaused] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
@@ -58,7 +59,7 @@ export const PausableMovie = ({ src }: Props) => {
           ref={videoRef}
           className="w-full"
           src={src}
-          preload="metadata"
+          preload={interactive ? "auto" : "metadata"}
           autoPlay
           loop
           muted

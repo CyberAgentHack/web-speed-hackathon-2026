@@ -28,9 +28,10 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
  */
 interface Props {
   post: Models.Post;
+  interactive?: boolean;
 }
 
-export const TimelineItem = ({ post }: Props) => {
+export const TimelineItem = ({ post, interactive }: Props) => {
   const navigate = useNavigate();
 
   /**
@@ -91,7 +92,7 @@ export const TimelineItem = ({ post }: Props) => {
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
+              <MovieArea interactive={interactive} movie={post.movie} />
             </div>
           ) : null}
           {post.sound ? (
