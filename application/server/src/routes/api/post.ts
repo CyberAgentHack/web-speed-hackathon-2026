@@ -41,22 +41,26 @@ postRouter.post("/posts", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
+  const { images, ...body } = req.body;
+
   const post = await Post.create(
     {
-      ...req.body,
+      ...body,
       userId: req.session.userId,
     },
     {
       include: [
-        {
-          association: "images",
-          through: { attributes: [] },
-        },
         { association: "movie" },
         { association: "sound" },
       ],
     },
   );
 
-  return res.status(200).type("application/json").send(post);
+  if (Array.isArray(images) && images.length > 0) {
+    const imageIds = images.map((img: { id: string }) => img.id);
+    await (post as any).setImages(imageIds);
+  }
+
+  const result = await Post.findByPk(post.id);
+  return res.status(200).type("application/json").send(result);
 });
