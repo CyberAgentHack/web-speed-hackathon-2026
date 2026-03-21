@@ -1,4 +1,4 @@
-import { RefObject, useEffect, useState } from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
 
 /**
  * 要素がビューポートに入る（または rootMargin の範囲内に入る）と true を返す。
@@ -9,6 +9,8 @@ export function useIntersectionObserver(
   options?: IntersectionObserverInit,
 ): boolean {
   const [isVisible, setIsVisible] = useState(false);
+  // options はレンダーごとに新しいオブジェクトが渡されることがあるため ref で安定化させる
+  const optionsRef = useRef(options);
 
   useEffect(() => {
     const el = ref.current;
@@ -21,12 +23,12 @@ export function useIntersectionObserver(
           io.disconnect();
         }
       },
-      options,
+      optionsRef.current,
     );
     io.observe(el);
 
     return () => io.disconnect();
-  }, [ref, options]);
+  }, [ref]);
 
   return isVisible;
 }
