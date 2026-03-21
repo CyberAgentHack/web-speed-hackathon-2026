@@ -26,6 +26,7 @@ const config = {
       },
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
+    hot: true,
   },
   devtool: false,
   entry: {

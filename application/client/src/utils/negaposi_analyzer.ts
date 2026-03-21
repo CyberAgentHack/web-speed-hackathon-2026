@@ -1,4 +1,3 @@
-import Bluebird from "bluebird";
 import { type Tokenizer, type IpadicFeatures } from "kuromoji";
 
 let tokenizerCache: Tokenizer<IpadicFeatures> | null = null;
@@ -8,8 +7,12 @@ async function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
     return tokenizerCache;
   }
   const { default: kuromoji } = await import("kuromoji");
-  const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-  tokenizerCache = await builder.buildAsync();
+  tokenizerCache = await new Promise<Tokenizer<IpadicFeatures>>((resolve, reject) => {
+    kuromoji.builder({ dicPath: "/dicts" }).build((err, tokenizer) => {
+      if (err) reject(err);
+      else resolve(tokenizer);
+    });
+  });
   return tokenizerCache;
 }
 
