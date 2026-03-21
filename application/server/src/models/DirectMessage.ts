@@ -60,6 +60,11 @@ export function initDirectMessage(sequelize: Sequelize) {
     },
     {
       sequelize,
+      indexes: [
+        { fields: ["conversationId"] },
+        { fields: ["senderId"] },
+        { fields: ["conversationId", "isRead"] },
+      ],
       defaultScope: {
         include: [
           {
@@ -80,29 +85,37 @@ export function initDirectMessage(sequelize: Sequelize) {
       return;
     }
 
+    // WebSocket通知を先に実行（メッセージ表示をブロックしない）
+    eventhub.emit(`dm:conversation/${conversation.id}:message`, directMessage);
+
+    // 未読数カウントは非同期で後から通知
     const receiverId =
       conversation.initiatorId === directMessage.senderId
         ? conversation.memberId
         : conversation.initiatorId;
 
-    const unreadCount = await DirectMessage.count({
-      distinct: true,
-      where: {
-        senderId: { [Op.ne]: receiverId },
-        isRead: false,
-      },
-      include: [
-        {
-          association: "conversation",
+    setImmediate(async () => {
+      try {
+        const unreadCount = await DirectMessage.count({
+          distinct: true,
           where: {
-            [Op.or]: [{ initiatorId: receiverId }, { memberId: receiverId }],
+            senderId: { [Op.ne]: receiverId },
+            isRead: false,
           },
-          required: true,
-        },
-      ],
+          include: [
+            {
+              association: "conversation",
+              where: {
+                [Op.or]: [{ initiatorId: receiverId }, { memberId: receiverId }],
+              },
+              required: true,
+            },
+          ],
+        });
+        eventhub.emit(`dm:unread/${receiverId}`, { unreadCount });
+      } catch {
+        // 未読数通知の失敗はメッセージ配信に影響させない
+      }
     });
-
-    eventhub.emit(`dm:conversation/${conversation.id}:message`, directMessage);
-    eventhub.emit(`dm:unread/${receiverId}`, { unreadCount });
   });
 }

@@ -58,7 +58,19 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
           `/api/v1/dm/${conversationId}`,
         );
         hasLoadedConversationRef.current = true;
-        setConversation(data);
+        setConversation((prev) => {
+          if (prev == null) return data;
+          // サーバーデータにない楽観的メッセージを保持
+          const serverIds = new Set(data.messages.map((m: Models.DirectMessage) => m.id));
+          const optimisticMessages = prev.messages.filter(
+            (m) => !serverIds.has(m.id) && !data.messages.some((sm: Models.DirectMessage) => sm.body === m.body),
+          );
+          if (optimisticMessages.length === 0) return data;
+          return {
+            ...data,
+            messages: [...data.messages, ...optimisticMessages],
+          };
+        });
         setConversationError(null);
         return;
       } catch (error) {
