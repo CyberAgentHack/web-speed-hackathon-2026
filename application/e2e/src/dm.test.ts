@@ -200,7 +200,10 @@ test.describe("DM一覧", () => {
     await expect(page.getByText("入力中…")).toBeVisible({ timeout: 30 * 1000 });
   });
 
-  test("メッセージの入力を辞めると入力中のインジケータが非表示になる", async ({ page, browser }) => {
+  test("メッセージの入力を辞めると入力中のインジケータが非表示になる", async ({
+    page,
+    browser,
+  }) => {
     await login(page, "gg3i6j6");
     await page.goto("/dm");
 
@@ -267,7 +270,10 @@ test.describe("DM詳細 - 追加テスト", () => {
     await page.setViewportSize({ width: 1920, height: 1080 });
   });
 
-  test("新規メッセージを受信した場合、DM一覧画面がリアルタイムで更新される", async ({ page, browser }) => {
+  test("新規メッセージを受信した場合、DM一覧画面がリアルタイムで更新される", async ({
+    page,
+    browser,
+  }) => {
     await login(page, "gg3i6j6");
     await page.goto("/dm");
 
@@ -318,7 +324,9 @@ test.describe("DM詳細 - 追加テスト", () => {
     }).toPass({ timeout: 30_000 });
   });
 
-  test("自分のメッセージで相手が既読している場合は「既読」のラベルが表示される", async ({ page }) => {
+  test("自分のメッセージで相手が既読している場合は「既読」のラベルが表示される", async ({
+    page,
+  }) => {
     await login(page, "gg3i6j6");
     await page.goto("/dm");
 
@@ -347,7 +355,10 @@ test.describe("DM詳細 - 追加テスト", () => {
     }
   });
 
-  test("未読のメッセージがある状態でDM詳細画面を開いた場合、未読のメッセージが既読になる", async ({ page, browser }) => {
+  test("未読のメッセージがある状態でDM詳細画面を開いた場合、未読のメッセージが既読になる", async ({
+    page,
+    browser,
+  }) => {
     // 相手からメッセージを送信する
     const peerContext = await browser.newContext();
     const peerPage = await peerContext.newPage();
@@ -384,7 +395,10 @@ test.describe("DM詳細 - 追加テスト", () => {
     await peerContext.close();
   });
 
-  test("新規メッセージを受信した場合、リアルタイムで相手のメッセージ履歴が既読になる", async ({ page, browser }) => {
+  test("新規メッセージを受信した場合、リアルタイムで相手のメッセージ履歴が既読になる", async ({
+    page,
+    browser,
+  }) => {
     await login(page, "gg3i6j6");
     await page.goto("/dm");
 
@@ -418,7 +432,10 @@ test.describe("DM詳細 - 追加テスト", () => {
     await peerContext.close();
   });
 
-  test("新規メッセージを受信した場合、画面が一番下までスクロールされる", async ({ page, browser }) => {
+  test("新規メッセージを受信した場合、画面が一番下までスクロールされる", async ({
+    page,
+    browser,
+  }) => {
     await login(page, "gg3i6j6");
     await page.goto("/dm");
 
@@ -466,7 +483,10 @@ test.describe("DM - 未読バッジ", () => {
     await page.setViewportSize({ width: 1920, height: 1080 });
   });
 
-  test("未読のメッセージがある場合はメニューに未読数のバッジが表示される", async ({ page, browser }) => {
+  test("未読のメッセージがある場合はメニューに未読数のバッジが表示される", async ({
+    page,
+    browser,
+  }) => {
     await login(page, "gg3i6j6");
     await page.goto("/");
 

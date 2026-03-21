@@ -143,9 +143,7 @@ export const DirectMessagePage = ({
                   {message.body}
                 </p>
                 <div className="flex gap-1 text-xs">
-                  <time dateTime={message.createdAt}>
-                    {formatTime(message.createdAt)}
-                  </time>
+                  <time dateTime={message.createdAt}>{formatTime(message.createdAt)}</time>
                   {isActiveUserSend && message.isRead && (
                     <span className="text-cax-text-muted">既読</span>
                   )}

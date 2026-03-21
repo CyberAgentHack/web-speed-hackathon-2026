@@ -44,9 +44,7 @@ export const CommentItem = ({ comment }: Props) => {
             <TranslatableText text={comment.text} />
           </div>
           <p className="text-cax-text-muted pt-1 text-xs">
-            <time dateTime={toISOString(comment.createdAt)}>
-              {formatDate(comment.createdAt)}
-            </time>
+            <time dateTime={toISOString(comment.createdAt)}>{formatDate(comment.createdAt)}</time>
           </p>
         </div>
       </div>

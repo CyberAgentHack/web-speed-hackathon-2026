@@ -1,6 +1,7 @@
+import path from "node:path";
+
 import history from "connect-history-api-fallback";
 import { Router } from "express";
-import path from "node:path";
 import serveStatic from "serve-static";
 
 import {

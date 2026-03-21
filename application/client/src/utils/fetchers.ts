@@ -1,7 +1,10 @@
 async function ensureOk(response: Response): Promise<Response> {
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
-    const error = Object.assign(new Error(`HTTP ${response.status}`), { responseJSON: body, status: response.status });
+    const error = Object.assign(new Error(`HTTP ${response.status}`), {
+      responseJSON: body,
+      status: response.status,
+    });
     throw error;
   }
   return response;

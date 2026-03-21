@@ -29,12 +29,17 @@ export async function convertMovie(input: Buffer): Promise<Buffer> {
     await new Promise<void>((resolve, reject) => {
       const command = ffmpeg(inputPath)
         .outputOptions([
-          "-t", "5",
-          "-r", "10",
-          "-vf", "crop='min(iw,ih)':'min(iw,ih)'",
+          "-t",
+          "5",
+          "-r",
+          "10",
+          "-vf",
+          "crop='min(iw,ih)':'min(iw,ih)'",
           "-an",
-          "-pix_fmt", "yuv420p",
-          "-movflags", "+faststart",
+          "-pix_fmt",
+          "yuv420p",
+          "-movflags",
+          "+faststart",
         ])
         .output(outputPath)
         .on("end", () => {

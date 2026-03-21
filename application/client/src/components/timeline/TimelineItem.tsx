@@ -79,9 +79,7 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={toISOString(post.createdAt)}>
-                {formatDate(post.createdAt)}
-              </time>
+              <time dateTime={toISOString(post.createdAt)}>{formatDate(post.createdAt)}</time>
             </Link>
           </p>
           <div className="text-cax-text leading-relaxed">

@@ -100,7 +100,9 @@ test.describe("サインアウト", () => {
     await login(page);
 
     // サインイン後、サインインボタンは表示されない
-    await expect(page.getByRole("button", { name: "サインイン" })).not.toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("button", { name: "サインイン" })).not.toBeVisible({
+      timeout: 10_000,
+    });
 
     // アカウントメニューボタンをクリック
     const accountMenuButton = page.getByRole("button", { name: "アカウントメニュー" });

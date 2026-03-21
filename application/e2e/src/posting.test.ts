@@ -137,7 +137,9 @@ test.describe("投稿機能 - TIFF画像", () => {
     await altButton.click();
 
     // モーダルが開いて ALT テキストが表示される
-    await expect(page.getByRole("heading", { name: "画像の説明" })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { name: "画像の説明" })).toBeVisible({
+      timeout: 10_000,
+    });
 
     // ALTテキストが空でないことを確認
     const altDescription = page.locator("dialog p.text-sm");
@@ -164,7 +166,10 @@ test.describe("投稿機能 - WAV音声", () => {
 
     // WAV音声ファイルを添付
     const fileInput = page.locator('input[type="file"][accept="audio/*"]');
-    const wavPath = path.resolve(import.meta.dirname, "../../../docs/assets/maoudamashii_shining_star.wav");
+    const wavPath = path.resolve(
+      import.meta.dirname,
+      "../../../docs/assets/maoudamashii_shining_star.wav",
+    );
     await fileInput.setInputFiles(wavPath);
 
     // モーダル内の投稿ボタンをクリック
@@ -225,7 +230,10 @@ test.describe("投稿機能 - MKV動画", () => {
 
     // MKV動画ファイルを添付
     const fileInput = page.locator('input[type="file"][accept="video/*"]');
-    const mkvPath = path.resolve(import.meta.dirname, "../../../docs/assets/pixabay_326739_kanenori_himejijo.mkv");
+    const mkvPath = path.resolve(
+      import.meta.dirname,
+      "../../../docs/assets/pixabay_326739_kanenori_himejijo.mkv",
+    );
     await fileInput.setInputFiles(mkvPath);
 
     // モーダル内の投稿ボタンをクリック
@@ -288,7 +296,10 @@ test.describe("投稿機能 - MKV動画", () => {
 
     // MKV動画ファイルを添付
     const fileInput = page.locator('input[type="file"][accept="video/*"]');
-    const mkvPath = path.resolve(import.meta.dirname, "../../../docs/assets/pixabay_326739_kanenori_himejijo.mkv");
+    const mkvPath = path.resolve(
+      import.meta.dirname,
+      "../../../docs/assets/pixabay_326739_kanenori_himejijo.mkv",
+    );
     await fileInput.setInputFiles(mkvPath);
 
     // モーダル内の投稿ボタンをクリック

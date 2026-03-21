@@ -10,14 +10,16 @@ export const app = Express();
 
 app.set("trust proxy", true);
 
-app.use(compression({
-  filter: (req, res) => {
-    if (req.headers.accept === 'text/event-stream') {
-      return false;
-    }
-    return compression.filter(req, res);
-  },
-}));
+app.use(
+  compression({
+    filter: (req, res) => {
+      if (req.headers.accept === "text/event-stream") {
+        return false;
+      }
+      return compression.filter(req, res);
+    },
+  }),
+);
 app.use(sessionMiddleware);
 app.use(bodyParser.json());
 app.use(bodyParser.raw({ limit: "10mb" }));

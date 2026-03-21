@@ -26,9 +26,13 @@ test.describe("Crok AIチャット", () => {
     await expect(page).toHaveURL(/\/crok/, { timeout: 30_000 });
   });
 
-  test("初回表示時にウェルカム画面「AIアシスタントに質問してみましょう」が表示される", async ({ page }) => {
+  test("初回表示時にウェルカム画面「AIアシスタントに質問してみましょう」が表示される", async ({
+    page,
+  }) => {
     // ウェルカム画面のテキストが表示されること
-    await expect(page.getByText("AIアシスタントに質問してみましょう")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText("AIアシスタントに質問してみましょう")).toBeVisible({
+      timeout: 30_000,
+    });
     // Crok AI の見出しも表示されること
     await expect(page.getByRole("heading", { name: "Crok AI" })).toBeVisible({ timeout: 10_000 });
   });

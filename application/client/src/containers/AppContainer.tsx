@@ -19,9 +19,11 @@ const DirectMessageContainer = lazy(() =>
   })),
 );
 const DirectMessageListContainer = lazy(() =>
-  import("@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer").then((m) => ({
-    default: m.DirectMessageListContainer,
-  })),
+  import("@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer").then(
+    (m) => ({
+      default: m.DirectMessageListContainer,
+    }),
+  ),
 );
 const NotFoundContainer = lazy(() =>
   import("@web-speed-hackathon-2026/client/src/containers/NotFoundContainer").then((m) => ({

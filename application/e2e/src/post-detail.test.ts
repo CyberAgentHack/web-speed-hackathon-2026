@@ -180,7 +180,9 @@ test.describe("投稿詳細 - 写真", () => {
     await expect(altButton).toBeVisible({ timeout: 30_000 });
     await altButton.click();
 
-    await expect(page.getByRole("heading", { name: "画像の説明" })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { name: "画像の説明" })).toBeVisible({
+      timeout: 10_000,
+    });
     const altDescription = page.locator("dialog p.text-sm").first();
     await expect(altDescription).toBeVisible({ timeout: 10_000 });
     const altText = await altDescription.innerText();

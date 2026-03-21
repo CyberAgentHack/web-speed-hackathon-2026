@@ -69,9 +69,7 @@ export const PostItem = ({ post }: Props) => {
           ) : null}
           <p className="mt-2 text-sm sm:mt-4">
             <Link className="text-cax-text-muted hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={toISOString(post.createdAt)}>
-                {formatDate(post.createdAt)}
-              </time>
+              <time dateTime={toISOString(post.createdAt)}>{formatDate(post.createdAt)}</time>
             </Link>
           </p>
         </div>

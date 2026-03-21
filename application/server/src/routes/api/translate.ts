@@ -40,7 +40,9 @@ translateRouter.post("/translate", async (req, res) => {
 
   try {
     const targetLang = TARGET_LANG_MAP[targetLanguage ?? "en"] ?? "en-US";
-    const sourceLang = sourceLanguage ? (TARGET_LANG_MAP[sourceLanguage] as deepl.SourceLanguageCode | undefined) : undefined;
+    const sourceLang = sourceLanguage
+      ? (TARGET_LANG_MAP[sourceLanguage] as deepl.SourceLanguageCode | undefined)
+      : undefined;
 
     const result = await getTranslator().translateText(text, sourceLang ?? null, targetLang);
     return res.status(200).type("application/json").send({ result: result.text });

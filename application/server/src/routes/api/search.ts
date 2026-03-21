@@ -41,10 +41,7 @@ searchRouter.get("/search", async (req, res) => {
     ? await User.unscoped()
         .findAll({
           where: {
-            [Op.or]: [
-              { username: { [Op.like]: searchTerm } },
-              { name: { [Op.like]: searchTerm } },
-            ],
+            [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
           },
           attributes: ["id"],
           raw: true,
