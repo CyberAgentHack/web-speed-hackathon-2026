@@ -14,29 +14,24 @@ interface ReturnValues {
   reset: () => void;
 }
 
-const BATCH_INTERVAL_MS = 300;
-
 export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
   const [content, setContent] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const contentRef = useRef("");
-  const timerIdRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const flushUpdate = useCallback(() => {
-    timerIdRef.current = null;
-    setContent(contentRef.current);
-  }, []);
+  const rafIdRef = useRef<number>(0);
+  const pendingUpdateRef = useRef(false);
 
   const stop = useCallback(() => {
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
     }
-    if (timerIdRef.current !== null) {
-      clearTimeout(timerIdRef.current);
-      timerIdRef.current = null;
+    if (rafIdRef.current) {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = 0;
     }
+    pendingUpdateRef.current = false;
     setIsStreaming(false);
   }, []);
 
@@ -47,9 +42,13 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
   }, [stop]);
 
   const scheduleUpdate = useCallback(() => {
-    if (timerIdRef.current !== null) return;
-    timerIdRef.current = setTimeout(flushUpdate, BATCH_INTERVAL_MS);
-  }, [flushUpdate]);
+    if (pendingUpdateRef.current) return;
+    pendingUpdateRef.current = true;
+    rafIdRef.current = requestAnimationFrame(() => {
+      pendingUpdateRef.current = false;
+      setContent(contentRef.current);
+    });
+  }, []);
 
   const start = useCallback(
     (url: string) => {
@@ -66,10 +65,11 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
 
         const isDone = options.onDone?.(data) ?? false;
         if (isDone) {
-          if (timerIdRef.current !== null) {
-            clearTimeout(timerIdRef.current);
-            timerIdRef.current = null;
+          if (rafIdRef.current) {
+            cancelAnimationFrame(rafIdRef.current);
+            rafIdRef.current = 0;
           }
+          pendingUpdateRef.current = false;
           setContent(contentRef.current);
           options.onComplete?.(contentRef.current);
           stop();
