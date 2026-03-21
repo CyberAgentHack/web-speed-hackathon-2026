@@ -86,13 +86,17 @@ export async function calculateDmPage({ baseUrl, playwrightPage, puppeteerPage }
   const {
     steps: [result],
   } = await flow.createFlowResult();
+  const audits = result!.lhr.audits;
+  if (audits["first-contentful-paint"]?.numericValue == null) {
+    throw new Error("NO_FCP: DM詳細ページ (/dm/33881deb-da8a-4ca9-a153-2f80d5fa7af8)");
+  }
 
-  const { breakdown, scoreX100 } = calculateHackathonScore(result!.lhr.audits, {
+  const { breakdown, scoreX100 } = calculateHackathonScore(audits, {
     isUserflow: false,
   });
 
   return {
-    audits: result!.lhr.audits,
+    audits,
     breakdown,
     scoreX100,
   };

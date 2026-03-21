@@ -34,13 +34,17 @@ export async function calculatePostPhotoPage({ baseUrl, playwrightPage, puppetee
   const {
     steps: [result],
   } = await flow.createFlowResult();
+  const audits = result!.lhr.audits;
+  if (audits["first-contentful-paint"]?.numericValue == null) {
+    throw new Error("NO_FCP: 写真つき投稿詳細ページ (/posts/fe6712a1-d9e4-4f6a-987d-e7d08b7f8a46)");
+  }
 
-  const { breakdown, scoreX100 } = calculateHackathonScore(result!.lhr.audits, {
+  const { breakdown, scoreX100 } = calculateHackathonScore(audits, {
     isUserflow: false,
   });
 
   return {
-    audits: result!.lhr.audits,
+    audits,
     breakdown,
     scoreX100,
   };

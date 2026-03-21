@@ -17,7 +17,7 @@ export async function goTo({ playwrightPage, puppeteerPage, timeout, url }: Para
 
   await Promise.race([
     playwrightPage
-      .goto(url, { waitUntil: "networkidle" })
+      .goto(url, { waitUntil: "domcontentloaded" })
       .catch(() => {})
       .then(() => {
         // `/api/v1/me` APIはエラーを返す可能性があるので無視する
@@ -27,7 +27,10 @@ export async function goTo({ playwrightPage, puppeteerPage, timeout, url }: Para
         }
       })
       .then(() => {
-        return watcher.waitForRequestsComplete();
+        return Promise.race([
+          watcher.waitForRequestsComplete(),
+          setTimeout(15 * 1000),
+        ]);
       }),
     setTimeout(timeout).then(() => {
       throw new Error("ページの読み込みがタイムアウトしました");
