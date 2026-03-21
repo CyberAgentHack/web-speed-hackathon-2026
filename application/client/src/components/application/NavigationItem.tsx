@@ -19,6 +19,7 @@ export const NavigationItem = ({ badge, href, icon, command, commandfor, text }:
     <li>
       {href !== undefined ? (
         <Link
+          aria-label={text}
           className={classNames(
             "flex flex-col items-center justify-center w-12 h-12 hover:bg-cax-brand-soft rounded-full sm:px-2 sm:w-24 sm:h-auto sm:rounded-sm lg:flex-row lg:justify-start lg:px-4 lg:py-2 lg:w-auto lg:h-auto lg:rounded-full",
             { "text-cax-brand": isActive },
@@ -33,6 +34,7 @@ export const NavigationItem = ({ badge, href, icon, command, commandfor, text }:
         </Link>
       ) : (
         <button
+          aria-label={text}
           className="hover:bg-cax-brand-soft flex h-12 w-12 flex-col items-center justify-center rounded-full sm:h-auto sm:w-24 sm:rounded-sm sm:px-2 lg:h-auto lg:w-auto lg:flex-row lg:justify-start lg:rounded-full lg:px-4 lg:py-2"
           type="button"
           command={command}

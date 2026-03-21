@@ -29,6 +29,10 @@
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
+
+  .password-mask {
+    -webkit-text-security: disc;
+  }
 }
 
 @theme {
