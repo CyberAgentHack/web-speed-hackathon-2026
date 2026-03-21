@@ -109,6 +109,9 @@ crokRouter.get("/crok", async (req, res) => {
 
     const data = JSON.stringify({ text: char, done: false });
     res.write(`event: message\nid: ${messageId++}\ndata: ${data}\n\n`);
+    if (typeof (res as any).flush === "function") {
+      (res as any).flush();
+    }
 
     await sleep(10);
   }
@@ -116,6 +119,9 @@ crokRouter.get("/crok", async (req, res) => {
   if (!res.closed) {
     const data = JSON.stringify({ text: "", done: true });
     res.write(`event: message\nid: ${messageId}\ndata: ${data}\n\n`);
+    if (typeof (res as any).flush === "function") {
+      (res as any).flush();
+    }
   }
 
   res.end();
