@@ -11,7 +11,7 @@ export function getMoviePath(movieId: string): string {
 }
 
 export function getSoundPath(soundId: string): string {
-  return `/sounds/${soundId}.mp3`;
+  return `/sounds/${soundId}.opus`;
 }
 
 export function getProfileImagePath(profileImageId: string): string {
