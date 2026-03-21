@@ -43,6 +43,8 @@ export const CoveredImage = ({ imageId, alt = "", isLcpElement = false, isFull =
           "opacity-100": isLoaded,
         })}
         loading={isLcpElement ? "eager" : "lazy"}
+        // @ts-ignore
+        fetchpriority={isLcpElement ? "high" : "auto"}
         onLoad={handleLoad}
         src={src}
       />

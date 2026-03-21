@@ -1,14 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router";
-import { Field, InjectedFormProps, reduxForm, WrappedFieldProps } from "redux-form";
 
 import { Timeline } from "@web-speed-hackathon-2026/client/src/components/timeline/Timeline";
 import {
   parseSearchQuery,
   sanitizeSearchText,
 } from "@web-speed-hackathon-2026/client/src/search/services";
-import { SearchFormData } from "@web-speed-hackathon-2026/client/src/search/types";
-import { validate } from "@web-speed-hackathon-2026/client/src/search/validation";
 import { analyzeSentiment } from "@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer";
 
 import { Button } from "../foundation/Button";
@@ -18,33 +15,17 @@ interface Props {
   results: Models.Post[];
 }
 
-const SearchInput = ({ input, meta }: WrappedFieldProps) => (
-  <div className="flex flex-1 flex-col">
-    <input
-      {...input}
-      className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
-        meta.touched && meta.error
-          ? "border-cax-danger focus:border-cax-danger"
-          : "border-cax-border focus:border-cax-brand-strong"
-      }`}
-      placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
-      type="text"
-    />
-    {meta.touched && meta.error && (
-      <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>
-    )}
-  </div>
-);
-
-const SearchPageComponent = ({
-  query,
-  results,
-  handleSubmit,
-}: Props & InjectedFormProps<SearchFormData, Props>) => {
+export const SearchPage = ({ query, results }: Props) => {
   const navigate = useNavigate();
   const [isNegative, setIsNegative] = useState(false);
+  const [searchText, setSearchText] = useState(query);
 
-  const parsed = parseSearchQuery(query);
+  // URLのクエリが変わったら入力欄を同期
+  useEffect(() => {
+    setSearchText(query);
+  }, [query]);
+
+  const parsed = useMemo(() => parseSearchQuery(query), [query]);
 
   useEffect(() => {
     if (!parsed.keywords) {
@@ -53,19 +34,15 @@ const SearchPageComponent = ({
     }
 
     let isMounted = true;
-    // 初期化時の負荷を避けるため、わずかに待ってから実行
     const timer = setTimeout(() => {
       analyzeSentiment(parsed.keywords)
         .then((score) => {
           if (isMounted) {
-            // しきい値を -0.1 に設定して判定を安定させる
             setIsNegative(score < -0.1);
           }
         })
         .catch(() => {
-          if (isMounted) {
-            setIsNegative(false);
-          }
+          if (isMounted) setIsNegative(false);
         });
     }, 100);
 
@@ -77,29 +54,36 @@ const SearchPageComponent = ({
 
   const searchConditionText = useMemo(() => {
     const parts: string[] = [];
-    if (parsed.keywords) {
-      parts.push(`「${parsed.keywords}」`);
-    }
-    if (parsed.sinceDate) {
-      parts.push(`${parsed.sinceDate} 以降`);
-    }
-    if (parsed.untilDate) {
-      parts.push(`${parsed.untilDate} 以前`);
-    }
+    if (parsed.keywords) parts.push(`「${parsed.keywords}」`);
+    if (parsed.sinceDate) parts.push(`${parsed.sinceDate} 以降`);
+    if (parsed.untilDate) parts.push(`${parsed.untilDate} 以前`);
     return parts.join(" ");
   }, [parsed]);
 
-  const onSubmit = (values: SearchFormData) => {
-    const sanitizedText = sanitizeSearchText(values.searchText.trim());
-    navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
+  const handleSubmit = useCallback((e: FormEvent) => {
+    e.preventDefault();
+    const sanitizedText = sanitizeSearchText(searchText.trim());
+    if (sanitizedText) {
+      navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
+    }
+  }, [navigate, searchText]);
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSearchText(e.target.value);
   };
 
   return (
     <div className="flex flex-col gap-4">
       <div className="bg-cax-surface p-4 shadow">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit}>
           <div className="flex gap-2">
-            <Field name="searchText" component={SearchInput} />
+            <input
+              className="border-cax-border focus:border-cax-brand-strong flex-1 rounded border px-4 py-2 focus:outline-none"
+              placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
+              type="text"
+              value={searchText}
+              onChange={handleInputChange}
+            />
             <Button variant="primary" type="submit">
               検索
             </Button>
@@ -139,9 +123,3 @@ const SearchPageComponent = ({
     </div>
   );
 };
-
-export const SearchPage = reduxForm<SearchFormData, Props>({
-  form: "search",
-  enableReinitialize: true,
-  validate,
-})(SearchPageComponent);

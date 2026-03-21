@@ -98,7 +98,7 @@ export const AppContainer = () => {
         newPostModalId={newPostModalId}
         onLogout={handleLogout}
       >
-        <Suspense fallback={<div className="p-4 text-center">読込中...</div>}>
+        <Suspense fallback={null}>
           <Routes>
             <Route element={<TimelineContainer />} path="/" />
             <Route

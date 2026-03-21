@@ -127,18 +127,31 @@ const config = {
   optimization: {
     minimize: process.env.NODE_ENV === "production",
     splitChunks: {
-      chunks: "async", // ここを async に変更
+      chunks: "async",
+      minSize: 30000,
       cacheGroups: {
+        // 巨大なライブラリを個別に切り出す
+        kuromoji: {
+          test: /[\\/]node_modules[\\/]kuromoji[\\/]/,
+          name: "lib-kuromoji",
+          priority: 20,
+        },
+        negaposi: {
+          test: /[\\/]node_modules[\\/]negaposi-analyzer-ja[\\/]/,
+          name: "lib-negaposi",
+          priority: 20,
+        },
+        katex: {
+          test: /[\\/]node_modules[\\/]katex[\\/]/,
+          name: "lib-katex",
+          priority: 20,
+        },
+        // その他のベンダー
         defaultVendors: {
           test: /[\\/]node_modules[\\/]/,
           priority: -10,
           reuseExistingChunk: true,
-          name: "vendors",
-        },
-        default: {
-          minChunks: 2,
-          priority: -20,
-          reuseExistingChunk: true,
+          name: "vendors-misc",
         },
       },
     },

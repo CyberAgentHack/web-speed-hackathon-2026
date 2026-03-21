@@ -7,7 +7,7 @@ import httpErrors from "http-errors";
 import sharp from "sharp";
 import { v4 as uuidv4 } from "uuid";
 
-import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+import { UPLOAD_PATH, PUBLIC_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
 // サーバー側で保存・配信する標準の拡張子
 const TARGET_EXTENSION = "webp";
@@ -16,10 +16,7 @@ export const imageRouter = Router();
 
 imageRouter.get("/images/:id/thumbnail", async (req, res) => {
   const { id } = req.params;
-  const originalFileName = `./images/${id}.${TARGET_EXTENSION}`;
   const thumbFileName = `./thumbnails/${id}.webp`;
-  const uploadPath = path.resolve(UPLOAD_PATH, originalFileName);
-  const publicPath = path.resolve(PUBLIC_PATH, originalFileName);
   const cachePath = path.resolve(UPLOAD_PATH, thumbFileName);
 
   try {
@@ -29,15 +26,25 @@ imageRouter.get("/images/:id/thumbnail", async (req, res) => {
       return res.type("image/webp").sendFile(cachePath);
     } catch {}
 
-    // 2. オリジナル確認
-    let filePath: string;
-    try {
-      await fs.access(uploadPath);
-      filePath = uploadPath;
-    } catch {
-      await fs.access(publicPath);
-      filePath = publicPath;
+    // 2. オリジナル確認（webp または jpg）
+    let filePath: string | null = null;
+    const candidates = [
+      path.resolve(UPLOAD_PATH, `./images/${id}.webp`),
+      path.resolve(PUBLIC_PATH, `./images/${id}.webp`),
+      path.resolve(PUBLIC_PATH, `./images/${id}.jpg`), // シードデータ用
+      path.resolve(PUBLIC_PATH, `./images/profiles/${id}.webp`),
+      path.resolve(PUBLIC_PATH, `./images/profiles/${id}.jpg`),
+    ];
+
+    for (const cand of candidates) {
+      try {
+        await fs.access(cand);
+        filePath = cand;
+        break;
+      } catch {}
     }
+
+    if (!filePath) throw new Error("Original image not found");
 
     // 3. サムネイル生成
     const buffer = await fs.readFile(filePath);
@@ -71,22 +78,30 @@ imageRouter.post("/images", async (req, res) => {
   }
 
   const imageId = uuidv4();
+  const imageDir = path.resolve(UPLOAD_PATH, "images");
+  const finalPath = path.resolve(imageDir, `./${imageId}.${TARGET_EXTENSION}`);
 
-  const filePath = path.resolve(UPLOAD_PATH, `./images/${imageId}.${TARGET_EXTENSION}`);
-  await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
+  await fs.mkdir(imageDir, { recursive: true });
 
-  // sharp を使用してリサイズと WebP 変換
-  const resizedBuffer = await sharp(req.body)
-    .resize({
-      fit: "inside",
-      width: 1080,
-      withoutEnlargement: true,
-    })
-    .webp({ quality: 80 })
-    .withMetadata()
-    .toBuffer();
+  // 変換処理を非同期（await しない）で実行
+  (async () => {
+    try {
+      const resizedBuffer = await sharp(req.body)
+        .resize({
+          fit: "inside",
+          width: 1080,
+          withoutEnlargement: true,
+        })
+        .webp({ quality: 80 })
+        .withMetadata()
+        .toBuffer();
 
-  await fs.writeFile(filePath, resizedBuffer);
+      await fs.writeFile(finalPath, resizedBuffer);
+    } catch (err) {
+      console.error(`Background image processing failed for ${imageId}:`, err);
+    }
+  })();
 
+  // 処理を待たずに即座に ID を返却
   return res.status(200).type("application/json").send({ id: imageId });
 });
