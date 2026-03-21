@@ -50,8 +50,13 @@ export const NewPostModalContainer = ({ id }: Props) => {
     }
 
     const handleToggle = () => {
-      // 閉じた時だけフォームをリセットし、オープン直後の再マウントを避ける
-      if (!element.open) {
+      if (element.open) {
+        // モーダルが開いた時にWASMモジュールを事前ロード
+        import("@imagemagick/magick-wasm").catch(() => {});
+        import("@web-speed-hackathon-2026/client/src/utils/convert_movie").catch(() => {});
+        import("@web-speed-hackathon-2026/client/src/utils/convert_sound").catch(() => {});
+      } else {
+        // 閉じた時だけフォームをリセットし、オープン直後の再マウントを避ける
         setResetKey((key) => key + 1);
       }
     };

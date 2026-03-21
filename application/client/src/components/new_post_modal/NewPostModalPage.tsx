@@ -1,4 +1,4 @@
-import { ChangeEventHandler, FormEventHandler, useCallback, useEffect, useState } from "react";
+import { ChangeEventHandler, FormEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/components/modal/ModalErrorMessage";
@@ -19,12 +19,12 @@ const loadImageConverter = async () => {
 
 const loadMovieConverter = async () => {
   const { convertMovie } = await import("@web-speed-hackathon-2026/client/src/utils/convert_movie");
-  return (file: File) => convertMovie(file, { extension: "gif", size: 320 });
+  return (file: File) => convertMovie(file, { extension: "mp4", size: 320 });
 };
 
 const loadSoundConverter = async () => {
   const { convertSound } = await import("@web-speed-hackathon-2026/client/src/utils/convert_sound");
-  return (file: File) => convertSound(file, { extension: "mp3" });
+  return (file: File) => convertSound(file, { extension: "ogg" });
 };
 
 interface SubmitParams {
@@ -53,12 +53,6 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
   const [hasFileError, setHasFileError] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
 
-  // WASMモジュールを事前ロード (ファイル添付前にダウンロード完了させる)
-  useEffect(() => {
-    loadImageConverter();
-    loadMovieConverter();
-    loadSoundConverter();
-  }, []);
 
   const handleChangeText = useCallback<ChangeEventHandler<HTMLTextAreaElement>>((ev) => {
     const value = ev.currentTarget.value;
@@ -120,7 +114,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
             ...params,
             images: [],
             movie: undefined,
-            sound: new File([converted], "converted.mp3", { type: "audio/mpeg" }),
+            sound: new File([converted], "converted.ogg", { type: "audio/ogg" }),
           }));
 
           setIsConverting(false);
@@ -146,8 +140,8 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
           setParams((params) => ({
             ...params,
             images: [],
-            movie: new File([converted], "converted.gif", {
-              type: "image/gif",
+            movie: new File([converted], "converted.mp4", {
+              type: "video/mp4",
             }),
             sound: undefined,
           }));
