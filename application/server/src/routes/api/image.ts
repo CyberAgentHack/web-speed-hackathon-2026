@@ -5,6 +5,7 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
+import { Image } from "@web-speed-hackathon-2026/server/src/models";
 import {
     PUBLIC_PATH,
     UPLOAD_PATH,
@@ -96,6 +97,22 @@ imageRouter.post("/images", async (req, res) => {
         throw new httpErrors.BadRequest("Invalid file type");
     } finally {
         await fs.rm(tempDir, { recursive: true, force: true });
+    }
+
+    const sizeBytes = output.length;
+
+    // Save image metadata to database
+    try {
+        await Image.create({
+            id: imageId,
+            alt: "",
+            width: null,
+            height: null,
+            sizeBytes,
+        });
+    } catch (err) {
+        console.error("Failed to save image metadata to database", err);
+        // Continue even if database save fails
     }
 
     return res.status(200).type("application/json").send({ id: imageId });

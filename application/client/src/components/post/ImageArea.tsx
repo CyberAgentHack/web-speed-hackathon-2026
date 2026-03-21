@@ -10,8 +10,19 @@ interface Props {
 }
 
 export const ImageArea = ({ images, prioritizeFirstImage = false }: Props) => {
+    const firstImage = images[0];
+    const hasValidImageSize =
+        images.length === 1 &&
+        typeof firstImage?.width === "number" &&
+        typeof firstImage?.height === "number" &&
+        firstImage.width > 0 &&
+        firstImage.height > 0;
+
+    const aspectWidth = hasValidImageSize ? firstImage.width! : 16;
+    const aspectHeight = hasValidImageSize ? firstImage.height! : 9;
+
     return (
-        <AspectRatioBox aspectHeight={9} aspectWidth={16}>
+        <AspectRatioBox aspectHeight={aspectHeight} aspectWidth={aspectWidth}>
             <div className="border-cax-border grid h-full w-full grid-cols-2 grid-rows-2 gap-1 overflow-hidden rounded-lg border">
                 {images.map((image, idx) => {
                     const isLcpImage = prioritizeFirstImage && idx === 0;
@@ -34,6 +45,8 @@ export const ImageArea = ({ images, prioritizeFirstImage = false }: Props) => {
                             <CoveredImage
                                 src={getImagePath(image.id)}
                                 alt={image.alt}
+                                width={image.width ?? undefined}
+                                height={image.height ?? undefined}
                                 fetchPriority={isLcpImage ? "high" : "auto"}
                                 loading={isLcpImage ? "eager" : "lazy"}
                             />

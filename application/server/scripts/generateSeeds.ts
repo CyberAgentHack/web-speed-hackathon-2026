@@ -1,5 +1,6 @@
 import { createWriteStream } from "node:fs";
-import { readFile, mkdir } from "node:fs/promises";
+import { readFile, mkdir, stat } from "node:fs/promises";
+import { spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -229,6 +230,57 @@ function pickRandomN<T>(arr: T[], n: number): T[] {
     return faker.helpers.arrayElements(arr, n);
 }
 
+async function getImageDimensions(
+    filePath: string,
+): Promise<{ width: number | null; height: number | null }> {
+    const output = await new Promise<string>((resolve, reject) => {
+        const process = spawn("exiftool", [
+            "-j",
+            "-ImageWidth",
+            "-ImageHeight",
+            filePath,
+        ]);
+
+        let stdout = "";
+        let stderr = "";
+
+        process.stdout.on("data", (chunk) => {
+            stdout += chunk.toString();
+        });
+        process.stderr.on("data", (chunk) => {
+            stderr += chunk.toString();
+        });
+
+        process.on("error", reject);
+        process.on("close", (code) => {
+            if (code === 0) {
+                resolve(stdout);
+                return;
+            }
+            reject(
+                new Error(`exiftool failed with exit code ${code}: ${stderr}`),
+            );
+        });
+    });
+
+    const [metadata = {}] = JSON.parse(output) as Array<
+        Record<string, unknown>
+    >;
+    const rawWidth = metadata["ImageWidth"];
+    const rawHeight = metadata["ImageHeight"];
+
+    return {
+        width:
+            typeof rawWidth === "number" && Number.isFinite(rawWidth)
+                ? rawWidth
+                : null,
+        height:
+            typeof rawHeight === "number" && Number.isFinite(rawHeight)
+                ? rawHeight
+                : null,
+    };
+}
+
 function generateProfileImages(): ProfileImageSeed[] {
     // Use existing profile image IDs from public/images/profiles/
     return EXISTING_PROFILE_IMAGE_IDS.map((id) => ({
@@ -271,14 +323,42 @@ function generateUsers(
     return users;
 }
 
-function generateImages(): ImageSeed[] {
+async function generateImages(): Promise<ImageSeed[]> {
     // Use existing image IDs from public/images/
     const baseTime = now - ONE_WEEK_MS;
-    return EXISTING_IMAGE_IDS.map((id, i) => ({
-        id,
-        alt: "",
-        createdAt: new Date(baseTime + i * 60 * 1000).toISOString(),
-    }));
+    const publicDir = path.resolve(__dirname, "../../public");
+
+    const images: ImageSeed[] = [];
+    for (let i = 0; i < EXISTING_IMAGE_IDS.length; i++) {
+        const id = EXISTING_IMAGE_IDS[i]!;
+        const imagePath = path.join(publicDir, "images", `${id}.avif`);
+
+        let sizeBytes: number | null = null;
+        let width: number | null = null;
+        let height: number | null = null;
+        try {
+            const [fileStats, dimensions] = await Promise.all([
+                stat(imagePath),
+                getImageDimensions(imagePath),
+            ]);
+            sizeBytes = fileStats.size;
+            width = dimensions.width;
+            height = dimensions.height;
+        } catch (err) {
+            console.warn(`Failed to get metadata for image ${id}`, err);
+        }
+
+        images.push({
+            id,
+            alt: "",
+            width,
+            height,
+            sizeBytes,
+            createdAt: new Date(baseTime + i * 60 * 1000).toISOString(),
+        });
+    }
+
+    return images;
 }
 
 function generateMovies(): MovieSeed[] {
@@ -857,7 +937,7 @@ async function main() {
     const users = generateUsers(CONFIG.USER_COUNT, profileImages);
 
     console.log("3. Generating Images (using existing assets)...");
-    const images = generateImages();
+    const images = await generateImages();
 
     console.log("4. Generating Movies (using existing assets)...");
     const movies = generateMovies();

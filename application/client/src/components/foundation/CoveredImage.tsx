@@ -7,8 +7,10 @@ import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 interface Props {
     alt?: string;
     fetchPriority?: "auto" | "high" | "low";
+    height?: number;
     loading?: "eager" | "lazy";
     src: string;
+    width?: number;
 }
 
 /**
@@ -17,12 +19,15 @@ interface Props {
 export const CoveredImage = ({
     alt: initialAlt,
     fetchPriority = "auto",
+    height,
     loading = "lazy",
     src,
+    width,
 }: Props) => {
     const dialogId = useId();
     const [extractedAlt, setExtractedAlt] = useState<string | null>(null);
     const [isExtracting, setIsExtracting] = useState(false);
+    const [isLoaded, setIsLoaded] = useState(false);
 
     const displayAlt = initialAlt || extractedAlt || "";
 
@@ -60,12 +65,23 @@ export const CoveredImage = ({
 
     return (
         <div className="relative h-full w-full overflow-hidden">
+            {!isLoaded ? (
+                <div
+                    aria-hidden="true"
+                    className="bg-cax-surface-subtle absolute inset-0"
+                />
+            ) : null}
+
             <img
                 alt={displayAlt}
                 className="h-full w-full object-cover"
                 src={src}
                 fetchPriority={fetchPriority}
+                height={height}
                 loading={loading}
+                width={width}
+                onLoad={() => setIsLoaded(true)}
+                onError={() => setIsLoaded(true)}
             />
 
             <button

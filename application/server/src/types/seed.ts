@@ -13,53 +13,85 @@ import type { Sound } from "@web-speed-hackathon-2026/server/src/models/Sound";
 import type { User } from "@web-speed-hackathon-2026/server/src/models/User";
 
 type DateToString<T> = {
-  [K in keyof T]: T[K] extends Date
-    ? string
-    : T[K] extends Date | null
-      ? string | null
-      : T[K] extends Date | undefined
-        ? string | undefined
-        : T[K];
+    [K in keyof T]: T[K] extends Date
+        ? string
+        : T[K] extends Date | null
+          ? string | null
+          : T[K] extends Date | undefined
+            ? string | undefined
+            : T[K];
 };
 
-export type ProfileImageSeed = Pick<InferAttributes<ProfileImage>, "id" | "alt">;
-
-export type UserSeed = DateToString<
-  Pick<
-    InferAttributes<User>,
-    "id" | "username" | "name" | "description" | "password" | "profileImageId" | "createdAt"
-  >
+export type ProfileImageSeed = Pick<
+    InferAttributes<ProfileImage>,
+    "id" | "alt"
 >;
 
-export type ImageSeed = DateToString<Pick<InferAttributes<Image>, "id" | "alt" | "createdAt">>;
+export type UserSeed = DateToString<
+    Pick<
+        InferAttributes<User>,
+        | "id"
+        | "username"
+        | "name"
+        | "description"
+        | "password"
+        | "profileImageId"
+        | "createdAt"
+    >
+>;
+
+export type ImageSeed = DateToString<
+    Pick<
+        InferAttributes<Image>,
+        "id" | "alt" | "width" | "height" | "sizeBytes" | "createdAt"
+    >
+>;
 
 export type MovieSeed = Pick<InferAttributes<Movie>, "id">;
 
-export type SoundSeed = Pick<InferAttributes<Sound>, "id" | "title" | "artist" | "peaks">;
+export type SoundSeed = Pick<
+    InferAttributes<Sound>,
+    "id" | "title" | "artist" | "peaks"
+>;
 
 export type PostSeed = DateToString<
-  Pick<InferAttributes<Post>, "id" | "userId" | "movieId" | "soundId" | "text" | "createdAt">
+    Pick<
+        InferAttributes<Post>,
+        "id" | "userId" | "movieId" | "soundId" | "text" | "createdAt"
+    >
 >;
 
 export type PostsImagesRelationSeed = Pick<
-  InferAttributes<PostsImagesRelation>,
-  "postId" | "imageId"
+    InferAttributes<PostsImagesRelation>,
+    "postId" | "imageId"
 >;
 
 export type CommentSeed = DateToString<
-  Pick<InferAttributes<Comment>, "id" | "userId" | "postId" | "text" | "createdAt">
+    Pick<
+        InferAttributes<Comment>,
+        "id" | "userId" | "postId" | "text" | "createdAt"
+    >
 >;
 
 export type DirectMessageConversationSeed = Pick<
-  InferAttributes<DirectMessageConversation>,
-  "id" | "initiatorId" | "memberId"
+    InferAttributes<DirectMessageConversation>,
+    "id" | "initiatorId" | "memberId"
 >;
 
 export type DirectMessageSeed = DateToString<
-  Pick<
-    InferAttributes<DirectMessage>,
-    "id" | "conversationId" | "senderId" | "body" | "isRead" | "createdAt" | "updatedAt"
-  >
+    Pick<
+        InferAttributes<DirectMessage>,
+        | "id"
+        | "conversationId"
+        | "senderId"
+        | "body"
+        | "isRead"
+        | "createdAt"
+        | "updatedAt"
+    >
 >;
 
-export type QaSuggestionSeed = Pick<InferAttributes<QaSuggestion>, "id" | "question">;
+export type QaSuggestionSeed = Pick<
+    InferAttributes<QaSuggestion>,
+    "id" | "question"
+>;
