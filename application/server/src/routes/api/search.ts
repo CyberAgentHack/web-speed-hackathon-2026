@@ -41,55 +41,56 @@ searchRouter.get("/search", async (req, res) => {
   // テキスト検索条件
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
-  const postsByText = await Post.findAll({
-    limit,
-    offset,
-    where: {
-      ...textWhere,
-      ...dateWhere,
-    },
+  // オリジナルのロジックを ID のみの軽量版で実行
+  const textIds = await Post.unscoped().findAll({
+    attributes: ["id", "createdAt"],
+    where: { ...textWhere, ...dateWhere },
+    raw: true,
   });
 
-  // ユーザー名/名前での検索（キーワードがある場合のみ）
-  let postsByUser: typeof postsByText = [];
+  let userIds: Array<{ id: string; createdAt: Date }> = [];
   if (searchTerm) {
-    postsByUser = await Post.findAll({
+    userIds = await Post.unscoped().findAll({
+      attributes: ["id", "createdAt"],
       include: [
         {
           association: "user",
-          attributes: { exclude: ["profileImageId"] },
-          include: [{ association: "profileImage" }],
+          attributes: [],
           required: true,
           where: {
             [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
           },
         },
-        {
-          association: "images",
-          through: { attributes: [] },
-        },
-        { association: "movie" },
-        { association: "sound" },
       ],
-      limit,
-      offset,
       where: dateWhere,
+      raw: true,
     });
   }
 
-  const postIdSet = new Set<string>();
-  const mergedPosts: typeof postsByText = [];
-
-  for (const post of [...postsByText, ...postsByUser]) {
-    if (!postIdSet.has(post.id)) {
-      postIdSet.add(post.id);
-      mergedPosts.push(post);
+  const idSet = new Set<string>();
+  const merged: Array<{ id: string; createdAt: Date }> = [];
+  for (const row of [...textIds, ...userIds]) {
+    if (!idSet.has(row.id)) {
+      idSet.add(row.id);
+      merged.push(row);
     }
   }
+  merged.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-  mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  const pageIds = merged.slice(offset, offset + limit).map((row) => row.id);
 
-  const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
+  if (pageIds.length === 0) {
+    return res.status(200).type("application/json").send([]);
+  }
 
-  return res.status(200).type("application/json").send(result);
+  // ページ分に切り詰めた ID の配列でエンティティを取得
+  const posts = await Post.findAll({
+    where: { id: pageIds },
+  });
+
+  // findAll の結果を元のソート順に合わせる
+  const postMap = new Map(posts.map((p) => [p.id, p]));
+  const sorted = pageIds.map((id) => postMap.get(id)).filter(Boolean);
+
+  return res.status(200).type("application/json").send(sorted);
 });
