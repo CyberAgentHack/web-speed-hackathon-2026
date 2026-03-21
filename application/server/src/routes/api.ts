@@ -1,5 +1,5 @@
-import { Router, NextFunction, Request, Response } from "express";
-import httpErrors from "http-errors";
+import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
 import { ValidationError } from "sequelize";
 
 import { authRouter } from "@web-speed-hackathon-2026/server/src/routes/api/auth";
@@ -10,42 +10,34 @@ import { initializeRouter } from "@web-speed-hackathon-2026/server/src/routes/ap
 import { movieRouter } from "@web-speed-hackathon-2026/server/src/routes/api/movie";
 import { postRouter } from "@web-speed-hackathon-2026/server/src/routes/api/post";
 import { searchRouter } from "@web-speed-hackathon-2026/server/src/routes/api/search";
-import { soundRouter } from "@web-speed-hackathon-2026/server/src/routes/api/sound";
 import { sentimentRouter } from "@web-speed-hackathon-2026/server/src/routes/api/sentiment";
+import { soundRouter } from "@web-speed-hackathon-2026/server/src/routes/api/sound";
 import { translateRouter } from "@web-speed-hackathon-2026/server/src/routes/api/translate";
 import { userRouter } from "@web-speed-hackathon-2026/server/src/routes/api/user";
+import type { AppEnv } from "@web-speed-hackathon-2026/server/src/types";
 
-export const apiRouter = Router();
+export const apiRouter = new Hono<AppEnv>();
 
-apiRouter.use(initializeRouter);
-apiRouter.use(userRouter);
-apiRouter.use(postRouter);
-apiRouter.use(directMessageRouter);
-apiRouter.use(searchRouter);
-apiRouter.use(movieRouter);
-apiRouter.use(imageRouter);
-apiRouter.use(soundRouter);
-apiRouter.use(authRouter);
-apiRouter.use(crokRouter);
-apiRouter.use(translateRouter);
-apiRouter.use(sentimentRouter);
+apiRouter.route("/", initializeRouter);
+apiRouter.route("/", userRouter);
+apiRouter.route("/", postRouter);
+apiRouter.route("/", directMessageRouter);
+apiRouter.route("/", searchRouter);
+apiRouter.route("/", movieRouter);
+apiRouter.route("/", imageRouter);
+apiRouter.route("/", soundRouter);
+apiRouter.route("/", authRouter);
+apiRouter.route("/", crokRouter);
+apiRouter.route("/", translateRouter);
+apiRouter.route("/", sentimentRouter);
 
-apiRouter.use(async (err: Error, _req: Request, _res: Response, _next: NextFunction) => {
+apiRouter.onError((err, c) => {
   if (err instanceof ValidationError) {
-    throw new httpErrors.BadRequest();
+    return c.json({ message: "Bad Request" }, 400);
   }
-  throw err;
-});
-
-apiRouter.use(async (err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  if (!httpErrors.isHttpError(err) || err.status === 500) {
-    console.error(err);
+  if (err instanceof HTTPException) {
+    return c.json({ message: err.message }, err.status);
   }
-
-  return res
-    .status(httpErrors.isHttpError(err) ? err.status : 500)
-    .type("application/json")
-    .send({
-      message: err.message,
-    });
+  console.error(err);
+  return c.json({ message: "Internal Server Error" }, 500);
 });

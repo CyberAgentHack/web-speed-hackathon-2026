@@ -1,20 +1,23 @@
 import { translate } from "@vitalets/google-translate-api";
-import { Router } from "express";
-import httpErrors from "http-errors";
+import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
 
-export const translateRouter = Router();
+import type { AppEnv } from "@web-speed-hackathon-2026/server/src/types";
 
-translateRouter.post("/translate", async (req, res) => {
-  const { text, sourceLanguage, targetLanguage } = req.body as {
+export const translateRouter = new Hono<AppEnv>();
+
+translateRouter.post("/translate", async (c) => {
+  const body = await c.req.json();
+  const { text, sourceLanguage, targetLanguage } = body as {
     text?: string;
     sourceLanguage?: string;
     targetLanguage?: string;
   };
 
   if (!text || !sourceLanguage || !targetLanguage) {
-    throw new httpErrors.BadRequest("text, sourceLanguage, targetLanguage are required");
+    throw new HTTPException(400, { message: "text, sourceLanguage, targetLanguage are required" });
   }
 
   const { text: result } = await translate(text, { from: sourceLanguage, to: targetLanguage });
-  return res.status(200).json({ result });
+  return c.json({ result }, 200);
 });

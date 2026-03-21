@@ -2,9 +2,11 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { Router } from "express";
-import httpErrors from "http-errors";
+import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
 import type kuromoji from "kuromoji";
+
+import type { AppEnv } from "@web-speed-hackathon-2026/server/src/types";
 
 const require = createRequire(import.meta.url);
 const kuromojiLib = require("kuromoji") as typeof kuromoji;
@@ -28,12 +30,13 @@ function getTokenizer(): Promise<kuromoji.Tokenizer<kuromoji.IpadicFeatures>> {
   return tokenizerPromise;
 }
 
-export const sentimentRouter = Router();
+export const sentimentRouter = new Hono<AppEnv>();
 
-sentimentRouter.post("/sentiment", async (req, res) => {
-  const { text } = req.body as { text?: string };
+sentimentRouter.post("/sentiment", async (c) => {
+  const body = await c.req.json();
+  const { text } = body as { text?: string };
   if (typeof text !== "string") {
-    throw new httpErrors.BadRequest("text is required");
+    throw new HTTPException(400, { message: "text is required" });
   }
 
   const tokenizer = await getTokenizer();
@@ -49,5 +52,5 @@ sentimentRouter.post("/sentiment", async (req, res) => {
     label = "neutral";
   }
 
-  return res.status(200).json({ label, score });
+  return c.json({ label, score }, 200);
 });

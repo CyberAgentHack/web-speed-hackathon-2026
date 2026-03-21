@@ -1,30 +1,29 @@
-import { Router } from "express";
+import { Hono } from "hono";
 import { Op } from "sequelize";
 
 import { Post } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
+import type { AppEnv } from "@web-speed-hackathon-2026/server/src/types";
 
-export const searchRouter = Router();
+export const searchRouter = new Hono<AppEnv>();
 
-searchRouter.get("/search", async (req, res) => {
-  const query = req.query["q"];
+searchRouter.get("/search", async (c) => {
+  const query = c.req.query("q");
 
   if (typeof query !== "string" || query.trim() === "") {
-    return res.status(200).type("application/json").send([]);
+    return c.json([], 200);
   }
 
   const { keywords, sinceDate, untilDate } = parseSearchQuery(query);
 
-  // キーワードも日付フィルターもない場合は空配列を返す
   if (!keywords && !sinceDate && !untilDate) {
-    return res.status(200).type("application/json").send([]);
+    return c.json([], 200);
   }
 
   const searchTerm = keywords ? `%${keywords}%` : null;
-  const limit = req.query["limit"] != null ? Number(req.query["limit"]) : undefined;
-  const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
+  const limit = c.req.query("limit") != null ? Number(c.req.query("limit")) : undefined;
+  const offset = c.req.query("offset") != null ? Number(c.req.query("offset")) : undefined;
 
-  // 日付条件を構築
   const dateConditions: Record<symbol, Date>[] = [];
   if (sinceDate) {
     dateConditions.push({ [Op.gte]: sinceDate });
@@ -35,7 +34,6 @@ searchRouter.get("/search", async (req, res) => {
   const dateWhere =
     dateConditions.length > 0 ? { createdAt: Object.assign({}, ...dateConditions) } : {};
 
-  // Step 1: アソシエーションなしでマッチするPost IDとcreatedAtのみを取得（軽量クエリ）
   const idMap = new Map<string, Date>();
 
   if (searchTerm) {
@@ -71,7 +69,6 @@ searchRouter.get("/search", async (req, res) => {
     for (const p of dateMatches) idMap.set(p.id, p.createdAt);
   }
 
-  // createdAt降順でソートしてページネーションをIDリストに適用
   const sortedIds = Array.from(idMap.entries())
     .sort(([, a], [, b]) => b.getTime() - a.getTime())
     .map(([id]) => id);
@@ -80,11 +77,9 @@ searchRouter.get("/search", async (req, res) => {
   const paginatedIds = limit != null ? sortedIds.slice(start, start + limit) : sortedIds.slice(start);
 
   if (paginatedIds.length === 0) {
-    return res.status(200).type("application/json").send([]);
+    return c.json([], 200);
   }
 
-  // Step 2: ページネーション済みIDのみにアソシエーションをJOINして取得
-  // subQuery: false でSequelizeのサブクエリ生成を抑止しprofileImageIdの参照エラーを防ぐ
   const posts = await Post.findAll({
     where: { id: { [Op.in]: paginatedIds } },
     include: [
@@ -103,9 +98,8 @@ searchRouter.get("/search", async (req, res) => {
     subQuery: false,
   });
 
-  // IDリストの順序（createdAt降順）に並べ直す
   const postMap = new Map(posts.map((p) => [p.id, p]));
   const result = paginatedIds.map((id) => postMap.get(id)).filter(Boolean);
 
-  return res.status(200).type("application/json").send(result);
+  return c.json(result, 200);
 });

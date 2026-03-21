@@ -1,72 +1,68 @@
-import { Router } from "express";
-import httpErrors from "http-errors";
+import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
 
 import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
+import type { AppEnv } from "@web-speed-hackathon-2026/server/src/types";
 
-export const userRouter = Router();
+export const userRouter = new Hono<AppEnv>();
 
-userRouter.get("/me", async (req, res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
+userRouter.get("/me", async (c) => {
+  if (c.get("session").userId === undefined) {
+    throw new HTTPException(401);
   }
-  const user = await User.findByPk(req.session.userId);
+  const user = await User.findByPk(c.get("session").userId);
 
   if (user === null) {
-    throw new httpErrors.NotFound();
+    throw new HTTPException(404);
   }
 
-  return res.status(200).type("application/json").send(user);
+  return c.json(user, 200);
 });
 
-userRouter.put("/me", async (req, res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
+userRouter.put("/me", async (c) => {
+  if (c.get("session").userId === undefined) {
+    throw new HTTPException(401);
   }
-  const user = await User.findByPk(req.session.userId);
+  const user = await User.findByPk(c.get("session").userId);
 
   if (user === null) {
-    throw new httpErrors.NotFound();
+    throw new HTTPException(404);
   }
 
-  Object.assign(user, req.body);
+  const body = await c.req.json();
+  Object.assign(user, body);
   await user.save();
 
-  return res.status(200).type("application/json").send(user);
+  return c.json(user, 200);
 });
 
-userRouter.get("/users/:username", async (req, res) => {
+userRouter.get("/users/:username", async (c) => {
   const user = await User.findOne({
-    where: {
-      username: req.params.username,
-    },
+    where: { username: c.req.param("username") },
   });
 
   if (user === null) {
-    throw new httpErrors.NotFound();
+    throw new HTTPException(404);
   }
 
-  return res.status(200).type("application/json").send(user);
+  return c.json(user, 200);
 });
 
-userRouter.get("/users/:username/posts", async (req, res) => {
+userRouter.get("/users/:username/posts", async (c) => {
   const user = await User.unscoped().findOne({
     attributes: ["id"],
-    where: {
-      username: req.params.username,
-    },
+    where: { username: c.req.param("username") },
   });
 
   if (user === null) {
-    throw new httpErrors.NotFound();
+    throw new HTTPException(404);
   }
 
   const posts = await Post.findAll({
-    limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
-    offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
-    where: {
-      userId: user.id,
-    },
+    limit: c.req.query("limit") != null ? Number(c.req.query("limit")) : undefined,
+    offset: c.req.query("offset") != null ? Number(c.req.query("offset")) : undefined,
+    where: { userId: user.id },
   });
 
-  return res.status(200).type("application/json").send(posts);
+  return c.json(posts, 200);
 });
