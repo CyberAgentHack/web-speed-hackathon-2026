@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useParams } from "react-router";
 
@@ -84,30 +84,33 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   const handleSubmit = useCallback(
     async (params: DirectMessageFormData) => {
-      setIsSubmitting(true);
       const optimisticId = activeUser == null ? null : crypto.randomUUID();
 
-      if (activeUser != null) {
-        setConversation((prev) => {
-          if (prev == null) return prev;
-          return {
-            ...prev,
-            messages: [
-              ...prev.messages,
-              {
-                id: optimisticId!,
-                conversationId,
-                senderId: activeUser.id,
-                body: params.body,
-                isRead: false,
-                sender: activeUser,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-              } as Models.DirectMessage,
-            ],
-          };
-        });
-      }
+      startTransition(() => {
+        setIsSubmitting(true);
+
+        if (activeUser != null) {
+          setConversation((prev) => {
+            if (prev == null) return prev;
+            return {
+              ...prev,
+              messages: [
+                ...prev.messages,
+                {
+                  id: optimisticId!,
+                  conversationId,
+                  senderId: activeUser.id,
+                  body: params.body,
+                  isRead: false,
+                  sender: activeUser,
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                } as Models.DirectMessage,
+              ],
+            };
+          });
+        }
+      });
 
       try {
         await sendJSON(`/api/v1/dm/${conversationId}/messages`, {
@@ -115,17 +118,21 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
         });
       } catch (error) {
         if (optimisticId != null) {
-          setConversation((prev) => {
-            if (prev == null) return prev;
-            return {
-              ...prev,
-              messages: prev.messages.filter((message) => message.id !== optimisticId),
-            };
+          startTransition(() => {
+            setConversation((prev) => {
+              if (prev == null) return prev;
+              return {
+                ...prev,
+                messages: prev.messages.filter((message) => message.id !== optimisticId),
+              };
+            });
           });
         }
         throw error;
       } finally {
-        setIsSubmitting(false);
+        startTransition(() => {
+          setIsSubmitting(false);
+        });
       }
     },
     [conversationId, loadConversation, activeUser],

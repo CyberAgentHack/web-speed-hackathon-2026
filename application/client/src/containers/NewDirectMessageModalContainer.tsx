@@ -15,6 +15,12 @@ interface CreateConversationResponse {
   id: string;
 }
 
+function waitForNextFrame() {
+  return new Promise<void>((resolve) => {
+    window.requestAnimationFrame(() => resolve());
+  });
+}
+
 export const NewDirectMessageModalContainer = ({ id }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
@@ -43,6 +49,7 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
           username: normalizedUsername,
         });
         ref.current?.close();
+        await waitForNextFrame();
         navigate(`/dm/${conversation.id}`);
       } catch {
         throw new SubmissionError({

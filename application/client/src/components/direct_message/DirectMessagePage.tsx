@@ -3,6 +3,7 @@ import {
   ChangeEvent,
   memo,
   useCallback,
+  useDeferredValue,
   useId,
   useRef,
   useState,
@@ -134,22 +135,24 @@ export const DirectMessagePage = ({
   onSubmit,
 }: Props) => {
   const formRef = useRef<HTMLFormElement>(null);
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const textAreaId = useId();
+  const deferredConversation = useDeferredValue(conversation);
+  const deferredIsPeerTyping = useDeferredValue(isPeerTyping);
 
   const peer =
-    conversation == null
+    deferredConversation == null
       ? null
-      : conversation.initiator.id !== activeUser.id
-        ? conversation.initiator
-        : conversation.member;
+      : deferredConversation.initiator.id !== activeUser.id
+        ? deferredConversation.initiator
+        : deferredConversation.member;
 
-  const [text, setText] = useState("");
-  const textAreaRows = Math.min((text || "").split("\n").length, 5);
-  const isInvalid = text.trim().length === 0;
+  const [hasText, setHasText] = useState(false);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
-      setText(event.target.value);
+      const nextHasText = event.target.value.trim().length > 0;
+      setHasText((prev) => (prev === nextHasText ? prev : nextHasText));
       onTyping();
     },
     [onTyping],
@@ -168,17 +171,23 @@ export const DirectMessagePage = ({
   const handleSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      const body = text.trim();
+      const body = textAreaRef.current?.value.trim() ?? "";
       if (body.length === 0) {
         return;
       }
 
-      setText("");
+      if (textAreaRef.current != null) {
+        textAreaRef.current.value = "";
+      }
+      setHasText(false);
       void onSubmit({ body }).catch(() => {
-        setText(body);
+        if (textAreaRef.current != null) {
+          textAreaRef.current.value = body;
+        }
+        setHasText(true);
       });
     },
-    [onSubmit, text],
+    [onSubmit],
   );
 
   useEffect(() => {
@@ -187,15 +196,15 @@ export const DirectMessagePage = ({
     });
 
     return () => window.cancelAnimationFrame(id);
-  }, [conversation?.messages.length, isPeerTyping]);
+  }, [deferredConversation?.messages.length, deferredIsPeerTyping]);
 
   return (
     <section className="bg-cax-surface flex min-h-[calc(100vh-(--spacing(12)))] flex-col lg:min-h-screen">
       <ConversationBody
         activeUser={activeUser}
-        conversation={conversation}
+        conversation={deferredConversation}
         conversationError={conversationError}
-        isPeerTyping={isPeerTyping}
+        isPeerTyping={deferredIsPeerTyping}
         peer={peer}
       />
 
@@ -212,16 +221,17 @@ export const DirectMessagePage = ({
             <textarea
               id={textAreaId}
               className="border-cax-border placeholder-cax-text-subtle focus:outline-cax-brand w-full resize-none rounded-xl border px-3 py-2 focus:outline-2 focus:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              value={text}
+              defaultValue=""
               onChange={handleChange}
               onKeyDown={handleKeyDown}
-              rows={textAreaRows}
+              ref={textAreaRef}
+              rows={3}
               disabled={isSubmitting}
             />
           </div>
           <button
             className="bg-cax-brand text-cax-surface-raised hover:bg-cax-brand-strong rounded-full px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={isInvalid || isSubmitting}
+            disabled={!hasText || isSubmitting}
             type="submit"
           >
             <FontAwesomeIcon iconType="arrow-right" styleType="solid" />

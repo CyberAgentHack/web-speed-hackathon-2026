@@ -1,5 +1,5 @@
 import moment from "moment";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -13,27 +13,47 @@ interface Props {
   newDmModalId: string;
 }
 
+const INITIAL_CONVERSATIONS_RETRY_COUNT = 5;
+const INITIAL_CONVERSATIONS_RETRY_DELAY_MS = 200;
+
+function sleep(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
 export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
   const [conversations, setConversations] =
     useState<Array<Models.DirectMessageConversation> | null>(null);
   const [error, setError] = useState<Error | null>(null);
+  const hasLoadedConversationsRef = useRef(false);
 
   const loadConversations = useCallback(async () => {
     if (activeUser == null) {
       return;
     }
 
-    try {
-      const conversations = await fetchJSON<Array<Models.DirectMessageConversation>>("/api/v1/dm");
-      setConversations(conversations);
-      setError(null);
-    } catch (error) {
-      setConversations(null);
-      setError(error as Error);
+    const maxAttempts = hasLoadedConversationsRef.current ? 1 : INITIAL_CONVERSATIONS_RETRY_COUNT;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
+        const conversations = await fetchJSON<Array<Models.DirectMessageConversation>>("/api/v1/dm");
+        hasLoadedConversationsRef.current = true;
+        setConversations(conversations);
+        setError(null);
+        return;
+      } catch (error) {
+        if (attempt === maxAttempts) {
+          setConversations(null);
+          setError(error as Error);
+          return;
+        }
+
+        await sleep(INITIAL_CONVERSATIONS_RETRY_DELAY_MS);
+      }
     }
   }, [activeUser]);
 
   useEffect(() => {
+    hasLoadedConversationsRef.current = false;
     void loadConversations();
   }, [loadConversations]);
 
@@ -42,6 +62,26 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
   });
 
   if (conversations == null) {
+    if (error == null) {
+      return (
+        <section>
+          <header className="border-cax-border flex flex-col gap-4 border-b px-4 pt-6 pb-4">
+            <h1 className="text-2xl font-bold">ダイレクトメッセージ</h1>
+            <div className="flex flex-wrap items-center gap-4">
+              <Button
+                command="show-modal"
+                commandfor={newDmModalId}
+                leftItem={<FontAwesomeIcon iconType="paper-plane" styleType="solid" />}
+              >
+                新しくDMを始める
+              </Button>
+            </div>
+          </header>
+          <p className="text-cax-text-muted px-4 py-6 text-center">DM一覧を読み込んでいます…</p>
+        </section>
+      );
+    }
+
     return null;
   }
 
