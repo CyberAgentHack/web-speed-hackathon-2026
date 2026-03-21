@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CaX</title>
+    <link rel="preload" href="/styles/main.css" as="style" />
+    <link rel="stylesheet" href="/styles/main.css" />
     <script>
       window.__prefetchPromise = {};
 
@@ -40,7 +42,6 @@
       prefetchWhenIdle("/api/v1/me");
     </script>
     <script src="/scripts/main.js" defer></script>
-    <link rel="stylesheet" href="/styles/main.css" />
   </head>
   <body class="bg-cax-canvas text-cax-text">
     <div id="app">Loading...</div>

@@ -35,9 +35,10 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
  */
 interface Props {
   post: Models.Post;
+  prioritizeAvatar?: boolean;
 }
 
-export const TimelineItem = ({ post }: Props) => {
+export const TimelineItem = ({ post, prioritizeAvatar = false }: Props) => {
   const navigate = useNavigate();
 
   /**
@@ -64,8 +65,8 @@ export const TimelineItem = ({ post }: Props) => {
             <img
               alt={post.user.profileImage.alt}
               decoding="async"
-              fetchPriority="low"
-              loading="lazy"
+              fetchPriority={prioritizeAvatar ? "high" : "low"}
+              loading={prioritizeAvatar ? "eager" : "lazy"}
               src={getProfileImagePath(post.user.profileImage.id)}
             />
           </Link>
