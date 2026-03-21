@@ -38,7 +38,7 @@ searchRouter.get("/search", async (req, res) => {
   // テキスト検索条件
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
-  const postsByText = await Post.findAll({
+  const postsByText = await Post.scope("withFullRelations").findAll({
     limit,
     offset,
     where: {
