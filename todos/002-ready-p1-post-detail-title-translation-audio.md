@@ -25,4 +25,4 @@ dependencies: []
 
 ## Acceptance Criteria
 
-- [ ] 投稿詳細の全E2Eテスト（9件）がパスする
+- [x] 投稿詳細の全E2Eテスト（10件）がパスする

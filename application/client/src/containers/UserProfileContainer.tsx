@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useParams } from "react-router";
 import useSWR from "swr";
 import useSWRInfinite from "swr/infinite";
@@ -33,6 +33,12 @@ export const UserProfileContainer = () => {
   const posts = data ? data.flat() : (ssrUserPosts ?? []);
   const hasMore = data ? (data[data.length - 1]?.length ?? 0) >= PAGE_SIZE : true;
 
+  useEffect(() => {
+    if (user) {
+      document.title = `${user.name} さんのタイムライン - CaX`;
+    }
+  }, [user]);
+
   if (isLoadingUser) {
     return <title>読込中 - CaX</title>;
   }
@@ -48,7 +54,6 @@ export const UserProfileContainer = () => {
       hasMore={hasMore}
       isLoading={isValidating}
     >
-      <title>{user!.name} さんのタイムライン - CaX</title>
       <UserProfilePage timeline={posts} user={user!} />
     </InfiniteScroll>
   );
