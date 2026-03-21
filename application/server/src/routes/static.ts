@@ -12,23 +12,20 @@ export const staticRouter = Router();
 
 staticRouter.use(
   serveStatic(UPLOAD_PATH, {
-    etag: false,
-    lastModified: false,
+    maxAge: "1m",
   }),
 );
 
 staticRouter.use(
   serveStatic(PUBLIC_PATH, {
-    etag: false,
-    lastModified: false,
+    maxAge: "1m",
   }),
 );
 
 staticRouter.use(
   serveStatic(CLIENT_DIST_PATH, {
-    etag: false,
     index: false,
-    lastModified: false,
+    maxAge: "1m",
   }),
 );
 
@@ -39,7 +36,11 @@ staticRouter.get("/{*splat}", async (req, res, next) => {
 
   try {
     const html = await renderAppHtml(req);
-    return res.status(200).type("text/html").send(html);
+    return res
+      .status(200)
+      .set("Cache-Control", "no-cache")
+      .type("text/html")
+      .send(html);
   } catch (error) {
     return next(error);
   }
