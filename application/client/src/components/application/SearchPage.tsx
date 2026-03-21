@@ -87,6 +87,7 @@ export const SearchPage = ({ query, results }: Props) => {
               <FormInputField
                 name="searchText"
                 label=""
+                aria-label="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
                 placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}

@@ -11,10 +11,24 @@ interface Props extends ComponentPropsWithRef<"input"> {
   touched?: boolean;
 }
 
-export const FormInputField = ({ label, leftItem, rightItem, error, touched, ...inputProps }: Props) => {
+export const FormInputField = ({
+  label,
+  leftItem,
+  rightItem,
+  error,
+  touched,
+  ...inputProps
+}: Props) => {
   const inputId = useId();
   const errorMessageId = useId();
   const isInvalid = touched && error;
+  const fallbackAriaLabel =
+    inputProps["aria-label"] ??
+    (label.trim() !== ""
+      ? label
+      : typeof inputProps.placeholder === "string"
+        ? inputProps.placeholder
+        : undefined);
 
   return (
     <div className="flex flex-col gap-y-1">
@@ -25,6 +39,7 @@ export const FormInputField = ({ label, leftItem, rightItem, error, touched, ...
         id={inputId}
         leftItem={leftItem}
         rightItem={rightItem}
+        aria-label={fallbackAriaLabel}
         aria-invalid={isInvalid || undefined}
         aria-describedby={isInvalid ? errorMessageId : undefined}
         {...inputProps}
