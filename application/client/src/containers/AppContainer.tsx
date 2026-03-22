@@ -1,4 +1,4 @@
-import { lazy, useCallback, useEffect, useId, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useId, useState } from "react";
 import { Helmet, HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
@@ -6,6 +6,8 @@ import { AppPage } from "@web-speed-hackathon-2026/client/src/components/applica
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
 import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHourglass } from "@fortawesome/free-solid-svg-icons";
 
 const TimelineContainer = lazy(
   () => import("@web-speed-hackathon-2026/client/src/containers/TimelineContainer"),
@@ -80,28 +82,30 @@ export const AppContainer = () => {
         newPostModalId={newPostModalId}
         onLogout={handleLogout}
       >
-        <Routes>
-          <Route element={<TimelineContainer />} path="/" />
-          <Route
-            element={
-              <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
-            }
-            path="/dm"
-          />
-          <Route
-            element={<DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />}
-            path="/dm/:conversationId"
-          />
-          <Route element={<SearchContainer />} path="/search" />
-          <Route element={<UserProfileContainer />} path="/users/:username" />
-          <Route element={<PostContainer />} path="/posts/:postId" />
-          <Route element={<TermContainer />} path="/terms" />
-          <Route
-            element={<CrokContainer activeUser={activeUser} authModalId={authModalId} />}
-            path="/crok"
-          />
-          <Route element={<NotFoundContainer />} path="*" />
-        </Routes>
+        <Suspense fallback={<FontAwesomeIcon icon={faHourglass} />}>
+          <Routes>
+            <Route element={<TimelineContainer />} path="/" />
+            <Route
+              element={
+                <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
+              }
+              path="/dm"
+            />
+            <Route
+              element={<DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />}
+              path="/dm/:conversationId"
+            />
+            <Route element={<SearchContainer />} path="/search" />
+            <Route element={<UserProfileContainer />} path="/users/:username" />
+            <Route element={<PostContainer />} path="/posts/:postId" />
+            <Route element={<TermContainer />} path="/terms" />
+            <Route
+              element={<CrokContainer activeUser={activeUser} authModalId={authModalId} />}
+              path="/crok"
+            />
+            <Route element={<NotFoundContainer />} path="*" />
+          </Routes>
+        </Suspense>
       </AppPage>
 
       <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
