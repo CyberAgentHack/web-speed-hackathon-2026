@@ -10,6 +10,7 @@ const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
+const isProduction = process.env.NODE_ENV === "production";
 
 /** @type {import('webpack').Configuration} */
 const config = {
@@ -25,18 +26,15 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: isProduction ? false : "inline-source-map",
   entry: {
     main: [
-      "core-js",
-      "regenerator-runtime/runtime",
-      "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: isProduction ? "production" : "development",
   module: {
     rules: [
       {
@@ -53,6 +51,10 @@ const config = {
         ],
       },
       {
+        resourceQuery: /url/,
+        type: "asset/resource",
+      },
+      {
         resourceQuery: /binary/,
         type: "asset/bytes",
       },
@@ -60,24 +62,20 @@ const config = {
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
     filename: "scripts/[name].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     clean: true,
   },
   plugins: [
     new webpack.ProvidePlugin({
-      $: "jquery",
-      AudioContext: ["standardized-audio-context", "AudioContext"],
       Buffer: ["buffer", "Buffer"],
-      "window.jQuery": "jquery",
     }),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
+      NODE_ENV: isProduction ? "production" : "development",
     }),
     new MiniCssExtractPlugin({
       filename: "styles/[name].css",
@@ -91,7 +89,7 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: "body",
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
   ],
@@ -127,15 +125,23 @@ const config = {
       url: false,
     },
   },
-  optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
-  },
-  cache: false,
+  optimization: isProduction
+    ? {
+        chunkIds: "deterministic",
+        moduleIds: "deterministic",
+        splitChunks: {
+          chunks: "all",
+        },
+      }
+    : {
+        minimize: false,
+        splitChunks: false,
+        concatenateModules: false,
+        usedExports: false,
+        providedExports: false,
+        sideEffects: false,
+      },
+  cache: isProduction ? { type: "filesystem" } : false,
   ignoreWarnings: [
     {
       module: /@ffmpeg/,

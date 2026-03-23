@@ -1,46 +1,78 @@
+const DATE_PATTERN = /\d{4}-\d{2}-\d{2}/;
+
+function extractDate(token: string): string | null {
+  return token.match(DATE_PATTERN)?.[0] ?? null;
+}
+
+function splitSearchQuery(query: string) {
+  const tokens = query.trim().split(/\s+/).filter(Boolean);
+  const keywordTokens: string[] = [];
+  let sinceDate: string | null = null;
+  let untilDate: string | null = null;
+
+  for (const token of tokens) {
+    const lowerToken = token.toLowerCase();
+
+    if (sinceDate === null && (lowerToken.startsWith("since:") || lowerToken.startsWith("from:"))) {
+      sinceDate = extractDate(token);
+      continue;
+    }
+
+    if (untilDate === null && lowerToken.startsWith("until:")) {
+      untilDate = extractDate(token);
+      continue;
+    }
+
+    keywordTokens.push(token);
+  }
+
+  return {
+    keywords: keywordTokens.join(" "),
+    sinceDate,
+    untilDate,
+  };
+}
+
 export const sanitizeSearchText = (input: string): string => {
-  let text = input;
+  return input
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((token) => {
+      const lowerToken = token.toLowerCase();
 
-  text = text.replace(
-    /\b(from|until)\s*:?\s*(\d{4}-\d{2}-\d{2})\d*/gi,
-    (_m, key, date) => `${key}:${date}`,
-  );
+      if (lowerToken.startsWith("since:") || lowerToken.startsWith("from:")) {
+        const date = extractDate(token);
+        return date ? `since:${date}` : token;
+      }
 
-  return text;
+      if (lowerToken.startsWith("until:")) {
+        const date = extractDate(token);
+        return date ? `until:${date}` : token;
+      }
+
+      return token;
+    })
+    .join(" ");
 };
 
 export const parseSearchQuery = (query: string) => {
-  const sincePattern = /since:((\d|\d\d|\d\d\d\d-\d\d-\d\d)+)+$/;
-  const untilPattern = /until:((\d|\d\d|\d\d\d\d-\d\d-\d\d)+)+$/;
-
-  const sincePart = query.match(/since:[^\s]*/)?.[0] || "";
-  const untilPart = query.match(/until:[^\s]*/)?.[0] || "";
-
-  const sinceMatch = sincePattern.exec(sincePart);
-  const untilMatch = untilPattern.exec(untilPart);
-
-  const keywords = query
-    .replace(/since:.*(\d{4}-\d{2}-\d{2}).*/g, "")
-    .replace(/until:.*(\d{4}-\d{2}-\d{2}).*/g, "")
-    .trim();
-
-  const extractDate = (s: string | null) => {
-    if (!s) return null;
-    const m = /(\d{4}-\d{2}-\d{2})/.exec(s);
-    return m ? m[1] : null;
-  };
-
-  return {
-    keywords,
-    sinceDate: extractDate(sinceMatch ? sinceMatch[1]! : null),
-    untilDate: extractDate(untilMatch ? untilMatch[1]! : null),
-  };
+  return splitSearchQuery(query);
 };
 
 export const isValidDate = (dateStr: string): boolean => {
-  const slowDateLike = /^(\d+)+-(\d+)+-(\d+)+$/;
-  if (!slowDateLike.test(dateStr)) return false;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;
 
-  const date = new Date(dateStr);
-  return !Number.isNaN(date.getTime());
+  const [yearText, monthText, dayText] = dateStr.split("-");
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  return (
+    !Number.isNaN(date.getTime()) &&
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
 };

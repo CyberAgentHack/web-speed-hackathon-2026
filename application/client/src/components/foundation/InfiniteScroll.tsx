@@ -8,9 +8,9 @@ interface Props {
 
 export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
   const latestItem = items[items.length - 1];
-
   const prevReachedRef = useRef(false);
 
+  // Synchronize pagination with browser scroll and resize events.
   useEffect(() => {
     const handler = () => {
       // 念の為 2の18乗 回、最下部かどうかを確認する

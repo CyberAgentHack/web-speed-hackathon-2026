@@ -22,6 +22,33 @@ interface Props {
   onSendMessage: (message: string) => void;
 }
 
+let tokenizerPromise: Promise<Tokenizer<IpadicFeatures>> | null = null;
+function loadTokenizer() {
+  if (tokenizerPromise == null) {
+    const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
+    tokenizerPromise = Promise.resolve(builder.buildAsync()).catch((error) => {
+      tokenizerPromise = null;
+      throw error;
+    });
+  }
+
+  return tokenizerPromise;
+}
+
+let suggestionCandidatesPromise: Promise<string[]> | null = null;
+function loadSuggestionCandidates() {
+  if (suggestionCandidatesPromise == null) {
+    suggestionCandidatesPromise = fetchJSON<{ suggestions: string[] }>("/api/v1/crok/suggestions")
+      .then(({ suggestions }) => suggestions)
+      .catch((error) => {
+        suggestionCandidatesPromise = null;
+        throw error;
+      });
+  }
+
+  return suggestionCandidatesPromise;
+}
+
 // トークン単位でハイライト
 function highlightMatchByTokens(text: string, queryTokens: string[]): React.ReactNode {
   if (queryTokens.length === 0) return text;
@@ -80,6 +107,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
+  const [isSuggestionsReady, setIsSuggestionsReady] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
@@ -92,24 +120,46 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   }, [suggestions, showSuggestions]);
 
-  // 初回にkuromojiトークナイザーを構築
+  // Synchronize the tokenizer with the kuromoji dictionary files served from `/dicts`.
   useEffect(() => {
     let mounted = true;
 
     const init = async () => {
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
+      const nextTokenizer = await loadTokenizer();
       if (mounted) {
         setTokenizer(nextTokenizer);
       }
     };
-    init();
+    void init();
 
     return () => {
       mounted = false;
     };
   }, []);
 
+  // Synchronize the cached suggestion candidates with the Crok suggestions API.
+  useEffect(() => {
+    let mounted = true;
+
+    void loadSuggestionCandidates().then(
+      () => {
+        if (mounted) {
+          setIsSuggestionsReady(true);
+        }
+      },
+      () => {
+        if (mounted) {
+          setIsSuggestionsReady(false);
+        }
+      },
+    );
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Synchronize rendered suggestions with the latest input and preloaded suggestion candidates.
   useEffect(() => {
     let cancelled = false;
 
@@ -121,12 +171,11 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
         return;
       }
 
-      const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-        "/api/v1/crok/suggestions",
-      );
+      const candidates = await loadSuggestionCandidates();
       if (cancelled) {
         return;
       }
+      setIsSuggestionsReady(true);
 
       const tokens = extractTokens(tokenizer.tokenize(inputValue));
       const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
@@ -195,6 +244,9 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
 
   return (
     <div className="border-cax-border bg-cax-surface sticky bottom-12 border-t px-4 py-4 lg:bottom-0">
+      <p className="sr-only" data-testid="crok-suggestions-status">
+        {tokenizer !== null && isSuggestionsReady ? "ready" : "loading"}
+      </p>
       <form className="relative mx-auto max-w-2xl" onSubmit={handleSubmit}>
         {showSuggestions && suggestions.length > 0 && (
           <div

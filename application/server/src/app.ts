@@ -1,4 +1,5 @@
 import bodyParser from "body-parser";
+import compression from "compression";
 import Express from "express";
 
 import { apiRouter } from "@web-speed-hackathon-2026/server/src/routes/api";
@@ -12,11 +13,11 @@ app.set("trust proxy", true);
 app.use(sessionMiddleware);
 app.use(bodyParser.json());
 app.use(bodyParser.raw({ limit: "10mb" }));
+app.use(compression());
 
 app.use((_req, res, next) => {
   res.header({
-    "Cache-Control": "max-age=0, no-transform",
-    Connection: "close",
+    "Cache-Control": "max-age=0",
   });
   return next();
 });

@@ -14,6 +14,7 @@ interface Props {
 export const NewDirectMessageModalContainer = ({ id }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
+  // Synchronize the form reset key with the dialog open/close state.
   useEffect(() => {
     if (!ref.current) return;
     const element = ref.current;

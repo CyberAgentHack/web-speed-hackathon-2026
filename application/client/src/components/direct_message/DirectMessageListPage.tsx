@@ -33,6 +33,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     }
   }, [activeUser]);
 
+  // Synchronize the visible DM list with the server response.
   useEffect(() => {
     void loadConversations();
   }, [loadConversations]);

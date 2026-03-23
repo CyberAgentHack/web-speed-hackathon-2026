@@ -73,6 +73,7 @@ export const DirectMessagePage = ({
     [onSubmit, text],
   );
 
+  // Synchronize the page scroll position with the browser timer while messages grow.
   useEffect(() => {
     const id = setInterval(() => {
       const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
@@ -124,6 +125,7 @@ export const DirectMessagePage = ({
 
             return (
               <li
+                key={message.id}
                 className={classNames(
                   "flex flex-col w-full",
                   isActiveUserSend ? "items-end" : "items-start",

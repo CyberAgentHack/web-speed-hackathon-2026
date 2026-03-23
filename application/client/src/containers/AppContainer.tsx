@@ -19,12 +19,14 @@ import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/
 export const AppContainer = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  // Synchronize the browser scroll position with route changes.
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
   const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
+  // Synchronize the signed-in user with the server session.
   useEffect(() => {
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {

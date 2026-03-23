@@ -1,13 +1,9 @@
-import { MagickFormat } from "@imagemagick/magick-wasm";
 import { ChangeEventHandler, FormEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/components/modal/ModalErrorMessage";
 import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/components/modal/ModalSubmitButton";
 import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/AttachFileInputButton";
-import { convertImage } from "@web-speed-hackathon-2026/client/src/utils/convert_image";
-import { convertMovie } from "@web-speed-hackathon-2026/client/src/utils/convert_movie";
-import { convertSound } from "@web-speed-hackathon-2026/client/src/utils/convert_sound";
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
@@ -34,6 +30,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     text: "",
   });
 
+  const [hasMovieConversionError, setHasMovieConversionError] = useState(false);
   const [hasFileError, setHasFileError] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
 
@@ -51,26 +48,32 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
     setHasFileError(isValid !== true);
     if (isValid) {
+      setHasMovieConversionError(false);
       setIsConverting(true);
 
-      Promise.all(
-        files.map((file) =>
-          convertImage(file, { extension: MagickFormat.Jpg }).then(
-            (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
-          ),
-        ),
-      )
-        .then((convertedFiles) => {
-          setParams((params) => ({
-            ...params,
-            images: convertedFiles,
-            movie: undefined,
-            sound: undefined,
-          }));
+      void (async () => {
+        const { convertImage } = await import(
+          "@web-speed-hackathon-2026/client/src/utils/convert_image"
+        );
 
-          setIsConverting(false);
-        })
-        .catch(console.error);
+        const convertedFiles = await Promise.all(
+          files.map((file) =>
+            convertImage(file).then((blob) => new File([blob], "converted.jpg", { type: "image/jpeg" })),
+          ),
+        );
+
+        setParams((params) => ({
+          ...params,
+          images: convertedFiles,
+          movie: undefined,
+          sound: undefined,
+        }));
+
+        setIsConverting(false);
+      })().catch((error) => {
+        console.error(error);
+        setIsConverting(false);
+      });
     }
   }, []);
 
@@ -80,18 +83,27 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
     setHasFileError(isValid !== true);
     if (isValid) {
+      setHasMovieConversionError(false);
       setIsConverting(true);
 
-      convertSound(file, { extension: "mp3" }).then((converted) => {
-        setParams((params) => ({
-          ...params,
-          images: [],
-          movie: undefined,
-          sound: new File([converted], "converted.mp3", { type: "audio/mpeg" }),
-        }));
+      void import("@web-speed-hackathon-2026/client/src/utils/convert_sound")
+        .then(({ convertSound }) => {
+          return convertSound(file, { extension: "mp3" });
+        })
+        .then((converted) => {
+          setParams((params) => ({
+            ...params,
+            images: [],
+            movie: undefined,
+            sound: new File([converted], "converted.mp3", { type: "audio/mpeg" }),
+          }));
 
-        setIsConverting(false);
-      });
+          setIsConverting(false);
+        })
+        .catch((error) => {
+          console.error(error);
+          setIsConverting(false);
+        });
     }
   }, []);
 
@@ -101,9 +113,13 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
     setHasFileError(isValid !== true);
     if (isValid) {
+      setHasMovieConversionError(false);
       setIsConverting(true);
 
-      convertMovie(file, { extension: "gif", size: undefined })
+      void import("@web-speed-hackathon-2026/client/src/utils/convert_movie")
+        .then(({ convertMovie }) => {
+          return convertMovie(file, { extension: "gif", size: 384 });
+        })
         .then((converted) => {
           setParams((params) => ({
             ...params,
@@ -116,7 +132,11 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
           setIsConverting(false);
         })
-        .catch(console.error);
+        .catch((error) => {
+          console.error(error);
+          setHasMovieConversionError(true);
+          setIsConverting(false);
+        });
     }
   }, []);
 
@@ -167,14 +187,20 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       </div>
 
       <ModalSubmitButton
-        disabled={isConverting || isLoading || params.text === ""}
+        disabled={hasMovieConversionError || isConverting || isLoading || params.text === ""}
         loading={isConverting || isLoading}
       >
         {isConverting || isLoading ? "変換中" : "投稿する"}
       </ModalSubmitButton>
 
       <ModalErrorMessage>
-        {hasFileError ? "10 MB より小さくしてください" : hasError ? "投稿ができませんでした" : null}
+        {hasFileError
+          ? "10 MB より小さくしてください"
+          : hasMovieConversionError
+            ? "動画の変換に失敗しました"
+            : hasError
+              ? "投稿ができませんでした"
+              : null}
       </ModalErrorMessage>
     </form>
   );

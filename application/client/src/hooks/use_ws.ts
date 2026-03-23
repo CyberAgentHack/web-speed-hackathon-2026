@@ -5,6 +5,7 @@ export function useWs<T>(url: string, onMessage: (event: T) => void) {
     onMessage(JSON.parse(event.data));
   });
 
+  // Synchronize the WebSocket subscription with the current URL.
   useEffect(() => {
     const ws = new WebSocket(url);
     ws.addEventListener("message", handleMessage);

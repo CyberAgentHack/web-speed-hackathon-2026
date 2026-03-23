@@ -56,6 +56,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     await sendJSON(`/api/v1/dm/${conversationId}/read`, {});
   }, [conversationId]);
 
+  // Synchronize the visible conversation and read state with the DM API.
   useEffect(() => {
     void loadConversation();
     void sendRead();
@@ -80,28 +81,31 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
   }, [conversationId]);
 
-  useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {
-    if (event.type === "dm:conversation:message") {
-      void loadConversation().then(() => {
-        if (event.payload.sender.id !== activeUser?.id) {
-          setIsPeerTyping(false);
-          if (peerTypingTimeoutRef.current !== null) {
-            clearTimeout(peerTypingTimeoutRef.current);
+  useWs(
+    `/api/v1/dm/${conversationId}`,
+    (event: DmUpdateEvent | DmTypingEvent) => {
+      if (event.type === "dm:conversation:message") {
+        void loadConversation().then(() => {
+          if (event.payload.sender.id !== activeUser?.id) {
+            setIsPeerTyping(false);
+            if (peerTypingTimeoutRef.current !== null) {
+              clearTimeout(peerTypingTimeoutRef.current);
+            }
           }
           peerTypingTimeoutRef.current = null;
+        });
+        void sendRead();
+      } else if (event.type === "dm:conversation:typing") {
+        setIsPeerTyping(true);
+        if (peerTypingTimeoutRef.current !== null) {
+          clearTimeout(peerTypingTimeoutRef.current);
         }
-      });
-      void sendRead();
-    } else if (event.type === "dm:conversation:typing") {
-      setIsPeerTyping(true);
-      if (peerTypingTimeoutRef.current !== null) {
-        clearTimeout(peerTypingTimeoutRef.current);
+        peerTypingTimeoutRef.current = setTimeout(() => {
+          setIsPeerTyping(false);
+        }, TYPING_INDICATOR_DURATION_MS);
       }
-      peerTypingTimeoutRef.current = setTimeout(() => {
-        setIsPeerTyping(false);
-      }, TYPING_INDICATOR_DURATION_MS);
-    }
-  });
+    },
+  );
 
   if (activeUser === null) {
     return (
