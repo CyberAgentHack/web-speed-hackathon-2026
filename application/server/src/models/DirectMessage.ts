@@ -73,15 +73,18 @@ export function initDirectMessage(sequelize: Sequelize) {
   );
 
   DirectMessage.addHook("afterSave", "onDmSaved", async (message) => {
-    const directMessage = await DirectMessage.findByPk(message.get().id);
-    const conversation = await DirectMessageConversation.findByPk(directMessage?.conversationId);
+    const data = message.get();
+    const conversation = await DirectMessageConversation.findByPk(data.conversationId, {
+      attributes: ["id", "initiatorId", "memberId"],
+      include: [],
+    });
 
-    if (directMessage == null || conversation == null) {
+    if (conversation == null) {
       return;
     }
 
     const receiverId =
-      conversation.initiatorId === directMessage.senderId
+      conversation.initiatorId === data.senderId
         ? conversation.memberId
         : conversation.initiatorId;
 
@@ -94,6 +97,7 @@ export function initDirectMessage(sequelize: Sequelize) {
       include: [
         {
           association: "conversation",
+          attributes: [],
           where: {
             [Op.or]: [{ initiatorId: receiverId }, { memberId: receiverId }],
           },
@@ -102,6 +106,7 @@ export function initDirectMessage(sequelize: Sequelize) {
       ],
     });
 
+    const directMessage = await DirectMessage.findByPk(data.id);
     eventhub.emit(`dm:conversation/${conversation.id}:message`, directMessage);
     eventhub.emit(`dm:unread/${receiverId}`, { unreadCount });
   });
