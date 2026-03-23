@@ -4,13 +4,21 @@ import { Navigation } from "@web-speed-hackathon-2026/client/src/components/appl
 
 interface Props {
   activeUser: Models.User | null;
+  canPost: boolean;
   children: ReactNode;
   authModalId: string;
-  newPostModalId: string;
+  onOpenNewPostModal: () => void;
   onLogout: () => void;
 }
 
-export const AppPage = ({ activeUser, children, authModalId, newPostModalId, onLogout }: Props) => {
+export const AppPage = ({
+  activeUser,
+  canPost,
+  children,
+  authModalId,
+  onOpenNewPostModal,
+  onLogout,
+}: Props) => {
   return (
     <div className="relative z-0 flex justify-center font-sans">
       <div className="bg-cax-surface text-cax-text flex min-h-screen max-w-full">
@@ -18,7 +26,8 @@ export const AppPage = ({ activeUser, children, authModalId, newPostModalId, onL
           <Navigation
             activeUser={activeUser}
             authModalId={authModalId}
-            newPostModalId={newPostModalId}
+            canPost={canPost}
+            onOpenNewPostModal={onOpenNewPostModal}
             onLogout={onLogout}
           />
         </aside>

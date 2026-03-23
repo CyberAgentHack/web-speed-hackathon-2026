@@ -1,6 +1,8 @@
 import classNames from "classnames";
 import { ComponentPropsWithRef, ReactNode } from "react";
 
+import { runDialogCommand } from "@web-speed-hackathon-2026/client/src/utils/dialog_commands";
+
 interface Props extends ComponentPropsWithRef<"button"> {
   variant?: "primary" | "secondary";
   leftItem?: ReactNode;
@@ -11,6 +13,7 @@ export const Button = ({
   variant = "primary",
   leftItem,
   rightItem,
+  onClick,
   className,
   children,
   ...props
@@ -28,6 +31,13 @@ export const Button = ({
         },
         className,
       )}
+      onClick={(event) => {
+        onClick?.(event);
+        if (event.defaultPrevented) {
+          return;
+        }
+        runDialogCommand(props.command, props.commandfor);
+      }}
       type="button"
       {...props}
     >

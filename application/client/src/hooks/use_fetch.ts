@@ -6,6 +6,8 @@ interface ReturnValues<T> {
   isLoading: boolean;
 }
 
+type PrefetchCache = Record<string, Promise<unknown>>;
+
 export function useFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T>,
@@ -17,11 +19,26 @@ export function useFetch<T>(
   });
 
   useEffect(() => {
-    setResult(() => ({
-      data: null,
-      error: null,
-      isLoading: true,
-    }));
+    setResult({ data: null, error: null, isLoading: true });
+
+    const cache = (window as unknown as { __q?: PrefetchCache }).__q;
+    const prefetched = cache?.[apiPath] as Promise<T | null> | undefined;
+    if (prefetched) {
+      delete cache![apiPath];
+      void prefetched.then(
+        (data) => {
+          if (data !== null) {
+            setResult({ data, error: null, isLoading: false });
+          } else {
+            void fetcher(apiPath).then(
+              (data) => setResult({ data, error: null, isLoading: false }),
+              (error: Error) => setResult({ data: null, error, isLoading: false }),
+            );
+          }
+        },
+      );
+      return;
+    }
 
     void fetcher(apiPath).then(
       (data) => {

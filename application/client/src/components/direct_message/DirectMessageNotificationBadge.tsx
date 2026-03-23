@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
 
@@ -11,13 +11,40 @@ interface DmUnreadEvent {
 
 export const DirectMessageNotificationBadge = () => {
   const [unreadCount, updateUnreadCount] = useState(0);
+  const [isEnabled, setIsEnabled] = useState(false);
   const displayCount = unreadCount > 99 ? "99+" : String(unreadCount);
+
+  useEffect(() => {
+    const windowWithIdleCallback = window as Window & {
+      cancelIdleCallback?: (handle: number) => void;
+      requestIdleCallback?: (
+        callback: IdleRequestCallback,
+        options?: IdleRequestOptions,
+      ) => number;
+    };
+
+    if (typeof windowWithIdleCallback.requestIdleCallback === "function") {
+      const idleCallbackId = windowWithIdleCallback.requestIdleCallback(() => {
+        setIsEnabled(true);
+      }, { timeout: 3000 });
+      return () => {
+        windowWithIdleCallback.cancelIdleCallback?.(idleCallbackId);
+      };
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setIsEnabled(true);
+    }, 1);
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, []);
 
   useWs("/api/v1/dm/unread", (event: DmUnreadEvent) => {
     updateUnreadCount(event.payload.unreadCount);
-  });
+  }, isEnabled);
 
-  if (unreadCount === 0) {
+  if (!isEnabled || unreadCount === 0) {
     return null;
   }
   return (

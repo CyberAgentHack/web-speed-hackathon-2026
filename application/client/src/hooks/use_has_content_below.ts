@@ -1,4 +1,4 @@
-import { RefObject, useEffect, useState } from "react";
+import { RefObject, useLayoutEffect, useState } from "react";
 
 /**
  * contentEndRef の要素が boundaryRef の要素より下にあるかを監視する。
@@ -13,22 +13,69 @@ export function useHasContentBelow(
 ): boolean {
   const [hasContentBelow, setHasContentBelow] = useState(false);
 
-  useEffect(() => {
-    let active = true;
+  useLayoutEffect(() => {
+    let frameId = 0;
+
     const check = () => {
-      if (!active) return;
+      frameId = 0;
       const endEl = contentEndRef.current;
       const barEl = boundaryRef.current;
-      if (endEl && barEl) {
-        const endRect = endEl.getBoundingClientRect();
-        const barRect = barEl.getBoundingClientRect();
-        setHasContentBelow(endRect.top > barRect.top);
+      if (endEl == null || barEl == null) {
+        setHasContentBelow(false);
+        return;
       }
-      scheduler.postTask(check, { priority: "user-blocking", delay: 1 });
+
+      const endRect = endEl.getBoundingClientRect();
+      const barRect = barEl.getBoundingClientRect();
+      const nextHasContentBelow = endRect.top > barRect.top;
+
+      setHasContentBelow((current) =>
+        current === nextHasContentBelow ? current : nextHasContentBelow,
+      );
     };
-    scheduler.postTask(check, { priority: "user-blocking", delay: 1 });
+
+    const scheduleCheck = () => {
+      if (frameId !== 0) {
+        return;
+      }
+
+      frameId = window.requestAnimationFrame(check);
+    };
+
+    const resizeObserver = new ResizeObserver(scheduleCheck);
+    const mutationObserver = new MutationObserver(scheduleCheck);
+
+    const endEl = contentEndRef.current;
+    const barEl = boundaryRef.current;
+    const contentParentEl = endEl?.parentElement;
+
+    if (endEl != null) {
+      resizeObserver.observe(endEl);
+    }
+    if (barEl != null) {
+      resizeObserver.observe(barEl);
+    }
+    if (contentParentEl != null) {
+      resizeObserver.observe(contentParentEl);
+      mutationObserver.observe(contentParentEl, {
+        characterData: true,
+        childList: true,
+        subtree: true,
+      });
+    }
+
+    window.addEventListener("resize", scheduleCheck);
+    window.addEventListener("scroll", scheduleCheck, { passive: true });
+    scheduleCheck();
+
     return () => {
-      active = false;
+      if (frameId !== 0) {
+        window.cancelAnimationFrame(frameId);
+      }
+      resizeObserver.disconnect();
+      mutationObserver.disconnect();
+      window.removeEventListener("resize", scheduleCheck);
+      window.removeEventListener("scroll", scheduleCheck);
     };
   }, [contentEndRef, boundaryRef]);
 

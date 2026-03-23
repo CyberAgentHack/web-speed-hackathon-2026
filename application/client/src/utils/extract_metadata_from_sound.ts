@@ -14,16 +14,16 @@ const UNKNOWN_TITLE = "Unknown Title";
 export async function extractMetadataFromSound(data: File): Promise<SoundMetadata> {
   try {
     const ffmpeg = await loadFFmpeg();
+    const jobId = crypto.randomUUID();
+    const inputFile = `metadata-${jobId}.input`;
+    const exportFile = `metadata-${jobId}.txt`;
 
-    const exportFile = "meta.txt";
+    await ffmpeg.writeFile(inputFile, new Uint8Array(await data.arrayBuffer()));
 
-    await ffmpeg.writeFile("file", new Uint8Array(await data.arrayBuffer()));
-
-    await ffmpeg.exec(["-i", "file", "-f", "ffmetadata", exportFile]);
+    await ffmpeg.exec(["-i", inputFile, "-f", "ffmetadata", exportFile]);
 
     const output = (await ffmpeg.readFile(exportFile)) as Uint8Array<ArrayBuffer>;
-
-    ffmpeg.terminate();
+    await Promise.allSettled([ffmpeg.deleteFile(inputFile), ffmpeg.deleteFile(exportFile)]);
 
     const outputUtf8 = Encoding.convert(output, {
       to: "UNICODE",

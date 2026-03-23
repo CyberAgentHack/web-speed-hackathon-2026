@@ -28,7 +28,11 @@ export const CrokPage = ({ messages, isStreaming, onSendMessage }: Props) => {
           {messages.length === 0 && <WelcomeScreen />}
 
           {messages.map((message, index) => (
-            <ChatMessage key={index} message={message} />
+            <ChatMessage
+              key={index}
+              message={message}
+              streaming={isStreaming && index === messages.length - 1 && message.role === "assistant"}
+            />
           ))}
           <div ref={messagesEndRef} />
         </div>

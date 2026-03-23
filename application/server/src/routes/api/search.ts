@@ -1,10 +1,51 @@
+import path from "node:path";
+
+import Bluebird from "bluebird";
+import kuromoji from "kuromoji";
+import analyze from "negaposi-analyzer-ja";
 import { Router } from "express";
 import { Op } from "sequelize";
 
 import { Post } from "@web-speed-hackathon-2026/server/src/models";
+import { PUBLIC_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 
 export const searchRouter = Router();
+
+interface SearchTokenizer {
+  tokenize(text: string): unknown[];
+}
+
+let tokenizerPromise: Promise<SearchTokenizer> | undefined;
+
+function getTokenizer(): Promise<SearchTokenizer> {
+  if (tokenizerPromise === undefined) {
+    const builder = Bluebird.promisifyAll(
+      kuromoji.builder({ dicPath: path.join(PUBLIC_PATH, "dicts") }),
+    ) as unknown as { buildAsync(): Promise<SearchTokenizer> };
+    tokenizerPromise = builder.buildAsync();
+  }
+  return tokenizerPromise;
+}
+
+void getTokenizer();
+
+searchRouter.get("/search/sentiment", async (req, res) => {
+  const query = req.query["q"];
+  if (typeof query !== "string" || query.trim() === "") {
+    return res.status(200).type("application/json").send({ isNegative: false });
+  }
+
+  const { keywords } = parseSearchQuery(query);
+  if (!keywords) {
+    return res.status(200).type("application/json").send({ isNegative: false });
+  }
+
+  const tokenizer = await getTokenizer();
+  const score = analyze(tokenizer.tokenize(keywords));
+
+  return res.status(200).type("application/json").send({ isNegative: score < -0.1 });
+});
 
 searchRouter.get("/search", async (req, res) => {
   const query = req.query["q"];
@@ -54,7 +95,6 @@ searchRouter.get("/search", async (req, res) => {
       include: [
         {
           association: "user",
-          attributes: { exclude: ["profileImageId"] },
           include: [{ association: "profileImage" }],
           required: true,
           where: {
@@ -70,6 +110,7 @@ searchRouter.get("/search", async (req, res) => {
       ],
       limit,
       offset,
+      subQuery: false,
       where: dateWhere,
     });
   }
