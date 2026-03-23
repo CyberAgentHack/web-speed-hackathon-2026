@@ -1,25 +1,43 @@
-import { initializeImageMagick, ImageMagick, MagickFormat } from "@imagemagick/magick-wasm";
-import magickWasm from "@imagemagick/magick-wasm/magick.wasm?binary";
-import { dump, insert, ImageIFD } from "piexifjs";
+import type { MagickFormat } from "@imagemagick/magick-wasm";
 
 interface Options {
-  extension: MagickFormat;
+  extension: keyof typeof MagickFormat;
 }
 
-export async function convertImage(file: File, options: Options): Promise<Blob> {
-  await initializeImageMagick(magickWasm);
+export interface ConvertImageResult {
+  blob: Blob;
+  alt: string | null;
+}
 
+export async function convertImage(file: File, options: Options): Promise<ConvertImageResult> {
+  const [
+    { initializeImageMagick, ImageMagick, MagickFormat },
+    magickWasmBuffer,
+    { dump, insert, ImageIFD },
+  ] = await Promise.all([
+    import("@imagemagick/magick-wasm"),
+    fetch("/wasm/magick.wasm").then((r) => {
+      if (!r.ok) throw new Error(`Failed to fetch magick.wasm: ${r.status}`);
+      return r.arrayBuffer();
+    }),
+    import("piexifjs"),
+  ]);
+
+  await initializeImageMagick(new Uint8Array(magickWasmBuffer));
+
+  const format = MagickFormat[options.extension];
   const byteArray = new Uint8Array(await file.arrayBuffer());
 
   return new Promise((resolve) => {
     ImageMagick.read(byteArray, (img) => {
-      img.format = options.extension;
+      img.format = format;
 
       const comment = img.comment;
 
       img.write((output) => {
-        if (comment == null) {
-          resolve(new Blob([output as Uint8Array<ArrayBuffer>]));
+        // piexifjs の EXIF 挿入は JPEG のみ対応。WebP 等はコメントだけ返す
+        if (comment == null || format !== MagickFormat.Jpg) {
+          resolve({ blob: new Blob([output as Uint8Array<ArrayBuffer>]), alt: comment || null });
           return;
         }
 
@@ -35,7 +53,7 @@ export async function convertImage(file: File, options: Options): Promise<Blob> 
         const exifStr = dump({ "0th": { [ImageIFD.ImageDescription]: descriptionBinary } });
         const outputWithExif = insert(exifStr, binary);
         const bytes = Uint8Array.from(outputWithExif.split("").map((c) => c.charCodeAt(0)));
-        resolve(new Blob([bytes]));
+        resolve({ blob: new Blob([bytes]), alt: comment });
       });
     });
   });

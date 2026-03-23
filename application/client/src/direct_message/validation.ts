@@ -1,5 +1,4 @@
-import { FormErrors } from "redux-form";
-
+import { FormErrors } from "@web-speed-hackathon-2026/client/src/auth/validation";
 import { NewDirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
 
 export const validate = (

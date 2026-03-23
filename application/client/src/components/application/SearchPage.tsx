@@ -1,13 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { Field, InjectedFormProps, reduxForm, WrappedFieldProps } from "redux-form";
 
 import { Timeline } from "@web-speed-hackathon-2026/client/src/components/timeline/Timeline";
 import {
   parseSearchQuery,
   sanitizeSearchText,
 } from "@web-speed-hackathon-2026/client/src/search/services";
-import { SearchFormData } from "@web-speed-hackathon-2026/client/src/search/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/search/validation";
 import { analyzeSentiment } from "@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer";
 
@@ -18,31 +16,16 @@ interface Props {
   results: Models.Post[];
 }
 
-const SearchInput = ({ input, meta }: WrappedFieldProps) => (
-  <div className="flex flex-1 flex-col">
-    <input
-      {...input}
-      className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
-        meta.touched && meta.error
-          ? "border-cax-danger focus:border-cax-danger"
-          : "border-cax-border focus:border-cax-brand-strong"
-      }`}
-      placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
-      type="text"
-    />
-    {meta.touched && meta.error && (
-      <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>
-    )}
-  </div>
-);
-
-const SearchPageComponent = ({
-  query,
-  results,
-  handleSubmit,
-}: Props & InjectedFormProps<SearchFormData, Props>) => {
+export const SearchPage = ({ query, results }: Props) => {
   const navigate = useNavigate();
+  const [searchText, setSearchText] = useState(query);
+  const [error, setError] = useState<string | null>(null);
   const [isNegative, setIsNegative] = useState(false);
+
+  useEffect(() => {
+    setSearchText(query);
+    setError(null);
+  }, [query]);
 
   const parsed = parseSearchQuery(query);
 
@@ -53,20 +36,32 @@ const SearchPageComponent = ({
     }
 
     let isMounted = true;
-    analyzeSentiment(parsed.keywords)
-      .then((result) => {
-        if (isMounted) {
-          setIsNegative(result.label === "negative");
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setIsNegative(false);
-        }
-      });
+
+    const schedule =
+      typeof requestIdleCallback === "function"
+        ? requestIdleCallback
+        : (cb: () => void, _opts?: { timeout?: number }) => window.setTimeout(cb, 0);
+    const cancel =
+      typeof cancelIdleCallback === "function"
+        ? cancelIdleCallback
+        : (id: number) => clearTimeout(id);
+
+    const id = schedule(
+      () => {
+        analyzeSentiment(parsed.keywords)
+          .then((result) => {
+            if (isMounted) setIsNegative(result.label === "negative");
+          })
+          .catch(() => {
+            if (isMounted) setIsNegative(false);
+          });
+      },
+      { timeout: 5000 },
+    );
 
     return () => {
       isMounted = false;
+      cancel(id);
     };
   }, [parsed.keywords]);
 
@@ -82,19 +77,42 @@ const SearchPageComponent = ({
       parts.push(`${parsed.untilDate} 以前`);
     }
     return parts.join(" ");
-  }, [parsed]);
+  }, [parsed.keywords, parsed.sinceDate, parsed.untilDate]);
 
-  const onSubmit = (values: SearchFormData) => {
-    const sanitizedText = sanitizeSearchText(values.searchText.trim());
+  const onSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    const errors = validate({ searchText });
+    if (errors.searchText) {
+      setError(errors.searchText);
+      return;
+    }
+    setError(null);
+    const sanitizedText = sanitizeSearchText(searchText.trim());
     navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
   };
 
   return (
     <div className="flex flex-col gap-4">
       <div className="bg-cax-surface p-4 shadow">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={onSubmit}>
           <div className="flex gap-2">
-            <Field name="searchText" component={SearchInput} />
+            <div className="flex flex-1 flex-col">
+              <input
+                className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
+                  error
+                    ? "border-cax-danger focus:border-cax-danger"
+                    : "border-cax-border focus:border-cax-brand-strong"
+                }`}
+                placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
+                type="text"
+                value={searchText}
+                onChange={(e) => {
+                  setSearchText(e.target.value);
+                  if (error) setError(null);
+                }}
+              />
+              {error && <span className="text-cax-danger mt-1 text-xs">{error}</span>}
+            </div>
             <Button variant="primary" type="submit">
               検索
             </Button>
@@ -134,9 +152,3 @@ const SearchPageComponent = ({
     </div>
   );
 };
-
-export const SearchPage = reduxForm<SearchFormData, Props>({
-  form: "search",
-  enableReinitialize: true,
-  validate,
-})(SearchPageComponent);

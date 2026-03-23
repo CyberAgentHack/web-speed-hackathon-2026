@@ -14,21 +14,34 @@ export function useHasContentBelow(
   const [hasContentBelow, setHasContentBelow] = useState(false);
 
   useEffect(() => {
-    let active = true;
-    const check = () => {
-      if (!active) return;
-      const endEl = contentEndRef.current;
-      const barEl = boundaryRef.current;
-      if (endEl && barEl) {
-        const endRect = endEl.getBoundingClientRect();
-        const barRect = barEl.getBoundingClientRect();
-        setHasContentBelow(endRect.top > barRect.top);
-      }
-      scheduler.postTask(check, { priority: "user-blocking", delay: 1 });
+    const endEl = contentEndRef.current;
+    const barEl = boundaryRef.current;
+    if (!endEl || !barEl) return;
+
+    let observer: IntersectionObserver | null = null;
+
+    const createObserver = () => {
+      observer?.disconnect();
+      const barHeight = barEl.getBoundingClientRect().height;
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          setHasContentBelow(!entry!.isIntersecting);
+        },
+        { rootMargin: `0px 0px -${barHeight}px 0px` },
+      );
+      observer.observe(endEl);
     };
-    scheduler.postTask(check, { priority: "user-blocking", delay: 1 });
+
+    createObserver();
+
+    const resizeObserver = new ResizeObserver(() => {
+      createObserver();
+    });
+    resizeObserver.observe(barEl);
+
     return () => {
-      active = false;
+      observer?.disconnect();
+      resizeObserver.disconnect();
     };
   }, [contentEndRef, boundaryRef]);
 

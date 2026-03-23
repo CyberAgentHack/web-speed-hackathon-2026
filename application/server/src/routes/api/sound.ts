@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import { extractMetadataFromSound } from "@web-speed-hackathon-2026/server/src/utils/extract_metadata_from_sound";
+import { generateWaveform } from "@web-speed-hackathon-2026/server/src/utils/generate_waveform";
 
 // 変換した音声の拡張子
 const EXTENSION = "mp3";
@@ -34,6 +35,10 @@ soundRouter.post("/sounds", async (req, res) => {
   const filePath = path.resolve(UPLOAD_PATH, `./sounds/${soundId}.${EXTENSION}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds"), { recursive: true });
   await fs.writeFile(filePath, req.body);
+
+  // 波形データ生成（非同期で行うがレスポンスは待たない）
+  const waveformDir = path.resolve(UPLOAD_PATH, "waveforms");
+  generateWaveform(filePath, waveformDir).catch(() => {});
 
   return res.status(200).type("application/json").send({ artist, id: soundId, title });
 });

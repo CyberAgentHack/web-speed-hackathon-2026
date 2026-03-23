@@ -7,9 +7,10 @@ import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+import { extractAltFromImage } from "@web-speed-hackathon-2026/server/src/utils/extract_alt_from_image";
 
 // 変換した画像の拡張子
-const EXTENSION = "jpg";
+const EXTENSION = "webp";
 
 export const imageRouter = Router();
 
@@ -27,10 +28,15 @@ imageRouter.post("/images", async (req, res) => {
   }
 
   const imageId = uuidv4();
+  let alt = await extractAltFromImage(req.body);
+  // WebP等でEXIFが消失した場合、クライアントから渡されたaltをフォールバックとして使用
+  if (!alt && typeof req.headers["x-image-alt"] === "string") {
+    alt = req.headers["x-image-alt"].slice(0, 255);
+  }
 
   const filePath = path.resolve(UPLOAD_PATH, `./images/${imageId}.${EXTENSION}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
   await fs.writeFile(filePath, req.body);
 
-  return res.status(200).type("application/json").send({ id: imageId });
+  return res.status(200).type("application/json").send({ alt, id: imageId });
 });
