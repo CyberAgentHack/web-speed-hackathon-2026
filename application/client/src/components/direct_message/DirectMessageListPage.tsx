@@ -46,7 +46,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
   }
 
   return (
-    <section>
+    <section className="bg-cax-surface flex h-[calc(100vh-(--spacing(12)))] flex-col overflow-hidden lg:h-screen">
       <header className="border-cax-border flex flex-col gap-4 border-b px-4 pt-6 pb-4">
         <h1 className="text-2xl font-bold">ダイレクトメッセージ</h1>
         <div className="flex flex-wrap items-center gap-4">
@@ -60,64 +60,68 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
         </div>
       </header>
 
-      {error != null ? (
-        <p className="text-cax-danger px-4 py-6 text-center text-sm">DMの取得に失敗しました</p>
-      ) : conversations.length === 0 ? (
-        <p className="text-cax-text-muted px-4 py-6 text-center">
-          まだDMで会話した相手がいません。
-        </p>
-      ) : (
-        <ul data-testid="dm-list">
-          {conversations.map((conversation) => {
-            const { messages } = conversation;
-            const peer =
-              conversation.initiator.id !== activeUser.id
-                ? conversation.initiator
-                : conversation.member;
+      <div className="flex-1 overflow-y-auto">
+        {error != null ? (
+          <p className="text-cax-danger px-4 py-6 text-center text-sm">DMの取得に失敗しました</p>
+        ) : conversations.length === 0 ? (
+          <p className="text-cax-text-muted px-4 py-6 text-center">
+            まだDMで会話した相手がいません。
+          </p>
+        ) : (
+          <ul data-testid="dm-list">
+            {conversations.map((conversation) => {
+              const { messages } = conversation;
+              const peer =
+                conversation.initiator.id !== activeUser.id
+                  ? conversation.initiator
+                  : conversation.member;
 
-            const lastMessage = messages.at(-1);
-            const hasUnread = messages
-              .filter((m) => m.sender.id === peer.id)
-              .some((m) => !m.isRead);
+              const lastMessage = messages.at(-1);
+              const hasUnread = messages
+                .filter((m) => m.sender.id === peer.id)
+                .some((m) => !m.isRead);
 
-            return (
-              <li className="grid" key={conversation.id}>
-                <Link className="hover:bg-cax-surface-subtle px-4" to={`/dm/${conversation.id}`}>
-                  <div className="border-cax-border flex gap-4 border-b px-4 pt-2 pb-4">
-                    <img
-                      alt={peer.profileImage.alt}
-                      className="w-12 shrink-0 self-start rounded-full"
-                      src={getProfileImagePath(peer.profileImage.id)}
-                    />
-                    <div className="flex flex-1 flex-col">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-bold">{peer.name}</p>
-                          <p className="text-cax-text-muted text-xs">@{peer.username}</p>
+              return (
+                <li className="grid" key={conversation.id}>
+                  <Link className="hover:bg-cax-surface-subtle px-4" to={`/dm/${conversation.id}`}>
+                    <div className="border-cax-border flex gap-4 border-b px-4 pt-2 pb-4">
+                      <img
+                        alt={peer.profileImage.alt}
+                        className="w-12 shrink-0 self-start rounded-full"
+                        src={getProfileImagePath(peer.profileImage.id)}
+                      />
+                      <div className="flex flex-1 flex-col">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-bold">{peer.name}</p>
+                            <p className="text-cax-text-muted text-xs">@{peer.username}</p>
+                          </div>
+                          {lastMessage != null && (
+                            <time
+                              className="text-cax-text-subtle text-xs"
+                              dateTime={lastMessage.createdAt}
+                            >
+                              {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            </time>
+                          )}
                         </div>
-                        {lastMessage != null && (
-                          <time
-                            className="text-cax-text-subtle text-xs"
-                            dateTime={lastMessage.createdAt}
-                          >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
-                          </time>
-                        )}
+                        <p className="mt-1 line-clamp-2 text-sm wrap-anywhere">
+                          {lastMessage?.body}
+                        </p>
+                        {hasUnread ? (
+                          <span className="bg-cax-brand-soft text-cax-brand mt-2 inline-flex w-fit rounded-full px-3 py-0.5 text-xs">
+                            未読
+                          </span>
+                        ) : null}
                       </div>
-                      <p className="mt-1 line-clamp-2 text-sm wrap-anywhere">{lastMessage?.body}</p>
-                      {hasUnread ? (
-                        <span className="bg-cax-brand-soft text-cax-brand mt-2 inline-flex w-fit rounded-full px-3 py-0.5 text-xs">
-                          未読
-                        </span>
-                      ) : null}
                     </div>
-                  </div>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
     </section>
   );
 };

@@ -94,7 +94,7 @@ export const DirectMessagePage = ({
   }
 
   return (
-    <section className="bg-cax-surface flex min-h-[calc(100vh-(--spacing(12)))] flex-col lg:min-h-screen">
+    <section className="bg-cax-surface flex h-[calc(100vh-(--spacing(12)))] flex-col overflow-hidden lg:h-screen">
       <header className="border-cax-border bg-cax-surface sticky top-0 z-10 flex items-center gap-2 border-b px-4 py-3">
         <img
           alt={peer.profileImage.alt}
@@ -128,6 +128,7 @@ export const DirectMessagePage = ({
                   "flex flex-col w-full",
                   isActiveUserSend ? "items-end" : "items-start",
                 )}
+                key={message.id}
               >
                 <p
                   className={classNames(

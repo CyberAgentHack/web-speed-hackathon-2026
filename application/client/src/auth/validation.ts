@@ -13,7 +13,10 @@ export const validate = (values: AuthFormData): FormErrors<AuthFormData> => {
     errors.name = "名前を入力してください";
   }
 
-  if (/^(?:[^\P{Letter}&&\P{Number}]*){16,}$/v.test(normalizedPassword)) {
+  const hasOnlyLettersAndNumbers =
+    normalizedPassword.length >= 16 && !/[^\p{Letter}\p{Number}]/u.test(normalizedPassword);
+
+  if (hasOnlyLettersAndNumbers) {
     errors.password = "パスワードには記号を含める必要があります";
   }
   if (normalizedPassword.length === 0) {

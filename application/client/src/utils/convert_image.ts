@@ -2,12 +2,22 @@ import { initializeImageMagick, ImageMagick, MagickFormat } from "@imagemagick/m
 import magickWasm from "@imagemagick/magick-wasm/magick.wasm?binary";
 import { dump, insert, ImageIFD } from "piexifjs";
 
+let imageMagickReadyPromise: Promise<void> | null = null;
+
+async function ensureImageMagickInitialized(): Promise<void> {
+  if (imageMagickReadyPromise === null) {
+    imageMagickReadyPromise = initializeImageMagick(magickWasm);
+  }
+
+  return imageMagickReadyPromise;
+}
+
 interface Options {
   extension: MagickFormat;
 }
 
 export async function convertImage(file: File, options: Options): Promise<Blob> {
-  await initializeImageMagick(magickWasm);
+  await ensureImageMagickInitialized();
 
   const byteArray = new Uint8Array(await file.arrayBuffer());
 

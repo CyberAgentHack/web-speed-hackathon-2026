@@ -1,57 +1,70 @@
-import { useCallback, useEffect, useId, useState } from "react";
-import { Helmet, HelmetProvider } from "react-helmet";
-import { Route, Routes, useLocation, useNavigate } from "react-router";
+import { Suspense, lazy, useCallback, useEffect, useId, useRef, useState } from "react";
+import { HelmetProvider } from "react-helmet";
+import { Route, Routes, useLocation } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
-import { CrokContainer } from "@web-speed-hackathon-2026/client/src/containers/CrokContainer";
 import { DirectMessageContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer";
 import { DirectMessageListContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer";
 import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
-import { PostContainer } from "@web-speed-hackathon-2026/client/src/containers/PostContainer";
+import { PostLoadingPlaceholder } from "@web-speed-hackathon-2026/client/src/containers/PostContainer";
 import { SearchContainer } from "@web-speed-hackathon-2026/client/src/containers/SearchContainer";
 import { TermContainer } from "@web-speed-hackathon-2026/client/src/containers/TermContainer";
-import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
-import { UserProfileContainer } from "@web-speed-hackathon-2026/client/src/containers/UserProfileContainer";
+import { TimelineLoadingPlaceholder } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+const CrokContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/CrokContainer").then((module) => ({
+    default: module.CrokContainer,
+  })),
+);
+const TimelineContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/TimelineContainer").then((module) => ({
+    default: module.TimelineContainer,
+  })),
+);
+const UserProfileContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/UserProfileContainer").then(
+    (module) => ({
+      default: module.UserProfileContainer,
+    }),
+  ),
+);
+const PostContainer = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/containers/PostContainer").then((module) => ({
+    default: module.PostContainer,
+  })),
+);
 
 export const AppContainer = () => {
   const { pathname } = useLocation();
-  const navigate = useNavigate();
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
   const [activeUser, setActiveUser] = useState<Models.User | null>(null);
-  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
+  const ignoreInitialMeRequestRef = useRef(false);
   useEffect(() => {
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {
-        setActiveUser(user);
+        if (!ignoreInitialMeRequestRef.current) {
+          setActiveUser(user);
+        }
       })
-      .finally(() => {
-        setIsLoadingActiveUser(false);
+      .catch(() => {
+        if (!ignoreInitialMeRequestRef.current) {
+          setActiveUser(null);
+        }
       });
-  }, [setActiveUser, setIsLoadingActiveUser]);
+  }, [setActiveUser]);
   const handleLogout = useCallback(async () => {
+    ignoreInitialMeRequestRef.current = true;
     await sendJSON("/api/v1/signout", {});
     setActiveUser(null);
-    navigate("/");
-  }, [navigate]);
+  }, []);
 
   const authModalId = useId();
   const newPostModalId = useId();
-
-  if (isLoadingActiveUser) {
-    return (
-      <HelmetProvider>
-        <Helmet>
-          <title>読込中 - CaX</title>
-        </Helmet>
-      </HelmetProvider>
-    );
-  }
 
   return (
     <HelmetProvider>
@@ -62,11 +75,16 @@ export const AppContainer = () => {
         onLogout={handleLogout}
       >
         <Routes>
-          <Route element={<TimelineContainer />} path="/" />
           <Route
             element={
-              <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
+              <Suspense fallback={<TimelineLoadingPlaceholder />}>
+                <TimelineContainer />
+              </Suspense>
             }
+            path="/"
+          />
+          <Route
+            element={<DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />}
             path="/dm"
           />
           <Route
@@ -74,18 +92,42 @@ export const AppContainer = () => {
             path="/dm/:conversationId"
           />
           <Route element={<SearchContainer />} path="/search" />
-          <Route element={<UserProfileContainer />} path="/users/:username" />
-          <Route element={<PostContainer />} path="/posts/:postId" />
+          <Route
+            element={
+              <Suspense fallback={null}>
+                <UserProfileContainer />
+              </Suspense>
+            }
+            path="/users/:username"
+          />
+          <Route
+            element={
+              <Suspense fallback={<PostLoadingPlaceholder />}>
+                <PostContainer />
+              </Suspense>
+            }
+            path="/posts/:postId"
+          />
           <Route element={<TermContainer />} path="/terms" />
           <Route
-            element={<CrokContainer activeUser={activeUser} authModalId={authModalId} />}
+            element={
+              <Suspense fallback={null}>
+                <CrokContainer activeUser={activeUser} authModalId={authModalId} />
+              </Suspense>
+            }
             path="/crok"
           />
           <Route element={<NotFoundContainer />} path="*" />
         </Routes>
       </AppPage>
 
-      <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
+      <AuthModalContainer
+        id={authModalId}
+        onUpdateActiveUser={(user) => {
+          ignoreInitialMeRequestRef.current = true;
+          setActiveUser(user);
+        }}
+      />
       <NewPostModalContainer id={newPostModalId} />
     </HelmetProvider>
   );

@@ -1,58 +1,113 @@
-import $ from "jquery";
-import { gzip } from "pako";
+class RequestError extends Error {
+  responseJSON?: unknown;
+  status: number;
+  statusText: string;
+
+  constructor({
+    responseText = "",
+    status,
+    statusText,
+  }: {
+    responseText?: string;
+    status: number;
+    statusText: string;
+  }) {
+    super(`Request failed: ${status} ${statusText}`);
+    this.name = "RequestError";
+    this.status = status;
+    this.statusText = statusText;
+
+    if (responseText.length > 0) {
+      try {
+        this.responseJSON = JSON.parse(responseText);
+      } catch {
+        this.responseJSON = undefined;
+      }
+    }
+  }
+}
+
+async function requestArrayBuffer(url: string): Promise<ArrayBuffer> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new RequestError({
+      responseText: await response.text(),
+      status: response.status,
+      statusText: response.statusText,
+    });
+  }
+
+  return response.arrayBuffer();
+}
+
+async function requestJSON<T>({
+  body,
+  headers,
+  method,
+  url,
+}: {
+  body?: Blob | BufferSource | File;
+  headers?: Record<string, string>;
+  method: "GET" | "POST";
+  url: string;
+}): Promise<T> {
+  const response = await fetch(url, {
+    body: body ?? null,
+    headers,
+    method,
+  });
+
+  if (!response.ok) {
+    throw new RequestError({
+      responseText: await response.text(),
+      status: response.status,
+      statusText: response.statusText,
+    });
+  }
+
+  return (await response.json()) as T;
+}
 
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "binary",
-    method: "GET",
-    responseType: "arraybuffer",
-    url,
-  });
-  return result;
+  return requestArrayBuffer(url);
 }
 
 export async function fetchJSON<T>(url: string): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "json",
-    method: "GET",
-    url,
-  });
-  return result;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new RequestError({
+      responseText: await response.text(),
+      status: response.status,
+      statusText: response.statusText,
+    });
+  }
+
+  return (await response.json()) as T;
 }
 
 export async function sendFile<T>(url: string, file: File): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    data: file,
-    dataType: "json",
+  return requestJSON<T>({
+    body: file,
     headers: {
       "Content-Type": "application/octet-stream",
     },
     method: "POST",
-    processData: false,
     url,
   });
-  return result;
 }
 
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
-  const jsonString = JSON.stringify(data);
-  const uint8Array = new TextEncoder().encode(jsonString);
-  const compressed = gzip(uint8Array);
-
-  const result = await $.ajax({
-    async: false,
-    data: compressed,
-    dataType: "json",
-    headers: {
-      "Content-Encoding": "gzip",
-      "Content-Type": "application/json",
-    },
+  const response = await fetch(url, {
+    body: JSON.stringify(data),
+    headers: { "Content-Type": "application/json" },
     method: "POST",
-    processData: false,
-    url,
   });
-  return result;
+  if (!response.ok) {
+    throw new RequestError({
+      responseText: await response.text(),
+      status: response.status,
+      statusText: response.statusText,
+    });
+  }
+  return (await response.json()) as T;
 }

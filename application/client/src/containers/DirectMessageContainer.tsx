@@ -41,9 +41,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     }
 
     try {
-      const data = await fetchJSON<Models.DirectMessageConversation>(
-        `/api/v1/dm/${conversationId}`,
-      );
+      const data = await fetchJSON<Models.DirectMessageConversation>(`/api/v1/dm/${conversationId}`);
       setConversation(data);
       setConversationError(null);
     } catch (error) {
@@ -120,7 +118,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   }
 
   const peer =
-    conversation.initiator.id !== activeUser?.id ? conversation.initiator : conversation.member;
+    conversation.initiator.id !== activeUser.id ? conversation.initiator : conversation.member;
 
   return (
     <>

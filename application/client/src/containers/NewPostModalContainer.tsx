@@ -12,10 +12,17 @@ interface SubmitParams {
   text: string;
 }
 
+interface UploadedImage {
+  alt: string;
+  id: string;
+}
+
 async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promise<Models.Post> {
   const payload = {
     images: images
-      ? await Promise.all(images.map((image) => sendFile("/api/v1/images", image)))
+      ? await Promise.all(
+          images.map(async (image) => sendFile<UploadedImage>("/api/v1/images", image)),
+        )
       : [],
     movie: movie ? await sendFile("/api/v1/movies", movie) : undefined,
     sound: sound ? await sendFile("/api/v1/sounds", sound) : undefined,
@@ -40,8 +47,13 @@ export const NewPostModalContainer = ({ id }: Props) => {
     }
 
     const handleToggle = () => {
-      // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
-      setResetKey((key) => key + 1);
+      if (element.open) {
+        // モーダルが開いた時にWASMモジュールを事前ロード
+        import("@imagemagick/magick-wasm").catch(() => {});
+      } else {
+        // 閉じた時だけフォームをリセットし、オープン直後の再マウントを避ける
+        setResetKey((key) => key + 1);
+      }
     };
     element.addEventListener("toggle", handleToggle);
     return () => {

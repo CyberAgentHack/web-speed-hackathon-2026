@@ -2,7 +2,7 @@ export const sanitizeSearchText = (input: string): string => {
   let text = input;
 
   text = text.replace(
-    /\b(from|until)\s*:?\s*(\d{4}-\d{2}-\d{2})\d*/gi,
+    /\b(since|until)\s*:?\s*(\d{4}-\d{2}-\d{2})\S*/gi,
     (_m, key, date) => `${key}:${date}`,
   );
 
@@ -10,30 +10,35 @@ export const sanitizeSearchText = (input: string): string => {
 };
 
 export const parseSearchQuery = (query: string) => {
-  const sincePattern = /since:((\d|\d\d|\d\d\d\d-\d\d-\d\d)+)+$/;
-  const untilPattern = /until:((\d|\d\d|\d\d\d\d-\d\d-\d\d)+)+$/;
+  const sincePattern = /^since:(\d{4}-\d{2}-\d{2})/i;
+  const untilPattern = /^until:(\d{4}-\d{2}-\d{2})/i;
 
-  const sincePart = query.match(/since:[^\s]*/)?.[0] || "";
-  const untilPart = query.match(/until:[^\s]*/)?.[0] || "";
+  let sinceDate: string | null = null;
+  let untilDate: string | null = null;
+  const keywords: string[] = [];
 
-  const sinceMatch = sincePattern.exec(sincePart);
-  const untilMatch = untilPattern.exec(untilPart);
+  for (const token of query.trim().split(/\s+/)) {
+    const sinceMatch = sincePattern.exec(token);
+    if (sinceMatch) {
+      sinceDate = sinceMatch[1] ?? null;
+      continue;
+    }
 
-  const keywords = query
-    .replace(/since:.*(\d{4}-\d{2}-\d{2}).*/g, "")
-    .replace(/until:.*(\d{4}-\d{2}-\d{2}).*/g, "")
-    .trim();
+    const untilMatch = untilPattern.exec(token);
+    if (untilMatch) {
+      untilDate = untilMatch[1] ?? null;
+      continue;
+    }
 
-  const extractDate = (s: string | null) => {
-    if (!s) return null;
-    const m = /(\d{4}-\d{2}-\d{2})/.exec(s);
-    return m ? m[1] : null;
-  };
+    if (token.length > 0) {
+      keywords.push(token);
+    }
+  }
 
   return {
-    keywords,
-    sinceDate: extractDate(sinceMatch ? sinceMatch[1]! : null),
-    untilDate: extractDate(untilMatch ? untilMatch[1]! : null),
+    keywords: keywords.join(" ").trim(),
+    sinceDate,
+    untilDate,
   };
 };
 

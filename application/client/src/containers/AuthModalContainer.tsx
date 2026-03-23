@@ -38,13 +38,17 @@ function getErrorCode(err: JQuery.jqXHR<unknown>, type: "signin" | "signup"): st
 export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
+  const [serverError, setServerError] = useState<string | null>(null);
   useEffect(() => {
     if (!ref.current) return;
     const element = ref.current;
 
     const handleToggle = () => {
-      // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
-      setResetKey((key) => key + 1);
+      // 閉じた時だけフォームをリセットし、オープン直後の再マウントを避ける
+      if (!element.open) {
+        setServerError(null);
+        setResetKey((key) => key + 1);
+      }
     };
     element.addEventListener("toggle", handleToggle);
     return () => {
@@ -59,6 +63,7 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   const handleSubmit = useCallback(
     async (values: AuthFormData) => {
       try {
+        setServerError(null);
         if (values.type === "signup") {
           const user = await sendJSON<Models.User>("/api/v1/signup", values);
           onUpdateActiveUser(user);
@@ -69,6 +74,7 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
         handleRequestCloseModal();
       } catch (err: unknown) {
         const error = getErrorCode(err as JQuery.jqXHR<unknown>, values.type);
+        setServerError(error);
         throw new SubmissionError({
           _error: error,
         });
@@ -83,6 +89,7 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
         key={resetKey}
         onRequestCloseModal={handleRequestCloseModal}
         onSubmit={handleSubmit}
+        serverError={serverError}
       />
     </Modal>
   );
