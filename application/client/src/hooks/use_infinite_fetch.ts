@@ -9,10 +9,7 @@ interface ReturnValues<T> {
   fetchMore: () => void;
 }
 
-export function useInfiniteFetch<T>(
-  apiPath: string,
-  fetcher: (apiPath: string) => Promise<T[]>,
-): ReturnValues<T> {
+export function useInfiniteFetch<T>(apiPath: string, fetcher: (apiPath: string) => Promise<T[]>): ReturnValues<T> {
   const internalRef = useRef({ isLoading: false, offset: 0 });
 
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
@@ -36,11 +33,12 @@ export function useInfiniteFetch<T>(
       offset,
     };
 
-    void fetcher(apiPath).then(
-      (allData) => {
+    const separator = apiPath.includes("?") ? "&" : "?";
+    void fetcher(`${apiPath}${separator}limit=${LIMIT}&offset=${offset}`).then(
+      (pageData) => {
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...pageData],
           isLoading: false,
         }));
         internalRef.current = {

@@ -1,6 +1,7 @@
 /// <reference types="webpack-dev-server" />
 const path = require("path");
 
+const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
@@ -88,12 +89,27 @@ const config = {
           from: path.resolve(__dirname, "node_modules/katex/dist/fonts"),
           to: path.resolve(DIST_PATH, "styles/fonts"),
         },
+        {
+          from: path.resolve(__dirname, "node_modules/@ffmpeg/core/dist/umd/ffmpeg-core.js"),
+          to: path.resolve(DIST_PATH, "static/ffmpeg-core.js"),
+        },
+        {
+          from: path.resolve(__dirname, "node_modules/@ffmpeg/core/dist/umd/ffmpeg-core.wasm"),
+          to: path.resolve(DIST_PATH, "static/ffmpeg-core.wasm"),
+        },
+        {
+          from: path.resolve(__dirname, "node_modules/@imagemagick/magick-wasm/dist/magick.wasm"),
+          to: path.resolve(DIST_PATH, "static/magick.wasm"),
+        },
       ],
     }),
     new HtmlWebpackPlugin({
       inject: false,
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
+    ...(process.env.ANALYZE === "true"
+      ? [new BundleAnalyzerPlugin({ analyzerMode: "static", reportFilename: "bundle-report.html", openAnalyzer: false })]
+      : []),
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
@@ -104,21 +120,6 @@ const config = {
         __dirname,
         "node_modules",
         "@ffmpeg/ffmpeg/dist/esm/index.js",
-      ),
-      "@ffmpeg/core$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/core/dist/umd/ffmpeg-core.js",
-      ),
-      "@ffmpeg/core/wasm$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/core/dist/umd/ffmpeg-core.wasm",
-      ),
-      "@imagemagick/magick-wasm/magick.wasm$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@imagemagick/magick-wasm/dist/magick.wasm",
       ),
     },
     fallback: {
