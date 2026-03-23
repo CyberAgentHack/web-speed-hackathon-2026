@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { useLocation } from "wouter";
 import { SubmissionError } from "redux-form";
 
 import { NewDirectMessageModalPage } from "@web-speed-hackathon-2026/client/src/components/direct_message/NewDirectMessageModalPage";
@@ -27,7 +27,7 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
     };
   }, [ref]);
 
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
 
   const handleSubmit = useCallback(
     async (values: NewDirectMessageFormData) => {

@@ -8,22 +8,25 @@ FROM node:${NODE_VERSION}-slim AS base
 LABEL fly_launch_runtime="Node.js"
 
 ENV PNPM_HOME=/pnpm
+ENV PATH=${PNPM_HOME}:${PATH}
 
 WORKDIR /app
-RUN --mount=type=cache,target=/root/.npm npm install -g pnpm@${PNPM_VERSION}
+RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
 
 FROM base AS build
 
 COPY ./application/package.json ./application/pnpm-lock.yaml ./application/pnpm-workspace.yaml ./
 COPY ./application/client/package.json ./client/package.json
 COPY ./application/server/package.json ./server/package.json
-RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile
+RUN --mount=type=cache,target=/pnpm/store pnpm fetch --frozen-lockfile --filter @web-speed-hackathon-2026/client --filter @web-speed-hackathon-2026/server
 
 COPY ./application .
 
+RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile --offline --filter @web-speed-hackathon-2026/client --filter @web-speed-hackathon-2026/server
+
 RUN NODE_OPTIONS="--max-old-space-size=4096" pnpm build
 
-RUN --mount=type=cache,target=/pnpm/store CI=true pnpm install --frozen-lockfile --prod --filter @web-speed-hackathon-2026/server
+RUN --mount=type=cache,target=/pnpm/store CI=true pnpm install --frozen-lockfile --offline --prod --filter @web-speed-hackathon-2026/server
 
 FROM base
 

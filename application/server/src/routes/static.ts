@@ -1,6 +1,8 @@
-import history from "connect-history-api-fallback";
-import { Router } from "express";
-import serveStatic from "serve-static";
+import { existsSync } from "node:fs";
+import path from "node:path";
+
+import { serveStatic } from "@hono/node-server/serve-static";
+import { Hono } from "hono";
 
 import {
   CLIENT_DIST_PATH,
@@ -8,28 +10,45 @@ import {
   UPLOAD_PATH,
 } from "@web-speed-hackathon-2026/server/src/paths";
 
-export const staticRouter = Router();
+export const staticRouter = new Hono();
 
-// SPA 対応のため、ファイルが存在しないときに index.html を返す
-staticRouter.use(history());
+// Serve uploads
+if (existsSync(UPLOAD_PATH)) {
+  staticRouter.use(
+    serveStatic({
+      root: UPLOAD_PATH,
+      rewriteRequestPath: (path) => path,
+    }),
+  );
+}
 
+// Serve public
 staticRouter.use(
-  serveStatic(UPLOAD_PATH, {
-    etag: false,
-    lastModified: false,
+  serveStatic({
+    root: PUBLIC_PATH,
+    rewriteRequestPath: (path) => path,
   }),
 );
 
-staticRouter.use(
-  serveStatic(PUBLIC_PATH, {
-    etag: false,
-    lastModified: false,
-  }),
-);
+// Serve client dist with SPA fallback
+if (existsSync(CLIENT_DIST_PATH)) {
+  staticRouter.use(
+    serveStatic({
+      root: CLIENT_DIST_PATH,
+      rewriteRequestPath: (requestPath) => requestPath,
+    }),
+  );
 
-staticRouter.use(
-  serveStatic(CLIENT_DIST_PATH, {
-    etag: false,
-    lastModified: false,
-  }),
-);
+  const serveClientIndex = serveStatic({
+    root: CLIENT_DIST_PATH,
+    path: "/index.html",
+  });
+
+  staticRouter.get("*", async (c, next) => {
+    if (path.extname(c.req.path) !== "") {
+      return c.notFound();
+    }
+
+    return serveClientIndex(c, next);
+  });
+}

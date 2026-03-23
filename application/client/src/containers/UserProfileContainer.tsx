@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet";
-import { useParams } from "react-router";
+import { useRoute } from "wouter";
 
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
 import { UserProfilePage } from "@web-speed-hackathon-2026/client/src/components/user_profile/UserProfilePage";
@@ -9,22 +9,31 @@ import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 export const UserProfileContainer = () => {
-  const { username } = useParams();
+  const [, params] = useRoute("/users/:username");
+  const username = params?.username;
 
   const { data: user, isLoading: isLoadingUser } = useFetch<Models.User>(
     `/api/v1/users/${username}`,
     fetchJSON,
   );
-  const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>(
-    `/api/v1/users/${username}/posts`,
-    fetchJSON,
-  );
+  const {
+    data: posts,
+    fetchMore,
+    hasMore,
+  } = useInfiniteFetch<Models.Post>(`/api/v1/users/${username}/posts`, fetchJSON);
 
   if (isLoadingUser) {
     return (
-      <Helmet>
-        <title>読込中 - CaX</title>
-      </Helmet>
+      <>
+        <Helmet>
+          <title>読込中 - CaX</title>
+        </Helmet>
+        <section className="px-4 py-6">
+          <div className="bg-cax-surface-subtle h-5 w-56 rounded" />
+          <div className="bg-cax-surface-subtle mt-4 h-4 w-full rounded" />
+          <div className="bg-cax-surface-subtle mt-2 h-4 w-3/4 rounded" />
+        </section>
+      </>
     );
   }
 
@@ -33,7 +42,7 @@ export const UserProfileContainer = () => {
   }
 
   return (
-    <InfiniteScroll fetchMore={fetchMore} items={posts}>
+    <InfiniteScroll fetchMore={fetchMore} hasMore={hasMore} items={posts}>
       <Helmet>
         <title>{user.name} さんのタイムライン - CaX</title>
       </Helmet>

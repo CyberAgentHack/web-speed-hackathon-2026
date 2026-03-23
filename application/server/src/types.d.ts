@@ -1,26 +1,10 @@
-import WebSocket from "ws";
-
-declare module "express-session" {
-  interface SessionData {
-    userId?: string | undefined;
+declare module "hono" {
+  interface ContextVariableMap {
+    body: Record<string, unknown>;
+    rawBody: Buffer;
+    session: Record<string, unknown>;
+    session_id: string;
   }
 }
 
-declare module "express" {
-  function Router(options?: RouterOptions): Router;
-  interface Router {
-    ws: IRouterMatcher<this>;
-  }
-}
-
-declare global {
-  namespace Express {
-    interface Request {
-      _wsHandled: boolean;
-      ws: WebSocket;
-    }
-    interface Application {
-      ws: import("express").IRouterMatcher<this>;
-    }
-  }
-}
+export {};

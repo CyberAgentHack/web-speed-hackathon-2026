@@ -18,6 +18,7 @@ CaX のアプリケーションコードです。
    - ```bash
      pnpm run build
      ```
+   - クライアントの成果物は `./dist` に出力されます（`client` から見て `../dist`）
 2. サーバーを起動します
    - ```bash
      pnpm run start

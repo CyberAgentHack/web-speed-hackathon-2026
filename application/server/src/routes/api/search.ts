@@ -1,30 +1,57 @@
-import { Router } from "express";
+import { Hono } from "hono";
+import type { Context } from "hono";
 import { Op } from "sequelize";
 
-import { Post } from "@web-speed-hackathon-2026/server/src/models";
+import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 
-export const searchRouter = Router();
+export const searchRouter = new Hono();
 
-searchRouter.get("/search", async (req, res) => {
-  const query = req.query["q"];
+function parseLimit(value: string | undefined): number | undefined {
+  if (value == null) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return undefined;
+  }
+
+  return Math.min(parsed, 100);
+}
+
+function parseOffset(value: string | undefined): number | undefined {
+  if (value == null) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    return undefined;
+  }
+
+  return parsed;
+}
+
+searchRouter.get("/search", async (c: Context) => {
+  const query = c.req.query("q");
 
   if (typeof query !== "string" || query.trim() === "") {
-    return res.status(200).type("application/json").send([]);
+    return c.json([], 200);
   }
 
   const { keywords, sinceDate, untilDate } = parseSearchQuery(query);
 
-  // キーワードも日付フィルターもない場合は空配列を返す
   if (!keywords && !sinceDate && !untilDate) {
-    return res.status(200).type("application/json").send([]);
+    return c.json([], 200);
   }
 
   const searchTerm = keywords ? `%${keywords}%` : null;
-  const limit = req.query["limit"] != null ? Number(req.query["limit"]) : undefined;
-  const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
+  const limit = parseLimit(c.req.query("limit")) ?? 30;
+  const offset = parseOffset(c.req.query("offset"));
+  const mergedOffset = offset ?? 0;
+  const fetchSize = Math.min(limit + mergedOffset, 100);
 
-  // 日付条件を構築
   const dateConditions: Record<symbol, Date>[] = [];
   if (sinceDate) {
     dateConditions.push({ [Op.gte]: sinceDate });
@@ -35,43 +62,37 @@ searchRouter.get("/search", async (req, res) => {
   const dateWhere =
     dateConditions.length > 0 ? { createdAt: Object.assign({}, ...dateConditions) } : {};
 
-  // テキスト検索条件
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
   const postsByText = await Post.findAll({
-    limit,
-    offset,
+    limit: fetchSize,
+    offset: 0,
     where: {
       ...textWhere,
       ...dateWhere,
     },
   });
 
-  // ユーザー名/名前での検索（キーワードがある場合のみ）
   let postsByUser: typeof postsByText = [];
   if (searchTerm) {
-    postsByUser = await Post.findAll({
-      include: [
-        {
-          association: "user",
-          attributes: { exclude: ["profileImageId"] },
-          include: [{ association: "profileImage" }],
-          required: true,
-          where: {
-            [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
-          },
-        },
-        {
-          association: "images",
-          through: { attributes: [] },
-        },
-        { association: "movie" },
-        { association: "sound" },
-      ],
-      limit,
-      offset,
-      where: dateWhere,
+    const matchedUsers = await User.unscoped().findAll({
+      attributes: ["id"],
+      where: {
+        [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
+      },
     });
+    const matchedUserIds = matchedUsers.map((user) => user.id);
+
+    if (matchedUserIds.length > 0) {
+      postsByUser = await Post.findAll({
+        limit: fetchSize,
+        offset: 0,
+        where: {
+          ...dateWhere,
+          userId: { [Op.in]: matchedUserIds },
+        },
+      });
+    }
   }
 
   const postIdSet = new Set<string>();
@@ -86,7 +107,7 @@ searchRouter.get("/search", async (req, res) => {
 
   mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-  const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
+  const result = mergedPosts.slice(mergedOffset, mergedOffset + limit);
 
-  return res.status(200).type("application/json").send(result);
+  return c.json(result, 200);
 });

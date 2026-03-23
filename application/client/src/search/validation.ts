@@ -8,9 +8,10 @@ import { SearchFormData } from "@web-speed-hackathon-2026/client/src/search/type
 
 export const validate = (values: SearchFormData): FormErrors<SearchFormData> => {
   const errors: FormErrors<SearchFormData> = {};
-  const raw = values.searchText?.trim() || "";
+  const rawInput = values.searchText ?? "";
+  const raw = rawInput.trim();
 
-  if (!raw) {
+  if (rawInput.length === 0) {
     errors.searchText = "検索キーワードを入力してください";
     return errors;
   }

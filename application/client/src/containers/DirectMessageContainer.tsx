@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
-import { useParams } from "react-router";
+import { useRoute } from "wouter";
 
 import { DirectMessageGate } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageGate";
 import { DirectMessagePage } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessagePage";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
-import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { fetchJSON, sendJSON, sendPOST } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface DmUpdateEvent {
   type: "dm:conversation:message";
@@ -26,7 +26,8 @@ interface Props {
 }
 
 export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
-  const { conversationId = "" } = useParams<{ conversationId: string }>();
+  const [, params] = useRoute("/dm/:conversationId");
+  const conversationId = params?.conversationId ?? "";
 
   const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(null);
   const [conversationError, setConversationError] = useState<Error | null>(null);
@@ -53,7 +54,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   }, [activeUser, conversationId]);
 
   const sendRead = useCallback(async () => {
-    await sendJSON(`/api/v1/dm/${conversationId}/read`, {});
+    await sendPOST(`/api/v1/dm/${conversationId}/read`);
   }, [conversationId]);
 
   useEffect(() => {
@@ -65,33 +66,41 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     async (params: DirectMessageFormData) => {
       setIsSubmitting(true);
       try {
-        await sendJSON(`/api/v1/dm/${conversationId}/messages`, {
+        const message = await sendJSON<Models.DirectMessage>(`/api/v1/dm/${conversationId}/messages`, {
           body: params.body,
         });
-        loadConversation();
+        setConversation((currentConversation) => {
+          if (currentConversation == null) {
+            return currentConversation;
+          }
+          return {
+            ...currentConversation,
+            messages: [...(currentConversation.messages ?? []), message],
+          };
+        });
       } finally {
         setIsSubmitting(false);
       }
     },
-    [conversationId, loadConversation],
+    [conversationId],
   );
 
   const handleTyping = useCallback(async () => {
-    void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
+    void sendPOST(`/api/v1/dm/${conversationId}/typing`);
   }, [conversationId]);
 
   useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {
     if (event.type === "dm:conversation:message") {
-      void loadConversation().then(() => {
-        if (event.payload.sender.id !== activeUser?.id) {
+      if (event.payload.sender.id !== activeUser?.id) {
+        void loadConversation().then(() => {
           setIsPeerTyping(false);
           if (peerTypingTimeoutRef.current !== null) {
             clearTimeout(peerTypingTimeoutRef.current);
           }
           peerTypingTimeoutRef.current = null;
-        }
-      });
-      void sendRead();
+        });
+        void sendRead();
+      }
     } else if (event.type === "dm:conversation:typing") {
       setIsPeerTyping(true);
       if (peerTypingTimeoutRef.current !== null) {
@@ -116,7 +125,18 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     if (conversationError != null) {
       return <NotFoundContainer />;
     }
-    return null;
+    return (
+      <>
+        <Helmet>
+          <title>ダイレクトメッセージ - CaX</title>
+        </Helmet>
+        <section className="px-4 py-6">
+          <div className="bg-cax-surface-subtle h-5 w-48 rounded" />
+          <div className="bg-cax-surface-subtle mt-4 h-4 w-full rounded" />
+          <div className="bg-cax-surface-subtle mt-2 h-4 w-2/3 rounded" />
+        </section>
+      </>
+    );
   }
 
   const peer =

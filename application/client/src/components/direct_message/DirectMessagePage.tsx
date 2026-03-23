@@ -1,18 +1,17 @@
-import classNames from "classnames";
-import moment from "moment";
 import {
   ChangeEvent,
   useCallback,
+  useLayoutEffect,
   useId,
   useRef,
   useState,
   KeyboardEvent,
   FormEvent,
-  useEffect,
 } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
+import { formatShortTime } from "@web-speed-hackathon-2026/client/src/utils/date";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
@@ -43,7 +42,7 @@ export const DirectMessagePage = ({
   const [text, setText] = useState("");
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
-  const scrollHeightRef = useRef(0);
+  const messageCount = conversation.messages.length;
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -73,17 +72,13 @@ export const DirectMessagePage = ({
     [onSubmit, text],
   );
 
-  useEffect(() => {
-    const id = setInterval(() => {
-      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
-      if (height !== scrollHeightRef.current) {
-        scrollHeightRef.current = height;
-        window.scrollTo(0, height);
-      }
-    }, 1);
+  useLayoutEffect(() => {
+    const id = window.requestAnimationFrame(() => {
+      window.scrollTo(0, document.body.scrollHeight);
+    });
 
-    return () => clearInterval(id);
-  }, []);
+    return () => window.cancelAnimationFrame(id);
+  }, [isPeerTyping, messageCount]);
 
   if (conversationError != null) {
     return (
@@ -99,6 +94,8 @@ export const DirectMessagePage = ({
         <img
           alt={peer.profileImage.alt}
           className="h-12 w-12 rounded-full object-cover"
+          decoding="async"
+          loading="lazy"
           src={getProfileImagePath(peer.profileImage.id)}
         />
         <div className="min-w-0">
@@ -124,25 +121,19 @@ export const DirectMessagePage = ({
 
             return (
               <li
-                className={classNames(
-                  "flex flex-col w-full",
-                  isActiveUserSend ? "items-end" : "items-start",
-                )}
+                className={`flex w-full flex-col ${isActiveUserSend ? "items-end" : "items-start"}`}
               >
                 <p
-                  className={classNames(
-                    "max-w-3/4 rounded-xl border px-4 py-2 text-sm whitespace-pre-wrap leading-relaxed wrap-anywhere",
+                  className={`max-w-3/4 wrap-anywhere rounded-xl border px-4 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
                     isActiveUserSend
                       ? "rounded-br-sm border-transparent bg-cax-brand text-cax-surface-raised"
-                      : "rounded-bl-sm border-cax-border bg-cax-surface text-cax-text",
-                  )}
+                      : "rounded-bl-sm border-cax-border bg-cax-surface text-cax-text"
+                  }`}
                 >
                   {message.body}
                 </p>
                 <div className="flex gap-1 text-xs">
-                  <time dateTime={message.createdAt}>
-                    {moment(message.createdAt).locale("ja").format("HH:mm")}
-                  </time>
+                  <time dateTime={message.createdAt}>{formatShortTime(message.createdAt)}</time>
                   {isActiveUserSend && message.isRead && (
                     <span className="text-cax-text-muted">既読</span>
                   )}

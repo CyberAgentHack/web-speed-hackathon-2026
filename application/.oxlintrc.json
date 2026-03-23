@@ -35,5 +35,5 @@
     "builtin": true
   },
   "globals": {},
-  "ignorePatterns": []
+  "ignorePatterns": ["public/wasm/**", "dist/**"]
 }

@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet";
-import { useParams } from "react-router";
+import { useRoute } from "wouter";
 
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
 import { PostPage } from "@web-speed-hackathon-2026/client/src/components/post/PostPage";
@@ -14,16 +14,24 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
     fetchJSON,
   );
 
-  const { data: comments, fetchMore } = useInfiniteFetch<Models.Comment>(
-    `/api/v1/posts/${postId}/comments`,
-    fetchJSON,
-  );
+  const {
+    data: comments,
+    fetchMore,
+    hasMore,
+  } = useInfiniteFetch<Models.Comment>(`/api/v1/posts/${postId}/comments`, fetchJSON);
 
   if (isLoadingPost) {
     return (
-      <Helmet>
-        <title>読込中 - CaX</title>
-      </Helmet>
+      <>
+        <Helmet>
+          <title>読込中 - CaX</title>
+        </Helmet>
+        <section className="px-4 py-6">
+          <div className="bg-cax-surface-subtle h-5 w-48 rounded" />
+          <div className="bg-cax-surface-subtle mt-4 h-4 w-full rounded" />
+          <div className="bg-cax-surface-subtle mt-2 h-4 w-5/6 rounded" />
+        </section>
+      </>
     );
   }
 
@@ -32,7 +40,7 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
   }
 
   return (
-    <InfiniteScroll fetchMore={fetchMore} items={comments}>
+    <InfiniteScroll fetchMore={fetchMore} hasMore={hasMore} items={comments}>
       <Helmet>
         <title>{post.user.name} さんのつぶやき - CaX</title>
       </Helmet>
@@ -42,6 +50,7 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
 };
 
 export const PostContainer = () => {
-  const { postId } = useParams();
+  const [, params] = useRoute("/posts/:postId");
+  const postId = params?.postId;
   return <PostContainerContent key={postId} postId={postId} />;
 };

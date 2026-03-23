@@ -1,6 +1,5 @@
-import Bluebird from "bluebird";
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -20,6 +19,18 @@ import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 interface Props {
   isStreaming: boolean;
   onSendMessage: (message: string) => void;
+}
+
+let suggestionsPromise: Promise<string[]> | null = null;
+
+async function getSuggestions(): Promise<string[]> {
+  if (suggestionsPromise == null) {
+    suggestionsPromise = fetchJSON<{ suggestions: string[] }>("/api/v1/crok/suggestions").then(
+      (result) => result.suggestions,
+    );
+  }
+
+  return suggestionsPromise;
 }
 
 // トークン単位でハイライト
@@ -79,10 +90,9 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [queryTokens, setQueryTokens] = useState<string[]>([]);
+  const [queryText, setQueryText] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   // サジェストが更新されたら一番下にスクロール
@@ -92,60 +102,45 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   }, [suggestions, showSuggestions]);
 
-  // 初回にkuromojiトークナイザーを構築
-  useEffect(() => {
-    let mounted = true;
+  const loadSuggestionDependencies = useCallback(async () => {
+    const [{ buildTokenizer }, suggestionsData] = await Promise.all([
+      import("@web-speed-hackathon-2026/client/src/utils/kuromoji"),
+      getSuggestions(),
+    ]);
 
-    const init = async () => {
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
-      if (mounted) {
-        setTokenizer(nextTokenizer);
-      }
-    };
-    init();
-
-    return () => {
-      mounted = false;
-    };
+    const tokenizer = await buildTokenizer();
+    return { suggestionsData, tokenizer };
   }, []);
 
   useEffect(() => {
+    const normalizedInput = inputValue.trim();
+    if (!normalizedInput) {
+      setSuggestions([]);
+      setQueryText("");
+      setShowSuggestions(false);
+      return;
+    }
+
     let cancelled = false;
+    const timeoutId = window.setTimeout(() => {
+      void loadSuggestionDependencies().then(({ suggestionsData, tokenizer }) => {
+        if (cancelled) {
+          return;
+        }
 
-    const updateSuggestions = async () => {
-      if (!tokenizer || !inputValue.trim()) {
-        setSuggestions([]);
-        setQueryTokens([]);
-        setShowSuggestions(false);
-        return;
-      }
-
-      const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-        "/api/v1/crok/suggestions",
-      );
-      if (cancelled) {
-        return;
-      }
-
-      const tokens = extractTokens(tokenizer.tokenize(inputValue));
-      const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
-
-      if (cancelled) {
-        return;
-      }
-
-      setQueryTokens(tokens);
-      setSuggestions(results);
-      setShowSuggestions(results.length > 0);
-    };
-
-    void updateSuggestions();
+        const tokens = extractTokens(tokenizer.tokenize(normalizedInput));
+        const results = filterSuggestionsBM25(tokenizer, suggestionsData, tokens);
+        setQueryText(normalizedInput.toLowerCase());
+        setSuggestions(results);
+        setShowSuggestions(results.length > 0);
+      });
+    }, 120);
 
     return () => {
       cancelled = true;
+      window.clearTimeout(timeoutId);
     };
-  }, [inputValue, tokenizer]);
+  }, [inputValue, loadSuggestionDependencies]);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
@@ -170,7 +165,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const handleSuggestionClick = (suggestion: string) => {
     setInputValue(suggestion);
     setSuggestions([]);
-    setQueryTokens([]);
+    setQueryText("");
     setShowSuggestions(false);
   };
 
@@ -180,7 +175,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
       onSendMessage(inputValue.trim());
       setInputValue("");
       setSuggestions([]);
-      setQueryTokens([]);
+      setQueryText("");
       setShowSuggestions(false);
       resetTextareaHeight();
     }
@@ -210,7 +205,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
                 className="border-cax-border text-cax-text-muted hover:bg-cax-surface-subtle w-full border-b px-4 py-2 text-left text-sm last:border-b-0"
                 onClick={() => handleSuggestionClick(suggestion)}
               >
-                {highlightMatchByTokens(suggestion, queryTokens)}
+                {highlightMatchByTokens(suggestion, queryText ? [queryText] : [])}
               </button>
             ))}
           </div>

@@ -1,5 +1,7 @@
 import { Helmet } from "react-helmet";
 
+import { runDialogCommand } from "@web-speed-hackathon-2026/client/src/utils/dialog";
+
 interface Props {
   headline: string;
   description?: string;
@@ -26,6 +28,7 @@ export const CrokGate = ({
           type="button"
           command="show-modal"
           commandfor={authModalId}
+          onClick={() => runDialogCommand("show-modal", authModalId)}
         >
           {buttonLabel}
         </button>

@@ -1,42 +1,91 @@
-import { initializeImageMagick, ImageMagick, MagickFormat } from "@imagemagick/magick-wasm";
-import magickWasm from "@imagemagick/magick-wasm/magick.wasm?binary";
-import { dump, insert, ImageIFD } from "piexifjs";
+import piexif from "piexifjs";
 
-interface Options {
-  extension: MagickFormat;
+export interface ConvertedImage {
+  blob: Blob;
+  alt: string;
 }
 
-export async function convertImage(file: File, options: Options): Promise<Blob> {
-  await initializeImageMagick(magickWasm);
+const FALLBACK_ALT = "";
 
-  const byteArray = new Uint8Array(await file.arrayBuffer());
+let encoderPromise: Promise<(imageData: ImageData) => Promise<ArrayBuffer>> | null = null;
 
-  return new Promise((resolve) => {
-    ImageMagick.read(byteArray, (img) => {
-      img.format = options.extension;
+async function getAvifEncoder() {
+  if (encoderPromise != null) {
+    return encoderPromise;
+  }
 
-      const comment = img.comment;
-
-      img.write((output) => {
-        if (comment == null) {
-          resolve(new Blob([output as Uint8Array<ArrayBuffer>]));
-          return;
-        }
-
-        // ImageMagick では EXIF の ImageDescription フィールドに保存されているデータが
-        // 非標準の Comment フィールドに移されてしまうため
-        // piexifjs を使って ImageDescription フィールドに書き込む
-        const binary = Array.from(output as Uint8Array<ArrayBuffer>)
-          .map((b) => String.fromCharCode(b))
-          .join("");
-        const descriptionBinary = Array.from(new TextEncoder().encode(comment))
-          .map((b) => String.fromCharCode(b))
-          .join("");
-        const exifStr = dump({ "0th": { [ImageIFD.ImageDescription]: descriptionBinary } });
-        const outputWithExif = insert(exifStr, binary);
-        const bytes = Uint8Array.from(outputWithExif.split("").map((c) => c.charCodeAt(0)));
-        resolve(new Blob([bytes]));
-      });
+  encoderPromise = import("@jsquash/avif")
+    .then((module) => module.encode)
+    .catch((error: unknown) => {
+      encoderPromise = null;
+      throw error;
     });
+
+  return encoderPromise;
+}
+
+async function fileToImageData(file: File): Promise<ImageData> {
+  const bitmap = await createImageBitmap(file);
+  const canvas = document.createElement("canvas");
+  canvas.width = bitmap.width;
+  canvas.height = bitmap.height;
+  const context = canvas.getContext("2d");
+  if (context == null) {
+    bitmap.close();
+    throw new Error("Failed to get 2D context.");
+  }
+  context.drawImage(bitmap, 0, 0);
+  bitmap.close();
+  return context.getImageData(0, 0, canvas.width, canvas.height);
+}
+
+async function readDataUrl(file: File): Promise<string> {
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+      reject(new Error("Failed to read image as data URL."));
+    };
+    reader.onerror = () => reject(reader.error ?? new Error("Failed to read image metadata."));
+    reader.readAsDataURL(file);
   });
+}
+
+function normalizeAlt(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : null;
+}
+
+async function readAltText(file: File): Promise<string> {
+  try {
+    const dataUrl = await readDataUrl(file);
+    const exif = piexif.load(dataUrl);
+    const imageDescription = normalizeAlt(exif["0th"]?.[piexif.ImageIFD.ImageDescription]);
+    if (imageDescription != null) {
+      return imageDescription;
+    }
+  } catch {
+    // Ignore EXIF read failure and fallback to default text
+  }
+
+  return FALLBACK_ALT;
+}
+
+export async function convertImage(file: File): Promise<ConvertedImage> {
+  const [encode, imageData, alt] = await Promise.all([
+    getAvifEncoder(),
+    fileToImageData(file),
+    readAltText(file),
+  ]);
+  const encoded = await encode(imageData);
+  return {
+    blob: new Blob([encoded], { type: "image/avif" }),
+    alt,
+  };
 }

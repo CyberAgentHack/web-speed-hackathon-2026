@@ -1,11 +1,12 @@
-import moment from "moment";
 import { MouseEventHandler, useCallback } from "react";
-import { Link, useNavigate } from "react-router";
+import { useLocation } from "wouter";
 
+import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
 import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
 import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
+import { formatLongDate, toIsoDateTime } from "@web-speed-hackathon-2026/client/src/utils/date";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Element): boolean => {
@@ -31,7 +32,7 @@ interface Props {
 }
 
 export const TimelineItem = ({ post }: Props) => {
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
 
   /**
    * ボタンやリンク以外の箇所をクリックしたとき かつ 文字が選択されてないとき、投稿詳細ページに遷移する
@@ -56,6 +57,8 @@ export const TimelineItem = ({ post }: Props) => {
           >
             <img
               alt={post.user.profileImage.alt}
+              decoding="async"
+              loading="lazy"
               src={getProfileImagePath(post.user.profileImage.id)}
             />
           </Link>
@@ -76,9 +79,7 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
-              </time>
+              <time dateTime={toIsoDateTime(post.createdAt)}>{formatLongDate(post.createdAt)}</time>
             </Link>
           </p>
           <div className="text-cax-text leading-relaxed">

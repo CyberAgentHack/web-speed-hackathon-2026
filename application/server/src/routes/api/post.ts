@@ -1,50 +1,112 @@
-import { Router } from "express";
-import httpErrors from "http-errors";
+import { Hono } from "hono";
+import type { Context } from "hono";
 
-import { Comment, Post } from "@web-speed-hackathon-2026/server/src/models";
+import { Comment, Image, Post } from "@web-speed-hackathon-2026/server/src/models";
 
-export const postRouter = Router();
+export const postRouter = new Hono();
 
-postRouter.get("/posts", async (req, res) => {
-  const posts = await Post.findAll({
-    limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
-    offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
-  });
-
-  return res.status(200).type("application/json").send(posts);
-});
-
-postRouter.get("/posts/:postId", async (req, res) => {
-  const post = await Post.findByPk(req.params.postId);
-
-  if (post === null) {
-    throw new httpErrors.NotFound();
+function parseLimit(value: string | undefined): number | undefined {
+  if (value == null) {
+    return undefined;
   }
 
-  return res.status(200).type("application/json").send(post);
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return undefined;
+  }
+
+  return Math.min(parsed, 100);
+}
+
+function parseOffset(value: string | undefined): number | undefined {
+  if (value == null) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    return undefined;
+  }
+
+  return parsed;
+}
+
+postRouter.get("/posts", async (c: Context) => {
+  const limit = parseLimit(c.req.query("limit"));
+  const offset = parseOffset(c.req.query("offset"));
+
+  const posts = await Post.findAll({
+    limit,
+    offset,
+  });
+
+  return c.json(posts, 200);
 });
 
-postRouter.get("/posts/:postId/comments", async (req, res) => {
+postRouter.get("/posts/:postId", async (c: Context) => {
+  const postId = c.req.param("postId");
+  const post = await Post.findByPk(postId);
+
+  if (post === null) {
+    return c.json({ message: "Not Found" }, 404);
+  }
+
+  return c.json(post, 200);
+});
+
+postRouter.get("/posts/:postId/comments", async (c: Context) => {
+  const postId = c.req.param("postId");
+  const limit = parseLimit(c.req.query("limit"));
+  const offset = parseOffset(c.req.query("offset"));
+
   const posts = await Comment.findAll({
-    limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
-    offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
+    limit,
+    offset,
     where: {
-      postId: req.params.postId,
+      postId,
     },
   });
 
-  return res.status(200).type("application/json").send(posts);
+  return c.json(posts, 200);
 });
 
-postRouter.post("/posts", async (req, res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
+postRouter.post("/posts", async (c: Context) => {
+  const session = c.get("session" as never) as Record<string, unknown>;
+  if (session["userId"] === undefined) {
+    return c.json({ message: "Unauthorized" }, 401);
+  }
+
+  const body = c.get("body" as never) || (await c.req.json());
+  const rawImages: unknown = body?.images;
+
+  if (Array.isArray(rawImages)) {
+    const imageUpdates = rawImages
+      .map((image): { id: string; alt: string } | null => {
+        if (typeof image !== "object" || image == null) {
+          return null;
+        }
+        const id = "id" in image ? image.id : undefined;
+        const alt = "alt" in image ? image.alt : undefined;
+        if (typeof id !== "string" || typeof alt !== "string") {
+          return null;
+        }
+        return { id, alt };
+      })
+      .filter((image): image is { id: string; alt: string } => image !== null);
+
+    if (imageUpdates.length > 0) {
+      await Promise.all(
+        imageUpdates.map(async ({ id, alt }) => {
+          await Image.update({ alt }, { where: { id } });
+        }),
+      );
+    }
   }
 
   const post = await Post.create(
     {
-      ...req.body,
-      userId: req.session.userId,
+      ...body,
+      userId: session["userId"],
     },
     {
       include: [
@@ -58,5 +120,5 @@ postRouter.post("/posts", async (req, res) => {
     },
   );
 
-  return res.status(200).type("application/json").send(post);
+  return c.json(post, 200);
 });

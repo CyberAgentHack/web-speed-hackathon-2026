@@ -5,8 +5,10 @@
   "author": "CyberAgent, Inc.",
   "type": "module",
   "scripts": {
-    "build": "pnpm --filter @web-speed-hackathon-2026/client build",
-    "start": "pnpm --filter @web-speed-hackathon-2026/server start",
+    "build": "pnpm run build:client",
+    "build:client": "pnpm --filter @web-speed-hackathon-2026/client build",
+    "start": "pnpm run start:server",
+    "start:server": "pnpm --filter @web-speed-hackathon-2026/server start",
     "typecheck": "pnpm run --recursive typecheck",
     "format": "pnpm run format:oxlint && pnpm run format:oxfmt",
     "format:oxlint": "oxlint --fix",
