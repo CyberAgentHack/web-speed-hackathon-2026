@@ -27,6 +27,8 @@ RUN --mount=type=cache,target=/pnpm/store CI=true pnpm install --frozen-lockfile
 
 FROM base
 
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /app /app
 
 EXPOSE 8080

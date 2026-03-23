@@ -1,9 +1,9 @@
 import { FastAverageColor } from "fast-average-color";
-import moment from "moment";
 import { ReactEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { formatLL } from "@web-speed-hackathon-2026/client/src/utils/format_date";
+import { getProfileImagePath, getProfileImageSrcSet } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   user: Models.User;
@@ -12,9 +12,9 @@ interface Props {
 export const UserProfileHeader = ({ user }: Props) => {
   const [averageColor, setAverageColor] = useState<string | null>(null);
 
-  // 画像の平均色を取得します
+  // 色抽出用: フルサイズの元画像から平均色を取得します
   /** @type {React.ReactEventHandler<HTMLImageElement>} */
-  const handleLoadImage = useCallback<ReactEventHandler<HTMLImageElement>>((ev) => {
+  const handleColorImage = useCallback<ReactEventHandler<HTMLImageElement>>((ev) => {
     const fac = new FastAverageColor();
     const { rgb } = fac.getColor(ev.currentTarget, { mode: "precision" });
     setAverageColor(rgb);
@@ -23,6 +23,14 @@ export const UserProfileHeader = ({ user }: Props) => {
 
   return (
     <header className="relative">
+      {/* 色抽出専用の非表示画像（srcSetなしでフルサイズ元画像を使用） */}
+      <img
+        alt=""
+        crossOrigin="anonymous"
+        onLoad={handleColorImage}
+        src={getProfileImagePath(user.profileImage.id)}
+        style={{ position: "absolute", width: 0, height: 0, opacity: 0, pointerEvents: "none" }}
+      />
       <div
         className={`h-32 ${averageColor ? `bg-[${averageColor}]` : "bg-cax-surface-subtle"}`}
       ></div>
@@ -30,8 +38,9 @@ export const UserProfileHeader = ({ user }: Props) => {
         <img
           alt=""
           crossOrigin="anonymous"
-          onLoad={handleLoadImage}
           src={getProfileImagePath(user.profileImage.id)}
+          srcSet={getProfileImageSrcSet(user.profileImage.id)}
+          sizes="128px"
         />
       </div>
       <div className="px-4 pt-20">
@@ -43,8 +52,8 @@ export const UserProfileHeader = ({ user }: Props) => {
             <FontAwesomeIcon iconType="calendar-alt" styleType="regular" />
           </span>
           <span>
-            <time dateTime={moment(user.createdAt).toISOString()}>
-              {moment(user.createdAt).locale("ja").format("LL")}
+            <time dateTime={new Date(user.createdAt).toISOString()}>
+              {formatLL(user.createdAt)}
             </time>
             からサービスを利用しています
           </span>

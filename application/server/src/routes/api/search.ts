@@ -3,6 +3,7 @@ import { Op } from "sequelize";
 
 import { Post } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
+import { getWaveform } from "@web-speed-hackathon-2026/server/src/utils/waveform_cache";
 
 export const searchRouter = Router();
 
@@ -39,8 +40,6 @@ searchRouter.get("/search", async (req, res) => {
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
   const postsByText = await Post.findAll({
-    limit,
-    offset,
     where: {
       ...textWhere,
       ...dateWhere,
@@ -68,8 +67,6 @@ searchRouter.get("/search", async (req, res) => {
         { association: "movie" },
         { association: "sound" },
       ],
-      limit,
-      offset,
       where: dateWhere,
     });
   }
@@ -88,5 +85,16 @@ searchRouter.get("/search", async (req, res) => {
 
   const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
 
-  return res.status(200).type("application/json").send(result);
+  const resultJson = result.map((p) => {
+    const json = p.toJSON() as any;
+    if (json.sound && json.sound.id) {
+      const waveform = getWaveform(json.sound.id);
+      if (waveform) {
+        json.sound.waveform = waveform;
+      }
+    }
+    return json;
+  });
+
+  return res.status(200).type("application/json").send(resultJson);
 });

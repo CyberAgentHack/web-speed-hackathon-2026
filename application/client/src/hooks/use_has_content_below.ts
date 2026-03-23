@@ -14,9 +14,7 @@ export function useHasContentBelow(
   const [hasContentBelow, setHasContentBelow] = useState(false);
 
   useEffect(() => {
-    let active = true;
     const check = () => {
-      if (!active) return;
       const endEl = contentEndRef.current;
       const barEl = boundaryRef.current;
       if (endEl && barEl) {
@@ -24,11 +22,25 @@ export function useHasContentBelow(
         const barRect = barEl.getBoundingClientRect();
         setHasContentBelow(endRect.top > barRect.top);
       }
-      scheduler.postTask(check, { priority: "user-blocking", delay: 1 });
     };
-    scheduler.postTask(check, { priority: "user-blocking", delay: 1 });
+
+    check();
+
+    window.addEventListener("scroll", check, { passive: true });
+    window.addEventListener("resize", check, { passive: true });
+
+    // コンテンツの高さ変化（メッセージ追加等）を検知
+    const endEl = contentEndRef.current;
+    let ro: ResizeObserver | null = null;
+    if (endEl?.parentElement) {
+      ro = new ResizeObserver(check);
+      ro.observe(endEl.parentElement);
+    }
+
     return () => {
-      active = false;
+      window.removeEventListener("scroll", check);
+      window.removeEventListener("resize", check);
+      ro?.disconnect();
     };
   }, [contentEndRef, boundaryRef]);
 

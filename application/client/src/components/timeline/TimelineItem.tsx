@@ -1,17 +1,17 @@
-import moment from "moment";
-import { MouseEventHandler, useCallback } from "react";
+import { memo, MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
 import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
 import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { formatLL } from "@web-speed-hackathon-2026/client/src/utils/format_date";
+import { getProfileImagePath, getProfileImageSrcSet } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
-const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Element): boolean => {
+const isClickedInteractive = (target: EventTarget | null, currentTarget: Element): boolean => {
   while (target !== null && target instanceof Element) {
-    const tagName = target.tagName.toLowerCase();
-    if (["button", "a"].includes(tagName)) {
+    const tag = target.tagName.toLowerCase();
+    if (tag === "a" || tag === "button") {
       return true;
     }
     if (currentTarget === target) {
@@ -28,9 +28,10 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
  */
 interface Props {
   post: Models.Post;
+  isFirst?: boolean;
 }
 
-export const TimelineItem = ({ post }: Props) => {
+export const TimelineItem = memo(({ post, isFirst }: Props) => {
   const navigate = useNavigate();
 
   /**
@@ -39,7 +40,7 @@ export const TimelineItem = ({ post }: Props) => {
   const handleClick = useCallback<MouseEventHandler>(
     (ev) => {
       const isSelectedText = document.getSelection()?.isCollapsed === false;
-      if (!isClickedAnchorOrButton(ev.target, ev.currentTarget) && !isSelectedText) {
+      if (!isClickedInteractive(ev.target, ev.currentTarget) && !isSelectedText) {
         navigate(`/posts/${post.id}`);
       }
     },
@@ -56,7 +57,10 @@ export const TimelineItem = ({ post }: Props) => {
           >
             <img
               alt={post.user.profileImage.alt}
+              loading="lazy"
               src={getProfileImagePath(post.user.profileImage.id)}
+              srcSet={getProfileImageSrcSet(post.user.profileImage.id)}
+              sizes="64px"
             />
           </Link>
         </div>
@@ -76,8 +80,8 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={new Date(post.createdAt).toISOString()}>
+                {formatLL(post.createdAt)}
               </time>
             </Link>
           </p>
@@ -86,12 +90,12 @@ export const TimelineItem = ({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea images={post.images} isLCP={isFirst} />
             </div>
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
+              <MovieArea movie={post.movie} isLCP={isFirst} />
             </div>
           ) : null}
           {post.sound ? (
@@ -103,4 +107,4 @@ export const TimelineItem = ({ post }: Props) => {
       </div>
     </article>
   );
-};
+});

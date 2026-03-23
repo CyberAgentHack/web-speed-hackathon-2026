@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface ReturnValues<T> {
   data: T | null;
@@ -9,14 +9,22 @@ interface ReturnValues<T> {
 export function useFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T>,
+  initialData?: T,
 ): ReturnValues<T> {
+  const hasInitialData = initialData !== undefined;
   const [result, setResult] = useState<ReturnValues<T>>({
-    data: null,
+    data: hasInitialData ? initialData : null,
     error: null,
-    isLoading: true,
+    isLoading: !hasInitialData,
   });
 
+  const initialDataUsedRef = useRef(hasInitialData);
+
   useEffect(() => {
+    if (initialDataUsedRef.current) {
+      initialDataUsedRef.current = false;
+      return;
+    }
     setResult(() => ({
       data: null,
       error: null,

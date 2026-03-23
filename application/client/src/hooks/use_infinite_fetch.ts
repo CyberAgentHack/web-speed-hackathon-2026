@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const LIMIT = 30;
+const INITIAL_LIMIT = 5;
+const LIMIT = 5;
 
 interface ReturnValues<T> {
   data: Array<T>;
@@ -12,20 +13,24 @@ interface ReturnValues<T> {
 export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
+  initialData?: T[] | null,
 ): ReturnValues<T> {
-  const internalRef = useRef({ isLoading: false, offset: 0 });
+  const hasInitialData = initialData != null && initialData.length > 0;
+  const internalRef = useRef({ isLoading: false, offset: hasInitialData ? initialData.length : 0, isFirstFetch: !hasInitialData });
 
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
-    data: [],
+    data: hasInitialData ? initialData : [],
     error: null,
-    isLoading: true,
+    isLoading: !hasInitialData,
   });
 
   const fetchMore = useCallback(() => {
-    const { isLoading, offset } = internalRef.current;
-    if (isLoading) {
+    const { isLoading, offset, isFirstFetch } = internalRef.current;
+    if (isLoading || !apiPath) {
       return;
     }
+
+    const currentLimit = isFirstFetch ? INITIAL_LIMIT : LIMIT;
 
     setResult((cur) => ({
       ...cur,
@@ -34,18 +39,23 @@ export function useInfiniteFetch<T>(
     internalRef.current = {
       isLoading: true,
       offset,
+      isFirstFetch,
     };
 
-    void fetcher(apiPath).then(
-      (allData) => {
+    const separator = apiPath.includes("?") ? "&" : "?";
+    const paginatedPath = `${apiPath}${separator}limit=${currentLimit}&offset=${offset}`;
+
+    void fetcher(paginatedPath).then(
+      (pageData) => {
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...pageData],
           isLoading: false,
         }));
         internalRef.current = {
           isLoading: false,
-          offset: offset + LIMIT,
+          offset: offset + currentLimit,
+          isFirstFetch: false,
         };
       },
       (error) => {
@@ -57,12 +67,19 @@ export function useInfiniteFetch<T>(
         internalRef.current = {
           isLoading: false,
           offset,
+          isFirstFetch: false,
         };
       },
     );
   }, [apiPath, fetcher]);
 
+  const initialDataUsedRef = useRef(hasInitialData);
+
   useEffect(() => {
+    if (initialDataUsedRef.current) {
+      initialDataUsedRef.current = false;
+      return;
+    }
     setResult(() => ({
       data: [],
       error: null,
@@ -71,6 +88,7 @@ export function useInfiniteFetch<T>(
     internalRef.current = {
       isLoading: false,
       offset: 0,
+      isFirstFetch: true,
     };
 
     fetchMore();

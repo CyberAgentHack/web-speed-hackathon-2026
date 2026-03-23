@@ -1,4 +1,5 @@
 export const TermPage = () => {
+
   return (
     <article className="px-2 pb-16 leading-relaxed md:px-4 md:pt-2">
       <h1 className="mt-4 mb-2 font-[Rei_no_Are_Mincho] text-3xl leading-[normal] font-bold">

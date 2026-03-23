@@ -1,4 +1,3 @@
-import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -6,7 +5,8 @@ import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { fromNow } from "@web-speed-hackathon-2026/client/src/utils/format_date";
+import { getProfileImagePath, getProfileImageSrcSet } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   activeUser: Models.User;
@@ -51,8 +51,10 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
         <h1 className="text-2xl font-bold">ダイレクトメッセージ</h1>
         <div className="flex flex-wrap items-center gap-4">
           <Button
-            command="show-modal"
-            commandfor={newDmModalId}
+            onClick={() => {
+              const dialog = document.getElementById(newDmModalId) as HTMLDialogElement | null;
+              dialog?.showModal();
+            }}
             leftItem={<FontAwesomeIcon iconType="paper-plane" styleType="solid" />}
           >
             新しくDMを始める
@@ -87,7 +89,10 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                     <img
                       alt={peer.profileImage.alt}
                       className="w-12 shrink-0 self-start rounded-full"
+                      loading="lazy"
                       src={getProfileImagePath(peer.profileImage.id)}
+                      srcSet={getProfileImageSrcSet(peer.profileImage.id)}
+                      sizes="48px"
                     />
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-center justify-between">
@@ -100,7 +105,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {fromNow(lastMessage.createdAt)}
                           </time>
                         )}
                       </div>

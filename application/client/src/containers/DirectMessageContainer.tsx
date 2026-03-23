@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Helmet } from "react-helmet";
 import { useParams } from "react-router";
 
 import { DirectMessageGate } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageGate";
 import { DirectMessagePage } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessagePage";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
+import { useTitle } from "@web-speed-hackathon-2026/client/src/hooks/use_title";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
@@ -44,7 +44,19 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
       const data = await fetchJSON<Models.DirectMessageConversation>(
         `/api/v1/dm/${conversationId}`,
       );
-      setConversation(data);
+      // 楽観的メッセージを保持: サーバーレスポンスに含まれない optimistic- メッセージを末尾に追加
+      setConversation((prev) => {
+        if (!prev) return data;
+        const optimisticMessages = prev.messages.filter(
+          (m) => typeof m.id === "string" && m.id.startsWith("optimistic-"),
+        );
+        if (optimisticMessages.length === 0) return data;
+        // サーバーが返したメッセージに楽観的メッセージの body が含まれていなければ保持
+        const serverBodies = new Set(data.messages.map((m) => m.body));
+        const remaining = optimisticMessages.filter((m) => !serverBodies.has(m.body));
+        if (remaining.length === 0) return data;
+        return { ...data, messages: [...data.messages, ...remaining] };
+      });
       setConversationError(null);
     } catch (error) {
       setConversation(null);
@@ -65,20 +77,45 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     async (params: DirectMessageFormData) => {
       setIsSubmitting(true);
       try {
+        // 楽観的更新: functional update で常に最新の conversation を参照
+        if (activeUser) {
+          const optimisticMessage: Models.DirectMessage = {
+            id: `optimistic-${Date.now()}`,
+            body: params.body,
+            sender: activeUser,
+            createdAt: new Date().toISOString(),
+          };
+          setConversation((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              messages: [...prev.messages, optimisticMessage],
+            };
+          });
+        }
+
         await sendJSON(`/api/v1/dm/${conversationId}/messages`, {
           body: params.body,
         });
-        loadConversation();
+        // バックグラウンドで会話を再取得（WebSocketからも来るので重複するが安全）
+        void loadConversation();
       } finally {
         setIsSubmitting(false);
       }
     },
-    [conversationId, loadConversation],
+    [conversationId, loadConversation, activeUser],
   );
 
   const handleTyping = useCallback(async () => {
     void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
   }, [conversationId]);
+
+  const peer =
+    conversation != null && activeUser != null
+      ? (conversation.initiator.id !== activeUser.id ? conversation.initiator : conversation.member)
+      : null;
+
+  useTitle(peer ? `${peer.name} さんとのダイレクトメッセージ - CaX` : "ダイレクトメッセージ - CaX");
 
   useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {
     if (event.type === "dm:conversation:message") {
@@ -119,14 +156,8 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     return null;
   }
 
-  const peer =
-    conversation.initiator.id !== activeUser?.id ? conversation.initiator : conversation.member;
-
   return (
     <>
-      <Helmet>
-        <title>{peer.name} さんとのダイレクトメッセージ - CaX</title>
-      </Helmet>
       <DirectMessagePage
         conversationError={conversationError}
         conversation={conversation}
