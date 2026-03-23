@@ -39,6 +39,12 @@ https://github.com/CyberAgentHack/web-speed-hackathon-2026-scoring/issues/new?te
 
 ローカルで計測する方法は [./scoring-tool/README.md](./scoring-tool/README.md) を参照してください。
 
+## 参加レポート
+
+コンペ参加の最終レポート (スコア推移、実施施策、考察、Next Action) は [./results/final-report.md](./results/final-report.md) を参照してください。
+
+- 最終スコア: **485.05 / 1150.00 (50位 / 95名)**
+
 ## ライセンス
 
 - Code

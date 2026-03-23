@@ -1,5 +1,8 @@
 import { FastAverageColor } from "fast-average-color";
-import moment from "moment";
+import dayjs from "dayjs";
+import "dayjs/locale/ja";
+import relativeTime from "dayjs/plugin/relativeTime";
+dayjs.extend(relativeTime);
 import { ReactEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -43,8 +46,8 @@ export const UserProfileHeader = ({ user }: Props) => {
             <FontAwesomeIcon iconType="calendar-alt" styleType="regular" />
           </span>
           <span>
-            <time dateTime={moment(user.createdAt).toISOString()}>
-              {moment(user.createdAt).locale("ja").format("LL")}
+            <time dateTime={dayjs(user.createdAt).toISOString()}>
+              {dayjs(user.createdAt).locale("ja").format("YYYY年M月D日")}
             </time>
             からサービスを利用しています
           </span>

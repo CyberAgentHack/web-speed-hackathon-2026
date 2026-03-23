@@ -1,58 +1,61 @@
-import $ from "jquery";
-import { gzip } from "pako";
-
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "binary",
-    method: "GET",
-    responseType: "arraybuffer",
-    url,
-  });
-  return result;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`fetchBinary failed: ${res.status} ${res.statusText}`);
+  }
+  return res.arrayBuffer();
 }
 
 export async function fetchJSON<T>(url: string): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "json",
-    method: "GET",
-    url,
-  });
-  return result;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`fetchJSON failed: ${res.status} ${res.statusText}`);
+  }
+  return res.json() as Promise<T>;
+}
+
+class FetchError extends Error {
+  responseJSON: unknown;
+  constructor(status: number, responseJSON: unknown) {
+    super(`Request failed: ${status}`);
+    this.responseJSON = responseJSON;
+  }
 }
 
 export async function sendFile<T>(url: string, file: File): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    data: file,
-    dataType: "json",
-    headers: {
-      "Content-Type": "application/octet-stream",
-    },
+  const res = await fetch(url, {
     method: "POST",
-    processData: false,
-    url,
+    headers: { "Content-Type": "application/octet-stream" },
+    body: file,
   });
-  return result;
+  const json = await res.json();
+  if (!res.ok) {
+    throw new FetchError(res.status, json);
+  }
+  return json as T;
 }
 
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
   const jsonString = JSON.stringify(data);
   const uint8Array = new TextEncoder().encode(jsonString);
-  const compressed = gzip(uint8Array);
 
-  const result = await $.ajax({
-    async: false,
-    data: compressed,
-    dataType: "json",
+  const cs = new CompressionStream("gzip");
+  const writer = cs.writable.getWriter();
+  void writer.write(uint8Array);
+  void writer.close();
+  const compressed = await new Response(cs.readable).arrayBuffer();
+
+  const res = await fetch(url, {
+    method: "POST",
     headers: {
       "Content-Encoding": "gzip",
       "Content-Type": "application/json",
     },
-    method: "POST",
-    processData: false,
-    url,
+    body: compressed,
   });
-  return result;
+  const json = await res.json();
+  if (!res.ok) {
+    throw new FetchError(res.status, json);
+  }
+  return json as T;
 }

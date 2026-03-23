@@ -1,0 +1,1595 @@
+ WARN  Unsupported engine: wanted: {"node":"24.14.0"} (current: {"node":"v23.5.0","pnpm":"10.32.1"})
+
+> @web-speed-hackathon-2026/e2e@0.0.1 test:update /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e
+> playwright test --update-snapshots
+
+
+Running 52 tests using 5 workers
+
+  ✓  5 [Desktop Chrome] › src/auth.test.ts:60:3 › サインイン・新規登録 › 未入力の場合はボタンが無効化されている (7.5s)
+  ✓  3 [Desktop Chrome] › src/auth.test.ts:80:3 › サインイン・新規登録 › サインインに失敗するとエラーが表示される (7.9s)
+  ✓  2 [Desktop Chrome] › src/auth.test.ts:45:3 › サインイン・新規登録 › 既に使われているユーザー名で登録するとエラーが表示される (8.0s)
+  ✓  4 [Desktop Chrome] › src/auth.test.ts:29:3 › サインイン・新規登録 › 日本語ユーザー名で登録するとエラーが表示される (8.0s)
+  ✓  1 [Desktop Chrome] › src/auth.test.ts:13:3 › サインイン・新規登録 › 新規登録ができる (8.7s)
+  ✘  10 [Desktop Chrome] › src/dm.test.ts:44:3 › DM一覧 › 新規DM開始モーダルが初期仕様通りにバリデーションされること (1.1m)
+  ✘  9 [Desktop Chrome] › src/dm.test.ts:26:3 › DM一覧 › DM一覧が最後にやり取りをした順にソートされる (1.1m)
+  ✘  8 [Desktop Chrome] › src/dm.test.ts:10:3 › DM一覧 › DM一覧が表示される (1.1m)
+  ✘  6 [Desktop Chrome] › src/crok-chat.test.ts:13:3 › Crok AIチャット › サジェスト候補が表示される (1.7m)
+  ✘  12 [Desktop Chrome] › src/dm.test.ts:10:3 › DM一覧 › DM一覧が表示される (retry #1) (30.4s)
+  ✘  11 [Desktop Chrome] › src/dm.test.ts:26:3 › DM一覧 › DM一覧が最後にやり取りをした順にソートされる (retry #1) (30.4s)
+  ✘  13 [Desktop Chrome] › src/dm.test.ts:44:3 › DM一覧 › 新規DM開始モーダルが初期仕様通りにバリデーションされること (retry #1) (30.4s)
+  ✘  7 [Desktop Chrome] › src/crok-chat.test.ts:42:3 › Crok AIチャット › 質問を送信するとAIの応答が表示される (1.7m)
+  ✘  15 [Desktop Chrome] › src/dm.test.ts:91:3 › DM一覧 › 送信ボタンをクリックすると、DM詳細画面に遷移すること (30.4s)
+  ✘  19 [Desktop Chrome] › src/dm.test.ts:91:3 › DM一覧 › 送信ボタンをクリックすると、DM詳細画面に遷移すること (retry #1) (37.2s)
+  ✘  20 [Desktop Chrome] › src/dm.test.ts:164:3 › DM一覧 › 相手が入力中の場合、入力中のインジケータが表示されること (57.4s)
+  ✘  21 [Desktop Chrome] › src/dm.test.ts:164:3 › DM一覧 › 相手が入力中の場合、入力中のインジケータが表示されること (retry #1) (1.1m)
+  ✘  22 [Desktop Chrome] › src/dm.test.ts:187:3 › DM一覧 › メッセージ・既読がリアルタイムで更新されること (45.9s)
+  ✘  16 [Desktop Chrome] › src/dm.test.ts:120:3 › DM一覧 › DM詳細画面でメッセージが古い順に表示されること (30.5s)
+  ✘  17 [Desktop Chrome] › src/dm.test.ts:141:3 › DM一覧 › Enterでメッセージを送信・Shift+Enterで改行できること (30.3s)
+  ✘  14 [Desktop Chrome] › src/crok-chat.test.ts:13:3 › Crok AIチャット › サジェスト候補が表示される (retry #1) (30.2s)
+  ✘  23 [Desktop Chrome] › src/dm.test.ts:187:3 › DM一覧 › メッセージ・既読がリアルタイムで更新されること (retry #1) (47.4s)
+  ✘  25 [Desktop Chrome] › src/dm.test.ts:120:3 › DM一覧 › DM詳細画面でメッセージが古い順に表示されること (retry #1) (30.4s)
+  ✘  24 [Desktop Chrome] › src/dm.test.ts:141:3 › DM一覧 › Enterでメッセージを送信・Shift+Enterで改行できること (retry #1) (30.4s)
+  ✘  26 [Desktop Chrome] › src/home.test.ts:11:3 › ホーム › タイムラインが表示される (30.2s)
+  ✘  27 [Desktop Chrome] › src/home.test.ts:26:3 › ホーム › タイトルが「タイムライン - CaX」 (30.2s)
+  ✘  18 [Desktop Chrome] › src/crok-chat.test.ts:42:3 › Crok AIチャット › 質問を送信するとAIの応答が表示される (retry #1) (30.2s)
+  ✘  30 [Desktop Chrome] › src/home.test.ts:11:3 › ホーム › タイムラインが表示される (retry #1) (30.2s)
+  ✘  31 [Desktop Chrome] › src/home.test.ts:26:3 › ホーム › タイトルが「タイムライン - CaX」 (retry #1) (30.4s)
+  ✘  29 [Desktop Chrome] › src/home.test.ts:30:3 › ホーム › 動画が自動再生される (59.5s)
+  ✘  28 [Desktop Chrome] › src/home.test.ts:38:3 › ホーム › 音声の波形が表示される (1.0m)
+  ✘  34 [Desktop Chrome] › src/home.test.ts:63:3 › 404ページ › 存在しないページで404が表示される (30.2s)
+  ✘  35 [Desktop Chrome] › src/home.test.ts:30:3 › ホーム › 動画が自動再生される (retry #1) (30.3s)
+  ✘  36 [Desktop Chrome] › src/home.test.ts:38:3 › ホーム › 音声の波形が表示される (retry #1) (30.2s)
+  ✘  33 [Desktop Chrome] › src/home.test.ts:53:3 › ホーム › 投稿クリック → 投稿詳細に遷移する (30.3s)
+  ✓  37 [Desktop Chrome] › src/home.test.ts:63:3 › 404ページ › 存在しないページで404が表示される (retry #1) (31.1s)
+  ✘  32 [Desktop Chrome] › src/home.test.ts:43:3 › ホーム › 写真が枠を覆う形で拡縮している (30.3s)
+  ✘  40 [Desktop Chrome] › src/home.test.ts:53:3 › ホーム › 投稿クリック → 投稿詳細に遷移する (retry #1) (30.4s)
+  ✘  41 [Desktop Chrome] › src/post-detail.test.ts:44:3 › 投稿詳細 - 動画 › 動画が自動再生され、クリックで一時停止・再生を切り替えられる (30.3s)
+  ✓  39 [Desktop Chrome] › src/post-detail.test.ts:28:3 › 投稿詳細 › タイトルが「{ユーザー名} さんのつぶやき - CaX」 (1.1m)
+  ✘  43 [Desktop Chrome] › src/post-detail.test.ts:74:3 › 投稿詳細 - 音声 › 音声の波形が表示され、再生ボタンで切り替えられる (30.2s)
+  ✘  38 [Desktop Chrome] › src/post-detail.test.ts:10:3 › 投稿詳細 › 投稿が表示される (1.3m)
+  ✘  42 [Desktop Chrome] › src/home.test.ts:43:3 › ホーム › 写真が枠を覆う形で拡縮している (retry #1) (30.2s)
+  ✘  44 [Desktop Chrome] › src/post-detail.test.ts:44:3 › 投稿詳細 - 動画 › 動画が自動再生され、クリックで一時停止・再生を切り替えられる (retry #1) (30.2s)
+  ✘  45 [Desktop Chrome] › src/post-detail.test.ts:106:3 › 投稿詳細 - 写真 › 写真がcover拡縮し、画像サイズが著しく荒くない (30.2s)
+  ✘  46 [Desktop Chrome] › src/post-detail.test.ts:74:3 › 投稿詳細 - 音声 › 音声の波形が表示され、再生ボタンで切り替えられる (retry #1) (30.2s)
+  ✘  47 [Desktop Chrome] › src/post-detail.test.ts:10:3 › 投稿詳細 › 投稿が表示される (retry #1) (30.2s)
+  ✘  48 [Desktop Chrome] › src/posting.test.ts:13:3 › 投稿機能 › テキストの投稿ができる (30.2s)
+  ✘  49 [Desktop Chrome] › src/posting.test.ts:41:3 › 投稿機能 › 画像の投稿ができる (30.3s)
+  ✘  50 [Desktop Chrome] › src/post-detail.test.ts:106:3 › 投稿詳細 - 写真 › 写真がcover拡縮し、画像サイズが著しく荒くない (retry #1) (30.2s)
+  ✘  51 [Desktop Chrome] › src/responsive.test.ts:6:3 › レスポンシブ › スマホ表示で表示が崩れない (30.2s)
+  ✘  52 [Desktop Chrome] › src/responsive.test.ts:30:3 › レスポンシブ › デスクトップ表示で表示が崩れない (30.2s)
+  ✘  53 [Desktop Chrome] › src/posting.test.ts:13:3 › 投稿機能 › テキストの投稿ができる (retry #1) (30.2s)
+  ✘  54 [Desktop Chrome] › src/posting.test.ts:41:3 › 投稿機能 › 画像の投稿ができる (retry #1) (30.3s)
+  ✘  55 [Desktop Chrome] › src/search.test.ts:6:3 › 検索ページ › 検索ページが表示される (30.2s)
+  ✘  56 [Desktop Chrome] › src/responsive.test.ts:6:3 › レスポンシブ › スマホ表示で表示が崩れない (retry #1) (30.2s)
+  ✘  57 [Desktop Chrome] › src/responsive.test.ts:30:3 › レスポンシブ › デスクトップ表示で表示が崩れない (retry #1) (30.3s)
+  ✘  58 [Desktop Chrome] › src/search.test.ts:20:3 › 検索ページ › タイトルが「検索 - CaX」となること (30.2s)
+  ✘  59 [Desktop Chrome] › src/search.test.ts:27:5 › 検索ページ › 検索フォーム › 入力欄のプレースホルダーが「検索 (例: キーワード since:2025-01-01 until:2025-12-31)」であること (30.2s)
+  ✘  60 [Desktop Chrome] › src/search.test.ts:6:3 › 検索ページ › 検索ページが表示される (retry #1) (30.2s)
+  ✘  61 [Desktop Chrome] › src/search.test.ts:39:5 › 検索ページ › 検索フォーム › 「since:YYYY-MM-DD で開始日、until:YYYY-MM-DD で終了日を指定できます」のヘルプテキストが表示されること (30.3s)
+  ✘  62 [Desktop Chrome] › src/search.test.ts:52:5 › 検索ページ › バリデーション › 空のまま検索するとエラーが表示される (30.2s)
+  ✘  63 [Desktop Chrome] › src/search.test.ts:20:3 › 検索ページ › タイトルが「検索 - CaX」となること (retry #1) (30.2s)
+  ✘  64 [Desktop Chrome] › src/search.test.ts:27:5 › 検索ページ › 検索フォーム › 入力欄のプレースホルダーが「検索 (例: キーワード since:2025-01-01 until:2025-12-31)」であること (retry #1) (30.2s)
+  ✘  65 [Desktop Chrome] › src/search.test.ts:63:5 › 検索ページ › バリデーション › 不正な since: 日付形式でエラーが表示される (30.2s)
+  ✘  66 [Desktop Chrome] › src/search.test.ts:39:5 › 検索ページ › 検索フォーム › 「since:YYYY-MM-DD で開始日、until:YYYY-MM-DD で終了日を指定できます」のヘルプテキストが表示されること (retry #1) (30.2s)
+  ✘  67 [Desktop Chrome] › src/search.test.ts:52:5 › 検索ページ › バリデーション › 空のまま検索するとエラーが表示される (retry #1) (30.3s)
+  ✘  68 [Desktop Chrome] › src/search.test.ts:78:5 › 検索ページ › バリデーション › since: が until: より後の日付でエラーが表示される (30.3s)
+  ✘  69 [Desktop Chrome] › src/search.test.ts:94:3 › 検索ページ › 検索結果が表示される (30.4s)
+  ✘  70 [Desktop Chrome] › src/search.test.ts:63:5 › 検索ページ › バリデーション › 不正な since: 日付形式でエラーが表示される (retry #1) (30.3s)
+  ✘  71 [Desktop Chrome] › src/search.test.ts:114:3 › 検索ページ › キーワードと since:YYYY-MM-DD を組み合わせて検索できること (30.2s)
+  ✘  72 [Desktop Chrome] › src/search.test.ts:130:3 › 検索ページ › キーワードと since:YYYY-MM-DD until:YYYY-MM-DD を組み合わせて検索できること (30.3s)
+  ✘  73 [Desktop Chrome] › src/search.test.ts:78:5 › 検索ページ › バリデーション › since: が until: より後の日付でエラーが表示される (retry #1) (30.2s)
+  ✘  74 [Desktop Chrome] › src/search.test.ts:94:3 › 検索ページ › 検索結果が表示される (retry #1) (30.2s)
+  ✘  76 [Desktop Chrome] › src/search.test.ts:114:3 › 検索ページ › キーワードと since:YYYY-MM-DD を組み合わせて検索できること (retry #1) (30.2s)
+  ✘  77 [Desktop Chrome] › src/search.test.ts:130:3 › 検索ページ › キーワードと since:YYYY-MM-DD until:YYYY-MM-DD を組み合わせて検索できること (retry #1) (30.2s)
+  ✓  75 [Desktop Chrome] › src/search.test.ts:149:3 › 検索ページ › 検索結果が見つからない場合、「検索結果が見つかりませんでした」と表示されること (35.2s)
+  ✘  78 [Desktop Chrome] › src/search.test.ts:181:5 › 検索ページ › ネガティブ判定 › ネガティブな検索クエリのとき、「どしたん話聞こうか?」のメッセージが表示される (30.3s)
+  ✓  79 [Desktop Chrome] › src/search.test.ts:192:5 › 検索ページ › ネガティブ判定 › ポジティブな検索クエリのとき、「どしたん話聞こうか?」のメッセージが表示されない (25.9s)
+  ✘  80 [Desktop Chrome] › src/search.test.ts:205:5 › 検索ページ › ネガティブ判定 › 補正係数により境界値(-0.1)をわずかに下回る単語でネガティブ判定される (30.3s)
+  ✘  82 [Desktop Chrome] › src/search.test.ts:228:5 › 検索ページ › ネガティブ判定 › 直感的にネガティブでも補正係数により中立判定される単語がある (30.4s)
+  ✘  81 [Desktop Chrome] › src/search.test.ts:215:5 › 検索ページ › ネガティブ判定 › 補正係数により境界値(-0.1)をわずかに上回る単語ではネガティブ判定されない (30.4s)
+  ✘  83 [Desktop Chrome] › src/search.test.ts:181:5 › 検索ページ › ネガティブ判定 › ネガティブな検索クエリのとき、「どしたん話聞こうか?」のメッセージが表示される (retry #1) (30.4s)
+  ✘  84 [Desktop Chrome] › src/search.test.ts:241:3 › 検索ページ › 検索結果のタイムラインが無限スクロールで追加読み込みされること (30.2s)
+  ✘  85 [Desktop Chrome] › src/search.test.ts:205:5 › 検索ページ › ネガティブ判定 › 補正係数により境界値(-0.1)をわずかに下回る単語でネガティブ判定される (retry #1) (30.3s)
+  ✘  86 [Desktop Chrome] › src/search.test.ts:228:5 › 検索ページ › ネガティブ判定 › 直感的にネガティブでも補正係数により中立判定される単語がある (retry #1) (30.6s)
+  ✘  87 [Desktop Chrome] › src/search.test.ts:215:5 › 検索ページ › ネガティブ判定 › 補正係数により境界値(-0.1)をわずかに上回る単語ではネガティブ判定されない (retry #1) (30.5s)
+  ✘  88 [Desktop Chrome] › src/terms.test.ts:11:3 › 利用規約 › タイトルが「利用規約 - CaX」 (30.4s)
+  ✘  89 [Desktop Chrome] › src/search.test.ts:241:3 › 検索ページ › 検索結果のタイムラインが無限スクロールで追加読み込みされること (retry #1) (30.2s)
+  ✘  90 [Desktop Chrome] › src/terms.test.ts:15:3 › 利用規約 › ページが正しく表示されている (30.5s)
+  ✘  91 [Desktop Chrome] › src/user-profile.test.ts:10:3 › ユーザー詳細 › タイトルが「{ユーザー名} さんのタイムライン - CaX」 (30.4s)
+  ✘  92 [Desktop Chrome] › src/user-profile.test.ts:17:3 › ユーザー詳細 › ページ上部がユーザーサムネイル画像の色を抽出した色になっている (30.4s)
+  ✘  93 [Desktop Chrome] › src/terms.test.ts:11:3 › 利用規約 › タイトルが「利用規約 - CaX」 (retry #1) (30.3s)
+  ✓  95 [Desktop Chrome] › src/user-profile.test.ts:10:3 › ユーザー詳細 › タイトルが「{ユーザー名} さんのタイムライン - CaX」 (retry #1) (30.8s)
+  ✘  96 [Desktop Chrome] › src/user-profile.test.ts:17:3 › ユーザー詳細 › ページ上部がユーザーサムネイル画像の色を抽出した色になっている (retry #1) (56.4s)
+  ✓  94 [Desktop Chrome] › src/terms.test.ts:15:3 › 利用規約 › ページが正しく表示されている (retry #1) (1.1m)
+
+
+  1) [Desktop Chrome] › src/crok-chat.test.ts:13:3 › Crok AIチャット › サジェスト候補が表示される ───────────────────
+
+    TimeoutError: locator.pressSequentially: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByPlaceholder('メッセージを入力...')[22m
+    [2m    - locator resolved to <textarea rows="1" lang="ja" placeholder="メッセージを入力..." class="text-cax-text placeholder-cax-text-subtle max-h-[200px] min-h-[52px] flex-1 resize-none overflow-y-auto bg-transparent py-3 pr-2 pl-4 focus:outline-none"></textarea>[22m
+    [2m  - elementHandle.type("TypeScriptの型")[22m
+
+
+      20 |
+      21 |     const chatInput = page.getByPlaceholder("メッセージを入力...");
+    > 22 |     await chatInput.pressSequentially("TypeScriptの型");
+         |                     ^
+      23 |
+      24 |     const suggestions = page.getByRole("listbox", { name: "サジェスト候補" });
+      25 |     await suggestions.waitFor({ timeout: 30_000 });
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/crok-chat.test.ts:22:21
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/not-found", waiting until "domcontentloaded"[22m
+
+
+       at utils.ts:9
+
+       7 |   password: string = "wsh-2026",
+       8 | ): Promise<void> {
+    >  9 |   await page.goto("/not-found", { waitUntil: "domcontentloaded" });
+         |              ^
+      10 |   const signinButton = page.getByRole("button", { name: "サインイン" });
+      11 |   await expect(signinButton).toBeVisible({ timeout: 30_000 });
+      12 |   await signinButton.click();
+        at login (/Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/utils.ts:9:14)
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/crok-chat.test.ts:8:11
+
+  2) [Desktop Chrome] › src/crok-chat.test.ts:42:3 › Crok AIチャット › 質問を送信するとAIの応答が表示される ─────────────
+
+    TimeoutError: locator.fill: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByPlaceholder('メッセージを入力...')[22m
+
+
+      44 |     const prompt =
+      45 |       "『走れメロス』って、冷笑系の“どうせ人なんか信じても無駄”に対する話なんだと思うんだけどどう？";
+    > 46 |     await chatInput.fill(prompt);
+         |                     ^
+      47 |
+      48 |     // 送信ボタンをクリック
+      49 |     await page.getByRole("button", { name: "送信" }).click();
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/crok-chat.test.ts:46:21
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/not-found", waiting until "domcontentloaded"[22m
+
+
+       at utils.ts:9
+
+       7 |   password: string = "wsh-2026",
+       8 | ): Promise<void> {
+    >  9 |   await page.goto("/not-found", { waitUntil: "domcontentloaded" });
+         |              ^
+      10 |   const signinButton = page.getByRole("button", { name: "サインイン" });
+      11 |   await expect(signinButton).toBeVisible({ timeout: 30_000 });
+      12 |   await signinButton.click();
+        at login (/Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/utils.ts:9:14)
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/crok-chat.test.ts:8:11
+
+  3) [Desktop Chrome] › src/dm.test.ts:10:3 › DM一覧 › DM一覧が表示される ────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/dm", waiting until "load"[22m
+
+
+      10 |   test("DM一覧が表示される", async ({ page }) => {
+      11 |     await login(page);
+    > 12 |     await page.goto("/dm");
+         |                ^
+      13 |
+      14 |     await expect(page.getByRole("heading", { name: "ダイレクトメッセージ" })).toBeVisible({
+      15 |       timeout: 30_000,
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/dm.test.ts:12:16
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/not-found", waiting until "domcontentloaded"[22m
+
+
+       at utils.ts:9
+
+       7 |   password: string = "wsh-2026",
+       8 | ): Promise<void> {
+    >  9 |   await page.goto("/not-found", { waitUntil: "domcontentloaded" });
+         |              ^
+      10 |   const signinButton = page.getByRole("button", { name: "サインイン" });
+      11 |   await expect(signinButton).toBeVisible({ timeout: 30_000 });
+      12 |   await signinButton.click();
+        at login (/Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/utils.ts:9:14)
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/dm.test.ts:11:11
+
+  4) [Desktop Chrome] › src/dm.test.ts:26:3 › DM一覧 › DM一覧が最後にやり取りをした順にソートされる ───────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/dm", waiting until "load"[22m
+
+
+      26 |   test("DM一覧が最後にやり取りをした順にソートされる", async ({ page }) => {
+      27 |     await login(page);
+    > 28 |     await page.goto("/dm");
+         |                ^
+      29 |
+      30 |     const timeElements = await page.getByTestId("dm-list").locator("li time").all();
+      31 |     const times = await Promise.all(
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/dm.test.ts:28:16
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/not-found", waiting until "domcontentloaded"[22m
+
+
+       at utils.ts:9
+
+       7 |   password: string = "wsh-2026",
+       8 | ): Promise<void> {
+    >  9 |   await page.goto("/not-found", { waitUntil: "domcontentloaded" });
+         |              ^
+      10 |   const signinButton = page.getByRole("button", { name: "サインイン" });
+      11 |   await expect(signinButton).toBeVisible({ timeout: 30_000 });
+      12 |   await signinButton.click();
+        at login (/Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/utils.ts:9:14)
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/dm.test.ts:27:11
+
+  5) [Desktop Chrome] › src/dm.test.ts:44:3 › DM一覧 › 新規DM開始モーダルが初期仕様通りにバリデーションされること ────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/dm", waiting until "load"[22m
+
+
+      44 |   test("新規DM開始モーダルが初期仕様通りにバリデーションされること", async ({ page }) => {
+      45 |     await login(page);
+    > 46 |     await page.goto("/dm");
+         |                ^
+      47 |
+      48 |     await page.getByRole("button", { name: "新しくDMを始める" }).click();
+      49 |     await page
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/dm.test.ts:46:16
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/not-found", waiting until "domcontentloaded"[22m
+
+
+       at utils.ts:9
+
+       7 |   password: string = "wsh-2026",
+       8 | ): Promise<void> {
+    >  9 |   await page.goto("/not-found", { waitUntil: "domcontentloaded" });
+         |              ^
+      10 |   const signinButton = page.getByRole("button", { name: "サインイン" });
+      11 |   await expect(signinButton).toBeVisible({ timeout: 30_000 });
+      12 |   await signinButton.click();
+        at login (/Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/utils.ts:9:14)
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/dm.test.ts:45:11
+
+  6) [Desktop Chrome] › src/dm.test.ts:91:3 › DM一覧 › 送信ボタンをクリックすると、DM詳細画面に遷移すること ───────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/not-found", waiting until "domcontentloaded"[22m
+
+
+       at utils.ts:9
+
+       7 |   password: string = "wsh-2026",
+       8 | ): Promise<void> {
+    >  9 |   await page.goto("/not-found", { waitUntil: "domcontentloaded" });
+         |              ^
+      10 |   const signinButton = page.getByRole("button", { name: "サインイン" });
+      11 |   await expect(signinButton).toBeVisible({ timeout: 30_000 });
+      12 |   await signinButton.click();
+        at login (/Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/utils.ts:9:14)
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/dm.test.ts:92:11
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: locator.click: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('button', { name: '新しくDMを始める' })[22m
+
+
+      93 |     await page.goto("/dm");
+      94 |
+    > 95 |     await page.getByRole("button", { name: "新しくDMを始める" }).click();
+         |                                                           ^
+      96 |     await page
+      97 |       .getByRole("dialog")
+      98 |       .getByRole("heading", { name: "新しくDMを始める" })
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/dm.test.ts:95:59
+
+  7) [Desktop Chrome] › src/dm.test.ts:120:3 › DM一覧 › DM詳細画面でメッセージが古い順に表示されること ─────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/not-found", waiting until "domcontentloaded"[22m
+
+
+       at utils.ts:9
+
+       7 |   password: string = "wsh-2026",
+       8 | ): Promise<void> {
+    >  9 |   await page.goto("/not-found", { waitUntil: "domcontentloaded" });
+         |              ^
+      10 |   const signinButton = page.getByRole("button", { name: "サインイン" });
+      11 |   await expect(signinButton).toBeVisible({ timeout: 30_000 });
+      12 |   await signinButton.click();
+        at login (/Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/utils.ts:9:14)
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/dm.test.ts:121:11
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/not-found", waiting until "domcontentloaded"[22m
+
+
+       at utils.ts:9
+
+       7 |   password: string = "wsh-2026",
+       8 | ): Promise<void> {
+    >  9 |   await page.goto("/not-found", { waitUntil: "domcontentloaded" });
+         |              ^
+      10 |   const signinButton = page.getByRole("button", { name: "サインイン" });
+      11 |   await expect(signinButton).toBeVisible({ timeout: 30_000 });
+      12 |   await signinButton.click();
+        at login (/Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/utils.ts:9:14)
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/dm.test.ts:121:11
+
+  8) [Desktop Chrome] › src/dm.test.ts:141:3 › DM一覧 › Enterでメッセージを送信・Shift+Enterで改行できること ───────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/not-found", waiting until "domcontentloaded"[22m
+
+
+       at utils.ts:9
+
+       7 |   password: string = "wsh-2026",
+       8 | ): Promise<void> {
+    >  9 |   await page.goto("/not-found", { waitUntil: "domcontentloaded" });
+         |              ^
+      10 |   const signinButton = page.getByRole("button", { name: "サインイン" });
+      11 |   await expect(signinButton).toBeVisible({ timeout: 30_000 });
+      12 |   await signinButton.click();
+        at login (/Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/utils.ts:9:14)
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/dm.test.ts:142:11
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/not-found", waiting until "domcontentloaded"[22m
+
+
+       at utils.ts:9
+
+       7 |   password: string = "wsh-2026",
+       8 | ): Promise<void> {
+    >  9 |   await page.goto("/not-found", { waitUntil: "domcontentloaded" });
+         |              ^
+      10 |   const signinButton = page.getByRole("button", { name: "サインイン" });
+      11 |   await expect(signinButton).toBeVisible({ timeout: 30_000 });
+      12 |   await signinButton.click();
+        at login (/Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/utils.ts:9:14)
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/dm.test.ts:142:11
+
+  9) [Desktop Chrome] › src/dm.test.ts:164:3 › DM一覧 › 相手が入力中の場合、入力中のインジケータが表示されること ─────────────────
+
+    TimeoutError: locator.click: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('link', { name: 'g16hmw55' })[22m
+
+
+      166 |     await page.goto("/dm");
+      167 |
+    > 168 |     await page.getByRole("link", { name: "g16hmw55" }).click();
+          |                                                        ^
+      169 |     await page.waitForURL("**/dm/*", { timeout: 30 * 1000 });
+      170 |
+      171 |     const peerContext = await browser.newContext();
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/dm.test.ts:168:56
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: locator.click: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('link', { name: 'g16hmw55' })[22m
+
+
+      166 |     await page.goto("/dm");
+      167 |
+    > 168 |     await page.getByRole("link", { name: "g16hmw55" }).click();
+          |                                                        ^
+      169 |     await page.waitForURL("**/dm/*", { timeout: 30 * 1000 });
+      170 |
+      171 |     const peerContext = await browser.newContext();
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/dm.test.ts:168:56
+
+  10) [Desktop Chrome] › src/dm.test.ts:187:3 › DM一覧 › メッセージ・既読がリアルタイムで更新されること ─────────────────────
+
+    TimeoutError: locator.click: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('button', { name: 'サインイン' }).last()[22m
+    [2m    - locator resolved to <button type="submit" class="flex items-center justify-center gap-2 rounded-full px-4 py-2 border disabled:opacity-50 disabled:cursor-not-allowed bg-cax-brand text-cax-surface-raised hover:bg-cax-brand-strong border-transparent">…</button>[22m
+    [2m  - attempting click action[22m
+    [2m    - waiting for element to be visible, enabled and stable[22m
+    [2m    - element is visible, enabled and stable[22m
+    [2m    - scrolling into view if needed[22m
+    [2m    - done scrolling[22m
+    [2m    - performing click action[22m
+
+
+       at utils.ts:16
+
+      14 |   await page.getByRole("textbox", { name: "ユーザー名" }).pressSequentially(username);
+      15 |   await page.getByRole("textbox", { name: "パスワード" }).pressSequentially(password);
+    > 16 |   await page.getByRole("button", { name: "サインイン" }).last().click();
+         |                                                            ^
+      17 |   await page.getByRole("link", { name: "Crok" }).waitFor({ timeout: 30_000 });
+      18 | }
+      19 |
+        at login (/Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/utils.ts:16:60)
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/dm.test.ts:188:5
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: locator.click: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('button', { name: 'サインイン' }).last()[22m
+    [2m    - locator resolved to <button type="submit" class="flex items-center justify-center gap-2 rounded-full px-4 py-2 border disabled:opacity-50 disabled:cursor-not-allowed bg-cax-brand text-cax-surface-raised hover:bg-cax-brand-strong border-transparent">…</button>[22m
+    [2m  - attempting click action[22m
+    [2m    - waiting for element to be visible, enabled and stable[22m
+    [2m    - element is visible, enabled and stable[22m
+    [2m    - scrolling into view if needed[22m
+    [2m    - done scrolling[22m
+    [2m    - performing click action[22m
+
+
+       at utils.ts:16
+
+      14 |   await page.getByRole("textbox", { name: "ユーザー名" }).pressSequentially(username);
+      15 |   await page.getByRole("textbox", { name: "パスワード" }).pressSequentially(password);
+    > 16 |   await page.getByRole("button", { name: "サインイン" }).last().click();
+         |                                                            ^
+      17 |   await page.getByRole("link", { name: "Crok" }).waitFor({ timeout: 30_000 });
+      18 | }
+      19 |
+        at login (/Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/utils.ts:16:60)
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/dm.test.ts:188:5
+
+  11) [Desktop Chrome] › src/home.test.ts:11:3 › ホーム › タイムラインが表示される ────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/", waiting until "domcontentloaded"[22m
+
+
+       6 |   test.beforeEach(async ({ page }) => {
+       7 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    >  8 |     await page.goto("/", { waitUntil: "domcontentloaded" });
+         |                ^
+       9 |   });
+      10 |
+      11 |   test("タイムラインが表示される", async ({ page }) => {
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/home.test.ts:8:16
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/", waiting until "domcontentloaded"[22m
+
+
+       6 |   test.beforeEach(async ({ page }) => {
+       7 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    >  8 |     await page.goto("/", { waitUntil: "domcontentloaded" });
+         |                ^
+       9 |   });
+      10 |
+      11 |   test("タイムラインが表示される", async ({ page }) => {
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/home.test.ts:8:16
+
+  12) [Desktop Chrome] › src/home.test.ts:26:3 › ホーム › タイトルが「タイムライン - CaX」 ─────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/", waiting until "domcontentloaded"[22m
+
+
+       6 |   test.beforeEach(async ({ page }) => {
+       7 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    >  8 |     await page.goto("/", { waitUntil: "domcontentloaded" });
+         |                ^
+       9 |   });
+      10 |
+      11 |   test("タイムラインが表示される", async ({ page }) => {
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/home.test.ts:8:16
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/", waiting until "domcontentloaded"[22m
+
+
+       6 |   test.beforeEach(async ({ page }) => {
+       7 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    >  8 |     await page.goto("/", { waitUntil: "domcontentloaded" });
+         |                ^
+       9 |   });
+      10 |
+      11 |   test("タイムラインが表示される", async ({ page }) => {
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/home.test.ts:8:16
+
+  13) [Desktop Chrome] › src/home.test.ts:30:3 › ホーム › 動画が自動再生される ──────────────────────────────────
+
+    Error: [31mTimed out 30000ms waiting for [39m[2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m()[22m
+
+    Locator: locator('article button[aria-label="動画プレイヤー"]').first()
+    Expected: visible
+    Received: <element(s) not found>
+    Call log:
+    [2m  - expect.toBeVisible with timeout 30000ms[22m
+    [2m  - waiting for locator('article button[aria-label="動画プレイヤー"]').first()[22m
+
+
+      33 |     await waitForVisibleMedia(page);
+      34 |
+    > 35 |     await expect(videoPlayer).toBeVisible({ timeout: 30_000 });
+         |                               ^
+      36 |   });
+      37 |
+      38 |   test("音声の波形が表示される", async ({ page }) => {
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/home.test.ts:35:31
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/", waiting until "domcontentloaded"[22m
+
+
+       6 |   test.beforeEach(async ({ page }) => {
+       7 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    >  8 |     await page.goto("/", { waitUntil: "domcontentloaded" });
+         |                ^
+       9 |   });
+      10 |
+      11 |   test("タイムラインが表示される", async ({ page }) => {
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/home.test.ts:8:16
+
+  14) [Desktop Chrome] › src/home.test.ts:38:3 › ホーム › 音声の波形が表示される ─────────────────────────────────
+
+    Error: [31mTimed out 30000ms waiting for [39m[2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m()[22m
+
+    Locator: locator('svg[viewBox="0 0 100 1"]').first()
+    Expected: visible
+    Received: <element(s) not found>
+    Call log:
+    [2m  - expect.toBeVisible with timeout 30000ms[22m
+    [2m  - waiting for locator('svg[viewBox="0 0 100 1"]').first()[22m
+
+
+      38 |   test("音声の波形が表示される", async ({ page }) => {
+      39 |     const waveform = page.locator('svg[viewBox="0 0 100 1"]').first();
+    > 40 |     await expect(waveform).toBeVisible({ timeout: 30_000 });
+         |                            ^
+      41 |   });
+      42 |
+      43 |   test("写真が枠を覆う形で拡縮している", async ({ page }) => {
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/home.test.ts:40:28
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/", waiting until "domcontentloaded"[22m
+
+
+       6 |   test.beforeEach(async ({ page }) => {
+       7 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    >  8 |     await page.goto("/", { waitUntil: "domcontentloaded" });
+         |                ^
+       9 |   });
+      10 |
+      11 |   test("タイムラインが表示される", async ({ page }) => {
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/home.test.ts:8:16
+
+  15) [Desktop Chrome] › src/home.test.ts:43:3 › ホーム › 写真が枠を覆う形で拡縮している ─────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/", waiting until "domcontentloaded"[22m
+
+
+       6 |   test.beforeEach(async ({ page }) => {
+       7 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    >  8 |     await page.goto("/", { waitUntil: "domcontentloaded" });
+         |                ^
+       9 |   });
+      10 |
+      11 |   test("タイムラインが表示される", async ({ page }) => {
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/home.test.ts:8:16
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/", waiting until "domcontentloaded"[22m
+
+
+       6 |   test.beforeEach(async ({ page }) => {
+       7 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    >  8 |     await page.goto("/", { waitUntil: "domcontentloaded" });
+         |                ^
+       9 |   });
+      10 |
+      11 |   test("タイムラインが表示される", async ({ page }) => {
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/home.test.ts:8:16
+
+  16) [Desktop Chrome] › src/home.test.ts:53:3 › ホーム › 投稿クリック → 投稿詳細に遷移する ──────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/", waiting until "domcontentloaded"[22m
+
+
+       6 |   test.beforeEach(async ({ page }) => {
+       7 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    >  8 |     await page.goto("/", { waitUntil: "domcontentloaded" });
+         |                ^
+       9 |   });
+      10 |
+      11 |   test("タイムラインが表示される", async ({ page }) => {
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/home.test.ts:8:16
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/", waiting until "domcontentloaded"[22m
+
+
+       6 |   test.beforeEach(async ({ page }) => {
+       7 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    >  8 |     await page.goto("/", { waitUntil: "domcontentloaded" });
+         |                ^
+       9 |   });
+      10 |
+      11 |   test("タイムラインが表示される", async ({ page }) => {
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/home.test.ts:8:16
+
+  17) [Desktop Chrome] › src/post-detail.test.ts:10:3 › 投稿詳細 › 投稿が表示される ────────────────────────────
+
+    TimeoutError: locator.click: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('article').first()[22m
+    [2m    - locator resolved to <article class="hover:bg-cax-surface-subtle px-1 sm:px-4">…</article>[22m
+    [2m  - attempting click action[22m
+    [2m    - waiting for element to be visible, enabled and stable[22m
+    [2m    - element is visible, enabled and stable[22m
+    [2m    - scrolling into view if needed[22m
+    [2m    - done scrolling[22m
+    [2m    - performing click action[22m
+
+
+      12 |     const firstArticle = page.locator("article").first();
+      13 |     await expect(firstArticle).toBeVisible({ timeout: 30_000 });
+    > 14 |     await firstArticle.click();
+         |                        ^
+      15 |     await page.waitForURL("**/posts/*", { timeout: 30_000 });
+      16 |
+      17 |     const article = page.locator("article").first();
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/post-detail.test.ts:14:24
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/", waiting until "load"[22m
+
+
+       9 |
+      10 |   test("投稿が表示される", async ({ page }) => {
+    > 11 |     await page.goto("/");
+         |                ^
+      12 |     const firstArticle = page.locator("article").first();
+      13 |     await expect(firstArticle).toBeVisible({ timeout: 30_000 });
+      14 |     await firstArticle.click();
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/post-detail.test.ts:11:16
+
+  18) [Desktop Chrome] › src/post-detail.test.ts:44:3 › 投稿詳細 - 動画 › 動画が自動再生され、クリックで一時停止・再生を切り替えられる ─
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/", waiting until "load"[22m
+
+
+      43 |
+      44 |   test("動画が自動再生され、クリックで一時停止・再生を切り替えられる", async ({ page }) => {
+    > 45 |     await page.goto("/");
+         |                ^
+      46 |     const movieArticle = page.locator('article:has(button[aria-label="動画プレイヤー"])').first();
+      47 |     await expect(movieArticle).toBeVisible({ timeout: 30_000 });
+      48 |     await movieArticle.locator("time").first().click();
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/post-detail.test.ts:45:16
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/", waiting until "load"[22m
+
+
+      43 |
+      44 |   test("動画が自動再生され、クリックで一時停止・再生を切り替えられる", async ({ page }) => {
+    > 45 |     await page.goto("/");
+         |                ^
+      46 |     const movieArticle = page.locator('article:has(button[aria-label="動画プレイヤー"])').first();
+      47 |     await expect(movieArticle).toBeVisible({ timeout: 30_000 });
+      48 |     await movieArticle.locator("time").first().click();
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/post-detail.test.ts:45:16
+
+  19) [Desktop Chrome] › src/post-detail.test.ts:74:3 › 投稿詳細 - 音声 › 音声の波形が表示され、再生ボタンで切り替えられる ───────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/", waiting until "load"[22m
+
+
+      73 |
+      74 |   test("音声の波形が表示され、再生ボタンで切り替えられる", async ({ page }) => {
+    > 75 |     await page.goto("/");
+         |                ^
+      76 |     const soundArticle = page.locator('article:has(svg[viewBox="0 0 100 1"])').first();
+      77 |     await expect(soundArticle).toBeVisible({ timeout: 30_000 });
+      78 |     await soundArticle.locator("time").first().click();
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/post-detail.test.ts:75:16
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/", waiting until "load"[22m
+
+
+      73 |
+      74 |   test("音声の波形が表示され、再生ボタンで切り替えられる", async ({ page }) => {
+    > 75 |     await page.goto("/");
+         |                ^
+      76 |     const soundArticle = page.locator('article:has(svg[viewBox="0 0 100 1"])').first();
+      77 |     await expect(soundArticle).toBeVisible({ timeout: 30_000 });
+      78 |     await soundArticle.locator("time").first().click();
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/post-detail.test.ts:75:16
+
+  20) [Desktop Chrome] › src/post-detail.test.ts:106:3 › 投稿詳細 - 写真 › 写真がcover拡縮し、画像サイズが著しく荒くない ─────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/", waiting until "load"[22m
+
+
+      105 |
+      106 |   test("写真がcover拡縮し、画像サイズが著しく荒くない", async ({ page }) => {
+    > 107 |     await page.goto("/");
+          |                ^
+      108 |     const imageArticle = page.locator("article:has(.grid img)").first();
+      109 |     await expect(imageArticle).toBeVisible({ timeout: 30_000 });
+      110 |     await imageArticle.click();
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/post-detail.test.ts:107:16
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/", waiting until "load"[22m
+
+
+      105 |
+      106 |   test("写真がcover拡縮し、画像サイズが著しく荒くない", async ({ page }) => {
+    > 107 |     await page.goto("/");
+          |                ^
+      108 |     const imageArticle = page.locator("article:has(.grid img)").first();
+      109 |     await expect(imageArticle).toBeVisible({ timeout: 30_000 });
+      110 |     await imageArticle.click();
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/post-detail.test.ts:107:16
+
+  21) [Desktop Chrome] › src/posting.test.ts:13:3 › 投稿機能 › テキストの投稿ができる ─────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/not-found", waiting until "domcontentloaded"[22m
+
+
+       at utils.ts:9
+
+       7 |   password: string = "wsh-2026",
+       8 | ): Promise<void> {
+    >  9 |   await page.goto("/not-found", { waitUntil: "domcontentloaded" });
+         |              ^
+      10 |   const signinButton = page.getByRole("button", { name: "サインイン" });
+      11 |   await expect(signinButton).toBeVisible({ timeout: 30_000 });
+      12 |   await signinButton.click();
+        at login (/Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/utils.ts:9:14)
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/posting.test.ts:10:11
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/not-found", waiting until "domcontentloaded"[22m
+
+
+       at utils.ts:9
+
+       7 |   password: string = "wsh-2026",
+       8 | ): Promise<void> {
+    >  9 |   await page.goto("/not-found", { waitUntil: "domcontentloaded" });
+         |              ^
+      10 |   const signinButton = page.getByRole("button", { name: "サインイン" });
+      11 |   await expect(signinButton).toBeVisible({ timeout: 30_000 });
+      12 |   await signinButton.click();
+        at login (/Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/utils.ts:9:14)
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/posting.test.ts:10:11
+
+  22) [Desktop Chrome] › src/posting.test.ts:41:3 › 投稿機能 › 画像の投稿ができる ───────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/not-found", waiting until "domcontentloaded"[22m
+
+
+       at utils.ts:9
+
+       7 |   password: string = "wsh-2026",
+       8 | ): Promise<void> {
+    >  9 |   await page.goto("/not-found", { waitUntil: "domcontentloaded" });
+         |              ^
+      10 |   const signinButton = page.getByRole("button", { name: "サインイン" });
+      11 |   await expect(signinButton).toBeVisible({ timeout: 30_000 });
+      12 |   await signinButton.click();
+        at login (/Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/utils.ts:9:14)
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/posting.test.ts:10:11
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/not-found", waiting until "domcontentloaded"[22m
+
+
+       at utils.ts:9
+
+       7 |   password: string = "wsh-2026",
+       8 | ): Promise<void> {
+    >  9 |   await page.goto("/not-found", { waitUntil: "domcontentloaded" });
+         |              ^
+      10 |   const signinButton = page.getByRole("button", { name: "サインイン" });
+      11 |   await expect(signinButton).toBeVisible({ timeout: 30_000 });
+      12 |   await signinButton.click();
+        at login (/Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/utils.ts:9:14)
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/posting.test.ts:10:11
+
+  23) [Desktop Chrome] › src/responsive.test.ts:6:3 › レスポンシブ › スマホ表示で表示が崩れない ───────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/", waiting until "load"[22m
+
+
+       6 |   test("スマホ表示で表示が崩れない", async ({ page }) => {
+       7 |     await page.setViewportSize({ width: 375, height: 667 });
+    >  8 |     await page.goto("/");
+         |                ^
+       9 |
+      10 |     const articles = page.locator("article");
+      11 |     await expect(articles.first()).toBeVisible({ timeout: 30_000 });
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/responsive.test.ts:8:16
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/", waiting until "load"[22m
+
+
+       6 |   test("スマホ表示で表示が崩れない", async ({ page }) => {
+       7 |     await page.setViewportSize({ width: 375, height: 667 });
+    >  8 |     await page.goto("/");
+         |                ^
+       9 |
+      10 |     const articles = page.locator("article");
+      11 |     await expect(articles.first()).toBeVisible({ timeout: 30_000 });
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/responsive.test.ts:8:16
+
+  24) [Desktop Chrome] › src/responsive.test.ts:30:3 › レスポンシブ › デスクトップ表示で表示が崩れない ───────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/", waiting until "load"[22m
+
+
+      30 |   test("デスクトップ表示で表示が崩れない", async ({ page }) => {
+      31 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    > 32 |     await page.goto("/");
+         |                ^
+      33 |
+      34 |     const articles = page.locator("article");
+      35 |     await expect(articles.first()).toBeVisible({ timeout: 30_000 });
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/responsive.test.ts:32:16
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/", waiting until "load"[22m
+
+
+      30 |   test("デスクトップ表示で表示が崩れない", async ({ page }) => {
+      31 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    > 32 |     await page.goto("/");
+         |                ^
+      33 |
+      34 |     const articles = page.locator("article");
+      35 |     await expect(articles.first()).toBeVisible({ timeout: 30_000 });
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/responsive.test.ts:32:16
+
+  25) [Desktop Chrome] › src/search.test.ts:6:3 › 検索ページ › 検索ページが表示される ──────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search", waiting until "load"[22m
+
+
+       6 |   test("検索ページが表示される", async ({ page }) => {
+       7 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    >  8 |     await page.goto("/search");
+         |                ^
+       9 |     await scrollEntire(page);
+      10 |
+      11 |     // VRT: 検索ページ
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:8:16
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search", waiting until "load"[22m
+
+
+       6 |   test("検索ページが表示される", async ({ page }) => {
+       7 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    >  8 |     await page.goto("/search");
+         |                ^
+       9 |     await scrollEntire(page);
+      10 |
+      11 |     // VRT: 検索ページ
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:8:16
+
+  26) [Desktop Chrome] › src/search.test.ts:20:3 › 検索ページ › タイトルが「検索 - CaX」となること ────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search", waiting until "load"[22m
+
+
+      20 |   test("タイトルが「検索 - CaX」となること", async ({ page }) => {
+      21 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    > 22 |     await page.goto("/search");
+         |                ^
+      23 |     await expect(page).toHaveTitle("検索 - CaX", { timeout: 30_000 });
+      24 |   });
+      25 |
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:22:16
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search", waiting until "load"[22m
+
+
+      20 |   test("タイトルが「検索 - CaX」となること", async ({ page }) => {
+      21 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    > 22 |     await page.goto("/search");
+         |                ^
+      23 |     await expect(page).toHaveTitle("検索 - CaX", { timeout: 30_000 });
+      24 |   });
+      25 |
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:22:16
+
+  27) [Desktop Chrome] › src/search.test.ts:27:5 › 検索ページ › 検索フォーム › 入力欄のプレースホルダーが「検索 (例: キーワード since:2025-01-01 until:2025-12-31)」であること
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search", waiting until "load"[22m
+
+
+      29 |     }) => {
+      30 |       await page.setViewportSize({ width: 1920, height: 1080 });
+    > 31 |       await page.goto("/search");
+         |                  ^
+      32 |
+      33 |       const input = page.getByPlaceholder(
+      34 |         "検索 (例: キーワード since:2025-01-01 until:2025-12-31)",
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:31:18
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search", waiting until "load"[22m
+
+
+      29 |     }) => {
+      30 |       await page.setViewportSize({ width: 1920, height: 1080 });
+    > 31 |       await page.goto("/search");
+         |                  ^
+      32 |
+      33 |       const input = page.getByPlaceholder(
+      34 |         "検索 (例: キーワード since:2025-01-01 until:2025-12-31)",
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:31:18
+
+  28) [Desktop Chrome] › src/search.test.ts:39:5 › 検索ページ › 検索フォーム › 「since:YYYY-MM-DD で開始日、until:YYYY-MM-DD で終了日を指定できます」のヘルプテキストが表示されること
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search", waiting until "load"[22m
+
+
+      41 |     }) => {
+      42 |       await page.setViewportSize({ width: 1920, height: 1080 });
+    > 43 |       await page.goto("/search");
+         |                  ^
+      44 |
+      45 |       await expect(
+      46 |         page.getByText("since:YYYY-MM-DD で開始日、until:YYYY-MM-DD で終了日を指定できます"),
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:43:18
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search", waiting until "load"[22m
+
+
+      41 |     }) => {
+      42 |       await page.setViewportSize({ width: 1920, height: 1080 });
+    > 43 |       await page.goto("/search");
+         |                  ^
+      44 |
+      45 |       await expect(
+      46 |         page.getByText("since:YYYY-MM-DD で開始日、until:YYYY-MM-DD で終了日を指定できます"),
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:43:18
+
+  29) [Desktop Chrome] › src/search.test.ts:52:5 › 検索ページ › バリデーション › 空のまま検索するとエラーが表示される ────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search", waiting until "load"[22m
+
+
+      52 |     test("空のまま検索するとエラーが表示される", async ({ page }) => {
+      53 |       await page.setViewportSize({ width: 1920, height: 1080 });
+    > 54 |       await page.goto("/search");
+         |                  ^
+      55 |
+      56 |       await page.getByRole("button", { name: "検索" }).click();
+      57 |
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:54:18
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search", waiting until "load"[22m
+
+
+      52 |     test("空のまま検索するとエラーが表示される", async ({ page }) => {
+      53 |       await page.setViewportSize({ width: 1920, height: 1080 });
+    > 54 |       await page.goto("/search");
+         |                  ^
+      55 |
+      56 |       await page.getByRole("button", { name: "検索" }).click();
+      57 |
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:54:18
+
+  30) [Desktop Chrome] › src/search.test.ts:63:5 › 検索ページ › バリデーション › 不正な since: 日付形式でエラーが表示される ─────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search", waiting until "load"[22m
+
+
+      63 |     test("不正な since: 日付形式でエラーが表示される", async ({ page }) => {
+      64 |       await page.setViewportSize({ width: 1920, height: 1080 });
+    > 65 |       await page.goto("/search");
+         |                  ^
+      66 |
+      67 |       const input = page.getByPlaceholder(
+      68 |         "検索 (例: キーワード since:2025-01-01 until:2025-12-31)",
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:65:18
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search", waiting until "load"[22m
+
+
+      63 |     test("不正な since: 日付形式でエラーが表示される", async ({ page }) => {
+      64 |       await page.setViewportSize({ width: 1920, height: 1080 });
+    > 65 |       await page.goto("/search");
+         |                  ^
+      66 |
+      67 |       const input = page.getByPlaceholder(
+      68 |         "検索 (例: キーワード since:2025-01-01 until:2025-12-31)",
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:65:18
+
+  31) [Desktop Chrome] › src/search.test.ts:78:5 › 検索ページ › バリデーション › since: が until: より後の日付でエラーが表示される
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search", waiting until "load"[22m
+
+
+      78 |     test("since: が until: より後の日付でエラーが表示される", async ({ page }) => {
+      79 |       await page.setViewportSize({ width: 1920, height: 1080 });
+    > 80 |       await page.goto("/search");
+         |                  ^
+      81 |
+      82 |       const input = page.getByPlaceholder(
+      83 |         "検索 (例: キーワード since:2025-01-01 until:2025-12-31)",
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:80:18
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search", waiting until "load"[22m
+
+
+      78 |     test("since: が until: より後の日付でエラーが表示される", async ({ page }) => {
+      79 |       await page.setViewportSize({ width: 1920, height: 1080 });
+    > 80 |       await page.goto("/search");
+         |                  ^
+      81 |
+      82 |       const input = page.getByPlaceholder(
+      83 |         "検索 (例: キーワード since:2025-01-01 until:2025-12-31)",
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:80:18
+
+  32) [Desktop Chrome] › src/search.test.ts:94:3 › 検索ページ › 検索結果が表示される ──────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search?q=%E5%86%99%E7%9C%9F", waiting until "load"[22m
+
+
+      94 |   test("検索結果が表示される", async ({ page }) => {
+      95 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    > 96 |     await page.goto("/search?q=写真");
+         |                ^
+      97 |
+      98 |     await expect(page.locator("main article").first()).toBeVisible({ timeout: 30_000 });
+      99 |
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:96:16
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search?q=%E5%86%99%E7%9C%9F", waiting until "load"[22m
+
+
+      94 |   test("検索結果が表示される", async ({ page }) => {
+      95 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    > 96 |     await page.goto("/search?q=写真");
+         |                ^
+      97 |
+      98 |     await expect(page.locator("main article").first()).toBeVisible({ timeout: 30_000 });
+      99 |
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:96:16
+
+  33) [Desktop Chrome] › src/search.test.ts:114:3 › 検索ページ › キーワードと since:YYYY-MM-DD を組み合わせて検索できること ─
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search", waiting until "load"[22m
+
+
+      114 |   test("キーワードと since:YYYY-MM-DD を組み合わせて検索できること", async ({ page }) => {
+      115 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    > 116 |     await page.goto("/search");
+          |                ^
+      117 |
+      118 |     const input = page.getByPlaceholder("検索 (例: キーワード since:2025-01-01 until:2025-12-31)");
+      119 |     await input.fill("写真 since:2026-01-01");
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:116:16
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search", waiting until "load"[22m
+
+
+      114 |   test("キーワードと since:YYYY-MM-DD を組み合わせて検索できること", async ({ page }) => {
+      115 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    > 116 |     await page.goto("/search");
+          |                ^
+      117 |
+      118 |     const input = page.getByPlaceholder("検索 (例: キーワード since:2025-01-01 until:2025-12-31)");
+      119 |     await input.fill("写真 since:2026-01-01");
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:116:16
+
+  34) [Desktop Chrome] › src/search.test.ts:130:3 › 検索ページ › キーワードと since:YYYY-MM-DD until:YYYY-MM-DD を組み合わせて検索できること
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search", waiting until "load"[22m
+
+
+      132 |   }) => {
+      133 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    > 134 |     await page.goto("/search");
+          |                ^
+      135 |
+      136 |     const input = page.getByPlaceholder("検索 (例: キーワード since:2025-01-01 until:2025-12-31)");
+      137 |     await input.fill("写真 since:2026-01-01 until:2026-12-31");
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:134:16
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search", waiting until "load"[22m
+
+
+      132 |   }) => {
+      133 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    > 134 |     await page.goto("/search");
+          |                ^
+      135 |
+      136 |     const input = page.getByPlaceholder("検索 (例: キーワード since:2025-01-01 until:2025-12-31)");
+      137 |     await input.fill("写真 since:2026-01-01 until:2026-12-31");
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:134:16
+
+  35) [Desktop Chrome] › src/search.test.ts:181:5 › 検索ページ › ネガティブ判定 › ネガティブな検索クエリのとき、「どしたん話聞こうか?」のメッセージが表示される
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search?q=%E6%82%B2%E3%81%97%E3%81%84", waiting until "load"[22m
+
+
+      184 |       await page.setViewportSize({ width: 1920, height: 1080 });
+      185 |       // 「悲しい」: 辞書 rank=-0.999102 → 補正後スコア≈-0.1024 (< -0.1 → negative)
+    > 186 |       await page.goto("/search?q=悲しい");
+          |                  ^
+      187 |
+      188 |       await expect(page.getByText("どしたん話聞こうか?")).toBeVisible({ timeout: 30_000 });
+      189 |       await expect(page.getByText("言わなくてもいいけど、言ってもいいよ。")).toBeVisible();
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:186:18
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search?q=%E6%82%B2%E3%81%97%E3%81%84", waiting until "load"[22m
+
+
+      184 |       await page.setViewportSize({ width: 1920, height: 1080 });
+      185 |       // 「悲しい」: 辞書 rank=-0.999102 → 補正後スコア≈-0.1024 (< -0.1 → negative)
+    > 186 |       await page.goto("/search?q=悲しい");
+          |                  ^
+      187 |
+      188 |       await expect(page.getByText("どしたん話聞こうか?")).toBeVisible({ timeout: 30_000 });
+      189 |       await expect(page.getByText("言わなくてもいいけど、言ってもいいよ。")).toBeVisible();
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:186:18
+
+  36) [Desktop Chrome] › src/search.test.ts:205:5 › 検索ページ › ネガティブ判定 › 補正係数により境界値(-0.1)をわずかに下回る単語でネガティブ判定される
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search?q=%E6%83%91%E3%81%84", waiting until "load"[22m
+
+
+      208 |       await page.setViewportSize({ width: 1920, height: 1080 });
+      209 |       // 「惑い」: 辞書 rank=-0.976115 → 補正後スコア≈-0.100027 (< -0.1 → negative)
+    > 210 |       await page.goto("/search?q=惑い");
+          |                  ^
+      211 |
+      212 |       await expect(page.getByText("どしたん話聞こうか?")).toBeVisible({ timeout: 30_000 });
+      213 |     });
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:210:18
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search?q=%E6%83%91%E3%81%84", waiting until "load"[22m
+
+
+      208 |       await page.setViewportSize({ width: 1920, height: 1080 });
+      209 |       // 「惑い」: 辞書 rank=-0.976115 → 補正後スコア≈-0.100027 (< -0.1 → negative)
+    > 210 |       await page.goto("/search?q=惑い");
+          |                  ^
+      211 |
+      212 |       await expect(page.getByText("どしたん話聞こうか?")).toBeVisible({ timeout: 30_000 });
+      213 |     });
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:210:18
+
+  37) [Desktop Chrome] › src/search.test.ts:215:5 › 検索ページ › ネガティブ判定 › 補正係数により境界値(-0.1)をわずかに上回る単語ではネガティブ判定されない
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search?q=%E6%B2%A1%E8%90%BD", waiting until "load"[22m
+
+
+      218 |       await page.setViewportSize({ width: 1920, height: 1080 });
+      219 |       // 「没落」: 辞書 rank=-0.975572 → 補正後スコア≈-0.099972 (> -0.1 → neutral)
+    > 220 |       await page.goto("/search?q=没落");
+          |                  ^
+      221 |
+      222 |       await expect(page.getByText("検索結果が見つかりませんでした")).toBeVisible({
+      223 |         timeout: 30_000,
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:220:18
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search?q=%E6%B2%A1%E8%90%BD", waiting until "load"[22m
+
+
+      218 |       await page.setViewportSize({ width: 1920, height: 1080 });
+      219 |       // 「没落」: 辞書 rank=-0.975572 → 補正後スコア≈-0.099972 (> -0.1 → neutral)
+    > 220 |       await page.goto("/search?q=没落");
+          |                  ^
+      221 |
+      222 |       await expect(page.getByText("検索結果が見つかりませんでした")).toBeVisible({
+      223 |         timeout: 30_000,
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:220:18
+
+  38) [Desktop Chrome] › src/search.test.ts:228:5 › 検索ページ › ネガティブ判定 › 直感的にネガティブでも補正係数により中立判定される単語がある
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search?q=%E5%AB%8C%E3%81%84", waiting until "load"[22m
+
+
+      230 |       // 「嫌い」: 辞書 rank=-0.629629 → 補正後スコア≈-0.0645 (> -0.1 → neutral)
+      231 |       // ネガティブ辞書が多いため補正係数で緩和され、中立と判定される
+    > 232 |       await page.goto("/search?q=嫌い");
+          |                  ^
+      233 |
+      234 |       await expect(page.getByText("検索結果が見つかりませんでした")).toBeVisible({
+      235 |         timeout: 30_000,
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:232:18
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search?q=%E5%AB%8C%E3%81%84", waiting until "load"[22m
+
+
+      230 |       // 「嫌い」: 辞書 rank=-0.629629 → 補正後スコア≈-0.0645 (> -0.1 → neutral)
+      231 |       // ネガティブ辞書が多いため補正係数で緩和され、中立と判定される
+    > 232 |       await page.goto("/search?q=嫌い");
+          |                  ^
+      233 |
+      234 |       await expect(page.getByText("検索結果が見つかりませんでした")).toBeVisible({
+      235 |         timeout: 30_000,
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:232:18
+
+  39) [Desktop Chrome] › src/search.test.ts:241:3 › 検索ページ › 検索結果のタイムラインが無限スクロールで追加読み込みされること ────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search?q=%E5%86%99%E7%9C%9F", waiting until "load"[22m
+
+
+      241 |   test("検索結果のタイムラインが無限スクロールで追加読み込みされること", async ({ page }) => {
+      242 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    > 243 |     await page.goto("/search?q=写真");
+          |                ^
+      244 |
+      245 |     await expect(page.locator("main article").first()).toBeVisible({ timeout: 30_000 });
+      246 |
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:243:16
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/search?q=%E5%86%99%E7%9C%9F", waiting until "load"[22m
+
+
+      241 |   test("検索結果のタイムラインが無限スクロールで追加読み込みされること", async ({ page }) => {
+      242 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    > 243 |     await page.goto("/search?q=写真");
+          |                ^
+      244 |
+      245 |     await expect(page.locator("main article").first()).toBeVisible({ timeout: 30_000 });
+      246 |
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/search.test.ts:243:16
+
+  40) [Desktop Chrome] › src/terms.test.ts:11:3 › 利用規約 › タイトルが「利用規約 - CaX」 ─────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/terms", waiting until "load"[22m
+
+
+       6 |   test.beforeEach(async ({ page }) => {
+       7 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    >  8 |     await page.goto("/terms");
+         |                ^
+       9 |   });
+      10 |
+      11 |   test("タイトルが「利用規約 - CaX」", async ({ page }) => {
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/terms.test.ts:8:16
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/terms", waiting until "load"[22m
+
+
+       6 |   test.beforeEach(async ({ page }) => {
+       7 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    >  8 |     await page.goto("/terms");
+         |                ^
+       9 |   });
+      10 |
+      11 |   test("タイトルが「利用規約 - CaX」", async ({ page }) => {
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/terms.test.ts:8:16
+
+  41) [Desktop Chrome] › src/user-profile.test.ts:17:3 › ユーザー詳細 › ページ上部がユーザーサムネイル画像の色を抽出した色になっている ──
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/users/o6yq16leo", waiting until "load"[22m
+
+
+      16 |
+      17 |   test("ページ上部がユーザーサムネイル画像の色を抽出した色になっている", async ({ page }) => {
+    > 18 |     await page.goto("/users/o6yq16leo");
+         |                ^
+      19 |
+      20 |     // VRT: ユーザー詳細（無限スクロールがあるため viewport のみ）
+      21 |     await waitForVisibleMedia(page);
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/user-profile.test.ts:18:16
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.waitForLoadState: Timeout 30000ms exceeded.
+
+       at utils.ts:23
+
+      21 | export async function waitForPageToLoad(page: Page): Promise<void> {
+      22 |   // ネットワークがidleになるまで待つ
+    > 23 |   await page.waitForLoadState("networkidle", { timeout: 30_000 });
+         |              ^
+      24 |   // ページの表示を安定させるため、10秒待つ
+      25 |   await page.waitForTimeout(10_000);
+      26 | }
+        at waitForPageToLoad (/Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/utils.ts:23:14)
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/user-profile.test.ts:22:11
+
+  42) [Desktop Chrome] › src/home.test.ts:63:3 › 404ページ › 存在しないページで404が表示される ───────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/this-page-does-not-exist", waiting until "load"[22m
+
+
+      63 |   test("存在しないページで404が表示される", async ({ page }) => {
+      64 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    > 65 |     await page.goto("/this-page-does-not-exist");
+         |                ^
+      66 |     await scrollEntire(page);
+      67 |
+      68 |     // VRT: 404
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/home.test.ts:65:16
+
+  43) [Desktop Chrome] › src/terms.test.ts:15:3 › 利用規約 › ページが正しく表示されている ────────────────────────────
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/terms", waiting until "load"[22m
+
+
+       6 |   test.beforeEach(async ({ page }) => {
+       7 |     await page.setViewportSize({ width: 1920, height: 1080 });
+    >  8 |     await page.goto("/terms");
+         |                ^
+       9 |   });
+      10 |
+      11 |   test("タイトルが「利用規約 - CaX」", async ({ page }) => {
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/terms.test.ts:8:16
+
+  44) [Desktop Chrome] › src/user-profile.test.ts:10:3 › ユーザー詳細 › タイトルが「{ユーザー名} さんのタイムライン - CaX」 ───
+
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "https://pr-251-web-speed-hackathon-2026.fly.dev/users/o6yq16leo", waiting until "load"[22m
+
+
+       9 |
+      10 |   test("タイトルが「{ユーザー名} さんのタイムライン - CaX」", async ({ page }) => {
+    > 11 |     await page.goto("/users/o6yq16leo");
+         |                ^
+      12 |     await expect(page).toHaveTitle(/さんのタイムライン - CaX/, {
+      13 |       timeout: 30_000,
+      14 |     });
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/user-profile.test.ts:11:16
+
+  41 failed
+    [Desktop Chrome] › src/crok-chat.test.ts:13:3 › Crok AIチャット › サジェスト候補が表示される ────────────────────
+    [Desktop Chrome] › src/crok-chat.test.ts:42:3 › Crok AIチャット › 質問を送信するとAIの応答が表示される ──────────────
+    [Desktop Chrome] › src/dm.test.ts:10:3 › DM一覧 › DM一覧が表示される ─────────────────────────────────────
+    [Desktop Chrome] › src/dm.test.ts:26:3 › DM一覧 › DM一覧が最後にやり取りをした順にソートされる ────────────────────────
+    [Desktop Chrome] › src/dm.test.ts:44:3 › DM一覧 › 新規DM開始モーダルが初期仕様通りにバリデーションされること ─────────────────
+    [Desktop Chrome] › src/dm.test.ts:91:3 › DM一覧 › 送信ボタンをクリックすると、DM詳細画面に遷移すること ────────────────────
+    [Desktop Chrome] › src/dm.test.ts:120:3 › DM一覧 › DM詳細画面でメッセージが古い順に表示されること ──────────────────────
+    [Desktop Chrome] › src/dm.test.ts:141:3 › DM一覧 › Enterでメッセージを送信・Shift+Enterで改行できること ────────────
+    [Desktop Chrome] › src/dm.test.ts:164:3 › DM一覧 › 相手が入力中の場合、入力中のインジケータが表示されること ──────────────────
+    [Desktop Chrome] › src/dm.test.ts:187:3 › DM一覧 › メッセージ・既読がリアルタイムで更新されること ───────────────────────
+    [Desktop Chrome] › src/home.test.ts:11:3 › ホーム › タイムラインが表示される ──────────────────────────────────
+    [Desktop Chrome] › src/home.test.ts:26:3 › ホーム › タイトルが「タイムライン - CaX」 ───────────────────────────
+    [Desktop Chrome] › src/home.test.ts:30:3 › ホーム › 動画が自動再生される ────────────────────────────────────
+    [Desktop Chrome] › src/home.test.ts:38:3 › ホーム › 音声の波形が表示される ───────────────────────────────────
+    [Desktop Chrome] › src/home.test.ts:43:3 › ホーム › 写真が枠を覆う形で拡縮している ───────────────────────────────
+    [Desktop Chrome] › src/home.test.ts:53:3 › ホーム › 投稿クリック → 投稿詳細に遷移する ────────────────────────────
+    [Desktop Chrome] › src/post-detail.test.ts:10:3 › 投稿詳細 › 投稿が表示される ──────────────────────────────
+    [Desktop Chrome] › src/post-detail.test.ts:44:3 › 投稿詳細 - 動画 › 動画が自動再生され、クリックで一時停止・再生を切り替えられる ───
+    [Desktop Chrome] › src/post-detail.test.ts:74:3 › 投稿詳細 - 音声 › 音声の波形が表示され、再生ボタンで切り替えられる ─────────
+    [Desktop Chrome] › src/post-detail.test.ts:106:3 › 投稿詳細 - 写真 › 写真がcover拡縮し、画像サイズが著しく荒くない ───────
+    [Desktop Chrome] › src/posting.test.ts:13:3 › 投稿機能 › テキストの投稿ができる ───────────────────────────────
+    [Desktop Chrome] › src/posting.test.ts:41:3 › 投稿機能 › 画像の投稿ができる ─────────────────────────────────
+    [Desktop Chrome] › src/responsive.test.ts:6:3 › レスポンシブ › スマホ表示で表示が崩れない ─────────────────────────
+    [Desktop Chrome] › src/responsive.test.ts:30:3 › レスポンシブ › デスクトップ表示で表示が崩れない ─────────────────────
+    [Desktop Chrome] › src/search.test.ts:6:3 › 検索ページ › 検索ページが表示される ────────────────────────────────
+    [Desktop Chrome] › src/search.test.ts:20:3 › 検索ページ › タイトルが「検索 - CaX」となること ──────────────────────
+    [Desktop Chrome] › src/search.test.ts:27:5 › 検索ページ › 検索フォーム › 入力欄のプレースホルダーが「検索 (例: キーワード since:2025-01-01 until:2025-12-31)」であること
+    [Desktop Chrome] › src/search.test.ts:39:5 › 検索ページ › 検索フォーム › 「since:YYYY-MM-DD で開始日、until:YYYY-MM-DD で終了日を指定できます」のヘルプテキストが表示されること
+    [Desktop Chrome] › src/search.test.ts:52:5 › 検索ページ › バリデーション › 空のまま検索するとエラーが表示される ──────────────
+    [Desktop Chrome] › src/search.test.ts:63:5 › 検索ページ › バリデーション › 不正な since: 日付形式でエラーが表示される ───────
+    [Desktop Chrome] › src/search.test.ts:78:5 › 検索ページ › バリデーション › since: が until: より後の日付でエラーが表示される
+    [Desktop Chrome] › src/search.test.ts:94:3 › 検索ページ › 検索結果が表示される ────────────────────────────────
+    [Desktop Chrome] › src/search.test.ts:114:3 › 検索ページ › キーワードと since:YYYY-MM-DD を組み合わせて検索できること ───
+    [Desktop Chrome] › src/search.test.ts:130:3 › 検索ページ › キーワードと since:YYYY-MM-DD until:YYYY-MM-DD を組み合わせて検索できること
+    [Desktop Chrome] › src/search.test.ts:181:5 › 検索ページ › ネガティブ判定 › ネガティブな検索クエリのとき、「どしたん話聞こうか?」のメッセージが表示される
+    [Desktop Chrome] › src/search.test.ts:205:5 › 検索ページ › ネガティブ判定 › 補正係数により境界値(-0.1)をわずかに下回る単語でネガティブ判定される
+    [Desktop Chrome] › src/search.test.ts:215:5 › 検索ページ › ネガティブ判定 › 補正係数により境界値(-0.1)をわずかに上回る単語ではネガティブ判定されない
+    [Desktop Chrome] › src/search.test.ts:228:5 › 検索ページ › ネガティブ判定 › 直感的にネガティブでも補正係数により中立判定される単語がある ─
+    [Desktop Chrome] › src/search.test.ts:241:3 › 検索ページ › 検索結果のタイムラインが無限スクロールで追加読み込みされること ──────────
+    [Desktop Chrome] › src/terms.test.ts:11:3 › 利用規約 › タイトルが「利用規約 - CaX」 ───────────────────────────
+    [Desktop Chrome] › src/user-profile.test.ts:17:3 › ユーザー詳細 › ページ上部がユーザーサムネイル画像の色を抽出した色になっている ────
+  3 flaky
+    [Desktop Chrome] › src/home.test.ts:63:3 › 404ページ › 存在しないページで404が表示される ─────────────────────────
+    [Desktop Chrome] › src/terms.test.ts:15:3 › 利用規約 › ページが正しく表示されている ──────────────────────────────
+    [Desktop Chrome] › src/user-profile.test.ts:10:3 › ユーザー詳細 › タイトルが「{ユーザー名} さんのタイムライン - CaX」 ─────
+  8 passed (17.1m)
+ ELIFECYCLE  Command failed with exit code 1.

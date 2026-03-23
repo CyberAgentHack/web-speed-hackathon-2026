@@ -1,0 +1,131 @@
+
+> @web-speed-hackathon-2026/e2e@0.0.1 test:update /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e
+> playwright test --update-snapshots
+
+
+Running 52 tests using 5 workers
+
+  ✓  1 [Desktop Chrome] › src/auth.test.ts:80:3 › サインイン・新規登録 › サインインに失敗するとエラーが表示される (5.0s)
+  ✓  4 [Desktop Chrome] › src/auth.test.ts:29:3 › サインイン・新規登録 › 日本語ユーザー名で登録するとエラーが表示される (5.0s)
+  ✓  2 [Desktop Chrome] › src/auth.test.ts:60:3 › サインイン・新規登録 › 未入力の場合はボタンが無効化されている (5.1s)
+  ✓  5 [Desktop Chrome] › src/auth.test.ts:45:3 › サインイン・新規登録 › 既に使われているユーザー名で登録するとエラーが表示される (5.1s)
+  ✓  3 [Desktop Chrome] › src/auth.test.ts:13:3 › サインイン・新規登録 › 新規登録ができる (5.2s)
+  ✓  8 [Desktop Chrome] › src/dm.test.ts:10:3 › DM一覧 › DM一覧が表示される (5.1s)
+  ✓  9 [Desktop Chrome] › src/dm.test.ts:20:3 › DM一覧 › DM一覧が最後にやり取りをした順にソートされる (8.1s)
+  ✓  6 [Desktop Chrome] › src/crok-chat.test.ts:13:3 › Crok AIチャット › サジェスト候補が表示される (15.5s)
+  ✘  10 [Desktop Chrome] › src/dm.test.ts:38:3 › DM一覧 › 新規DM開始モーダルが初期仕様通りにバリデーションされること (43.0s)
+  ✓  12 [Desktop Chrome] › src/dm.test.ts:111:3 › DM一覧 › DM詳細画面でメッセージが古い順に表示されること (38.5s)
+  ✘  11 [Desktop Chrome] › src/dm.test.ts:83:3 › DM一覧 › 送信ボタンをクリックすると、DM詳細画面に遷移すること (45.2s)
+  ✓  14 [Desktop Chrome] › src/dm.test.ts:38:3 › DM一覧 › 新規DM開始モーダルが初期仕様通りにバリデーションされること (retry #1) (32.5s)
+  ✓  16 [Desktop Chrome] › src/dm.test.ts:83:3 › DM一覧 › 送信ボタンをクリックすると、DM詳細画面に遷移すること (retry #1) (29.1s)
+  ✓  15 [Desktop Chrome] › src/dm.test.ts:155:3 › DM一覧 › 相手が入力中の場合、入力中のインジケータが表示されること (36.4s)
+  ✘  13 [Desktop Chrome] › src/dm.test.ts:132:3 › DM一覧 › Enterでメッセージを送信・Shift+Enterで改行できること (1.2m)
+  ✓  19 [Desktop Chrome] › src/home.test.ts:25:3 › ホーム › タイトルが「タイムライン - CaX」 (4.7s)
+  ✓  18 [Desktop Chrome] › src/home.test.ts:11:3 › ホーム › タイムラインが表示される (30.3s)
+  ✓  21 [Desktop Chrome] › src/home.test.ts:29:3 › ホーム › 動画が自動再生される (23.7s)
+  ✓  22 [Desktop Chrome] › src/home.test.ts:39:3 › ホーム › 音声の波形が表示される (12.0s)
+  ✓  24 [Desktop Chrome] › src/home.test.ts:54:3 › ホーム › 投稿クリック → 投稿詳細に遷移する (8.4s)
+  ✓  23 [Desktop Chrome] › src/home.test.ts:44:3 › ホーム › 写真が枠を覆う形で拡縮している (22.9s)
+  ✓  25 [Desktop Chrome] › src/home.test.ts:64:3 › 404ページ › 存在しないページで404が表示される (5.7s)
+  ✓  26 [Desktop Chrome] › src/post-detail.test.ts:10:3 › 投稿詳細 › 投稿が表示される (7.5s)
+  ✓  27 [Desktop Chrome] › src/post-detail.test.ts:27:3 › 投稿詳細 › タイトルが「{ユーザー名} さんのつぶやき - CaX」 (7.0s)
+  ✓  17 [Desktop Chrome] › src/dm.test.ts:178:3 › DM一覧 › メッセージ・既読がリアルタイムで更新されること (1.2m)
+  ✓  7 [Desktop Chrome] › src/crok-chat.test.ts:40:3 › Crok AIチャット › 質問を送信するとAIの応答が表示される (2.6m)
+  ✓  20 [Desktop Chrome] › src/dm.test.ts:132:3 › DM一覧 › Enterでメッセージを送信・Shift+Enterで改行できること (retry #1) (1.3m)
+  ✓  31 [Desktop Chrome] › src/posting.test.ts:13:3 › 投稿機能 › テキストの投稿ができる (11.3s)
+  ✓  28 [Desktop Chrome] › src/post-detail.test.ts:43:3 › 投稿詳細 - 動画 › 動画が自動再生され、クリックで一時停止・再生を切り替えられる (31.4s)
+  ✓  32 [Desktop Chrome] › src/posting.test.ts:40:3 › 投稿機能 › 画像の投稿ができる (9.9s)
+  ✓  29 [Desktop Chrome] › src/post-detail.test.ts:73:3 › 投稿詳細 - 音声 › 音声の波形が表示され、再生ボタンで切り替えられる (30.4s)
+  ✓  36 [Desktop Chrome] › src/search.test.ts:19:3 › 検索ページ › タイトルが「検索 - CaX」となること (7.0s)
+  ✓  35 [Desktop Chrome] › src/search.test.ts:6:3 › 検索ページ › 検索ページが表示される (9.5s)
+  ✓  30 [Desktop Chrome] › src/post-detail.test.ts:104:3 › 投稿詳細 - 写真 › 写真がcover拡縮し、画像サイズが著しく荒くない (32.4s)
+  ✓  37 [Desktop Chrome] › src/search.test.ts:26:5 › 検索ページ › 検索フォーム › 入力欄のプレースホルダーが「検索 (例: キーワード since:2025-01-01 until:2025-12-31)」であること (4.2s)
+  ✓  38 [Desktop Chrome] › src/search.test.ts:38:5 › 検索ページ › 検索フォーム › 「since:YYYY-MM-DD で開始日、until:YYYY-MM-DD で終了日を指定できます」のヘルプテキストが表示されること (4.1s)
+  ✓  39 [Desktop Chrome] › src/search.test.ts:51:5 › 検索ページ › バリデーション › 空のまま検索するとエラーが表示される (5.2s)
+  ✓  40 [Desktop Chrome] › src/search.test.ts:62:5 › 検索ページ › バリデーション › 不正な since: 日付形式でエラーが表示される (5.0s)
+  ✓  41 [Desktop Chrome] › src/search.test.ts:77:5 › 検索ページ › バリデーション › since: が until: より後の日付でエラーが表示される (6.3s)
+  ✓  33 [Desktop Chrome] › src/responsive.test.ts:6:3 › レスポンシブ › スマホ表示で表示が崩れない (25.1s)
+  ✓  43 [Desktop Chrome] › src/search.test.ts:112:3 › 検索ページ › キーワードと since:YYYY-MM-DD を組み合わせて検索できること (11.7s)
+  ✓  45 [Desktop Chrome] › src/search.test.ts:147:3 › 検索ページ › 検索結果が見つからない場合、「検索結果が見つかりませんでした」と表示されること (8.8s)
+  ✓  34 [Desktop Chrome] › src/responsive.test.ts:29:3 › レスポンシブ › デスクトップ表示で表示が崩れない (30.3s)
+  ✓  44 [Desktop Chrome] › src/search.test.ts:128:3 › 検索ページ › キーワードと since:YYYY-MM-DD until:YYYY-MM-DD を組み合わせて検索できること (10.0s)
+  ✓  46 [Desktop Chrome] › src/search.test.ts:179:5 › 検索ページ › ネガティブ判定 › ネガティブな検索クエリのとき、「どしたん話聞こうか?」のメッセージが表示される (4.9s)
+  ✓  47 [Desktop Chrome] › src/search.test.ts:190:5 › 検索ページ › ネガティブ判定 › ポジティブな検索クエリのとき、「どしたん話聞こうか?」のメッセージが表示されない (4.5s)
+  ✓  48 [Desktop Chrome] › src/search.test.ts:203:5 › 検索ページ › ネガティブ判定 › 補正係数により境界値(-0.1)をわずかに下回る単語でネガティブ判定される (5.1s)
+  ✓  49 [Desktop Chrome] › src/search.test.ts:213:5 › 検索ページ › ネガティブ判定 › 補正係数により境界値(-0.1)をわずかに上回る単語ではネガティブ判定されない (4.6s)
+  ✓  50 [Desktop Chrome] › src/search.test.ts:226:5 › 検索ページ › ネガティブ判定 › 直感的にネガティブでも補正係数により中立判定される単語がある (4.0s)
+  ✓  52 [Desktop Chrome] › src/terms.test.ts:11:3 › 利用規約 › タイトルが「利用規約 - CaX」 (3.7s)
+  ✓  51 [Desktop Chrome] › src/search.test.ts:239:3 › 検索ページ › 検索結果のタイムラインが無限スクロールで追加読み込みされること (5.9s)
+  ✓  54 [Desktop Chrome] › src/user-profile.test.ts:10:3 › ユーザー詳細 › タイトルが「{ユーザー名} さんのタイムライン - CaX」 (3.5s)
+  ✓  42 [Desktop Chrome] › src/search.test.ts:93:3 › 検索ページ › 検索結果が表示される (25.9s)
+  ✓  53 [Desktop Chrome] › src/terms.test.ts:15:3 › 利用規約 › ページが正しく表示されている (13.0s)
+/Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/user-profile.test.ts-snapshots/user-profile-ユーザー詳細-Desktop-Chrome-darwin.png is re-generated, writing actual.
+  ✓  55 [Desktop Chrome] › src/user-profile.test.ts:17:3 › ユーザー詳細 › ページ上部がユーザーサムネイル画像の色を抽出した色になっている (14.6s)
+
+
+  1) [Desktop Chrome] › src/dm.test.ts:38:3 › DM一覧 › 新規DM開始モーダルが初期仕様通りにバリデーションされること ────────────────
+
+    TimeoutError: locator.pressSequentially: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('dialog').getByRole('textbox', { name: 'ユーザー名' })[22m
+    [2m    - locator resolved to <input value="" id="_r_g_" name="username" placeholder="username" class="flex-1 placeholder-cax-text-subtle focus:outline-none"/>[22m
+    [2m  - elementHandle.type("user_does_not_exist")[22m
+
+
+      68 |
+      69 |     await usernameInput.click();
+    > 70 |     await usernameInput.pressSequentially("user_does_not_exist", { delay: 10 });
+         |                         ^
+      71 |     await usernameInput.blur();
+      72 |     await expect(submitButton).toBeEnabled();
+      73 |     await submitButton.click();
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/dm.test.ts:70:25
+
+  2) [Desktop Chrome] › src/dm.test.ts:83:3 › DM一覧 › 送信ボタンをクリックすると、DM詳細画面に遷移すること ───────────────────
+
+    TimeoutError: locator.click: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('dialog').getByRole('button', { name: 'DMを開始' })[22m
+    [2m    - locator resolved to <button type="submit" class="flex items-center justify-center gap-2 rounded-full px-4 py-2 border disabled:opacity-50 disabled:cursor-not-allowed bg-cax-brand text-cax-surface-raised hover:bg-cax-brand-strong border-transparent">…</button>[22m
+    [2m  - attempting click action[22m
+    [2m    - waiting for element to be visible, enabled and stable[22m
+    [2m    - element is visible, enabled and stable[22m
+    [2m    - scrolling into view if needed[22m
+    [2m    - done scrolling[22m
+    [2m    - performing click action[22m
+    [2m    - click action done[22m
+    [2m    - waiting for scheduled navigations to finish[22m
+
+
+       97 |     await usernameInput.pressSequentially("p72k8qi1c3", { delay: 10 });
+       98 |     await usernameInput.blur();
+    >  99 |     await submitButton.click();
+          |                        ^
+      100 |
+      101 |     await page.waitForURL("**/dm/*", { timeout: 10 * 1000 });
+      102 |
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/dm.test.ts:99:24
+
+  3) [Desktop Chrome] › src/dm.test.ts:132:3 › DM一覧 › Enterでメッセージを送信・Shift+Enterで改行できること ───────────
+
+    TimeoutError: locator.pressSequentially: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('textbox', { name: '内容' })[22m
+    [2m    - locator resolved to <textarea rows="1" id="_r_9_" class="border-cax-border placeholder-cax-text-subtle focus:outline-cax-brand w-full resize-none rounded-xl border px-3 py-2 focus:outline-2 focus:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"></textarea>[22m
+    [2m  - elementHandle.type("【2026-03-20T10:18:13.639Z】")[22m
+
+
+      142 |
+      143 |     await messageInput.click();
+    > 144 |     await messageInput.pressSequentially(now, { delay: 10 });
+          |                        ^
+      145 |     await page.keyboard.press("Shift+Enter");
+      146 |     await messageInput.pressSequentially("こんにちは", { delay: 10 });
+      147 |     await page.keyboard.press("Shift+Enter");
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/dm.test.ts:144:24
+
+  3 flaky
+    [Desktop Chrome] › src/dm.test.ts:38:3 › DM一覧 › 新規DM開始モーダルが初期仕様通りにバリデーションされること ─────────────────
+    [Desktop Chrome] › src/dm.test.ts:83:3 › DM一覧 › 送信ボタンをクリックすると、DM詳細画面に遷移すること ────────────────────
+    [Desktop Chrome] › src/dm.test.ts:132:3 › DM一覧 › Enterでメッセージを送信・Shift+Enterで改行できること ────────────
+  49 passed (3.9m)

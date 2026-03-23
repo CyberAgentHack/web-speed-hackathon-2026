@@ -1,0 +1,4952 @@
+{
+  "lighthouseVersion": "13.0.2",
+  "requestedUrl": "https://pr-251-web-speed-hackathon-2026.fly.dev/",
+  "mainDocumentUrl": "https://pr-251-web-speed-hackathon-2026.fly.dev/",
+  "finalDisplayedUrl": "https://pr-251-web-speed-hackathon-2026.fly.dev/",
+  "finalUrl": "https://pr-251-web-speed-hackathon-2026.fly.dev/",
+  "fetchTime": "2026-03-21T04:14:20.199Z",
+  "gatherMode": "navigation",
+  "runtimeError": {
+    "code": "NO_FCP",
+    "message": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+    "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+    "artifactKey": "PageLoadError"
+  },
+  "runWarnings": [
+    "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。"
+  ],
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+  "environment": {
+    "hostUserAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+    "benchmarkIndex": 3127,
+    "credits": {}
+  },
+  "audits": {
+    "is-on-https": {
+      "id": "is-on-https",
+      "title": "HTTPS を使用しています",
+      "description": "すべてのサイトは、機密性の高い情報を扱っていない場合でも、HTTPS で保護する必要があります。たとえば、[混合コンテンツ](https://developers.google.com/web/fundamentals/security/prevent-mixed-content/what-is-mixed-content)（HTTPS で送信されたリクエストに対して一部のリソースを HTTP で読み込む）などは使用しないようにします。HTTPS は、侵入者があなたのアプリとユーザー間の通信を改ざんしたり、傍受したりするのを防ぎます。HTTPS は、HTTP/2 や多くの新しいウェブ プラットフォーム API を使用するための前提条件となります。[HTTPS についての詳細](https://developer.chrome.com/docs/lighthouse/pwa/is-on-https/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "redirects-http": {
+      "id": "redirects-http",
+      "title": "HTTP トラフィックは HTTPS にリダイレクトされます",
+      "description": "すべてのユーザーに安全なウェブ機能を提供できるように、すべての HTTP トラフィックが HTTPS にリダイレクトされることを確認してください。[詳細](https://developer.chrome.com/docs/lighthouse/pwa/redirects-http/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "first-contentful-paint": {
+      "id": "first-contentful-paint",
+      "title": "First Contentful Paint",
+      "description": "First Contentful Paint は、テキストまたは画像が初めてペイントされるまでにかかった時間です。[First Contentful Paint の指標の詳細](https://developer.chrome.com/docs/lighthouse/performance/first-contentful-paint/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "largest-contentful-paint": {
+      "id": "largest-contentful-paint",
+      "title": "Largest Contentful Paint",
+      "description": "Largest Contentful Paint は、最も大きなテキストまたは画像が描画されるまでにかかった時間です。[Largest Contentful Paint 指標の詳細](https://developer.chrome.com/docs/lighthouse/performance/lighthouse-largest-contentful-paint/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "speed-index": {
+      "id": "speed-index",
+      "title": "Speed Index",
+      "description": "Speed Index は、ページのコンテンツが取り込まれて表示される速さを表します。[Speed Index の指標の詳細](https://developer.chrome.com/docs/lighthouse/performance/speed-index/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "screenshot-thumbnails": {
+      "id": "screenshot-thumbnails",
+      "title": "Screenshot Thumbnails",
+      "description": "This is what the load of your site looked like.",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "final-screenshot": {
+      "id": "final-screenshot",
+      "title": "Final Screenshot",
+      "description": "The last screenshot captured of the pageload.",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "total-blocking-time": {
+      "id": "total-blocking-time",
+      "title": "Total Blocking Time",
+      "description": "タスクの処理時間が 50 ミリ秒を上回った場合の、コンテンツの初回ペイントから操作可能になるまでの合計時間（ミリ秒）です。[Total Blocking Time の指標の詳細](https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "max-potential-fid": {
+      "id": "max-potential-fid",
+      "title": "初回入力遅延の最大推定時間",
+      "description": "初回入力遅延の最大推定時間は、ユーザーが最も長いタスクを行うのにかかると推定される時間です。[Maximum Potential First Input Delay 指標の詳細](https://developer.chrome.com/docs/lighthouse/performance/lighthouse-max-potential-fid/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "cumulative-layout-shift": {
+      "id": "cumulative-layout-shift",
+      "title": "Cumulative Layout Shift",
+      "description": "Cumulative Layout Shift はビューポート内の視覚要素がどのくらい移動しているかを測定する指標です。[Cumulative Layout Shift 指標の詳細](https://web.dev/articles/cls)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "errors-in-console": {
+      "id": "errors-in-console",
+      "title": "コンソールに記録されたブラウザのエラーはありません",
+      "description": "コンソールに記録されたエラーは未解決の問題を表します。これらはネットワーク リクエストの失敗や他のブラウザの問題が原因で表示される可能性があります。[コンソールの診断監査でのこのエラーの詳細](https://developer.chrome.com/docs/lighthouse/best-practices/errors-in-console/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "server-response-time": {
+      "id": "server-response-time",
+      "title": "最初のサーバー応答時間は問題ない速さです",
+      "description": "メイン ドキュメントのサーバー応答時間は、他のすべてのリクエストに影響するため、速くする必要があります。[Time to First Byte 指標の詳細](https://developer.chrome.com/docs/lighthouse/performance/time-to-first-byte/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 1
+    },
+    "interactive": {
+      "id": "interactive",
+      "title": "Time to Interactive",
+      "description": "操作可能になるまでの時間とは、ページが完全に操作可能になるのに要する時間です。[操作可能になるまでの時間の指標についての詳細](https://developer.chrome.com/docs/lighthouse/performance/interactive/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "user-timings": {
+      "id": "user-timings",
+      "title": "カスタム速度の記録と計測",
+      "description": "User Timing API を使用してアプリを計測可能にし、主要なユーザー エクスペリエンスでのアプリの実際のパフォーマンスを測定できるようにしてください。[カスタム速度マークの詳細](https://developer.chrome.com/docs/lighthouse/performance/user-timings/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 2
+    },
+    "redirects": {
+      "id": "redirects",
+      "title": "複数のページ リダイレクトの回避",
+      "description": "リダイレクトを行うと、ページの読み込みにさらに時間がかかる可能性があります。[ページ リダイレクトの回避方法の詳細](https://developer.chrome.com/docs/lighthouse/performance/redirects/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 2
+    },
+    "image-aspect-ratio": {
+      "id": "image-aspect-ratio",
+      "title": "正しいアスペクト比の画像が表示されています",
+      "description": "画像は本来のアスペクト比で表示する必要があります。[画像のアスペクト比についての詳細](https://developer.chrome.com/docs/lighthouse/best-practices/image-aspect-ratio/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "image-size-responsive": {
+      "id": "image-size-responsive",
+      "title": "画像が適切な解像度で表示されています",
+      "description": "画像をできるだけ鮮明に表示するには、画像の実サイズを、表示するサイズとピクセル比に比例させる必要があります。[レスポンシブな画像の表示方法の詳細](https://web.dev/articles/serve-responsive-images)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "deprecations": {
+      "id": "deprecations",
+      "title": "サポートを終了した API は使用されていません",
+      "description": "非推奨の API は最終的にブラウザから削除されます。[非推奨 API の詳細](https://developer.chrome.com/docs/lighthouse/best-practices/deprecations/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "third-party-cookies": {
+      "id": "third-party-cookies",
+      "title": "サードパーティ Cookie は使用されていません",
+      "description": "サードパーティ Cookie は、状況によってはブロックされることがあります。[サードパーティ Cookie の制限に備える方法について](https://privacysandbox.google.com/cookies/prepare/overview)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "mainthread-work-breakdown": {
+      "id": "mainthread-work-breakdown",
+      "title": "メインスレッド処理の最小化",
+      "description": "JavaScript の解析、コンパイル、実行にかかる時間を短縮することをご検討ください。JavaScript ペイロードのサイズを抑えるなどの方法があります。[メインスレッドでの作業を最小限に抑える方法の詳細](https://developer.chrome.com/docs/lighthouse/performance/mainthread-work-breakdown/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 1
+    },
+    "bootup-time": {
+      "id": "bootup-time",
+      "title": "JavaScript の実行にかかる時間",
+      "description": "JavaScript の解析、コンパイル、実行にかかる時間の短縮をご検討ください。JavaScript ペイロードのサイズを抑えるなどの方法があります。[JavaScript の実行時間を短縮する方法の詳細](https://developer.chrome.com/docs/lighthouse/performance/bootup-time/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 1
+    },
+    "diagnostics": {
+      "id": "diagnostics",
+      "title": "Diagnostics",
+      "description": "Collection of useful page vitals.",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "network-requests": {
+      "id": "network-requests",
+      "title": "Network Requests",
+      "description": "Lists the network requests that were made during page load.",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "network-rtt": {
+      "id": "network-rtt",
+      "title": "ネットワークのラウンドトリップ時間",
+      "description": "ネットワークのラウンド トリップ時間（RTT）はパフォーマンスに大きく影響します。オリジンへの RTT が高い場合は、サーバーの場所をユーザーの近くにするとパフォーマンスを改善できることを示しています。[ラウンド トリップ時間の詳細](https://hpbn.co/primer-on-latency-and-bandwidth/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "network-server-latency": {
+      "id": "network-server-latency",
+      "title": "サーバーのバックエンド待ち時間",
+      "description": "サーバーの待ち時間はウェブ パフォーマンスに影響することがあります。オリジンのサーバー レイテンシが高い場合は、サーバーが過負荷であるか、サーバーのバックエンド パフォーマンスが低いことを示しています。[サーバー応答時間の詳細](https://hpbn.co/primer-on-web-performance/#analyzing-the-resource-waterfall)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "main-thread-tasks": {
+      "id": "main-thread-tasks",
+      "title": "Tasks",
+      "description": "Lists the toplevel main thread tasks that executed during page load.",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "metrics": {
+      "id": "metrics",
+      "title": "Metrics",
+      "description": "Collects all available metrics.",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "resource-summary": {
+      "id": "resource-summary",
+      "title": "Resources Summary",
+      "description": "Aggregates all network requests and groups them by type",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "layout-shifts": {
+      "id": "layout-shifts",
+      "title": "レイアウトが大きく変わらないようにする",
+      "description": "これらは、ページで確認された最大のレイアウト シフトです。表の各項目は 1 つのレイアウト シフトを表し、最もシフトの大きかった要素が表示されます。各項目の下には、レイアウト シフトにつながったと考えられる根本原因が表示されます。[ウィンドウ処理](https://web.dev/articles/cls#what_is_cls)が原因で、これらのレイアウト シフトの一部が CLS 指標値に含まれていない場合があります。[CLS を改善する方法について](https://web.dev/articles/optimize-cls)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 2
+    },
+    "long-tasks": {
+      "id": "long-tasks",
+      "title": "メインスレッドでタスクが長時間実行されないようにしてください",
+      "description": "メインスレッドで長時間実行されているタスクを表示します。入力の遅延に最も影響しているタスクを特定する際に役立ちます。[長いメインスレッド タスクの回避方法の詳細](https://web.dev/articles/optimize-long-tasks)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 1
+    },
+    "non-composited-animations": {
+      "id": "non-composited-animations",
+      "title": "合成されていないアニメーションは使用しないでください",
+      "description": "合成されていないアニメーションは動きが不自然になり、CLS が大きくなることがあります。[合成されていないアニメーションを避ける方法の詳細](https://developer.chrome.com/docs/lighthouse/performance/non-composited-animations/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 2
+    },
+    "unsized-images": {
+      "id": "unsized-images",
+      "title": "画像要素で `width` と `height` が明示的に指定されている",
+      "description": "画像要素で幅と高さを明示的に設定すると、レイアウト シフトを減らして、CLS を改善できます。[画像サイズの設定方法の詳細](https://web.dev/articles/optimize-cls#images_without_dimensions)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 4
+    },
+    "valid-source-maps": {
+      "id": "valid-source-maps",
+      "title": "ページで有効なソースマップが使用されています",
+      "description": "ソースマップは軽量化したコードを元のソースコードに変換するもので、デベロッパーが本番環境でデバッグする際に役立ちます。また、Lighthouse で詳しい分析情報を提供することも可能になります。このようなメリットをふまえ、ソースマップの導入をご検討ください。[ソースマップの詳細](https://developer.chrome.com/docs/devtools/javascript/source-maps/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "csp-xss": {
+      "id": "csp-xss",
+      "title": "CSP が XSS 攻撃を防げるよう設定されているか確認する",
+      "description": "厳格なコンテンツ セキュリティ ポリシー（CSP）を設定すると、クロスサイト スクリプティング（XSS）攻撃のリスクを大幅に軽減できます。[CSP を使用して XSS を防ぐ方法の詳細](https://developer.chrome.com/docs/lighthouse/best-practices/csp-xss/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "has-hsts": {
+      "id": "has-hsts",
+      "title": "強力な HSTS ポリシーを使用する",
+      "description": "HSTS ヘッダーを実装すると、HTTP 接続のダウングレードやスニッフィング攻撃のリスクが大幅に軽減されます。低い max-age から段階的にロールアウトすることをおすすめします。[強力な HSTS ポリシーの使用に関する詳細](https://developer.chrome.com/docs/lighthouse/best-practices/has-hsts)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "origin-isolation": {
+      "id": "origin-isolation",
+      "title": "COOP でオリジン分離が適切に行われていることを確認する",
+      "description": "Cross-Origin-Opener-Policy（COOP）を使用すると、ポップアップなどの他のドキュメントから最上位のウィンドウを分離できます。[COOP ヘッダーの実装に関する詳細](https://web.dev/articles/why-coop-coep#coop)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "clickjacking-mitigation": {
+      "id": "clickjacking-mitigation",
+      "title": "XFO または CSP を使用してクリックジャッキングを軽減する",
+      "description": "`X-Frame-Options`（XFO）ヘッダーまたは `Content-Security-Policy`（CSP）ヘッダーの `frame-ancestors` ディレクティブは、ページを埋め込むことができる場所を制御します。これらを使用して、一部またはすべてのサイトでページの埋め込みをブロックすることで、クリックジャッキング攻撃を軽減できます。[クリックジャッキングを軽減する方法について](https://developer.chrome.com/docs/lighthouse/best-practices/clickjacking-mitigation)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "trusted-types-xss": {
+      "id": "trusted-types-xss",
+      "title": "Trusted Types を使用して DOM ベースの XSS に対処する",
+      "description": "`Content-Security-Policy`（CSP）ヘッダーの `require-trusted-types-for` ディレクティブは、DOM XSS シンク関数に渡されるデータの制御をユーザー エージェントに指示します。[Trusted Types を使用して DOM ベースの XSS に対処する方法の詳細](https://developer.chrome.com/docs/lighthouse/best-practices/trusted-types-xss)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "script-treemap-data": {
+      "id": "script-treemap-data",
+      "title": "Script Treemap Data",
+      "description": "Used for treemap app",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "accesskeys": {
+      "id": "accesskeys",
+      "title": "`[accesskey]` の値は一意です",
+      "description": "アクセスキーは、ユーザーがページの特定の部分にすばやくフォーカスを移動するときに使います。正しく操作できるよう、各アクセスキーは一意にする必要があります。[アクセスキーの詳細](https://dequeuniversity.com/rules/axe/4.11/accesskeys)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "aria-allowed-attr": {
+      "id": "aria-allowed-attr",
+      "title": "`[aria-*]` 属性は役割と一致しています",
+      "description": "各 ARIA `role` は、`aria-*` 属性の特定のサブセットに対応しています。これらが一致しない場合、`aria-*` 属性は無効になります。[ARIA 属性をロールと照合する方法の詳細](https://dequeuniversity.com/rules/axe/4.11/aria-allowed-attr)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "aria-allowed-role": {
+      "id": "aria-allowed-role",
+      "title": "互換性のある要素にのみ ARIA ロールを使用する",
+      "description": "多くの HTML 要素は、特定の ARIA ロールのみを割り当てることができます。ARIA ロールを許可されていない場所で使用すると、ウェブページのアクセシビリティが妨げられる可能性があります。[ARIA ロールの詳細](https://dequeuniversity.com/rules/axe/4.11/aria-allowed-role)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "aria-command-name": {
+      "id": "aria-command-name",
+      "title": "`button`、`link`、`menuitem` 要素にユーザー補助機能向けの名前が設定されています",
+      "description": "要素にユーザー補助機能用の名前が設定されていない場合、スクリーン リーダーでは一般名で読み上げられるため、スクリーン リーダーのみを使用するユーザーには用途がわかりません。[コマンド要素にアクセスしやすくする方法の詳細](https://dequeuniversity.com/rules/axe/4.11/aria-command-name)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "aria-conditional-attr": {
+      "id": "aria-conditional-attr",
+      "title": "ARIA 属性は要素のロールで指定されたとおりに使用されています",
+      "description": "一部の ARIA 属性は、特定の条件下に限り要素で使用できます。[条件付き ARIA 属性の詳細](https://dequeuniversity.com/rules/axe/4.11/aria-conditional-attr)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "aria-deprecated-role": {
+      "id": "aria-deprecated-role",
+      "title": "非推奨の ARIA ロールは使用されていませんでした",
+      "description": "非推奨の ARIA ロールは、支援技術によって正しく処理されない可能性があります。[非推奨の ARIA ロールの詳細](https://dequeuniversity.com/rules/axe/4.11/aria-deprecated-role)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "aria-dialog-name": {
+      "id": "aria-dialog-name",
+      "title": "`role=\"dialog\"` または `role=\"alertdialog\"` が含まれる要素に、ユーザー補助機能用の名前が設定されています。",
+      "description": "ARIA ダイアログ要素にユーザー補助機能用の名前が設定されていない場合、スクリーン リーダーのユーザーはこれらの要素の用途を識別できません。[ARIA ダイアログ要素をアクセスしやすくする方法の詳細](https://dequeuniversity.com/rules/axe/4.11/aria-dialog-name)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "aria-hidden-body": {
+      "id": "aria-hidden-body",
+      "title": "ドキュメントの `<body>` に `[aria-hidden=\"true\"]` は設定されていません",
+      "description": "スクリーン リーダーなどの支援技術は、ドキュメントの `<body>` に `aria-hidden=\"true\"` が設定されていると、正常に動作しません。[`aria-hidden` がドキュメントの本文に与える影響についての詳細](https://dequeuniversity.com/rules/axe/4.11/aria-hidden-body)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "aria-hidden-focus": {
+      "id": "aria-hidden-focus",
+      "title": "`[aria-hidden=\"true\"]` 要素にフォーカス可能な子要素は含まれていません",
+      "description": "フォーカス可能な子要素が `[aria-hidden=\"true\"]` 要素内にある場合、スクリーン リーダーなどの支援技術を使用するユーザーはこれらの操作可能な要素を使用できません。[`aria-hidden` がフォーカス可能な要素に与える影響の詳細](https://dequeuniversity.com/rules/axe/4.11/aria-hidden-focus)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "aria-input-field-name": {
+      "id": "aria-input-field-name",
+      "title": "ARIA 入力フィールドにユーザー補助機能向けの名前が設定されています",
+      "description": "入力フィールドにユーザー補助機能用の名前が設定されていない場合、スクリーン リーダーでは一般名で読み上げられるため、スクリーン リーダーのみを使用するユーザーには用途がわかりません。[入力フィールドのラベルの詳細](https://dequeuniversity.com/rules/axe/4.11/aria-input-field-name)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "aria-meter-name": {
+      "id": "aria-meter-name",
+      "title": "ARIA `meter` 要素にユーザー補助機能向けの名前が設定されています",
+      "description": "メーター要素にユーザー補助機能用の名前が設定されていない場合、スクリーン リーダーでは一般名で読み上げられるため、スクリーン リーダーのみを使用するユーザーには用途がわかりません。[`meter` 要素に名前を付ける方法の詳細](https://dequeuniversity.com/rules/axe/4.11/aria-meter-name)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "aria-progressbar-name": {
+      "id": "aria-progressbar-name",
+      "title": "ARIA `progressbar` 要素にユーザー補助機能向けの名前が設定されています",
+      "description": "`progressbar` 要素にユーザー補助機能用の名前が設定されていない場合、スクリーン リーダーでは一般名で読み上げられるため、スクリーン リーダーのみを使用するユーザーには用途がわかりません。[`progressbar` 要素にラベルを付ける方法の詳細](https://dequeuniversity.com/rules/axe/4.11/aria-progressbar-name)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "aria-prohibited-attr": {
+      "id": "aria-prohibited-attr",
+      "title": "許可された ARIA 属性のみが要素で使用されています",
+      "description": "禁止されているロールで ARIA 属性を使用すると、支援技術のユーザーに重要な情報が伝わらない可能性があります。[禁止されている ARIA ロールの詳細](https://dequeuniversity.com/rules/axe/4.11/aria-prohibited-attr)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "aria-required-attr": {
+      "id": "aria-required-attr",
+      "title": "`[role]` に必須の `[aria-*]` 属性がすべて指定されています",
+      "description": "一部の ARIA ロールには、スクリーン リーダーに要素の状態を伝える必須の属性があります。[ロールと必須属性の詳細](https://dequeuniversity.com/rules/axe/4.11/aria-required-attr)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "aria-required-children": {
+      "id": "aria-required-children",
+      "title": "ARIA `[role]` が指定されている要素に、特定の `[role]` を含む必要な子がすべて指定されています。",
+      "description": "目的のユーザー補助機能を実行するには、一部の ARIA 親ロールに特定の子ロールを含める必要があります。[ロールと必要な子要素の詳細](https://dequeuniversity.com/rules/axe/4.11/aria-required-children)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "aria-required-parent": {
+      "id": "aria-required-parent",
+      "title": "`[role]` は必須の親要素に含まれています",
+      "description": "想定されるユーザー補助機能が適切に動作するためには、一部の ARIA 子ロールは、特定の親ロールに含まれている必要があります。[ARIA ロールと必要な親要素の詳細](https://dequeuniversity.com/rules/axe/4.11/aria-required-parent)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "aria-roles": {
+      "id": "aria-roles",
+      "title": "`[role]` の値は有効です",
+      "description": "目的のユーザー補助機能を実行するには、ARIA ロールに有効な値を指定してください。[有効な ARIA ロールの詳細](https://dequeuniversity.com/rules/axe/4.11/aria-roles)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "aria-text": {
+      "id": "aria-text",
+      "title": "`role=text` 属性が指定された要素にフォーカス可能な子孫がありません。",
+      "description": "マークアップによってテキストノードの分割を `role=text` で囲むと、ナレーションで 1 つのフレーズとして扱うことができますが、要素のフォーカス可能な子孫は読み上げられません。[`role=text` 属性の詳細](https://dequeuniversity.com/rules/axe/4.11/aria-text)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "aria-toggle-field-name": {
+      "id": "aria-toggle-field-name",
+      "title": "ARIA 切り替えフィールドにユーザー補助機能向けの名前が設定されています",
+      "description": "切り替えフィールドにユーザー補助機能用の名前が設定されていない場合、スクリーン リーダーでは一般名で読み上げられるため、スクリーン リーダーのみを使用するユーザーには用途がわかりません。[切り替えフィールドの詳細](https://dequeuniversity.com/rules/axe/4.11/aria-toggle-field-name)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "aria-tooltip-name": {
+      "id": "aria-tooltip-name",
+      "title": "ARIA `tooltip` 要素にユーザー補助機能向けの名前が設定されています",
+      "description": "ツールチップ要素にユーザー補助機能用の名前が設定されていない場合、スクリーン リーダーでは一般名で読み上げられるため、スクリーン リーダーのみを使用するユーザーには用途がわかりません。[`tooltip` 要素に名前を付ける方法の詳細](https://dequeuniversity.com/rules/axe/4.11/aria-tooltip-name)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "aria-treeitem-name": {
+      "id": "aria-treeitem-name",
+      "title": "ARIA `treeitem` 要素にユーザー補助機能向けの名前が設定されています",
+      "description": "`treeitem` 要素にユーザー補助機能用の名前が設定されていない場合、スクリーン リーダーでは一般名で読み上げられるため、スクリーン リーダーのみを使用するユーザーには用途がわかりません。[`treeitem` 要素のラベル付けの詳細](https://dequeuniversity.com/rules/axe/4.11/aria-treeitem-name)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "aria-valid-attr-value": {
+      "id": "aria-valid-attr-value",
+      "title": "`[aria-*]` 属性に有効な値が指定されています",
+      "description": "支援技術（スクリーン リーダーなど）で、無効な値が指定された ARIA 属性を解釈できません。[ARIA 属性で有効な値の詳細](https://dequeuniversity.com/rules/axe/4.11/aria-valid-attr-value)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "aria-valid-attr": {
+      "id": "aria-valid-attr",
+      "title": "`[aria-*]` 属性は有効で、スペルミスもありません",
+      "description": "支援技術（スクリーン リーダーなど）で、無効な名前が指定された ARIA 属性を解釈できません。[有効な ARIA 属性の詳細](https://dequeuniversity.com/rules/axe/4.11/aria-valid-attr)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "button-name": {
+      "id": "button-name",
+      "title": "ボタンにユーザー補助機能名が指定されています",
+      "description": "ボタンにユーザー補助機能名が指定されていない場合、スクリーン リーダーでは「ボタン」と読み上げられるため、スクリーン リーダーを使用しているユーザーはボタンの用途がわからず、使用することができなくなります。[ボタンにアクセスしやすくするための方法の詳細](https://dequeuniversity.com/rules/axe/4.11/button-name)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "bypass": {
+      "id": "bypass",
+      "title": "ページに見出し、スキップリンク、またはランドマーク領域が設定されています",
+      "description": "重複するコンテンツをスキップする手段を追加すると、キーボードを使ったページの移動を効率化できます。[ブロックの回避についての詳細](https://dequeuniversity.com/rules/axe/4.11/bypass)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "color-contrast": {
+      "id": "color-contrast",
+      "title": "背景色と前景色には十分なコントラスト比があります",
+      "description": "低コントラストのテキストを使用すると、多くのユーザーは読むことが困難または不可能になります。[十分なカラー コントラストを確保する方法の詳細](https://dequeuniversity.com/rules/axe/4.11/color-contrast)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "definition-list": {
+      "id": "definition-list",
+      "title": "`<dl>` には、正しく順序付けられた `<dt>` および `<dd>` グループ、`<script>`、`<template>`、または `<div>` 要素のみが含まれています。",
+      "description": "定義リストが適切にマークアップされていないと、スクリーン リーダーで、誤解を招く内容や不正確な内容が読み上げられる可能性があります。[定義リストを正しく構成する方法の詳細](https://dequeuniversity.com/rules/axe/4.11/definition-list)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "dlitem": {
+      "id": "dlitem",
+      "title": "定義リストの項目は `<dl>` 要素でラップされています",
+      "description": "スクリーン リーダーで正しく読み上げられるようにするには、定義リストの項目（`<dt>` と `<dd>`）を親の `<dl>` 要素でラップする必要があります。[定義リストを正しく構成する方法の詳細](https://dequeuniversity.com/rules/axe/4.11/dlitem)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "document-title": {
+      "id": "document-title",
+      "title": "ドキュメントに `<title>` 要素が指定されています",
+      "description": "タイトルを指定すると、スクリーン リーダーのユーザーがページの概要を把握できるようになります。検索エンジンの使用時には、検索語句に関連するページかどうかを判断するための重要な要素となります。[ドキュメントのタイトルに関する詳細](https://dequeuniversity.com/rules/axe/4.11/document-title)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "duplicate-id-aria": {
+      "id": "duplicate-id-aria",
+      "title": "ARIA ID は一意です",
+      "description": "他のインスタンスが支援技術によって見落とされることのないように、ARIA ID の値は一意にする必要があります。[重複する ARIA ID の修正方法の詳細](https://dequeuniversity.com/rules/axe/4.11/duplicate-id-aria)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "empty-heading": {
+      "id": "empty-heading",
+      "title": "すべての見出し要素にコンテンツが含まれています。",
+      "description": "見出しにコンテンツがない場合やアクセスできないテキストが含まれている場合、スクリーン リーダーのユーザーはページの構造に関する情報にアクセスできません。[見出しの詳細](https://dequeuniversity.com/rules/axe/4.11/empty-heading)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "form-field-multiple-labels": {
+      "id": "form-field-multiple-labels",
+      "title": "複数のラベルが設定されたフォーム フィールドはありません",
+      "description": "フォーム フィールドに複数のラベルが設定されている場合、スクリーン リーダーなどの支援技術で最初または最後のラベルだけ、もしくはすべてのラベルが読み上げられるため、混乱が生じる可能性があります。[フォームラベルの使用方法の詳細](https://dequeuniversity.com/rules/axe/4.11/form-field-multiple-labels)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "frame-title": {
+      "id": "frame-title",
+      "title": "`<frame>` または `<iframe>` の要素にタイトルが指定されています",
+      "description": "スクリーン リーダーでは、フレームのコンテンツを説明するためにフレームのタイトルが使用されます。[フレームのタイトルの詳細](https://dequeuniversity.com/rules/axe/4.11/frame-title)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "heading-order": {
+      "id": "heading-order",
+      "title": "見出し要素は降順になっています",
+      "description": "見出しを適切なレベルの順序で配置すると、ページのセマンティック構造を伝えることができ、支援技術を使用した操作やコンテンツの把握が簡単になります。[見出しの順序の詳細](https://dequeuniversity.com/rules/axe/4.11/heading-order)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "html-has-lang": {
+      "id": "html-has-lang",
+      "title": "`<html>` 要素に `[lang]` 属性が指定されています",
+      "description": "ページで `lang` 属性が指定されていない場合、スクリーン リーダーは、スクリーン リーダーの設定時にユーザーが選択したデフォルト言語がページで使用されているものと見なします。そのページでデフォルト言語が実際には使用されていない場合、スクリーン リーダーはページのテキストを正しく読み上げられない可能性があります。[`lang` 属性の詳細](https://dequeuniversity.com/rules/axe/4.11/html-has-lang)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "html-lang-valid": {
+      "id": "html-lang-valid",
+      "title": "`<html>` 要素の `[lang]` 属性に有効な値が指定されています",
+      "description": "有効な [BCP 47 言語](https://www.w3.org/International/questions/qa-choosing-language-tags#question)を指定すると、スクリーン リーダーでテキストが正しく読み上げられるようになります。[`lang` 属性の使用方法の詳細](https://dequeuniversity.com/rules/axe/4.11/html-lang-valid)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "html-xml-lang-mismatch": {
+      "id": "html-xml-lang-mismatch",
+      "title": "`<html>` 要素に、`[lang]` 属性と同じベース言語の `[xml:lang]` 属性があります。",
+      "description": "ウェブページで一貫性のある言語が指定されていない場合、スクリーン リーダーでページのテキストが正しく読み上げられないことがあります。[`lang` 属性の詳細](https://dequeuniversity.com/rules/axe/4.11/html-xml-lang-mismatch)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "identical-links-same-purpose": {
+      "id": "identical-links-same-purpose",
+      "title": "同一のリンクの目的は同じです。",
+      "description": "リンク先が同じリンクは、ユーザーがそのリンクの目的を理解し、クリックするかどうかを判断できるように、説明を同じものにする必要があります。[同一リンクの詳細](https://dequeuniversity.com/rules/axe/4.11/identical-links-same-purpose)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "image-alt": {
+      "id": "image-alt",
+      "title": "画像要素に `[alt]` 属性が指定されています",
+      "description": "説明的要素は、簡潔でわかりやすい代替テキストにする必要があります。装飾的要素は、alt 属性が空の場合は無視される可能性があります。[`alt` 属性の詳細](https://dequeuniversity.com/rules/axe/4.11/image-alt)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "image-redundant-alt": {
+      "id": "image-redundant-alt",
+      "title": "画像要素に、重複する内容の`[alt]` 属性は含まれていません。",
+      "description": "説明的要素は、簡潔でわかりやすい代替テキストにする必要があります。リンクや画像の近くのテキストとまったく同じ代替テキストを指定すると、スクリーン リーダーで同じ内容が 2 回読み上げられるため、混乱を招く可能性があります。[`alt` 属性の詳細](https://dequeuniversity.com/rules/axe/4.11/image-redundant-alt)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "input-button-name": {
+      "id": "input-button-name",
+      "title": "入力ボタンに識別可能なテキストがあります。",
+      "description": "識別可能およびアクセス可能なテキストを入力ボタンに追加すると、スクリーン リーダーのユーザーが入力ボタンの目的を把握するのに役立ちます。[入力ボタンの詳細](https://dequeuniversity.com/rules/axe/4.11/input-button-name)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "input-image-alt": {
+      "id": "input-image-alt",
+      "title": "`<input type=\"image\">` 要素に `[alt]` テキストが指定されています",
+      "description": "画像を `<input>` ボタンとして使用している場合は、代替テキストを指定すると、スクリーン リーダーのユーザーがボタンの用途を理解しやすくなります。[入力画像の代替テキストの詳細](https://dequeuniversity.com/rules/axe/4.11/input-image-alt)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "label-content-name-mismatch": {
+      "id": "label-content-name-mismatch",
+      "title": "表示されるテキストラベルの要素に、一致するユーザー補助機能用の名前があります。",
+      "description": "表示されるテキストラベルがユーザー補助機能用の名前と一致しない場合、スクリーン リーダーのユーザーが混乱する可能性があります。[ユーザー補助機能用の名前の詳細](https://dequeuniversity.com/rules/axe/4.11/label-content-name-mismatch)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "label": {
+      "id": "label",
+      "title": "フォームの要素にラベルが関連付けられています",
+      "description": "ラベルを使用すると、フォームの各コントロールが支援技術（スクリーン リーダーなど）によって正しく読み上げられるようになります。[フォーム要素のラベルの詳細](https://dequeuniversity.com/rules/axe/4.11/label)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "landmark-one-main": {
+      "id": "landmark-one-main",
+      "title": "ドキュメントにメインのランドマークが設定されています。",
+      "description": "メインのランドマークが 1 つ設定されていると、スクリーン リーダーのユーザーがウェブページを移動しやすくなります。[ランドマークの詳細](https://dequeuniversity.com/rules/axe/4.11/landmark-one-main)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "link-name": {
+      "id": "link-name",
+      "title": "リンクに識別可能な名前が指定されています",
+      "description": "識別可能、フォーカス可能な一意のリンクテキスト（および画像をリンクとして使用している場合はその代替テキスト）を使用すると、スクリーン リーダーでのナビゲーションの操作性が向上します。[リンクをアクセス可能にする方法の詳細](https://dequeuniversity.com/rules/axe/4.11/link-name)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "link-in-text-block": {
+      "id": "link-in-text-block",
+      "title": "リンクは色に依存せずに識別可能です。",
+      "description": "低コントラストのテキストを使用すると、多くのユーザーは読むことが困難または不可能になります。識別可能なリンクテキストを使用すると、ロービジョンのユーザーの利便性が向上します。[リンクを識別可能にする方法の詳細](https://dequeuniversity.com/rules/axe/4.11/link-in-text-block)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "list": {
+      "id": "list",
+      "title": "リストには、`<li>` 要素と、スクリプト対応要素（`<script>` と `<template>`）のみが含まれています。",
+      "description": "スクリーン リーダーでは、特殊な方法でリストが読み上げられます。適切に読み上げられるようにするには、正しいリスト構造を指定する必要があります。[適切なリスト構造についての詳細](https://dequeuniversity.com/rules/axe/4.11/list)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "listitem": {
+      "id": "listitem",
+      "title": "リスト項目（`<li>`）は `<ul>`、`<ol>`、`<menu>` の親要素に含まれています",
+      "description": "スクリーン リーダーで正しく読み上げられるようにするには、リスト項目（`<li>`）を親の `<ul>`、`<ol>`、`<menu>` に含める必要があります。[適切なリスト構造についての詳細](https://dequeuniversity.com/rules/axe/4.11/listitem)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "meta-refresh": {
+      "id": "meta-refresh",
+      "title": "ドキュメントで `<meta http-equiv=\"refresh\">` が使用されていません",
+      "description": "ユーザーはページが自動的に更新されると思っていないため、自動更新によってフォーカスがページ上部に戻ると、ユーザーの利便性が低下する可能性があります。[メタタグの更新の詳細](https://dequeuniversity.com/rules/axe/4.11/meta-refresh)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "meta-viewport": {
+      "id": "meta-viewport",
+      "title": "`[user-scalable=\"no\"]` は `<meta name=\"viewport\">` 要素で使用されておらず、`[maximum-scale]` 属性も 5 未満ではありません。",
+      "description": "ズーム機能を無効にすると、画面の拡大操作を利用する視力の弱いユーザーがウェブページのコンテンツを確認できなくなります。[ビューポート メタタグの詳細](https://dequeuniversity.com/rules/axe/4.11/meta-viewport)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "object-alt": {
+      "id": "object-alt",
+      "title": "`<object>` 要素に代替テキストが指定されています",
+      "description": "スクリーン リーダーは、テキスト以外のコンテンツを解釈できません。`<object>` 要素に代替テキストを追加すると、スクリーン リーダーを使用するユーザーが意味を把握するのに役立ちます。[`object` 要素の代替テキストの詳細](https://dequeuniversity.com/rules/axe/4.11/object-alt)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "select-name": {
+      "id": "select-name",
+      "title": "一部の要素にラベル要素が関連付けられています。",
+      "description": "効果的なラベルのないフォーム要素は、スクリーン リーダーのユーザーにとって不便となる可能性があります。[`select` 要素の詳細](https://dequeuniversity.com/rules/axe/4.11/select-name)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "skip-link": {
+      "id": "skip-link",
+      "title": "スキップリンクはフォーカス可能です。",
+      "description": "スキップリンクを含めると、メインのコンテンツにスキップできるようになり、ユーザーの手間が省けます。[スキップリンクの詳細](https://dequeuniversity.com/rules/axe/4.11/skip-link)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "tabindex": {
+      "id": "tabindex",
+      "title": "`[tabindex]` に 0 より大きい値を指定している要素はありません",
+      "description": "値が 0 より大きい場合は、明示的なナビゲーション順序を示します。技術的には有効ですが、多くの場合、支援技術を使用しているユーザーにとって利便性が低下します。[`tabindex` 属性の詳細](https://dequeuniversity.com/rules/axe/4.11/tabindex)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "table-duplicate-name": {
+      "id": "table-duplicate-name",
+      "title": "表の summary 属性と `<caption>` の内容は異なっています。",
+      "description": "summary 属性では表構造を説明し、`<caption>` には画面に表示されるタイトルを指定します。表のマークアップを正確に行うと、スクリーン リーダーを使用するユーザーに役立ちます。[summary と caption の詳細](https://dequeuniversity.com/rules/axe/4.11/table-duplicate-name)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "table-fake-caption": {
+      "id": "table-fake-caption",
+      "title": "表で字幕を示すために `[colspan]` 属性を含むセルの代わりに `<caption>` が使用されています。",
+      "description": "スクリーン リーダーには、表内の移動を補助する機能があります。表で `[colspan]` 属性を含むセルの代わりに、実際の字幕要素を使用すると、スクリーン リーダー ユーザーの利便性が向上する可能性があります。[字幕の詳細](https://dequeuniversity.com/rules/axe/4.11/table-fake-caption)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "target-size": {
+      "id": "target-size",
+      "title": "タップ ターゲットのサイズと間隔は十分な大きさです。",
+      "description": "タップ ターゲットのサイズと間隔を十分な大きさにすると、小さいコントロールでもターゲットを選択しやすくなります。[タップ ターゲットの詳細](https://dequeuniversity.com/rules/axe/4.11/target-size)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "td-has-header": {
+      "id": "td-has-header",
+      "title": "サイズの大きい `<table>` の `<td>` 要素にテーブル ヘッダーが 1 つ以上含まれています。",
+      "description": "スクリーン リーダーには、表内の移動を補助する機能があります。サイズの大きい表（幅と高さが 3 セル以上）の `<td>` 要素にテーブル ヘッダーを関連付けると、スクリーン リーダー ユーザーの利便性が向上する可能性があります。[テーブル ヘッダーの詳細](https://dequeuniversity.com/rules/axe/4.11/td-has-header)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "td-headers-attr": {
+      "id": "td-headers-attr",
+      "title": "`<table>` 要素で `[headers]` 属性を使用しているセルは、同じ表内の表セルを参照しています。",
+      "description": "スクリーン リーダーには、表内の移動を補助する機能があります。`[headers]` 属性を使用している `<td>` セルが同じ表の他のセルのみを参照するように設定すると、スクリーン リーダーの利便性が向上する可能性があります。[`headers` 属性の詳細](https://dequeuniversity.com/rules/axe/4.11/td-headers-attr)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "th-has-data-cells": {
+      "id": "th-has-data-cells",
+      "title": "`<th>` 要素および `[role=\"columnheader\"/\"rowheader\"]` が指定された要素に、記述されたデータセルがあります。",
+      "description": "スクリーン リーダーには、表内の移動を補助する機能があります。表のヘッダーが常に一部のセルを参照するように設定すると、スクリーン リーダーの利便性が向上する可能性があります。[テーブル ヘッダーの詳細](https://dequeuniversity.com/rules/axe/4.11/th-has-data-cells)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "valid-lang": {
+      "id": "valid-lang",
+      "title": "`[lang]` 属性に有効な値が指定されています",
+      "description": "要素に有効な [BCP 47 言語](https://www.w3.org/International/questions/qa-choosing-language-tags#question)を指定すると、スクリーン リーダーでテキストが正しく読み上げられるようになります。[`lang` 属性の使用方法の詳細](https://dequeuniversity.com/rules/axe/4.11/valid-lang)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "video-caption": {
+      "id": "video-caption",
+      "title": "`<video>` 要素に `[kind=\"captions\"]` が指定された `<track>` 要素が含まれています",
+      "description": "動画に字幕を設定すると、聴覚障がいのあるユーザーが情報にアクセスしやすくなります。[動画の字幕についての詳細](https://dequeuniversity.com/rules/axe/4.11/video-caption)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "custom-controls-labels": {
+      "id": "custom-controls-labels",
+      "title": "Custom controls have associated labels",
+      "description": "Custom interactive controls have associated labels, provided by aria-label or aria-labelledby. [Learn more about custom controls and labels](https://developer.chrome.com/docs/lighthouse/accessibility/custom-controls-labels/).",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "custom-controls-roles": {
+      "id": "custom-controls-roles",
+      "title": "Custom controls have ARIA roles",
+      "description": "Custom interactive controls have appropriate ARIA roles. [Learn how to add roles to custom controls](https://developer.chrome.com/docs/lighthouse/accessibility/custom-control-roles/).",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "focus-traps": {
+      "id": "focus-traps",
+      "title": "User focus is not accidentally trapped in a region",
+      "description": "A user can tab into and out of any control or region without accidentally trapping their focus. [Learn how to avoid focus traps](https://developer.chrome.com/docs/lighthouse/accessibility/focus-traps/).",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "focusable-controls": {
+      "id": "focusable-controls",
+      "title": "Interactive controls are keyboard focusable",
+      "description": "Custom interactive controls are keyboard focusable and display a focus indicator. [Learn how to make custom controls focusable](https://developer.chrome.com/docs/lighthouse/accessibility/focusable-controls/).",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "interactive-element-affordance": {
+      "id": "interactive-element-affordance",
+      "title": "Interactive elements indicate their purpose and state",
+      "description": "Interactive elements, such as links and buttons, should indicate their state and be distinguishable from non-interactive elements. [Learn how to decorate interactive elements with affordance hints](https://developer.chrome.com/docs/lighthouse/accessibility/interactive-element-affordance/).",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "logical-tab-order": {
+      "id": "logical-tab-order",
+      "title": "The page has a logical tab order",
+      "description": "Tabbing through the page follows the visual layout. Users cannot focus elements that are offscreen. [Learn more about logical tab ordering](https://developer.chrome.com/docs/lighthouse/accessibility/logical-tab-order/).",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "managed-focus": {
+      "id": "managed-focus",
+      "title": "The user's focus is directed to new content added to the page",
+      "description": "If new content, such as a dialog, is added to the page, the user's focus is directed to it. [Learn how to direct focus to new content](https://developer.chrome.com/docs/lighthouse/accessibility/managed-focus/).",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "offscreen-content-hidden": {
+      "id": "offscreen-content-hidden",
+      "title": "Offscreen content is hidden from assistive technology",
+      "description": "Offscreen content is hidden with display: none or aria-hidden=true. [Learn how to properly hide offscreen content](https://developer.chrome.com/docs/lighthouse/accessibility/offscreen-content-hidden/).",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "use-landmarks": {
+      "id": "use-landmarks",
+      "title": "HTML5 landmark elements are used to improve navigation",
+      "description": "Landmark elements (`<main>`, `<nav>`, etc.) are used to improve the keyboard navigation of the page for assistive technology. [Learn more about landmark elements](https://developer.chrome.com/docs/lighthouse/accessibility/use-landmarks/).",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "visual-order-follows-dom": {
+      "id": "visual-order-follows-dom",
+      "title": "Visual order on the page follows DOM order",
+      "description": "DOM order matches the visual order, improving navigation for assistive technology. [Learn more about DOM and visual ordering](https://developer.chrome.com/docs/lighthouse/accessibility/visual-order-follows-dom/).",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "total-byte-weight": {
+      "id": "total-byte-weight",
+      "title": "過大なネットワーク ペイロードの回避",
+      "description": "ネットワーク ペイロードのサイズが大きいと、ユーザーの金銭的負担が大きくなり、多くの場合、読み込み時間が長くなります。[ペイロード サイズを小さくする方法の詳細](https://developer.chrome.com/docs/lighthouse/performance/total-byte-weight/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 1
+    },
+    "unminified-css": {
+      "id": "unminified-css",
+      "title": "CSS の最小化",
+      "description": "CSS ファイルを最小化すると、ネットワーク ペイロードのサイズを抑えることができます。[CSS を圧縮する方法の詳細](https://developer.chrome.com/docs/lighthouse/performance/unminified-css/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 3
+    },
+    "unminified-javascript": {
+      "id": "unminified-javascript",
+      "title": "JavaScript の最小化",
+      "description": "JavaScript ファイルを最小化すると、ペイロード サイズとスクリプトの解析時間を抑えることができます。[JavaScript を圧縮する方法の詳細](https://developer.chrome.com/docs/lighthouse/performance/unminified-javascript/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 3
+    },
+    "unused-css-rules": {
+      "id": "unused-css-rules",
+      "title": "使用していない CSS の削減",
+      "description": "スタイルシートから使用していないルールを削除して、スクロールせずに見える範囲のコンテンツで使用されていない CSS の読み込みを遅らせると、ネットワークの通信量を減らすことができます。[未使用の CSS を削減する方法の詳細](https://developer.chrome.com/docs/lighthouse/performance/unused-css-rules/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 1
+    },
+    "unused-javascript": {
+      "id": "unused-javascript",
+      "title": "使用していない JavaScript の削減",
+      "description": "使用していない JavaScript を削除して、必要になるまでスクリプトの読み込みを遅らせると、ネットワークの通信量を減らすことができます。[使用していない JavaScript を削除する方法の詳細](https://developer.chrome.com/docs/lighthouse/performance/unused-javascript/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 1
+    },
+    "doctype": {
+      "id": "doctype",
+      "title": "ページに HTML doctype が指定されています",
+      "description": "doctype を指定すると、ブラウザは後方互換モードに切り替えることができなくなります。[doctype 宣言の詳細](https://developer.chrome.com/docs/lighthouse/best-practices/doctype/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "charset": {
+      "id": "charset",
+      "title": "文字セットを適切に定義する",
+      "description": "文字エンコードの宣言が必要です。これには、HTML の最初の 1,024 バイトか Content-Type HTTP レスポンス ヘッダーの中で `<meta>` タグを使用します。[文字エンコードの宣言についての詳細](https://developer.chrome.com/docs/lighthouse/best-practices/charset/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "geolocation-on-start": {
+      "id": "geolocation-on-start",
+      "title": "ページの読み込み時に位置情報の許可はリクエストされません",
+      "description": "サイトから脈絡なしに位置情報の許可を求められると、ユーザーは不信感を抱き、困惑します。リクエストはユーザーの操作と関連付けて行うようにしてください。[位置情報の権限に関する詳細](https://developer.chrome.com/docs/lighthouse/best-practices/geolocation-on-start/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "inspector-issues": {
+      "id": "inspector-issues",
+      "title": "Chrome デベロッパー ツールの [`Issues`] パネルに記録されている問題はありません",
+      "description": "Chrome デベロッパー ツールの [`Issues`] パネルに記録された問題は未解決のものです。ネットワーク リクエストの失敗、不十分なセキュリティ コントロールや、他のブラウザの問題が原因で表示される可能性があります。各問題について詳しくは、Chrome DevTools の [Issues] パネルを開いてご確認ください。",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "js-libraries": {
+      "id": "js-libraries",
+      "title": "JavaScript ライブラリが検出されました",
+      "description": "ページで検出されたすべてのフロントエンドの JavaScript ライブラリです。[JavaScript ライブラリ検出の診断監査についての詳細](https://developer.chrome.com/docs/lighthouse/best-practices/js-libraries/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "notification-on-start": {
+      "id": "notification-on-start",
+      "title": "ページの読み込み時に通知の許可はリクエストされません",
+      "description": "サイトから脈絡なしに通知の送信許可を求められると、ユーザーは不信感を抱き、困惑します。リクエストはユーザーの操作と関連付けて行うようにしてください。[通知の許可を責任を持って取得する方法の詳細](https://developer.chrome.com/docs/lighthouse/best-practices/notification-on-start/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "paste-preventing-inputs": {
+      "id": "paste-preventing-inputs",
+      "title": "ユーザーは入力フィールドに貼り付けできます",
+      "description": "ユーザーの利便性が損なわれるため、入力フィールドへの貼り付けを禁止することは推奨されません。パスワード マネージャーがブロックされるため、セキュリティの低下にもつながります。詳しくは、[ユーザー フレンドリーな入力フィールド](https://developer.chrome.com/docs/lighthouse/best-practices/paste-preventing-inputs/)をご覧ください。",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531"
+    },
+    "bf-cache": {
+      "id": "bf-cache",
+      "title": "ページでバックフォワード キャッシュの復元は妨げられませんでした",
+      "description": "多くのナビゲーションは、前のページに戻るか、次に進むことで実行されます。バックフォワード キャッシュ（bfcache）を使用すると、こうした戻るナビゲーションを高速化できます。[bfcache について](https://developer.chrome.com/docs/lighthouse/performance/bf-cache/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 4
+    },
+    "cache-insight": {
+      "id": "cache-insight",
+      "title": "効率的なキャッシュ保存期間を使用する",
+      "description": "キャッシュの有効期間を長くすると、再訪問したユーザーへのページの読み込み速度を向上できます。[詳細](https://web.dev/uses-long-cache-ttl/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 3
+    },
+    "cls-culprits-insight": {
+      "id": "cls-culprits-insight",
+      "title": "レイアウト シフトの原因",
+      "description": "レイアウト シフトは、ユーザーの操作なしで要素が移動する場合に発生します。[レイアウト シフトの原因を調査](https://web.dev/articles/optimize-cls)してください。たとえば、ページの読み込み時に要素が追加、削除される、フォントが変更されるなどの原因が考えられます。",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 3
+    },
+    "document-latency-insight": {
+      "id": "document-latency-insight",
+      "title": "ドキュメント リクエストのレイテンシ",
+      "description": "最初のネットワーク リクエストは最も重要です。リダイレクトを回避し、サーバー応答を高速に保ち、テキスト圧縮を有効にして、レイテンシを削減します。",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 3
+    },
+    "dom-size-insight": {
+      "id": "dom-size-insight",
+      "title": "DOM サイズを最適化する",
+      "description": "DOM サイズが大きいと、スタイルの計算とレイアウトのリフローに時間がかかり、ページの応答性に影響する可能性があります。DOM サイズが大きいと、メモリ使用量も増加します。[過度な DOM サイズの回避方法の詳細](https://developer.chrome.com/docs/lighthouse/performance/dom-size/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 3
+    },
+    "duplicated-javascript-insight": {
+      "id": "duplicated-javascript-insight",
+      "title": "重複する JavaScript",
+      "description": "重複する大きい JavaScript モジュールをバンドルから削除すると、ネットワーク アクティビティで不必要に消費されるデータ量を減らすことができます。",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 2
+    },
+    "font-display-insight": {
+      "id": "font-display-insight",
+      "title": "フォント表示",
+      "description": "テキストの表示を統一するため、[font-display](https://developer.chrome.com/blog/font-display) を swap または optional に設定することを検討してください。swap をさらに最適化して、[フォント指標のオーバーライド](https://developer.chrome.com/blog/font-fallbacks)でレイアウト シフトを軽減できます。",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 3
+    },
+    "forced-reflow-insight": {
+      "id": "forced-reflow-insight",
+      "title": "強制リフロー",
+      "description": "強制リフローは、DOM の状態の変更によってスタイルが無効化された後に JavaScript が幾何学的プロパティ（offsetWidth など）をクエリしたときに発生します。これにより、パフォーマンスが低下する可能性があります。詳しくは、[強制リフロー](https://developers.google.com/web/fundamentals/performance/rendering/avoid-large-complex-layouts-and-layout-thrashing#avoid-forced-synchronous-layouts)とその緩和策をご覧ください。",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 3
+    },
+    "image-delivery-insight": {
+      "id": "image-delivery-insight",
+      "title": "画像配信を改善する",
+      "description": "画像のダウンロード時間を短縮すると、ページ読み込みの体感時間と LCP を改善できます。[画像サイズの最適化に関する詳細](https://developer.chrome.com/docs/lighthouse/performance/uses-optimized-images/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 3
+    },
+    "inp-breakdown-insight": {
+      "id": "inp-breakdown-insight",
+      "title": "INP の内訳",
+      "description": "最も長いサブパートから調査を開始します。[遅延を最小限に抑えることができます](https://web.dev/articles/optimize-inp#optimize_interactions)。処理期間を削減するには、[メインスレッドのコスト（通常は JS）を最適化](https://web.dev/articles/optimize-long-tasks)します。",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 3
+    },
+    "lcp-breakdown-insight": {
+      "id": "lcp-breakdown-insight",
+      "title": "LCP の内訳",
+      "description": "各[サブパートには、それに適した改善戦略があります](https://web.dev/articles/optimize-lcp#lcp-breakdown)。理想的なのは、LCP 時間のほとんどがリソースの読み込みに使われ、遅延に費やされないことです。",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 3
+    },
+    "lcp-discovery-insight": {
+      "id": "lcp-discovery-insight",
+      "title": "LCP リクエストの検出",
+      "description": "LCP 画像を HTML からすぐに[検出できる](https://web.dev/articles/optimize-lcp#1_eliminate_resource_load_delay)ようにし、[遅延読み込みを回避](https://web.dev/articles/lcp-lazy-loading)して、LCP を最適化します",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 3
+    },
+    "legacy-javascript-insight": {
+      "id": "legacy-javascript-insight",
+      "title": "以前の JavaScript",
+      "description": "ポリフィルと変換を使用すると、従来のブラウザで新しい JavaScript 機能を使用できるようになります。ただし、その機能の多くは最新ブラウザでは必要ありません。従来のブラウザをサポートする必要がある場合を除き、[Baseline](https://web.dev/articles/baseline-and-polyfills) の機能をトランスパイルしないように JavaScript ビルドプロセスを変更することを検討してください。[ほとんどのサイトでトランスパイルせずに ES6+ コードをデプロイできる理由](https://philipwalton.com/articles/the-state-of-es5-on-the-web/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 2
+    },
+    "modern-http-insight": {
+      "id": "modern-http-insight",
+      "title": "最新の HTTP",
+      "description": "HTTP/2 と HTTP/3 には、多重化など、HTTP/1.1 と比べて多くのメリットがあります。[最新の HTTP の使用について](https://developer.chrome.com/docs/lighthouse/best-practices/uses-http2/)",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 3
+    },
+    "network-dependency-tree-insight": {
+      "id": "network-dependency-tree-insight",
+      "title": "ネットワークの依存関係ツリー",
+      "description": "チェーンの長さを縮小する、リソースのダウンロード サイズを抑える、不要なリソースのダウンロードを遅らせるなどしてページの読み込み速度を改善し、[クリティカル リクエスト チェーンを回避](https://developer.chrome.com/docs/lighthouse/performance/critical-request-chains)してください。",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 1
+    },
+    "render-blocking-insight": {
+      "id": "render-blocking-insight",
+      "title": "レンダリングをブロックしているリクエスト",
+      "description": "リクエストがページの最初のレンダリングをブロックしているため、LCP が遅れる可能性があります。これらのネットワーク リクエストを[遅らせるかインライン化](https://web.dev/learn/performance/understanding-the-critical-path#render-blocking_resources)すると、クリティカル パスから移動できます。",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 3
+    },
+    "third-parties-insight": {
+      "id": "third-parties-insight",
+      "title": "サードパーティ",
+      "description": "サードパーティのコードによって、読み込み速度が著しく低下する可能性があります。ページのコンテンツを優先させるには、[サードパーティのコードの読み込みを減らして遅らせ](https://web.dev/articles/optimizing-content-efficiency-loading-third-party-javascript/)ます。",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 3
+    },
+    "viewport-insight": {
+      "id": "viewport-insight",
+      "title": "ビューポートをモバイル向けに最適化する",
+      "description": "ビューポートがモバイル向けに最適化されていない場合、タップ操作が[最大 300 ミリ秒遅延](https://developer.chrome.com/blog/300ms-tap-delay-gone-away/)する可能性があります。",
+      "score": null,
+      "scoreDisplayMode": "error",
+      "errorMessage": "ページにコンテンツが描画されませんでした。読み込みの際にブラウザ ウィンドウをフォアグラウンドのままにして、もう一度お試しください（NO_FCP）。",
+      "errorStack": "LighthouseError: NO_FCP\n    at devtools://devtools/bundled/third_party/lighthouse/lighthouse-dt-bundle.js:1728:531",
+      "guidanceLevel": 3
+    }
+  },
+  "configSettings": {
+    "output": "json",
+    "maxWaitForFcp": 30000,
+    "maxWaitForLoad": 45000,
+    "pauseAfterFcpMs": 1000,
+    "pauseAfterLoadMs": 1000,
+    "networkQuietThresholdMs": 1000,
+    "cpuQuietThresholdMs": 1000,
+    "formFactor": "desktop",
+    "throttling": {
+      "rttMs": 40,
+      "throughputKbps": 10240,
+      "requestLatencyMs": 0,
+      "downloadThroughputKbps": 0,
+      "uploadThroughputKbps": 0,
+      "cpuSlowdownMultiplier": 1
+    },
+    "throttlingMethod": "simulate",
+    "screenEmulation": {
+      "mobile": true,
+      "width": 412,
+      "height": 823,
+      "deviceScaleFactor": 1.75,
+      "disabled": true
+    },
+    "emulatedUserAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36",
+    "auditMode": false,
+    "gatherMode": false,
+    "clearStorageTypes": [
+      "file_systems",
+      "shader_cache",
+      "service_workers",
+      "cache_storage"
+    ],
+    "disableStorageReset": false,
+    "debugNavigation": false,
+    "channel": "devtools",
+    "usePassiveGathering": false,
+    "disableFullPageScreenshot": false,
+    "skipAboutBlank": false,
+    "blankPage": "about:blank",
+    "ignoreStatusCode": true,
+    "locale": "ja",
+    "blockedUrlPatterns": null,
+    "additionalTraceCategories": "",
+    "extraHeaders": null,
+    "precomputedLanternData": null,
+    "onlyAudits": null,
+    "onlyCategories": [
+      "performance",
+      "accessibility",
+      "best-practices"
+    ],
+    "skipAudits": null
+  },
+  "categories": {
+    "performance": {
+      "title": "パフォーマンス",
+      "supportedModes": [
+        "navigation",
+        "timespan",
+        "snapshot"
+      ],
+      "auditRefs": [
+        {
+          "id": "first-contentful-paint",
+          "weight": 10,
+          "group": "metrics",
+          "acronym": "FCP"
+        },
+        {
+          "id": "largest-contentful-paint",
+          "weight": 25,
+          "group": "metrics",
+          "acronym": "LCP"
+        },
+        {
+          "id": "total-blocking-time",
+          "weight": 30,
+          "group": "metrics",
+          "acronym": "TBT"
+        },
+        {
+          "id": "cumulative-layout-shift",
+          "weight": 25,
+          "group": "metrics",
+          "acronym": "CLS"
+        },
+        {
+          "id": "speed-index",
+          "weight": 10,
+          "group": "metrics",
+          "acronym": "SI"
+        },
+        {
+          "id": "cache-insight",
+          "weight": 0,
+          "group": "insights"
+        },
+        {
+          "id": "cls-culprits-insight",
+          "weight": 0,
+          "group": "insights"
+        },
+        {
+          "id": "document-latency-insight",
+          "weight": 0,
+          "group": "insights"
+        },
+        {
+          "id": "dom-size-insight",
+          "weight": 0,
+          "group": "insights"
+        },
+        {
+          "id": "duplicated-javascript-insight",
+          "weight": 0,
+          "group": "insights"
+        },
+        {
+          "id": "font-display-insight",
+          "weight": 0,
+          "group": "insights"
+        },
+        {
+          "id": "forced-reflow-insight",
+          "weight": 0,
+          "group": "insights"
+        },
+        {
+          "id": "image-delivery-insight",
+          "weight": 0,
+          "group": "insights"
+        },
+        {
+          "id": "inp-breakdown-insight",
+          "weight": 0,
+          "group": "insights"
+        },
+        {
+          "id": "lcp-breakdown-insight",
+          "weight": 0,
+          "group": "insights"
+        },
+        {
+          "id": "lcp-discovery-insight",
+          "weight": 0,
+          "group": "insights"
+        },
+        {
+          "id": "legacy-javascript-insight",
+          "weight": 0,
+          "group": "insights"
+        },
+        {
+          "id": "modern-http-insight",
+          "weight": 0,
+          "group": "insights"
+        },
+        {
+          "id": "network-dependency-tree-insight",
+          "weight": 0,
+          "group": "insights"
+        },
+        {
+          "id": "render-blocking-insight",
+          "weight": 0,
+          "group": "insights"
+        },
+        {
+          "id": "third-parties-insight",
+          "weight": 0,
+          "group": "insights"
+        },
+        {
+          "id": "viewport-insight",
+          "weight": 0,
+          "group": "insights"
+        },
+        {
+          "id": "interactive",
+          "weight": 0,
+          "group": "hidden",
+          "acronym": "TTI"
+        },
+        {
+          "id": "max-potential-fid",
+          "weight": 0,
+          "group": "hidden"
+        },
+        {
+          "id": "unminified-css",
+          "weight": 0,
+          "group": "diagnostics"
+        },
+        {
+          "id": "unminified-javascript",
+          "weight": 0,
+          "group": "diagnostics"
+        },
+        {
+          "id": "unused-css-rules",
+          "weight": 0,
+          "group": "diagnostics"
+        },
+        {
+          "id": "unused-javascript",
+          "weight": 0,
+          "group": "diagnostics"
+        },
+        {
+          "id": "total-byte-weight",
+          "weight": 0,
+          "group": "diagnostics"
+        },
+        {
+          "id": "user-timings",
+          "weight": 0,
+          "group": "diagnostics"
+        },
+        {
+          "id": "bootup-time",
+          "weight": 0,
+          "group": "diagnostics"
+        },
+        {
+          "id": "mainthread-work-breakdown",
+          "weight": 0,
+          "group": "diagnostics"
+        },
+        {
+          "id": "long-tasks",
+          "weight": 0,
+          "group": "diagnostics"
+        },
+        {
+          "id": "non-composited-animations",
+          "weight": 0,
+          "group": "diagnostics"
+        },
+        {
+          "id": "unsized-images",
+          "weight": 0,
+          "group": "diagnostics"
+        },
+        {
+          "id": "bf-cache",
+          "weight": 0,
+          "group": "diagnostics"
+        },
+        {
+          "id": "network-requests",
+          "weight": 0,
+          "group": "hidden"
+        },
+        {
+          "id": "network-rtt",
+          "weight": 0,
+          "group": "hidden"
+        },
+        {
+          "id": "network-server-latency",
+          "weight": 0,
+          "group": "hidden"
+        },
+        {
+          "id": "main-thread-tasks",
+          "weight": 0,
+          "group": "hidden"
+        },
+        {
+          "id": "diagnostics",
+          "weight": 0,
+          "group": "hidden"
+        },
+        {
+          "id": "metrics",
+          "weight": 0,
+          "group": "hidden"
+        },
+        {
+          "id": "screenshot-thumbnails",
+          "weight": 0,
+          "group": "hidden"
+        },
+        {
+          "id": "final-screenshot",
+          "weight": 0,
+          "group": "hidden"
+        },
+        {
+          "id": "script-treemap-data",
+          "weight": 0,
+          "group": "hidden"
+        },
+        {
+          "id": "resource-summary",
+          "weight": 0,
+          "group": "hidden"
+        },
+        {
+          "id": "redirects",
+          "weight": 0,
+          "group": "hidden"
+        },
+        {
+          "id": "server-response-time",
+          "weight": 0,
+          "group": "hidden"
+        },
+        {
+          "id": "layout-shifts",
+          "weight": 0,
+          "group": "hidden"
+        }
+      ],
+      "id": "performance",
+      "score": null
+    },
+    "accessibility": {
+      "title": "ユーザー補助",
+      "description": "これらのチェックにより、[ウェブアプリのユーザー補助機能の改善点](https://developer.chrome.com/docs/lighthouse/accessibility/)が明確になります。ただし、自動的に検出できる問題は一部に過ぎず、ウェブアプリのユーザー補助機能に問題がないことが保証されたわけではないため、[手動テスト](https://web.dev/articles/how-to-review)も実施することをおすすめします。",
+      "manualDescription": "ここに、自動テストツールではカバーできない範囲に対処する項目が表示されます。詳しくは、[ユーザー補助機能の審査を実施する](https://web.dev/articles/how-to-review)方法についてのガイドをご覧ください。",
+      "supportedModes": [
+        "navigation",
+        "snapshot"
+      ],
+      "auditRefs": [
+        {
+          "id": "accesskeys",
+          "weight": 7,
+          "group": "a11y-navigation"
+        },
+        {
+          "id": "aria-allowed-attr",
+          "weight": 10,
+          "group": "a11y-aria"
+        },
+        {
+          "id": "aria-command-name",
+          "weight": 7,
+          "group": "a11y-aria"
+        },
+        {
+          "id": "aria-conditional-attr",
+          "weight": 7,
+          "group": "a11y-aria"
+        },
+        {
+          "id": "aria-deprecated-role",
+          "weight": 1,
+          "group": "a11y-aria"
+        },
+        {
+          "id": "aria-dialog-name",
+          "weight": 7,
+          "group": "a11y-aria"
+        },
+        {
+          "id": "aria-hidden-body",
+          "weight": 10,
+          "group": "a11y-aria"
+        },
+        {
+          "id": "aria-hidden-focus",
+          "weight": 7,
+          "group": "a11y-aria"
+        },
+        {
+          "id": "aria-input-field-name",
+          "weight": 7,
+          "group": "a11y-aria"
+        },
+        {
+          "id": "aria-meter-name",
+          "weight": 7,
+          "group": "a11y-aria"
+        },
+        {
+          "id": "aria-progressbar-name",
+          "weight": 7,
+          "group": "a11y-aria"
+        },
+        {
+          "id": "aria-prohibited-attr",
+          "weight": 7,
+          "group": "a11y-aria"
+        },
+        {
+          "id": "aria-required-attr",
+          "weight": 10,
+          "group": "a11y-aria"
+        },
+        {
+          "id": "aria-required-children",
+          "weight": 10,
+          "group": "a11y-aria"
+        },
+        {
+          "id": "aria-required-parent",
+          "weight": 10,
+          "group": "a11y-aria"
+        },
+        {
+          "id": "aria-roles",
+          "weight": 10,
+          "group": "a11y-aria"
+        },
+        {
+          "id": "aria-text",
+          "weight": 7,
+          "group": "a11y-aria"
+        },
+        {
+          "id": "aria-toggle-field-name",
+          "weight": 7,
+          "group": "a11y-aria"
+        },
+        {
+          "id": "aria-tooltip-name",
+          "weight": 7,
+          "group": "a11y-aria"
+        },
+        {
+          "id": "aria-treeitem-name",
+          "weight": 7,
+          "group": "a11y-aria"
+        },
+        {
+          "id": "aria-valid-attr-value",
+          "weight": 10,
+          "group": "a11y-aria"
+        },
+        {
+          "id": "aria-valid-attr",
+          "weight": 10,
+          "group": "a11y-aria"
+        },
+        {
+          "id": "button-name",
+          "weight": 10,
+          "group": "a11y-names-labels"
+        },
+        {
+          "id": "bypass",
+          "weight": 7,
+          "group": "a11y-navigation"
+        },
+        {
+          "id": "color-contrast",
+          "weight": 7,
+          "group": "a11y-color-contrast"
+        },
+        {
+          "id": "definition-list",
+          "weight": 7,
+          "group": "a11y-tables-lists"
+        },
+        {
+          "id": "dlitem",
+          "weight": 7,
+          "group": "a11y-tables-lists"
+        },
+        {
+          "id": "document-title",
+          "weight": 7,
+          "group": "a11y-names-labels"
+        },
+        {
+          "id": "duplicate-id-aria",
+          "weight": 10,
+          "group": "a11y-aria"
+        },
+        {
+          "id": "form-field-multiple-labels",
+          "weight": 3,
+          "group": "a11y-names-labels"
+        },
+        {
+          "id": "frame-title",
+          "weight": 7,
+          "group": "a11y-names-labels"
+        },
+        {
+          "id": "heading-order",
+          "weight": 3,
+          "group": "a11y-navigation"
+        },
+        {
+          "id": "html-has-lang",
+          "weight": 7,
+          "group": "a11y-language"
+        },
+        {
+          "id": "html-lang-valid",
+          "weight": 7,
+          "group": "a11y-language"
+        },
+        {
+          "id": "html-xml-lang-mismatch",
+          "weight": 3,
+          "group": "a11y-language"
+        },
+        {
+          "id": "image-alt",
+          "weight": 10,
+          "group": "a11y-names-labels"
+        },
+        {
+          "id": "input-button-name",
+          "weight": 10,
+          "group": "a11y-names-labels"
+        },
+        {
+          "id": "input-image-alt",
+          "weight": 10,
+          "group": "a11y-names-labels"
+        },
+        {
+          "id": "label",
+          "weight": 10,
+          "group": "a11y-names-labels"
+        },
+        {
+          "id": "link-in-text-block",
+          "weight": 7,
+          "group": "a11y-color-contrast"
+        },
+        {
+          "id": "link-name",
+          "weight": 7,
+          "group": "a11y-names-labels"
+        },
+        {
+          "id": "list",
+          "weight": 7,
+          "group": "a11y-tables-lists"
+        },
+        {
+          "id": "listitem",
+          "weight": 7,
+          "group": "a11y-tables-lists"
+        },
+        {
+          "id": "meta-refresh",
+          "weight": 10,
+          "group": "a11y-best-practices"
+        },
+        {
+          "id": "meta-viewport",
+          "weight": 10,
+          "group": "a11y-best-practices"
+        },
+        {
+          "id": "object-alt",
+          "weight": 7,
+          "group": "a11y-names-labels"
+        },
+        {
+          "id": "select-name",
+          "weight": 10,
+          "group": "a11y-names-labels"
+        },
+        {
+          "id": "skip-link",
+          "weight": 3,
+          "group": "a11y-names-labels"
+        },
+        {
+          "id": "tabindex",
+          "weight": 7,
+          "group": "a11y-navigation"
+        },
+        {
+          "id": "target-size",
+          "weight": 7,
+          "group": "a11y-best-practices"
+        },
+        {
+          "id": "td-headers-attr",
+          "weight": 7,
+          "group": "a11y-tables-lists"
+        },
+        {
+          "id": "th-has-data-cells",
+          "weight": 7,
+          "group": "a11y-tables-lists"
+        },
+        {
+          "id": "valid-lang",
+          "weight": 7,
+          "group": "a11y-language"
+        },
+        {
+          "id": "video-caption",
+          "weight": 10,
+          "group": "a11y-audio-video"
+        },
+        {
+          "id": "landmark-one-main",
+          "weight": 3,
+          "group": "a11y-best-practices"
+        },
+        {
+          "id": "focusable-controls",
+          "weight": 0
+        },
+        {
+          "id": "interactive-element-affordance",
+          "weight": 0
+        },
+        {
+          "id": "logical-tab-order",
+          "weight": 0
+        },
+        {
+          "id": "visual-order-follows-dom",
+          "weight": 0
+        },
+        {
+          "id": "focus-traps",
+          "weight": 0
+        },
+        {
+          "id": "managed-focus",
+          "weight": 0
+        },
+        {
+          "id": "use-landmarks",
+          "weight": 0
+        },
+        {
+          "id": "offscreen-content-hidden",
+          "weight": 0
+        },
+        {
+          "id": "custom-controls-labels",
+          "weight": 0
+        },
+        {
+          "id": "custom-controls-roles",
+          "weight": 0
+        },
+        {
+          "id": "table-duplicate-name",
+          "weight": 0,
+          "group": "a11y-best-practices"
+        },
+        {
+          "id": "empty-heading",
+          "weight": 0,
+          "group": "a11y-best-practices"
+        },
+        {
+          "id": "aria-allowed-role",
+          "weight": 0,
+          "group": "a11y-best-practices"
+        },
+        {
+          "id": "image-redundant-alt",
+          "weight": 0,
+          "group": "a11y-names-labels"
+        },
+        {
+          "id": "identical-links-same-purpose",
+          "weight": 0,
+          "group": "a11y-best-practices"
+        },
+        {
+          "id": "label-content-name-mismatch",
+          "weight": 0,
+          "group": "hidden"
+        },
+        {
+          "id": "table-fake-caption",
+          "weight": 0,
+          "group": "hidden"
+        },
+        {
+          "id": "td-has-header",
+          "weight": 0,
+          "group": "hidden"
+        }
+      ],
+      "id": "accessibility",
+      "score": null
+    },
+    "best-practices": {
+      "title": "おすすめの方法",
+      "supportedModes": [
+        "navigation",
+        "timespan",
+        "snapshot"
+      ],
+      "auditRefs": [
+        {
+          "id": "is-on-https",
+          "weight": 5,
+          "group": "best-practices-trust-safety"
+        },
+        {
+          "id": "redirects-http",
+          "weight": 1,
+          "group": "best-practices-trust-safety"
+        },
+        {
+          "id": "geolocation-on-start",
+          "weight": 1,
+          "group": "best-practices-trust-safety"
+        },
+        {
+          "id": "notification-on-start",
+          "weight": 1,
+          "group": "best-practices-trust-safety"
+        },
+        {
+          "id": "csp-xss",
+          "weight": 0,
+          "group": "best-practices-trust-safety"
+        },
+        {
+          "id": "has-hsts",
+          "weight": 0,
+          "group": "best-practices-trust-safety"
+        },
+        {
+          "id": "origin-isolation",
+          "weight": 0,
+          "group": "best-practices-trust-safety"
+        },
+        {
+          "id": "clickjacking-mitigation",
+          "weight": 0,
+          "group": "best-practices-trust-safety"
+        },
+        {
+          "id": "trusted-types-xss",
+          "weight": 0,
+          "group": "best-practices-trust-safety"
+        },
+        {
+          "id": "paste-preventing-inputs",
+          "weight": 3,
+          "group": "best-practices-ux"
+        },
+        {
+          "id": "image-aspect-ratio",
+          "weight": 1,
+          "group": "best-practices-ux"
+        },
+        {
+          "id": "image-size-responsive",
+          "weight": 1,
+          "group": "best-practices-ux"
+        },
+        {
+          "id": "doctype",
+          "weight": 1,
+          "group": "best-practices-browser-compat"
+        },
+        {
+          "id": "charset",
+          "weight": 1,
+          "group": "best-practices-browser-compat"
+        },
+        {
+          "id": "js-libraries",
+          "weight": 0,
+          "group": "best-practices-general"
+        },
+        {
+          "id": "deprecations",
+          "weight": 5,
+          "group": "best-practices-general"
+        },
+        {
+          "id": "third-party-cookies",
+          "weight": 5,
+          "group": "best-practices-general"
+        },
+        {
+          "id": "errors-in-console",
+          "weight": 1,
+          "group": "best-practices-general"
+        },
+        {
+          "id": "valid-source-maps",
+          "weight": 0,
+          "group": "best-practices-general"
+        },
+        {
+          "id": "inspector-issues",
+          "weight": 1,
+          "group": "best-practices-general"
+        }
+      ],
+      "id": "best-practices",
+      "score": null
+    }
+  },
+  "categoryGroups": {
+    "metrics": {
+      "title": "指標"
+    },
+    "insights": {
+      "title": "インサイト",
+      "description": "これらのインサイトは、Chrome DevTools のパフォーマンス パネルでも確認できます。詳しい情報を表示するには、[トレースを記録](https://developer.chrome.com/docs/devtools/performance/reference)してください。"
+    },
+    "diagnostics": {
+      "title": "診断",
+      "description": "アプリケーションのパフォーマンスに関する詳細。これらの数値は、パフォーマンス スコアには[直接影響](https://developer.chrome.com/docs/lighthouse/performance/performance-scoring/)しません。"
+    },
+    "a11y-best-practices": {
+      "title": "おすすめの方法",
+      "description": "ここで、一般的なユーザー補助機能のおすすめの方法を確認できます。"
+    },
+    "a11y-color-contrast": {
+      "title": "コントラスト",
+      "description": "ここには、コンテンツの読みやすさに関する改善点が表示されます。"
+    },
+    "a11y-names-labels": {
+      "title": "名前とラベル",
+      "description": "ここには、アプリ内のコントロールのセマンティクスに関する改善点が表示されます。修正すると、支援技術（スクリーン リーダーなど）の利便性が向上する可能性があります。"
+    },
+    "a11y-navigation": {
+      "title": "操作性",
+      "description": "ここには、アプリのキーボード操作性に関する改善点が表示されます。"
+    },
+    "a11y-aria": {
+      "title": "ARIA",
+      "description": "ここには、アプリでの ARIA の使用方法に関する改善点が表示されます。修正すると、支援技術（スクリーン リーダーなど）の利便性が向上する可能性があります。"
+    },
+    "a11y-language": {
+      "title": "多言語対応とローカライズ",
+      "description": "ここには、地域ユーザー別のコンテンツの解釈に関する改善点が表示されます。"
+    },
+    "a11y-audio-video": {
+      "title": "音声と動画",
+      "description": "ここで、音声と動画の代替コンテンツを提供できます。代替コンテンツを提供すると、聴覚や視覚に障がいがあるユーザーの利便性が向上する可能性があります。"
+    },
+    "a11y-tables-lists": {
+      "title": "表とリスト",
+      "description": "ここには、支援技術（スクリーン リーダーなど）を使用した表やリストのデータの読み取りの利便性に関する改善点が表示されます。"
+    },
+    "seo-mobile": {
+      "title": "スマホ対応",
+      "description": "ページをスマホ対応にして、ピンチ操作や拡大操作なしでコンテンツを読めるようにします。[ページをスマホ対応にする方法の詳細](https://developers.google.com/search/mobile-sites/)"
+    },
+    "seo-content": {
+      "title": "コンテンツ制作のおすすめの方法",
+      "description": "クローラがアプリのコンテンツを正確に読み取れるように HTML を適切な形式で記述します。"
+    },
+    "seo-crawl": {
+      "title": "クロールとインデックス登録",
+      "description": "検索結果に表示するには、クローラがアプリにアクセスできるようにする必要があります。"
+    },
+    "best-practices-trust-safety": {
+      "title": "信頼性と安全性"
+    },
+    "best-practices-ux": {
+      "title": "ユーザー エクスペリエンス"
+    },
+    "best-practices-browser-compat": {
+      "title": "ブラウザの互換性"
+    },
+    "best-practices-general": {
+      "title": "全般"
+    },
+    "hidden": {
+      "title": ""
+    }
+  },
+  "stackPacks": [],
+  "timing": {
+    "entries": [
+      {
+        "startTime": 148.1,
+        "name": "lh:config",
+        "duration": 98.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 148.7,
+        "name": "lh:config:resolveArtifactsToDefns",
+        "duration": 0.5,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 246.5,
+        "name": "lh:runner:gather",
+        "duration": 47075.7,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 246.6,
+        "name": "lh:driver:connect",
+        "duration": 8.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 255,
+        "name": "lh:driver:navigate",
+        "duration": 51.1,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 306.4,
+        "name": "lh:gather:getBenchmarkIndex",
+        "duration": 1007.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 1313.6,
+        "name": "lh:gather:getVersion",
+        "duration": 1.5,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 1315.1,
+        "name": "lh:gather:getDevicePixelRatio",
+        "duration": 2.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 1317.5,
+        "name": "lh:prepare:navigationMode",
+        "duration": 265.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 1317.9,
+        "name": "lh:gather:getVersion",
+        "duration": 0.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 1327,
+        "name": "lh:storage:clearDataForOrigin",
+        "duration": 13.6,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 1340.6,
+        "name": "lh:storage:clearBrowserCaches",
+        "duration": 241.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 1582.4,
+        "name": "lh:gather:prepareThrottlingAndNetwork",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47320.4,
+        "name": "lh:computed:NetworkRecords",
+        "duration": 0.5,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47322.3,
+        "name": "lh:runner:auditing",
+        "duration": 63.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47322.3,
+        "name": "lh:runner:audit",
+        "duration": 63.6,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47323.2,
+        "name": "lh:audit:is-on-https",
+        "duration": 1.6,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47325,
+        "name": "lh:audit:redirects-http",
+        "duration": 0.7,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47325.9,
+        "name": "lh:audit:first-contentful-paint",
+        "duration": 0.5,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47326.6,
+        "name": "lh:audit:largest-contentful-paint",
+        "duration": 0.5,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47327.2,
+        "name": "lh:audit:speed-index",
+        "duration": 0.5,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47327.8,
+        "name": "lh:audit:screenshot-thumbnails",
+        "duration": 0,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47327.8,
+        "name": "lh:audit:final-screenshot",
+        "duration": 0,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47327.9,
+        "name": "lh:audit:total-blocking-time",
+        "duration": 0.5,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47328.6,
+        "name": "lh:audit:max-potential-fid",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47329,
+        "name": "lh:audit:cumulative-layout-shift",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47329.6,
+        "name": "lh:audit:errors-in-console",
+        "duration": 0.7,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47330.6,
+        "name": "lh:audit:server-response-time",
+        "duration": 0.7,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47331.3,
+        "name": "lh:audit:interactive",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47331.8,
+        "name": "lh:audit:user-timings",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47332.2,
+        "name": "lh:audit:redirects",
+        "duration": 0.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47332.5,
+        "name": "lh:audit:image-aspect-ratio",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47333,
+        "name": "lh:audit:image-size-responsive",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47333.4,
+        "name": "lh:audit:deprecations",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47333.8,
+        "name": "lh:audit:third-party-cookies",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47334.2,
+        "name": "lh:audit:mainthread-work-breakdown",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47334.6,
+        "name": "lh:audit:bootup-time",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47335,
+        "name": "lh:audit:diagnostics",
+        "duration": 0,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47335.1,
+        "name": "lh:audit:network-requests",
+        "duration": 0,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47335.1,
+        "name": "lh:audit:network-rtt",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47335.5,
+        "name": "lh:audit:network-server-latency",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47335.8,
+        "name": "lh:audit:main-thread-tasks",
+        "duration": 0,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47335.8,
+        "name": "lh:audit:metrics",
+        "duration": 0,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47335.8,
+        "name": "lh:audit:resource-summary",
+        "duration": 0,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47336,
+        "name": "lh:audit:layout-shifts",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47336.4,
+        "name": "lh:audit:long-tasks",
+        "duration": 0.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47336.7,
+        "name": "lh:audit:non-composited-animations",
+        "duration": 0.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47337,
+        "name": "lh:audit:unsized-images",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47337.5,
+        "name": "lh:audit:valid-source-maps",
+        "duration": 0.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47337.8,
+        "name": "lh:audit:csp-xss",
+        "duration": 0.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47338.1,
+        "name": "lh:audit:has-hsts",
+        "duration": 0.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47338.4,
+        "name": "lh:audit:origin-isolation",
+        "duration": 0.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47338.7,
+        "name": "lh:audit:clickjacking-mitigation",
+        "duration": 0.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47339,
+        "name": "lh:audit:trusted-types-xss",
+        "duration": 0.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47339.2,
+        "name": "lh:audit:script-treemap-data",
+        "duration": 0.1,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47339.3,
+        "name": "lh:audit:accesskeys",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47339.8,
+        "name": "lh:audit:aria-allowed-attr",
+        "duration": 0.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47340.1,
+        "name": "lh:audit:aria-allowed-role",
+        "duration": 0.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47340.4,
+        "name": "lh:audit:aria-command-name",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47340.9,
+        "name": "lh:audit:aria-conditional-attr",
+        "duration": 1.8,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47342.8,
+        "name": "lh:audit:aria-deprecated-role",
+        "duration": 0.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47343.1,
+        "name": "lh:audit:aria-dialog-name",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47343.6,
+        "name": "lh:audit:aria-hidden-body",
+        "duration": 0.5,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47344.3,
+        "name": "lh:audit:aria-hidden-focus",
+        "duration": 0.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47344.6,
+        "name": "lh:audit:aria-input-field-name",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47345.1,
+        "name": "lh:audit:aria-meter-name",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47345.5,
+        "name": "lh:audit:aria-progressbar-name",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47345.9,
+        "name": "lh:audit:aria-prohibited-attr",
+        "duration": 0.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47346.2,
+        "name": "lh:audit:aria-required-attr",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47346.6,
+        "name": "lh:audit:aria-required-children",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47347,
+        "name": "lh:audit:aria-required-parent",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47347.4,
+        "name": "lh:audit:aria-roles",
+        "duration": 1.8,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47349.3,
+        "name": "lh:audit:aria-text",
+        "duration": 0.6,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47350,
+        "name": "lh:audit:aria-toggle-field-name",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47350.5,
+        "name": "lh:audit:aria-tooltip-name",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47350.8,
+        "name": "lh:audit:aria-treeitem-name",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47351.2,
+        "name": "lh:audit:aria-valid-attr-value",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47351.6,
+        "name": "lh:audit:aria-valid-attr",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47352,
+        "name": "lh:audit:button-name",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47352.4,
+        "name": "lh:audit:bypass",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47352.9,
+        "name": "lh:audit:color-contrast",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47353.3,
+        "name": "lh:audit:definition-list",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47353.6,
+        "name": "lh:audit:dlitem",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47354,
+        "name": "lh:audit:document-title",
+        "duration": 0.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47354.3,
+        "name": "lh:audit:duplicate-id-aria",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47354.7,
+        "name": "lh:audit:empty-heading",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47355.1,
+        "name": "lh:audit:form-field-multiple-labels",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47355.4,
+        "name": "lh:audit:frame-title",
+        "duration": 0.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47355.8,
+        "name": "lh:audit:heading-order",
+        "duration": 0.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47356.1,
+        "name": "lh:audit:html-has-lang",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47356.6,
+        "name": "lh:audit:html-lang-valid",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47356.9,
+        "name": "lh:audit:html-xml-lang-mismatch",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47357.4,
+        "name": "lh:audit:identical-links-same-purpose",
+        "duration": 0.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47357.7,
+        "name": "lh:audit:image-alt",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47358.1,
+        "name": "lh:audit:image-redundant-alt",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47358.5,
+        "name": "lh:audit:input-button-name",
+        "duration": 0.5,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47359,
+        "name": "lh:audit:input-image-alt",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47359.5,
+        "name": "lh:audit:label-content-name-mismatch",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47359.9,
+        "name": "lh:audit:label",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47360.3,
+        "name": "lh:audit:landmark-one-main",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47360.7,
+        "name": "lh:audit:link-name",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47361,
+        "name": "lh:audit:link-in-text-block",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47361.4,
+        "name": "lh:audit:list",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47361.8,
+        "name": "lh:audit:listitem",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47362.2,
+        "name": "lh:audit:meta-refresh",
+        "duration": 0.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47362.5,
+        "name": "lh:audit:meta-viewport",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47363,
+        "name": "lh:audit:object-alt",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47363.3,
+        "name": "lh:audit:select-name",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47363.7,
+        "name": "lh:audit:skip-link",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47364.1,
+        "name": "lh:audit:tabindex",
+        "duration": 0.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47364.4,
+        "name": "lh:audit:table-duplicate-name",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47364.9,
+        "name": "lh:audit:table-fake-caption",
+        "duration": 0.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47365.2,
+        "name": "lh:audit:target-size",
+        "duration": 0.5,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47366,
+        "name": "lh:audit:td-has-header",
+        "duration": 0.5,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47366.8,
+        "name": "lh:audit:td-headers-attr",
+        "duration": 0.5,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47367.5,
+        "name": "lh:audit:th-has-data-cells",
+        "duration": 1.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47368.9,
+        "name": "lh:audit:valid-lang",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47369.4,
+        "name": "lh:audit:video-caption",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47369.7,
+        "name": "lh:audit:custom-controls-labels",
+        "duration": 0.1,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47369.8,
+        "name": "lh:audit:custom-controls-roles",
+        "duration": 0,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47369.9,
+        "name": "lh:audit:focus-traps",
+        "duration": 0,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47369.9,
+        "name": "lh:audit:focusable-controls",
+        "duration": 0.1,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47370,
+        "name": "lh:audit:interactive-element-affordance",
+        "duration": 0.1,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47370.1,
+        "name": "lh:audit:logical-tab-order",
+        "duration": 0,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47370.1,
+        "name": "lh:audit:managed-focus",
+        "duration": 0.1,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47370.3,
+        "name": "lh:audit:offscreen-content-hidden",
+        "duration": 0,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47370.3,
+        "name": "lh:audit:use-landmarks",
+        "duration": 0,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47370.3,
+        "name": "lh:audit:visual-order-follows-dom",
+        "duration": 0.1,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47370.5,
+        "name": "lh:audit:total-byte-weight",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47370.9,
+        "name": "lh:audit:unminified-css",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47371.3,
+        "name": "lh:audit:unminified-javascript",
+        "duration": 0.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47371.6,
+        "name": "lh:audit:unused-css-rules",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47372,
+        "name": "lh:audit:unused-javascript",
+        "duration": 0.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47372.2,
+        "name": "lh:audit:doctype",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47372.6,
+        "name": "lh:audit:charset",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47373.1,
+        "name": "lh:audit:geolocation-on-start",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47373.7,
+        "name": "lh:audit:inspector-issues",
+        "duration": 2.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47376.3,
+        "name": "lh:audit:js-libraries",
+        "duration": 0.6,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47377.1,
+        "name": "lh:audit:notification-on-start",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47377.6,
+        "name": "lh:audit:paste-preventing-inputs",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47378.1,
+        "name": "lh:audit:bf-cache",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47378.7,
+        "name": "lh:audit:cache-insight",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47379.1,
+        "name": "lh:audit:cls-culprits-insight",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47379.5,
+        "name": "lh:audit:document-latency-insight",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47380,
+        "name": "lh:audit:dom-size-insight",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47380.4,
+        "name": "lh:audit:duplicated-javascript-insight",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47380.9,
+        "name": "lh:audit:font-display-insight",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47381.4,
+        "name": "lh:audit:forced-reflow-insight",
+        "duration": 0.4,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47381.9,
+        "name": "lh:audit:image-delivery-insight",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47382.3,
+        "name": "lh:audit:inp-breakdown-insight",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47382.7,
+        "name": "lh:audit:lcp-breakdown-insight",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47383.2,
+        "name": "lh:audit:lcp-discovery-insight",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47383.6,
+        "name": "lh:audit:legacy-javascript-insight",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47384,
+        "name": "lh:audit:modern-http-insight",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47384.4,
+        "name": "lh:audit:network-dependency-tree-insight",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47384.7,
+        "name": "lh:audit:render-blocking-insight",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47385.1,
+        "name": "lh:audit:third-parties-insight",
+        "duration": 0.3,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47385.5,
+        "name": "lh:audit:viewport-insight",
+        "duration": 0.2,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 47385.7,
+        "name": "lh:runner:generate",
+        "duration": 0.2,
+        "entryType": "measure"
+      }
+    ],
+    "total": 47139.299999999996
+  },
+  "i18n": {
+    "rendererFormattedStrings": {
+      "calculatorLink": "計算ツールはこちら。",
+      "collapseView": "ビューを閉じる",
+      "crcInitialNavigation": "最初の移動先",
+      "crcLongestDurationLabel": "クリティカル パスの最大待ち時間:",
+      "dropdownCopyJSON": "JSON をコピー",
+      "dropdownDarkTheme": "ダークモードの切り替え",
+      "dropdownPrintExpanded": "完全版を印刷",
+      "dropdownPrintSummary": "概要を印刷",
+      "dropdownSaveGist": "Gist 形式で保存",
+      "dropdownSaveHTML": "HTML 形式で保存",
+      "dropdownSaveJSON": "JSON 形式で保存",
+      "dropdownViewUnthrottledTrace": "スロットリングされていないトレースを表示",
+      "dropdownViewer": "ビューアで開く",
+      "errorLabel": "エラー",
+      "errorMissingAuditInfo": "レポートエラー: 監査情報はありません",
+      "expandView": "ビューを開く",
+      "firstPartyChipLabel": "自社",
+      "footerIssue": "問題を提出",
+      "hide": "非表示",
+      "labDataTitle": "ラボデータ",
+      "lsPerformanceCategoryDescription": "エミュレート済みモバイル ネットワークでの現在のページに関する [Lighthouse](https://developers.google.com/web/tools/lighthouse/) 分析です。推定値のため変動する可能性があります。",
+      "manualAuditsGroupTitle": "個別の検証が必要な他の項目",
+      "notApplicableAuditsGroupTitle": "該当なし",
+      "openInANewTabTooltip": "新しいタブで開く",
+      "opportunityResourceColumnLabel": "改善できる項目",
+      "opportunitySavingsColumnLabel": "短縮できる時間（推定）",
+      "passedAuditsGroupTitle": "合格した監査",
+      "runtimeAnalysisWindow": "最初のページ読み込み",
+      "runtimeAnalysisWindowSnapshot": "特定の時点のスナップショット",
+      "runtimeAnalysisWindowTimespan": "ユーザー インタラクションの期間",
+      "runtimeCustom": "カスタム スロットリング",
+      "runtimeDesktopEmulation": "デスクトップのエミュレーション",
+      "runtimeMobileEmulation": "Moto G Power のエミュレーション",
+      "runtimeNoEmulation": "エミュレーションなし",
+      "runtimeSettingsAxeVersion": "Axe バージョン",
+      "runtimeSettingsBenchmark": "スロットリングされていない CPU / メモリ容量",
+      "runtimeSettingsCPUThrottling": "CPU スロットリング",
+      "runtimeSettingsDevice": "デバイス",
+      "runtimeSettingsNetworkThrottling": "ネットワーク スロットリング",
+      "runtimeSettingsScreenEmulation": "画面のエミュレーション",
+      "runtimeSettingsUANetwork": "ユーザー エージェント（ネットワーク）",
+      "runtimeSingleLoad": "1 ページのみのセッション",
+      "runtimeSingleLoadTooltip": "このデータは 1 回のページ セッションで取得されたもので、フィールド データは多数のセッションを要約したものです。",
+      "runtimeSlow4g": "低速 4G スロットリング",
+      "runtimeUnknown": "不明",
+      "show": "表示",
+      "showRelevantAudits": "次に関連する監査を表示:",
+      "snippetCollapseButtonLabel": "スニペットを折りたたむ",
+      "snippetExpandButtonLabel": "スニペットを展開",
+      "thirdPartyResourcesLabel": "第三者リソースを表示",
+      "throttlingProvided": "環境により提供",
+      "toplevelWarningsMessage": "Lighthouse の実行に影響する問題が発生しました。",
+      "unattributable": "アトリビューション不可",
+      "unscoredLabel": "スコアなし",
+      "unscoredTitle": "この監査は、カテゴリの総合スコアに影響しません。",
+      "varianceDisclaimer": "推定値のため変動する可能性があります。[パフォーマンス スコアの計算](https://developer.chrome.com/docs/lighthouse/performance/performance-scoring/)は、これらの指標を基に行っています。",
+      "viewTraceLabel": "トレースを表示",
+      "viewTreemapLabel": "ツリーマップを見る",
+      "warningAuditsGroupTitle": "監査には合格しましたが警告があります",
+      "warningHeader": "警告: "
+    },
+    "icuMessagePaths": {
+      "core/lib/lh-error.js | noFcp": [
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "runtimeError.message"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "runWarnings[0]"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[is-on-https].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[redirects-http].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[first-contentful-paint].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[largest-contentful-paint].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[speed-index].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[screenshot-thumbnails].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[final-screenshot].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[total-blocking-time].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[max-potential-fid].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[cumulative-layout-shift].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[errors-in-console].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[server-response-time].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits.interactive.errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[user-timings].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits.redirects.errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[image-aspect-ratio].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[image-size-responsive].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits.deprecations.errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[third-party-cookies].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[mainthread-work-breakdown].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[bootup-time].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits.diagnostics.errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[network-requests].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[network-rtt].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[network-server-latency].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[main-thread-tasks].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits.metrics.errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[resource-summary].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[layout-shifts].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[long-tasks].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[non-composited-animations].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[unsized-images].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[valid-source-maps].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[csp-xss].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[has-hsts].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[origin-isolation].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[clickjacking-mitigation].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[trusted-types-xss].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[script-treemap-data].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits.accesskeys.errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[aria-allowed-attr].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[aria-allowed-role].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[aria-command-name].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[aria-conditional-attr].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[aria-deprecated-role].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[aria-dialog-name].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[aria-hidden-body].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[aria-hidden-focus].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[aria-input-field-name].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[aria-meter-name].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[aria-progressbar-name].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[aria-prohibited-attr].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[aria-required-attr].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[aria-required-children].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[aria-required-parent].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[aria-roles].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[aria-text].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[aria-toggle-field-name].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[aria-tooltip-name].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[aria-treeitem-name].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[aria-valid-attr-value].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[aria-valid-attr].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[button-name].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits.bypass.errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[color-contrast].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[definition-list].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits.dlitem.errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[document-title].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[duplicate-id-aria].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[empty-heading].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[form-field-multiple-labels].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[frame-title].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[heading-order].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[html-has-lang].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[html-lang-valid].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[html-xml-lang-mismatch].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[identical-links-same-purpose].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[image-alt].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[image-redundant-alt].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[input-button-name].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[input-image-alt].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[label-content-name-mismatch].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits.label.errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[landmark-one-main].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[link-name].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[link-in-text-block].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits.list.errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits.listitem.errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[meta-refresh].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[meta-viewport].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[object-alt].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[select-name].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[skip-link].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits.tabindex.errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[table-duplicate-name].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[table-fake-caption].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[target-size].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[td-has-header].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[td-headers-attr].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[th-has-data-cells].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[valid-lang].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[video-caption].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[custom-controls-labels].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[custom-controls-roles].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[focus-traps].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[focusable-controls].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[interactive-element-affordance].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[logical-tab-order].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[managed-focus].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[offscreen-content-hidden].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[use-landmarks].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[visual-order-follows-dom].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[total-byte-weight].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[unminified-css].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[unminified-javascript].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[unused-css-rules].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[unused-javascript].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits.doctype.errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits.charset.errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[geolocation-on-start].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[inspector-issues].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[js-libraries].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[notification-on-start].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[paste-preventing-inputs].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[bf-cache].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[cache-insight].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[cls-culprits-insight].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[document-latency-insight].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[dom-size-insight].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[duplicated-javascript-insight].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[font-display-insight].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[forced-reflow-insight].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[image-delivery-insight].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[inp-breakdown-insight].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[lcp-breakdown-insight].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[lcp-discovery-insight].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[legacy-javascript-insight].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[modern-http-insight].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[network-dependency-tree-insight].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[render-blocking-insight].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[third-parties-insight].errorMessage"
+        },
+        {
+          "values": {
+            "errorCode": "NO_FCP"
+          },
+          "path": "audits[viewport-insight].errorMessage"
+        }
+      ],
+      "core/audits/is-on-https.js | title": [
+        "audits[is-on-https].title"
+      ],
+      "core/audits/is-on-https.js | description": [
+        "audits[is-on-https].description"
+      ],
+      "core/audits/redirects-http.js | title": [
+        "audits[redirects-http].title"
+      ],
+      "core/audits/redirects-http.js | description": [
+        "audits[redirects-http].description"
+      ],
+      "core/lib/i18n/i18n.js | firstContentfulPaintMetric": [
+        "audits[first-contentful-paint].title"
+      ],
+      "core/audits/metrics/first-contentful-paint.js | description": [
+        "audits[first-contentful-paint].description"
+      ],
+      "core/lib/i18n/i18n.js | largestContentfulPaintMetric": [
+        "audits[largest-contentful-paint].title"
+      ],
+      "core/audits/metrics/largest-contentful-paint.js | description": [
+        "audits[largest-contentful-paint].description"
+      ],
+      "core/lib/i18n/i18n.js | speedIndexMetric": [
+        "audits[speed-index].title"
+      ],
+      "core/audits/metrics/speed-index.js | description": [
+        "audits[speed-index].description"
+      ],
+      "core/lib/i18n/i18n.js | totalBlockingTimeMetric": [
+        "audits[total-blocking-time].title"
+      ],
+      "core/audits/metrics/total-blocking-time.js | description": [
+        "audits[total-blocking-time].description"
+      ],
+      "core/lib/i18n/i18n.js | maxPotentialFIDMetric": [
+        "audits[max-potential-fid].title"
+      ],
+      "core/audits/metrics/max-potential-fid.js | description": [
+        "audits[max-potential-fid].description"
+      ],
+      "core/lib/i18n/i18n.js | cumulativeLayoutShiftMetric": [
+        "audits[cumulative-layout-shift].title"
+      ],
+      "core/audits/metrics/cumulative-layout-shift.js | description": [
+        "audits[cumulative-layout-shift].description"
+      ],
+      "core/audits/errors-in-console.js | title": [
+        "audits[errors-in-console].title"
+      ],
+      "core/audits/errors-in-console.js | description": [
+        "audits[errors-in-console].description"
+      ],
+      "core/audits/server-response-time.js | title": [
+        "audits[server-response-time].title"
+      ],
+      "core/audits/server-response-time.js | description": [
+        "audits[server-response-time].description"
+      ],
+      "core/lib/i18n/i18n.js | interactiveMetric": [
+        "audits.interactive.title"
+      ],
+      "core/audits/metrics/interactive.js | description": [
+        "audits.interactive.description"
+      ],
+      "core/audits/user-timings.js | title": [
+        "audits[user-timings].title"
+      ],
+      "core/audits/user-timings.js | description": [
+        "audits[user-timings].description"
+      ],
+      "core/audits/redirects.js | title": [
+        "audits.redirects.title"
+      ],
+      "core/audits/redirects.js | description": [
+        "audits.redirects.description"
+      ],
+      "core/audits/image-aspect-ratio.js | title": [
+        "audits[image-aspect-ratio].title"
+      ],
+      "core/audits/image-aspect-ratio.js | description": [
+        "audits[image-aspect-ratio].description"
+      ],
+      "core/audits/image-size-responsive.js | title": [
+        "audits[image-size-responsive].title"
+      ],
+      "core/audits/image-size-responsive.js | description": [
+        "audits[image-size-responsive].description"
+      ],
+      "core/audits/deprecations.js | title": [
+        "audits.deprecations.title"
+      ],
+      "core/audits/deprecations.js | description": [
+        "audits.deprecations.description"
+      ],
+      "core/audits/third-party-cookies.js | title": [
+        "audits[third-party-cookies].title"
+      ],
+      "core/audits/third-party-cookies.js | description": [
+        "audits[third-party-cookies].description"
+      ],
+      "core/audits/mainthread-work-breakdown.js | title": [
+        "audits[mainthread-work-breakdown].title"
+      ],
+      "core/audits/mainthread-work-breakdown.js | description": [
+        "audits[mainthread-work-breakdown].description"
+      ],
+      "core/audits/bootup-time.js | title": [
+        "audits[bootup-time].title"
+      ],
+      "core/audits/bootup-time.js | description": [
+        "audits[bootup-time].description"
+      ],
+      "core/audits/network-rtt.js | title": [
+        "audits[network-rtt].title"
+      ],
+      "core/audits/network-rtt.js | description": [
+        "audits[network-rtt].description"
+      ],
+      "core/audits/network-server-latency.js | title": [
+        "audits[network-server-latency].title"
+      ],
+      "core/audits/network-server-latency.js | description": [
+        "audits[network-server-latency].description"
+      ],
+      "core/audits/layout-shifts.js | title": [
+        "audits[layout-shifts].title"
+      ],
+      "core/audits/layout-shifts.js | description": [
+        "audits[layout-shifts].description"
+      ],
+      "core/audits/long-tasks.js | title": [
+        "audits[long-tasks].title"
+      ],
+      "core/audits/long-tasks.js | description": [
+        "audits[long-tasks].description"
+      ],
+      "core/audits/non-composited-animations.js | title": [
+        "audits[non-composited-animations].title"
+      ],
+      "core/audits/non-composited-animations.js | description": [
+        "audits[non-composited-animations].description"
+      ],
+      "core/audits/unsized-images.js | title": [
+        "audits[unsized-images].title"
+      ],
+      "core/audits/unsized-images.js | description": [
+        "audits[unsized-images].description"
+      ],
+      "core/audits/valid-source-maps.js | title": [
+        "audits[valid-source-maps].title"
+      ],
+      "core/audits/valid-source-maps.js | description": [
+        "audits[valid-source-maps].description"
+      ],
+      "core/audits/csp-xss.js | title": [
+        "audits[csp-xss].title"
+      ],
+      "core/audits/csp-xss.js | description": [
+        "audits[csp-xss].description"
+      ],
+      "core/audits/has-hsts.js | title": [
+        "audits[has-hsts].title"
+      ],
+      "core/audits/has-hsts.js | description": [
+        "audits[has-hsts].description"
+      ],
+      "core/audits/origin-isolation.js | title": [
+        "audits[origin-isolation].title"
+      ],
+      "core/audits/origin-isolation.js | description": [
+        "audits[origin-isolation].description"
+      ],
+      "core/audits/clickjacking-mitigation.js | title": [
+        "audits[clickjacking-mitigation].title"
+      ],
+      "core/audits/clickjacking-mitigation.js | description": [
+        "audits[clickjacking-mitigation].description"
+      ],
+      "core/audits/trusted-types-xss.js | title": [
+        "audits[trusted-types-xss].title"
+      ],
+      "core/audits/trusted-types-xss.js | description": [
+        "audits[trusted-types-xss].description"
+      ],
+      "core/audits/accessibility/accesskeys.js | title": [
+        "audits.accesskeys.title"
+      ],
+      "core/audits/accessibility/accesskeys.js | description": [
+        "audits.accesskeys.description"
+      ],
+      "core/audits/accessibility/aria-allowed-attr.js | title": [
+        "audits[aria-allowed-attr].title"
+      ],
+      "core/audits/accessibility/aria-allowed-attr.js | description": [
+        "audits[aria-allowed-attr].description"
+      ],
+      "core/audits/accessibility/aria-allowed-role.js | title": [
+        "audits[aria-allowed-role].title"
+      ],
+      "core/audits/accessibility/aria-allowed-role.js | description": [
+        "audits[aria-allowed-role].description"
+      ],
+      "core/audits/accessibility/aria-command-name.js | title": [
+        "audits[aria-command-name].title"
+      ],
+      "core/audits/accessibility/aria-command-name.js | description": [
+        "audits[aria-command-name].description"
+      ],
+      "core/audits/accessibility/aria-conditional-attr.js | title": [
+        "audits[aria-conditional-attr].title"
+      ],
+      "core/audits/accessibility/aria-conditional-attr.js | description": [
+        "audits[aria-conditional-attr].description"
+      ],
+      "core/audits/accessibility/aria-deprecated-role.js | title": [
+        "audits[aria-deprecated-role].title"
+      ],
+      "core/audits/accessibility/aria-deprecated-role.js | description": [
+        "audits[aria-deprecated-role].description"
+      ],
+      "core/audits/accessibility/aria-dialog-name.js | title": [
+        "audits[aria-dialog-name].title"
+      ],
+      "core/audits/accessibility/aria-dialog-name.js | description": [
+        "audits[aria-dialog-name].description"
+      ],
+      "core/audits/accessibility/aria-hidden-body.js | title": [
+        "audits[aria-hidden-body].title"
+      ],
+      "core/audits/accessibility/aria-hidden-body.js | description": [
+        "audits[aria-hidden-body].description"
+      ],
+      "core/audits/accessibility/aria-hidden-focus.js | title": [
+        "audits[aria-hidden-focus].title"
+      ],
+      "core/audits/accessibility/aria-hidden-focus.js | description": [
+        "audits[aria-hidden-focus].description"
+      ],
+      "core/audits/accessibility/aria-input-field-name.js | title": [
+        "audits[aria-input-field-name].title"
+      ],
+      "core/audits/accessibility/aria-input-field-name.js | description": [
+        "audits[aria-input-field-name].description"
+      ],
+      "core/audits/accessibility/aria-meter-name.js | title": [
+        "audits[aria-meter-name].title"
+      ],
+      "core/audits/accessibility/aria-meter-name.js | description": [
+        "audits[aria-meter-name].description"
+      ],
+      "core/audits/accessibility/aria-progressbar-name.js | title": [
+        "audits[aria-progressbar-name].title"
+      ],
+      "core/audits/accessibility/aria-progressbar-name.js | description": [
+        "audits[aria-progressbar-name].description"
+      ],
+      "core/audits/accessibility/aria-prohibited-attr.js | title": [
+        "audits[aria-prohibited-attr].title"
+      ],
+      "core/audits/accessibility/aria-prohibited-attr.js | description": [
+        "audits[aria-prohibited-attr].description"
+      ],
+      "core/audits/accessibility/aria-required-attr.js | title": [
+        "audits[aria-required-attr].title"
+      ],
+      "core/audits/accessibility/aria-required-attr.js | description": [
+        "audits[aria-required-attr].description"
+      ],
+      "core/audits/accessibility/aria-required-children.js | title": [
+        "audits[aria-required-children].title"
+      ],
+      "core/audits/accessibility/aria-required-children.js | description": [
+        "audits[aria-required-children].description"
+      ],
+      "core/audits/accessibility/aria-required-parent.js | title": [
+        "audits[aria-required-parent].title"
+      ],
+      "core/audits/accessibility/aria-required-parent.js | description": [
+        "audits[aria-required-parent].description"
+      ],
+      "core/audits/accessibility/aria-roles.js | title": [
+        "audits[aria-roles].title"
+      ],
+      "core/audits/accessibility/aria-roles.js | description": [
+        "audits[aria-roles].description"
+      ],
+      "core/audits/accessibility/aria-text.js | title": [
+        "audits[aria-text].title"
+      ],
+      "core/audits/accessibility/aria-text.js | description": [
+        "audits[aria-text].description"
+      ],
+      "core/audits/accessibility/aria-toggle-field-name.js | title": [
+        "audits[aria-toggle-field-name].title"
+      ],
+      "core/audits/accessibility/aria-toggle-field-name.js | description": [
+        "audits[aria-toggle-field-name].description"
+      ],
+      "core/audits/accessibility/aria-tooltip-name.js | title": [
+        "audits[aria-tooltip-name].title"
+      ],
+      "core/audits/accessibility/aria-tooltip-name.js | description": [
+        "audits[aria-tooltip-name].description"
+      ],
+      "core/audits/accessibility/aria-treeitem-name.js | title": [
+        "audits[aria-treeitem-name].title"
+      ],
+      "core/audits/accessibility/aria-treeitem-name.js | description": [
+        "audits[aria-treeitem-name].description"
+      ],
+      "core/audits/accessibility/aria-valid-attr-value.js | title": [
+        "audits[aria-valid-attr-value].title"
+      ],
+      "core/audits/accessibility/aria-valid-attr-value.js | description": [
+        "audits[aria-valid-attr-value].description"
+      ],
+      "core/audits/accessibility/aria-valid-attr.js | title": [
+        "audits[aria-valid-attr].title"
+      ],
+      "core/audits/accessibility/aria-valid-attr.js | description": [
+        "audits[aria-valid-attr].description"
+      ],
+      "core/audits/accessibility/button-name.js | title": [
+        "audits[button-name].title"
+      ],
+      "core/audits/accessibility/button-name.js | description": [
+        "audits[button-name].description"
+      ],
+      "core/audits/accessibility/bypass.js | title": [
+        "audits.bypass.title"
+      ],
+      "core/audits/accessibility/bypass.js | description": [
+        "audits.bypass.description"
+      ],
+      "core/audits/accessibility/color-contrast.js | title": [
+        "audits[color-contrast].title"
+      ],
+      "core/audits/accessibility/color-contrast.js | description": [
+        "audits[color-contrast].description"
+      ],
+      "core/audits/accessibility/definition-list.js | title": [
+        "audits[definition-list].title"
+      ],
+      "core/audits/accessibility/definition-list.js | description": [
+        "audits[definition-list].description"
+      ],
+      "core/audits/accessibility/dlitem.js | title": [
+        "audits.dlitem.title"
+      ],
+      "core/audits/accessibility/dlitem.js | description": [
+        "audits.dlitem.description"
+      ],
+      "core/audits/accessibility/document-title.js | title": [
+        "audits[document-title].title"
+      ],
+      "core/audits/accessibility/document-title.js | description": [
+        "audits[document-title].description"
+      ],
+      "core/audits/accessibility/duplicate-id-aria.js | title": [
+        "audits[duplicate-id-aria].title"
+      ],
+      "core/audits/accessibility/duplicate-id-aria.js | description": [
+        "audits[duplicate-id-aria].description"
+      ],
+      "core/audits/accessibility/empty-heading.js | title": [
+        "audits[empty-heading].title"
+      ],
+      "core/audits/accessibility/empty-heading.js | description": [
+        "audits[empty-heading].description"
+      ],
+      "core/audits/accessibility/form-field-multiple-labels.js | title": [
+        "audits[form-field-multiple-labels].title"
+      ],
+      "core/audits/accessibility/form-field-multiple-labels.js | description": [
+        "audits[form-field-multiple-labels].description"
+      ],
+      "core/audits/accessibility/frame-title.js | title": [
+        "audits[frame-title].title"
+      ],
+      "core/audits/accessibility/frame-title.js | description": [
+        "audits[frame-title].description"
+      ],
+      "core/audits/accessibility/heading-order.js | title": [
+        "audits[heading-order].title"
+      ],
+      "core/audits/accessibility/heading-order.js | description": [
+        "audits[heading-order].description"
+      ],
+      "core/audits/accessibility/html-has-lang.js | title": [
+        "audits[html-has-lang].title"
+      ],
+      "core/audits/accessibility/html-has-lang.js | description": [
+        "audits[html-has-lang].description"
+      ],
+      "core/audits/accessibility/html-lang-valid.js | title": [
+        "audits[html-lang-valid].title"
+      ],
+      "core/audits/accessibility/html-lang-valid.js | description": [
+        "audits[html-lang-valid].description"
+      ],
+      "core/audits/accessibility/html-xml-lang-mismatch.js | title": [
+        "audits[html-xml-lang-mismatch].title"
+      ],
+      "core/audits/accessibility/html-xml-lang-mismatch.js | description": [
+        "audits[html-xml-lang-mismatch].description"
+      ],
+      "core/audits/accessibility/identical-links-same-purpose.js | title": [
+        "audits[identical-links-same-purpose].title"
+      ],
+      "core/audits/accessibility/identical-links-same-purpose.js | description": [
+        "audits[identical-links-same-purpose].description"
+      ],
+      "core/audits/accessibility/image-alt.js | title": [
+        "audits[image-alt].title"
+      ],
+      "core/audits/accessibility/image-alt.js | description": [
+        "audits[image-alt].description"
+      ],
+      "core/audits/accessibility/image-redundant-alt.js | title": [
+        "audits[image-redundant-alt].title"
+      ],
+      "core/audits/accessibility/image-redundant-alt.js | description": [
+        "audits[image-redundant-alt].description"
+      ],
+      "core/audits/accessibility/input-button-name.js | title": [
+        "audits[input-button-name].title"
+      ],
+      "core/audits/accessibility/input-button-name.js | description": [
+        "audits[input-button-name].description"
+      ],
+      "core/audits/accessibility/input-image-alt.js | title": [
+        "audits[input-image-alt].title"
+      ],
+      "core/audits/accessibility/input-image-alt.js | description": [
+        "audits[input-image-alt].description"
+      ],
+      "core/audits/accessibility/label-content-name-mismatch.js | title": [
+        "audits[label-content-name-mismatch].title"
+      ],
+      "core/audits/accessibility/label-content-name-mismatch.js | description": [
+        "audits[label-content-name-mismatch].description"
+      ],
+      "core/audits/accessibility/label.js | title": [
+        "audits.label.title"
+      ],
+      "core/audits/accessibility/label.js | description": [
+        "audits.label.description"
+      ],
+      "core/audits/accessibility/landmark-one-main.js | title": [
+        "audits[landmark-one-main].title"
+      ],
+      "core/audits/accessibility/landmark-one-main.js | description": [
+        "audits[landmark-one-main].description"
+      ],
+      "core/audits/accessibility/link-name.js | title": [
+        "audits[link-name].title"
+      ],
+      "core/audits/accessibility/link-name.js | description": [
+        "audits[link-name].description"
+      ],
+      "core/audits/accessibility/link-in-text-block.js | title": [
+        "audits[link-in-text-block].title"
+      ],
+      "core/audits/accessibility/link-in-text-block.js | description": [
+        "audits[link-in-text-block].description"
+      ],
+      "core/audits/accessibility/list.js | title": [
+        "audits.list.title"
+      ],
+      "core/audits/accessibility/list.js | description": [
+        "audits.list.description"
+      ],
+      "core/audits/accessibility/listitem.js | title": [
+        "audits.listitem.title"
+      ],
+      "core/audits/accessibility/listitem.js | description": [
+        "audits.listitem.description"
+      ],
+      "core/audits/accessibility/meta-refresh.js | title": [
+        "audits[meta-refresh].title"
+      ],
+      "core/audits/accessibility/meta-refresh.js | description": [
+        "audits[meta-refresh].description"
+      ],
+      "core/audits/accessibility/meta-viewport.js | title": [
+        "audits[meta-viewport].title"
+      ],
+      "core/audits/accessibility/meta-viewport.js | description": [
+        "audits[meta-viewport].description"
+      ],
+      "core/audits/accessibility/object-alt.js | title": [
+        "audits[object-alt].title"
+      ],
+      "core/audits/accessibility/object-alt.js | description": [
+        "audits[object-alt].description"
+      ],
+      "core/audits/accessibility/select-name.js | title": [
+        "audits[select-name].title"
+      ],
+      "core/audits/accessibility/select-name.js | description": [
+        "audits[select-name].description"
+      ],
+      "core/audits/accessibility/skip-link.js | title": [
+        "audits[skip-link].title"
+      ],
+      "core/audits/accessibility/skip-link.js | description": [
+        "audits[skip-link].description"
+      ],
+      "core/audits/accessibility/tabindex.js | title": [
+        "audits.tabindex.title"
+      ],
+      "core/audits/accessibility/tabindex.js | description": [
+        "audits.tabindex.description"
+      ],
+      "core/audits/accessibility/table-duplicate-name.js | title": [
+        "audits[table-duplicate-name].title"
+      ],
+      "core/audits/accessibility/table-duplicate-name.js | description": [
+        "audits[table-duplicate-name].description"
+      ],
+      "core/audits/accessibility/table-fake-caption.js | title": [
+        "audits[table-fake-caption].title"
+      ],
+      "core/audits/accessibility/table-fake-caption.js | description": [
+        "audits[table-fake-caption].description"
+      ],
+      "core/audits/accessibility/target-size.js | title": [
+        "audits[target-size].title"
+      ],
+      "core/audits/accessibility/target-size.js | description": [
+        "audits[target-size].description"
+      ],
+      "core/audits/accessibility/td-has-header.js | title": [
+        "audits[td-has-header].title"
+      ],
+      "core/audits/accessibility/td-has-header.js | description": [
+        "audits[td-has-header].description"
+      ],
+      "core/audits/accessibility/td-headers-attr.js | title": [
+        "audits[td-headers-attr].title"
+      ],
+      "core/audits/accessibility/td-headers-attr.js | description": [
+        "audits[td-headers-attr].description"
+      ],
+      "core/audits/accessibility/th-has-data-cells.js | title": [
+        "audits[th-has-data-cells].title"
+      ],
+      "core/audits/accessibility/th-has-data-cells.js | description": [
+        "audits[th-has-data-cells].description"
+      ],
+      "core/audits/accessibility/valid-lang.js | title": [
+        "audits[valid-lang].title"
+      ],
+      "core/audits/accessibility/valid-lang.js | description": [
+        "audits[valid-lang].description"
+      ],
+      "core/audits/accessibility/video-caption.js | title": [
+        "audits[video-caption].title"
+      ],
+      "core/audits/accessibility/video-caption.js | description": [
+        "audits[video-caption].description"
+      ],
+      "core/audits/byte-efficiency/total-byte-weight.js | title": [
+        "audits[total-byte-weight].title"
+      ],
+      "core/audits/byte-efficiency/total-byte-weight.js | description": [
+        "audits[total-byte-weight].description"
+      ],
+      "core/audits/byte-efficiency/unminified-css.js | title": [
+        "audits[unminified-css].title"
+      ],
+      "core/audits/byte-efficiency/unminified-css.js | description": [
+        "audits[unminified-css].description"
+      ],
+      "core/audits/byte-efficiency/unminified-javascript.js | title": [
+        "audits[unminified-javascript].title"
+      ],
+      "core/audits/byte-efficiency/unminified-javascript.js | description": [
+        "audits[unminified-javascript].description"
+      ],
+      "core/audits/byte-efficiency/unused-css-rules.js | title": [
+        "audits[unused-css-rules].title"
+      ],
+      "core/audits/byte-efficiency/unused-css-rules.js | description": [
+        "audits[unused-css-rules].description"
+      ],
+      "core/audits/byte-efficiency/unused-javascript.js | title": [
+        "audits[unused-javascript].title"
+      ],
+      "core/audits/byte-efficiency/unused-javascript.js | description": [
+        "audits[unused-javascript].description"
+      ],
+      "core/audits/dobetterweb/doctype.js | title": [
+        "audits.doctype.title"
+      ],
+      "core/audits/dobetterweb/doctype.js | description": [
+        "audits.doctype.description"
+      ],
+      "core/audits/dobetterweb/charset.js | title": [
+        "audits.charset.title"
+      ],
+      "core/audits/dobetterweb/charset.js | description": [
+        "audits.charset.description"
+      ],
+      "core/audits/dobetterweb/geolocation-on-start.js | title": [
+        "audits[geolocation-on-start].title"
+      ],
+      "core/audits/dobetterweb/geolocation-on-start.js | description": [
+        "audits[geolocation-on-start].description"
+      ],
+      "core/audits/dobetterweb/inspector-issues.js | title": [
+        "audits[inspector-issues].title"
+      ],
+      "core/audits/dobetterweb/inspector-issues.js | description": [
+        "audits[inspector-issues].description"
+      ],
+      "core/audits/dobetterweb/js-libraries.js | title": [
+        "audits[js-libraries].title"
+      ],
+      "core/audits/dobetterweb/js-libraries.js | description": [
+        "audits[js-libraries].description"
+      ],
+      "core/audits/dobetterweb/notification-on-start.js | title": [
+        "audits[notification-on-start].title"
+      ],
+      "core/audits/dobetterweb/notification-on-start.js | description": [
+        "audits[notification-on-start].description"
+      ],
+      "core/audits/dobetterweb/paste-preventing-inputs.js | title": [
+        "audits[paste-preventing-inputs].title"
+      ],
+      "core/audits/dobetterweb/paste-preventing-inputs.js | description": [
+        "audits[paste-preventing-inputs].description"
+      ],
+      "core/audits/bf-cache.js | title": [
+        "audits[bf-cache].title"
+      ],
+      "core/audits/bf-cache.js | description": [
+        "audits[bf-cache].description"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/Cache.js | title": [
+        "audits[cache-insight].title"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/Cache.js | description": [
+        "audits[cache-insight].description"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/CLSCulprits.js | title": [
+        "audits[cls-culprits-insight].title"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/CLSCulprits.js | description": [
+        "audits[cls-culprits-insight].description"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/DocumentLatency.js | title": [
+        "audits[document-latency-insight].title"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/DocumentLatency.js | description": [
+        "audits[document-latency-insight].description"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/DOMSize.js | title": [
+        "audits[dom-size-insight].title"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/DOMSize.js | description": [
+        "audits[dom-size-insight].description"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/DuplicatedJavaScript.js | title": [
+        "audits[duplicated-javascript-insight].title"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/DuplicatedJavaScript.js | description": [
+        "audits[duplicated-javascript-insight].description"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/FontDisplay.js | title": [
+        "audits[font-display-insight].title"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/FontDisplay.js | description": [
+        "audits[font-display-insight].description"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/ForcedReflow.js | title": [
+        "audits[forced-reflow-insight].title"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/ForcedReflow.js | description": [
+        "audits[forced-reflow-insight].description"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/ImageDelivery.js | title": [
+        "audits[image-delivery-insight].title"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/ImageDelivery.js | description": [
+        "audits[image-delivery-insight].description"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/INPBreakdown.js | title": [
+        "audits[inp-breakdown-insight].title"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/INPBreakdown.js | description": [
+        "audits[inp-breakdown-insight].description"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/LCPBreakdown.js | title": [
+        "audits[lcp-breakdown-insight].title"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/LCPBreakdown.js | description": [
+        "audits[lcp-breakdown-insight].description"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/LCPDiscovery.js | title": [
+        "audits[lcp-discovery-insight].title"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/LCPDiscovery.js | description": [
+        "audits[lcp-discovery-insight].description"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/LegacyJavaScript.js | title": [
+        "audits[legacy-javascript-insight].title"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/LegacyJavaScript.js | description": [
+        "audits[legacy-javascript-insight].description"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/ModernHTTP.js | title": [
+        "audits[modern-http-insight].title"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/ModernHTTP.js | description": [
+        "audits[modern-http-insight].description"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/NetworkDependencyTree.js | title": [
+        "audits[network-dependency-tree-insight].title"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/NetworkDependencyTree.js | description": [
+        "audits[network-dependency-tree-insight].description"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/RenderBlocking.js | title": [
+        "audits[render-blocking-insight].title"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/RenderBlocking.js | description": [
+        "audits[render-blocking-insight].description"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/ThirdParties.js | title": [
+        "audits[third-parties-insight].title"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/ThirdParties.js | description": [
+        "audits[third-parties-insight].description"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/Viewport.js | title": [
+        "audits[viewport-insight].title"
+      ],
+      "node_modules/@paulirish/trace_engine/models/trace/insights/Viewport.js | description": [
+        "audits[viewport-insight].description"
+      ],
+      "core/config/default-config.js | performanceCategoryTitle": [
+        "categories.performance.title"
+      ],
+      "core/config/default-config.js | a11yCategoryTitle": [
+        "categories.accessibility.title"
+      ],
+      "core/config/default-config.js | a11yCategoryDescription": [
+        "categories.accessibility.description"
+      ],
+      "core/config/default-config.js | a11yCategoryManualDescription": [
+        "categories.accessibility.manualDescription"
+      ],
+      "core/config/default-config.js | bestPracticesCategoryTitle": [
+        "categories[best-practices].title"
+      ],
+      "core/config/default-config.js | metricGroupTitle": [
+        "categoryGroups.metrics.title"
+      ],
+      "core/config/default-config.js | insightsGroupTitle": [
+        "categoryGroups.insights.title"
+      ],
+      "core/config/default-config.js | insightsGroupDescription": [
+        "categoryGroups.insights.description"
+      ],
+      "core/config/default-config.js | diagnosticsGroupTitle": [
+        "categoryGroups.diagnostics.title"
+      ],
+      "core/config/default-config.js | diagnosticsGroupDescription": [
+        "categoryGroups.diagnostics.description"
+      ],
+      "core/config/default-config.js | a11yBestPracticesGroupTitle": [
+        "categoryGroups[a11y-best-practices].title"
+      ],
+      "core/config/default-config.js | a11yBestPracticesGroupDescription": [
+        "categoryGroups[a11y-best-practices].description"
+      ],
+      "core/config/default-config.js | a11yColorContrastGroupTitle": [
+        "categoryGroups[a11y-color-contrast].title"
+      ],
+      "core/config/default-config.js | a11yColorContrastGroupDescription": [
+        "categoryGroups[a11y-color-contrast].description"
+      ],
+      "core/config/default-config.js | a11yNamesLabelsGroupTitle": [
+        "categoryGroups[a11y-names-labels].title"
+      ],
+      "core/config/default-config.js | a11yNamesLabelsGroupDescription": [
+        "categoryGroups[a11y-names-labels].description"
+      ],
+      "core/config/default-config.js | a11yNavigationGroupTitle": [
+        "categoryGroups[a11y-navigation].title"
+      ],
+      "core/config/default-config.js | a11yNavigationGroupDescription": [
+        "categoryGroups[a11y-navigation].description"
+      ],
+      "core/config/default-config.js | a11yAriaGroupTitle": [
+        "categoryGroups[a11y-aria].title"
+      ],
+      "core/config/default-config.js | a11yAriaGroupDescription": [
+        "categoryGroups[a11y-aria].description"
+      ],
+      "core/config/default-config.js | a11yLanguageGroupTitle": [
+        "categoryGroups[a11y-language].title"
+      ],
+      "core/config/default-config.js | a11yLanguageGroupDescription": [
+        "categoryGroups[a11y-language].description"
+      ],
+      "core/config/default-config.js | a11yAudioVideoGroupTitle": [
+        "categoryGroups[a11y-audio-video].title"
+      ],
+      "core/config/default-config.js | a11yAudioVideoGroupDescription": [
+        "categoryGroups[a11y-audio-video].description"
+      ],
+      "core/config/default-config.js | a11yTablesListsVideoGroupTitle": [
+        "categoryGroups[a11y-tables-lists].title"
+      ],
+      "core/config/default-config.js | a11yTablesListsVideoGroupDescription": [
+        "categoryGroups[a11y-tables-lists].description"
+      ],
+      "core/config/default-config.js | seoMobileGroupTitle": [
+        "categoryGroups[seo-mobile].title"
+      ],
+      "core/config/default-config.js | seoMobileGroupDescription": [
+        "categoryGroups[seo-mobile].description"
+      ],
+      "core/config/default-config.js | seoContentGroupTitle": [
+        "categoryGroups[seo-content].title"
+      ],
+      "core/config/default-config.js | seoContentGroupDescription": [
+        "categoryGroups[seo-content].description"
+      ],
+      "core/config/default-config.js | seoCrawlingGroupTitle": [
+        "categoryGroups[seo-crawl].title"
+      ],
+      "core/config/default-config.js | seoCrawlingGroupDescription": [
+        "categoryGroups[seo-crawl].description"
+      ],
+      "core/config/default-config.js | bestPracticesTrustSafetyGroupTitle": [
+        "categoryGroups[best-practices-trust-safety].title"
+      ],
+      "core/config/default-config.js | bestPracticesUXGroupTitle": [
+        "categoryGroups[best-practices-ux].title"
+      ],
+      "core/config/default-config.js | bestPracticesBrowserCompatGroupTitle": [
+        "categoryGroups[best-practices-browser-compat].title"
+      ],
+      "core/config/default-config.js | bestPracticesGeneralGroupTitle": [
+        "categoryGroups[best-practices-general].title"
+      ]
+    }
+  }
+}

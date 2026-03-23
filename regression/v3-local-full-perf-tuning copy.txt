@@ -1,0 +1,179 @@
+
+> @web-speed-hackathon-2026/e2e@0.0.1 test:update /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e
+> playwright test --update-snapshots
+
+
+Running 52 tests using 5 workers
+
+  ✓  3 [Desktop Chrome] › src/auth.test.ts:29:3 › サインイン・新規登録 › 日本語ユーザー名で登録するとエラーが表示される (1.7s)
+  ✓  2 [Desktop Chrome] › src/auth.test.ts:80:3 › サインイン・新規登録 › サインインに失敗するとエラーが表示される (1.7s)
+  ✓  5 [Desktop Chrome] › src/auth.test.ts:60:3 › サインイン・新規登録 › 未入力の場合はボタンが無効化されている (1.7s)
+  ✓  1 [Desktop Chrome] › src/auth.test.ts:13:3 › サインイン・新規登録 › 新規登録ができる (1.8s)
+  ✓  9 [Desktop Chrome] › src/dm.test.ts:26:3 › DM一覧 › DM一覧が最後にやり取りをした順にソートされる (2.8s)
+  ✓  8 [Desktop Chrome] › src/dm.test.ts:10:3 › DM一覧 › DM一覧が表示される (35.4s)
+  ✓  6 [Desktop Chrome] › src/crok-chat.test.ts:13:3 › Crok AIチャット › サジェスト候補が表示される (35.6s)
+  ✓  10 [Desktop Chrome] › src/dm.test.ts:44:3 › DM一覧 › 新規DM開始モーダルが初期仕様通りにバリデーションされること (41.2s)
+  ✓  12 [Desktop Chrome] › src/dm.test.ts:120:3 › DM一覧 › DM詳細画面でメッセージが古い順に表示されること (11.5s)
+  ✓  11 [Desktop Chrome] › src/dm.test.ts:91:3 › DM一覧 › 送信ボタンをクリックすると、DM詳細画面に遷移すること (35.5s)
+  ✓  14 [Desktop Chrome] › src/dm.test.ts:164:3 › DM一覧 › 相手が入力中の場合、入力中のインジケータが表示されること (36.1s)
+  ✓  13 [Desktop Chrome] › src/dm.test.ts:141:3 › DM一覧 › Enterでメッセージを送信・Shift+Enterで改行できること (40.7s)
+  ✓  17 [Desktop Chrome] › src/home.test.ts:26:3 › ホーム › タイトルが「タイムライン - CaX」 (709ms)
+  ✓  18 [Desktop Chrome] › src/home.test.ts:30:3 › ホーム › 動画が自動再生される (10.1s)
+  ✓  15 [Desktop Chrome] › src/dm.test.ts:187:3 › DM一覧 › メッセージ・既読がリアルタイムで更新されること (27.2s)
+  ✓  19 [Desktop Chrome] › src/home.test.ts:38:3 › ホーム › 音声の波形が表示される (10.9s)
+  ✓  21 [Desktop Chrome] › src/home.test.ts:53:3 › ホーム › 投稿クリック → 投稿詳細に遷移する (1.3s)
+  ✓  16 [Desktop Chrome] › src/home.test.ts:11:3 › ホーム › タイムラインが表示される (26.5s)
+  ✓  22 [Desktop Chrome] › src/home.test.ts:63:3 › 404ページ › 存在しないページで404が表示される (11.8s)
+  ✓  24 [Desktop Chrome] › src/post-detail.test.ts:28:3 › 投稿詳細 › タイトルが「{ユーザー名} さんのつぶやき - CaX」 (1.3s)
+  ✓  23 [Desktop Chrome] › src/post-detail.test.ts:10:3 › 投稿詳細 › 投稿が表示される (13.4s)
+  ✓  7 [Desktop Chrome] › src/crok-chat.test.ts:42:3 › Crok AIチャット › 質問を送信するとAIの応答が表示される (2.4m)
+  ✓  25 [Desktop Chrome] › src/post-detail.test.ts:44:3 › 投稿詳細 - 動画 › 動画が自動再生され、クリックで一時停止・再生を切り替えられる (26.2s)
+  ✓  26 [Desktop Chrome] › src/post-detail.test.ts:74:3 › 投稿詳細 - 音声 › 音声の波形が表示され、再生ボタンで切り替えられる (26.5s)
+  ✓  29 [Desktop Chrome] › src/posting.test.ts:41:3 › 投稿機能 › 画像の投稿ができる (2.5s)
+  ✓  28 [Desktop Chrome] › src/posting.test.ts:13:3 › 投稿機能 › テキストの投稿ができる (12.4s)
+  ✓  30 [Desktop Chrome] › src/responsive.test.ts:6:3 › レスポンシブ › スマホ表示で表示が崩れない (24.5s)
+  ✓  31 [Desktop Chrome] › src/responsive.test.ts:30:3 › レスポンシブ › デスクトップ表示で表示が崩れない (24.0s)
+  ✓  33 [Desktop Chrome] › src/search.test.ts:20:3 › 検索ページ › タイトルが「検索 - CaX」となること (645ms)
+  ✓  34 [Desktop Chrome] › src/search.test.ts:27:5 › 検索ページ › 検索フォーム › 入力欄のプレースホルダーが「検索 (例: キーワード since:2025-01-01 until:2025-12-31)」であること (547ms)
+  ✓  35 [Desktop Chrome] › src/search.test.ts:39:5 › 検索ページ › 検索フォーム › 「since:YYYY-MM-DD で開始日、until:YYYY-MM-DD で終了日を指定できます」のヘルプテキストが表示されること (545ms)
+  ✓  36 [Desktop Chrome] › src/search.test.ts:52:5 › 検索ページ › バリデーション › 空のまま検索するとエラーが表示される (611ms)
+  ✓  37 [Desktop Chrome] › src/search.test.ts:63:5 › 検索ページ › バリデーション › 不正な since: 日付形式でエラーが表示される (615ms)
+  ✓  38 [Desktop Chrome] › src/search.test.ts:78:5 › 検索ページ › バリデーション › since: が until: より後の日付でエラーが表示される (626ms)
+  ✓  32 [Desktop Chrome] › src/search.test.ts:6:3 › 検索ページ › 検索ページが表示される (12.0s)
+  ✓  40 [Desktop Chrome] › src/search.test.ts:114:3 › 検索ページ › キーワードと since:YYYY-MM-DD を組み合わせて検索できること (896ms)
+  ✓  41 [Desktop Chrome] › src/search.test.ts:130:3 › 検索ページ › キーワードと since:YYYY-MM-DD until:YYYY-MM-DD を組み合わせて検索できること (856ms)
+  ✓  42 [Desktop Chrome] › src/search.test.ts:149:3 › 検索ページ › 検索結果が見つからない場合、「検索結果が見つかりませんでした」と表示されること (656ms)
+  ✓  43 [Desktop Chrome] › src/search.test.ts:181:5 › 検索ページ › ネガティブ判定 › ネガティブな検索クエリのとき、「どしたん話聞こうか?」のメッセージが表示される (1.8s)
+  ✓  44 [Desktop Chrome] › src/search.test.ts:192:5 › 検索ページ › ネガティブ判定 › ポジティブな検索クエリのとき、「どしたん話聞こうか?」のメッセージが表示されない (812ms)
+  ✓  45 [Desktop Chrome] › src/search.test.ts:205:5 › 検索ページ › ネガティブ判定 › 補正係数により境界値(-0.1)をわずかに下回る単語でネガティブ判定される (1.8s)
+  ✓  46 [Desktop Chrome] › src/search.test.ts:215:5 › 検索ページ › ネガティブ判定 › 補正係数により境界値(-0.1)をわずかに上回る単語ではネガティブ判定されない (1.8s)
+  ✓  47 [Desktop Chrome] › src/search.test.ts:228:5 › 検索ページ › ネガティブ判定 › 直感的にネガティブでも補正係数により中立判定される単語がある (653ms)
+  ✓  39 [Desktop Chrome] › src/search.test.ts:94:3 › 検索ページ › 検索結果が表示される (23.5s)
+  ✓  49 [Desktop Chrome] › src/terms.test.ts:11:3 › 利用規約 › タイトルが「利用規約 - CaX」 (630ms)
+  ✓  48 [Desktop Chrome] › src/search.test.ts:241:3 › 検索ページ › 検索結果のタイムラインが無限スクロールで追加読み込みされること (13.9s)
+  ✓  51 [Desktop Chrome] › src/user-profile.test.ts:10:3 › ユーザー詳細 › タイトルが「{ユーザー名} さんのタイムライン - CaX」 (555ms)
+  ✓  52 [Desktop Chrome] › src/user-profile.test.ts:17:3 › ユーザー詳細 › ページ上部がユーザーサムネイル画像の色を抽出した色になっている (15.5s)
+  ✓  50 [Desktop Chrome] › src/terms.test.ts:15:3 › 利用規約 › ページが正しく表示されている (19.7s)
+  ✘  4 [Desktop Chrome] › src/auth.test.ts:45:3 › サインイン・新規登録 › 既に使われているユーザー名で登録するとエラーが表示される (31.8s)
+  ✘  20 [Desktop Chrome] › src/home.test.ts:43:3 › ホーム › 写真が枠を覆う形で拡縮している (15.4s)
+  ✘  53 [Desktop Chrome] › src/auth.test.ts:45:3 › サインイン・新規登録 › 既に使われているユーザー名で登録するとエラーが表示される (retry #1) (30.8s)
+  ✘  54 [Desktop Chrome] › src/home.test.ts:43:3 › ホーム › 写真が枠を覆う形で拡縮している (retry #1) (17.8s)
+  ✘  27 [Desktop Chrome] › src/post-detail.test.ts:106:3 › 投稿詳細 - 写真 › 写真がcover拡縮し、画像サイズが著しく荒くない (16.1s)
+  ✘  55 [Desktop Chrome] › src/post-detail.test.ts:106:3 › 投稿詳細 - 写真 › 写真がcover拡縮し、画像サイズが著しく荒くない (retry #1) (14.2s)
+
+
+  1) [Desktop Chrome] › src/auth.test.ts:45:3 › サインイン・新規登録 › 既に使われているユーザー名で登録するとエラーが表示される ──────────
+
+    Error: [31mTimed out 30000ms waiting for [39m[2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m()[22m
+
+    Locator: getByText('ユーザー名が使われています')
+    Expected: visible
+    Received: <element(s) not found>
+    Call log:
+    [2m  - expect.toBeVisible with timeout 30000ms[22m
+    [2m  - waiting for getByText('ユーザー名が使われています')[22m
+
+
+      55 |
+      56 |     // エラーメッセージが表示される
+    > 57 |     await expect(page.getByText("ユーザー名が使われています")).toBeVisible({ timeout: 30_000 });
+         |                                                   ^
+      58 |   });
+      59 |
+      60 |   test("未入力の場合はボタンが無効化されている", async ({ page }) => {
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/auth.test.ts:57:51
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [31mTimed out 30000ms waiting for [39m[2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m()[22m
+
+    Locator: getByText('ユーザー名が使われています')
+    Expected: visible
+    Received: <element(s) not found>
+    Call log:
+    [2m  - expect.toBeVisible with timeout 30000ms[22m
+    [2m  - waiting for getByText('ユーザー名が使われています')[22m
+
+
+      55 |
+      56 |     // エラーメッセージが表示される
+    > 57 |     await expect(page.getByText("ユーザー名が使われています")).toBeVisible({ timeout: 30_000 });
+         |                                                   ^
+      58 |   });
+      59 |
+      60 |   test("未入力の場合はボタンが無効化されている", async ({ page }) => {
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/auth.test.ts:57:51
+
+  2) [Desktop Chrome] › src/home.test.ts:43:3 › ホーム › 写真が枠を覆う形で拡縮している ──────────────────────────────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m"absolute"[39m
+    Received: [31m"static"[39m
+
+      48 |       return window.getComputedStyle(el).position;
+      49 |     });
+    > 50 |     expect(position).toBe("absolute");
+         |                      ^
+      51 |   });
+      52 |
+      53 |   test("投稿クリック → 投稿詳細に遷移する", async ({ page }) => {
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/home.test.ts:50:22
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m"absolute"[39m
+    Received: [31m"static"[39m
+
+      48 |       return window.getComputedStyle(el).position;
+      49 |     });
+    > 50 |     expect(position).toBe("absolute");
+         |                      ^
+      51 |   });
+      52 |
+      53 |   test("投稿クリック → 投稿詳細に遷移する", async ({ page }) => {
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/home.test.ts:50:22
+
+  3) [Desktop Chrome] › src/post-detail.test.ts:106:3 › 投稿詳細 - 写真 › 写真がcover拡縮し、画像サイズが著しく荒くない ──────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m"absolute"[39m
+    Received: [31m"static"[39m
+
+      117 |       return window.getComputedStyle(el).position;
+      118 |     });
+    > 119 |     expect(position).toBe("absolute");
+          |                      ^
+      120 |
+      121 |     const naturalWidth = await coveredImage.evaluate((el: HTMLImageElement) => el.naturalWidth);
+      122 |     expect(naturalWidth).toBeGreaterThan(100);
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/post-detail.test.ts:119:22
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m"absolute"[39m
+    Received: [31m"static"[39m
+
+      117 |       return window.getComputedStyle(el).position;
+      118 |     });
+    > 119 |     expect(position).toBe("absolute");
+          |                      ^
+      120 |
+      121 |     const naturalWidth = await coveredImage.evaluate((el: HTMLImageElement) => el.naturalWidth);
+      122 |     expect(naturalWidth).toBeGreaterThan(100);
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/post-detail.test.ts:119:22
+
+  Slow test file: [Desktop Chrome] › src/terms.test.ts (20.4s)
+  Slow test file: [Desktop Chrome] › src/user-profile.test.ts (16.1s)
+  Consider running tests from slow files in parallel, see https://playwright.dev/docs/test-parallel.
+  3 failed
+    [Desktop Chrome] › src/auth.test.ts:45:3 › サインイン・新規登録 › 既に使われているユーザー名で登録するとエラーが表示される ───────────
+    [Desktop Chrome] › src/home.test.ts:43:3 › ホーム › 写真が枠を覆う形で拡縮している ───────────────────────────────
+    [Desktop Chrome] › src/post-detail.test.ts:106:3 › 投稿詳細 - 写真 › 写真がcover拡縮し、画像サイズが著しく荒くない ───────
+  49 passed (14.5m)
+ ELIFECYCLE  Command failed with exit code 1.

@@ -1,0 +1,130 @@
+
+> @web-speed-hackathon-2026/e2e@0.0.1 test:update /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e
+> playwright test --update-snapshots
+
+
+Running 52 tests using 5 workers
+
+  ✓  5 [Desktop Chrome] › src/auth.test.ts:29:3 › サインイン・新規登録 › 日本語ユーザー名で登録するとエラーが表示される (1.4s)
+  ✓  3 [Desktop Chrome] › src/auth.test.ts:60:3 › サインイン・新規登録 › 未入力の場合はボタンが無効化されている (1.4s)
+  ✓  2 [Desktop Chrome] › src/auth.test.ts:80:3 › サインイン・新規登録 › サインインに失敗するとエラーが表示される (1.4s)
+  ✓  1 [Desktop Chrome] › src/auth.test.ts:13:3 › サインイン・新規登録 › 新規登録ができる (1.5s)
+  ✓  4 [Desktop Chrome] › src/auth.test.ts:45:3 › サインイン・新規登録 › 既に使われているユーザー名で登録するとエラーが表示される (1.5s)
+  ✓  9 [Desktop Chrome] › src/dm.test.ts:26:3 › DM一覧 › DM一覧が最後にやり取りをした順にソートされる (1.6s)
+  ✓  8 [Desktop Chrome] › src/dm.test.ts:10:3 › DM一覧 › DM一覧が表示される (43.4s)
+  ✓  6 [Desktop Chrome] › src/crok-chat.test.ts:13:3 › Crok AIチャット › サジェスト候補が表示される (44.8s)
+  ✓  11 [Desktop Chrome] › src/dm.test.ts:91:3 › DM一覧 › 送信ボタンをクリックすると、DM詳細画面に遷移すること (43.4s)
+  ✓  12 [Desktop Chrome] › src/dm.test.ts:120:3 › DM一覧 › DM詳細画面でメッセージが古い順に表示されること (5.0s)
+  ✓  10 [Desktop Chrome] › src/dm.test.ts:44:3 › DM一覧 › 新規DM開始モーダルが初期仕様通りにバリデーションされること (58.1s)
+  ✓  14 [Desktop Chrome] › src/dm.test.ts:164:3 › DM一覧 › 相手が入力中の場合、入力中のインジケータが表示されること (45.5s)
+  ✓  17 [Desktop Chrome] › src/home.test.ts:26:3 › ホーム › タイトルが「タイムライン - CaX」 (595ms)
+  ✓  13 [Desktop Chrome] › src/dm.test.ts:141:3 › DM一覧 › Enterでメッセージを送信・Shift+Enterで改行できること (48.2s)
+  ✓  16 [Desktop Chrome] › src/home.test.ts:11:3 › ホーム › タイムラインが表示される (36.5s)
+  ✓  15 [Desktop Chrome] › src/dm.test.ts:187:3 › DM一覧 › メッセージ・既読がリアルタイムで更新されること (51.1s)
+  ✓  19 [Desktop Chrome] › src/home.test.ts:38:3 › ホーム › 音声の波形が表示される (6.7s)
+  ✓  21 [Desktop Chrome] › src/home.test.ts:53:3 › ホーム › 投稿クリック → 投稿詳細に遷移する (1.5s)
+  ✓  18 [Desktop Chrome] › src/home.test.ts:30:3 › ホーム › 動画が自動再生される (10.6s)
+  ✓  24 [Desktop Chrome] › src/post-detail.test.ts:28:3 › 投稿詳細 › タイトルが「{ユーザー名} さんのつぶやき - CaX」 (1.2s)
+  ✓  20 [Desktop Chrome] › src/home.test.ts:43:3 › ホーム › 写真が枠を覆う形で拡縮している (13.1s)
+  ✓  22 [Desktop Chrome] › src/home.test.ts:63:3 › 404ページ › 存在しないページで404が表示される (12.0s)
+  ✓  23 [Desktop Chrome] › src/post-detail.test.ts:10:3 › 投稿詳細 › 投稿が表示される (13.3s)
+  ✓  28 [Desktop Chrome] › src/posting.test.ts:13:3 › 投稿機能 › テキストの投稿ができる (12.1s)
+  ✓  25 [Desktop Chrome] › src/post-detail.test.ts:44:3 › 投稿詳細 - 動画 › 動画が自動再生され、クリックで一時停止・再生を切り替えられる (26.2s)
+  ✓  26 [Desktop Chrome] › src/post-detail.test.ts:74:3 › 投稿詳細 - 音声 › 音声の波形が表示され、再生ボタンで切り替えられる (25.3s)
+  ✓  27 [Desktop Chrome] › src/post-detail.test.ts:106:3 › 投稿詳細 - 写真 › 写真がcover拡縮し、画像サイズが著しく荒くない (25.0s)
+  ✓  32 [Desktop Chrome] › src/search.test.ts:6:3 › 検索ページ › 検索ページが表示される (11.8s)
+  ✓  33 [Desktop Chrome] › src/search.test.ts:20:3 › 検索ページ › タイトルが「検索 - CaX」となること (595ms)
+  ✓  34 [Desktop Chrome] › src/search.test.ts:27:5 › 検索ページ › 検索フォーム › 入力欄のプレースホルダーが「検索 (例: キーワード since:2025-01-01 until:2025-12-31)」であること (535ms)
+  ✓  35 [Desktop Chrome] › src/search.test.ts:39:5 › 検索ページ › 検索フォーム › 「since:YYYY-MM-DD で開始日、until:YYYY-MM-DD で終了日を指定できます」のヘルプテキストが表示されること (526ms)
+  ✓  36 [Desktop Chrome] › src/search.test.ts:52:5 › 検索ページ › バリデーション › 空のまま検索するとエラーが表示される (563ms)
+  ✓  30 [Desktop Chrome] › src/responsive.test.ts:6:3 › レスポンシブ › スマホ表示で表示が崩れない (22.2s)
+  ✓  37 [Desktop Chrome] › src/search.test.ts:63:5 › 検索ページ › バリデーション › 不正な since: 日付形式でエラーが表示される (543ms)
+  ✓  38 [Desktop Chrome] › src/search.test.ts:78:5 › 検索ページ › バリデーション › since: が until: より後の日付でエラーが表示される (688ms)
+  ✓  40 [Desktop Chrome] › src/search.test.ts:114:3 › 検索ページ › キーワードと since:YYYY-MM-DD を組み合わせて検索できること (738ms)
+  ✓  41 [Desktop Chrome] › src/search.test.ts:130:3 › 検索ページ › キーワードと since:YYYY-MM-DD until:YYYY-MM-DD を組み合わせて検索できること (750ms)
+  ✓  42 [Desktop Chrome] › src/search.test.ts:149:3 › 検索ページ › 検索結果が見つからない場合、「検索結果が見つかりませんでした」と表示されること (537ms)
+  ✓  7 [Desktop Chrome] › src/crok-chat.test.ts:42:3 › Crok AIチャット › 質問を送信するとAIの応答が表示される (2.6m)
+  ✓  44 [Desktop Chrome] › src/search.test.ts:192:5 › 検索ページ › ネガティブ判定 › ポジティブな検索クエリのとき、「どしたん話聞こうか?」のメッセージが表示されない (579ms)
+  ✓  43 [Desktop Chrome] › src/search.test.ts:181:5 › 検索ページ › ネガティブ判定 › ネガティブな検索クエリのとき、「どしたん話聞こうか?」のメッセージが表示される (1.9s)
+  ✓  31 [Desktop Chrome] › src/responsive.test.ts:30:3 › レスポンシブ › デスクトップ表示で表示が崩れない (23.2s)
+  ✓  46 [Desktop Chrome] › src/search.test.ts:215:5 › 検索ページ › ネガティブ判定 › 補正係数により境界値(-0.1)をわずかに上回る単語ではネガティブ判定されない (605ms)
+  ✓  47 [Desktop Chrome] › src/search.test.ts:228:5 › 検索ページ › ネガティブ判定 › 直感的にネガティブでも補正係数により中立判定される単語がある (907ms)
+  ✓  45 [Desktop Chrome] › src/search.test.ts:205:5 › 検索ページ › ネガティブ判定 › 補正係数により境界値(-0.1)をわずかに下回る単語でネガティブ判定される (1.8s)
+  ✓  49 [Desktop Chrome] › src/terms.test.ts:11:3 › 利用規約 › タイトルが「利用規約 - CaX」 (468ms)
+  ✓  51 [Desktop Chrome] › src/user-profile.test.ts:10:3 › ユーザー詳細 › タイトルが「{ユーザー名} さんのタイムライン - CaX」 (587ms)
+  ✓  48 [Desktop Chrome] › src/search.test.ts:241:3 › 検索ページ › 検索結果のタイムラインが無限スクロールで追加読み込みされること (9.5s)
+  ✓  39 [Desktop Chrome] › src/search.test.ts:94:3 › 検索ページ › 検索結果が表示される (24.0s)
+/Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/user-profile.test.ts-snapshots/user-profile-ユーザー詳細-Desktop-Chrome-darwin.png is re-generated, writing actual.
+  ✓  52 [Desktop Chrome] › src/user-profile.test.ts:17:3 › ユーザー詳細 › ページ上部がユーザーサムネイル画像の色を抽出した色になっている (18.7s)
+  ✓  50 [Desktop Chrome] › src/terms.test.ts:15:3 › 利用規約 › ページが正しく表示されている (20.0s)
+  ✘  29 [Desktop Chrome] › src/posting.test.ts:41:3 › 投稿機能 › 画像の投稿ができる (30.6s)
+  ✘  53 [Desktop Chrome] › src/posting.test.ts:41:3 › 投稿機能 › 画像の投稿ができる (retry #1) (30.8s)
+
+
+  1) [Desktop Chrome] › src/posting.test.ts:41:3 › 投稿機能 › 画像の投稿ができる ────────────────────────────────
+
+    TimeoutError: locator.click: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('dialog').getByRole('button', { name: '投稿する' })[22m
+    [2m    - locator resolved to <button disabled type="submit" class="flex items-center justify-center gap-2 rounded-full px-4 py-2 border disabled:opacity-50 disabled:cursor-not-allowed bg-cax-brand text-cax-surface-raised hover:bg-cax-brand-strong border-transparent">…</button>[22m
+    [2m  - attempting click action[22m
+    [2m    2 × waiting for element to be visible, enabled and stable[22m
+    [2m      - element is not enabled[22m
+    [2m    - retrying click action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible, enabled and stable[22m
+    [2m      - element is not enabled[22m
+    [2m    - retrying click action[22m
+    [2m      - waiting 100ms[22m
+    [2m    56 × waiting for element to be visible, enabled and stable[22m
+    [2m       - element is not enabled[22m
+    [2m     - retrying click action[22m
+    [2m       - waiting 500ms[22m
+    [2m    - waiting for element to be visible, enabled and stable[22m
+
+
+      57 |
+      58 |     // モーダル内の投稿ボタンをクリック
+    > 59 |     await page.locator("dialog").getByRole("button", { name: "投稿する" }).click();
+         |                                                                        ^
+      60 |
+      61 |     // 投稿詳細に遷移する
+      62 |     await page.waitForURL("**/posts/*", { timeout: 60_000 });
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/posting.test.ts:59:72
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: locator.click: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('dialog').getByRole('button', { name: '投稿する' })[22m
+    [2m    - locator resolved to <button disabled type="submit" class="flex items-center justify-center gap-2 rounded-full px-4 py-2 border disabled:opacity-50 disabled:cursor-not-allowed bg-cax-brand text-cax-surface-raised hover:bg-cax-brand-strong border-transparent">…</button>[22m
+    [2m  - attempting click action[22m
+    [2m    2 × waiting for element to be visible, enabled and stable[22m
+    [2m      - element is not enabled[22m
+    [2m    - retrying click action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible, enabled and stable[22m
+    [2m      - element is not enabled[22m
+    [2m    - retrying click action[22m
+    [2m      - waiting 100ms[22m
+    [2m    56 × waiting for element to be visible, enabled and stable[22m
+    [2m       - element is not enabled[22m
+    [2m     - retrying click action[22m
+    [2m       - waiting 500ms[22m
+
+
+      57 |
+      58 |     // モーダル内の投稿ボタンをクリック
+    > 59 |     await page.locator("dialog").getByRole("button", { name: "投稿する" }).click();
+         |                                                                        ^
+      60 |
+      61 |     // 投稿詳細に遷移する
+      62 |     await page.waitForURL("**/posts/*", { timeout: 60_000 });
+        at /Users/kumadamasahito/development/private/web-speed-hackathon-2026/application/e2e/src/posting.test.ts:59:72
+
+  Slow test file: [Desktop Chrome] › src/user-profile.test.ts (19.3s)
+  Consider running tests from slow files in parallel, see https://playwright.dev/docs/test-parallel.
+  1 failed
+    [Desktop Chrome] › src/posting.test.ts:41:3 › 投稿機能 › 画像の投稿ができる ─────────────────────────────────
+  51 passed (17.3m)
+ ELIFECYCLE  Command failed with exit code 1.
