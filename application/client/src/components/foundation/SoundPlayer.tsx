@@ -1,4 +1,4 @@
-import { ReactEventHandler, useCallback, useMemo, useRef, useState } from "react";
+import { ReactEventHandler, useCallback, useEffect, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -14,8 +14,19 @@ interface Props {
 export const SoundPlayer = ({ sound }: Props) => {
   const { data, isLoading } = useFetch(getSoundPath(sound.id), fetchBinary);
 
-  const blobUrl = useMemo(() => {
-    return data !== null ? URL.createObjectURL(new Blob([data])) : null;
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (data === null) {
+      setBlobUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(new Blob([data]));
+    setBlobUrl(url);
+    
+    return () => {
+      URL.revokeObjectURL(url);
+    };
   }, [data]);
 
   const [currentTimeRatio, setCurrentTimeRatio] = useState(0);

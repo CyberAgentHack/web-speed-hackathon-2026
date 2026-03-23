@@ -36,7 +36,7 @@ const config = {
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: process.env.NODE_ENV === "development" ? "development" : "production",
   module: {
     rules: [
       {
@@ -60,10 +60,9 @@ const config = {
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
     filename: "scripts/[name].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     clean: true,
   },
   plugins: [
@@ -91,7 +90,7 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: true,
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
   ],
@@ -128,14 +127,12 @@ const config = {
     },
   },
   optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
+    minimize: process.env.NODE_ENV !== "development",
+    splitChunks: {
+      chunks: "all",
+    },
   },
-  cache: false,
+  cache: process.env.NODE_ENV === "development",
   ignoreWarnings: [
     {
       module: /@ffmpeg/,

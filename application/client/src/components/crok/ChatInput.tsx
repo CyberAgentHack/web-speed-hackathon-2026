@@ -1,5 +1,4 @@
-import Bluebird from "bluebird";
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
+import { type Tokenizer, type IpadicFeatures } from "kuromoji";
 import {
   useEffect,
   useLayoutEffect,
@@ -13,9 +12,10 @@ import {
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import {
   extractTokens,
-  filterSuggestionsBM25,
+  BM25Suggester,
 } from "@web-speed-hackathon-2026/client/src/utils/bm25_search";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { getKuromojiTokenizer } from "@web-speed-hackathon-2026/client/src/utils/kuromoji";
 
 interface Props {
   isStreaming: boolean;
@@ -85,6 +85,8 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
+  const [suggester, setSuggester] = useState<BM25Suggester | null>(null);
+
   // サジェストが更新されたら一番下にスクロール
   useLayoutEffect(() => {
     if (suggestionsRef.current && showSuggestions) {
@@ -92,18 +94,22 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   }, [suggestions, showSuggestions]);
 
-  // 初回にkuromojiトークナイザーを構築
+  // 初回にkuromojiトークナイザーとサジェスト候補を準備
   useEffect(() => {
     let mounted = true;
 
     const init = async () => {
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
+      const [nextTokenizer, { suggestions: candidates }] = await Promise.all([
+        getKuromojiTokenizer(),
+        fetchJSON<{ suggestions: string[] }>("/api/v1/crok/suggestions"),
+      ]);
+      
       if (mounted) {
         setTokenizer(nextTokenizer);
+        setSuggester(new BM25Suggester(nextTokenizer, candidates));
       }
     };
-    init();
+    void init();
 
     return () => {
       mounted = false;
@@ -111,41 +117,20 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
+    if (!tokenizer || !suggester || !inputValue.trim()) {
+      setSuggestions([]);
+      setQueryTokens([]);
+      setShowSuggestions(false);
+      return;
+    }
 
-    const updateSuggestions = async () => {
-      if (!tokenizer || !inputValue.trim()) {
-        setSuggestions([]);
-        setQueryTokens([]);
-        setShowSuggestions(false);
-        return;
-      }
+    const tokens = extractTokens(tokenizer.tokenize(inputValue));
+    const results = suggester.getSuggestions(tokens);
 
-      const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-        "/api/v1/crok/suggestions",
-      );
-      if (cancelled) {
-        return;
-      }
-
-      const tokens = extractTokens(tokenizer.tokenize(inputValue));
-      const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
-
-      if (cancelled) {
-        return;
-      }
-
-      setQueryTokens(tokens);
-      setSuggestions(results);
-      setShowSuggestions(results.length > 0);
-    };
-
-    void updateSuggestions();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [inputValue, tokenizer]);
+    setQueryTokens(tokens);
+    setSuggestions(results);
+    setShowSuggestions(results.length > 0);
+  }, [inputValue, tokenizer, suggester]);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
