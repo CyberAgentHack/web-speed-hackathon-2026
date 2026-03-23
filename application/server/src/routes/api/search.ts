@@ -24,7 +24,6 @@ searchRouter.get("/search", async (req, res) => {
   const limit = req.query["limit"] != null ? Number(req.query["limit"]) : undefined;
   const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
 
-  // 日付条件を構築
   const dateConditions: Record<symbol, Date>[] = [];
   if (sinceDate) {
     dateConditions.push({ [Op.gte]: sinceDate });
@@ -35,58 +34,42 @@ searchRouter.get("/search", async (req, res) => {
   const dateWhere =
     dateConditions.length > 0 ? { createdAt: Object.assign({}, ...dateConditions) } : {};
 
-  // テキスト検索条件
-  const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
+  const keywordWhere = searchTerm
+    ? {
+        [Op.or]: [
+          { text: { [Op.like]: searchTerm } },
+          { "$user.username$": { [Op.like]: searchTerm } },
+          { "$user.name$": { [Op.like]: searchTerm } },
+        ],
+      }
+    : {};
 
-  const postsByText = await Post.findAll({
-    limit,
-    offset,
+  // Step 1: Get matching post IDs with correct pagination (unscoped to avoid images JOIN duplication)
+  const matchingPosts = await Post.unscoped().findAll({
     where: {
-      ...textWhere,
+      ...keywordWhere,
       ...dateWhere,
     },
+    include: searchTerm
+      ? [{ association: "user", attributes: ["username", "name"] }]
+      : [],
+    attributes: ["id", "createdAt"],
+    order: [["createdAt", "DESC"]],
+    limit,
+    offset,
+    subQuery: false,
   });
 
-  // ユーザー名/名前での検索（キーワードがある場合のみ）
-  let postsByUser: typeof postsByText = [];
-  if (searchTerm) {
-    postsByUser = await Post.findAll({
-      include: [
-        {
-          association: "user",
-          attributes: { exclude: ["profileImageId"] },
-          include: [{ association: "profileImage" }],
-          required: true,
-          where: {
-            [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
-          },
-        },
-        {
-          association: "images",
-          through: { attributes: [] },
-        },
-        { association: "movie" },
-        { association: "sound" },
-      ],
-      limit,
-      offset,
-      where: dateWhere,
-    });
+  if (matchingPosts.length === 0) {
+    return res.status(200).type("application/json").send([]);
   }
 
-  const postIdSet = new Set<string>();
-  const mergedPosts: typeof postsByText = [];
+  // Step 2: Fetch full post data for those IDs (preserving order)
+  const ids = matchingPosts.map((p) => p.id);
+  const posts = await Post.findAll({
+    where: { id: { [Op.in]: ids } },
+    order: [["createdAt", "DESC"]],
+  });
 
-  for (const post of [...postsByText, ...postsByUser]) {
-    if (!postIdSet.has(post.id)) {
-      postIdSet.add(post.id);
-      mergedPosts.push(post);
-    }
-  }
-
-  mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-
-  const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
-
-  return res.status(200).type("application/json").send(result);
+  return res.status(200).type("application/json").send(posts);
 });

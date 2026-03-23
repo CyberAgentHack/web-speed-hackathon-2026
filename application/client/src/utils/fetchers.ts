@@ -1,58 +1,50 @@
-import $ from "jquery";
-import { gzip } from "pako";
+async function checkOk(res: Response): Promise<Response> {
+  if (!res.ok) {
+    const error = new Error(`HTTP ${res.status}`) as Error & {
+      responseJSON?: unknown;
+      status?: number;
+    };
+    error.status = res.status;
+    try {
+      // jQuery.ajax のエラーオブジェクト互換（AuthModalContainer 側で参照している）
+      error.responseJSON = await res.clone().json();
+    } catch {
+      // JSON でない失敗レスポンスは従来どおり汎用エラーとして扱う
+    }
+    throw error;
+  }
+  return res;
+}
 
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "binary",
-    method: "GET",
-    responseType: "arraybuffer",
-    url,
-  });
-  return result;
+  const res = await fetch(url).then(checkOk);
+  return res.arrayBuffer();
 }
 
 export async function fetchJSON<T>(url: string): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "json",
-    method: "GET",
-    url,
-  });
-  return result;
+  const res = await fetch(url).then(checkOk);
+  return res.json() as Promise<T>;
 }
 
 export async function sendFile<T>(url: string, file: File): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    data: file,
-    dataType: "json",
+  const res = await fetch(url, {
+    method: "POST",
     headers: {
       "Content-Type": "application/octet-stream",
     },
-    method: "POST",
-    processData: false,
-    url,
-  });
-  return result;
+    body: file,
+  }).then(checkOk);
+  return res.json() as Promise<T>;
 }
 
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
-  const jsonString = JSON.stringify(data);
-  const uint8Array = new TextEncoder().encode(jsonString);
-  const compressed = gzip(uint8Array);
-
-  const result = await $.ajax({
-    async: false,
-    data: compressed,
-    dataType: "json",
+  // サーバーは bodyParser.json() のみ。gzip はバンドル・CPU 負荷の割に効果が薄いので素の JSON を送る。
+  const res = await fetch(url, {
+    method: "POST",
     headers: {
-      "Content-Encoding": "gzip",
       "Content-Type": "application/json",
     },
-    method: "POST",
-    processData: false,
-    url,
-  });
-  return result;
+    body: JSON.stringify(data),
+  }).then(checkOk);
+  return res.json() as Promise<T>;
 }

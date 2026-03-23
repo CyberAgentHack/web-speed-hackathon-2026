@@ -1,3 +1,4 @@
+import bcrypt from "bcrypt";
 import { Router } from "express";
 import httpErrors from "http-errors";
 
@@ -28,7 +29,11 @@ userRouter.put("/me", async (req, res) => {
     throw new httpErrors.NotFound();
   }
 
-  Object.assign(user, req.body);
+  const body = { ...req.body };
+  if (typeof body.password === "string") {
+    body.password = await bcrypt.hash(body.password as string, 8);
+  }
+  Object.assign(user, body);
   await user.save();
 
   return res.status(200).type("application/json").send(user);

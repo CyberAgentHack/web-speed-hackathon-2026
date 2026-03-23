@@ -61,7 +61,12 @@ declare namespace Models {
     id: string;
     initiator: Models.User;
     member: Models.User;
-    messages: Array<Models.DirectMessage>;
+    /** GET /api/v1/dm/:id などメッセージ付きレスポンス用 */
+    messages?: Array<Models.DirectMessage>;
+    /** GET /api/v1/dm 一覧のみ */
+    latestMessage?: Models.DirectMessage | null;
+    /** GET /api/v1/dm 一覧のみ（相手からの未読が1件でもある） */
+    hasUnread?: boolean;
   }
 
   interface ChatMessage {

@@ -1,4 +1,3 @@
-import Bluebird from "bluebird";
 import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
 import {
   useEffect,
@@ -97,8 +96,12 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     let mounted = true;
 
     const init = async () => {
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
+      const nextTokenizer = await new Promise<Tokenizer<IpadicFeatures>>((resolve, reject) => {
+        kuromoji.builder({ dicPath: "/dicts" }).build((err, tok) => {
+          if (err) reject(err);
+          else resolve(tok);
+        });
+      });
       if (mounted) {
         setTokenizer(nextTokenizer);
       }
@@ -218,13 +221,14 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
         <div className="border-cax-border bg-cax-surface-subtle focus-within:border-cax-brand-strong relative flex items-end rounded-2xl border transition-colors">
           <textarea
             ref={textareaRef}
-            className="text-cax-text placeholder-cax-text-subtle max-h-[200px] min-h-[52px] flex-1 resize-none overflow-y-auto bg-transparent py-3 pr-2 pl-4 focus:outline-none"
+            className="text-cax-text placeholder-cax-text-subtle max-h-[200px] min-h-[52px] flex-1 resize-none overflow-y-auto bg-transparent py-3 pr-2 pl-4 focus:outline-none disabled:cursor-wait"
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             placeholder="メッセージを入力..."
             lang="ja"
             rows={1}
             value={inputValue}
+            disabled={!tokenizer || isStreaming}
           />
           <div className="flex items-end pr-[6px] pb-[6px]">
             <button
