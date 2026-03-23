@@ -6,7 +6,6 @@ import invariant from "tiny-invariant";
 
 interface Translator {
   translate(text: string): Promise<string>;
-  [Symbol.dispose](): void;
 }
 
 interface Params {
@@ -14,14 +13,62 @@ interface Params {
   targetLanguage: string;
 }
 
+interface BuiltInTranslator {
+  translate(text: string): Promise<string>;
+}
+
+interface BrowserAI {
+  ai?: {
+    translator?: {
+      create?(params: Params): Promise<BuiltInTranslator>;
+    };
+  };
+}
+
+const MODEL_IDS = [
+  "Qwen2.5-0.5B-Instruct-q4f32_1-MLC",
+  "Qwen2-0.5B-Instruct-q4f16_1-MLC",
+  "gemma-2-2b-jpn-it-q4f16_1-MLC",
+] as const;
+
+let enginePromise: Promise<Awaited<ReturnType<typeof CreateMLCEngine>>> | null = null;
+
+async function getEngine() {
+  if (enginePromise == null) {
+    enginePromise = (async () => {
+      let lastError: unknown;
+
+      for (const modelId of MODEL_IDS) {
+        try {
+          return await CreateMLCEngine(modelId);
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      throw lastError ?? new Error("Failed to initialize the translation engine.");
+    })().catch((error) => {
+      enginePromise = null;
+      throw error;
+    });
+  }
+
+  return enginePromise;
+}
+
 export async function createTranslator(params: Params): Promise<Translator> {
+  const browserTranslator = await createBuiltInTranslator(params);
+  if (browserTranslator != null) {
+    return browserTranslator;
+  }
+
   const sourceLang = langs.where("1", params.sourceLanguage);
   invariant(sourceLang, `Unsupported source language code: ${params.sourceLanguage}`);
 
   const targetLang = langs.where("1", params.targetLanguage);
   invariant(targetLang, `Unsupported target language code: ${params.targetLanguage}`);
 
-  const engine = await CreateMLCEngine("gemma-2-2b-jpn-it-q4f16_1-MLC");
+  const engine = await getEngine();
 
   return {
     async translate(text: string): Promise<string> {
@@ -54,8 +101,20 @@ export async function createTranslator(params: Params): Promise<Translator> {
 
       return String(parsed.result);
     },
-    [Symbol.dispose]: () => {
-      engine.unload();
+  };
+}
+
+async function createBuiltInTranslator(params: Params): Promise<Translator | null> {
+  const ai = (window as BrowserAI).ai;
+
+  if (ai?.translator?.create == null) {
+    return null;
+  }
+
+  const translator = await ai.translator.create(params);
+  return {
+    async translate(text: string): Promise<string> {
+      return translator.translate(text);
     },
   };
 }

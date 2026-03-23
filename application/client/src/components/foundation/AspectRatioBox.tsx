@@ -9,7 +9,11 @@ interface Props {
 /**
  * 親要素の横幅を基準にして、指定したアスペクト比のブロック要素を作ります
  */
-export const AspectRatioBox = ({ aspectHeight, aspectWidth, children }: Props) => {
+export const AspectRatioBox = ({
+  aspectHeight,
+  aspectWidth,
+  children,
+}: Props) => {
   const ref = useRef<HTMLDivElement>(null);
   const [clientHeight, setClientHeight] = useState(0);
 
@@ -19,7 +23,7 @@ export const AspectRatioBox = ({ aspectHeight, aspectWidth, children }: Props) =
       const clientWidth = ref.current?.clientWidth ?? 0;
       setClientHeight((clientWidth / aspectWidth) * aspectHeight);
     }
-    setTimeout(() => calcStyle(), 500);
+    setTimeout(() => calcStyle(), 300);
 
     // ウィンドウサイズが変わるたびに計算する
     window.addEventListener("resize", calcStyle, { passive: false });
@@ -29,9 +33,15 @@ export const AspectRatioBox = ({ aspectHeight, aspectWidth, children }: Props) =
   }, [aspectHeight, aspectWidth]);
 
   return (
-    <div ref={ref} className="relative h-1 w-full" style={{ height: clientHeight }}>
+    <div
+      ref={ref}
+      className="relative h-1 w-full"
+      style={{ height: clientHeight }}
+    >
       {/* 高さが計算できるまで render しない */}
-      {clientHeight !== 0 ? <div className="absolute inset-0">{children}</div> : null}
+      {clientHeight !== 0 ? (
+        <div className="absolute inset-0">{children}</div>
+      ) : null}
     </div>
   );
 };

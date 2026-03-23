@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { Field, InjectedFormProps, reduxForm, WrappedFieldProps } from "redux-form";
+import {
+  Field,
+  InjectedFormProps,
+  reduxForm,
+  SubmissionError,
+  WrappedFieldProps,
+} from "redux-form";
 
 import { Timeline } from "@web-speed-hackathon-2026/client/src/components/timeline/Timeline";
 import {
@@ -30,7 +36,7 @@ const SearchInput = ({ input, meta }: WrappedFieldProps) => (
       placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
       type="text"
     />
-    {meta.touched && meta.error && (
+    {(meta.touched || meta.submitFailed) && meta.error && (
       <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>
     )}
   </div>
@@ -85,7 +91,12 @@ const SearchPageComponent = ({
   }, [parsed]);
 
   const onSubmit = (values: SearchFormData) => {
-    const sanitizedText = sanitizeSearchText(values.searchText.trim());
+    const rawSearchText = values.searchText?.trim() ?? "";
+    if (rawSearchText.length === 0) {
+      throw new SubmissionError({ searchText: "検索キーワードを入力してください" });
+    }
+
+    const sanitizedText = sanitizeSearchText(rawSearchText);
     navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
   };
 

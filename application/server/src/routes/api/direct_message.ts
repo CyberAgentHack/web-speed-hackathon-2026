@@ -11,6 +11,24 @@ import {
 
 export const directMessageRouter = Router();
 
+function sortMessagesByCreatedAtAsc(
+  messages: DirectMessage[] | undefined,
+): DirectMessage[] {
+  if (messages == null) {
+    return [];
+  }
+
+  return [...messages].sort((a, b) => {
+    const createdAtDiff =
+      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    if (createdAtDiff !== 0) {
+      return createdAtDiff;
+    }
+
+    return a.id.localeCompare(b.id);
+  });
+}
+
 directMessageRouter.get("/dm", async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
@@ -28,7 +46,7 @@ directMessageRouter.get("/dm", async (req, res) => {
 
   const sorted = conversations.map((c) => ({
     ...c.toJSON(),
-    messages: c.messages?.reverse(),
+    messages: sortMessagesByCreatedAtAsc(c.messages),
   }));
 
   return res.status(200).type("application/json").send(sorted);
@@ -110,7 +128,12 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
     throw new httpErrors.NotFound();
   }
 
-  return res.status(200).type("application/json").send(conversation);
+  const serialized = {
+    ...conversation.toJSON(),
+    messages: sortMessagesByCreatedAtAsc(conversation.messages),
+  };
+
+  return res.status(200).type("application/json").send(serialized);
 });
 
 directMessageRouter.ws("/dm/:conversationId", async (req, _res) => {
