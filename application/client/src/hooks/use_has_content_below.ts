@@ -8,29 +8,58 @@ import { RefObject, useEffect, useState } from "react";
  * @param boundaryRef - 比較対象となる境界要素の ref（例: sticky な入力欄）
  */
 export function useHasContentBelow(
-  contentEndRef: RefObject<HTMLElement | null>,
-  boundaryRef: RefObject<HTMLElement | null>,
+    contentEndRef: RefObject<HTMLElement | null>,
+    boundaryRef: RefObject<HTMLElement | null>,
 ): boolean {
-  const [hasContentBelow, setHasContentBelow] = useState(false);
+    const [hasContentBelow, setHasContentBelow] = useState(false);
 
-  useEffect(() => {
-    let active = true;
-    const check = () => {
-      if (!active) return;
-      const endEl = contentEndRef.current;
-      const barEl = boundaryRef.current;
-      if (endEl && barEl) {
-        const endRect = endEl.getBoundingClientRect();
-        const barRect = barEl.getBoundingClientRect();
-        setHasContentBelow(endRect.top > barRect.top);
-      }
-      scheduler.postTask(check, { priority: "user-blocking", delay: 1 });
-    };
-    scheduler.postTask(check, { priority: "user-blocking", delay: 1 });
-    return () => {
-      active = false;
-    };
-  }, [contentEndRef, boundaryRef]);
+    useEffect(() => {
+        let frameId: number | null = null;
 
-  return hasContentBelow;
+        const check = () => {
+            frameId = null;
+            const endEl = contentEndRef.current;
+            const barEl = boundaryRef.current;
+            if (endEl === null || barEl === null) {
+                return;
+            }
+
+            const endRect = endEl.getBoundingClientRect();
+            const barRect = barEl.getBoundingClientRect();
+            setHasContentBelow(endRect.top > barRect.top);
+        };
+
+        const scheduleCheck = () => {
+            if (frameId !== null) {
+                return;
+            }
+            frameId = window.requestAnimationFrame(check);
+        };
+
+        const resizeObserver = new ResizeObserver(scheduleCheck);
+        const endEl = contentEndRef.current;
+        const barEl = boundaryRef.current;
+
+        if (endEl !== null) {
+            resizeObserver.observe(endEl);
+        }
+        if (barEl !== null) {
+            resizeObserver.observe(barEl);
+        }
+
+        window.addEventListener("scroll", scheduleCheck, { passive: true });
+        window.addEventListener("resize", scheduleCheck);
+        scheduleCheck();
+
+        return () => {
+            if (frameId !== null) {
+                window.cancelAnimationFrame(frameId);
+            }
+            resizeObserver.disconnect();
+            window.removeEventListener("scroll", scheduleCheck);
+            window.removeEventListener("resize", scheduleCheck);
+        };
+    }, [contentEndRef, boundaryRef]);
+
+    return hasContentBelow;
 }
