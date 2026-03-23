@@ -2,6 +2,7 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 
 import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
+import { POST_FULL_SCOPE } from "@web-speed-hackathon-2026/server/src/models/Post";
 
 export const userRouter = Router();
 
@@ -60,6 +61,7 @@ userRouter.get("/users/:username/posts", async (req, res) => {
   }
 
   const posts = await Post.findAll({
+    ...POST_FULL_SCOPE,
     limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
     offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
     where: {

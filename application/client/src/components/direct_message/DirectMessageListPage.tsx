@@ -1,4 +1,3 @@
-import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -7,6 +6,8 @@ import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { formatDistanceToNow } from "date-fns";
+import { ja } from 'date-fns/locale'
 
 interface Props {
   activeUser: Models.User;
@@ -87,7 +88,10 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                     <img
                       alt={peer.profileImage.alt}
                       className="w-12 shrink-0 self-start rounded-full"
-                      src={getProfileImagePath(peer.profileImage.id)}
+                      height={40}
+                      loading="lazy"
+                      src={getProfileImagePath(peer.profileImage.id, 40)}
+                      width={40}
                     />
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-center justify-between">
@@ -100,7 +104,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {formatDistanceToNow(lastMessage.createdAt, { addSuffix: true, locale: ja })}
                           </time>
                         )}
                       </div>

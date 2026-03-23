@@ -56,11 +56,11 @@ function formatMetricScore(result: Result, metricKey: MetricKey): string {
 }
 
 function formatScoreSection({
-  metrics,
-  results,
-  totalMaxScore,
-  title,
-}: {
+                              metrics,
+                              results,
+                              totalMaxScore,
+                              title,
+                            }: {
   metrics: Array<{ key: MetricKey; label: string; maxScore: number }>;
   results: Result[];
   totalMaxScore: number;
@@ -144,17 +144,17 @@ const command = defineCommand({
     name: "@web-speed-hackathon-2026/scoring-tool",
   },
   async run({
-    args: {
-      applicationUrl,
-      targetName,
-      competitionEndAt = null,
-      competitionStartAt = null,
-      dashboardServerToken = null,
-      dashboardServerUrl = null,
-      participationGitHubId = null,
-      participationKind = null,
-    },
-  }) {
+              args: {
+                applicationUrl,
+                targetName,
+                competitionEndAt = null,
+                competitionStartAt = null,
+                dashboardServerToken = null,
+                dashboardServerUrl = null,
+                participationGitHubId = null,
+                participationKind = null,
+              },
+            }) {
     async function sendScoreToDashboard(score: number): Promise<{ rank: number | null }> {
       if (!dashboardServerUrl || !dashboardServerToken || !participationGitHubId) {
         return { rank: null };
@@ -204,10 +204,10 @@ const command = defineCommand({
     const requestedDate =
       process.env["GITHUB_ACTIONS"] != null
         ? new Date(
-            (github.context.eventName === "issues"
-              ? github.context.payload.issue!["created_at"]
-              : github.context.payload.comment!["created_at"]) as number,
-          )
+          (github.context.eventName === "issues"
+            ? github.context.payload.issue!["created_at"]
+            : github.context.payload.comment!["created_at"]) as number,
+        )
         : new Date();
 
     if (competitionStartAt != null && requestedDate < new Date(competitionStartAt)) {

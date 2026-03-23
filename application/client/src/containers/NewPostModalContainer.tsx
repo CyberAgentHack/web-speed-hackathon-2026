@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
+import { invalidateAltTextsCache } from "@web-speed-hackathon-2026/client/src/components/foundation/CoveredImage";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { NewPostModalPage } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage";
 import { sendFile, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
@@ -63,6 +64,10 @@ export const NewPostModalContainer = ({ id }: Props) => {
       try {
         setIsLoading(true);
         const post = await sendNewPost(params);
+        // 新しい画像の alt text が alt_texts.json に追加されているのでキャッシュを無効化
+        if (params.images.length > 0) {
+          invalidateAltTextsCache();
+        }
         ref.current?.close();
         navigate(`/posts/${post.id}`);
       } catch {

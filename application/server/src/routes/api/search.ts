@@ -2,6 +2,7 @@ import { Router } from "express";
 import { Op } from "sequelize";
 
 import { Post } from "@web-speed-hackathon-2026/server/src/models";
+import { POST_FULL_SCOPE } from "@web-speed-hackathon-2026/server/src/models/Post";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 
 export const searchRouter = Router();
@@ -38,23 +39,25 @@ searchRouter.get("/search", async (req, res) => {
   // テキスト検索条件
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
+  const maxFetch = (offset || 0) + (limit || 50);
+
   const postsByText = await Post.findAll({
-    limit,
-    offset,
+    ...POST_FULL_SCOPE,
     where: {
       ...textWhere,
       ...dateWhere,
     },
+    limit: maxFetch,
   });
 
   // ユーザー名/名前での検索（キーワードがある場合のみ）
   let postsByUser: typeof postsByText = [];
   if (searchTerm) {
     postsByUser = await Post.findAll({
+      attributes: { exclude: ["userId", "movieId", "soundId"] },
       include: [
         {
           association: "user",
-          attributes: { exclude: ["profileImageId"] },
           include: [{ association: "profileImage" }],
           required: true,
           where: {
@@ -68,9 +71,8 @@ searchRouter.get("/search", async (req, res) => {
         { association: "movie" },
         { association: "sound" },
       ],
-      limit,
-      offset,
       where: dateWhere,
+      limit: maxFetch,
     });
   }
 

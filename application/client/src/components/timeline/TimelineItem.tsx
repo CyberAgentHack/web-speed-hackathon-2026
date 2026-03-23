@@ -1,4 +1,3 @@
-import moment from "moment";
 import { MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
@@ -7,6 +6,8 @@ import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/
 import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { format, formatISO } from 'date-fns'
+import { ja } from 'date-fns/locale'
 
 const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Element): boolean => {
   while (target !== null && target instanceof Element) {
@@ -22,15 +23,15 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
   return false;
 };
 
-/**
- * @typedef {object} Props
- * @property {Models.Post} post
- */
+const EAGER_LOAD_COUNT = 5;
+const FETCH_PRIORITY_COUNT = 3;
+
 interface Props {
   post: Models.Post;
+  index: number;
 }
 
-export const TimelineItem = ({ post }: Props) => {
+export const TimelineItem = ({ post, index }: Props) => {
   const navigate = useNavigate();
 
   /**
@@ -56,7 +57,11 @@ export const TimelineItem = ({ post }: Props) => {
           >
             <img
               alt={post.user.profileImage.alt}
-              src={getProfileImagePath(post.user.profileImage.id)}
+              fetchPriority={index < FETCH_PRIORITY_COUNT ? "high" : undefined}
+              height={96}
+              loading={index < EAGER_LOAD_COUNT ? "eager" : "lazy"}
+              src={getProfileImagePath(post.user.profileImage.id, 96)}
+              width={96}
             />
           </Link>
         </div>
@@ -76,8 +81,8 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={formatISO(post.createdAt)}>
+                {format(post.createdAt, "PPP", { locale: ja })}
               </time>
             </Link>
           </p>
@@ -86,7 +91,7 @@ export const TimelineItem = ({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea images={post.images} loading={index < EAGER_LOAD_COUNT ? "eager" : "lazy"} fetchPriority={index < FETCH_PRIORITY_COUNT ? "high" : undefined} />
             </div>
           ) : null}
           {post.movie ? (

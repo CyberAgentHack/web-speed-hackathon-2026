@@ -1,6 +1,6 @@
 import { ComponentProps, isValidElement, ReactElement, ReactNode } from "react";
-import SyntaxHighlighter from "react-syntax-highlighter";
-import { atomOneLight } from "react-syntax-highlighter/dist/esm/styles/hljs";
+import SyntaxHighlighter from "react-syntax-highlighter/dist/esm/light-async";
+import atomOneLight from "react-syntax-highlighter/dist/esm/styles/hljs/atom-one-light";
 
 const getLanguage = (children: ReactElement<ComponentProps<"code">>) => {
   const className = children.props.className;

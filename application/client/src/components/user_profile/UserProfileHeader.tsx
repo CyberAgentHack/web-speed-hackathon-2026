@@ -1,5 +1,6 @@
 import { FastAverageColor } from "fast-average-color";
-import moment from "moment";
+import { format, formatISO } from "date-fns";
+import { ja } from "date-fns/locale";
 import { ReactEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -13,8 +14,7 @@ export const UserProfileHeader = ({ user }: Props) => {
   const [averageColor, setAverageColor] = useState<string | null>(null);
 
   // 画像の平均色を取得します
-  /** @type {React.ReactEventHandler<HTMLImageElement>} */
-  const handleLoadImage = useCallback<ReactEventHandler<HTMLImageElement>>((ev) => {
+  const handleLoadImage: React.ReactEventHandler<HTMLImageElement> = useCallback<ReactEventHandler<HTMLImageElement>>((ev) => {
     const fac = new FastAverageColor();
     const { rgb } = fac.getColor(ev.currentTarget, { mode: "precision" });
     setAverageColor(rgb);
@@ -24,14 +24,17 @@ export const UserProfileHeader = ({ user }: Props) => {
   return (
     <header className="relative">
       <div
-        className={`h-32 ${averageColor ? `bg-[${averageColor}]` : "bg-cax-surface-subtle"}`}
+        className={`h-32 bg-cax-surface-subtle`}
+        style={{backgroundColor: averageColor ? averageColor : "transparent"}}
       ></div>
       <div className="border-cax-border bg-cax-surface-subtle absolute left-2/4 m-0 h-28 w-28 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border sm:h-32 sm:w-32">
         <img
           alt=""
           crossOrigin="anonymous"
           onLoad={handleLoadImage}
-          src={getProfileImagePath(user.profileImage.id)}
+          height={192}
+          src={getProfileImagePath(user.profileImage.id, 192)}
+          width={192}
         />
       </div>
       <div className="px-4 pt-20">
@@ -43,8 +46,8 @@ export const UserProfileHeader = ({ user }: Props) => {
             <FontAwesomeIcon iconType="calendar-alt" styleType="regular" />
           </span>
           <span>
-            <time dateTime={moment(user.createdAt).toISOString()}>
-              {moment(user.createdAt).locale("ja").format("LL")}
+            <time dateTime={formatISO(user.createdAt)}>
+              {format(user.createdAt, "PPP", { locale: ja })}
             </time>
             からサービスを利用しています
           </span>
