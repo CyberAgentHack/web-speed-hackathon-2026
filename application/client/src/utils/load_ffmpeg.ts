@@ -1,7 +1,8 @@
-import { FFmpeg } from "@ffmpeg/ffmpeg";
+import type { FFmpeg } from "@ffmpeg/ffmpeg";
 
 export async function loadFFmpeg(): Promise<FFmpeg> {
-  const ffmpeg = new FFmpeg();
+  const { FFmpeg: FFmpegClass } = await import("@ffmpeg/ffmpeg");
+  const ffmpeg = new FFmpegClass();
 
   await ffmpeg.load({
     coreURL: await import("@ffmpeg/core?binary").then(({ default: b }) => {

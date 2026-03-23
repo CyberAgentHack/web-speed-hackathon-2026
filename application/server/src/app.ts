@@ -15,8 +15,7 @@ app.use(bodyParser.raw({ limit: "10mb" }));
 
 app.use((_req, res, next) => {
   res.header({
-    "Cache-Control": "max-age=0, no-transform",
-    Connection: "close",
+    "Cache-Control": "max-age=0, no-cache",
   });
   return next();
 });

@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 
-const LIMIT = 30;
+const LIMIT = 10;
 
 interface ReturnValues<T> {
   data: Array<T>;
@@ -36,17 +36,22 @@ export function useInfiniteFetch<T>(
       offset,
     };
 
-    void fetcher(apiPath).then(
-      (allData) => {
-        setResult((cur) => ({
-          ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
-          isLoading: false,
-        }));
+    const separator = apiPath.includes("?") ? "&" : "?";
+    const pagedPath = `${apiPath}${separator}limit=${LIMIT}&offset=${offset}`;
+
+    void fetcher(pagedPath).then(
+      (pageData) => {
         internalRef.current = {
           isLoading: false,
           offset: offset + LIMIT,
         };
+        startTransition(() => {
+          setResult((cur) => ({
+            ...cur,
+            data: [...cur.data, ...pageData],
+            isLoading: false,
+          }));
+        });
       },
       (error) => {
         setResult((cur) => ({
