@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Helmet } from "react-helmet";
 import { useParams } from "react-router";
+
+import { useTitle } from "@web-speed-hackathon-2026/client/src/hooks/use_title";
 
 import { DirectMessageGate } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageGate";
 import { DirectMessagePage } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessagePage";
@@ -30,8 +31,6 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(null);
   const [conversationError, setConversationError] = useState<Error | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -63,17 +62,37 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   const handleSubmit = useCallback(
     async (params: DirectMessageFormData) => {
-      setIsSubmitting(true);
-      try {
-        await sendJSON(`/api/v1/dm/${conversationId}/messages`, {
-          body: params.body,
+      const optimisticId = `optimistic-${Date.now()}`;
+      const optimisticMessage: Models.DirectMessage = {
+        id: optimisticId,
+        body: params.body,
+        sender: activeUser!,
+        isRead: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      setConversation((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          messages: [...prev.messages, optimisticMessage],
+        };
+      });
+
+      // 서버 전송은 백그라운드 (await 하지 않음)
+      sendJSON(`/api/v1/dm/${conversationId}/messages`, { body: params.body })
+        .catch(() => {
+          setConversation((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              messages: prev.messages.filter((m) => m.id !== optimisticId),
+            };
+          });
         });
-        loadConversation();
-      } finally {
-        setIsSubmitting(false);
-      }
     },
-    [conversationId, loadConversation],
+    [conversationId, activeUser],
   );
 
   const handleTyping = useCallback(async () => {
@@ -82,15 +101,28 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {
     if (event.type === "dm:conversation:message") {
-      void loadConversation().then(() => {
-        if (event.payload.sender.id !== activeUser?.id) {
-          setIsPeerTyping(false);
-          if (peerTypingTimeoutRef.current !== null) {
-            clearTimeout(peerTypingTimeoutRef.current);
-          }
-          peerTypingTimeoutRef.current = null;
+      const newMessage = event.payload;
+      setConversation((prev) => {
+        if (!prev) return prev;
+        if (prev.messages.some((m) => m.id === newMessage.id)) return prev;
+        const optimisticIdx = prev.messages.findIndex(
+          (m) => m.id.startsWith("optimistic-") && m.sender.id === newMessage.sender.id && m.body === newMessage.body
+        );
+        if (optimisticIdx !== -1) {
+          const updated = [...prev.messages];
+          updated[optimisticIdx] = newMessage;
+          return { ...prev, messages: updated };
         }
+        return { ...prev, messages: [...prev.messages, newMessage] };
       });
+
+      if (newMessage.sender.id !== activeUser?.id) {
+        setIsPeerTyping(false);
+        if (peerTypingTimeoutRef.current !== null) {
+          clearTimeout(peerTypingTimeoutRef.current);
+        }
+        peerTypingTimeoutRef.current = null;
+      }
       void sendRead();
     } else if (event.type === "dm:conversation:typing") {
       setIsPeerTyping(true);
@@ -102,6 +134,12 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
       }, TYPING_INDICATOR_DURATION_MS);
     }
   });
+
+  const peer = conversation != null && activeUser != null
+    ? (conversation.initiator.id !== activeUser.id ? conversation.initiator : conversation.member)
+    : null;
+
+  useTitle(peer ? `${peer.name} さんとのダイレクトメッセージ - CaX` : "ダイレクトメッセージ - CaX");
 
   if (activeUser === null) {
     return (
@@ -119,23 +157,14 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     return null;
   }
 
-  const peer =
-    conversation.initiator.id !== activeUser?.id ? conversation.initiator : conversation.member;
-
   return (
-    <>
-      <Helmet>
-        <title>{peer.name} さんとのダイレクトメッセージ - CaX</title>
-      </Helmet>
-      <DirectMessagePage
-        conversationError={conversationError}
-        conversation={conversation}
-        activeUser={activeUser}
-        onTyping={handleTyping}
-        isPeerTyping={isPeerTyping}
-        isSubmitting={isSubmitting}
-        onSubmit={handleSubmit}
-      />
-    </>
+    <DirectMessagePage
+      conversationError={conversationError}
+      conversation={conversation}
+      activeUser={activeUser}
+      onTyping={handleTyping}
+      isPeerTyping={isPeerTyping}
+      onSubmit={handleSubmit}
+    />
   );
 };

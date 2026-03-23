@@ -11,6 +11,8 @@ import {
 
 export const directMessageRouter = Router();
 
+const senderInclude = [{ association: "sender", include: [{ association: "profileImage" }] }];
+
 directMessageRouter.get("/dm", async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();

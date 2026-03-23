@@ -3,10 +3,15 @@ import { Op } from "sequelize";
 
 import { Post } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
+import { getCached, setCache } from "@web-speed-hackathon-2026/server/src/utils/response_cache";
 
 export const searchRouter = Router();
 
 searchRouter.get("/search", async (req, res) => {
+  const cacheKey = `search:${req.originalUrl}`;
+  const cached = getCached(cacheKey);
+  if (cached) return res.status(200).type("application/json").send(cached);
+
   const query = req.query["q"];
 
   if (typeof query !== "string" || query.trim() === "") {
@@ -88,5 +93,6 @@ searchRouter.get("/search", async (req, res) => {
 
   const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
 
+  setCache(cacheKey, result);
   return res.status(200).type("application/json").send(result);
 });

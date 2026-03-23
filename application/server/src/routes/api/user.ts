@@ -2,6 +2,7 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 
 import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
+import { getCached, setCache } from "@web-speed-hackathon-2026/server/src/utils/response_cache";
 
 export const userRouter = Router();
 
@@ -35,6 +36,10 @@ userRouter.put("/me", async (req, res) => {
 });
 
 userRouter.get("/users/:username", async (req, res) => {
+  const cacheKey = req.originalUrl;
+  const cached = getCached(cacheKey);
+  if (cached) return res.status(200).type("application/json").send(cached);
+
   const user = await User.findOne({
     where: {
       username: req.params.username,
@@ -45,10 +50,15 @@ userRouter.get("/users/:username", async (req, res) => {
     throw new httpErrors.NotFound();
   }
 
+  setCache(cacheKey, user);
   return res.status(200).type("application/json").send(user);
 });
 
 userRouter.get("/users/:username/posts", async (req, res) => {
+  const cacheKey = req.originalUrl;
+  const cached = getCached(cacheKey);
+  if (cached) return res.status(200).type("application/json").send(cached);
+
   const user = await User.findOne({
     where: {
       username: req.params.username,
@@ -67,5 +77,6 @@ userRouter.get("/users/:username/posts", async (req, res) => {
     },
   });
 
+  setCache(cacheKey, posts);
   return res.status(200).type("application/json").send(posts);
 });

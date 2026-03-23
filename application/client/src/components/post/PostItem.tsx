@@ -1,4 +1,5 @@
-import moment from "moment";
+import { memo } from "react";
+import { formatLL, toISOString } from "@web-speed-hackathon-2026/client/src/utils/format_date";
 
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
@@ -11,7 +12,7 @@ interface Props {
   post: Models.Post;
 }
 
-export const PostItem = ({ post }: Props) => {
+export const PostItem = memo(({ post }: Props) => {
   return (
     <article className="px-1 sm:px-4">
       <div className="border-cax-border border-b px-4 pt-4 pb-4">
@@ -24,6 +25,8 @@ export const PostItem = ({ post }: Props) => {
               <img
                 alt={post.user.profileImage.alt}
                 src={getProfileImagePath(post.user.profileImage.id)}
+                width={64}
+                height={64}
               />
             </Link>
           </div>
@@ -52,7 +55,7 @@ export const PostItem = ({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea images={post.images} priority />
             </div>
           ) : null}
           {post.movie ? (
@@ -67,8 +70,8 @@ export const PostItem = ({ post }: Props) => {
           ) : null}
           <p className="mt-2 text-sm sm:mt-4">
             <Link className="text-cax-text-muted hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={toISOString(post.createdAt)}>
+                {formatLL(post.createdAt)}
               </time>
             </Link>
           </p>
@@ -76,4 +79,4 @@ export const PostItem = ({ post }: Props) => {
       </div>
     </article>
   );
-};
+});

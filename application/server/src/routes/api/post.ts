@@ -2,25 +2,36 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 
 import { Comment, Post } from "@web-speed-hackathon-2026/server/src/models";
+import { getCached, setCache, clearCache } from "@web-speed-hackathon-2026/server/src/utils/response_cache";
 
 export const postRouter = Router();
 
 postRouter.get("/posts", async (req, res) => {
+  const cacheKey = `posts:${req.originalUrl}`;
+  const cached = getCached(cacheKey);
+  if (cached) return res.status(200).type("application/json").send(cached);
+
   const posts = await Post.findAll({
     limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
     offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
   });
 
+  setCache(cacheKey, posts);
   return res.status(200).type("application/json").send(posts);
 });
 
 postRouter.get("/posts/:postId", async (req, res) => {
+  const cacheKey = `posts:${req.originalUrl}`;
+  const cached = getCached(cacheKey);
+  if (cached) return res.status(200).type("application/json").send(cached);
+
   const post = await Post.findByPk(req.params.postId);
 
   if (post === null) {
     throw new httpErrors.NotFound();
   }
 
+  setCache(cacheKey, post);
   return res.status(200).type("application/json").send(post);
 });
 
@@ -57,6 +68,8 @@ postRouter.post("/posts", async (req, res) => {
       ],
     },
   );
+
+  clearCache("posts:");
 
   return res.status(200).type("application/json").send(post);
 });

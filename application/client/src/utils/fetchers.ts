@@ -1,58 +1,43 @@
-import $ from "jquery";
-import { gzip } from "pako";
-
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "binary",
-    method: "GET",
-    responseType: "arraybuffer",
-    url,
-  });
-  return result;
+  const res = await fetch(url);
+  if (!res.ok) throw res;
+  return res.arrayBuffer();
+}
+
+declare global {
+  interface Window {
+    __PREFETCH__?: Record<string, unknown>;
+  }
 }
 
 export async function fetchJSON<T>(url: string): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "json",
-    method: "GET",
-    url,
-  });
-  return result;
+  const key = url.startsWith("/") ? url : new URL(url, location.origin).pathname + new URL(url, location.origin).search;
+  if (window.__PREFETCH__ && key in window.__PREFETCH__) {
+    const data = window.__PREFETCH__[key] as T;
+    delete window.__PREFETCH__[key];
+    return data;
+  }
+  const res = await fetch(url);
+  if (!res.ok) throw res;
+  return res.json() as Promise<T>;
 }
 
 export async function sendFile<T>(url: string, file: File): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    data: file,
-    dataType: "json",
-    headers: {
-      "Content-Type": "application/octet-stream",
-    },
+  const res = await fetch(url, {
     method: "POST",
-    processData: false,
-    url,
+    headers: { "Content-Type": "application/octet-stream" },
+    body: file,
   });
-  return result;
+  if (!res.ok) throw res;
+  return res.json() as Promise<T>;
 }
 
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
-  const jsonString = JSON.stringify(data);
-  const uint8Array = new TextEncoder().encode(jsonString);
-  const compressed = gzip(uint8Array);
-
-  const result = await $.ajax({
-    async: false,
-    data: compressed,
-    dataType: "json",
-    headers: {
-      "Content-Encoding": "gzip",
-      "Content-Type": "application/json",
-    },
+  const res = await fetch(url, {
     method: "POST",
-    processData: false,
-    url,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
   });
-  return result;
+  if (!res.ok) throw res;
+  return res.json() as Promise<T>;
 }
