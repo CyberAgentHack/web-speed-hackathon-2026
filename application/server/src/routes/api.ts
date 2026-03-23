@@ -1,5 +1,5 @@
-import { Router, NextFunction, Request, Response } from "express";
-import httpErrors from "http-errors";
+import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
 import { ValidationError } from "sequelize";
 
 import { authRouter } from "@web-speed-hackathon-2026/server/src/routes/api/auth";
@@ -13,35 +13,27 @@ import { searchRouter } from "@web-speed-hackathon-2026/server/src/routes/api/se
 import { soundRouter } from "@web-speed-hackathon-2026/server/src/routes/api/sound";
 import { userRouter } from "@web-speed-hackathon-2026/server/src/routes/api/user";
 
-export const apiRouter = Router();
+export const apiApp = new Hono();
 
-apiRouter.use(initializeRouter);
-apiRouter.use(userRouter);
-apiRouter.use(postRouter);
-apiRouter.use(directMessageRouter);
-apiRouter.use(searchRouter);
-apiRouter.use(movieRouter);
-apiRouter.use(imageRouter);
-apiRouter.use(soundRouter);
-apiRouter.use(authRouter);
-apiRouter.use(crokRouter);
+apiApp.route("/", initializeRouter);
+apiApp.route("/", userRouter);
+apiApp.route("/", postRouter);
+apiApp.route("/", directMessageRouter);
+apiApp.route("/", searchRouter);
+apiApp.route("/", movieRouter);
+apiApp.route("/", imageRouter);
+apiApp.route("/", soundRouter);
+apiApp.route("/", authRouter);
+apiApp.route("/", crokRouter);
 
-apiRouter.use(async (err: Error, _req: Request, _res: Response, _next: NextFunction) => {
+// Error handling
+apiApp.onError((err, c) => {
   if (err instanceof ValidationError) {
-    throw new httpErrors.BadRequest();
+    return c.json({ message: "Bad Request" }, 400);
   }
-  throw err;
-});
-
-apiRouter.use(async (err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  if (!httpErrors.isHttpError(err) || err.status === 500) {
-    console.error(err);
+  if (err instanceof HTTPException) {
+    return c.json({ message: err.message }, err.status);
   }
-
-  return res
-    .status(httpErrors.isHttpError(err) ? err.status : 500)
-    .type("application/json")
-    .send({
-      message: err.message,
-    });
+  console.error(err);
+  return c.json({ message: "Internal Server Error" }, 500);
 });

@@ -1,9 +1,3 @@
-import { CreateMLCEngine } from "@mlc-ai/web-llm";
-import { stripIndents } from "common-tags";
-import * as JSONRepairJS from "json-repair-js";
-import langs from "langs";
-import invariant from "tiny-invariant";
-
 interface Translator {
   translate(text: string): Promise<string>;
   [Symbol.dispose](): void;
@@ -14,14 +8,42 @@ interface Params {
   targetLanguage: string;
 }
 
+// エンジンをキャッシュして毎回ロードし直さないようにする
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let cachedEngine: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let engineLoadingPromise: Promise<any> | null = null;
+
+async function getEngine() {
+  if (cachedEngine) return cachedEngine;
+  if (!engineLoadingPromise) {
+    engineLoadingPromise = (async () => {
+      const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
+      cachedEngine = await CreateMLCEngine("gemma-2-2b-jpn-it-q4f16_1-MLC");
+      return cachedEngine;
+    })();
+  }
+  return engineLoadingPromise;
+}
+
 export async function createTranslator(params: Params): Promise<Translator> {
+  const [
+    { stripIndents },
+    { loads },
+    { default: langs },
+  ] = await Promise.all([
+    import("common-tags"),
+    import("json-repair-js"),
+    import("langs"),
+  ]);
+
   const sourceLang = langs.where("1", params.sourceLanguage);
-  invariant(sourceLang, `Unsupported source language code: ${params.sourceLanguage}`);
+  if (!sourceLang) throw new Error(`Unsupported source language code: ${params.sourceLanguage}`);
 
   const targetLang = langs.where("1", params.targetLanguage);
-  invariant(targetLang, `Unsupported target language code: ${params.targetLanguage}`);
+  if (!targetLang) throw new Error(`Unsupported target language code: ${params.targetLanguage}`);
 
-  const engine = await CreateMLCEngine("gemma-2-2b-jpn-it-q4f16_1-MLC");
+  const engine = await getEngine();
 
   return {
     async translate(text: string): Promise<string> {
@@ -44,18 +66,17 @@ export async function createTranslator(params: Params): Promise<Translator> {
       });
 
       const content = reply.choices[0]!.message.content;
-      invariant(content, "No content in the reply from the translation engine.");
+      if (!content) throw new Error("No content in the reply from the translation engine.");
 
-      const parsed = JSONRepairJS.loads(content);
-      invariant(
-        parsed != null && "result" in parsed,
-        "The translation result is missing in the reply.",
-      );
+      const parsed = loads(content);
+      if (parsed == null || !("result" in parsed)) {
+        throw new Error("The translation result is missing in the reply.");
+      }
 
-      return String(parsed.result);
+      return String((parsed as Record<string, unknown>)["result"]);
     },
     [Symbol.dispose]: () => {
-      engine.unload();
+      // エンジンはキャッシュするためアンロードしない
     },
   };
 }

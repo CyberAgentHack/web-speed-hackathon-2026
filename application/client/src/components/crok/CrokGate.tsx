@@ -24,8 +24,10 @@ export const CrokGate = ({
         <button
           className="bg-cax-brand text-cax-surface-raised hover:bg-cax-brand-strong inline-flex items-center justify-center rounded-full px-6 py-2 shadow"
           type="button"
-          command="show-modal"
-          commandfor={authModalId}
+          onClick={() => {
+            const target = document.getElementById(authModalId);
+            if (target instanceof HTMLDialogElement) target.showModal();
+          }}
         >
           {buttonLabel}
         </button>

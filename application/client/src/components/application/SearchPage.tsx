@@ -1,14 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import { Field, InjectedFormProps, reduxForm, WrappedFieldProps } from "redux-form";
 
 import { Timeline } from "@web-speed-hackathon-2026/client/src/components/timeline/Timeline";
 import {
   parseSearchQuery,
   sanitizeSearchText,
+  isValidDate,
 } from "@web-speed-hackathon-2026/client/src/search/services";
-import { SearchFormData } from "@web-speed-hackathon-2026/client/src/search/types";
-import { validate } from "@web-speed-hackathon-2026/client/src/search/validation";
 import { analyzeSentiment } from "@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer";
 
 import { Button } from "../foundation/Button";
@@ -16,35 +14,16 @@ import { Button } from "../foundation/Button";
 interface Props {
   query: string;
   results: Models.Post[];
+  isLoading?: boolean;
 }
 
-const SearchInput = ({ input, meta }: WrappedFieldProps) => (
-  <div className="flex flex-1 flex-col">
-    <input
-      {...input}
-      className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
-        meta.touched && meta.error
-          ? "border-cax-danger focus:border-cax-danger"
-          : "border-cax-border focus:border-cax-brand-strong"
-      }`}
-      placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
-      type="text"
-    />
-    {meta.touched && meta.error && (
-      <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>
-    )}
-  </div>
-);
-
-const SearchPageComponent = ({
-  query,
-  results,
-  handleSubmit,
-}: Props & InjectedFormProps<SearchFormData, Props>) => {
+export const SearchPage = ({ query, results, isLoading }: Props) => {
   const navigate = useNavigate();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [error, setError] = useState<string | null>(null);
   const [isNegative, setIsNegative] = useState(false);
 
-  const parsed = parseSearchQuery(query);
+  const parsed = useMemo(() => parseSearchQuery(query), [query]);
 
   useEffect(() => {
     if (!parsed.keywords) {
@@ -72,29 +51,67 @@ const SearchPageComponent = ({
 
   const searchConditionText = useMemo(() => {
     const parts: string[] = [];
-    if (parsed.keywords) {
-      parts.push(`「${parsed.keywords}」`);
-    }
-    if (parsed.sinceDate) {
-      parts.push(`${parsed.sinceDate} 以降`);
-    }
-    if (parsed.untilDate) {
-      parts.push(`${parsed.untilDate} 以前`);
-    }
+    if (parsed.keywords) parts.push(`「${parsed.keywords}」`);
+    if (parsed.sinceDate) parts.push(`${parsed.sinceDate} 以降`);
+    if (parsed.untilDate) parts.push(`${parsed.untilDate} 以前`);
     return parts.join(" ");
   }, [parsed]);
 
-  const onSubmit = (values: SearchFormData) => {
-    const sanitizedText = sanitizeSearchText(values.searchText.trim());
-    navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
-  };
+  const handleSubmit = useCallback(
+    (e: FormEvent) => {
+      e.preventDefault();
+      const raw = inputRef.current?.value.trim() ?? "";
+
+      if (!raw) {
+        setError("検索キーワードを入力してください");
+        return;
+      }
+
+      const { keywords, sinceDate, untilDate } = parseSearchQuery(raw);
+
+      if (!keywords && !sinceDate && !untilDate) {
+        setError("検索キーワードまたは日付範囲を指定してください");
+        return;
+      }
+      if (sinceDate && !isValidDate(sinceDate)) {
+        setError(`since: の日付形式が不正です: ${sinceDate}`);
+        return;
+      }
+      if (untilDate && !isValidDate(untilDate)) {
+        setError(`until: の日付形式が不正です: ${untilDate}`);
+        return;
+      }
+      if (sinceDate && untilDate && new Date(sinceDate) > new Date(untilDate)) {
+        setError("since: は until: より前の日付を指定してください");
+        return;
+      }
+
+      setError(null);
+      const sanitized = sanitizeSearchText(raw);
+      navigate(`/search?q=${encodeURIComponent(sanitized)}`);
+    },
+    [navigate],
+  );
 
   return (
     <div className="flex flex-col gap-4">
       <div className="bg-cax-surface p-4 shadow">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit}>
           <div className="flex gap-2">
-            <Field name="searchText" component={SearchInput} />
+            <div className="flex flex-1 flex-col">
+              <input
+                ref={inputRef}
+                defaultValue={query}
+                className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
+                  error
+                    ? "border-cax-danger focus:border-cax-danger"
+                    : "border-cax-border focus:border-cax-brand-strong"
+                }`}
+                placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
+                type="text"
+              />
+              {error && <span className="text-cax-danger mt-1 text-xs">{error}</span>}
+            </div>
             <Button variant="primary" type="submit">
               検索
             </Button>
@@ -105,7 +122,7 @@ const SearchPageComponent = ({
         </p>
       </div>
 
-      {query && (
+      {query && !isLoading && (
         <div className="px-4">
           <h2 className="text-lg font-bold">
             {searchConditionText} の検索結果 ({results.length} 件)
@@ -124,7 +141,7 @@ const SearchPageComponent = ({
         </article>
       )}
 
-      {query && results.length === 0 ? (
+      {query && !isLoading && results.length === 0 ? (
         <div className="text-cax-text-muted flex items-center justify-center p-8">
           検索結果が見つかりませんでした
         </div>
@@ -134,9 +151,3 @@ const SearchPageComponent = ({
     </div>
   );
 };
-
-export const SearchPage = reduxForm<SearchFormData, Props>({
-  form: "search",
-  enableReinitialize: true,
-  validate,
-})(SearchPageComponent);

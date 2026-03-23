@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Helmet } from "react-helmet";
 import { useParams } from "react-router";
 
@@ -8,10 +9,19 @@ import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
+declare const window: Window & { __INITIAL_POST__?: Models.Post };
+
 const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
+  const [initialPost] = useState<Models.Post | undefined>(() => {
+    const post = window.__INITIAL_POST__;
+    delete window.__INITIAL_POST__;
+    return post;
+  });
+
   const { data: post, isLoading: isLoadingPost } = useFetch<Models.Post>(
     `/api/v1/posts/${postId}`,
     fetchJSON,
+    initialPost,
   );
 
   const { data: comments, fetchMore } = useInfiniteFetch<Models.Comment>(

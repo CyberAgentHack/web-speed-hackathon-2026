@@ -1,48 +1,57 @@
-import { Router } from "express";
-import httpErrors from "http-errors";
+import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
 import { UniqueConstraintError, ValidationError } from "sequelize";
 
 import { User } from "@web-speed-hackathon-2026/server/src/models";
+import {
+  setSession,
+  clearSession,
+} from "@web-speed-hackathon-2026/server/src/session";
+import { parseJSON } from "@web-speed-hackathon-2026/server/src/utils/parse_json";
 
-export const authRouter = Router();
+export const authRouter = new Hono();
 
-authRouter.post("/signup", async (req, res) => {
+authRouter.post("/signup", async (c) => {
   try {
-    const { id: userId } = await User.create(req.body);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const body: any = await parseJSON(c);
+    const { id: userId } = await User.create(body);
     const user = await User.findByPk(userId);
 
-    req.session.userId = userId;
-    return res.status(200).type("application/json").send(user);
+    setSession(c, userId);
+    return c.json(user);
   } catch (err) {
     if (err instanceof UniqueConstraintError) {
-      return res.status(400).type("application/json").send({ code: "USERNAME_TAKEN" });
+      return c.json({ code: "USERNAME_TAKEN" }, 400);
     }
     if (err instanceof ValidationError) {
-      return res.status(400).type("application/json").send({ code: "INVALID_USERNAME" });
+      return c.json({ code: "INVALID_USERNAME" }, 400);
     }
     throw err;
   }
 });
 
-authRouter.post("/signin", async (req, res) => {
+authRouter.post("/signin", async (c) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const body: any = await parseJSON(c);
   const user = await User.findOne({
     where: {
-      username: req.body.username,
+      username: body.username,
     },
   });
 
   if (user === null) {
-    throw new httpErrors.BadRequest();
+    throw new HTTPException(400);
   }
-  if (!user.validPassword(req.body.password)) {
-    throw new httpErrors.BadRequest();
+  if (!user.validPassword(body.password)) {
+    throw new HTTPException(400);
   }
 
-  req.session.userId = user.id;
-  return res.status(200).type("application/json").send(user);
+  setSession(c, user.id);
+  return c.json(user);
 });
 
-authRouter.post("/signout", async (req, res) => {
-  req.session.userId = undefined;
-  return res.status(200).type("application/json").send({});
+authRouter.post("/signout", async (c) => {
+  clearSession(c);
+  return c.json({});
 });
