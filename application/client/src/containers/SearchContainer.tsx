@@ -10,17 +10,22 @@ export const SearchContainer = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
 
-  const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>(
+  const { data: posts, fetchMore, hasMore, isLoading } = useInfiniteFetch<Models.Post>(
     query ? `/api/v1/search?q=${encodeURIComponent(query)}` : "",
     fetchJSON,
   );
 
   return (
-    <InfiniteScroll fetchMore={fetchMore} items={posts}>
+    <InfiniteScroll fetchMore={fetchMore} hasMore={hasMore} items={posts}>
       <Helmet>
         <title>検索 - CaX</title>
       </Helmet>
-      <SearchPage query={query} results={posts} initialValues={{ searchText: query }} />
+      <SearchPage
+        query={query}
+        results={posts}
+        isLoading={isLoading}
+        initialValues={{ searchText: query }}
+      />
     </InfiniteScroll>
   );
 };

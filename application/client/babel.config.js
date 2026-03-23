@@ -6,14 +6,14 @@ module.exports = {
       {
         targets: "ie 11",
         corejs: "3",
-        modules: "commonjs",
-        useBuiltIns: false,
+        modules: false,
+        useBuiltIns: "usage",
       },
     ],
     [
       "@babel/preset-react",
       {
-        development: true,
+        development: process.env.NODE_ENV !== "production",
         runtime: "automatic",
       },
     ],

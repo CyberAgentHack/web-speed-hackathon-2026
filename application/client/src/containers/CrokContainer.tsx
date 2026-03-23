@@ -8,9 +8,10 @@ import { useSSE } from "@web-speed-hackathon-2026/client/src/hooks/use_sse";
 type Props = {
   activeUser: Models.User | null;
   authModalId: string;
+  isResolvingActiveUser: boolean;
 };
 
-export const CrokContainer = ({ activeUser, authModalId }: Props) => {
+export const CrokContainer = ({ activeUser, authModalId, isResolvingActiveUser }: Props) => {
   const [messages, setMessages] = useState<Models.ChatMessage[]>([]);
 
   const sseOptions = useMemo(
@@ -69,6 +70,19 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
     },
     [isStreaming, start],
   );
+
+  if (activeUser == null && isResolvingActiveUser) {
+    return (
+      <>
+        <Helmet>
+          <title>Crok - CaX</title>
+        </Helmet>
+        <section className="px-6 py-10">
+          <p className="text-cax-text-muted text-sm">ユーザー情報を読み込んでいます...</p>
+        </section>
+      </>
+    );
+  }
 
   if (!activeUser) {
     return (

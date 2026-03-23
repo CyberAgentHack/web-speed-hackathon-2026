@@ -2,9 +2,18 @@ import Bluebird from "bluebird";
 import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
 import analyze from "negaposi-analyzer-ja";
 
+let tokenizerPromise: Promise<Tokenizer<IpadicFeatures>> | null = null;
+
 async function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
-  const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-  return await builder.buildAsync();
+  if (tokenizerPromise == null) {
+    const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
+    tokenizerPromise = builder.buildAsync().catch((error: unknown) => {
+      tokenizerPromise = null;
+      throw error;
+    });
+  }
+
+  return await tokenizerPromise;
 }
 
 type SentimentResult = {

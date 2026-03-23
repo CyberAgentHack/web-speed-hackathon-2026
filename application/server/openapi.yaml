@@ -333,10 +333,13 @@ paths:
                 type: object
                 required:
                   - id
+                  - alt
                 properties:
                   id:
                     type: string
                     format: uuid
+                  alt:
+                    type: string
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":

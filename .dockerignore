@@ -4,3 +4,8 @@ node_modules
 
 application/server/seeds
 application/server/upload
+docs
+scoring-tool
+application/e2e
+application/dist
+application/dist-prod-test

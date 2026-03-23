@@ -10,9 +10,10 @@ interface Props {
   href?: string;
   command?: string;
   commandfor?: string;
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
 }
 
-export const NavigationItem = ({ badge, href, icon, command, commandfor, text }: Props) => {
+export const NavigationItem = ({ badge, href, icon, command, commandfor, onClick, text }: Props) => {
   const location = useLocation();
   const isActive = location.pathname === href;
   return (
@@ -37,6 +38,7 @@ export const NavigationItem = ({ badge, href, icon, command, commandfor, text }:
           type="button"
           command={command}
           commandfor={commandfor}
+          onClick={onClick}
         >
           <span className="relative text-xl lg:pr-2 lg:text-3xl">
             {icon}

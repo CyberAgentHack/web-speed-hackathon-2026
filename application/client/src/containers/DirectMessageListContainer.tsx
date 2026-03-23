@@ -8,10 +8,28 @@ import { NewDirectMessageModalContainer } from "@web-speed-hackathon-2026/client
 interface Props {
   activeUser: Models.User | null;
   authModalId: string;
+  isResolvingActiveUser: boolean;
 }
 
-export const DirectMessageListContainer = ({ activeUser, authModalId }: Props) => {
+export const DirectMessageListContainer = ({
+  activeUser,
+  authModalId,
+  isResolvingActiveUser,
+}: Props) => {
   const newDmModalId = useId();
+
+  if (activeUser === null && isResolvingActiveUser) {
+    return (
+      <>
+        <Helmet>
+          <title>ダイレクトメッセージ - CaX</title>
+        </Helmet>
+        <section className="px-6 py-10">
+          <p className="text-cax-text-muted text-sm">DM情報を読み込んでいます...</p>
+        </section>
+      </>
+    );
+  }
 
   if (activeUser === null) {
     return (

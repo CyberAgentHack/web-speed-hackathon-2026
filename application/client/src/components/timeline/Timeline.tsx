@@ -7,8 +7,8 @@ interface Props {
 export const Timeline = ({ timeline }: Props) => {
   return (
     <section>
-      {timeline.map((post) => {
-        return <TimelineItem key={post.id} post={post} />;
+      {timeline.map((post, idx) => {
+        return <TimelineItem key={post.id} post={post} prioritizeFirstImage={idx === 0} />;
       })}
     </section>
   );

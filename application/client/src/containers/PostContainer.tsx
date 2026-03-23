@@ -14,16 +14,22 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
     fetchJSON,
   );
 
-  const { data: comments, fetchMore } = useInfiniteFetch<Models.Comment>(
+  const { data: comments, fetchMore, hasMore } = useInfiniteFetch<Models.Comment>(
     `/api/v1/posts/${postId}/comments`,
     fetchJSON,
+    { limit: 10 },
   );
 
   if (isLoadingPost) {
     return (
-      <Helmet>
-        <title>読込中 - CaX</title>
-      </Helmet>
+      <>
+        <Helmet>
+          <title>読込中 - CaX</title>
+        </Helmet>
+        <section className="px-4 py-8">
+          <p className="text-cax-text-muted text-center">投稿を読み込み中です...</p>
+        </section>
+      </>
     );
   }
 
@@ -32,7 +38,7 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
   }
 
   return (
-    <InfiniteScroll fetchMore={fetchMore} items={comments}>
+    <InfiniteScroll fetchMore={fetchMore} hasMore={hasMore} items={comments}>
       <Helmet>
         <title>{post.user.name} さんのつぶやき - CaX</title>
       </Helmet>

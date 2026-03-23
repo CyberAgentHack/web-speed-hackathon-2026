@@ -2,48 +2,64 @@ import { ReactNode, useEffect, useRef } from "react";
 
 interface Props {
   children: ReactNode;
+  hasMore: boolean;
   items: any[];
   fetchMore: () => void;
 }
 
-export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
-  const latestItem = items[items.length - 1];
-
-  const prevReachedRef = useRef(false);
+export const InfiniteScroll = ({ children, fetchMore, hasMore, items }: Props) => {
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const wasIntersectingRef = useRef(false);
+  const hasItemsRef = useRef(items.length > 0);
 
   useEffect(() => {
-    const handler = () => {
-      // 念の為 2の18乗 回、最下部かどうかを確認する
-      const hasReached = Array.from(Array(2 ** 18), () => {
-        return window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
-      }).every(Boolean);
+    hasItemsRef.current = items.length > 0;
+  }, [items.length]);
 
-      // 画面最下部にスクロールしたタイミングで、登録したハンドラを呼び出す
-      if (hasReached && !prevReachedRef.current) {
-        // アイテムがないときは追加で読み込まない
-        if (latestItem !== undefined) {
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (sentinel == null) {
+      return;
+    }
+
+    if (!hasMore) {
+      return;
+    }
+
+    wasIntersectingRef.current = false;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const isIntersecting = entry?.isIntersecting ?? false;
+
+        if (
+          isIntersecting &&
+          !wasIntersectingRef.current &&
+          hasItemsRef.current
+        ) {
           fetchMore();
         }
-      }
 
-      prevReachedRef.current = hasReached;
-    };
+        wasIntersectingRef.current = isIntersecting;
+      },
+      {
+        root: null,
+        threshold: 0,
+        rootMargin: "0px 0px 300px 0px",
+      },
+    );
 
-    // 最初は実行されないので手動で呼び出す
-    prevReachedRef.current = false;
-    handler();
+    observer.observe(sentinel);
 
-    document.addEventListener("wheel", handler, { passive: false });
-    document.addEventListener("touchmove", handler, { passive: false });
-    document.addEventListener("resize", handler, { passive: false });
-    document.addEventListener("scroll", handler, { passive: false });
     return () => {
-      document.removeEventListener("wheel", handler);
-      document.removeEventListener("touchmove", handler);
-      document.removeEventListener("resize", handler);
-      document.removeEventListener("scroll", handler);
+      observer.disconnect();
     };
-  }, [latestItem, fetchMore]);
+  }, [fetchMore, hasMore]);
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <div ref={sentinelRef} aria-hidden className="h-px w-full" />
+    </>
+    );
 };

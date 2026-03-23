@@ -23,9 +23,14 @@ const TYPING_INDICATOR_DURATION_MS = 10 * 1000;
 interface Props {
   activeUser: Models.User | null;
   authModalId: string;
+  isResolvingActiveUser: boolean;
 }
 
-export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
+export const DirectMessageContainer = ({
+  activeUser,
+  authModalId,
+  isResolvingActiveUser,
+}: Props) => {
   const { conversationId = "" } = useParams<{ conversationId: string }>();
 
   const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(null);
@@ -103,6 +108,14 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     }
   });
 
+  if (activeUser === null && isResolvingActiveUser) {
+    return (
+      <section className="px-6 py-10">
+        <p className="text-cax-text-muted text-sm">DM情報を読み込んでいます...</p>
+      </section>
+    );
+  }
+
   if (activeUser === null) {
     return (
       <DirectMessageGate
@@ -116,7 +129,11 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     if (conversationError != null) {
       return <NotFoundContainer />;
     }
-    return null;
+    return (
+      <section className="px-6 py-10">
+        <p className="text-cax-text-muted text-sm">会話を読み込んでいます...</p>
+      </section>
+    );
   }
 
   const peer =

@@ -1,7 +1,8 @@
 import { Router } from "express";
-import { Op } from "sequelize";
+import { Op, type WhereOptions } from "sequelize";
 
-import { Post } from "@web-speed-hackathon-2026/server/src/models";
+import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
+import { resolvePagination } from "@web-speed-hackathon-2026/server/src/utils/pagination";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 
 export const searchRouter = Router();
@@ -20,73 +21,81 @@ searchRouter.get("/search", async (req, res) => {
     return res.status(200).type("application/json").send([]);
   }
 
-  const searchTerm = keywords ? `%${keywords}%` : null;
-  const limit = req.query["limit"] != null ? Number(req.query["limit"]) : undefined;
-  const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
-
-  // 日付条件を構築
-  const dateConditions: Record<symbol, Date>[] = [];
-  if (sinceDate) {
-    dateConditions.push({ [Op.gte]: sinceDate });
-  }
-  if (untilDate) {
-    dateConditions.push({ [Op.lte]: untilDate });
-  }
-  const dateWhere =
-    dateConditions.length > 0 ? { createdAt: Object.assign({}, ...dateConditions) } : {};
-
-  // テキスト検索条件
-  const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
-
-  const postsByText = await Post.findAll({
-    limit,
-    offset,
-    where: {
-      ...textWhere,
-      ...dateWhere,
-    },
+  const { limit, offset } = resolvePagination(req.query["limit"], req.query["offset"], {
+    maxLimit: 50,
   });
 
-  // ユーザー名/名前での検索（キーワードがある場合のみ）
-  let postsByUser: typeof postsByText = [];
-  if (searchTerm) {
-    postsByUser = await Post.findAll({
-      include: [
-        {
-          association: "user",
-          attributes: { exclude: ["profileImageId"] },
-          include: [{ association: "profileImage" }],
-          required: true,
-          where: {
-            [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
-          },
-        },
-        {
-          association: "images",
-          through: { attributes: [] },
-        },
-        { association: "movie" },
-        { association: "sound" },
+  const whereConditions: WhereOptions[] = [];
+
+  // 日付条件を構築
+  const createdAtCondition: Record<symbol, Date> = {};
+  let hasDateFilter = false;
+  if (sinceDate) {
+    createdAtCondition[Op.gte] = sinceDate;
+    hasDateFilter = true;
+  }
+  if (untilDate) {
+    createdAtCondition[Op.lte] = untilDate;
+    hasDateFilter = true;
+  }
+  if (hasDateFilter) {
+    whereConditions.push({ createdAt: createdAtCondition });
+  }
+
+  if (keywords) {
+    const searchTerm = `%${keywords}%`;
+    whereConditions.push({
+      [Op.or]: [
+        { text: { [Op.like]: searchTerm } },
+        { "$user.username$": { [Op.like]: searchTerm } },
+        { "$user.name$": { [Op.like]: searchTerm } },
       ],
-      limit,
-      offset,
-      where: dateWhere,
     });
   }
 
-  const postIdSet = new Set<string>();
-  const mergedPosts: typeof postsByText = [];
+  const where = whereConditions.length > 0 ? ({ [Op.and]: whereConditions } as WhereOptions) : {};
 
-  for (const post of [...postsByText, ...postsByUser]) {
-    if (!postIdSet.has(post.id)) {
-      postIdSet.add(post.id);
-      mergedPosts.push(post);
-    }
+  const matchedPosts = await Post.unscoped().findAll({
+    attributes: ["id"],
+    include: [
+      {
+        model: User.unscoped(),
+        as: "user",
+        attributes: [],
+        required: true,
+      },
+    ],
+    limit,
+    offset,
+    order: [
+      ["createdAt", "DESC"],
+      ["id", "DESC"],
+    ],
+    subQuery: false,
+    where,
+  });
+
+  const postIds = matchedPosts.map((post) => post.id);
+  if (postIds.length === 0) {
+    return res.status(200).type("application/json").send([]);
   }
 
-  mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  const posts = await Post.findAll({
+    where: {
+      id: {
+        [Op.in]: postIds,
+      },
+    },
+  });
 
-  const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
+  const postIdToIndex = new Map(postIds.map((postId, index) => [postId, index]));
+  const orderedPosts = posts
+    .slice()
+    .sort(
+      (a, b) =>
+        (postIdToIndex.get(a.id) ?? Number.MAX_SAFE_INTEGER) -
+        (postIdToIndex.get(b.id) ?? Number.MAX_SAFE_INTEGER),
+    );
 
-  return res.status(200).type("application/json").send(result);
+  return res.status(200).type("application/json").send(orderedPosts);
 });

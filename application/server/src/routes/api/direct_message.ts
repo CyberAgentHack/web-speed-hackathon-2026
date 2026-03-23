@@ -1,6 +1,6 @@
 import { Router } from "express";
 import httpErrors from "http-errors";
-import { col, where, Op } from "sequelize";
+import { Op } from "sequelize";
 
 import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
 import {
@@ -8,6 +8,7 @@ import {
   DirectMessageConversation,
   User,
 } from "@web-speed-hackathon-2026/server/src/models";
+import { countUnreadDirectMessagesForUser } from "@web-speed-hackathon-2026/server/src/models/DirectMessage";
 
 export const directMessageRouter = Router();
 
@@ -16,22 +17,58 @@ directMessageRouter.get("/dm", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversations = await DirectMessageConversation.findAll({
+  const conversations = await DirectMessageConversation.unscoped().findAll({
     where: {
-      [Op.and]: [
-        { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
-        where(col("messages.id"), { [Op.not]: null }),
-      ],
+      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
-    order: [[col("messages.createdAt"), "DESC"]],
+    include: [
+      { association: "initiator", include: [{ association: "profileImage" }] },
+      { association: "member", include: [{ association: "profileImage" }] },
+    ],
   });
 
-  const sorted = conversations.map((c) => ({
-    ...c.toJSON(),
-    messages: c.messages?.reverse(),
-  }));
+  const summarizedConversations = (
+    await Promise.all(
+      conversations.map(async (conversation) => {
+        const [lastMessage, unreadCount] = await Promise.all([
+          DirectMessage.unscoped().findOne({
+            where: {
+              conversationId: conversation.id,
+            },
+            include: [{ association: "sender", include: [{ association: "profileImage" }] }],
+            order: [["createdAt", "DESC"]],
+          }),
+          DirectMessage.unscoped().count({
+            where: {
+              conversationId: conversation.id,
+              senderId: {
+                [Op.ne]: req.session.userId,
+              },
+              isRead: false,
+            },
+          }),
+        ]);
+        if (lastMessage == null) {
+          return null;
+        }
 
-  return res.status(200).type("application/json").send(sorted);
+        return {
+          ...conversation.toJSON(),
+          messages: [lastMessage.toJSON()],
+          hasUnread: unreadCount > 0,
+        };
+      }),
+    )
+  )
+    .filter((conversation): conversation is NonNullable<typeof conversation> => conversation !== null)
+    .sort((a, b) => {
+      return (
+        new Date(b.messages[0]?.createdAt ?? 0).getTime() -
+        new Date(a.messages[0]?.createdAt ?? 0).getTime()
+      );
+    });
+
+  return res.status(200).type("application/json").send(summarizedConversations);
 });
 
 directMessageRouter.post("/dm", async (req, res) => {
@@ -39,7 +76,21 @@ directMessageRouter.post("/dm", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const peer = await User.findByPk(req.body?.peerId);
+  const peerId = req.body?.peerId;
+  const peerUsernameRaw = req.body?.peerUsername;
+  const peerUsername =
+    typeof peerUsernameRaw === "string" ? peerUsernameRaw.trim().replace(/^@/, "") : undefined;
+
+  const peer =
+    typeof peerId === "string" && peerId !== ""
+      ? await User.findByPk(peerId)
+      : peerUsername
+        ? await User.findOne({
+            where: {
+              username: peerUsername,
+            },
+          })
+        : null;
   if (peer === null) {
     throw new httpErrors.NotFound();
   }
@@ -56,9 +107,12 @@ directMessageRouter.post("/dm", async (req, res) => {
       memberId: peer.id,
     },
   });
-  await conversation.reload();
 
-  return res.status(200).type("application/json").send(conversation);
+  return res.status(200).type("application/json").send({
+    id: conversation.id,
+    initiatorId: conversation.initiatorId,
+    memberId: conversation.memberId,
+  });
 });
 
 directMessageRouter.ws("/dm/unread", async (req, _res) => {
@@ -75,22 +129,7 @@ directMessageRouter.ws("/dm/unread", async (req, _res) => {
     eventhub.off(`dm:unread/${req.session.userId}`, handler);
   });
 
-  const unreadCount = await DirectMessage.count({
-    distinct: true,
-    where: {
-      senderId: { [Op.ne]: req.session.userId },
-      isRead: false,
-    },
-    include: [
-      {
-        association: "conversation",
-        where: {
-          [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
-        },
-        required: true,
-      },
-    ],
-  });
+  const unreadCount = await countUnreadDirectMessagesForUser(req.session.userId);
 
   eventhub.emit(`dm:unread/${req.session.userId}`, { unreadCount });
 });
@@ -110,7 +149,14 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
     throw new httpErrors.NotFound();
   }
 
-  return res.status(200).type("application/json").send(conversation);
+  const sortedMessages = [...(conversation.messages ?? [])].sort((a, b) => {
+    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+  });
+
+  return res.status(200).type("application/json").send({
+    ...conversation.toJSON(),
+    messages: sortedMessages.map((message) => message.toJSON()),
+  });
 });
 
 directMessageRouter.ws("/dm/:conversationId", async (req, _res) => {
@@ -200,13 +246,30 @@ directMessageRouter.post("/dm/:conversationId/read", async (req, res) => {
       ? conversation.initiatorId
       : conversation.memberId;
 
-  await DirectMessage.update(
+  const [updatedCount] = await DirectMessage.update(
     { isRead: true },
     {
       where: { conversationId: conversation.id, senderId: peerId, isRead: false },
-      individualHooks: true,
     },
   );
+
+  if (updatedCount > 0) {
+    const unreadCount = await countUnreadDirectMessagesForUser(req.session.userId);
+    eventhub.emit(`dm:unread/${req.session.userId}`, { unreadCount });
+
+    const latestReadMessage = await DirectMessage.findOne({
+      where: {
+        conversationId: conversation.id,
+        senderId: peerId,
+        isRead: true,
+      },
+      order: [["createdAt", "DESC"]],
+    });
+
+    if (latestReadMessage != null) {
+      eventhub.emit(`dm:conversation/${conversation.id}:message`, latestReadMessage);
+    }
+  }
 
   return res.status(200).type("application/json").send({});
 });
