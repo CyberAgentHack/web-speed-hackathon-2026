@@ -1,11 +1,3 @@
-import { combineReducers, legacy_createStore as createStore, Dispatch, UnknownAction } from "redux";
-import { reducer as formReducer, FormAction } from "redux-form";
-
-const rootReducer = combineReducers({
-  form: formReducer,
-});
-
-export type RootState = ReturnType<typeof rootReducer>;
-export type AppDispatch = Dispatch<UnknownAction | FormAction>;
-
-export const store = createStore(rootReducer);
+// redux-form を削除したため、このファイルは不要になりました
+// 後方互換のため空エクスポートを保持
+export {};

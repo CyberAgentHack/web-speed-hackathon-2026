@@ -8,6 +8,8 @@ allowBuilds:
   esbuild: true
   sqlite3: true
   negaposi-analyzer-ja: true
+  ffmpeg-static: true
+  sharp: true
 overrides:
   gifler>bluebird: 3.7.2
   gifler>omggif: 1.0.10

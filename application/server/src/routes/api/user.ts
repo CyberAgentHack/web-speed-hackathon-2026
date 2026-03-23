@@ -49,23 +49,31 @@ userRouter.get("/users/:username", async (req, res) => {
 });
 
 userRouter.get("/users/:username/posts", async (req, res) => {
-  const user = await User.findOne({
-    where: {
-      username: req.params.username,
-    },
-  });
-
-  if (user === null) {
-    throw new httpErrors.NotFound();
-  }
-
+  // user 取得と posts 取得を JOIN で 1 クエリに統合
   const posts = await Post.findAll({
+    include: [
+      {
+        association: "user",
+        attributes: { exclude: ["profileImageId"] },
+        include: [{ association: "profileImage" }],
+        required: true,
+        where: { username: req.params.username },
+      },
+      { association: "images", through: { attributes: [] } },
+      { association: "movie" },
+      { association: "sound" },
+    ],
     limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
     offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
-    where: {
-      userId: user.id,
-    },
   });
+
+  if (posts.length === 0) {
+    // ユーザー存在確認
+    const user = await User.findOne({ where: { username: req.params.username }, attributes: ["id"] });
+    if (user === null) {
+      throw new httpErrors.NotFound();
+    }
+  }
 
   return res.status(200).type("application/json").send(posts);
 });
