@@ -1,0 +1,11 @@
+import React from 'react';
+import { Text } from 'ink';
+import { parse, setOptions } from 'marked';
+import TerminalRenderer from 'marked-terminal';
+const Markdown = ({ children, ...options }) => {
+    setOptions({
+        renderer: new TerminalRenderer(options),
+    });
+    return React.createElement(Text, null, parse(children).trim());
+};
+export default Markdown;

@@ -1,0 +1,65 @@
+{
+  "name": "is-error-instance",
+  "version": "3.0.1",
+  "type": "module",
+  "exports": {
+    "types": "./build/src/main.d.ts",
+    "default": "./build/src/main.js"
+  },
+  "main": "./build/src/main.js",
+  "types": "./build/src/main.d.ts",
+  "files": [
+    "build/src/**/*.{js,json,d.ts}",
+    "!build/src/**/*.test.js",
+    "!build/src/{helpers,fixtures}"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "test": "gulp test"
+  },
+  "description": "Check if a value is an `Error` instance",
+  "keywords": [
+    "browser",
+    "cross-realm",
+    "dom",
+    "error",
+    "error-handle",
+    "error-handler",
+    "error-handlers",
+    "error-handling",
+    "error-monitoring",
+    "error-reporting",
+    "errors",
+    "exception",
+    "exception-handling",
+    "instanceof",
+    "javascript",
+    "library",
+    "monitoring",
+    "nodejs",
+    "testing",
+    "typescript"
+  ],
+  "license": "MIT",
+  "homepage": "https://www.github.com/ehmicky/is-error-instance",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ehmicky/is-error-instance.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ehmicky/is-error-instance/issues"
+  },
+  "author": "ehmicky <ehmicky@gmail.com> (https://github.com/ehmicky)",
+  "directories": {
+    "lib": "src"
+  },
+  "devDependencies": {
+    "@ehmicky/dev-tasks": "^3.0.33",
+    "@ehmicky/eslint-config": "^20.0.31",
+    "@ehmicky/prettier-config": "^1.0.6",
+    "test-each": "^7.0.0"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  }
+}

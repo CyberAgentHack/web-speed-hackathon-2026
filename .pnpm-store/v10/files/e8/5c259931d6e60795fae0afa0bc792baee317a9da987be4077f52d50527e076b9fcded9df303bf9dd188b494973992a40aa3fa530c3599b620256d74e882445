@@ -1,0 +1,9 @@
+/**
+ *
+ * Calculates time until given Promise object is resolved
+ *
+ * @param target - Target Promise
+ * @returns Time to perform and the result of the original promise
+ *
+ **/
+export declare function time<T>(target: Promise<T>): Promise<[T, number]>;

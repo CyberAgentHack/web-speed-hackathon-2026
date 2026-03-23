@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet";
 import { useParams } from "react-router";
 
 import { DirectMessageGate } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageGate";
+import { MeaningfulPaintHeader } from "@web-speed-hackathon-2026/client/src/components/foundation/MeaningfulPaintHeader";
 import { DirectMessagePage } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessagePage";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
@@ -114,9 +115,24 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   if (conversation == null) {
     if (conversationError != null) {
-      return <NotFoundContainer />;
+      return (
+        <div>
+          <MeaningfulPaintHeader title="ダイレクトメッセージ" />
+          <NotFoundContainer />
+        </div>
+      );
     }
-    return null;
+    return (
+      <div>
+        <Helmet>
+          <title>ダイレクトメッセージ - CaX</title>
+        </Helmet>
+        <MeaningfulPaintHeader title="ダイレクトメッセージ" />
+        <p aria-busy="true" className="text-cax-text-muted px-4 py-8 text-center">
+          読込中...
+        </p>
+      </div>
+    );
   }
 
   const peer =
@@ -127,6 +143,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
       <Helmet>
         <title>{peer.name} さんとのダイレクトメッセージ - CaX</title>
       </Helmet>
+      <MeaningfulPaintHeader title="ダイレクトメッセージ" />
       <DirectMessagePage
         conversationError={conversationError}
         conversation={conversation}

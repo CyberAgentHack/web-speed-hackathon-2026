@@ -9,9 +9,11 @@ type State =
 
 interface Props {
   text: string;
+  /** When true, the first paragraph is omitted in idle state (parent already shows `text`). */
+  suppressPrimaryParagraph?: boolean;
 }
 
-export const TranslatableText = ({ text }: Props) => {
+export const TranslatableText = ({ text, suppressPrimaryParagraph = false }: Props) => {
   const [state, updateState] = useState<State>({ type: "idle", text });
 
   const handleClick = useCallback(() => {
@@ -52,15 +54,20 @@ export const TranslatableText = ({ text }: Props) => {
     }
   }, [state]);
 
+  const showPrimary =
+    !suppressPrimaryParagraph || state.type === "loading" || state.type === "translated";
+
   return (
     <>
-      <p>
-        {state.type !== "loading" ? (
-          <span>{state.text}</span>
-        ) : (
-          <span className="bg-cax-surface-subtle text-cax-text-muted">{text}</span>
-        )}
-      </p>
+      {showPrimary ? (
+        <p>
+          {state.type !== "loading" ? (
+            <span>{state.text}</span>
+          ) : (
+            <span className="bg-cax-surface-subtle text-cax-text-muted">{text}</span>
+          )}
+        </p>
+      ) : null}
 
       <p>
         <button

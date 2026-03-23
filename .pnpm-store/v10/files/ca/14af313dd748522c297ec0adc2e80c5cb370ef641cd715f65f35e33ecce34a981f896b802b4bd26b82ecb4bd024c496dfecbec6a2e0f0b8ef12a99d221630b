@@ -1,0 +1,10 @@
+import type { Viewport } from 'puppeteer-core';
+/**
+ *
+ * @returns Puppeteer device discriptors
+ *
+ */
+export declare function getDeviceDescriptors(): {
+    name: string;
+    viewport: Viewport;
+}[];

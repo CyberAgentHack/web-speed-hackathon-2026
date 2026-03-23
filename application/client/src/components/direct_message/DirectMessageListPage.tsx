@@ -2,6 +2,7 @@ import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
+import { MeaningfulPaintHeader } from "@web-speed-hackathon-2026/client/src/components/foundation/MeaningfulPaintHeader";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
@@ -41,14 +42,14 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     void loadConversations();
   });
 
-  if (conversations == null) {
-    return null;
-  }
+  const isListLoading = conversations === null && error === null;
+  const loadedConversations =
+    !isListLoading && error === null && conversations !== null ? conversations : null;
 
   return (
     <section>
-      <header className="border-cax-border flex flex-col gap-4 border-b px-4 pt-6 pb-4">
-        <h1 className="text-2xl font-bold">ダイレクトメッセージ</h1>
+      <MeaningfulPaintHeader title="ダイレクトメッセージ" />
+      <header className="border-cax-border flex flex-col gap-4 border-b px-4 pt-4 pb-4">
         <div className="flex flex-wrap items-center gap-4">
           <Button
             command="show-modal"
@@ -60,15 +61,19 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
         </div>
       </header>
 
-      {error != null ? (
+      {isListLoading ? (
+        <p aria-busy="true" className="text-cax-text-muted px-4 py-8 text-center">
+          読込中...
+        </p>
+      ) : error != null ? (
         <p className="text-cax-danger px-4 py-6 text-center text-sm">DMの取得に失敗しました</p>
-      ) : conversations.length === 0 ? (
+      ) : loadedConversations !== null && loadedConversations.length === 0 ? (
         <p className="text-cax-text-muted px-4 py-6 text-center">
           まだDMで会話した相手がいません。
         </p>
-      ) : (
+      ) : loadedConversations !== null ? (
         <ul data-testid="dm-list">
-          {conversations.map((conversation) => {
+          {loadedConversations.map((conversation) => {
             const { messages } = conversation;
             const peer =
               conversation.initiator.id !== activeUser.id
@@ -86,8 +91,10 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                   <div className="border-cax-border flex gap-4 border-b px-4 pt-2 pb-4">
                     <img
                       alt={peer.profileImage.alt}
-                      className="w-12 shrink-0 self-start rounded-full"
+                      className="h-12 w-12 shrink-0 self-start rounded-full object-cover"
+                      height={48}
                       src={getProfileImagePath(peer.profileImage.id)}
+                      width={48}
                     />
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-center justify-between">
@@ -117,7 +124,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
             );
           })}
         </ul>
-      )}
+      ) : null}
     </section>
   );
 };

@@ -1,0 +1,69 @@
+{
+  "name": "normalize-exception",
+  "version": "4.0.1",
+  "type": "module",
+  "exports": {
+    "types": "./build/src/main.d.ts",
+    "default": "./build/src/main.js"
+  },
+  "main": "./build/src/main.js",
+  "types": "./build/src/main.d.ts",
+  "files": [
+    "build/src/**/*.{js,json,d.ts}",
+    "!build/src/**/*.test.js",
+    "!build/src/{helpers,fixtures}"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "test": "gulp test"
+  },
+  "description": "Normalize exceptions/errors",
+  "keywords": [
+    "nodejs",
+    "javascript",
+    "stacktrace",
+    "library",
+    "typescript",
+    "browser",
+    "errors",
+    "monitoring",
+    "error-monitoring",
+    "message",
+    "error-handler",
+    "properties",
+    "error-handling",
+    "error",
+    "code-quality",
+    "cause",
+    "error-reporting",
+    "error-classes",
+    "normalization",
+    "exceptions"
+  ],
+  "license": "MIT",
+  "homepage": "https://www.github.com/ehmicky/normalize-exception",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ehmicky/normalize-exception.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ehmicky/normalize-exception/issues"
+  },
+  "author": "ehmicky <ehmicky@gmail.com> (https://github.com/ehmicky)",
+  "directories": {
+    "lib": "src"
+  },
+  "dependencies": {
+    "is-error-instance": "^3.0.1",
+    "is-plain-obj": "^4.1.0"
+  },
+  "devDependencies": {
+    "@ehmicky/dev-tasks": "^3.0.33",
+    "@ehmicky/eslint-config": "^20.0.31",
+    "@ehmicky/prettier-config": "^1.0.6",
+    "test-each": "^7.0.0"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  }
+}

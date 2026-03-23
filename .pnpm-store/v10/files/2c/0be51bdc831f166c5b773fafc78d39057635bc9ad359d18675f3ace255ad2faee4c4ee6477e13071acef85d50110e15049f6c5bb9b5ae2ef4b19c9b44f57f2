@@ -1,0 +1,28 @@
+import { t as format$1 } from "./bindings-DSU8hw_s.js";
+import { i as sortTailwindClasses, n as formatFile, r as resolvePlugins, t as formatEmbeddedCode } from "./prettier-gzzUBJre.js";
+
+//#region src-js/index.ts
+/**
+* Format the given source text according to the specified options.
+*/
+async function format(fileName, sourceText, options) {
+	if (typeof fileName !== "string") throw new TypeError("`fileName` must be a string");
+	if (typeof sourceText !== "string") throw new TypeError("`sourceText` must be a string");
+	return format$1(fileName, sourceText, options ?? {}, resolvePlugins, (options, parserName, code) => formatEmbeddedCode({
+		options,
+		parserName,
+		code
+	}), (options, parserName, fileName, code) => formatFile({
+		options,
+		parserName,
+		fileName,
+		code
+	}), (filepath, options, classes) => sortTailwindClasses({
+		filepath,
+		classes,
+		options
+	}));
+}
+
+//#endregion
+export { format };

@@ -1,5 +1,7 @@
 import { Helmet } from "react-helmet";
 
+import { MeaningfulPaintHeader } from "@web-speed-hackathon-2026/client/src/components/foundation/MeaningfulPaintHeader";
+
 interface Props {
   headline: string;
   description?: string;
@@ -18,6 +20,7 @@ export const DirectMessageGate = ({
       <Helmet>
         <title>ダイレクトメッセージ - CaX</title>
       </Helmet>
+      <MeaningfulPaintHeader title="ダイレクトメッセージ" />
       <section className="space-y-4 px-6 py-12 text-center">
         <p className="text-lg font-bold">{headline}</p>
         {description !== "" ? <p className="text-cax-text-muted text-sm">{description}</p> : null}

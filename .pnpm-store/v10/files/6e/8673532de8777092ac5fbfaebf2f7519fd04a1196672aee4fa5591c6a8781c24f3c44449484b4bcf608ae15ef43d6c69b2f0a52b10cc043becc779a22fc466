@@ -1,0 +1,94 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const async_utils_1 = require("./async-utils");
+const createWorker = (workerName) => ({
+    async process(taskId, time = 0) {
+        await (0, async_utils_1.sleep)(time);
+        return `${workerName}_${taskId}`;
+    },
+});
+describe(async_utils_1.runParallel, () => {
+    it('should return empty when task generator yield nothing', async () => {
+        async function* tasks() { }
+        const result = await (0, async_utils_1.runParallel)(tasks, [createWorker('w0')]);
+        expect(result).toEqual([]);
+    });
+    it('should run 1 task with 1 worker', async () => {
+        async function* tasks() {
+            yield async (worker) => await worker.process('t0');
+        }
+        const result = await (0, async_utils_1.runParallel)(tasks, [createWorker('w0')]);
+        expect(result).toEqual(['w0_t0']);
+    });
+    it('should run multiple tasks with multiple workers in parallel', async () => {
+        async function* tasks() {
+            for (let i = 0; i < 10; i++) {
+                yield async (worker) => await worker.process(`t${i}`, 20);
+            }
+        }
+        const start = Date.now();
+        const result = await (0, async_utils_1.runParallel)(tasks, [...new Array(4).keys()].map(createWorker));
+        const end = Date.now();
+        expect(result.length).toEqual(10);
+        expect(end - start <= 200).toBeTruthy();
+    });
+});
+describe(async_utils_1.Queue, () => {
+    it('should be closed automatically when allowEmpty is not set', done => {
+        const queue = new async_utils_1.Queue({
+            allowEmpty: false,
+            createTask(req) {
+                return async (worker) => worker.process(req, 10);
+            },
+        });
+        queue.push('t0');
+        (0, async_utils_1.runParallel)(queue.tasks.bind(queue), [createWorker('w0')]).then(result => {
+            expect(result).toEqual(['w0_t0', 'w0_t1']);
+            done();
+        });
+        (0, async_utils_1.sleep)(5).then(() => queue.push('t1'));
+    });
+    it('should be shutdown when close is called if tasks are remaining', done => {
+        const queue = new async_utils_1.Queue({
+            allowEmpty: false,
+            createTask(req) {
+                return async (worker) => worker.process(req, 10);
+            },
+        });
+        queue.push('t0');
+        queue.push('t1');
+        (0, async_utils_1.sleep)(5).then(() => queue.close());
+        (0, async_utils_1.runParallel)(queue.tasks.bind(queue), [createWorker('w0')]).then(result => {
+            expect(result).toEqual(['w0_t0']);
+            done();
+        });
+    });
+    it('should be closed manually when allowEmpty is set', done => {
+        const queue = new async_utils_1.Queue({
+            allowEmpty: true,
+            createTask(req) {
+                return async (worker) => worker.process(req);
+            },
+        });
+        queue.push('t0');
+        (0, async_utils_1.runParallel)(queue.tasks.bind(queue), [createWorker('w0')]).then(result => {
+            expect(result).toEqual(['w0_t0', 'w0_t1']);
+            done();
+        });
+        (0, async_utils_1.sleep)(1).then(() => queue.push('t1'));
+        (0, async_utils_1.sleep)(2).then(() => queue.close());
+    });
+});
+describe(async_utils_1.createExecutionService, () => {
+    it('should create executable object', done => {
+        const service = (0, async_utils_1.createExecutionService)([createWorker('w0')], ['t0'], req => worker => worker.process(req), {
+            allowEmpty: true,
+        });
+        service.execute().then(result => {
+            expect(result).toEqual(['w0_t0', 'w0_t1']);
+            done();
+        });
+        (0, async_utils_1.sleep)(1).then(() => service.push('t1'));
+        (0, async_utils_1.sleep)(2).then(() => service.close());
+    });
+});

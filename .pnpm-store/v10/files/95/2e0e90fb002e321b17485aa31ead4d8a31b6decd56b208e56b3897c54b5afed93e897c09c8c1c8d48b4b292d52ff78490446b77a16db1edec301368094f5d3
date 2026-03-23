@@ -1,0 +1,18 @@
+export declare class InvalidUrlError extends Error {
+    name: string;
+    constructor(invalidUrl: string);
+}
+export declare class StorybookServerTimeoutError extends Error {
+    name: string;
+    constructor(msec: number);
+}
+export declare class NoStoriesError extends Error {
+    name: string;
+}
+export declare class StoriesTimeoutError extends Error {
+    name: string;
+    constructor();
+}
+export declare class ChromiumNotFoundError extends Error {
+    name: string;
+}

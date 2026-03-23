@@ -1,0 +1,7 @@
+import React from 'react';
+import { TerminalRendererOptions } from 'marked-terminal';
+export type MarkdownProps = TerminalRendererOptions & {
+    children: string;
+};
+declare const Markdown: ({ children, ...options }: MarkdownProps) => React.JSX.Element;
+export default Markdown;

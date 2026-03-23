@@ -1,0 +1,127 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.BaseBrowser = void 0;
+const async_utils_1 = require("../async-utils");
+const find_chrome_1 = require("../find-chrome");
+const errors_1 = require("../errors");
+function getPuppeteer() {
+    const pc = require('puppeteer-core');
+    return pc;
+}
+/**
+ *
+ * Wrapper for Puppeteer page.
+ *
+ **/
+class BaseBrowser {
+    /**
+     *
+     * @param opt See {@link BaseBrowserOptions}
+     *
+     **/
+    constructor(opt) {
+        this.opt = opt;
+        this._executablePath = '';
+        this.debugInputResolver = () => { };
+        this.debugInputPromise = Promise.resolve();
+    }
+    /**
+     *
+     * @returns Puppeteer Page object.
+     *
+     * @remarks
+     * Use this after calling `boot`.
+     *
+     **/
+    get page() {
+        return this._page;
+    }
+    /**
+     *
+     * Instantiates Puppeteer browser and page.
+     *
+     **/
+    async boot() {
+        var _a;
+        const baseExecutablePath = this.opt.chromiumPath || ((_a = this.opt.launchOptions) === null || _a === void 0 ? void 0 : _a.executablePath);
+        const { executablePath } = await (0, find_chrome_1.findChrome)({
+            executablePath: baseExecutablePath,
+            channel: this.opt.chromiumChannel,
+        });
+        if (!executablePath) {
+            throw new errors_1.ChromiumNotFoundError();
+        }
+        this._executablePath = executablePath;
+        const puppeteer = getPuppeteer();
+        this.browser = await puppeteer.launch({
+            ...(this.opt.launchOptions || {
+                args: ['--no-sandbox', '--disable-setuid-sandbox'],
+                headless: true,
+            }),
+            executablePath,
+        });
+        this._page = await this.browser.newPage();
+        await this.setupDebugInput();
+        return this;
+    }
+    /**
+     *
+     * Disposes Puppeteer browser and pages.
+     *
+     **/
+    async close() {
+        try {
+            await this._page.close();
+            await (0, async_utils_1.sleep)(50);
+            await this.browser.close();
+        }
+        catch (e) {
+            // nothing to do
+        }
+    }
+    /**
+     *
+     * Get found or user defined executable Chromium binray path.
+     *
+     **/
+    get executablePath() {
+        return this._executablePath;
+    }
+    /**
+     *
+     * Waits for developer's action only if the browser is instantiated with `headless: false` .
+     *
+     * @example
+     *
+     * ```ts
+     * class MyBrowser extends BaseBrowser {
+     *   async doSomething() {
+     *     doXxxx();
+     *
+     *     // This method stops until developer inputs `nextStep()` into the page's developer console
+     *     await this.waitForDebugInput();
+     *     doYyyy();
+     *   }
+     * }
+     * ```
+     *
+     **/
+    async waitForDebugInput() {
+        if (this.opt.launchOptions && this.opt.launchOptions.headless === false) {
+            // eslint-disable-next-line no-console
+            console.log('story-crawler waits for your input. Open Puppeteer devtool console and exec "nextStep()" to go to the next step.');
+            await this.debugInputPromise;
+        }
+    }
+    async setupDebugInput() {
+        if (this.opt.launchOptions && this.opt.launchOptions.headless === false) {
+            const resetInput = () => (this.debugInputPromise = new Promise(res => (this.debugInputResolver = res)).then(() => {
+                setTimeout(() => resetInput(), 10);
+                return;
+            }));
+            resetInput();
+            await this._page.exposeFunction('nextStep', () => this.debugInputResolver());
+        }
+    }
+}
+exports.BaseBrowser = BaseBrowser;

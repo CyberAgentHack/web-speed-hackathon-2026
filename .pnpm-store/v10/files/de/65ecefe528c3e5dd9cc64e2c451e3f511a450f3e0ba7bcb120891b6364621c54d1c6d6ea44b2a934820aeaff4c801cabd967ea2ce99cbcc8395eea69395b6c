@@ -1,0 +1,58 @@
+import { BaseBrowser, BaseBrowserOptions } from './base-browser';
+import { Story } from '../story-types';
+import { Logger } from '../logger';
+import { StorybookConnection } from '../storybook-connection';
+/**
+ *
+ * Browser class to visit Storybook's preview window.
+ *
+ **/
+export declare class StoryPreviewBrowser extends BaseBrowser {
+    protected connection: StorybookConnection;
+    protected readonly idx: number;
+    protected opt: BaseBrowserOptions;
+    protected readonly logger: Logger;
+    private _currentStory?;
+    /**
+     *
+     * @param connection Connected connection to the target Storybook
+     * @param idx Index number of this browser
+     * @param opt Options to launch browser
+     * @param logger Logger instance
+     *
+     **/
+    constructor(connection: StorybookConnection, idx?: number, opt?: BaseBrowserOptions, logger?: Logger);
+    /**
+     *
+     * @override
+     *
+     **/
+    boot(): Promise<this>;
+    /**
+     *
+     * @returns Story which this instance visit
+     *
+     **/
+    get currentStory(): import("../story-types").V5Story | undefined;
+    /**
+     *
+     * Triggers to change story to display in the browser page's frame
+     *
+     * @param story Target story
+     * @param opt: Options
+     *
+     * @remarks
+     * To resolve of this method **does not** mean completion of rendering the target story.
+     *
+     **/
+    setCurrentStory(story: Story, opt?: {
+        forceRerender?: boolean;
+    }): Promise<void>;
+    /**
+     *
+     * Logs debug message with the index number
+     *
+     **/
+    protected debug(...args: any[]): void;
+    private createPostmessageData;
+}

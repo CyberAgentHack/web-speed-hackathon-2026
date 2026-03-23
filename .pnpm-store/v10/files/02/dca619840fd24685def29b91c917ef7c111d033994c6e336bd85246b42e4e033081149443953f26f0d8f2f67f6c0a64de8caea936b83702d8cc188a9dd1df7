@@ -1,0 +1,39 @@
+import type { Page } from 'puppeteer-core';
+/**
+ *
+ * Helper to detect whether browser's rendering pipeline is stable
+ *
+ * @example
+ *
+ * ```ts
+ * async function someTask() {
+ *   const watcher = new MetricsWatcher(previewBrowser.page);
+ *   await watcher.waitForStable();
+ *   doSomething(previewBrowser.page);
+ * }
+ * ```
+ *
+ **/
+export declare class MetricsWatcher {
+    private page;
+    private count;
+    private length;
+    private previous;
+    constructor(page: Page, count?: number);
+    /**
+     *
+     * Waits until the page's rendering process is stable.
+     *
+     * @remarks
+     * This method checks the following counts get steady:
+     *
+     * - The number of DOM nodes
+     * - The number of calculation style
+     * - The number of calculation layout
+     *
+     **/
+    waitForStable(): Promise<number>;
+    private check;
+    private diff;
+    private next;
+}

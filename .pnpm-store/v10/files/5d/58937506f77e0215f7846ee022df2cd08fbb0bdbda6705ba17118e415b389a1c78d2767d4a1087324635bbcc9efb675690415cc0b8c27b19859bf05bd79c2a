@@ -1,0 +1,41 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ChromiumNotFoundError = exports.StoriesTimeoutError = exports.NoStoriesError = exports.StorybookServerTimeoutError = exports.InvalidUrlError = void 0;
+class InvalidUrlError extends Error {
+    constructor(invalidUrl) {
+        super();
+        this.name = ' InvalidUrlError';
+        this.message = `The URL ${invalidUrl} is invalid.`;
+    }
+}
+exports.InvalidUrlError = InvalidUrlError;
+class StorybookServerTimeoutError extends Error {
+    constructor(msec) {
+        super();
+        this.name = 'ScreenshotTimeoutError';
+        this.message = `Storybook server launch timeout exceeded in ${msec} ms.`;
+    }
+}
+exports.StorybookServerTimeoutError = StorybookServerTimeoutError;
+class NoStoriesError extends Error {
+    constructor() {
+        super(...arguments);
+        this.name = 'NoStoriesError';
+    }
+}
+exports.NoStoriesError = NoStoriesError;
+class StoriesTimeoutError extends Error {
+    constructor() {
+        super();
+        this.name = 'StoriesTimeoutError';
+        this.message = `Getting stories was failed. Make sure that your Storybook is rendered correctly.`;
+    }
+}
+exports.StoriesTimeoutError = StoriesTimeoutError;
+class ChromiumNotFoundError extends Error {
+    constructor() {
+        super(...arguments);
+        this.name = 'ChromiumNotFoundError';
+    }
+}
+exports.ChromiumNotFoundError = ChromiumNotFoundError;

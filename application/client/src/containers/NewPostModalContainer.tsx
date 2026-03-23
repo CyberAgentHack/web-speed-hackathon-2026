@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { useNavigate } from "react-router";
 
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { NewPostModalPage } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage";
-import { sendFile, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { fetchJSON, sendFile, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface SubmitParams {
   images: File[];
@@ -62,9 +63,13 @@ export const NewPostModalContainer = ({ id }: Props) => {
     async (params: SubmitParams) => {
       try {
         setIsLoading(true);
-        const post = await sendNewPost(params);
-        ref.current?.close();
-        navigate(`/posts/${post.id}`);
+        await sendNewPost(params);
+        await fetchJSON<Array<Models.Post>>("/api/v1/posts");
+        flushSync(() => {
+          ref.current?.close();
+          navigate("/");
+        });
+        await Promise.resolve();
       } catch {
         setHasError(true);
       } finally {
