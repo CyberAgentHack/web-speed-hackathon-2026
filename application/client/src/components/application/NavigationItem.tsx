@@ -15,12 +15,15 @@ interface Props {
 export const NavigationItem = ({ badge, href, icon, command, commandfor, text }: Props) => {
   const location = useLocation();
   const isActive = location.pathname === href;
+  const itemClassName =
+    "flex flex-col items-center justify-center w-12 h-12 sm:px-2 sm:w-24 sm:h-auto lg:flex-row lg:justify-start lg:px-4 lg:py-2 lg:w-auto lg:h-auto";
+
   return (
-    <li>
+    <li className="hover:bg-cax-brand-soft rounded-full transition-colors sm:rounded-sm lg:rounded-full">
       {href !== undefined ? (
         <Link
           className={classNames(
-            "flex flex-col items-center justify-center w-12 h-12 hover:bg-cax-brand-soft rounded-full sm:px-2 sm:w-24 sm:h-auto sm:rounded-sm lg:flex-row lg:justify-start lg:px-4 lg:py-2 lg:w-auto lg:h-auto lg:rounded-full",
+            itemClassName,
             { "text-cax-brand": isActive },
           )}
           to={href}
@@ -33,7 +36,7 @@ export const NavigationItem = ({ badge, href, icon, command, commandfor, text }:
         </Link>
       ) : (
         <button
-          className="hover:bg-cax-brand-soft flex h-12 w-12 flex-col items-center justify-center rounded-full sm:h-auto sm:w-24 sm:rounded-sm sm:px-2 lg:h-auto lg:w-auto lg:flex-row lg:justify-start lg:rounded-full lg:px-4 lg:py-2"
+          className={itemClassName}
           type="button"
           command={command}
           commandfor={commandfor}

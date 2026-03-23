@@ -41,9 +41,29 @@ postRouter.post("/posts", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
+  const normalizedImages = Array.isArray(req.body.images)
+    ? req.body.images.map((image: unknown, index: number) => {
+        if (typeof image !== "object" || image == null) {
+          return image;
+        }
+        const imageObject = image as Record<string, unknown>;
+
+        const alt =
+          typeof imageObject["alt"] === "string" && imageObject["alt"].trim() !== ""
+            ? imageObject["alt"].trim()
+            : `投稿画像 ${index + 1}`;
+
+        return {
+          ...imageObject,
+          alt,
+        };
+      })
+    : req.body.images;
+
   const post = await Post.create(
     {
       ...req.body,
+      images: normalizedImages,
       userId: req.session.userId,
     },
     {

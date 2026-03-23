@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { Navigation } from "@web-speed-hackathon-2026/client/src/components/application/Navigation";
 
 interface Props {
-  activeUser: Models.User | null;
+  activeUser: Models.User | null | undefined;
   children: ReactNode;
   authModalId: string;
   newPostModalId: string;

@@ -1,4 +1,4 @@
-import moment from "moment";
+import { formatDateLL } from "@web-speed-hackathon-2026/client/src/utils/format_date";
 
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
@@ -6,9 +6,13 @@ import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/
 
 interface Props {
   comment: Models.Comment;
+  index: number;
 }
 
-export const CommentItem = ({ comment }: Props) => {
+const EAGER_LOAD_MAX_COUNT = 3;
+
+export const CommentItem = ({ comment, index }: Props) => {
+  const loading = index < EAGER_LOAD_MAX_COUNT ? "eager" : "lazy";
   return (
     <article className="hover:bg-cax-surface-subtle px-1 sm:px-4">
       <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
@@ -19,6 +23,7 @@ export const CommentItem = ({ comment }: Props) => {
           >
             <img
               alt={comment.user.profileImage.alt}
+              loading={loading}
               src={getProfileImagePath(comment.user.profileImage.id)}
             />
           </Link>
@@ -42,8 +47,8 @@ export const CommentItem = ({ comment }: Props) => {
             <TranslatableText text={comment.text} />
           </div>
           <p className="text-cax-text-muted pt-1 text-xs">
-            <time dateTime={moment(comment.createdAt).toISOString()}>
-              {moment(comment.createdAt).locale("ja").format("LL")}
+            <time dateTime={new Date(comment.createdAt).toISOString()}>
+              {formatDateLL(comment.createdAt)}
             </time>
           </p>
         </div>

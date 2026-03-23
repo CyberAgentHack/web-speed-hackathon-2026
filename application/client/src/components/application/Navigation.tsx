@@ -5,7 +5,7 @@ import { CrokLogo } from "@web-speed-hackathon-2026/client/src/components/founda
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 
 interface Props {
-  activeUser: Models.User | null;
+  activeUser: Models.User | null | undefined;
   authModalId: string;
   newPostModalId: string;
   onLogout: () => void;
@@ -26,7 +26,7 @@ export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }
             icon={<FontAwesomeIcon iconType="search" styleType="solid" />}
             text="検索"
           />
-          {activeUser !== null ? (
+          {activeUser != null ? (
             <NavigationItem
               badge={<DirectMessageNotificationBadge />}
               href="/dm"
@@ -34,7 +34,7 @@ export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }
               text="DM"
             />
           ) : null}
-          {activeUser !== null ? (
+          {activeUser != null ? (
             <NavigationItem
               icon={<FontAwesomeIcon iconType="edit" styleType="solid" />}
               command="show-modal"
@@ -42,7 +42,7 @@ export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }
               text="投稿する"
             />
           ) : null}
-          {activeUser !== null ? (
+          {activeUser != null ? (
             <NavigationItem
               href={`/users/${activeUser.username}`}
               icon={<FontAwesomeIcon iconType="user" styleType="solid" />}
@@ -71,7 +71,7 @@ export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }
           />
         </ul>
 
-        {activeUser !== null ? <AccountMenu user={activeUser} onLogout={onLogout} /> : null}
+        {activeUser != null ? <AccountMenu user={activeUser} onLogout={onLogout} /> : null}
       </div>
     </nav>
   );

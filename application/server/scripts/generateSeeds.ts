@@ -180,9 +180,9 @@ function pickRandomN<T>(arr: T[], n: number): T[] {
 
 function generateProfileImages(): ProfileImageSeed[] {
   // Use existing profile image IDs from public/images/profiles/
-  return EXISTING_PROFILE_IMAGE_IDS.map((id) => ({
+  return EXISTING_PROFILE_IMAGE_IDS.map((id, index) => ({
     id,
-    alt: "",
+    alt: `プロフィール画像 ${index + 1}`,
   }));
 }
 
@@ -222,7 +222,7 @@ function generateImages(): ImageSeed[] {
   const baseTime = now - ONE_WEEK_MS;
   return EXISTING_IMAGE_IDS.map((id, i) => ({
     id,
-    alt: "",
+    alt: `投稿画像 ${i + 1}`,
     createdAt: new Date(baseTime + i * 60 * 1000).toISOString(),
   }));
 }

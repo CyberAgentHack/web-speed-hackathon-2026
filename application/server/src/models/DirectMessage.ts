@@ -67,7 +67,10 @@ export function initDirectMessage(sequelize: Sequelize) {
             include: [{ association: "profileImage" }],
           },
         ],
-        order: [["createdAt", "ASC"]],
+        order: [
+          ["createdAt", "ASC"],
+          ["id", "ASC"],
+        ],
       },
     },
   );

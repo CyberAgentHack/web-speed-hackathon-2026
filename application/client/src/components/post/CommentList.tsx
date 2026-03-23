@@ -7,8 +7,8 @@ interface Props {
 export const CommentList = ({ comments }: Props) => {
   return (
     <div>
-      {comments.map((comment) => {
-        return <CommentItem key={comment.id} comment={comment} />;
+      {comments.map((comment, index) => {
+        return <CommentItem key={comment.id} comment={comment} index={index} />;
       })}
     </div>
   );

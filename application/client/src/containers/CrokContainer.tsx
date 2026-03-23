@@ -6,7 +6,7 @@ import { CrokPage } from "@web-speed-hackathon-2026/client/src/components/crok/C
 import { useSSE } from "@web-speed-hackathon-2026/client/src/hooks/use_sse";
 
 type Props = {
-  activeUser: Models.User | null;
+  activeUser: Models.User | null | undefined;
   authModalId: string;
 };
 
@@ -70,7 +70,7 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
     [isStreaming, start],
   );
 
-  if (!activeUser) {
+  if (activeUser === null) {
     return (
       <CrokGate headline="Crokを利用するにはサインインしてください" authModalId={authModalId} />
     );
@@ -81,7 +81,12 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
       <Helmet>
         <title>Crok - CaX</title>
       </Helmet>
-      <CrokPage isStreaming={isStreaming} messages={displayMessages} onSendMessage={sendMessage} />
+      <CrokPage
+        activeUser={activeUser}
+        isStreaming={isStreaming}
+        messages={displayMessages}
+        onSendMessage={sendMessage}
+      />
     </>
   );
 };

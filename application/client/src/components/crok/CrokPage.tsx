@@ -7,12 +7,13 @@ import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components
 import { useHasContentBelow } from "@web-speed-hackathon-2026/client/src/hooks/use_has_content_below";
 
 interface Props {
+  activeUser: Models.User | undefined;
   messages: Models.ChatMessage[];
   isStreaming: boolean;
   onSendMessage: (message: string) => void;
 }
 
-export const CrokPage = ({ messages, isStreaming, onSendMessage }: Props) => {
+export const CrokPage = ({ activeUser, messages, isStreaming, onSendMessage }: Props) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const stickyBarRef = useRef<HTMLDivElement>(null);
   const showScrollButton = useHasContentBelow(messagesEndRef, stickyBarRef);
@@ -44,7 +45,7 @@ export const CrokPage = ({ messages, isStreaming, onSendMessage }: Props) => {
             <FontAwesomeIcon iconType="arrow-down" styleType="solid" />
           </button>
         )}
-        <ChatInput isStreaming={isStreaming} onSendMessage={onSendMessage} />
+        {activeUser && <ChatInput isStreaming={isStreaming} onSendMessage={onSendMessage} />}
       </div>
     </div>
   );

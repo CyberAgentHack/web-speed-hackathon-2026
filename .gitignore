@@ -220,3 +220,7 @@ $RECYCLE.BIN/
 application/upload/**
 !application/upload/**/
 !application/upload/**/.gitkeep
+
+
+.vscode/settings.json
+for-me/

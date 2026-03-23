@@ -21,7 +21,7 @@ interface DmTypingEvent {
 const TYPING_INDICATOR_DURATION_MS = 10 * 1000;
 
 interface Props {
-  activeUser: Models.User | null;
+  activeUser: Models.User | null | undefined;
   authModalId: string;
 }
 
@@ -103,6 +103,10 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     }
   });
 
+  if (activeUser === undefined) {
+    return null;
+  }
+
   if (activeUser === null) {
     return (
       <DirectMessageGate
@@ -130,7 +134,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
       <DirectMessagePage
         conversationError={conversationError}
         conversation={conversation}
-        activeUser={activeUser}
+        activeUser={activeUser!}
         onTyping={handleTyping}
         isPeerTyping={isPeerTyping}
         isSubmitting={isSubmitting}

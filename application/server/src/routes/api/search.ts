@@ -1,23 +1,42 @@
+import analyze from "negaposi-analyzer-ja";
 import { Router } from "express";
 import { Op } from "sequelize";
 
 import { Post } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
+import { getTokenizer } from "@web-speed-hackathon-2026/server/src/utils/tokenizer.js";
 
 export const searchRouter = Router();
+
+async function checkNegative(text: string): Promise<boolean> {
+  try {
+    const tokenizer = await getTokenizer();
+    const tokens = tokenizer.tokenize(text);
+    const score = analyze(tokens);
+    return score < -0.1;
+  } catch {
+    return false;
+  }
+}
 
 searchRouter.get("/search", async (req, res) => {
   const query = req.query["q"];
 
   if (typeof query !== "string" || query.trim() === "") {
-    return res.status(200).type("application/json").send([]);
+    return res.status(200).type("application/json").send({ isNegative: false, posts: [] });
   }
 
   const { keywords, sinceDate, untilDate } = parseSearchQuery(query);
 
   // キーワードも日付フィルターもない場合は空配列を返す
   if (!keywords && !sinceDate && !untilDate) {
-    return res.status(200).type("application/json").send([]);
+    return res.status(200).type("application/json").send({ isNegative: false, posts: [] });
+  }
+
+  // ネガポジ判定を行い、ネガティブなら検索せずに返却
+  const isNegative = keywords ? await checkNegative(keywords) : false;
+  if (isNegative) {
+    return res.status(200).type("application/json").send({ isNegative: true, posts: [] });
   }
 
   const searchTerm = keywords ? `%${keywords}%` : null;
@@ -51,6 +70,7 @@ searchRouter.get("/search", async (req, res) => {
   let postsByUser: typeof postsByText = [];
   if (searchTerm) {
     postsByUser = await Post.findAll({
+      subQuery: false,
       include: [
         {
           association: "user",
@@ -88,5 +108,5 @@ searchRouter.get("/search", async (req, res) => {
 
   const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
 
-  return res.status(200).type("application/json").send(result);
+  return res.status(200).type("application/json").send({ isNegative: false, posts: result });
 });

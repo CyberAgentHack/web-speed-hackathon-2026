@@ -1,6 +1,6 @@
 import { Router } from "express";
 import httpErrors from "http-errors";
-import { col, where, Op } from "sequelize";
+import { Op, QueryTypes } from "sequelize";
 
 import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
 import {
@@ -16,20 +16,98 @@ directMessageRouter.get("/dm", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversations = await DirectMessageConversation.findAll({
+  const conversations = await DirectMessageConversation.unscoped().findAll({
     where: {
-      [Op.and]: [
-        { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
-        where(col("messages.id"), { [Op.not]: null }),
-      ],
+      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
-    order: [[col("messages.createdAt"), "DESC"]],
+    include: [
+      { association: "initiator", include: [{ association: "profileImage" }] },
+      { association: "member", include: [{ association: "profileImage" }] },
+    ],
   });
 
-  const sorted = conversations.map((c) => ({
-    ...c.toJSON(),
-    messages: c.messages?.reverse(),
-  }));
+  const conversationIds = conversations.map((conversation) => conversation.id);
+  const sequelize = DirectMessage.sequelize;
+  if (sequelize == null) {
+    throw new httpErrors.InternalServerError();
+  }
+
+  const latestMessageRows =
+    conversationIds.length === 0
+      ? []
+      : await sequelize.query<{ conversationId: string; id: string }>(
+          `
+            SELECT "conversationId", "id"
+            FROM (
+              SELECT
+                "conversationId",
+                "id",
+                ROW_NUMBER() OVER (
+                  PARTITION BY "conversationId"
+                  ORDER BY "createdAt" DESC, "id" DESC
+                ) AS rownum
+              FROM "DirectMessages"
+              WHERE "conversationId" IN (:conversationIds)
+            ) ranked
+            WHERE ranked.rownum = 1
+          `,
+          {
+            replacements: { conversationIds },
+            type: QueryTypes.SELECT,
+          },
+        );
+
+  const latestMessageIds = latestMessageRows.map((row) => row.id);
+  const latestMessages =
+    latestMessageIds.length === 0
+      ? []
+      : await DirectMessage.unscoped().findAll({
+          where: {
+            id: latestMessageIds,
+          },
+          include: [{ association: "sender", include: [{ association: "profileImage" }] }],
+        });
+
+  const latestMessageIdByConversationId = new Map(
+    latestMessageRows.map((row) => [row.conversationId, row.id]),
+  );
+  const latestMessageById = new Map(
+    latestMessages.map((message) => [message.id, message.toJSON()]),
+  );
+
+  const sorted = conversations
+    .map((conversation) => {
+      const payload = conversation.toJSON();
+      const latestMessageId = latestMessageIdByConversationId.get(conversation.id);
+      const latestMessage =
+        latestMessageId === undefined ? undefined : latestMessageById.get(latestMessageId);
+
+      return {
+        ...payload,
+        messages: latestMessage === undefined ? [] : [latestMessage],
+      };
+    })
+    .sort((a, b) => {
+      const aMessage = a.messages?.[0];
+      const bMessage = b.messages?.[0];
+
+      if (aMessage === undefined && bMessage === undefined) {
+        return 0;
+      }
+      if (aMessage === undefined) {
+        return 1;
+      }
+      if (bMessage === undefined) {
+        return -1;
+      }
+
+      const aCreatedAt = new Date(aMessage.createdAt).getTime();
+      const bCreatedAt = new Date(bMessage.createdAt).getTime();
+      if (aCreatedAt !== bCreatedAt) {
+        return bCreatedAt - aCreatedAt;
+      }
+      return bMessage.id.localeCompare(aMessage.id);
+    });
 
   return res.status(200).type("application/json").send(sorted);
 });
@@ -110,7 +188,17 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
     throw new httpErrors.NotFound();
   }
 
-  return res.status(200).type("application/json").send(conversation);
+  const payload = conversation.toJSON();
+  payload.messages = [...(payload.messages ?? [])].sort((a, b) => {
+    const aCreatedAt = new Date(a.createdAt).getTime();
+    const bCreatedAt = new Date(b.createdAt).getTime();
+    if (aCreatedAt !== bCreatedAt) {
+      return aCreatedAt - bCreatedAt;
+    }
+    return a.id.localeCompare(b.id);
+  });
+
+  return res.status(200).type("application/json").send(payload);
 });
 
 directMessageRouter.ws("/dm/:conversationId", async (req, _res) => {

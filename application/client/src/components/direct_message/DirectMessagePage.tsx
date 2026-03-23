@@ -1,8 +1,9 @@
 import classNames from "classnames";
-import moment from "moment";
 import {
   ChangeEvent,
   useCallback,
+  useLayoutEffect,
+  useMemo,
   useId,
   useRef,
   useState,
@@ -13,6 +14,7 @@ import {
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
+import { formatTimeHHmm } from "@web-speed-hackathon-2026/client/src/utils/format_date";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
@@ -25,6 +27,9 @@ interface Props {
   onSubmit: (params: DirectMessageFormData) => Promise<void>;
 }
 
+const MESSAGE_PAGE_SIZE = 30;
+const LOAD_MORE_SCROLL_THRESHOLD_PX = 48;
+
 export const DirectMessagePage = ({
   conversationError,
   conversation,
@@ -35,15 +40,31 @@ export const DirectMessagePage = ({
   onSubmit,
 }: Props) => {
   const formRef = useRef<HTMLFormElement>(null);
+  const prevReachedTopRef = useRef(false);
+  const isPrependingRef = useRef(false);
+  const previousBodyHeightRef = useRef<number | null>(null);
   const textAreaId = useId();
 
   const peer =
     conversation.initiator.id !== activeUser.id ? conversation.initiator : conversation.member;
 
   const [text, setText] = useState("");
+  const [renderCount, setRenderCount] = useState(MESSAGE_PAGE_SIZE);
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
-  const scrollHeightRef = useRef(0);
+  const sortedMessages = useMemo(() => {
+    return [...conversation.messages].sort((a, b) => {
+      const createdAtDiff = Date.parse(a.createdAt) - Date.parse(b.createdAt);
+      if (createdAtDiff !== 0) {
+        return createdAtDiff;
+      }
+      return a.id.localeCompare(b.id);
+    });
+  }, [conversation.messages]);
+  const renderedMessages = useMemo(() => {
+    return sortedMessages.slice(Math.max(0, sortedMessages.length - renderCount));
+  }, [sortedMessages, renderCount]);
+  const hasOlderMessages = renderCount < sortedMessages.length;
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -73,17 +94,62 @@ export const DirectMessagePage = ({
     [onSubmit, text],
   );
 
-  useEffect(() => {
-    const id = setInterval(() => {
-      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
-      if (height !== scrollHeightRef.current) {
-        scrollHeightRef.current = height;
-        window.scrollTo(0, height);
-      }
-    }, 1);
+  const handleLoadOlderMessages = useCallback(() => {
+    if (!hasOlderMessages) {
+      return;
+    }
+    isPrependingRef.current = true;
+    previousBodyHeightRef.current = document.body.offsetHeight;
+    setRenderCount((current) => Math.min(current + MESSAGE_PAGE_SIZE, sortedMessages.length));
+  }, [hasOlderMessages, sortedMessages.length]);
 
-    return () => clearInterval(id);
-  }, []);
+  useEffect(() => {
+    const handler = () => {
+      const hasReachedTop = Math.ceil(window.scrollY) <= LOAD_MORE_SCROLL_THRESHOLD_PX;
+
+      if (hasReachedTop && !prevReachedTopRef.current && hasOlderMessages) {
+        handleLoadOlderMessages();
+      }
+
+      prevReachedTopRef.current = hasReachedTop;
+    };
+
+    prevReachedTopRef.current = false;
+    handler();
+
+    document.addEventListener("resize", handler, { passive: false });
+    document.addEventListener("scroll", handler, { passive: false });
+    return () => {
+      document.removeEventListener("resize", handler);
+      document.removeEventListener("scroll", handler);
+    };
+  }, [hasOlderMessages, handleLoadOlderMessages]);
+
+  useEffect(() => {
+    setRenderCount(MESSAGE_PAGE_SIZE);
+  }, [conversation.id]);
+
+  useLayoutEffect(() => {
+    if (!isPrependingRef.current) {
+      return;
+    }
+    const previousBodyHeight = previousBodyHeightRef.current;
+    if (previousBodyHeight != null) {
+      const addedHeight = document.body.offsetHeight - previousBodyHeight;
+      window.scrollTo(0, window.scrollY + addedHeight);
+    }
+    isPrependingRef.current = false;
+    previousBodyHeightRef.current = null;
+  }, [renderedMessages.length]);
+
+  useEffect(() => {
+    const id = window.requestAnimationFrame(() => {
+      window.scrollTo(0, document.body.scrollHeight);
+    });
+    return () => {
+      window.cancelAnimationFrame(id);
+    };
+  }, [conversation.messages.length, isPeerTyping]);
 
   if (conversationError != null) {
     return (
@@ -99,6 +165,7 @@ export const DirectMessagePage = ({
         <img
           alt={peer.profileImage.alt}
           className="h-12 w-12 rounded-full object-cover"
+          loading="lazy"
           src={getProfileImagePath(peer.profileImage.id)}
         />
         <div className="min-w-0">
@@ -112,18 +179,19 @@ export const DirectMessagePage = ({
       </header>
 
       <div className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8">
-        {conversation.messages.length === 0 && (
+        {sortedMessages.length === 0 && (
           <p className="text-cax-text-muted text-center text-sm">
             まだメッセージはありません。最初のメッセージを送信してみましょう。
           </p>
         )}
 
         <ul className="grid gap-3" data-testid="dm-message-list">
-          {conversation.messages.map((message) => {
+          {renderedMessages.map((message) => {
             const isActiveUserSend = message.sender.id === activeUser.id;
 
             return (
               <li
+                key={message.id}
                 className={classNames(
                   "flex flex-col w-full",
                   isActiveUserSend ? "items-end" : "items-start",
@@ -140,9 +208,7 @@ export const DirectMessagePage = ({
                   {message.body}
                 </p>
                 <div className="flex gap-1 text-xs">
-                  <time dateTime={message.createdAt}>
-                    {moment(message.createdAt).locale("ja").format("HH:mm")}
-                  </time>
+                  <time dateTime={message.createdAt}>{formatTimeHHmm(message.createdAt)}</time>
                   {isActiveUserSend && message.isRead && (
                     <span className="text-cax-text-muted">既読</span>
                   )}
