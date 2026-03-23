@@ -29,8 +29,15 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   generateHash(password: string): string {
     return bcrypt.hashSync(password, bcrypt.genSaltSync(8));
   }
+  async generateHashAsync(password: string): Promise<string> {
+    const salt = await bcrypt.genSalt(8);
+    return bcrypt.hash(password, salt);
+  }
   validPassword(password: string): boolean {
     return bcrypt.compareSync(password, this.getDataValue("password"));
+  }
+  validPasswordAsync(password: string): Promise<boolean> {
+    return bcrypt.compare(password, this.getDataValue("password"));
   }
 }
 
@@ -58,7 +65,8 @@ export function initUser(sequelize: Sequelize) {
           return undefined;
         },
         set(value: string) {
-          this.setDataValue("password", this.generateHash(value));
+          // Store raw password temporarily; hashing is done in beforeCreate/beforeUpdate hooks
+          this.setDataValue("password", value);
         },
         type: DataTypes.STRING,
       },
@@ -83,4 +91,22 @@ export function initUser(sequelize: Sequelize) {
       },
     },
   );
+
+  User.addHook("beforeCreate", async (user) => {
+    const raw = (user as User).getDataValue("password");
+    if (raw) {
+      const salt = await bcrypt.genSalt(8);
+      (user as User).setDataValue("password", await bcrypt.hash(raw, salt));
+    }
+  });
+
+  User.addHook("beforeUpdate", async (user) => {
+    if ((user as User).changed("password")) {
+      const raw = (user as User).getDataValue("password");
+      if (raw) {
+        const salt = await bcrypt.genSalt(8);
+        (user as User).setDataValue("password", await bcrypt.hash(raw, salt));
+      }
+    }
+  });
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router";
 import { Field, InjectedFormProps, reduxForm, WrappedFieldProps } from "redux-form";
 
@@ -9,13 +9,13 @@ import {
 } from "@web-speed-hackathon-2026/client/src/search/services";
 import { SearchFormData } from "@web-speed-hackathon-2026/client/src/search/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/search/validation";
-import { analyzeSentiment } from "@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer";
 
 import { Button } from "../foundation/Button";
 
 interface Props {
   query: string;
   results: Models.Post[];
+  sentiment: string;
 }
 
 const SearchInput = ({ input, meta }: WrappedFieldProps) => (
@@ -39,36 +39,13 @@ const SearchInput = ({ input, meta }: WrappedFieldProps) => (
 const SearchPageComponent = ({
   query,
   results,
+  sentiment,
   handleSubmit,
 }: Props & InjectedFormProps<SearchFormData, Props>) => {
   const navigate = useNavigate();
-  const [isNegative, setIsNegative] = useState(false);
+  const isNegative = sentiment === "negative";
 
   const parsed = parseSearchQuery(query);
-
-  useEffect(() => {
-    if (!parsed.keywords) {
-      setIsNegative(false);
-      return;
-    }
-
-    let isMounted = true;
-    analyzeSentiment(parsed.keywords)
-      .then((result) => {
-        if (isMounted) {
-          setIsNegative(result.label === "negative");
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setIsNegative(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [parsed.keywords]);
 
   const searchConditionText = useMemo(() => {
     const parts: string[] = [];

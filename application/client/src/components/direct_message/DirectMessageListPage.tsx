@@ -1,4 +1,4 @@
-import moment from "moment";
+import { formatFromNow } from "@web-speed-hackathon-2026/client/src/utils/date_format";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -76,9 +76,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                 : conversation.member;
 
             const lastMessage = messages.at(-1);
-            const hasUnread = messages
-              .filter((m) => m.sender.id === peer.id)
-              .some((m) => !m.isRead);
+            const hasUnread = conversation.hasUnread ?? false;
 
             return (
               <li className="grid" key={conversation.id}>
@@ -100,7 +98,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {formatFromNow(lastMessage.createdAt)}
                           </time>
                         )}
                       </div>

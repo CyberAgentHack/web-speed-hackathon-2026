@@ -26,4 +26,16 @@ export async function initializeSequelize() {
     storage: TEMP_PATH,
   });
   initModels(_sequelize);
+
+  await Promise.all([
+    _sequelize.query(
+      "CREATE INDEX IF NOT EXISTS idx_dm_conversationId ON DirectMessages (conversationId)",
+    ),
+    _sequelize.query(
+      "CREATE INDEX IF NOT EXISTS idx_dm_conversationId_createdAt ON DirectMessages (conversationId, createdAt)",
+    ),
+    _sequelize.query(
+      "CREATE INDEX IF NOT EXISTS idx_dm_conversationId_senderId_isRead ON DirectMessages (conversationId, senderId, isRead)",
+    ),
+  ]);
 }

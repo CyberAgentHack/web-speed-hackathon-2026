@@ -8,11 +8,12 @@ export const authRouter = Router();
 
 authRouter.post("/signup", async (req, res) => {
   try {
-    const { id: userId } = await User.create(req.body);
-    const user = await User.findByPk(userId);
+    const created = await User.create(req.body);
+    const userId = created.id;
+    await created.reload();
 
     req.session.userId = userId;
-    return res.status(200).type("application/json").send(user);
+    return res.status(200).type("application/json").send(created);
   } catch (err) {
     if (err instanceof UniqueConstraintError) {
       return res.status(400).type("application/json").send({ code: "USERNAME_TAKEN" });
@@ -34,7 +35,7 @@ authRouter.post("/signin", async (req, res) => {
   if (user === null) {
     throw new httpErrors.BadRequest();
   }
-  if (!user.validPassword(req.body.password)) {
+  if (!(await user.validPasswordAsync(req.body.password))) {
     throw new httpErrors.BadRequest();
   }
 
