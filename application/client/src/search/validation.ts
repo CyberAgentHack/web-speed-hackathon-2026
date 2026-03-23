@@ -15,20 +15,20 @@ export const validate = (values: SearchFormData): FormErrors<SearchFormData> => 
     return errors;
   }
 
-  const { keywords, sinceDate, untilDate } = parseSearchQuery(raw);
+  const { keywords, sinceDate, sinceToken, untilDate, untilToken } = parseSearchQuery(raw);
 
   if (!keywords && !sinceDate && !untilDate) {
     errors.searchText = "検索キーワードまたは日付範囲を指定してください";
     return errors;
   }
 
-  if (sinceDate && !isValidDate(sinceDate)) {
-    errors.searchText = `since: の日付形式が不正です: ${sinceDate}`;
+  if (sinceToken && (!sinceDate || !isValidDate(sinceDate))) {
+    errors.searchText = `since: の日付形式が不正です: ${sinceToken.replace(/^since:/i, "")}`;
     return errors;
   }
 
-  if (untilDate && !isValidDate(untilDate)) {
-    errors.searchText = `until: の日付形式が不正です: ${untilDate}`;
+  if (untilToken && (!untilDate || !isValidDate(untilDate))) {
+    errors.searchText = `until: の日付形式が不正です: ${untilToken.replace(/^until:/i, "")}`;
     return errors;
   }
 

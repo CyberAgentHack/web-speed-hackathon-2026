@@ -1,17 +1,34 @@
 import { useEffect, useEffectEvent } from "react";
 
-export function useWs<T>(url: string, onMessage: (event: T) => void) {
+interface Options {
+  delayMs?: number;
+  enabled?: boolean;
+}
+
+export function useWs<T>(
+  url: string,
+  onMessage: (event: T) => void,
+  { delayMs = 0, enabled = true }: Options = {},
+) {
   const handleMessage = useEffectEvent((event: MessageEvent) => {
     onMessage(JSON.parse(event.data));
   });
 
   useEffect(() => {
-    const ws = new WebSocket(url);
-    ws.addEventListener("message", handleMessage);
+    if (!enabled) {
+      return;
+    }
+
+    let ws: WebSocket | null = null;
+    const timerId = window.setTimeout(() => {
+      ws = new WebSocket(url);
+      ws.addEventListener("message", handleMessage);
+    }, delayMs);
 
     return () => {
-      ws.removeEventListener("message", handleMessage);
-      ws.close();
+      window.clearTimeout(timerId);
+      ws?.removeEventListener("message", handleMessage);
+      ws?.close();
     };
-  }, [url]);
+  }, [delayMs, enabled, url]);
 }

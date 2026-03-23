@@ -1,39 +1,77 @@
+const DATE_PREFIXES = ["since", "until"] as const;
+
+function normalizeDateToken(token: string): string {
+  const trimmed = token.trim();
+
+  for (const prefix of ["from", ...DATE_PREFIXES]) {
+    const normalizedPrefix = prefix === "from" ? "since" : prefix;
+    const lower = trimmed.toLowerCase();
+
+    if (!lower.startsWith(prefix)) {
+      continue;
+    }
+
+    const remainder = trimmed.slice(prefix.length).replace(/^:/, "");
+    const match = /\d{4}-\d{2}-\d{2}/.exec(remainder);
+    if (match != null) {
+      return `${normalizedPrefix}:${match[0]}`;
+    }
+  }
+
+  return trimmed;
+}
+
+function extractDateToken(token: string, prefix: (typeof DATE_PREFIXES)[number]): string | null {
+  const normalizedPrefix = `${prefix}:`;
+  if (!token.toLowerCase().startsWith(normalizedPrefix)) {
+    return null;
+  }
+
+  const candidate = token.slice(normalizedPrefix.length);
+  const match = /\d{4}-\d{2}-\d{2}/.exec(candidate);
+  return match?.[0] ?? null;
+}
+
 export const sanitizeSearchText = (input: string): string => {
-  let text = input;
-
-  text = text.replace(
-    /\b(from|until)\s*:?\s*(\d{4}-\d{2}-\d{2})\d*/gi,
-    (_m, key, date) => `${key}:${date}`,
-  );
-
-  return text;
+  return input
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(normalizeDateToken)
+    .join(" ");
 };
 
 export const parseSearchQuery = (query: string) => {
-  const sincePattern = /since:((\d|\d\d|\d\d\d\d-\d\d-\d\d)+)+$/;
-  const untilPattern = /until:((\d|\d\d|\d\d\d\d-\d\d-\d\d)+)+$/;
+  const tokens = query.trim().split(/\s+/).filter(Boolean).map(normalizeDateToken);
 
-  const sincePart = query.match(/since:[^\s]*/)?.[0] || "";
-  const untilPart = query.match(/until:[^\s]*/)?.[0] || "";
+  const keywordTokens: string[] = [];
+  let sinceDate: string | null = null;
+  let sinceToken: string | null = null;
+  let untilDate: string | null = null;
+  let untilToken: string | null = null;
 
-  const sinceMatch = sincePattern.exec(sincePart);
-  const untilMatch = untilPattern.exec(untilPart);
+  for (const token of tokens) {
+    if (token.toLowerCase().startsWith("since:")) {
+      sinceToken = token;
+      sinceDate = extractDateToken(token, "since");
+      continue;
+    }
 
-  const keywords = query
-    .replace(/since:.*(\d{4}-\d{2}-\d{2}).*/g, "")
-    .replace(/until:.*(\d{4}-\d{2}-\d{2}).*/g, "")
-    .trim();
+    if (token.toLowerCase().startsWith("until:")) {
+      untilToken = token;
+      untilDate = extractDateToken(token, "until");
+      continue;
+    }
 
-  const extractDate = (s: string | null) => {
-    if (!s) return null;
-    const m = /(\d{4}-\d{2}-\d{2})/.exec(s);
-    return m ? m[1] : null;
-  };
+    keywordTokens.push(token);
+  }
 
   return {
-    keywords,
-    sinceDate: extractDate(sinceMatch ? sinceMatch[1]! : null),
-    untilDate: extractDate(untilMatch ? untilMatch[1]! : null),
+    keywords: keywordTokens.join(" "),
+    sinceDate,
+    sinceToken,
+    untilDate,
+    untilToken,
   };
 };
 

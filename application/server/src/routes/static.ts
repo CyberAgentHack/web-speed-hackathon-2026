@@ -1,4 +1,3 @@
-import history from "connect-history-api-fallback";
 import { Router } from "express";
 import serveStatic from "serve-static";
 
@@ -10,26 +9,43 @@ import {
 
 export const staticRouter = Router();
 
-// SPA 対応のため、ファイルが存在しないときに index.html を返す
-staticRouter.use(history());
-
 staticRouter.use(
   serveStatic(UPLOAD_PATH, {
-    etag: false,
-    lastModified: false,
+    immutable: true,
+    maxAge: "1y",
   }),
 );
 
 staticRouter.use(
   serveStatic(PUBLIC_PATH, {
-    etag: false,
-    lastModified: false,
+    immutable: true,
+    maxAge: "1y",
   }),
 );
 
 staticRouter.use(
   serveStatic(CLIENT_DIST_PATH, {
-    etag: false,
-    lastModified: false,
+    index: false,
+    maxAge: "1h",
   }),
 );
+
+staticRouter.get("/{*splat}", async (req, res, next) => {
+  if (/\.[^/]+$/.test(req.path)) {
+    return next();
+  }
+
+  try {
+    const { renderAppHtml } = await import(
+      "@web-speed-hackathon-2026/server/src/utils/render_app_html"
+    );
+    const html = await renderAppHtml(req);
+    return res
+      .status(200)
+      .set("Cache-Control", "no-cache")
+      .type("text/html")
+      .send(html);
+  } catch (error) {
+    return next(error);
+  }
+});
