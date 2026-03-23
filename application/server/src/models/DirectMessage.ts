@@ -69,6 +69,11 @@ export function initDirectMessage(sequelize: Sequelize) {
         ],
         order: [["createdAt", "ASC"]],
       },
+      indexes: [
+        { fields: ["conversationId"] },
+        { fields: ["senderId"] },
+        { fields: ["conversationId", "isRead"] },
+      ],
     },
   );
 
