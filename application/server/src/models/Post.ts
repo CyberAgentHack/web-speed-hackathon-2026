@@ -42,6 +42,10 @@ export function initPost(sequelize: Sequelize) {
     },
     {
       sequelize,
+      indexes: [
+        { fields: ["userId"] },
+        { fields: ["createdAt"] },
+      ],
       defaultScope: {
         attributes: {
           exclude: ["userId", "movieId", "soundId"],
@@ -49,7 +53,7 @@ export function initPost(sequelize: Sequelize) {
         include: [
           {
             association: "user",
-            attributes: { exclude: ["profileImageId"] },
+            attributes: { exclude: ["profileImageId", "description"] },
             include: [{ association: "profileImage" }],
           },
           {

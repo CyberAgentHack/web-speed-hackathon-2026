@@ -1,90 +1,86 @@
 import classNames from "classnames";
-import { Animator, Decoder } from "gifler";
-import { GifReader } from "omggif";
-import { RefCallback, useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
-import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
-import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
   src: string;
 }
 
 /**
- * クリックすると再生・一時停止を切り替えます。
+ * MP4を<video>で再生し、クリックで一時停止/再生を切り替えます。
+ * CSS aspect-ratioでレイアウトシフトを防止。
  */
 export const PausableMovie = ({ src }: Props) => {
-  const { data, isLoading } = useFetch(src, fetchBinary);
-
-  const animatorRef = useRef<Animator>(null);
-  const canvasCallbackRef = useCallback<RefCallback<HTMLCanvasElement>>(
-    (el) => {
-      animatorRef.current?.stop();
-
-      if (el === null || data === null) {
-        return;
-      }
-
-      // GIF を解析する
-      const reader = new GifReader(new Uint8Array(data));
-      const frames = Decoder.decodeFramesSync(reader);
-      const animator = new Animator(reader, frames);
-
-      animator.animateInCanvas(el);
-      animator.onFrame(frames[0]!);
-
-      // 視覚効果 off のとき GIF を自動再生しない
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        setIsPlaying(false);
-        animator.stop();
-      } else {
-        setIsPlaying(true);
-        animator.start();
-      }
-
-      animatorRef.current = animator;
-    },
-    [data],
-  );
-
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
+
+  // prefers-reduced-motion対応
+  const prefersReducedMotion = typeof window !== "undefined"
+    && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   const handleClick = useCallback(() => {
-    setIsPlaying((isPlaying) => {
-      if (isPlaying) {
-        animatorRef.current?.stop();
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+
+    setIsPlaying((playing) => {
+      if (playing) {
+        // 一時停止: 現在のフレームをcanvasにキャプチャ
+        if (video && canvas) {
+          canvas.width = video.videoWidth || video.clientWidth;
+          canvas.height = video.videoHeight || video.clientHeight;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          }
+        }
+        video?.pause();
       } else {
-        animatorRef.current?.start();
+        video?.play();
       }
-      return !isPlaying;
+      return !playing;
     });
   }, []);
 
-  if (isLoading || data === null) {
-    return null;
-  }
+  const showVideo = isPlaying && !prefersReducedMotion;
 
   return (
-    <AspectRatioBox aspectHeight={1} aspectWidth={1}>
+    <div className="relative w-full" style={{ aspectRatio: "1 / 1" }}>
       <button
         aria-label="動画プレイヤー"
         className="group relative block h-full w-full"
         onClick={handleClick}
         type="button"
       >
-        <canvas ref={canvasCallbackRef} className="w-full" />
+        {/* 再生中: <video>でMP4再生 */}
+        <video
+          ref={videoRef}
+          autoPlay
+          className="w-full"
+          loop
+          muted
+          playsInline
+          src={src}
+          style={{ display: showVideo ? "block" : "none" }}
+        />
+        {/* 一時停止中: canvasで静止フレーム表示 */}
+        <canvas
+          ref={canvasRef}
+          className="w-full"
+          style={{ display: showVideo ? "none" : "block" }}
+        />
         <div
           className={classNames(
             "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
             {
-              "opacity-0 group-hover:opacity-100": isPlaying,
+              "opacity-0 group-hover:opacity-100": showVideo,
             },
           )}
         >
-          <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
+          <FontAwesomeIcon iconType={showVideo ? "pause" : "play"} styleType="solid" />
         </div>
       </button>
-    </AspectRatioBox>
+    </div>
   );
 };

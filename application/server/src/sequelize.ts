@@ -25,5 +25,7 @@ export async function initializeSequelize() {
     logging: false,
     storage: TEMP_PATH,
   });
+  await _sequelize.query("PRAGMA journal_mode = WAL;");
+  await _sequelize.query("PRAGMA synchronous = NORMAL;");
   initModels(_sequelize);
 }

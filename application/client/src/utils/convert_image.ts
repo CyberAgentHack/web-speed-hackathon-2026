@@ -1,42 +1,35 @@
 import { initializeImageMagick, ImageMagick, MagickFormat } from "@imagemagick/magick-wasm";
-import magickWasm from "@imagemagick/magick-wasm/magick.wasm?binary";
-import { dump, insert, ImageIFD } from "piexifjs";
+import magickWasmUrl from "@imagemagick/magick-wasm/magick.wasm?url";
 
 interface Options {
   extension: MagickFormat;
 }
 
-export async function convertImage(file: File, options: Options): Promise<Blob> {
-  await initializeImageMagick(magickWasm);
+interface ConvertResult {
+  blob: Blob;
+  alt: string;
+}
+
+export async function convertImage(file: File, options: Options): Promise<ConvertResult> {
+  const wasmResponse = await fetch(magickWasmUrl);
+  const wasmBinary = new Uint8Array(await wasmResponse.arrayBuffer());
+  await initializeImageMagick(wasmBinary);
 
   const byteArray = new Uint8Array(await file.arrayBuffer());
 
-  return new Promise((resolve) => {
-    ImageMagick.read(byteArray, (img) => {
-      img.format = options.extension;
+  return new Promise((resolve, reject) => {
+    try {
+      ImageMagick.read(byteArray, (img) => {
+        const alt = img.getAttribute("exif:ImageDescription") ?? "";
 
-      const comment = img.comment;
+        img.format = options.extension;
 
-      img.write((output) => {
-        if (comment == null) {
-          resolve(new Blob([output as Uint8Array<ArrayBuffer>]));
-          return;
-        }
-
-        // ImageMagick では EXIF の ImageDescription フィールドに保存されているデータが
-        // 非標準の Comment フィールドに移されてしまうため
-        // piexifjs を使って ImageDescription フィールドに書き込む
-        const binary = Array.from(output as Uint8Array<ArrayBuffer>)
-          .map((b) => String.fromCharCode(b))
-          .join("");
-        const descriptionBinary = Array.from(new TextEncoder().encode(comment))
-          .map((b) => String.fromCharCode(b))
-          .join("");
-        const exifStr = dump({ "0th": { [ImageIFD.ImageDescription]: descriptionBinary } });
-        const outputWithExif = insert(exifStr, binary);
-        const bytes = Uint8Array.from(outputWithExif.split("").map((c) => c.charCodeAt(0)));
-        resolve(new Blob([bytes]));
+        img.write((output) => {
+          resolve({ blob: new Blob([output as Uint8Array<ArrayBuffer>]), alt });
+        });
       });
-    });
+    } catch (err) {
+      reject(err);
+    }
   });
 }

@@ -5,8 +5,13 @@ import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Mod
 import { NewPostModalPage } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage";
 import { sendFile, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
+interface ImageWithAlt {
+  file: File;
+  alt: string;
+}
+
 interface SubmitParams {
-  images: File[];
+  images: ImageWithAlt[];
   movie: File | undefined;
   sound: File | undefined;
   text: string;
@@ -15,7 +20,10 @@ interface SubmitParams {
 async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promise<Models.Post> {
   const payload = {
     images: images
-      ? await Promise.all(images.map((image) => sendFile("/api/v1/images", image)))
+      ? await Promise.all(images.map(async ({ file, alt }) => {
+          const uploaded = await sendFile<{ id: string }>("/api/v1/images", file);
+          return { id: uploaded.id, alt };
+        }))
       : [],
     movie: movie ? await sendFile("/api/v1/movies", movie) : undefined,
     sound: sound ? await sendFile("/api/v1/sounds", sound) : undefined,

@@ -40,6 +40,10 @@ export function initComment(sequelize: Sequelize) {
     },
     {
       sequelize,
+      indexes: [
+        { fields: ["postId"] },
+        { fields: ["userId"] },
+      ],
       defaultScope: {
         attributes: {
           exclude: ["userId", "postId"],
@@ -47,7 +51,7 @@ export function initComment(sequelize: Sequelize) {
         include: [
           {
             association: "user",
-            attributes: { exclude: ["profileImageId"] },
+            attributes: { exclude: ["profileImageId", "description"] },
             include: [{ association: "profileImage" }],
           },
         ],

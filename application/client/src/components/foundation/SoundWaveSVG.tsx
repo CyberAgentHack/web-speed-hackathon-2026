@@ -1,4 +1,3 @@
-import _ from "lodash";
 import { useEffect, useRef, useState } from "react";
 
 interface ParsedData {
@@ -6,25 +5,39 @@ interface ParsedData {
   peaks: number[];
 }
 
+const yieldToMain = () => new Promise<void>((r) => setTimeout(r, 0));
+
 async function calculate(data: ArrayBuffer): Promise<ParsedData> {
   const audioCtx = new AudioContext();
-
-  // 音声をデコードする
+  // slice(0)を避けてtransferable対応バッファを直接渡す
   const buffer = await audioCtx.decodeAudioData(data.slice(0));
-  // 左の音声データの絶対値を取る
-  const leftData = _.map(buffer.getChannelData(0), Math.abs);
-  // 右の音声データの絶対値を取る
-  const rightData = _.map(buffer.getChannelData(1), Math.abs);
 
-  // 左右の音声データの平均を取る
-  const normalized = _.map(_.zip(leftData, rightData), _.mean);
-  // 100 個の chunk に分ける
-  const chunks = _.chunk(normalized, Math.ceil(normalized.length / 100));
-  // chunk ごとに平均を取る
-  const peaks = _.map(chunks, _.mean);
-  // chunk の平均の中から最大値を取る
-  const max = _.max(peaks) ?? 0;
+  await yieldToMain();
 
+  // Float32Arrayから直接ピーク計算（Array.fromで全変換しない）
+  const left = buffer.getChannelData(0);
+  const right = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : left;
+  const totalSamples = left.length;
+  const bucketSize = Math.ceil(totalSamples / 100);
+  const peaks: number[] = [];
+
+  for (let i = 0; i < 100; i++) {
+    const start = i * bucketSize;
+    const end = Math.min(start + bucketSize, totalSamples);
+    let sum = 0;
+    for (let j = start; j < end; j++) {
+      sum += (Math.abs(left[j]!) + Math.abs(right[j]!)) / 2;
+    }
+    peaks.push(sum / (end - start));
+
+    // 10バケットごとにyield（メインスレッドに制御を戻す）
+    if (i % 10 === 9) {
+      await yieldToMain();
+    }
+  }
+
+  const max = Math.max(...peaks, 0);
+  await audioCtx.close();
   return { max, peaks };
 }
 
@@ -40,9 +53,13 @@ export const SoundWaveSVG = ({ soundData }: Props) => {
   });
 
   useEffect(() => {
-    calculate(soundData).then(({ max, peaks }) => {
-      setPeaks({ max, peaks });
+    // requestIdleCallbackで波形計算をアイドル時まで遅延（TTIを先に達成）
+    const id = requestIdleCallback(() => {
+      calculate(soundData).then(({ max, peaks }) => {
+        setPeaks({ max, peaks });
+      });
     });
+    return () => cancelIdleCallback(id);
   }, [soundData]);
 
   return (

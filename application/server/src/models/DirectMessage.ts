@@ -60,10 +60,16 @@ export function initDirectMessage(sequelize: Sequelize) {
     },
     {
       sequelize,
+      indexes: [
+        { fields: ["conversationId"] },
+        { fields: ["senderId"] },
+        { fields: ["createdAt"] },
+      ],
       defaultScope: {
         include: [
           {
             association: "sender",
+            attributes: { exclude: ["profileImageId", "description"] },
             include: [{ association: "profileImage" }],
           },
         ],

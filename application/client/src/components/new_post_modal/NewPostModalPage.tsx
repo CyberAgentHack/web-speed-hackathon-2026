@@ -1,18 +1,19 @@
-import { MagickFormat } from "@imagemagick/magick-wasm";
 import { ChangeEventHandler, FormEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/components/modal/ModalErrorMessage";
 import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/components/modal/ModalSubmitButton";
 import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/AttachFileInputButton";
-import { convertImage } from "@web-speed-hackathon-2026/client/src/utils/convert_image";
-import { convertMovie } from "@web-speed-hackathon-2026/client/src/utils/convert_movie";
-import { convertSound } from "@web-speed-hackathon-2026/client/src/utils/convert_sound";
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
+interface ImageWithAlt {
+  file: File;
+  alt: string;
+}
+
 interface SubmitParams {
-  images: File[];
+  images: ImageWithAlt[];
   movie: File | undefined;
   sound: File | undefined;
   text: string;
@@ -53,13 +54,18 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     if (isValid) {
       setIsConverting(true);
 
-      Promise.all(
-        files.map((file) =>
-          convertImage(file, { extension: MagickFormat.Jpg }).then(
-            (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
+      Promise.all([
+        import("@imagemagick/magick-wasm"),
+        import("@web-speed-hackathon-2026/client/src/utils/convert_image"),
+      ]).then(([{ MagickFormat }, { convertImage }]) =>
+          Promise.all(
+            files.map((file) =>
+              convertImage(file, { extension: MagickFormat.WebP }).then(
+                ({ blob, alt }) => ({ file: new File([blob], "converted.webp", { type: "image/webp" }), alt }),
+              ),
+            ),
           ),
-        ),
-      )
+        )
         .then((convertedFiles) => {
           setParams((params) => ({
             ...params,
@@ -67,10 +73,11 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
             movie: undefined,
             sound: undefined,
           }));
-
-          setIsConverting(false);
         })
-        .catch(console.error);
+        .catch(console.error)
+        .finally(() => {
+          setIsConverting(false);
+        });
     }
   }, []);
 
@@ -82,16 +89,18 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     if (isValid) {
       setIsConverting(true);
 
-      convertSound(file, { extension: "mp3" }).then((converted) => {
+      import("@web-speed-hackathon-2026/client/src/utils/convert_sound").then(({ convertSound }) => convertSound(file, { extension: "mp3" })).then((converted) => {
         setParams((params) => ({
           ...params,
           images: [],
           movie: undefined,
           sound: new File([converted], "converted.mp3", { type: "audio/mpeg" }),
         }));
-
-        setIsConverting(false);
-      });
+      })
+        .catch(console.error)
+        .finally(() => {
+          setIsConverting(false);
+        });
     }
   }, []);
 
@@ -103,20 +112,21 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     if (isValid) {
       setIsConverting(true);
 
-      convertMovie(file, { extension: "gif", size: undefined })
+      import("@web-speed-hackathon-2026/client/src/utils/convert_movie").then(({ convertMovie }) => convertMovie(file, { extension: "mp4", size: undefined }))
         .then((converted) => {
           setParams((params) => ({
             ...params,
             images: [],
-            movie: new File([converted], "converted.gif", {
-              type: "image/gif",
+            movie: new File([converted], "converted.mp4", {
+              type: "video/mp4",
             }),
             sound: undefined,
           }));
-
-          setIsConverting(false);
         })
-        .catch(console.error);
+        .catch(console.error)
+        .finally(() => {
+          setIsConverting(false);
+        });
     }
   }, []);
 
@@ -136,6 +146,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       </h2>
 
       <textarea
+        aria-label="いまなにしてる？"
         className="border-cax-border placeholder-cax-text-subtle focus:outline-cax-brand w-full resize-none rounded-xl border px-3 py-2 focus:outline-2 focus:outline-offset-2"
         rows={4}
         onChange={handleChangeText}

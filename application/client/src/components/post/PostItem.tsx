@@ -1,9 +1,11 @@
-import moment from "moment";
+const jaDateFormat = new Intl.DateTimeFormat("ja", { year: "numeric", month: "long", day: "numeric" });
+
+import { lazy, memo, Suspense } from "react";
 
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
 import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
-import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
+const SoundArea = lazy(() => import("@web-speed-hackathon-2026/client/src/components/post/SoundArea").then(m => ({ default: m.SoundArea })));
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
@@ -11,7 +13,7 @@ interface Props {
   post: Models.Post;
 }
 
-export const PostItem = ({ post }: Props) => {
+export const PostItem = memo(({ post }: Props) => {
   return (
     <article className="px-1 sm:px-4">
       <div className="border-cax-border border-b px-4 pt-4 pb-4">
@@ -23,7 +25,9 @@ export const PostItem = ({ post }: Props) => {
             >
               <img
                 alt={post.user.profileImage.alt}
+                height={64}
                 src={getProfileImagePath(post.user.profileImage.id)}
+                width={64}
               />
             </Link>
           </div>
@@ -51,24 +55,26 @@ export const PostItem = ({ post }: Props) => {
             <TranslatableText text={post.text} />
           </div>
           {post.images?.length > 0 ? (
-            <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
-            </div>
-          ) : null}
+              <div className="relative mt-2 w-full">
+                <ImageArea images={post.images} />
+              </div>
+            ) : null}
           {post.movie ? (
-            <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
-            </div>
-          ) : null}
-          {post.sound ? (
-            <div className="relative mt-2 w-full">
-              <SoundArea sound={post.sound} />
-            </div>
-          ) : null}
+              <div className="relative mt-2 w-full">
+                <MovieArea movie={post.movie} />
+              </div>
+            ) : null}
+          <Suspense fallback={null}>
+            {post.sound ? (
+              <div className="relative mt-2 w-full">
+                <SoundArea sound={post.sound} />
+              </div>
+            ) : null}
+          </Suspense>
           <p className="mt-2 text-sm sm:mt-4">
             <Link className="text-cax-text-muted hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={new Date(post.createdAt).toISOString()}>
+                {jaDateFormat.format(new Date(post.createdAt))}
               </time>
             </Link>
           </p>
@@ -76,4 +82,4 @@ export const PostItem = ({ post }: Props) => {
       </div>
     </article>
   );
-};
+});

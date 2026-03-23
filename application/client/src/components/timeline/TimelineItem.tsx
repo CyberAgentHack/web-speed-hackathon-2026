@@ -1,5 +1,5 @@
-import moment from "moment";
-import { MouseEventHandler, useCallback } from "react";
+const jaDateFormat = new Intl.DateTimeFormat("ja", { year: "numeric", month: "long", day: "numeric" });
+import { memo, MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
@@ -28,9 +28,10 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
  */
 interface Props {
   post: Models.Post;
+  eager?: boolean;
 }
 
-export const TimelineItem = ({ post }: Props) => {
+export const TimelineItem = memo(({ post, eager }: Props) => {
   const navigate = useNavigate();
 
   /**
@@ -56,7 +57,10 @@ export const TimelineItem = ({ post }: Props) => {
           >
             <img
               alt={post.user.profileImage.alt}
+              height={64}
+              loading={eager ? "eager" : "lazy"}
               src={getProfileImagePath(post.user.profileImage.id)}
+              width={64}
             />
           </Link>
         </div>
@@ -76,8 +80,8 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={new Date(post.createdAt).toISOString()}>
+                {jaDateFormat.format(new Date(post.createdAt))}
               </time>
             </Link>
           </p>
@@ -103,4 +107,4 @@ export const TimelineItem = ({ post }: Props) => {
       </div>
     </article>
   );
-};
+});

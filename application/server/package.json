@@ -14,9 +14,11 @@
   },
   "dependencies": {
     "@tsconfig/strictest": "2.0.8",
+    "@types/compression": "1.8.1",
     "@web-speed-hackathon-2026/server": "workspace:*",
     "bcrypt": "6.0.0",
     "body-parser": "2.2.0",
+    "compression": "1.8.1",
     "connect-history-api-fallback": "2.0.0",
     "express": "5.1.0",
     "express-session": "1.18.2",

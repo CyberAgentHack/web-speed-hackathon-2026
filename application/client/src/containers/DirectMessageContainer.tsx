@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Helmet } from "react-helmet";
 import { useParams } from "react-router";
 
 import { DirectMessageGate } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageGate";
 import { DirectMessagePage } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessagePage";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
+import { useTitle } from "@web-speed-hackathon-2026/client/src/hooks/use_title";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
@@ -103,6 +103,12 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     }
   });
 
+  const peer = conversation
+    ? (conversation.initiator.id !== activeUser?.id ? conversation.initiator : conversation.member)
+    : null;
+
+  useTitle(peer ? `${peer.name} さんとのダイレクトメッセージ - CaX` : "ダイレクトメッセージ - CaX");
+
   if (activeUser === null) {
     return (
       <DirectMessageGate
@@ -119,23 +125,15 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     return null;
   }
 
-  const peer =
-    conversation.initiator.id !== activeUser?.id ? conversation.initiator : conversation.member;
-
   return (
-    <>
-      <Helmet>
-        <title>{peer.name} さんとのダイレクトメッセージ - CaX</title>
-      </Helmet>
-      <DirectMessagePage
-        conversationError={conversationError}
-        conversation={conversation}
-        activeUser={activeUser}
-        onTyping={handleTyping}
-        isPeerTyping={isPeerTyping}
-        isSubmitting={isSubmitting}
-        onSubmit={handleSubmit}
-      />
-    </>
+    <DirectMessagePage
+      conversationError={conversationError}
+      conversation={conversation}
+      activeUser={activeUser}
+      onTyping={handleTyping}
+      isPeerTyping={isPeerTyping}
+      isSubmitting={isSubmitting}
+      onSubmit={handleSubmit}
+    />
   );
 };
