@@ -9,7 +9,15 @@ userRouter.get("/me", async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
   }
-  const user = await User.findByPk(req.session.userId);
+  const user = await User.findByPk(req.session.userId, {
+    attributes: { exclude: ["password", "updatedAt"] },
+    include: [
+      {
+        association: "profileImage",
+        attributes: { exclude: ["updatedAt"] },
+      },
+    ],
+  });
 
   if (user === null) {
     throw new httpErrors.NotFound();
@@ -39,6 +47,13 @@ userRouter.get("/users/:username", async (req, res) => {
     where: {
       username: req.params.username,
     },
+    attributes: { exclude: ["password", "updatedAt"] },
+    include: [
+      {
+        association: "profileImage",
+        attributes: { exclude: ["updatedAt"] },
+      },
+    ],
   });
 
   if (user === null) {
@@ -65,6 +80,33 @@ userRouter.get("/users/:username/posts", async (req, res) => {
     where: {
       userId: user.id,
     },
+    order: [["createdAt", "DESC"]],
+    attributes: { exclude: ["updatedAt"] },
+    include: [
+      {
+        association: "user",
+        attributes: { exclude: ["password", "updatedAt"] },
+        include: [
+          {
+            association: "profileImage",
+            attributes: { exclude: ["updatedAt"] },
+          },
+        ],
+      },
+      {
+        association: "images",
+        attributes: { exclude: ["updatedAt"] },
+        through: { attributes: [] },
+      },
+      {
+        association: "movie",
+        attributes: { exclude: ["updatedAt"] },
+      },
+      {
+        association: "sound",
+        attributes: { exclude: ["updatedAt"] },
+      },
+    ],
   });
 
   return res.status(200).type("application/json").send(posts);

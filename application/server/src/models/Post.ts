@@ -14,7 +14,7 @@ import { Sound } from "@web-speed-hackathon-2026/server/src/models/Sound";
 import { User } from "@web-speed-hackathon-2026/server/src/models/User";
 
 export class Post extends Model<InferAttributes<Post>, InferCreationAttributes<Post>> {
-  declare id: string;
+  declare id: CreationOptional<string>;
   declare userId: ForeignKey<User["id"]>;
   declare movieId?: ForeignKey<Movie["id"]>;
   declare soundId?: ForeignKey<Sound["id"]>;
@@ -34,6 +34,18 @@ export function initPost(sequelize: Sequelize) {
       text: {
         allowNull: false,
         type: DataTypes.STRING,
+      },
+      userId: {
+        allowNull: false,
+        type: DataTypes.UUID,
+      },
+      movieId: {
+        allowNull: true,
+        type: DataTypes.UUID,
+      },
+      soundId: {
+        allowNull: true,
+        type: DataTypes.UUID,
       },
       createdAt: {
         allowNull: false,

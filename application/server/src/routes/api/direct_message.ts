@@ -1,6 +1,6 @@
 import { Router } from "express";
 import httpErrors from "http-errors";
-import { col, where, Op } from "sequelize";
+import { Op } from "sequelize";
 
 import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
 import {
@@ -18,17 +18,31 @@ directMessageRouter.get("/dm", async (req, res) => {
 
   const conversations = await DirectMessageConversation.findAll({
     where: {
-      [Op.and]: [
-        { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
-        where(col("messages.id"), { [Op.not]: null }),
-      ],
+      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
-    order: [[col("messages.createdAt"), "DESC"]],
+    include: [
+      {
+        association: "initiator",
+        include: [{ association: "profileImage" }],
+      },
+      {
+        association: "member",
+        include: [{ association: "profileImage" }],
+      },
+      {
+        association: "messages",
+      },
+    ],
+    order: [["messages", "createdAt", "DESC"]],
   });
 
-  const sorted = conversations.map((c) => ({
+  // メッセージがない会話を除外（元々のコードの where(col("messages.id"), ...) に相当）
+  const filtered = conversations.filter((c) => c.messages && c.messages.length > 0);
+
+  const sorted = filtered.map((c) => ({
     ...c.toJSON(),
-    messages: c.messages?.reverse(),
+    // messages は直近の1件だけ返すか、あるいは全部返すか
+    // 元のコードは全件返して reverse() していたようなので、そのまま全件とする
   }));
 
   return res.status(200).type("application/json").send(sorted);
@@ -105,6 +119,21 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
       id: req.params.conversationId,
       [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
+    include: [
+      {
+        association: "initiator",
+        include: [{ association: "profileImage" }],
+      },
+      {
+        association: "member",
+        include: [{ association: "profileImage" }],
+      },
+      {
+        association: "messages",
+        separate: true,
+        order: [["createdAt", "ASC"]],
+      },
+    ],
   });
   if (conversation === null) {
     throw new httpErrors.NotFound();

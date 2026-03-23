@@ -1,18 +1,31 @@
 {
-  "extends": ["@tsconfig/strictest/tsconfig.json"],
+  "extends": [
+    "@tsconfig/strictest/tsconfig.json"
+  ],
   "compilerOptions": {
     "baseUrl": ".",
     "noEmit": true,
     "checkJs": true,
     "jsx": "react-jsx",
     "target": "esnext",
-    "lib": ["DOM", "ESNext"],
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
     "module": "esnext",
     "moduleResolution": "bundler",
     "exactOptionalPropertyTypes": false,
     "paths": {
-      "@web-speed-hackathon-2026/server/*": ["./*"]
+      "@web-speed-hackathon-2026/server/*": [
+        "./*"
+      ]
     }
   },
-  "include": ["./src", "./types"]
+  "include": [
+    "./src",
+    "./types",
+    "../client/src/utils/convert_sound.ts",
+    "../client/src/utils/convert_movie.ts",
+    "../client/src/utils/convert_image.ts"
+  ]
 }

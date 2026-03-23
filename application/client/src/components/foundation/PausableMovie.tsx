@@ -1,12 +1,4 @@
-import classNames from "classnames";
-import { Animator, Decoder } from "gifler";
-import { GifReader } from "omggif";
-import { RefCallback, useCallback, useRef, useState } from "react";
-
-import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
-import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
-import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { useEffect, useRef, useState } from "react";
 
 interface Props {
   src: string;
@@ -14,77 +6,99 @@ interface Props {
 
 /**
  * クリックすると再生・一時停止を切り替えます。
+ * video要素を使って MP4 を再生し、canvas に描画します。
  */
 export const PausableMovie = ({ src }: Props) => {
-  const { data, isLoading } = useFetch(src, fetchBinary);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const rafRef = useRef<number>(0);
+  const [isPaused, setIsPaused] = useState(false);
 
-  const animatorRef = useRef<Animator>(null);
-  const canvasCallbackRef = useCallback<RefCallback<HTMLCanvasElement>>(
-    (el) => {
-      animatorRef.current?.stop();
+  useEffect(() => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
 
-      if (el === null || data === null) {
-        return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const drawFrame = () => {
+      if (video.paused || video.ended) return;
+      if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+        canvas.width = video.videoWidth || canvas.offsetWidth;
+        canvas.height = video.videoHeight || canvas.offsetHeight;
       }
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      rafRef.current = requestAnimationFrame(drawFrame);
+    };
 
-      // GIF を解析する
-      const reader = new GifReader(new Uint8Array(data));
-      const frames = Decoder.decodeFramesSync(reader);
-      const animator = new Animator(reader, frames);
+    const handlePlay = () => {
+      cancelAnimationFrame(rafRef.current);
+      drawFrame();
+    };
 
-      animator.animateInCanvas(el);
-      animator.onFrame(frames[0]!);
+    const handleLoadedMetadata = () => {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+    };
 
-      // 視覚効果 off のとき GIF を自動再生しない
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        setIsPlaying(false);
-        animator.stop();
-      } else {
-        setIsPlaying(true);
-        animator.start();
-      }
+    video.addEventListener("play", handlePlay);
+    video.addEventListener("loadedmetadata", handleLoadedMetadata);
 
-      animatorRef.current = animator;
-    },
-    [data],
-  );
+    // すでに再生中、またはデータが読み込み済みの場合は初期化する
+    if (!video.paused) {
+      handlePlay();
+    }
+    if (video.readyState >= 2) {
+      handleLoadedMetadata();
+    }
 
-  const [isPlaying, setIsPlaying] = useState(true);
-  const handleClick = useCallback(() => {
-    setIsPlaying((isPlaying) => {
-      if (isPlaying) {
-        animatorRef.current?.stop();
-      } else {
-        animatorRef.current?.start();
-      }
-      return !isPlaying;
-    });
-  }, []);
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      video.removeEventListener("play", handlePlay);
+      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
+    };
+  }, [src]);
 
-  if (isLoading || data === null) {
-    return null;
-  }
+  const togglePlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      video.play().catch(console.error);
+      setIsPaused(false);
+    } else {
+      video.pause();
+      setIsPaused(true);
+    }
+  };
 
   return (
-    <AspectRatioBox aspectHeight={1} aspectWidth={1}>
-      <button
-        aria-label="動画プレイヤー"
-        className="group relative block h-full w-full"
-        onClick={handleClick}
-        type="button"
-      >
-        <canvas ref={canvasCallbackRef} className="w-full" />
-        <div
-          className={classNames(
-            "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
-            {
-              "opacity-0 group-hover:opacity-100": isPlaying,
-            },
-          )}
-        >
-          <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
+    <button
+      className="group relative block h-full w-full overflow-hidden"
+      onClick={togglePlay}
+      type="button"
+    >
+      {/* Hidden but active video element for MP4 playback */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 -z-50 opacity-0 pointer-events-none h-full w-full object-cover"
+        ref={videoRef}
+        src={src}
+      />
+      {/* Canvas displays the video frames */}
+      <canvas
+        ref={canvasRef}
+        className="h-full w-full object-cover"
+      />
+      {isPaused && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+          <span className="text-4xl text-white drop-shadow-md">▶</span>
         </div>
-      </button>
-    </AspectRatioBox>
+      )}
+    </button>
   );
 };
