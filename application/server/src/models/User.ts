@@ -81,6 +81,7 @@ export function initUser(sequelize: Sequelize) {
         attributes: { exclude: ["profileImageId"] },
         include: { association: "profileImage" },
       },
+      indexes: [{ fields: ["profileImageId"] }],
     },
   );
 }

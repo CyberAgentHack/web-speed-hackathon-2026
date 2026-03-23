@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet";
+import { useEffect } from "react";
 
 import { SearchPage } from "@web-speed-hackathon-2026/client/src/components/application/SearchPage";
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
@@ -15,12 +15,15 @@ export const SearchContainer = () => {
     fetchJSON,
   );
 
+  useEffect(() => {
+    document.title = "検索 - CaX";
+  }, []);
+
   return (
     <InfiniteScroll fetchMore={fetchMore} items={posts}>
-      <Helmet>
-        <title>検索 - CaX</title>
-      </Helmet>
-      <SearchPage query={query} results={posts} initialValues={{ searchText: query }} />
+      <SearchPage query={query} results={posts} defaultValues={{ searchText: query }} />
     </InfiniteScroll>
   );
 };
+
+export default SearchContainer;

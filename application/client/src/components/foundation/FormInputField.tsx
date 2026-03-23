@@ -1,19 +1,31 @@
 import { ReactNode, useId } from "react";
-import { WrappedFieldProps } from "redux-form";
+import { ControllerRenderProps, FieldError } from "react-hook-form";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { Input } from "@web-speed-hackathon-2026/client/src/components/foundation/Input";
 
-interface Props extends WrappedFieldProps {
+interface Props {
   label: string;
   leftItem?: ReactNode;
   rightItem?: ReactNode;
+  field: ControllerRenderProps<any, any>;
+  error?: FieldError;
+  isTouched?: boolean;
+  [key: string]: unknown;
 }
 
-export const FormInputField = ({ label, leftItem, rightItem, input, meta, ...props }: Props) => {
+export const FormInputField = ({
+  label,
+  leftItem,
+  rightItem,
+  field,
+  error,
+  isTouched,
+  ...props
+}: Props) => {
   const inputId = useId();
   const errorMessageId = useId();
-  const isInvalid = meta.touched && meta.error;
+  const isInvalid = !!error && isTouched;
 
   return (
     <div className="flex flex-col gap-y-1">
@@ -24,9 +36,9 @@ export const FormInputField = ({ label, leftItem, rightItem, input, meta, ...pro
         id={inputId}
         leftItem={leftItem}
         rightItem={rightItem}
-        aria-invalid={isInvalid || undefined}
+        aria-invalid={isInvalid ? true : undefined}
         aria-describedby={isInvalid ? errorMessageId : undefined}
-        {...input}
+        {...field}
         {...props}
       />
       {isInvalid && (
@@ -34,7 +46,7 @@ export const FormInputField = ({ label, leftItem, rightItem, input, meta, ...pro
           <span className="mr-1">
             <FontAwesomeIcon iconType="exclamation-circle" styleType="solid" />
           </span>
-          {meta.error}
+          {error.message}
         </span>
       )}
     </div>

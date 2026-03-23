@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { startTransition, useCallback, useRef, useState } from "react";
 
 interface SSEOptions<T> {
   onMessage: (data: T, prevContent: string) => string;
@@ -44,23 +44,43 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
       const eventSource = new EventSource(url);
       eventSourceRef.current = eventSource;
 
+      let rafId: number | null = null;
+
       eventSource.onmessage = (event) => {
         const data = JSON.parse(event.data) as T;
 
         const isDone = options.onDone?.(data) ?? false;
         if (isDone) {
-          options.onComplete?.(contentRef.current);
-          stop();
+          if (rafId !== null) {
+            cancelAnimationFrame(rafId);
+          }
+          const finalContent = contentRef.current;
+          eventSourceRef.current?.close();
+          eventSourceRef.current = null;
+          startTransition(() => {
+            setContent(finalContent);
+            setIsStreaming(false);
+          });
+          options.onComplete?.(finalContent);
           return;
         }
 
         const newContent = options.onMessage(data, contentRef.current);
         contentRef.current = newContent;
-        setContent(newContent);
+
+        if (rafId === null) {
+          rafId = requestAnimationFrame(() => {
+            rafId = null;
+            setContent(contentRef.current);
+          });
+        }
       };
 
       eventSource.onerror = (error) => {
         console.error("SSE Error:", error);
+        if (rafId !== null) {
+          cancelAnimationFrame(rafId);
+        }
         stop();
       };
     },

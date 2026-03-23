@@ -69,24 +69,30 @@ export function initDirectMessage(sequelize: Sequelize) {
         ],
         order: [["createdAt", "ASC"]],
       },
+      indexes: [
+        { fields: ["conversationId"] },
+        { fields: ["senderId"] },
+        { fields: ["conversationId", "createdAt"] },
+      ],
     },
   );
 
   DirectMessage.addHook("afterSave", "onDmSaved", async (message) => {
-    const directMessage = await DirectMessage.findByPk(message.get().id);
-    const conversation = await DirectMessageConversation.findByPk(directMessage?.conversationId);
+    const conversationId = message.getDataValue("conversationId");
+    const senderId = message.getDataValue("senderId");
 
-    if (directMessage == null || conversation == null) {
+    const conversation = await DirectMessageConversation.unscoped().findByPk(conversationId, {
+      attributes: ["id", "initiatorId", "memberId"],
+    });
+
+    if (conversation == null) {
       return;
     }
 
     const receiverId =
-      conversation.initiatorId === directMessage.senderId
-        ? conversation.memberId
-        : conversation.initiatorId;
+      conversation.initiatorId === senderId ? conversation.memberId : conversation.initiatorId;
 
-    const unreadCount = await DirectMessage.count({
-      distinct: true,
+    const unreadCount = await DirectMessage.unscoped().count({
       where: {
         senderId: { [Op.ne]: receiverId },
         isRead: false,
@@ -94,6 +100,7 @@ export function initDirectMessage(sequelize: Sequelize) {
       include: [
         {
           association: "conversation",
+          attributes: [],
           where: {
             [Op.or]: [{ initiatorId: receiverId }, { memberId: receiverId }],
           },
@@ -102,6 +109,7 @@ export function initDirectMessage(sequelize: Sequelize) {
       ],
     });
 
+    const directMessage = await DirectMessage.findByPk(message.getDataValue("id"));
     eventhub.emit(`dm:conversation/${conversation.id}:message`, directMessage);
     eventhub.emit(`dm:unread/${receiverId}`, { unreadCount });
   });

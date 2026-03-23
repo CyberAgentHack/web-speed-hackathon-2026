@@ -1,15 +1,17 @@
-export function getImagePath(imageId: string): string {
-  return `/images/${imageId}.jpg`;
+export function getImagePath(imageId: string, width?: number): string {
+  const base = `/images/${imageId}.webp`;
+  return width ? `${base}?w=${width}` : base;
 }
 
 export function getMoviePath(movieId: string): string {
-  return `/movies/${movieId}.gif`;
+  return `/movies/${movieId}.mp4`;
 }
 
 export function getSoundPath(soundId: string): string {
   return `/sounds/${soundId}.mp3`;
 }
 
-export function getProfileImagePath(profileImageId: string): string {
-  return `/images/profiles/${profileImageId}.jpg`;
+export function getProfileImagePath(profileImageId: string, width?: number): string {
+  const base = `/images/profiles/${profileImageId}.webp`;
+  return width ? `${base}?w=${width}` : base;
 }

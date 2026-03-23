@@ -1,30 +1,33 @@
-import { useEffect, useRef, useState } from "react";
+import { useSyncExternalStore } from "react";
+
+let listeners: (() => void)[] = [];
+
+function subscribe(cb: () => void) {
+  listeners.push(cb);
+  return () => {
+    listeners = listeners.filter((l) => l !== cb);
+  };
+}
+
+function getSnapshot() {
+  return window.location.search;
+}
+
+const origPushState = history.pushState.bind(history);
+const origReplaceState = history.replaceState.bind(history);
+history.pushState = (...args) => {
+  origPushState(...args);
+  for (const l of listeners) l();
+};
+history.replaceState = (...args) => {
+  origReplaceState(...args);
+  for (const l of listeners) l();
+};
+window.addEventListener("popstate", () => {
+  for (const l of listeners) l();
+});
 
 export function useSearchParams(): [URLSearchParams] {
-  const [searchParams, setSearchParams] = useState(
-    () => new URLSearchParams(window.location.search),
-  );
-  const lastSearchRef = useRef(window.location.search);
-
-  useEffect(() => {
-    let active = true;
-
-    const poll = () => {
-      if (!active) return;
-      const currentSearch = window.location.search;
-      if (currentSearch !== lastSearchRef.current) {
-        lastSearchRef.current = currentSearch;
-        setSearchParams(new URLSearchParams(currentSearch));
-      }
-      scheduler.postTask(poll, { priority: "user-blocking", delay: 1 });
-    };
-
-    scheduler.postTask(poll, { priority: "user-blocking", delay: 1 });
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  return [searchParams];
+  const search = useSyncExternalStore(subscribe, getSnapshot);
+  return [new URLSearchParams(search)];
 }

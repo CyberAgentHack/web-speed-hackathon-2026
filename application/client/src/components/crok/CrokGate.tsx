@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet";
+import { useEffect } from "react";
 
 interface Props {
   headline: string;
@@ -13,11 +13,12 @@ export const CrokGate = ({
   buttonLabel = "サインイン",
   authModalId,
 }: Props) => {
+  useEffect(() => {
+    document.title = "Crok - CaX";
+  }, []);
+
   return (
     <>
-      <Helmet>
-        <title>Crok - CaX</title>
-      </Helmet>
       <section className="space-y-4 px-6 py-12 text-center">
         <p className="text-lg font-bold">{headline}</p>
         {description !== "" ? <p className="text-cax-text-muted text-sm">{description}</p> : null}

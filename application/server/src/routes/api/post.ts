@@ -2,6 +2,7 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 
 import { Comment, Post } from "@web-speed-hackathon-2026/server/src/models";
+import { clearHomeCache } from "@web-speed-hackathon-2026/server/src/routes/static";
 
 export const postRouter = Router();
 
@@ -11,6 +12,7 @@ postRouter.get("/posts", async (req, res) => {
     offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
   });
 
+  res.setHeader("Cache-Control", "public, max-age=5");
   return res.status(200).type("application/json").send(posts);
 });
 
@@ -21,6 +23,7 @@ postRouter.get("/posts/:postId", async (req, res) => {
     throw new httpErrors.NotFound();
   }
 
+  res.setHeader("Cache-Control", "public, max-age=5");
   return res.status(200).type("application/json").send(post);
 });
 
@@ -33,6 +36,7 @@ postRouter.get("/posts/:postId/comments", async (req, res) => {
     },
   });
 
+  res.setHeader("Cache-Control", "public, max-age=5");
   return res.status(200).type("application/json").send(posts);
 });
 
@@ -58,5 +62,6 @@ postRouter.post("/posts", async (req, res) => {
     },
   );
 
+  clearHomeCache();
   return res.status(200).type("application/json").send(post);
 });

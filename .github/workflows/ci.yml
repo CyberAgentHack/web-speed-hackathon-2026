@@ -1,0 +1,119 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.14.0"
+          cache: pnpm
+          cache-dependency-path: application/pnpm-lock.yaml
+      - run: cd application && pnpm install --frozen-lockfile
+      - run: cd application && pnpm exec oxlint .
+      - run: cd application && pnpm exec oxfmt --check .
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.14.0"
+          cache: pnpm
+          cache-dependency-path: application/pnpm-lock.yaml
+      - run: cd application && pnpm install --frozen-lockfile
+      - run: cd application && pnpm run typecheck
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.14.0"
+          cache: pnpm
+          cache-dependency-path: application/pnpm-lock.yaml
+      - run: cd application && pnpm install --frozen-lockfile
+      - run: cd application && pnpm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: client-dist
+          path: application/dist/
+          retention-days: 1
+
+  e2e:
+    runs-on: macos-latest
+    needs: build
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2, 3]
+        shardTotal: [3]
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.14.0"
+          cache: pnpm
+          cache-dependency-path: application/pnpm-lock.yaml
+      - run: cd application && pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v4
+        with:
+          name: client-dist
+          path: application/dist/
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(cd application/e2e && npx playwright --version)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/Library/Caches/ms-playwright
+          key: playwright-macos-${{ steps.playwright-version.outputs.version }}
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: cd application && pnpm --filter @web-speed-hackathon-2026/e2e exec playwright install --with-deps chrome
+      - name: Install Playwright deps (cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: cd application && pnpm --filter @web-speed-hackathon-2026/e2e exec playwright install-deps chrome
+      - name: Start server and run E2E tests
+        env:
+          E2E_WORKERS: 2
+        run: |
+          cd application && pnpm run start &
+          for i in $(seq 1 30); do curl -s http://localhost:3000 > /dev/null 2>&1 && break; sleep 2; done
+          cd application/e2e && pnpm run test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-report-${{ matrix.shardIndex }}
+          path: application/e2e/test-results/
+          retention-days: 7
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
