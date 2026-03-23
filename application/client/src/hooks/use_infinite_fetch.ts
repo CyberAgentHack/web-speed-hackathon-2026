@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const LIMIT = 30;
+const LIMIT = 10;
 
 interface ReturnValues<T> {
   data: Array<T>;
@@ -10,18 +10,22 @@ interface ReturnValues<T> {
 }
 
 export function useInfiniteFetch<T>(
-  apiPath: string,
+  apiPath: string | null,
   fetcher: (apiPath: string) => Promise<T[]>,
+  initialData?: T[],
+  pageSize: number = LIMIT,
 ): ReturnValues<T> {
-  const internalRef = useRef({ isLoading: false, offset: 0 });
+  const hasInitialData = (initialData?.length ?? 0) > 0;
+  const internalRef = useRef({ isLoading: false, offset: hasInitialData ? (initialData?.length ?? 0) : 0 });
 
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
-    data: [],
+    data: initialData ?? [],
     error: null,
-    isLoading: true,
+    isLoading: apiPath !== null && !hasInitialData,
   });
 
   const fetchMore = useCallback(() => {
+    if (apiPath === null) return;
     const { isLoading, offset } = internalRef.current;
     if (isLoading) {
       return;
@@ -36,16 +40,17 @@ export function useInfiniteFetch<T>(
       offset,
     };
 
-    void fetcher(apiPath).then(
-      (allData) => {
+    const separator = apiPath.includes("?") ? "&" : "?";
+    void fetcher(`${apiPath}${separator}offset=${offset}&limit=${pageSize}`).then(
+      (pageData) => {
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...pageData],
           isLoading: false,
         }));
         internalRef.current = {
           isLoading: false,
-          offset: offset + LIMIT,
+          offset: offset + pageSize,
         };
       },
       (error) => {
@@ -60,21 +65,25 @@ export function useInfiniteFetch<T>(
         };
       },
     );
-  }, [apiPath, fetcher]);
+  }, [apiPath, fetcher, pageSize]);
 
   useEffect(() => {
     setResult(() => ({
-      data: [],
+      data: initialData ?? [],
       error: null,
-      isLoading: true,
+      isLoading: apiPath !== null && !hasInitialData,
     }));
     internalRef.current = {
       isLoading: false,
-      offset: 0,
+      offset: hasInitialData ? (initialData?.length ?? 0) : 0,
     };
 
-    fetchMore();
-  }, [fetchMore]);
+    if (apiPath !== null && !hasInitialData) {
+      fetchMore();
+    }
+    // initialData は window.__INITIAL_POSTS__ から一度だけ読まれる値のため deps から除外
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiPath, fetchMore]);
 
   return {
     ...result,

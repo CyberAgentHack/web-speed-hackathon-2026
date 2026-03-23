@@ -1,58 +1,50 @@
-import $ from "jquery";
-import { gzip } from "pako";
+async function throwIfNotOk(res: Response): Promise<void> {
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw body;
+  }
+}
 
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "binary",
-    method: "GET",
-    responseType: "arraybuffer",
-    url,
-  });
-  return result;
+  const res = await fetch(url);
+  await throwIfNotOk(res);
+  return res.arrayBuffer();
 }
 
 export async function fetchJSON<T>(url: string): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "json",
-    method: "GET",
-    url,
-  });
-  return result;
+  const res = await fetch(url);
+  await throwIfNotOk(res);
+  return res.json() as Promise<T>;
 }
 
 export async function sendFile<T>(url: string, file: File): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    data: file,
-    dataType: "json",
-    headers: {
-      "Content-Type": "application/octet-stream",
-    },
+  const res = await fetch(url, {
     method: "POST",
-    processData: false,
-    url,
+    headers: { "Content-Type": "application/octet-stream" },
+    body: file,
   });
-  return result;
+  await throwIfNotOk(res);
+  return res.json() as Promise<T>;
 }
 
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
-  const jsonString = JSON.stringify(data);
-  const uint8Array = new TextEncoder().encode(jsonString);
-  const compressed = gzip(uint8Array);
-
-  const result = await $.ajax({
-    async: false,
-    data: compressed,
-    dataType: "json",
-    headers: {
-      "Content-Encoding": "gzip",
-      "Content-Type": "application/json",
-    },
-    method: "POST",
-    processData: false,
-    url,
-  });
-  return result;
+  const body = JSON.stringify(data);
+  // 小さいペイロードはgzip不要、大きい場合のみ動的importで圧縮
+  let res: Response;
+  if (body.length > 1024) {
+    const { gzip } = await import("pako");
+    res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Encoding": "gzip", "Content-Type": "application/json" },
+      body: gzip(new TextEncoder().encode(body)),
+    });
+  } else {
+    res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+    });
+  }
+  await throwIfNotOk(res);
+  return res.json() as Promise<T>;
 }

@@ -25,18 +25,15 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: false,
   entry: {
     main: [
-      "core-js",
-      "regenerator-runtime/runtime",
-      "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: "production",
   module: {
     rules: [
       {
@@ -60,24 +57,39 @@ const config = {
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
     filename: "scripts/[name].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     clean: true,
   },
   plugins: [
-    new webpack.ProvidePlugin({
-      $: "jquery",
-      AudioContext: ["standardized-audio-context", "AudioContext"],
-      Buffer: ["buffer", "Buffer"],
-      "window.jQuery": "jquery",
-    }),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
+      NODE_ENV: "production",
+    }),
+    // Force React/related packages to use production builds
+    new webpack.NormalModuleReplacementPlugin(/[\\/]cjs[\\/].*\.development\.js$/, (resource) => {
+      const r = resource.createData?.resource || resource.request;
+      if (!r) return;
+      // Some packages use .production.js, others use .production.min.js
+      const prodPath = r.replace(".development.js", ".production.js");
+      const prodMinPath = r.replace(".development.js", ".production.min.js");
+      const fs = require("fs");
+      const replacement = fs.existsSync(prodPath)
+        ? prodPath
+        : fs.existsSync(prodMinPath)
+          ? prodMinPath
+          : null;
+      if (replacement) {
+        if (resource.createData?.resource) resource.createData.resource = replacement;
+        if (resource.request?.includes(".development.js"))
+          resource.request = resource.request.replace(
+            ".development.js",
+            replacement.endsWith(".min.js") ? ".production.min.js" : ".production.js",
+          );
+      }
     }),
     new MiniCssExtractPlugin({
       filename: "styles/[name].css",
@@ -88,10 +100,23 @@ const config = {
           from: path.resolve(__dirname, "node_modules/katex/dist/fonts"),
           to: path.resolve(DIST_PATH, "styles/fonts"),
         },
+        {
+          from: path.resolve(__dirname, "node_modules/@ffmpeg/core/dist/umd/ffmpeg-core.js"),
+          to: path.resolve(DIST_PATH, "scripts/ffmpeg-core.js"),
+        },
+        {
+          from: path.resolve(__dirname, "node_modules/@ffmpeg/core/dist/umd/ffmpeg-core.wasm"),
+          to: path.resolve(DIST_PATH, "scripts/ffmpeg-core.wasm"),
+        },
+        {
+          from: path.resolve(__dirname, "node_modules/@imagemagick/magick-wasm/dist/magick.wasm"),
+          to: path.resolve(DIST_PATH, "scripts/magick.wasm"),
+        },
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: true,
+      scriptLoading: "defer",
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
   ],
@@ -128,12 +153,38 @@ const config = {
     },
   },
   optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
+    minimize: true,
+    splitChunks: {
+      chunks: "all",
+      maxInitialRequests: 10,
+      cacheGroups: {
+        // react-dom を単独チャンクに (最大のライブラリ)
+        reactDom: {
+          test: /[\\/]node_modules[\\/](react-dom|scheduler)[\\/]/,
+          name: "react-dom",
+          priority: 20,
+          chunks: "initial",
+        },
+        // react-router を別チャンクに
+        router: {
+          test: /[\\/]node_modules[\\/]react-router[\\/]/,
+          name: "router",
+          priority: 15,
+          chunks: "initial",
+        },
+        // redux 系を async chunk に分割 (AuthModal が lazy のため)
+        redux: {
+          test: /[\\/]node_modules[\\/](redux|react-redux|redux-form)[\\/]/,
+          name: "redux",
+          priority: 10,
+          chunks: "async",
+        },
+      },
+    },
+    concatenateModules: true,
+    usedExports: true,
+    providedExports: true,
+    sideEffects: true,
   },
   cache: false,
   ignoreWarnings: [

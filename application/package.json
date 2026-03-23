@@ -12,6 +12,10 @@
     "format:oxlint": "oxlint --fix",
     "format:oxfmt": "oxfmt"
   },
+  "dependencies": {
+    "@types/compression": "1.8.1",
+    "compression": "1.8.1"
+  },
   "devDependencies": {
     "oxfmt": "0.36.0",
     "oxlint": "1.43.0"

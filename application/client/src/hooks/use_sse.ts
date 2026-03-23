@@ -19,12 +19,19 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
   const [isStreaming, setIsStreaming] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const contentRef = useRef("");
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const stop = useCallback(() => {
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
     }
+    if (timerRef.current !== null) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    // Flush final content
+    setContent(contentRef.current);
     setIsStreaming(false);
   }, []);
 
@@ -56,7 +63,13 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
 
         const newContent = options.onMessage(data, contentRef.current);
         contentRef.current = newContent;
-        setContent(newContent);
+        // Throttle UI updates to reduce Markdown re-renders
+        if (timerRef.current === null) {
+          timerRef.current = setTimeout(() => {
+            setContent(contentRef.current);
+            timerRef.current = null;
+          }, 100);
+        }
       };
 
       eventSource.onerror = (error) => {

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import httpErrors from "http-errors";
-import { col, where, Op } from "sequelize";
+import { Op } from "sequelize";
 
 import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
 import {
@@ -16,22 +16,65 @@ directMessageRouter.get("/dm", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversations = await DirectMessageConversation.findAll({
+  const userId = req.session.userId;
+
+  // Fetch conversations without messages (bypass heavy defaultScope)
+  const conversations = await DirectMessageConversation.unscoped().findAll({
+    include: [
+      { association: "initiator", include: [{ association: "profileImage" }] },
+      { association: "member", include: [{ association: "profileImage" }] },
+    ],
     where: {
-      [Op.and]: [
-        { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
-        where(col("messages.id"), { [Op.not]: null }),
-      ],
+      [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
     },
-    order: [[col("messages.createdAt"), "DESC"]],
   });
 
-  const sorted = conversations.map((c) => ({
-    ...c.toJSON(),
-    messages: c.messages?.reverse(),
-  }));
+  // For each conversation, get last message + unread status in bulk
+  const conversationIds = conversations.map((c) => c.id);
 
-  return res.status(200).type("application/json").send(sorted);
+  // Bulk: last message per conversation (1 query)
+  const lastMessages = await DirectMessage.findAll({
+    where: { conversationId: conversationIds },
+    order: [["createdAt", "DESC"]],
+  });
+  const lastMessageMap = new Map<string, typeof lastMessages[0]>();
+  for (const msg of lastMessages) {
+    if (!lastMessageMap.has(msg.conversationId)) {
+      lastMessageMap.set(msg.conversationId, msg);
+    }
+  }
+
+  // Bulk: unread counts per conversation (1 query)
+  const unreadRows = await DirectMessage.unscoped().findAll({
+    attributes: ["conversationId", [DirectMessage.sequelize!.fn("COUNT", "*"), "cnt"]],
+    where: {
+      conversationId: conversationIds,
+      senderId: { [Op.ne]: userId },
+      isRead: false,
+    },
+    group: ["conversationId"],
+    raw: true,
+  }) as unknown as { conversationId: string; cnt: number }[];
+  const unreadMap = new Map(unreadRows.map((r) => [r.conversationId, Number(r.cnt)]));
+
+  const results = conversations
+    .map((c) => {
+      const lastMessage = lastMessageMap.get(c.id);
+      if (!lastMessage) return null;
+      return {
+        ...c.toJSON(),
+        messages: [lastMessage.toJSON()],
+        hasUnread: (unreadMap.get(c.id) ?? 0) > 0,
+      };
+    })
+    .filter((r): r is NonNullable<typeof r> => r != null)
+    .sort((a, b) => {
+      const aTime = new Date(a.messages[0]!.createdAt).getTime();
+      const bTime = new Date(b.messages[0]!.createdAt).getTime();
+      return bTime - aTime;
+    });
+
+  return res.status(200).type("application/json").send(results);
 });
 
 directMessageRouter.post("/dm", async (req, res) => {
@@ -100,11 +143,24 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversation = await DirectMessageConversation.findOne({
+  // defaultScopeの全メッセージ取得を回避し、最新50件のみ取得
+  const conversation = await DirectMessageConversation.unscoped().findOne({
     where: {
       id: req.params.conversationId,
       [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
+    include: [
+      { association: "initiator", include: [{ association: "profileImage" }] },
+      { association: "member", include: [{ association: "profileImage" }] },
+      {
+        association: "messages",
+        include: [{ association: "sender", include: [{ association: "profileImage" }] }],
+        order: [["createdAt", "ASC"]],
+        required: false,
+        limit: 50,
+        separate: true,
+      },
+    ],
   });
   if (conversation === null) {
     throw new httpErrors.NotFound();

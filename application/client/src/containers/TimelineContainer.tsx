@@ -5,8 +5,18 @@ import { TimelinePage } from "@web-speed-hackathon-2026/client/src/components/ti
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
+declare global {
+  interface Window {
+    __INITIAL_POSTS__?: Models.Post[];
+  }
+}
+
 export const TimelineContainer = () => {
-  const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>("/api/v1/posts", fetchJSON);
+  const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>(
+    "/api/v1/posts",
+    fetchJSON,
+    window.__INITIAL_POSTS__,
+  );
 
   return (
     <InfiniteScroll fetchMore={fetchMore} items={posts}>

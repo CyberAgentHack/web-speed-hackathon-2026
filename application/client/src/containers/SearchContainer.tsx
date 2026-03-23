@@ -13,6 +13,8 @@ export const SearchContainer = () => {
   const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>(
     query ? `/api/v1/search?q=${encodeURIComponent(query)}` : "",
     fetchJSON,
+    undefined,
+    30,
   );
 
   return (

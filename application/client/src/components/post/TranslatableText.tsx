@@ -1,7 +1,5 @@
 import { useCallback, useState } from "react";
 
-import { createTranslator } from "@web-speed-hackathon-2026/client/src/utils/create_translator";
-
 type State =
   | { type: "idle"; text: string }
   | { type: "loading" }
@@ -20,6 +18,8 @@ export const TranslatableText = ({ text }: Props) => {
         (async () => {
           updateState({ type: "loading" });
           try {
+            const { createTranslator } =
+              await import("@web-speed-hackathon-2026/client/src/utils/create_translator");
             using translator = await createTranslator({
               sourceLanguage: "ja",
               targetLanguage: "en",
