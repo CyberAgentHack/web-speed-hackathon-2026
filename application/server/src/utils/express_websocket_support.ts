@@ -1,5 +1,4 @@
 import http from "node:http";
-import { parse, format } from "node:url";
 
 import Express, { Router } from "express";
 import { WebSocketServer } from "ws";
@@ -11,10 +10,9 @@ Router.prototype.ws = Express.application.ws = function (
   ...handlers: Express.RequestHandler[]
 ) {
   // パスに `/ws` を付与してWebSocket用のルートを作成する
-  const wsPath = format({
-    ...parse(path),
-    pathname: `${parse(path).pathname}/ws`,
-  });
+  const url = new URL(path, "http://localhost");
+  url.pathname = `${url.pathname}/ws`;
+  const wsPath = url.pathname + url.search;
   this.get(wsPath, ...handlers);
 };
 
@@ -29,10 +27,9 @@ Express.application.listen = function (this: Express.Application, ...args: unkno
     const req: Express.Request = Object.setPrototypeOf(rawReq, Express.request);
 
     // パスに `/ws` を付与して WebSocket 用のルートに変換する
-    req.url = format({
-      ...parse(req.url),
-      pathname: `${parse(req.url).pathname}/ws`,
-    });
+    const url = new URL(req.url, "http://localhost");
+    url.pathname = `${url.pathname}/ws`;
+    req.url = url.pathname + url.search;
 
     const wss = mapping.get(req.path) ?? new WebSocketServer({ noServer: true });
     mapping.set(req.path, wss);

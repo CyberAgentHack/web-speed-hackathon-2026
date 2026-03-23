@@ -100,17 +100,40 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
+  const limit = req.query["limit"] != null ? Number(req.query["limit"]) : 50;
+  const offset = req.query["offset"] != null ? Number(req.query["offset"]) : 0;
+
   const conversation = await DirectMessageConversation.findOne({
     where: {
       id: req.params.conversationId,
       [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
+    // デフォルトスコープに含まれるメッセージを上書きするため、個別に include を指定
+    include: [
+      { association: "initiator", include: [{ association: "profileImage" }] },
+      { association: "member", include: [{ association: "profileImage" }] },
+      {
+        association: "messages",
+        include: [{ association: "sender", include: [{ association: "profileImage" }] }],
+        limit,
+        offset,
+        order: [["createdAt", "DESC"]],
+        required: false,
+      },
+    ],
   });
+
   if (conversation === null) {
     throw new httpErrors.NotFound();
   }
 
-  return res.status(200).type("application/json").send(conversation);
+  // クライアント側で使いやすいようにメッセージの順序を昇順に戻す
+  const result = conversation.toJSON();
+  if (result.messages) {
+    result.messages.reverse();
+  }
+
+  return res.status(200).type("application/json").send(result);
 });
 
 directMessageRouter.ws("/dm/:conversationId", async (req, _res) => {

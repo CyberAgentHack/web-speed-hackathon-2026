@@ -7,43 +7,42 @@ interface Props {
 }
 
 export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
+  const observerTarget = useRef<HTMLDivElement>(null);
   const latestItem = items[items.length - 1];
+  const fetchMoreRef = useRef(fetchMore);
 
-  const prevReachedRef = useRef(false);
+  // fetchMore が変わっても observer を再作成しないように ref に保持
+  useEffect(() => {
+    fetchMoreRef.current = fetchMore;
+  }, [fetchMore]);
 
   useEffect(() => {
-    const handler = () => {
-      // 念の為 2の18乗 回、最下部かどうかを確認する
-      const hasReached = Array.from(Array(2 ** 18), () => {
-        return window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
-      }).every(Boolean);
+    const target = observerTarget.current;
+    if (!target) return;
 
-      // 画面最下部にスクロールしたタイミングで、登録したハンドラを呼び出す
-      if (hasReached && !prevReachedRef.current) {
-        // アイテムがないときは追加で読み込まない
-        if (latestItem !== undefined) {
-          fetchMore();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && latestItem !== undefined) {
+          fetchMoreRef.current();
         }
+      },
+      {
+        rootMargin: "1000px", // 1000px 手前で読み込みを開始する
       }
+    );
 
-      prevReachedRef.current = hasReached;
-    };
+    observer.observe(target);
 
-    // 最初は実行されないので手動で呼び出す
-    prevReachedRef.current = false;
-    handler();
-
-    document.addEventListener("wheel", handler, { passive: false });
-    document.addEventListener("touchmove", handler, { passive: false });
-    document.addEventListener("resize", handler, { passive: false });
-    document.addEventListener("scroll", handler, { passive: false });
     return () => {
-      document.removeEventListener("wheel", handler);
-      document.removeEventListener("touchmove", handler);
-      document.removeEventListener("resize", handler);
-      document.removeEventListener("scroll", handler);
+      observer.unobserve(target);
     };
-  }, [latestItem, fetchMore]);
+  }, [latestItem]); // latestItem が変わる（＝アイテムが追加される）たびに判定をリセット
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      {/* この透明な div が画面に入ると fetchMore が呼ばれる */}
+      <div ref={observerTarget} className="h-1 w-full opacity-0" />
+    </>
+  );
 };

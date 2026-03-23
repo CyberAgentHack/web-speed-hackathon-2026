@@ -60,8 +60,13 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
       };
 
       eventSource.onerror = (error) => {
-        console.error("SSE Error:", error);
-        stop();
+        // 接続が完了した後の終了（done）をエラーと誤認しないようにチェック
+        if (eventSource.readyState === EventSource.CLOSED) {
+          stop();
+        } else {
+          console.error("SSE Error:", error);
+          stop();
+        }
       };
     },
     [options, stop],

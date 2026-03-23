@@ -4,6 +4,7 @@ const path = require("path");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const CompressionPlugin = require("compression-webpack-plugin");
 const webpack = require("webpack");
 
 const SRC_PATH = path.resolve(__dirname, "./src");
@@ -25,18 +26,15 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: process.env.NODE_ENV === "production" ? "source-map" : "eval-source-map",
   entry: {
     main: [
-      "core-js",
-      "regenerator-runtime/runtime",
-      "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: process.env.NODE_ENV === "production" ? "production" : "development",
   module: {
     rules: [
       {
@@ -54,24 +52,24 @@ const config = {
       },
       {
         resourceQuery: /binary/,
-        type: "asset/bytes",
+        type: "asset/resource",
+        generator: {
+          filename: "binaries/[name].[contenthash][ext]",
+        },
       },
     ],
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
-    filename: "scripts/[name].js",
+    chunkFormat: "array-push",
+    filename: "scripts/[name].[contenthash].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     clean: true,
   },
   plugins: [
     new webpack.ProvidePlugin({
-      $: "jquery",
-      AudioContext: ["standardized-audio-context", "AudioContext"],
       Buffer: ["buffer", "Buffer"],
-      "window.jQuery": "jquery",
     }),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
@@ -80,7 +78,7 @@ const config = {
       NODE_ENV: "development",
     }),
     new MiniCssExtractPlugin({
-      filename: "styles/[name].css",
+      filename: "styles/[name].[contenthash].css",
     }),
     new CopyWebpackPlugin({
       patterns: [
@@ -88,11 +86,20 @@ const config = {
           from: path.resolve(__dirname, "node_modules/katex/dist/fonts"),
           to: path.resolve(DIST_PATH, "styles/fonts"),
         },
+        {
+          from: path.resolve(SRC_PATH, "sw.js"),
+          to: DIST_PATH,
+        },
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: true,
       template: path.resolve(SRC_PATH, "./index.html"),
+    }),
+    new CompressionPlugin({
+      test: /\.(js|css|html|svg|ttf|woff|woff2)$/,
+      threshold: 10240,
+      minRatio: 0.8,
     }),
   ],
   resolve: {
@@ -128,14 +135,38 @@ const config = {
     },
   },
   optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
+    minimize: process.env.NODE_ENV === "production",
+    splitChunks: {
+      chunks: "async",
+      minSize: 30000,
+      cacheGroups: {
+        // 巨大なライブラリを個別に切り出す
+        kuromoji: {
+          test: /[\\/]node_modules[\\/]kuromoji[\\/]/,
+          name: "lib-kuromoji",
+          priority: 20,
+        },
+        negaposi: {
+          test: /[\\/]node_modules[\\/]negaposi-analyzer-ja[\\/]/,
+          name: "lib-negaposi",
+          priority: 20,
+        },
+        katex: {
+          test: /[\\/]node_modules[\\/]katex[\\/]/,
+          name: "lib-katex",
+          priority: 20,
+        },
+        // その他のベンダー
+        defaultVendors: {
+          test: /[\\/]node_modules[\\/]/,
+          priority: -10,
+          reuseExistingChunk: true,
+          name: "vendors-misc",
+        },
+      },
+    },
   },
-  cache: false,
+  cache: true,
   ignoreWarnings: [
     {
       module: /@ffmpeg/,

@@ -1,5 +1,4 @@
 import Bluebird from "bluebird";
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
 import {
   useEffect,
   useLayoutEffect,
@@ -22,64 +21,36 @@ interface Props {
   onSendMessage: (message: string) => void;
 }
 
-// トークン単位でハイライト
-function highlightMatchByTokens(text: string, queryTokens: string[]): React.ReactNode {
-  if (queryTokens.length === 0) return text;
+/**
+ * サジェスト内のトークンに一致する部分をハイライトします
+ */
+const highlightMatchByTokens = (text: string, tokens: string[]) => {
+  if (tokens.length === 0) return text;
 
-  const lowerText = text.toLowerCase();
-
-  // テキスト内でクエリトークンにマッチする範囲を収集
-  const ranges: { start: number; end: number }[] = [];
-  for (const token of queryTokens) {
-    let pos = 0;
-    while (pos < lowerText.length) {
-      const index = lowerText.indexOf(token, pos);
-      if (index === -1) break;
-      ranges.push({ start: index, end: index + token.length });
-      pos = index + 1;
-    }
-  }
-
-  if (ranges.length === 0) return text;
-
-  // 範囲をソートしてマージ
-  ranges.sort((a, b) => a.start - b.start);
-  const merged: { start: number; end: number }[] = [ranges[0]!];
-  for (let i = 1; i < ranges.length; i++) {
-    const prev = merged[merged.length - 1]!;
-    const curr = ranges[i]!;
-    if (curr.start <= prev.end) {
-      prev.end = Math.max(prev.end, curr.end);
-    } else {
-      merged.push(curr);
-    }
-  }
-
-  const parts: React.ReactNode[] = [];
-  let lastEnd = 0;
-  for (let i = 0; i < merged.length; i++) {
-    const range = merged[i]!;
-    if (range.start > lastEnd) {
-      parts.push(text.slice(lastEnd, range.start));
-    }
-    parts.push(
-      <span key={i} className="bg-cax-highlight text-cax-highlight-ink">
-        {text.slice(range.start, range.end)}
-      </span>,
-    );
-    lastEnd = range.end;
-  }
-  if (lastEnd < text.length) {
-    parts.push(text.slice(lastEnd));
-  }
-
-  return <>{parts}</>;
-}
+  // トークンを長い順にソートして、正規表現でのマッチングを確実にする
+  const sortedTokens = [...tokens].sort((a, b) => b.length - a.length);
+  const pattern = new RegExp(`(${sortedTokens.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi');
+  
+  const parts = text.split(pattern);
+  return (
+    <>
+      {parts.map((part, i) => (
+        pattern.test(part) ? (
+          <span key={i} className="text-cax-brand font-bold bg-cax-highlight/30">
+            {part}
+          </span>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      ))}
+    </>
+  );
+};
 
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
+  const [tokenizer, setTokenizer] = useState<any | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
@@ -97,8 +68,9 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     let mounted = true;
 
     const init = async () => {
+      const { default: kuromoji } = await import("kuromoji");
       const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
+      const nextTokenizer = await (builder as any).buildAsync();
       if (mounted) {
         setTokenizer(nextTokenizer);
       }
@@ -110,26 +82,36 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     };
   }, []);
 
+  const [candidates, setCandidates] = useState<string[]>([]);
+
+  // 初回に candidates を取得
+  useEffect(() => {
+    const fetchCandidates = async () => {
+      const { suggestions: data } = await fetchJSON<{ suggestions: string[] }>(
+        "/api/v1/crok/suggestions",
+      );
+      setCandidates(data);
+    };
+    fetchCandidates();
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
 
     const updateSuggestions = async () => {
-      if (!tokenizer || !inputValue.trim()) {
+      if (!tokenizer || !inputValue.trim() || candidates.length === 0) {
         setSuggestions([]);
         setQueryTokens([]);
         setShowSuggestions(false);
         return;
       }
 
-      const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-        "/api/v1/crok/suggestions",
-      );
-      if (cancelled) {
-        return;
-      }
+      // デバウンス的な待ちを入れる
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      if (cancelled) return;
 
       const tokens = extractTokens(tokenizer.tokenize(inputValue));
-      const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
+      const results = await filterSuggestionsBM25(tokenizer, candidates, tokens);
 
       if (cancelled) {
         return;
@@ -139,13 +121,12 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
       setSuggestions(results);
       setShowSuggestions(results.length > 0);
     };
-
     void updateSuggestions();
 
     return () => {
       cancelled = true;
     };
-  }, [inputValue, tokenizer]);
+  }, [inputValue, tokenizer, candidates]);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
@@ -174,8 +155,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     setShowSuggestions(false);
   };
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
+  const sendCurrentMessage = () => {
     if (inputValue.trim() && !isStreaming) {
       onSendMessage(inputValue.trim());
       setInputValue("");
@@ -186,10 +166,15 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   };
 
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    sendCurrentMessage();
+  };
+
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
-      handleSubmit(e);
+      sendCurrentMessage();
     }
   };
 

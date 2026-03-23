@@ -1,80 +1,64 @@
 import classNames from "classnames";
-import sizeOf from "image-size";
-import { load, ImageIFD } from "piexifjs";
-import { MouseEvent, RefCallback, useCallback, useId, useMemo, useState } from "react";
+import { MouseEvent, useCallback, useId, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
-import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { getImagePath, getImageThumbnailPath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
-  src: string;
+  imageId: string;
+  alt?: string;
+  isLcpElement?: boolean;
+  isFull?: boolean;
 }
 
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
+ * タイムライン表示（isFull=false）時は、軽量なサムネイルを読み込んで LCP を改善します。
  */
-export const CoveredImage = ({ src }: Props) => {
+export const CoveredImage = ({ imageId, alt = "", isLcpElement = false, isFull = false }: Props) => {
   const dialogId = useId();
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  const src = isFull ? getImagePath(imageId) : getImageThumbnailPath(imageId);
+
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
     ev.stopPropagation();
   }, []);
 
-  const { data, isLoading } = useFetch(src, fetchBinary);
-
-  const imageSize = useMemo(() => {
-    return data != null ? sizeOf(Buffer.from(data)) : { height: 0, width: 0 };
-  }, [data]);
-
-  const alt = useMemo(() => {
-    const exif = data != null ? load(Buffer.from(data).toString("binary")) : null;
-    const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-    return raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
-  }, [data]);
-
-  const blobUrl = useMemo(() => {
-    return data != null ? URL.createObjectURL(new Blob([data])) : null;
-  }, [data]);
-
-  const [containerSize, setContainerSize] = useState({ height: 0, width: 0 });
-  const callbackRef = useCallback<RefCallback<HTMLDivElement>>((el) => {
-    setContainerSize({
-      height: el?.clientHeight ?? 0,
-      width: el?.clientWidth ?? 0,
-    });
+  const handleLoad = useCallback(() => {
+    setIsLoaded(true);
   }, []);
 
-  if (isLoading || data === null || blobUrl === null) {
-    return null;
-  }
-
-  const containerRatio = containerSize.height / containerSize.width;
-  const imageRatio = imageSize?.height / imageSize?.width;
-
   return (
-    <div ref={callbackRef} className="relative h-full w-full overflow-hidden">
+    <div className="relative h-full w-full overflow-hidden bg-cax-surface-subtle">
+      {!isLoaded && (
+        <div className="absolute inset-0 animate-pulse bg-cax-surface-subtle" />
+      )}
       <img
         alt={alt}
-        className={classNames(
-          "absolute left-1/2 top-1/2 max-w-none -translate-x-1/2 -translate-y-1/2",
-          {
-            "w-auto h-full": containerRatio > imageRatio,
-            "w-full h-auto": containerRatio <= imageRatio,
-          },
-        )}
-        src={blobUrl}
+        className={classNames("h-full w-full object-cover transition-opacity duration-300", {
+          "opacity-0": !isLoaded,
+          "opacity-100": isLoaded,
+        })}
+        loading={isLcpElement ? "eager" : "lazy"}
+        // @ts-ignore
+        fetchpriority={isLcpElement ? "high" : "auto"}
+        onLoad={handleLoad}
+        src={src}
       />
 
-      <button
-        className="border-cax-border bg-cax-surface-raised/90 text-cax-text-muted hover:bg-cax-surface absolute right-1 bottom-1 rounded-full border px-2 py-1 text-center text-xs"
-        type="button"
-        command="show-modal"
-        commandfor={dialogId}
-      >
-        ALT を表示する
-      </button>
+      {alt && (
+        <button
+          className="border-cax-border bg-cax-surface-raised/90 text-cax-text-muted hover:bg-cax-surface absolute right-1 bottom-1 rounded-full border px-2 py-1 text-center text-xs"
+          type="button"
+          command="show-modal"
+          commandfor={dialogId}
+        >
+          ALT を表示する
+        </button>
+      )}
 
       <Modal id={dialogId} closedby="any" onClick={handleDialogClick}>
         <div className="grid gap-y-6">

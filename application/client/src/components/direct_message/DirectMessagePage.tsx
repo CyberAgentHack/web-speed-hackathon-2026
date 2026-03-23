@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import moment from "moment";
+import dayjs from "dayjs";
 import {
   ChangeEvent,
   useCallback,
@@ -21,8 +21,11 @@ interface Props {
   activeUser: Models.User;
   isPeerTyping: boolean;
   isSubmitting: boolean;
+  hasMore: boolean;
+  isLoadingMore: boolean;
   onTyping: () => void;
   onSubmit: (params: DirectMessageFormData) => Promise<void>;
+  onLoadMore: () => void;
 }
 
 export const DirectMessagePage = ({
@@ -31,8 +34,11 @@ export const DirectMessagePage = ({
   activeUser,
   isPeerTyping,
   isSubmitting,
+  hasMore,
+  isLoadingMore,
   onTyping,
   onSubmit,
+  onLoadMore,
 }: Props) => {
   const formRef = useRef<HTMLFormElement>(null);
   const textAreaId = useId();
@@ -43,7 +49,8 @@ export const DirectMessagePage = ({
   const [text, setText] = useState("");
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
-  const scrollHeightRef = useRef(0);
+
+  const prevMessageCountRef = useRef(conversation.messages.length);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -74,16 +81,15 @@ export const DirectMessagePage = ({
   );
 
   useEffect(() => {
-    const id = setInterval(() => {
-      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
-      if (height !== scrollHeightRef.current) {
-        scrollHeightRef.current = height;
-        window.scrollTo(0, height);
+    // 新しいメッセージが末尾に追加された場合のみスクロールする
+    if (conversation.messages.length > prevMessageCountRef.current) {
+      const lastMessage = conversation.messages.at(-1);
+      if (lastMessage && (lastMessage.sender.id === activeUser.id || lastMessage.id.startsWith("temp-"))) {
+        window.scrollTo(0, document.body.scrollHeight);
       }
-    }, 1);
-
-    return () => clearInterval(id);
-  }, []);
+    }
+    prevMessageCountRef.current = conversation.messages.length;
+  }, [conversation.messages.length, activeUser.id]);
 
   if (conversationError != null) {
     return (
@@ -99,6 +105,7 @@ export const DirectMessagePage = ({
         <img
           alt={peer.profileImage.alt}
           className="h-12 w-12 rounded-full object-cover"
+          loading="lazy"
           src={getProfileImagePath(peer.profileImage.id)}
         />
         <div className="min-w-0">
@@ -112,6 +119,18 @@ export const DirectMessagePage = ({
       </header>
 
       <div className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8">
+        {hasMore && (
+          <div className="flex justify-center pt-2">
+            <button
+              className="text-cax-brand hover:text-cax-brand-strong text-sm font-bold disabled:opacity-50"
+              onClick={onLoadMore}
+              disabled={isLoadingMore}
+              type="button"
+            >
+              {isLoadingMore ? "読み込み中..." : "以前のメッセージを読み込む"}
+            </button>
+          </div>
+        )}
         {conversation.messages.length === 0 && (
           <p className="text-cax-text-muted text-center text-sm">
             まだメッセージはありません。最初のメッセージを送信してみましょう。
@@ -124,6 +143,7 @@ export const DirectMessagePage = ({
 
             return (
               <li
+                key={message.id}
                 className={classNames(
                   "flex flex-col w-full",
                   isActiveUserSend ? "items-end" : "items-start",
@@ -141,7 +161,7 @@ export const DirectMessagePage = ({
                 </p>
                 <div className="flex gap-1 text-xs">
                   <time dateTime={message.createdAt}>
-                    {moment(message.createdAt).locale("ja").format("HH:mm")}
+                    {dayjs(message.createdAt).format("HH:mm")}
                   </time>
                   {isActiveUserSend && message.isRead && (
                     <span className="text-cax-text-muted">既読</span>
@@ -176,12 +196,11 @@ export const DirectMessagePage = ({
               onChange={handleChange}
               onKeyDown={handleKeyDown}
               rows={textAreaRows}
-              disabled={isSubmitting}
             />
           </div>
           <button
             className="bg-cax-brand text-cax-surface-raised hover:bg-cax-brand-strong rounded-full px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={isInvalid || isSubmitting}
+            disabled={isInvalid}
             type="submit"
           >
             <FontAwesomeIcon iconType="arrow-right" styleType="solid" />

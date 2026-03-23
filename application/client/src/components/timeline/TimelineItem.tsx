@@ -1,5 +1,6 @@
-import moment from "moment";
+import dayjs from "dayjs";
 import { MouseEventHandler, useCallback } from "react";
+
 import { Link, useNavigate } from "react-router";
 
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
@@ -28,10 +29,12 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
  */
 interface Props {
   post: Models.Post;
+  index?: number;
 }
 
-export const TimelineItem = ({ post }: Props) => {
+export const TimelineItem = ({ post, index = 0 }: Props) => {
   const navigate = useNavigate();
+  const isLcpElement = index < 3; // 最初の3件は LCP 対策で即時ロード
 
   /**
    * ボタンやリンク以外の箇所をクリックしたとき かつ 文字が選択されてないとき、投稿詳細ページに遷移する
@@ -56,6 +59,7 @@ export const TimelineItem = ({ post }: Props) => {
           >
             <img
               alt={post.user.profileImage.alt}
+              loading={isLcpElement ? "eager" : "lazy"}
               src={getProfileImagePath(post.user.profileImage.id)}
             />
           </Link>
@@ -76,8 +80,8 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={dayjs(post.createdAt).toISOString()}>
+                {dayjs(post.createdAt).format("LL")}
               </time>
             </Link>
           </p>
@@ -86,7 +90,7 @@ export const TimelineItem = ({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea images={post.images} isLcpElement={isLcpElement} />
             </div>
           ) : null}
           {post.movie ? (
