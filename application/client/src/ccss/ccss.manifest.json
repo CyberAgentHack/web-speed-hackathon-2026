@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "compiler": "@ccss/compiler",
+  "generatedAt": "2026-03-20T04:48:57.769Z",
+  "sourcePath": "C:\\.program\\web-speed-hackathon-2026\\application\\client\\src\\ccss\\AppShell.tsx",
+  "component": {
+    "name": "AppShell",
+    "slug": "app-shell"
+  },
+  "domRoots": {
+    "uiRootId": "ccss-ui-root",
+    "gameRootId": "ccss-game-root"
+  },
+  "states": [
+    {
+      "name": "authModalOpen",
+      "kind": "boolean",
+      "initialValue": false,
+      "stateId": "ccss:app-shell:app-shell:auth-modal-open"
+    },
+    {
+      "name": "newPostModalOpen",
+      "kind": "boolean",
+      "initialValue": false,
+      "stateId": "ccss:app-shell:app-shell:new-post-modal-open"
+    }
+  ]
+}

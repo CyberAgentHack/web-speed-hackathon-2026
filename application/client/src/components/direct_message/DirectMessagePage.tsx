@@ -1,9 +1,9 @@
 import classNames from "classnames";
-import moment from "moment";
 import {
   ChangeEvent,
   useCallback,
   useId,
+  useMemo,
   useRef,
   useState,
   KeyboardEvent,
@@ -13,6 +13,7 @@ import {
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
+import { formatTime } from "@web-speed-hackathon-2026/client/src/utils/format_date";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
@@ -36,26 +37,36 @@ export const DirectMessagePage = ({
 }: Props) => {
   const formRef = useRef<HTMLFormElement>(null);
   const textAreaId = useId();
+  const isComposingRef = useRef(false);
 
   const peer =
     conversation.initiator.id !== activeUser.id ? conversation.initiator : conversation.member;
 
   const [text, setText] = useState("");
+  const textRef = useRef("");
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
-  const scrollHeightRef = useRef(0);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
+      textRef.current = event.target.value;
       setText(event.target.value);
       onTyping();
     },
     [onTyping],
   );
 
+  const handleCompositionStart = useCallback(() => {
+    isComposingRef.current = true;
+  }, []);
+
+  const handleCompositionEnd = useCallback(() => {
+    isComposingRef.current = false;
+  }, []);
+
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLTextAreaElement>) => {
-      if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+      if (event.key === "Enter" && !event.shiftKey && !isComposingRef.current) {
         event.preventDefault();
         formRef.current?.requestSubmit();
       }
@@ -66,24 +77,28 @@ export const DirectMessagePage = ({
   const handleSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      void onSubmit({ body: text.trim() }).then(() => {
+      const body = textRef.current.trim();
+      if (!body) return;
+      void onSubmit({ body }).then(() => {
+        textRef.current = "";
         setText("");
       });
     },
-    [onSubmit, text],
+    [onSubmit],
   );
 
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const id = setInterval(() => {
-      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
-      if (height !== scrollHeightRef.current) {
-        scrollHeightRef.current = height;
-        window.scrollTo(0, height);
-      }
-    }, 1);
+    messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+  }, [conversation.messages.length]);
 
-    return () => clearInterval(id);
-  }, []);
+  const sortedMessages = useMemo(
+    () =>
+      [...conversation.messages].sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      ),
+    [conversation.messages],
+  );
 
   if (conversationError != null) {
     return (
@@ -119,7 +134,7 @@ export const DirectMessagePage = ({
         )}
 
         <ul className="grid gap-3" data-testid="dm-message-list">
-          {conversation.messages.map((message) => {
+          {sortedMessages.map((message) => {
             const isActiveUserSend = message.sender.id === activeUser.id;
 
             return (
@@ -141,7 +156,7 @@ export const DirectMessagePage = ({
                 </p>
                 <div className="flex gap-1 text-xs">
                   <time dateTime={message.createdAt}>
-                    {moment(message.createdAt).locale("ja").format("HH:mm")}
+                    {formatTime(message.createdAt)}
                   </time>
                   {isActiveUserSend && message.isRead && (
                     <span className="text-cax-text-muted">既読</span>
@@ -151,6 +166,7 @@ export const DirectMessagePage = ({
             );
           })}
         </ul>
+        <div ref={messagesEndRef} />
       </div>
 
       <div className="sticky bottom-12 z-10 lg:bottom-0">
@@ -174,6 +190,8 @@ export const DirectMessagePage = ({
               className="border-cax-border placeholder-cax-text-subtle focus:outline-cax-brand w-full resize-none rounded-xl border px-3 py-2 focus:outline-2 focus:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               value={text}
               onChange={handleChange}
+              onCompositionStart={handleCompositionStart}
+              onCompositionEnd={handleCompositionEnd}
               onKeyDown={handleKeyDown}
               rows={textAreaRows}
               disabled={isSubmitting}

@@ -1,4 +1,3 @@
-import _ from "lodash";
 import { useEffect, useRef, useState } from "react";
 
 interface ParsedData {
@@ -6,26 +5,56 @@ interface ParsedData {
   peaks: number[];
 }
 
+interface WorkerResponse {
+  id: number;
+  max: number;
+  peaks: number[];
+}
+
+let _worker: Worker | null = null;
+let _nextId = 0;
+const _pending = new Map<number, { resolve: (data: ParsedData) => void; reject: (err: Error) => void }>();
+
+function getSoundWaveWorker(): Worker {
+  if (!_worker) {
+    _worker = new Worker(
+      /* webpackChunkName: "sound-wave-worker" */
+      new URL("../../utils/sound_wave.worker", import.meta.url),
+      { type: "module" },
+    );
+    _worker.onmessage = (ev: MessageEvent<WorkerResponse>) => {
+      const { id, max, peaks } = ev.data;
+      const p = _pending.get(id);
+      if (!p) return;
+      _pending.delete(id);
+      p.resolve({ max, peaks });
+    };
+    _worker.onerror = (ev) => {
+      for (const [, p] of _pending) {
+        p.reject(new Error(`Worker error: ${ev.message}`));
+      }
+      _pending.clear();
+    };
+  }
+  return _worker;
+}
+
 async function calculate(data: ArrayBuffer): Promise<ParsedData> {
   const audioCtx = new AudioContext();
-
-  // 音声をデコードする
   const buffer = await audioCtx.decodeAudioData(data.slice(0));
-  // 左の音声データの絶対値を取る
-  const leftData = _.map(buffer.getChannelData(0), Math.abs);
-  // 右の音声データの絶対値を取る
-  const rightData = _.map(buffer.getChannelData(1), Math.abs);
+  const left = buffer.getChannelData(0);
+  const right = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : left;
 
-  // 左右の音声データの平均を取る
-  const normalized = _.map(_.zip(leftData, rightData), _.mean);
-  // 100 個の chunk に分ける
-  const chunks = _.chunk(normalized, Math.ceil(normalized.length / 100));
-  // chunk ごとに平均を取る
-  const peaks = _.map(chunks, _.mean);
-  // chunk の平均の中から最大値を取る
-  const max = _.max(peaks) ?? 0;
+  const leftCopy = new Float32Array(left);
+  const rightCopy = new Float32Array(right);
+  const id = _nextId++;
 
-  return { max, peaks };
+  return new Promise((resolve, reject) => {
+    _pending.set(id, { resolve, reject });
+    const transferList: Transferable[] = [leftCopy.buffer];
+    if (rightCopy.buffer !== leftCopy.buffer) transferList.push(rightCopy.buffer);
+    getSoundWaveWorker().postMessage({ id, leftData: leftCopy, rightData: rightCopy }, transferList);
+  });
 }
 
 interface Props {

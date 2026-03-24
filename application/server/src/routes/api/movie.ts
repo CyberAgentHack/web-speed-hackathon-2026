@@ -4,6 +4,7 @@ import path from "path";
 import { Router } from "express";
 import { fileTypeFromBuffer } from "file-type";
 import httpErrors from "http-errors";
+import sharp from "sharp";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
@@ -31,6 +32,14 @@ movieRouter.post("/movies", async (req, res) => {
   const filePath = path.resolve(UPLOAD_PATH, `./movies/${movieId}.${EXTENSION}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "movies"), { recursive: true });
   await fs.writeFile(filePath, req.body);
+
+  // Generate thumbnail from first frame
+  const thumbPath = path.resolve(UPLOAD_PATH, `./movies/${movieId}_thumb.jpg`);
+  try {
+    await sharp(filePath, { pages: 1 }).jpeg({ quality: 85 }).toFile(thumbPath);
+  } catch {
+    // Thumbnail generation is non-critical; continue without it
+  }
 
   return res.status(200).type("application/json").send({ id: movieId });
 });

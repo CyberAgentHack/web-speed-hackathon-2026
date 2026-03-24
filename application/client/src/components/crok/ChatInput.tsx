@@ -10,6 +10,19 @@ import {
   type KeyboardEvent,
 } from "react";
 
+// モジュールレベルで kuromoji を遅延初期化（初回入力時のみ dict をダウンロード）
+let _kuromojiPromise: Promise<Tokenizer<IpadicFeatures>> | null = null;
+function getKuromojiTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
+  if (!_kuromojiPromise) {
+    _kuromojiPromise = (
+      Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" })) as {
+        buildAsync: () => Promise<Tokenizer<IpadicFeatures>>;
+      }
+    ).buildAsync();
+  }
+  return _kuromojiPromise;
+}
+
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import {
   extractTokens,
@@ -92,48 +105,35 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   }, [suggestions, showSuggestions]);
 
-  // 初回にkuromojiトークナイザーを構築
-  useEffect(() => {
-    let mounted = true;
-
-    const init = async () => {
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
-      if (mounted) {
-        setTokenizer(nextTokenizer);
-      }
-    };
-    init();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
+  // 初回入力時にkuromojiトークナイザーを遅延構築（マウント時の17MB dictダウンロードを回避）
   useEffect(() => {
     let cancelled = false;
 
     const updateSuggestions = async () => {
-      if (!tokenizer || !inputValue.trim()) {
+      if (!inputValue.trim()) {
         setSuggestions([]);
         setQueryTokens([]);
         setShowSuggestions(false);
         return;
       }
 
+      // 初回入力時にトークナイザーを初期化（モジュールレベルシングルトンで1回だけ）
+      const resolvedTokenizer = tokenizer ?? (await getKuromojiTokenizer());
+      if (cancelled) return;
+      if (!tokenizer) {
+        setTokenizer(resolvedTokenizer);
+        return;
+      }
+
       const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
         "/api/v1/crok/suggestions",
       );
-      if (cancelled) {
-        return;
-      }
+      if (cancelled) return;
 
-      const tokens = extractTokens(tokenizer.tokenize(inputValue));
-      const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
+      const tokens = extractTokens(resolvedTokenizer.tokenize(inputValue));
+      const results = filterSuggestionsBM25(resolvedTokenizer, candidates, tokens);
 
-      if (cancelled) {
-        return;
-      }
+      if (cancelled) return;
 
       setQueryTokens(tokens);
       setSuggestions(results);

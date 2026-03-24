@@ -3,7 +3,11 @@ export function getImagePath(imageId: string): string {
 }
 
 export function getMoviePath(movieId: string): string {
-  return `/movies/${movieId}.gif`;
+  return `/movies/${movieId}.webp`;
+}
+
+export function getMovieThumbnailPath(movieId: string): string {
+  return `/movies/${movieId}_thumb.jpg`;
 }
 
 export function getSoundPath(soundId: string): string {

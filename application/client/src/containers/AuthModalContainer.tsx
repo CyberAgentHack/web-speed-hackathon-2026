@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { SubmissionError } from "redux-form";
+import { reducer as formReducer, SubmissionError } from "redux-form";
+
+import { addReducer } from "@web-speed-hackathon-2026/client/src/store";
+
+// このチャンクがロードされた時点でリデューサーを注入（reduxForm コンポーネントの初回レンダー前に必要）
+addReducer("form", formReducer);
 
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { AuthModalPage } from "@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage";
@@ -38,23 +43,23 @@ function getErrorCode(err: JQuery.jqXHR<unknown>, type: "signin" | "signup"): st
 export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
-  useEffect(() => {
-    if (!ref.current) return;
-    const element = ref.current;
 
-    const handleToggle = () => {
-      // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
+  useEffect(() => {
+    const dialog = ref.current;
+    if (!dialog) return;
+
+    const handleClose = () => {
       setResetKey((key) => key + 1);
     };
-    element.addEventListener("toggle", handleToggle);
+    dialog.addEventListener("close", handleClose);
     return () => {
-      element.removeEventListener("toggle", handleToggle);
+      dialog.removeEventListener("close", handleClose);
     };
-  }, [ref, setResetKey]);
+  }, []);
 
   const handleRequestCloseModal = useCallback(() => {
     ref.current?.close();
-  }, [ref]);
+  }, []);
 
   const handleSubmit = useCallback(
     async (values: AuthFormData) => {
@@ -78,7 +83,7 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   );
 
   return (
-    <Modal id={id} ref={ref} closedby="any">
+    <Modal id={id} ref={ref}>
       <AuthModalPage
         key={resetKey}
         onRequestCloseModal={handleRequestCloseModal}

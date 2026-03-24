@@ -1,5 +1,6 @@
-import moment from "moment";
 import { MouseEventHandler, useCallback } from "react";
+
+import { formatDateLong } from "@web-speed-hackathon-2026/client/src/utils/format_date";
 import { Link, useNavigate } from "react-router";
 
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
@@ -11,13 +12,10 @@ import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/
 const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Element): boolean => {
   while (target !== null && target instanceof Element) {
     const tagName = target.tagName.toLowerCase();
-    if (["button", "a"].includes(tagName)) {
-      return true;
-    }
-    if (currentTarget === target) {
-      return false;
-    }
-    target = target.parentNode;
+    if (tagName === "a") return true;
+    if (tagName === "button" && target.getAttribute("aria-label") !== "動画プレイヤー") return true;
+    if (currentTarget === target) return false;
+    target = target.parentNode as Element | null;
   }
   return false;
 };
@@ -76,8 +74,8 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={new Date(post.createdAt).toISOString()}>
+                {formatDateLong(post.createdAt)}
               </time>
             </Link>
           </p>

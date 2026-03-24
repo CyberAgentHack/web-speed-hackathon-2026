@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
@@ -10,23 +10,27 @@ interface Props {
 export const AccountMenu = ({ user, onLogout }: Props) => {
   const [open, setOpen] = useState(false);
 
+  const handleLogout = useCallback(() => {
+    setOpen(false);
+    onLogout();
+  }, [onLogout]);
+
+  const handleBlur = useCallback((e: React.FocusEvent<HTMLDivElement>) => {
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setOpen(false);
+    }
+  }, []);
+
   return (
     <div
       className="relative hidden lg:block lg:w-full lg:pb-2"
-      onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget)) {
-          setOpen(false);
-        }
-      }}
+      onBlur={handleBlur}
     >
       {open && (
         <div className="border-cax-border bg-cax-surface absolute bottom-full left-0 mb-2 w-full overflow-hidden rounded-xl border py-1 shadow-lg">
           <button
             className="text-cax-text hover:bg-cax-surface-subtle w-full px-4 py-3 text-left text-sm font-bold"
-            onClick={() => {
-              setOpen(false);
-              onLogout();
-            }}
+            onClick={handleLogout}
           >
             サインアウト
           </button>

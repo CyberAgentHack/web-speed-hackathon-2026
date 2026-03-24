@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { startTransition, useCallback, useRef, useState } from "react";
 
 interface SSEOptions<T> {
   onMessage: (data: T, prevContent: string) => string;
@@ -56,7 +56,8 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
 
         const newContent = options.onMessage(data, contentRef.current);
         contentRef.current = newContent;
-        setContent(newContent);
+        // SSE チャンクの逐次更新は non-urgent: startTransition で re-render を低優先度扱いにし TBT を削減
+        startTransition(() => setContent(newContent));
       };
 
       eventSource.onerror = (error) => {

@@ -9,7 +9,10 @@ interface ReturnValues<T> {
 export function useFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T>,
+  options?: { enabled?: boolean },
 ): ReturnValues<T> {
+  const enabled = options?.enabled ?? true;
+
   const [result, setResult] = useState<ReturnValues<T>>({
     data: null,
     error: null,
@@ -17,6 +20,8 @@ export function useFetch<T>(
   });
 
   useEffect(() => {
+    if (!enabled) return;
+
     setResult(() => ({
       data: null,
       error: null,
@@ -39,7 +44,7 @@ export function useFetch<T>(
         }));
       },
     );
-  }, [apiPath, fetcher]);
+  }, [apiPath, fetcher, enabled]);
 
-  return result;
+  return enabled ? result : { data: null, error: null, isLoading: false };
 }

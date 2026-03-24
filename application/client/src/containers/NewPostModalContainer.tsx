@@ -33,19 +33,17 @@ export const NewPostModalContainer = ({ id }: Props) => {
   const dialogId = useId();
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
-  useEffect(() => {
-    const element = ref.current;
-    if (element == null) {
-      return;
-    }
 
-    const handleToggle = () => {
-      // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
+  useEffect(() => {
+    const dialog = ref.current;
+    if (!dialog) return;
+
+    const handleClose = () => {
       setResetKey((key) => key + 1);
     };
-    element.addEventListener("toggle", handleToggle);
+    dialog.addEventListener("close", handleClose);
     return () => {
-      element.removeEventListener("toggle", handleToggle);
+      dialog.removeEventListener("close", handleClose);
     };
   }, []);
 
@@ -58,12 +56,16 @@ export const NewPostModalContainer = ({ id }: Props) => {
     setHasError(false);
   }, []);
 
+  const handleRequestCloseModal = useCallback(() => {
+    ref.current?.close();
+  }, []);
+
   const handleSubmit = useCallback(
     async (params: SubmitParams) => {
       try {
         setIsLoading(true);
         const post = await sendNewPost(params);
-        ref.current?.close();
+        handleRequestCloseModal();
         navigate(`/posts/${post.id}`);
       } catch {
         setHasError(true);
@@ -71,11 +73,11 @@ export const NewPostModalContainer = ({ id }: Props) => {
         setIsLoading(false);
       }
     },
-    [navigate],
+    [handleRequestCloseModal, navigate],
   );
 
   return (
-    <Modal aria-labelledby={dialogId} id={id} ref={ref} closedby="any">
+    <Modal id={id} ref={ref} aria-labelledby={dialogId}>
       <NewPostModalPage
         key={resetKey}
         id={dialogId}
