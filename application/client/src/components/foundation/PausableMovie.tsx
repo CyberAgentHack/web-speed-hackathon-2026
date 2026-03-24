@@ -1,7 +1,5 @@
 import classNames from "classnames";
-import { Animator, Decoder } from "gifler";
-import { GifReader } from "omggif";
-import { RefCallback, useCallback, useRef, useState } from "react";
+import { RefCallback, useCallback, useEffect, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -16,9 +14,31 @@ interface Props {
  * クリックすると再生・一時停止を切り替えます。
  */
 export const PausableMovie = ({ src }: Props) => {
-  const { data, isLoading } = useFetch(src, fetchBinary);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
 
-  const animatorRef = useRef<Animator>(null);
+  // 画面内に入ったときのみ GIF を取得・デコードする
+  useEffect(() => {
+    const el = containerRef.current;
+    if (el == null) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const { data, isLoading } = useFetch(isVisible ? src : null, fetchBinary);
+
+  // Animator 型は gifler の型だが、動的 import するため any で保持
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const animatorRef = useRef<any>(null);
   const canvasCallbackRef = useCallback<RefCallback<HTMLCanvasElement>>(
     (el) => {
       animatorRef.current?.stop();
@@ -27,24 +47,27 @@ export const PausableMovie = ({ src }: Props) => {
         return;
       }
 
-      // GIF を解析する
-      const reader = new GifReader(new Uint8Array(data));
-      const frames = Decoder.decodeFramesSync(reader);
-      const animator = new Animator(reader, frames);
+      // gifler / omggif を動的 import してデコード
+      void Promise.all([import("gifler"), import("omggif")]).then(
+        ([{ Animator, Decoder }, { GifReader }]) => {
+          const reader = new GifReader(new Uint8Array(data));
+          const frames = Decoder.decodeFramesSync(reader);
+          const animator = new Animator(reader, frames);
 
-      animator.animateInCanvas(el);
-      animator.onFrame(frames[0]!);
+          animator.animateInCanvas(el);
+          animator.onFrame(frames[0]!);
 
-      // 視覚効果 off のとき GIF を自動再生しない
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        setIsPlaying(false);
-        animator.stop();
-      } else {
-        setIsPlaying(true);
-        animator.start();
-      }
+          if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            setIsPlaying(false);
+            animator.stop();
+          } else {
+            setIsPlaying(true);
+            animator.start();
+          }
 
-      animatorRef.current = animator;
+          animatorRef.current = animator;
+        },
+      );
     },
     [data],
   );
@@ -61,30 +84,30 @@ export const PausableMovie = ({ src }: Props) => {
     });
   }, []);
 
-  if (isLoading || data === null) {
-    return null;
-  }
-
   return (
-    <AspectRatioBox aspectHeight={1} aspectWidth={1}>
-      <button
-        aria-label="動画プレイヤー"
-        className="group relative block h-full w-full"
-        onClick={handleClick}
-        type="button"
-      >
-        <canvas ref={canvasCallbackRef} className="w-full" />
-        <div
-          className={classNames(
-            "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
-            {
-              "opacity-0 group-hover:opacity-100": isPlaying,
-            },
-          )}
-        >
-          <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
-        </div>
-      </button>
-    </AspectRatioBox>
+    <div ref={containerRef}>
+      <AspectRatioBox aspectHeight={1} aspectWidth={1}>
+        {!isLoading && data !== null ? (
+          <button
+            aria-label="動画プレイヤー"
+            className="group relative block h-full w-full"
+            onClick={handleClick}
+            type="button"
+          >
+            <canvas ref={canvasCallbackRef} className="w-full" />
+            <div
+              className={classNames(
+                "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
+                {
+                  "opacity-0 group-hover:opacity-100": isPlaying,
+                },
+              )}
+            >
+              <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
+            </div>
+          </button>
+        ) : null}
+      </AspectRatioBox>
+    </div>
   );
 };

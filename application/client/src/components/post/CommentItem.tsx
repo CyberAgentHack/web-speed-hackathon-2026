@@ -1,5 +1,3 @@
-import moment from "moment";
-
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
@@ -7,6 +5,8 @@ import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/
 interface Props {
   comment: Models.Comment;
 }
+
+const dateFormatter = new Intl.DateTimeFormat("ja-JP", { dateStyle: "long" });
 
 export const CommentItem = ({ comment }: Props) => {
   return (
@@ -42,8 +42,8 @@ export const CommentItem = ({ comment }: Props) => {
             <TranslatableText text={comment.text} />
           </div>
           <p className="text-cax-text-muted pt-1 text-xs">
-            <time dateTime={moment(comment.createdAt).toISOString()}>
-              {moment(comment.createdAt).locale("ja").format("LL")}
+            <time dateTime={new Date(comment.createdAt).toISOString()}>
+              {dateFormatter.format(new Date(comment.createdAt))}
             </time>
           </p>
         </div>

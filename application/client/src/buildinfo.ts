@@ -1,3 +1,6 @@
+declare const __BUILD_DATE__: string;
+declare const __COMMIT_HASH__: string;
+
 declare global {
   var __BUILD_INFO__: {
     BUILD_DATE: string | undefined;
@@ -7,8 +10,8 @@ declare global {
 
 /** @note 競技用サーバーで参照します。可能な限りコード内に含めてください */
 window.__BUILD_INFO__ = {
-  BUILD_DATE: process.env["BUILD_DATE"],
-  COMMIT_HASH: process.env["COMMIT_HASH"],
+  BUILD_DATE: __BUILD_DATE__,
+  COMMIT_HASH: __COMMIT_HASH__,
 };
 
 export {};

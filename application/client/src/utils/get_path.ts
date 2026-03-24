@@ -1,5 +1,5 @@
-export function getImagePath(imageId: string): string {
-  return `/images/${imageId}.jpg`;
+export function getImagePath(imageId: string, width = 800): string {
+  return `/images/${imageId}.jpg?w=${width}`;
 }
 
 export function getMoviePath(movieId: string): string {
@@ -11,5 +11,5 @@ export function getSoundPath(soundId: string): string {
 }
 
 export function getProfileImagePath(profileImageId: string): string {
-  return `/images/profiles/${profileImageId}.jpg`;
+  return `/images/profiles/${profileImageId}.jpg?w=128`;
 }

@@ -1,4 +1,3 @@
-import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -11,6 +10,19 @@ import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/
 interface Props {
   activeUser: Models.User;
   newDmModalId: string;
+}
+
+const rtf = new Intl.RelativeTimeFormat("ja", { numeric: "auto" });
+
+function formatRelativeTime(dateStr: string): string {
+  const diffMs = new Date(dateStr).getTime() - Date.now();
+  const diffSeconds = Math.round(diffMs / 1000);
+  if (Math.abs(diffSeconds) < 60) return rtf.format(diffSeconds, "second");
+  const diffMinutes = Math.round(diffSeconds / 60);
+  if (Math.abs(diffMinutes) < 60) return rtf.format(diffMinutes, "minute");
+  const diffHours = Math.round(diffMinutes / 60);
+  if (Math.abs(diffHours) < 24) return rtf.format(diffHours, "hour");
+  return rtf.format(Math.round(diffHours / 24), "day");
 }
 
 export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
@@ -100,7 +112,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {formatRelativeTime(lastMessage.createdAt)}
                           </time>
                         )}
                       </div>
