@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Helmet } from "react-helmet";
 import { useParams } from "react-router";
 
 import { DirectMessageGate } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageGate";
@@ -7,11 +6,21 @@ import { DirectMessagePage } from "@web-speed-hackathon-2026/client/src/componen
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
-import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import {
+  fetchJSON,
+  sendJSON,
+} from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { setPageTitle } from "@web-speed-hackathon-2026/client/src/utils/set_page_title";
 
 interface DmUpdateEvent {
   type: "dm:conversation:message";
   payload: Models.DirectMessage;
+}
+interface DmReadEvent {
+  type: "dm:conversation:read";
+  payload: {
+    readerId: string;
+  };
 }
 interface DmTypingEvent {
   type: "dm:conversation:typing";
@@ -28,12 +37,17 @@ interface Props {
 export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   const { conversationId = "" } = useParams<{ conversationId: string }>();
 
-  const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(null);
-  const [conversationError, setConversationError] = useState<Error | null>(null);
+  const [conversation, setConversation] =
+    useState<Models.DirectMessageConversation | null>(null);
+  const [conversationError, setConversationError] = useState<Error | null>(
+    null,
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [isPeerTyping, setIsPeerTyping] = useState(false);
-  const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   const loadConversation = useCallback(async () => {
     if (activeUser == null) {
@@ -65,43 +79,56 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     async (params: DirectMessageFormData) => {
       setIsSubmitting(true);
       try {
-        await sendJSON(`/api/v1/dm/${conversationId}/messages`, {
-          body: params.body,
+        const newMessage = await sendJSON<Models.DirectMessage>(
+          `/api/v1/dm/${conversationId}/messages`,
+          {
+            body: params.body,
+          },
+        );
+        setConversation((prev) => {
+          if (prev == null) return prev;
+          const exists = prev.messages?.some((m) => m.id === newMessage.id);
+          if (exists) return prev;
+          return { ...prev, messages: [...(prev.messages ?? []), newMessage] };
         });
-        loadConversation();
       } finally {
         setIsSubmitting(false);
       }
     },
-    [conversationId, loadConversation],
+    [conversationId],
   );
 
   const handleTyping = useCallback(async () => {
     void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
   }, [conversationId]);
 
-  useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {
-    if (event.type === "dm:conversation:message") {
-      void loadConversation().then(() => {
-        if (event.payload.sender.id !== activeUser?.id) {
-          setIsPeerTyping(false);
-          if (peerTypingTimeoutRef.current !== null) {
-            clearTimeout(peerTypingTimeoutRef.current);
+  useWs(
+    `/api/v1/dm/${conversationId}`,
+    (event: DmUpdateEvent | DmReadEvent | DmTypingEvent) => {
+      if (event.type === "dm:conversation:message") {
+        void loadConversation().then(() => {
+          if (event.payload.sender.id !== activeUser?.id) {
+            setIsPeerTyping(false);
+            if (peerTypingTimeoutRef.current !== null) {
+              clearTimeout(peerTypingTimeoutRef.current);
+            }
+            peerTypingTimeoutRef.current = null;
           }
-          peerTypingTimeoutRef.current = null;
+        });
+        void sendRead();
+      } else if (event.type === "dm:conversation:read") {
+        void loadConversation();
+      } else if (event.type === "dm:conversation:typing") {
+        setIsPeerTyping(true);
+        if (peerTypingTimeoutRef.current !== null) {
+          clearTimeout(peerTypingTimeoutRef.current);
         }
-      });
-      void sendRead();
-    } else if (event.type === "dm:conversation:typing") {
-      setIsPeerTyping(true);
-      if (peerTypingTimeoutRef.current !== null) {
-        clearTimeout(peerTypingTimeoutRef.current);
+        peerTypingTimeoutRef.current = setTimeout(() => {
+          setIsPeerTyping(false);
+        }, TYPING_INDICATOR_DURATION_MS);
       }
-      peerTypingTimeoutRef.current = setTimeout(() => {
-        setIsPeerTyping(false);
-      }, TYPING_INDICATOR_DURATION_MS);
-    }
-  });
+    },
+  );
 
   if (activeUser === null) {
     return (
@@ -112,6 +139,20 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     );
   }
 
+  const peer =
+    conversation != null
+      ? conversation.initiator.id !== activeUser.id
+        ? conversation.initiator
+        : conversation.member
+      : null;
+
+  useEffect(() => {
+    if (peer == null) {
+      return;
+    }
+    setPageTitle(`${peer.name} さんとのダイレクトメッセージ - CaX`);
+  }, [peer]);
+
   if (conversation == null) {
     if (conversationError != null) {
       return <NotFoundContainer />;
@@ -119,23 +160,15 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     return null;
   }
 
-  const peer =
-    conversation.initiator.id !== activeUser?.id ? conversation.initiator : conversation.member;
-
   return (
-    <>
-      <Helmet>
-        <title>{peer.name} さんとのダイレクトメッセージ - CaX</title>
-      </Helmet>
-      <DirectMessagePage
-        conversationError={conversationError}
-        conversation={conversation}
-        activeUser={activeUser}
-        onTyping={handleTyping}
-        isPeerTyping={isPeerTyping}
-        isSubmitting={isSubmitting}
-        onSubmit={handleSubmit}
-      />
-    </>
+    <DirectMessagePage
+      conversationError={conversationError}
+      conversation={conversation}
+      activeUser={activeUser}
+      onTyping={handleTyping}
+      isPeerTyping={isPeerTyping}
+      isSubmitting={isSubmitting}
+      onSubmit={handleSubmit}
+    />
   );
 };

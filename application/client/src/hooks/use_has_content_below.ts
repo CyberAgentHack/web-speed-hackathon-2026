@@ -1,11 +1,11 @@
 import { RefObject, useEffect, useState } from "react";
 
 /**
- * contentEndRef の要素が boundaryRef の要素より下にあるかを監視する。
- * 例: コンテンツ末尾がスティッキーバーより下にあるとき true を返す。
+ * contentEndRef の位置が boundaryRef の位置より下にあるかを監視する。
+ * 例: コンテンツ末尾が sticky バーより下にあるときに true を返す。
  *
  * @param contentEndRef - コンテンツの末尾を示す要素の ref
- * @param boundaryRef - 比較対象となる境界要素の ref（例: sticky な入力欄）
+ * @param boundaryRef - 基準となる境界要素の ref
  */
 export function useHasContentBelow(
   contentEndRef: RefObject<HTMLElement | null>,
@@ -14,21 +14,21 @@ export function useHasContentBelow(
   const [hasContentBelow, setHasContentBelow] = useState(false);
 
   useEffect(() => {
-    let active = true;
-    const check = () => {
-      if (!active) return;
-      const endEl = contentEndRef.current;
-      const barEl = boundaryRef.current;
-      if (endEl && barEl) {
-        const endRect = endEl.getBoundingClientRect();
-        const barRect = barEl.getBoundingClientRect();
-        setHasContentBelow(endRect.top > barRect.top);
+    const endEl = contentEndRef.current;
+    if (!endEl || !boundaryRef.current) return;
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry == null) {
+        return;
       }
-      scheduler.postTask(check, { priority: "user-blocking", delay: 1 });
-    };
-    scheduler.postTask(check, { priority: "user-blocking", delay: 1 });
+
+      setHasContentBelow(!entry.isIntersecting);
+    });
+
+    observer.observe(endEl);
+
     return () => {
-      active = false;
+      observer.disconnect();
     };
   }, [contentEndRef, boundaryRef]);
 

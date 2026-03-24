@@ -1,4 +1,5 @@
 import "katex/dist/katex.min.css";
+import { useMemo } from "react";
 import Markdown from "react-markdown";
 import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
@@ -23,6 +24,19 @@ const UserMessage = ({ content }: { content: string }) => {
 };
 
 const AssistantMessage = ({ content }: { content: string }) => {
+  const renderedMarkdown = useMemo(
+    () => (
+      <Markdown
+        components={{ pre: CodeBlock }}
+        rehypePlugins={[rehypeKatex]}
+        remarkPlugins={[remarkMath, remarkGfm]}
+      >
+        {content}
+      </Markdown>
+    ),
+    [content],
+  );
+
   return (
     <div className="mb-6 flex gap-4">
       <div className="h-8 w-8 shrink-0">
@@ -31,18 +45,7 @@ const AssistantMessage = ({ content }: { content: string }) => {
       <div className="min-w-0 flex-1">
         <div className="text-cax-text mb-1 text-sm font-medium">Crok</div>
         <div className="markdown text-cax-text max-w-none">
-          {content ? (
-            <Markdown
-              components={{ pre: CodeBlock }}
-              key={content}
-              rehypePlugins={[rehypeKatex]}
-              remarkPlugins={[remarkMath, remarkGfm]}
-            >
-              {content}
-            </Markdown>
-          ) : (
-            <TypingIndicator />
-          )}
+          {content ? renderedMarkdown : <TypingIndicator />}
         </div>
       </div>
     </div>

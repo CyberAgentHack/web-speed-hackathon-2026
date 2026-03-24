@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet";
+import { useEffect } from "react";
 import { useParams } from "react-router";
 
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
@@ -7,6 +7,7 @@ import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containe
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { setPageTitle } from "@web-speed-hackathon-2026/client/src/utils/set_page_title";
 
 const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
   const { data: post, isLoading: isLoadingPost } = useFetch<Models.Post>(
@@ -19,12 +20,16 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
     fetchJSON,
   );
 
+  useEffect(() => {
+    if (isLoadingPost) {
+      setPageTitle("読込中 - CaX");
+    } else if (post !== null) {
+      setPageTitle(`${post.user.name} さんのつぶやき - CaX`);
+    }
+  }, [isLoadingPost, post]);
+
   if (isLoadingPost) {
-    return (
-      <Helmet>
-        <title>読込中 - CaX</title>
-      </Helmet>
-    );
+    return null;
   }
 
   if (post === null) {
@@ -33,9 +38,6 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
 
   return (
     <InfiniteScroll fetchMore={fetchMore} items={comments}>
-      <Helmet>
-        <title>{post.user.name} さんのつぶやき - CaX</title>
-      </Helmet>
       <PostPage comments={comments} post={post} />
     </InfiniteScroll>
   );

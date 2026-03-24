@@ -72,18 +72,19 @@ export function initDirectMessage(sequelize: Sequelize) {
     },
   );
 
-  DirectMessage.addHook("afterSave", "onDmSaved", async (message) => {
-    const directMessage = await DirectMessage.findByPk(message.get().id);
-    const conversation = await DirectMessageConversation.findByPk(directMessage?.conversationId);
+  DirectMessage.addHook("afterCreate", "onDmCreated", async (message: DirectMessage) => {
+    const conversation = await DirectMessageConversation.findByPk(message.conversationId);
+    if (conversation == null) {
+      return;
+    }
 
-    if (directMessage == null || conversation == null) {
+    const directMessage = await DirectMessage.findByPk(message.id);
+    if (directMessage == null) {
       return;
     }
 
     const receiverId =
-      conversation.initiatorId === directMessage.senderId
-        ? conversation.memberId
-        : conversation.initiatorId;
+      conversation.initiatorId === message.senderId ? conversation.memberId : conversation.initiatorId;
 
     const unreadCount = await DirectMessage.count({
       distinct: true,

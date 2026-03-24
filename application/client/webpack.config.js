@@ -4,12 +4,14 @@ const path = require("path");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 const webpack = require("webpack");
 
 const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
+const enableBundleAnalyzer = process.env.WEBPACK_ANALYZE === "true";
 
 /** @type {import('webpack').Configuration} */
 const config = {
@@ -25,18 +27,15 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: false,
   entry: {
     main: [
-      "core-js",
-      "regenerator-runtime/runtime",
-      "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: "production",
   module: {
     rules: [
       {
@@ -60,18 +59,14 @@ const config = {
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
     filename: "scripts/[name].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     clean: true,
   },
   plugins: [
     new webpack.ProvidePlugin({
-      $: "jquery",
-      AudioContext: ["standardized-audio-context", "AudioContext"],
       Buffer: ["buffer", "Buffer"],
-      "window.jQuery": "jquery",
     }),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
@@ -91,9 +86,20 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: true,
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
+    ...(enableBundleAnalyzer
+      ? [
+          new BundleAnalyzerPlugin({
+            analyzerMode: "static",
+            openAnalyzer: false,
+            reportFilename: path.resolve(DIST_PATH, "bundle-report.html"),
+            generateStatsFile: true,
+            statsFilename: path.resolve(DIST_PATH, "bundle-stats.json"),
+          }),
+        ]
+      : []),
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
@@ -128,14 +134,55 @@ const config = {
     },
   },
   optimization: {
-    minimize: false,
-    splitChunks: false,
+    minimize: true,
+    splitChunks: {
+      chunks: "all",
+      maxSize: 500000,
+      cacheGroups: {
+        ffmpeg: {
+          test: /[\\/]node_modules[\\/]@ffmpeg[\\/]/,
+          name: "vendor-ffmpeg",
+          chunks: "async",
+          enforce: true,
+          priority: 40,
+        },
+        imagemagick: {
+          test: /[\\/]node_modules[\\/]@imagemagick[\\/]magick-wasm[\\/]/,
+          name: "vendor-imagemagick",
+          chunks: "async",
+          enforce: true,
+          priority: 40,
+        },
+        webllm: {
+          test: /[\\/]node_modules[\\/]@mlc-ai[\\/]web-llm[\\/]/,
+          name: "vendor-web-llm",
+          chunks: "async",
+          enforce: true,
+          priority: 40,
+        },
+        react: {
+          test: /[\\/]node_modules[\\/](react|react-dom|react-router|react-redux|redux|redux-form)[\\/]/,
+          name: "vendor-react",
+          chunks: "initial",
+          priority: 20,
+        },
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: "vendor",
+          chunks: "initial",
+          priority: 10,
+          minSize: 20000,
+        },
+      },
+    },
     concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
+    usedExports: true,
+    providedExports: true,
+    sideEffects: true,
   },
-  cache: false,
+  cache: {
+    type: "filesystem",
+  },
   ignoreWarnings: [
     {
       module: /@ffmpeg/,

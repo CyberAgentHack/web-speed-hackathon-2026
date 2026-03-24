@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router";
-import { SubmissionError } from "redux-form";
+import { SubmissionError, reset } from "redux-form";
 
 import { NewDirectMessageModalPage } from "@web-speed-hackathon-2026/client/src/components/direct_message/NewDirectMessageModalPage";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
@@ -11,44 +12,63 @@ interface Props {
   id: string;
 }
 
-export const NewDirectMessageModalContainer = ({ id }: Props) => {
-  const ref = useRef<HTMLDialogElement>(null);
-  const [resetKey, setResetKey] = useState(0);
-  useEffect(() => {
-    if (!ref.current) return;
-    const element = ref.current;
+export const NewDirectMessageModalContainer = forwardRef<HTMLDialogElement, Props>(
+  ({ id }, ref) => {
+    const internalRef = useRef<HTMLDialogElement>(null);
+    const dispatch = useDispatch();
+    const [resetKey, setResetKey] = useState(0);
 
-    const handleToggle = () => {
-      setResetKey((key) => key + 1);
-    };
-    element.addEventListener("toggle", handleToggle);
-    return () => {
-      element.removeEventListener("toggle", handleToggle);
-    };
-  }, [ref]);
+    // Use useImperativeHandle to forward the ref
+    useImperativeHandle(ref, () => internalRef.current as HTMLDialogElement);
 
-  const navigate = useNavigate();
+    useEffect(() => {
+      if (!internalRef.current) return;
+      const element = internalRef.current;
 
-  const handleSubmit = useCallback(
-    async (values: NewDirectMessageFormData) => {
-      try {
-        const user = await fetchJSON<Models.User>(`/api/v1/users/${values.username}`);
-        const conversation = await sendJSON<Models.DirectMessageConversation>(`/api/v1/dm`, {
-          peerId: user.id,
-        });
-        navigate(`/dm/${conversation.id}`);
-      } catch {
-        throw new SubmissionError({
-          _error: "ユーザーが見つかりませんでした",
-        });
-      }
-    },
-    [navigate],
-  );
+      const handleToggle = () => {
+        setResetKey((key) => key + 1);
+        dispatch(reset("newDirectMessage") as any);
+      };
+      element.addEventListener("toggle", handleToggle);
+      return () => {
+        element.removeEventListener("toggle", handleToggle);
+      };
+    }, [dispatch]);
 
-  return (
-    <Modal id={id} ref={ref} closedby="any">
-      <NewDirectMessageModalPage key={resetKey} id={id} onSubmit={handleSubmit} />
-    </Modal>
-  );
-};
+    const navigate = useNavigate();
+
+    const handleSubmit = useCallback(
+      async (values: NewDirectMessageFormData) => {
+        try {
+          const normalizedUsername = values.username.trim().replace(/^@/, "");
+          const user = await fetchJSON<Models.User>(`/api/v1/users/${normalizedUsername}`);
+          const conversation = await sendJSON<Models.DirectMessageConversation>(`/api/v1/dm`, {
+            peerId: user.id,
+          });
+          internalRef.current?.close();
+          navigate(`/dm/${conversation.id}`);
+        } catch {
+          throw new SubmissionError({
+            _error: "ユーザーが見つかりませんでした",
+          });
+        }
+      },
+      [navigate],
+    );
+
+    const handleClose = useCallback(() => {
+      internalRef.current?.close();
+    }, []);
+
+    return (
+      <Modal id={id} ref={internalRef} closedby="any">
+        <NewDirectMessageModalPage
+          key={resetKey}
+          id={id}
+          onSubmit={handleSubmit}
+          onClose={handleClose}
+        />
+      </Modal>
+    );
+  }
+);

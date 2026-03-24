@@ -1,44 +1,59 @@
 import classNames from "classnames";
-import sizeOf from "image-size";
-import { load, ImageIFD } from "piexifjs";
-import { MouseEvent, RefCallback, useCallback, useId, useMemo, useState } from "react";
+import { MouseEvent, RefCallback, useCallback, useEffect, useId, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
-import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import {
+  RESPONSIVE_IMAGE_WIDTHS,
+} from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   src: string;
+  width: number;
+  height: number;
+  alt?: string;
+  fetchPriority?: "high" | "low" | "auto";
+  sizes?: string;
 }
 
 /**
  * アスペクト比を維持したまま、要素のコンテンツボックス全体を埋めるように画像を拡大縮小します
  */
-export const CoveredImage = ({ src }: Props) => {
+export const CoveredImage = ({
+  src,
+  width,
+  height,
+  alt = "",
+  fetchPriority = "auto",
+  sizes,
+}: Props) => {
   const dialogId = useId();
+  const [containerSize, setContainerSize] = useState({ height: 0, width: 0 });
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  const imgRef = useCallback<RefCallback<HTMLImageElement>>((el) => {
+    if (!el) return;
+    if (el.complete && el.naturalWidth > 0) {
+      setIsLoaded(true);
+    }
+  }, []);
+  const srcSet = width > 0 ? [
+    ...RESPONSIVE_IMAGE_WIDTHS.filter((candidateWidth) => candidateWidth < width).map(
+      (candidateWidth) =>
+        `${src.replace(/\.webp$/, `-${candidateWidth}w.webp`)} ${candidateWidth}w`,
+    ),
+    `${src} ${width}w`,
+  ].join(", ") : "";
+
   // ダイアログの背景をクリックしたときに投稿詳細ページに遷移しないようにする
   const handleDialogClick = useCallback((ev: MouseEvent<HTMLDialogElement>) => {
     ev.stopPropagation();
   }, []);
 
-  const { data, isLoading } = useFetch(src, fetchBinary);
+  useEffect(() => {
+    setIsLoaded(false);
+  }, [src]);
 
-  const imageSize = useMemo(() => {
-    return data != null ? sizeOf(Buffer.from(data)) : { height: 0, width: 0 };
-  }, [data]);
-
-  const alt = useMemo(() => {
-    const exif = data != null ? load(Buffer.from(data).toString("binary")) : null;
-    const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-    return raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
-  }, [data]);
-
-  const blobUrl = useMemo(() => {
-    return data != null ? URL.createObjectURL(new Blob([data])) : null;
-  }, [data]);
-
-  const [containerSize, setContainerSize] = useState({ height: 0, width: 0 });
   const callbackRef = useCallback<RefCallback<HTMLDivElement>>((el) => {
     setContainerSize({
       height: el?.clientHeight ?? 0,
@@ -46,17 +61,18 @@ export const CoveredImage = ({ src }: Props) => {
     });
   }, []);
 
-  if (isLoading || data === null || blobUrl === null) {
-    return null;
-  }
-
-  const containerRatio = containerSize.height / containerSize.width;
-  const imageRatio = imageSize?.height / imageSize?.width;
+  const containerRatio = containerSize.width > 0 ? containerSize.height / containerSize.width : 1;
+  const imageRatio = width > 0 && height > 0 ? height / width : 1;
 
   return (
     <div ref={callbackRef} className="relative h-full w-full overflow-hidden">
       <img
+        ref={imgRef}
         alt={alt}
+        fetchPriority={fetchPriority}
+        height={height}
+        loading="eager"
+        width={width}
         className={classNames(
           "absolute left-1/2 top-1/2 max-w-none -translate-x-1/2 -translate-y-1/2",
           {
@@ -64,7 +80,16 @@ export const CoveredImage = ({ src }: Props) => {
             "w-full h-auto": containerRatio <= imageRatio,
           },
         )}
-        src={blobUrl}
+        style={{ visibility: isLoaded ? "visible" : "hidden" }}
+        sizes={sizes}
+        src={src}
+        srcSet={srcSet}
+        onLoad={() => {
+          setIsLoaded(true);
+        }}
+        onError={() => {
+          setIsLoaded(false);
+        }}
       />
 
       <button

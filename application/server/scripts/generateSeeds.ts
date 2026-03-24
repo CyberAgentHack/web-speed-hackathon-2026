@@ -1,8 +1,10 @@
-import { createWriteStream } from "node:fs";
+import { createWriteStream, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { faker } from "@faker-js/faker/locale/ja";
+import * as exifr from "exifr";
+import sizeOf from "image-size";
 
 // Set seed for reproducible results
 faker.seed(123);
@@ -26,7 +28,7 @@ const seedsDir = path.resolve(__dirname, "../seeds");
 // ========== Existing Asset IDs from public directory ==========
 // These IDs correspond to actual files in the public directory
 
-// public/images/*.jpg (30 files)
+// public/images/*.webp (30 files)
 const EXISTING_IMAGE_IDS = [
   "029b4b75-bbcc-4aa5-8bd7-e4bb12a33cd3",
   "078c4d42-12e3-4c1d-823c-9ba552f6b066",
@@ -110,7 +112,7 @@ const EXISTING_SOUNDS = [
   { id: "93b848fe-24c8-4597-a515-463a910f6ceb", title: "Midnight Jazz", artist: "Blue Note" },
 ];
 
-// public/images/profiles/*.jpg (30 files)
+// public/images/profiles/*.webp (30 files)
 const EXISTING_PROFILE_IMAGE_IDS = [
   "09d52cbb-28a2-4413-b220-1f8c9e80a440",
   "0aba06a6-1b56-4ebd-8218-951aaba173af",
@@ -217,14 +219,51 @@ function generateUsers(count: number, profileImages: ProfileImageSeed[]): UserSe
   return users;
 }
 
-function generateImages(): ImageSeed[] {
+async function generateImages(): Promise<ImageSeed[]> {
   // Use existing image IDs from public/images/
   const baseTime = now - ONE_WEEK_MS;
-  return EXISTING_IMAGE_IDS.map((id, i) => ({
-    id,
-    alt: "",
-    createdAt: new Date(baseTime + i * 60 * 1000).toISOString(),
-  }));
+  const publicPath = path.resolve(__dirname, "../../public/images");
+
+  const images: ImageSeed[] = [];
+
+  for (let i = 0; i < EXISTING_IMAGE_IDS.length; i++) {
+    const id = EXISTING_IMAGE_IDS[i];
+    // Try to get dimensions from the actual image file
+    let width = 0;
+    let height = 0;
+    let alt = "";
+    try {
+      const imagePath = path.resolve(publicPath, `${id}.webp`);
+      const imageBuffer = readFileSync(imagePath);
+      const dimensions = sizeOf(imageBuffer);
+      width = dimensions?.width ?? 0;
+      height = dimensions?.height ?? 0;
+
+      // Try to extract EXIF alt text
+      try {
+        const exifData = await exifr.parse(imageBuffer);
+        if (exifData?.ImageDescription) {
+          alt = String(exifData.ImageDescription);
+        }
+      } catch {
+        // EXIF parsing failed or not present, keep alt as empty string
+      }
+    } catch {
+      // Use default dimensions if file not found
+      width = 0;
+      height = 0;
+    }
+
+    images.push({
+      id,
+      alt,
+      width,
+      height,
+      createdAt: new Date(baseTime + i * 60 * 1000).toISOString(),
+    });
+  }
+
+  return images;
 }
 
 function generateMovies(): MovieSeed[] {
@@ -701,7 +740,7 @@ async function main() {
   const users = generateUsers(CONFIG.USER_COUNT, profileImages);
 
   console.log("3. Generating Images (using existing assets)...");
-  const images = generateImages();
+  const images = await generateImages();
 
   console.log("4. Generating Movies (using existing assets)...");
   const movies = generateMovies();

@@ -1,9 +1,26 @@
+import { randomUUID } from "node:crypto";
+
 import { Router } from "express";
 import httpErrors from "http-errors";
+import { Op } from "sequelize";
 
-import { Comment, Post } from "@web-speed-hackathon-2026/server/src/models";
+import {
+  Comment,
+  Image,
+  Movie,
+  Post,
+  PostsImagesRelation,
+  Sound,
+} from "@web-speed-hackathon-2026/server/src/models";
 
 export const postRouter = Router();
+
+interface PostRequestBody {
+  images?: Array<{ id?: string }>;
+  movie?: { id?: string };
+  sound?: { id?: string };
+  text?: string;
+}
 
 postRouter.get("/posts", async (req, res) => {
   const posts = await Post.findAll({
@@ -40,23 +57,77 @@ postRouter.post("/posts", async (req, res) => {
   if (req.session.userId === undefined) {
     throw new httpErrors.Unauthorized();
   }
+  const userId = req.session.userId as string;
 
-  const post = await Post.create(
-    {
-      ...req.body,
-      userId: req.session.userId,
-    },
-    {
-      include: [
+  const { images = [], movie, sound, text } = req.body as PostRequestBody;
+  const imageIds = images
+    .map((image) => image.id)
+    .filter((imageId): imageId is string => typeof imageId === "string");
+  const movieId = typeof movie?.id === "string" ? movie.id : undefined;
+  const soundId = typeof sound?.id === "string" ? sound.id : undefined;
+
+  if (typeof text !== "string" || text.length === 0) {
+    throw new httpErrors.BadRequest();
+  }
+
+  const post = await Post.sequelize!.transaction(async (transaction) => {
+    if (movieId !== undefined) {
+      const existingMovie = await Movie.findByPk(movieId, { transaction });
+      if (existingMovie === null) {
+        throw new httpErrors.BadRequest();
+      }
+    }
+
+    if (soundId !== undefined) {
+      const existingSound = await Sound.findByPk(soundId, { transaction });
+      if (existingSound === null) {
+        throw new httpErrors.BadRequest();
+      }
+    }
+
+    const existingImages =
+      imageIds.length === 0
+        ? []
+        : await Image.findAll({
+            transaction,
+            where: {
+              id: {
+                [Op.in]: imageIds,
+              },
+            },
+          });
+
+    if (existingImages.length !== imageIds.length) {
+      throw new httpErrors.BadRequest();
+    }
+
+    const createdPost = await Post.create(
         {
-          association: "images",
-          through: { attributes: [] },
+          id: randomUUID(),
+          text,
+          userId,
+          ...(movieId === undefined ? {} : { movieId }),
+          ...(soundId === undefined ? {} : { soundId }),
         },
-        { association: "movie" },
-        { association: "sound" },
-      ],
-    },
-  );
+      { transaction },
+    );
+
+    if (existingImages.length > 0) {
+      await PostsImagesRelation.bulkCreate(
+        existingImages.map((image) => ({
+          imageId: image.id,
+          postId: createdPost.id,
+        })),
+        { transaction },
+      );
+    }
+
+    return Post.findByPk(createdPost.id, { transaction });
+  });
+
+  if (post === null) {
+    throw new httpErrors.InternalServerError();
+  }
 
   return res.status(200).type("application/json").send(post);
 });

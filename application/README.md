@@ -63,3 +63,5 @@ Playwright で Visual Regression Test (VRT) を提供しています。
      - ```bash
        E2E_BASE_URL=https://web-speed-hackathon-2026.example.com pnpm run test
        ```
+
+## 初回PR

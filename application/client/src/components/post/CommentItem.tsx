@@ -1,8 +1,8 @@
-import moment from "moment";
+import { AvatarImage } from "@web-speed-hackathon-2026/client/src/components/foundation/AvatarImage";
 
+import { formatDate } from "@web-speed-hackathon-2026/client/src/utils/date_formatter";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   comment: Models.Comment;
@@ -17,10 +17,7 @@ export const CommentItem = ({ comment }: Props) => {
             className="border-cax-border bg-cax-surface-subtle block h-8 w-8 overflow-hidden rounded-full border hover:opacity-75 sm:h-12 sm:w-12"
             to={`/users/${comment.user.username}`}
           >
-            <img
-              alt={comment.user.profileImage.alt}
-              src={getProfileImagePath(comment.user.profileImage.id)}
-            />
+            <AvatarImage height={48} profileImage={comment.user.profileImage} width={48} />
           </Link>
         </div>
         <div className="min-w-0 shrink grow">
@@ -42,8 +39,8 @@ export const CommentItem = ({ comment }: Props) => {
             <TranslatableText text={comment.text} />
           </div>
           <p className="text-cax-text-muted pt-1 text-xs">
-            <time dateTime={moment(comment.createdAt).toISOString()}>
-              {moment(comment.createdAt).locale("ja").format("LL")}
+            <time dateTime={new Date(comment.createdAt).toISOString()}>
+              {formatDate(comment.createdAt)}
             </time>
           </p>
         </div>

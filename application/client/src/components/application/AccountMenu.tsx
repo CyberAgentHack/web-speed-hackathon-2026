@@ -1,6 +1,5 @@
 import { useState } from "react";
-
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { AvatarImage } from "@web-speed-hackathon-2026/client/src/components/foundation/AvatarImage";
 
 interface Props {
   user: Models.User;
@@ -37,10 +36,11 @@ export const AccountMenu = ({ user, onLogout }: Props) => {
         className="hover:bg-cax-surface-subtle flex w-full items-center gap-3 rounded-full p-2 transition-colors"
         onClick={() => setOpen((prev) => !prev)}
       >
-        <img
-          alt={user.profileImage.alt}
-          className="h-10 w-10 shrink-0 rounded-full object-cover"
-          src={getProfileImagePath(user.profileImage.id)}
+        <AvatarImage
+          className="h-10 w-10 shrink-0 rounded-full"
+          height={40}
+          profileImage={user.profileImage}
+          width={40}
         />
         <div className="hidden min-w-0 flex-1 text-left lg:block">
           <div className="text-cax-text truncate text-sm font-bold">{user.name}</div>

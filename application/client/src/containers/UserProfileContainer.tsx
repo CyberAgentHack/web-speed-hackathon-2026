@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet";
+import { useEffect } from "react";
 import { useParams } from "react-router";
 
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
@@ -7,6 +7,7 @@ import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containe
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { setPageTitle } from "@web-speed-hackathon-2026/client/src/utils/set_page_title";
 
 export const UserProfileContainer = () => {
   const { username } = useParams();
@@ -20,12 +21,16 @@ export const UserProfileContainer = () => {
     fetchJSON,
   );
 
+  useEffect(() => {
+    if (isLoadingUser) {
+      setPageTitle("読込中 - CaX");
+    } else if (user !== null) {
+      setPageTitle(`${user.name} さんのタイムライン - CaX`);
+    }
+  }, [isLoadingUser, user]);
+
   if (isLoadingUser) {
-    return (
-      <Helmet>
-        <title>読込中 - CaX</title>
-      </Helmet>
-    );
+    return null;
   }
 
   if (user === null) {
@@ -34,9 +39,6 @@ export const UserProfileContainer = () => {
 
   return (
     <InfiniteScroll fetchMore={fetchMore} items={posts}>
-      <Helmet>
-        <title>{user.name} さんのタイムライン - CaX</title>
-      </Helmet>
       <UserProfilePage timeline={posts} user={user} />
     </InfiniteScroll>
   );
