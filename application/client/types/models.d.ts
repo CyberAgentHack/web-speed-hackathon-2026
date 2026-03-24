@@ -6,7 +6,7 @@ declare namespace Models {
     name: string;
     password: string;
     posts: Array<Models.Post>;
-    profileImage: Models.ProfileImage;
+    profileImage: Models.ProfileImage | null;
     username: string;
   }
 

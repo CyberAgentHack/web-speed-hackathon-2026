@@ -54,6 +54,8 @@ export function initDirectMessageConversation(sequelize: Sequelize) {
             association: "messages",
             include: [{ association: "sender", include: [{ association: "profileImage" }] }],
             order: [["createdAt", "ASC"]],
+            limit: 50,
+            separate: true,
             required: false,
           },
         ],

@@ -19,6 +19,7 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
   const [isStreaming, setIsStreaming] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const contentRef = useRef("");
+  const rafPendingRef = useRef(false);
 
   const stop = useCallback(() => {
     if (eventSourceRef.current) {
@@ -56,7 +57,13 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
 
         const newContent = options.onMessage(data, contentRef.current);
         contentRef.current = newContent;
-        setContent(newContent);
+        if (!rafPendingRef.current) {
+          rafPendingRef.current = true;
+          requestAnimationFrame(() => {
+            setContent(contentRef.current);
+            rafPendingRef.current = false;
+          });
+        }
       };
 
       eventSource.onerror = (error) => {

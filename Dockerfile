@@ -9,6 +9,8 @@ LABEL fly_launch_runtime="Node.js"
 
 ENV PNPM_HOME=/pnpm
 
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 RUN --mount=type=cache,target=/root/.npm npm install -g pnpm@${PNPM_VERSION}
 
@@ -22,6 +24,14 @@ RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile
 COPY ./application .
 
 RUN NODE_OPTIONS="--max-old-space-size=4096" pnpm build
+
+# シード GIF を WebM に変換（並列処理）
+RUN find /app/public/movies -name "*.gif" | xargs -P4 -I{} sh -c \
+  'out="${1%.gif}.webm"; ffmpeg -y -i "$1" -c:v libvpx-vp9 -b:v 0 -crf 33 -an -deadline realtime -cpu-used 8 "$out" 2>/dev/null && echo "converted: $out"' _ {}
+
+# シード JPG を WebP に事前変換（並列処理）
+RUN find /app/public/images -name "*.jpg" | xargs -P4 -I{} sh -c \
+  'out="${1%.jpg}.webp"; ffmpeg -y -i "$1" -vf "scale=min(1200\,iw):-2" -c:v libwebp -quality 80 "$out" 2>/dev/null && echo "converted: $out"' _ {}
 
 RUN --mount=type=cache,target=/pnpm/store CI=true pnpm install --frozen-lockfile --prod --filter @web-speed-hackathon-2026/server
 

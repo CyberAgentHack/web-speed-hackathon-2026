@@ -38,9 +38,10 @@ searchRouter.get("/search", async (req, res) => {
   // テキスト検索条件
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
+  res.setHeader("Cache-Control", "public, max-age=30");
+
+  // テキスト検索（defaultScope の include が自動適用される）
   const postsByText = await Post.findAll({
-    limit,
-    offset,
     where: {
       ...textWhere,
       ...dateWhere,
@@ -54,7 +55,6 @@ searchRouter.get("/search", async (req, res) => {
       include: [
         {
           association: "user",
-          attributes: { exclude: ["profileImageId"] },
           include: [{ association: "profileImage" }],
           required: true,
           where: {
@@ -68,8 +68,6 @@ searchRouter.get("/search", async (req, res) => {
         { association: "movie" },
         { association: "sound" },
       ],
-      limit,
-      offset,
       where: dateWhere,
     });
   }
