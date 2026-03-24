@@ -1,4 +1,2 @@
-declare module "*?binary" {
-  const value: Uint8Array<ArrayBuffer>;
-  export default value;
-}
+// Replaced by vite.d.ts — kept empty for compatibility
+export {};

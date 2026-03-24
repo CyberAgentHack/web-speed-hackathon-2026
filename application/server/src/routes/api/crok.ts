@@ -34,12 +34,15 @@ crokRouter.get("/crok", async (req, res) => {
   let messageId = 0;
 
   // TTFT (Time to First Token)
-  await sleep(3000);
+  await sleep(100);
 
-  for (const char of response) {
+  // 単語/チャンク単位でストリーミング（スペース・句点・改行区切り）
+  const chunks = response.match(/[^\s。、\n]*[\s。、\n]?/g) ?? [];
+  for (const chunk of chunks) {
     if (res.closed) break;
+    if (chunk === "") continue;
 
-    const data = JSON.stringify({ text: char, done: false });
+    const data = JSON.stringify({ text: chunk, done: false });
     res.write(`event: message\nid: ${messageId++}\ndata: ${data}\n\n`);
 
     await sleep(10);

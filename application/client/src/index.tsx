@@ -1,3 +1,6 @@
+import "./index.css";
+import "./buildinfo";
+
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router";

@@ -6,6 +6,8 @@ import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/par
 
 export const searchRouter = Router();
 
+const searchCache = new Map<string, { body: string; expireAt: number }>();
+
 searchRouter.get("/search", async (req, res) => {
   const query = req.query["q"];
 
@@ -24,6 +26,13 @@ searchRouter.get("/search", async (req, res) => {
   const limit = req.query["limit"] != null ? Number(req.query["limit"]) : undefined;
   const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
 
+  const cacheKey = `${query}:${limit}:${offset}`;
+  const now = Date.now();
+  const cached = searchCache.get(cacheKey);
+  if (cached != null && cached.expireAt > now) {
+    return res.status(200).type("application/json").send(cached.body);
+  }
+
   // 日付条件を構築
   const dateConditions: Record<symbol, Date>[] = [];
   if (sinceDate) {
@@ -35,44 +44,59 @@ searchRouter.get("/search", async (req, res) => {
   const dateWhere =
     dateConditions.length > 0 ? { createdAt: Object.assign({}, ...dateConditions) } : {};
 
+  const postIncludes = [
+    {
+      association: "user",
+      attributes: { exclude: ["profileImageId"] },
+      include: [{ association: "profileImage" }],
+      required: true,
+    },
+    {
+      association: "images",
+      through: { attributes: [] },
+    },
+    { association: "movie" },
+    { association: "sound" },
+  ];
+
   // テキスト検索条件
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
-  const postsByText = await Post.findAll({
-    limit,
-    offset,
-    where: {
-      ...textWhere,
-      ...dateWhere,
-    },
-  });
-
-  // ユーザー名/名前での検索（キーワードがある場合のみ）
-  let postsByUser: typeof postsByText = [];
-  if (searchTerm) {
-    postsByUser = await Post.findAll({
-      include: [
-        {
-          association: "user",
-          attributes: { exclude: ["profileImageId"] },
-          include: [{ association: "profileImage" }],
-          required: true,
-          where: {
-            [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
-          },
-        },
-        {
-          association: "images",
-          through: { attributes: [] },
-        },
-        { association: "movie" },
-        { association: "sound" },
-      ],
-      limit,
-      offset,
-      where: dateWhere,
-    });
-  }
+  // テキスト検索とユーザー名/名前検索を並列実行（limit/offsetなしで全件取得）
+  const [postsByText, postsByUser] = await Promise.all([
+    Post.findAll({
+      include: postIncludes,
+      where: {
+        ...textWhere,
+        ...dateWhere,
+      },
+    }),
+    searchTerm
+      ? Post.findAll({
+          include: [
+            {
+              association: "user",
+              attributes: { exclude: ["profileImageId"] },
+              include: [{ association: "profileImage" }],
+              required: true,
+              where: {
+                [Op.or]: [
+                  { username: { [Op.like]: searchTerm } },
+                  { name: { [Op.like]: searchTerm } },
+                ],
+              },
+            },
+            {
+              association: "images",
+              through: { attributes: [] },
+            },
+            { association: "movie" },
+            { association: "sound" },
+          ],
+          where: dateWhere,
+        })
+      : Promise.resolve([]),
+  ]);
 
   const postIdSet = new Set<string>();
   const mergedPosts: typeof postsByText = [];
@@ -86,7 +110,11 @@ searchRouter.get("/search", async (req, res) => {
 
   mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-  const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
+  // マージ後にページネーションを1回だけ適用
+  const result = mergedPosts.slice(offset || 0, limit != null ? (offset || 0) + limit : undefined);
 
-  return res.status(200).type("application/json").send(result);
+  const body = JSON.stringify(result);
+  searchCache.set(cacheKey, { body, expireAt: now + 10000 });
+
+  return res.status(200).type("application/json").send(body);
 });

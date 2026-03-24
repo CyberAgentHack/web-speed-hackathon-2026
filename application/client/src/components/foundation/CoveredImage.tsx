@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import { MouseEvent, useCallback, useId, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
