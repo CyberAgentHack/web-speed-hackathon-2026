@@ -29,6 +29,9 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   generateHash(password: string): string {
     return bcrypt.hashSync(password, bcrypt.genSaltSync(8));
   }
+  async validPasswordAsync(password: string): Promise<boolean> {
+    return bcrypt.compare(password, this.getDataValue("password"));
+  }
   validPassword(password: string): boolean {
     return bcrypt.compareSync(password, this.getDataValue("password"));
   }

@@ -110,10 +110,13 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     };
   }, []);
 
+  // サジェスト候補をキャッシュ
+  const candidatesRef = useRef<string[] | null>(null);
+
   useEffect(() => {
     let cancelled = false;
 
-    const updateSuggestions = async () => {
+    const timerId = setTimeout(async () => {
       if (!tokenizer || !inputValue.trim()) {
         setSuggestions([]);
         setQueryTokens([]);
@@ -121,29 +124,28 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
         return;
       }
 
-      const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-        "/api/v1/crok/suggestions",
-      );
-      if (cancelled) {
-        return;
+      // 候補をキャッシュ（毎回APIコールしない）
+      if (candidatesRef.current === null) {
+        const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
+          "/api/v1/crok/suggestions",
+        );
+        if (cancelled) return;
+        candidatesRef.current = candidates;
       }
 
       const tokens = extractTokens(tokenizer.tokenize(inputValue));
-      const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
+      const results = filterSuggestionsBM25(tokenizer, candidatesRef.current, tokens);
 
-      if (cancelled) {
-        return;
-      }
+      if (cancelled) return;
 
       setQueryTokens(tokens);
       setSuggestions(results);
       setShowSuggestions(results.length > 0);
-    };
-
-    void updateSuggestions();
+    }, 150); // 150ms デバウンス
 
     return () => {
       cancelled = true;
+      clearTimeout(timerId);
     };
   }, [inputValue, tokenizer]);
 
