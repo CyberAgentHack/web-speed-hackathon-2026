@@ -1,4 +1,3 @@
-import moment from "moment";
 import { MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
@@ -57,6 +56,8 @@ export const TimelineItem = ({ post }: Props) => {
             <img
               alt={post.user.profileImage.alt}
               src={getProfileImagePath(post.user.profileImage.id)}
+                loading="lazy"          // プロフィール画像は優先度を下げて遅延読み込み
+                decoding="async"
             />
           </Link>
         </div>
@@ -76,8 +77,8 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time>
+                {new Date(post.createdAt).toLocaleDateString("ja-JP")}
               </time>
             </Link>
           </p>

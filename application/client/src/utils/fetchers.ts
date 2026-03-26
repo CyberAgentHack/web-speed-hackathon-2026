@@ -1,58 +1,88 @@
 import $ from "jquery";
 import { gzip } from "pako";
 
+let binaryTransportLoaded = false;
+
+/**
+ * jquery-binarytransport を初回のみロード
+ */
+async function ensureBinaryTransportLoaded(): Promise<void> {
+  if (binaryTransportLoaded) return;
+  await import("jquery-binarytransport");
+  binaryTransportLoaded = true;
+}
+
+/**
+ * バイナリデータを非同期で取得
+ */
 export async function fetchBinary(url: string): Promise<ArrayBuffer> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "binary",
-    method: "GET",
-    responseType: "arraybuffer",
-    url,
+  await ensureBinaryTransportLoaded();
+  return new Promise((resolve, reject) => {
+    $.ajax({
+      url,
+      method: "GET",
+      dataType: "binary",
+      responseType: "arraybuffer",
+      success: resolve,
+      error: (_, __, err) => reject(err),
+    });
   });
-  return result;
 }
 
+/**
+ * JSONデータを非同期で取得
+ */
 export async function fetchJSON<T>(url: string): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    dataType: "json",
-    method: "GET",
-    url,
+  return new Promise((resolve, reject) => {
+    $.ajax({
+      url,
+      method: "GET",
+      dataType: "json",
+      success: resolve,
+      error: (_, __, err) => reject(err),
+    });
   });
-  return result;
 }
 
+/**
+ * ファイルを非同期で送信
+ */
 export async function sendFile<T>(url: string, file: File): Promise<T> {
-  const result = await $.ajax({
-    async: false,
-    data: file,
-    dataType: "json",
-    headers: {
-      "Content-Type": "application/octet-stream",
-    },
-    method: "POST",
-    processData: false,
-    url,
+  return new Promise((resolve, reject) => {
+    $.ajax({
+      url,
+      method: "POST",
+      data: file,
+      dataType: "json",
+      headers: { "Content-Type": "application/octet-stream" },
+      processData: false,
+      success: resolve,
+      error: (_, __, err) => reject(err),
+    });
   });
-  return result;
 }
 
+/**
+ * JSONをgzip圧縮して非同期送信
+ */
 export async function sendJSON<T>(url: string, data: object): Promise<T> {
   const jsonString = JSON.stringify(data);
   const uint8Array = new TextEncoder().encode(jsonString);
   const compressed = gzip(uint8Array);
 
-  const result = await $.ajax({
-    async: false,
-    data: compressed,
-    dataType: "json",
-    headers: {
-      "Content-Encoding": "gzip",
-      "Content-Type": "application/json",
-    },
-    method: "POST",
-    processData: false,
-    url,
+  return new Promise((resolve, reject) => {
+    $.ajax({
+      url,
+      method: "POST",
+      data: compressed,
+      dataType: "json",
+      headers: {
+        "Content-Encoding": "gzip",
+        "Content-Type": "application/json",
+      },
+      processData: false,
+      success: resolve,
+      error: (_, __, err) => reject(err),
+    });
   });
-  return result;
 }

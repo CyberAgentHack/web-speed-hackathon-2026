@@ -25,18 +25,17 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  // Lighthouse の初期計測では inline sourcemap がバンドルを激増させるため無効化します
+  devtool: false,
   entry: {
     main: [
-      "core-js",
       "regenerator-runtime/runtime",
-      "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: "production",
   module: {
     rules: [
       {
@@ -60,7 +59,8 @@ const config = {
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
+    // async chunk を通常どおり出力して、必要な時だけ追加ロードできるようにします
+    chunkFormat: "array-push",
     filename: "scripts/[name].js",
     path: DIST_PATH,
     publicPath: "auto",
@@ -77,7 +77,7 @@ const config = {
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
+      NODE_ENV: "production",
     }),
     new MiniCssExtractPlugin({
       filename: "styles/[name].css",
@@ -128,13 +128,14 @@ const config = {
     },
   },
   optimization: {
-    minimize: false,
+    minimize: true,
     splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
+    concatenateModules: true,
+    usedExports: true,
+    providedExports: true,
+    sideEffects: true,
   },
+  // Babel 設定の変更を確実に反映するため、いったんキャッシュを無効化します
   cache: false,
   ignoreWarnings: [
     {

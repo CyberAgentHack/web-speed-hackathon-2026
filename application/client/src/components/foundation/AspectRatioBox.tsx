@@ -19,13 +19,21 @@ export const AspectRatioBox = ({ aspectHeight, aspectWidth, children }: Props) =
       const clientWidth = ref.current?.clientWidth ?? 0;
       setClientHeight((clientWidth / aspectWidth) * aspectHeight);
     }
-    setTimeout(() => calcStyle(), 500);
 
-    // ウィンドウサイズが変わるたびに計算する
-    window.addEventListener("resize", calcStyle, { passive: false });
-    return () => {
-      window.removeEventListener("resize", calcStyle);
-    };
+    // まず即時に計算（子要素の遅延描画を避ける）
+    calcStyle();
+
+    // レイアウト変化をより確実に追う
+    const element = ref.current;
+    if (element && "ResizeObserver" in window) {
+      const ro = new ResizeObserver(() => calcStyle());
+      ro.observe(element);
+      return () => ro.disconnect();
+    }
+
+    // ResizeObserver が使えない環境向けフォールバック
+    window.addEventListener("resize", calcStyle, { passive: true });
+    return () => window.removeEventListener("resize", calcStyle);
   }, [aspectHeight, aspectWidth]);
 
   return (
