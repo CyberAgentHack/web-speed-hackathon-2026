@@ -1,5 +1,3 @@
-import { Helmet } from "react-helmet";
-
 interface Props {
   headline: string;
   description?: string;
@@ -14,11 +12,7 @@ export const CrokGate = ({
   authModalId,
 }: Props) => {
   return (
-    <>
-      <Helmet>
-        <title>Crok - CaX</title>
-      </Helmet>
-      <section className="space-y-4 px-6 py-12 text-center">
+    <section className="space-y-4 px-6 py-12 text-center">
         <p className="text-lg font-bold">{headline}</p>
         {description !== "" ? <p className="text-cax-text-muted text-sm">{description}</p> : null}
         <button
@@ -29,7 +23,6 @@ export const CrokGate = ({
         >
           {buttonLabel}
         </button>
-      </section>
-    </>
+    </section>
   );
 };

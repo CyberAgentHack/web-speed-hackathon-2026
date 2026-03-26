@@ -8,8 +8,6 @@ allowBuilds:
   esbuild: true
   sqlite3: true
   negaposi-analyzer-ja: true
-overrides:
-  gifler>bluebird: 3.7.2
-  gifler>omggif: 1.0.10
+  sharp: true
 saveExact: true
 shellEmulator: true

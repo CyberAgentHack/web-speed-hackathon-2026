@@ -62,6 +62,8 @@ declare namespace Models {
     initiator: Models.User;
     member: Models.User;
     messages: Array<Models.DirectMessage>;
+    lastMessage?: Models.DirectMessage;
+    hasUnread?: boolean;
   }
 
   interface ChatMessage {
