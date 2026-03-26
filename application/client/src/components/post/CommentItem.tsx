@@ -1,6 +1,6 @@
-import moment from "moment";
-
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
+
+const dateFormatter = new Intl.DateTimeFormat("ja", { year: "numeric", month: "long", day: "numeric" });
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
@@ -19,7 +19,11 @@ export const CommentItem = ({ comment }: Props) => {
           >
             <img
               alt={comment.user.profileImage.alt}
+              className="h-full w-full object-cover"
               src={getProfileImagePath(comment.user.profileImage.id)}
+              width={48}
+              height={48}
+              loading="lazy"
             />
           </Link>
         </div>
@@ -42,8 +46,8 @@ export const CommentItem = ({ comment }: Props) => {
             <TranslatableText text={comment.text} />
           </div>
           <p className="text-cax-text-muted pt-1 text-xs">
-            <time dateTime={moment(comment.createdAt).toISOString()}>
-              {moment(comment.createdAt).locale("ja").format("LL")}
+            <time dateTime={new Date(comment.createdAt).toISOString()}>
+              {dateFormatter.format(new Date(comment.createdAt))}
             </time>
           </p>
         </div>

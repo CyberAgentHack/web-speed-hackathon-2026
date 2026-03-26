@@ -1,4 +1,3 @@
-import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -7,6 +6,8 @@ import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+
+const rtf = new Intl.RelativeTimeFormat("ja", { numeric: "auto" });
 
 interface Props {
   activeUser: Models.User;
@@ -86,8 +87,10 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                   <div className="border-cax-border flex gap-4 border-b px-4 pt-2 pb-4">
                     <img
                       alt={peer.profileImage.alt}
-                      className="w-12 shrink-0 self-start rounded-full"
+                      className="w-12 shrink-0 self-start rounded-full object-cover"
                       src={getProfileImagePath(peer.profileImage.id)}
+                      width={48}
+                      height={48}
                     />
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-center justify-between">
@@ -100,7 +103,17 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {(() => {
+                              const diff = Date.now() - new Date(lastMessage.createdAt).getTime();
+                              const sec = Math.round(diff / 1000);
+                              if (sec < 60) return rtf.format(-sec, "second");
+                              const min = Math.round(diff / 60000);
+                              if (min < 60) return rtf.format(-min, "minute");
+                              const hr = Math.round(diff / 3600000);
+                              if (hr < 24) return rtf.format(-hr, "hour");
+                              const day = Math.round(diff / 86400000);
+                              return rtf.format(-day, "day");
+                            })()}
                           </time>
                         )}
                       </div>
