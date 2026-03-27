@@ -17,6 +17,11 @@ export async function calculateUserAuthFlowAction({
   playwrightPage,
   puppeteerPage,
 }: Params) {
+  const uniqueSuffix = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
+  const username = `scoreuser${uniqueSuffix}`;
+  const displayName = `Score User ${uniqueSuffix}`;
+  const password = `score-pass-${uniqueSuffix}`;
+
   consola.debug("UserAuthFlowAction - navigate");
   try {
     await goTo({
@@ -60,19 +65,19 @@ export async function calculateUserAuthFlowAction({
     }
     try {
       const input = playwrightPage.getByRole("dialog").getByRole("textbox", { name: "ユーザー名" });
-      await input.pressSequentially("superultrahypermiracleromantic", { delay: 10 });
+      await input.fill(username);
     } catch (err) {
       throw new Error("ユーザー名の入力に失敗しました", { cause: err });
     }
     try {
       const input = playwrightPage.getByRole("dialog").getByRole("textbox", { name: "名前" });
-      await input.pressSequentially("superultrahypermiracleromantic", { delay: 10 });
+      await input.fill(displayName);
     } catch (err) {
       throw new Error("名前の入力に失敗しました", { cause: err });
     }
     try {
       const input = playwrightPage.getByRole("dialog").getByRole("textbox", { name: "パスワード" });
-      await input.pressSequentially("superultra_hyper_miracle_romantic", { delay: 10 });
+      await input.fill(password);
     } catch (err) {
       throw new Error("パスワードの入力に失敗しました", { cause: err });
     }
@@ -116,13 +121,13 @@ export async function calculateUserAuthFlowAction({
     }
     try {
       const input = playwrightPage.getByRole("dialog").getByRole("textbox", { name: "ユーザー名" });
-      await input.pressSequentially("superultrahypermiracleromantic", { delay: 10 });
+      await input.fill(username);
     } catch (err) {
       throw new Error("ユーザー名の入力に失敗しました", { cause: err });
     }
     try {
       const input = playwrightPage.getByRole("dialog").getByRole("textbox", { name: "パスワード" });
-      await input.pressSequentially("superultra_hyper_miracle_romantic", { delay: 10 });
+      await input.fill(password);
     } catch (err) {
       throw new Error("パスワードの入力に失敗しました", { cause: err });
     }

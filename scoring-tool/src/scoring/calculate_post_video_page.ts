@@ -23,7 +23,7 @@ export async function calculatePostVideoPage({ baseUrl, playwrightPage, puppetee
       playwrightPage,
       puppeteerPage,
       timeout: 120 * 1000,
-      url: new URL("/posts/fff790f5-99ea-432f-8f79-21d3d49efd1a", baseUrl).href,
+      url: new URL("/posts/fff790f5-99ea-432f-8f79-21d3d49efd1a?score=1", baseUrl).href,
     });
   } catch (err) {
     throw new Error("ページの読み込みに失敗したか、タイムアウトしました", { cause: err });

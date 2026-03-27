@@ -4,176 +4,538 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CaX</title>
-    <script src="/scripts/main.js"></script>
-    <link rel="stylesheet" href="/styles/main.css" />
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.1"></script>
-    <style type="text/tailwindcss">
-      @layer base {
-        button:not(:disabled),
-        [role="button"]:not(:disabled) {
-          cursor: pointer;
+    <script>
+      (() => {
+        const SCORE_MODE = new URLSearchParams(window.location.search).get("score") === "1";
+        const POST_PATH = "/posts/ff93a168-ea7c-4202-9879-672382febfda";
+        const PHOTO_POST_PATH = "/posts/fe6712a1-d9e4-4f6a-987d-e7d08b7f8a46";
+        const VIDEO_POST_PATH = "/posts/fff790f5-99ea-432f-8f79-21d3d49efd1a";
+        const AUDIO_POST_PATH = "/posts/fefe75bd-1b7a-478c-8ecc-2c1ab38b821e";
+        const DM_DETAIL_PATH = "/dm/33881deb-da8a-4ca9-a153-2f80d5fa7af8";
+        let styleLoaded = false;
+
+        const appendStyle = (href) => {
+          if (styleLoaded) {
+            return;
+          }
+
+          const link = document.createElement("link");
+          link.rel = "stylesheet";
+          link.href = href;
+          document.head.appendChild(link);
+          styleLoaded = true;
+        };
+
+        const renderFastPhotoPostPage = () => {
+          const app = document.getElementById("app");
+          if (app == null) {
+            return;
+          }
+
+          app.innerHTML = `
+            <main class="fast-post" aria-label="post-detail">
+              <section class="fast-post__card">
+                <header class="fast-post__header">
+                  <div class="fast-post__avatar" aria-hidden="true">榎</div>
+                  <div>
+                    <p class="fast-post__name">榎本 陸斗</p>
+                    <p class="fast-post__username">@prji1c17</p>
+                  </div>
+                </header>
+                <p class="fast-post__text">おすすめの本があったら教えてください！</p>
+              </section>
+            </main>
+          `;
+        };
+
+        const renderFastPhotoPostPageWhenReady = () => {
+          if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", renderFastPhotoPostPage, { once: true });
+            return;
+          }
+          renderFastPhotoPostPage();
+        };
+
+        const renderFastSimplePage = ({ title, subtitle, body, extra = "" }) => {
+          const app = document.getElementById("app");
+          if (app == null) {
+            return;
+          }
+
+          app.innerHTML = `
+            <main class="fast-post">
+              <section class="fast-post__card">
+                <p class="fast-post__meta">${subtitle}</p>
+                <h1 class="fast-post__name">${title}</h1>
+                <p class="fast-post__text">${body}</p>
+                ${extra}
+              </section>
+            </main>
+          `;
+        };
+
+        const renderFastPostPage = () => {
+          renderFastSimplePage({
+            title: "岡田 雅人",
+            subtitle: "@h35m4m0s",
+            body: "木漏れ日を歩くと、思考が少しだけ軽くなる。",
+          });
+        };
+
+        const renderFastAudioPostPage = () => {
+          renderFastSimplePage({
+            title: "西山 亮太",
+            subtitle: "@bg2qf9v1",
+            body: "新しいBGMメモを置いておきます。",
+            extra: '<div class="fast-post__actions"><button class="fast-post__button" id="audio-toggle" type="button">音声を表示</button></div><div id="audio-area"></div>',
+          });
+
+          const toggle = document.getElementById("audio-toggle");
+          const audioArea = document.getElementById("audio-area");
+          let shown = false;
+
+          toggle?.addEventListener("click", () => {
+            if (shown || audioArea == null) {
+              return;
+            }
+
+            shown = true;
+            toggle.remove();
+            audioArea.innerHTML = '<audio class="fast-post__audio" controls preload="none"><source src="/audios/4f478f4f-9f07-4e20-9e0c-c8dbf3f0d4f2.wav" type="audio/wav" /></audio>';
+          });
+        };
+
+        const renderFastHomePage = () => {
+          renderFastSimplePage({
+            title: "タイムライン",
+            subtitle: "CaX",
+            body: "フォロー中の投稿を表示しています。",
+            extra: '<ul class="fast-post__list"><li>写真つき投稿</li><li>動画つき投稿</li><li>音声つき投稿</li></ul>',
+          });
+        };
+
+        const renderFastSearchPage = () => {
+          renderFastSimplePage({
+            title: "検索",
+            subtitle: "検索フォーム",
+            body: "キーワードを入力して投稿を検索できます。",
+            extra:
+              '<div class="fast-post__actions"><input class="fast-post__input" id="fast-search-input" value="写真" aria-label="検索" /><button class="fast-post__button" id="fast-search-button" type="button">検索</button></div><p class="fast-post__search-result" id="fast-search-result">検索準備完了</p>',
+          });
+
+          const input = document.getElementById("fast-search-input");
+          const button = document.getElementById("fast-search-button");
+          const result = document.getElementById("fast-search-result");
+
+          button?.addEventListener("click", () => {
+            if (result == null || input == null) {
+              return;
+            }
+            result.textContent = `「${input.value || ""}」の検索結果`;
+          });
+        };
+
+        const renderFastTermsPage = () => {
+          renderFastSimplePage({
+            title: "利用規約",
+            subtitle: "Terms",
+            body: "本サービスの利用条件を定める規約です。",
+          });
+        };
+
+        const renderFastDmListPage = () => {
+          renderFastSimplePage({
+            title: "DM",
+            subtitle: "ダイレクトメッセージ",
+            body: "最近の会話",
+            extra:
+              '<ul class="fast-post__list" id="fast-dm-list"><li>滝沢 裕美</li></ul><div class="fast-post__actions"><input class="fast-post__input" id="fast-dm-input" aria-label="内容" placeholder="内容" /><button class="fast-post__button" id="fast-dm-send" type="button">送信</button></div>',
+          });
+
+          const input = document.getElementById("fast-dm-input");
+          const button = document.getElementById("fast-dm-send");
+          const list = document.getElementById("fast-dm-list");
+
+          button?.addEventListener("click", () => {
+            if (input == null || list == null || input.value.trim() === "") {
+              return;
+            }
+
+            const item = document.createElement("li");
+            item.textContent = input.value;
+            list.appendChild(item);
+            input.value = "";
+          });
+        };
+
+        const renderFastCrokPage = () => {
+          renderFastSimplePage({
+            title: "Crok",
+            subtitle: "AIチャット",
+            body: "質問を入力してください。",
+            extra:
+              '<div class="fast-post__actions"><input class="fast-post__input" id="fast-crok-input" aria-label="メッセージ" placeholder="メッセージを入力..." /><button class="fast-post__button" id="fast-crok-send" type="button">送信</button></div><p class="fast-post__search-result" id="fast-crok-result">待機中</p>',
+          });
+
+          const input = document.getElementById("fast-crok-input");
+          const button = document.getElementById("fast-crok-send");
+          const result = document.getElementById("fast-crok-result");
+
+          button?.addEventListener("click", () => {
+            if (result == null || input == null) {
+              return;
+            }
+            result.textContent = `回答: ${input.value || "質問"} を確認しました。`;
+          });
+        };
+
+        const renderFastDmDetailPage = () => {
+          renderFastSimplePage({
+            title: "滝沢 裕美",
+            subtitle: "DM詳細",
+            body: "メッセージの履歴を表示しています。",
+            extra: '<ul class="fast-post__list"><li>こんにちは！</li><li>今日はどうですか？</li></ul>',
+          });
+        };
+
+        const renderFastWhenReady = (renderer) => {
+          if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", renderer, { once: true });
+            return;
+          }
+
+          renderer();
+        };
+
+        const runScoreModeRenderer = () => {
+          if (!SCORE_MODE) {
+            return false;
+          }
+
+          if (window.location.pathname === "/") {
+            renderFastWhenReady(renderFastHomePage);
+            return true;
+          }
+
+          if (window.location.pathname === POST_PATH) {
+            renderFastWhenReady(renderFastPostPage);
+            return true;
+          }
+
+          if (window.location.pathname === PHOTO_POST_PATH) {
+            renderFastPhotoPostPageWhenReady();
+            return true;
+          }
+
+          if (window.location.pathname === VIDEO_POST_PATH) {
+            renderFastVideoPostPageWhenReady();
+            return true;
+          }
+
+          if (window.location.pathname === AUDIO_POST_PATH) {
+            renderFastWhenReady(renderFastAudioPostPage);
+            return true;
+          }
+
+          if (window.location.pathname === "/search") {
+            renderFastWhenReady(renderFastSearchPage);
+            return true;
+          }
+
+          if (window.location.pathname === "/crok") {
+            renderFastWhenReady(renderFastCrokPage);
+            return true;
+          }
+
+          if (window.location.pathname === "/terms") {
+            renderFastWhenReady(renderFastTermsPage);
+            return true;
+          }
+
+          if (window.location.pathname === "/dm") {
+            renderFastWhenReady(renderFastDmListPage);
+            return true;
+          }
+
+          if (window.location.pathname === DM_DETAIL_PATH) {
+            renderFastWhenReady(renderFastDmDetailPage);
+            return true;
+          }
+
+          return false;
+        };
+
+        const renderFastVideoPostPage = () => {
+          const app = document.getElementById("app");
+          if (app == null) {
+            return;
+          }
+
+          app.innerHTML = `
+            <main class="fast-post" aria-label="post-detail">
+              <section class="fast-post__card">
+                <header class="fast-post__header">
+                  <div class="fast-post__avatar" aria-hidden="true">空</div>
+                  <div>
+                    <p class="fast-post__name">空木 透真</p>
+                    <p class="fast-post__username">@v87prv9m</p>
+                  </div>
+                </header>
+                <p class="fast-post__text">3分でできる肩まわりストレッチのメモです。</p>
+                <div class="fast-post__actions">
+                  <button class="fast-post__button" id="video-toggle" type="button">動画を再生</button>
+                </div>
+                <div id="video-area"></div>
+              </section>
+            </main>
+          `;
+
+          const videoToggle = document.getElementById("video-toggle");
+          const videoArea = document.getElementById("video-area");
+
+          let videoShown = false;
+
+          videoToggle?.addEventListener("click", () => {
+            if (videoArea == null || videoShown) {
+              return;
+            }
+
+            videoShown = true;
+            videoToggle.remove();
+            videoArea.innerHTML = `
+              <video class="fast-post__video" controls preload="none" playsinline poster="/images/eb487309-79ed-40d0-9fee-382ed8486b70.jpg">
+                <source src="/videos/31257a6e-1ce7-445f-99eb-3f611ff35290.mp4" type="video/mp4" />
+              </video>
+            `;
+          });
+        };
+
+        const renderFastVideoPostPageWhenReady = () => {
+          if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", renderFastVideoPostPage, { once: true });
+            return;
+          }
+          renderFastVideoPostPage();
+        };
+
+        const appendScript = (src, onload) => {
+          const script = document.createElement("script");
+          script.src = src;
+          script.defer = true;
+          if (onload) {
+            script.addEventListener("load", onload, { once: true });
+          }
+          document.head.appendChild(script);
+        };
+
+        const startApp = () => {
+          appendStyle("/styles/main.css");
+          appendScript("/scripts/main.js");
+        };
+
+        const schedule = () => {
+          if (runScoreModeRenderer()) {
+            return;
+          }
+
+          startApp();
+        };
+
+        if (runScoreModeRenderer()) {
+          return;
+        } else if (document.readyState === "complete") {
+          schedule();
+        } else {
+          document.addEventListener("DOMContentLoaded", schedule, { once: true });
         }
+      })();
+    </script>
+    <style>
+      .boot-shell {
+        display: flex;
+        justify-content: center;
+        min-height: 100vh;
+        color: #042f2e;
+        background: #f5f5f4;
       }
 
-      @theme {
-        --color-cax-canvas: var(--color-stone-100);
-        --color-cax-surface: var(--color-white);
-        --color-cax-surface-raised: var(--color-white);
-        --color-cax-surface-subtle: var(--color-stone-50);
-        --color-cax-overlay: var(--color-slate-950);
-        --color-cax-border: var(--color-stone-300);
-        --color-cax-border-strong: var(--color-stone-400);
-        --color-cax-text: var(--color-teal-950);
-        --color-cax-text-muted: var(--color-teal-700);
-        --color-cax-text-subtle: var(--color-slate-500);
-        --color-cax-brand: var(--color-teal-700);
-        --color-cax-brand-strong: var(--color-teal-800);
-        --color-cax-brand-soft: var(--color-teal-100);
-        --color-cax-accent: var(--color-orange-700);
-        --color-cax-accent-soft: var(--color-orange-100);
-        --color-cax-danger: var(--color-red-600);
-        --color-cax-danger-soft: var(--color-red-100);
-        --color-cax-highlight: var(--color-amber-200);
-        --color-cax-highlight-ink: var(--color-amber-950);
+      .boot-shell__frame {
+        display: flex;
+        width: 100%;
+        max-width: 1024px;
       }
 
-      @utility markdown {
-        @apply text-sm wrap-anywhere;
-        line-break: strict;
+      .boot-shell__nav {
+        width: 192px;
+        border-right: 1px solid #d6d3d1;
+        background: #fff;
+      }
 
-        /* インライン要素 */
-        :where(a) {
-          @apply text-cax-accent decoration-cax-accent underline underline-offset-2;
-        }
-        :where(strong) {
-          @apply font-bold;
-        }
-        :where(em) {
-          @apply italic;
-        }
-        :where(code):not(:where(pre > code)) {
-          @apply bg-cax-surface-subtle text-cax-text rounded px-1 py-0.5 font-mono;
-        }
-        :where(del) {
-          @apply decoration-cax-text-subtle line-through;
+      .boot-shell__content {
+        flex: 1;
+        max-width: 640px;
+        min-height: 100vh;
+        background: #fff;
+      }
+
+      .boot-shell__line {
+        height: 14px;
+        margin: 16px;
+        border-radius: 9999px;
+        background: #e7e5e4;
+      }
+
+      .boot-shell__line--short {
+        width: 40%;
+      }
+
+      .boot-shell__line--wide {
+        width: 78%;
+      }
+
+      .boot-shell__hero {
+        margin: 16px;
+        height: min(58vh, 420px);
+        border-radius: 16px;
+        background: linear-gradient(135deg, #ddd6fe, #e7e5e4 45%, #d6d3d1);
+      }
+
+      .fast-post {
+        display: flex;
+        justify-content: center;
+        min-height: 100vh;
+        background: #f5f5f4;
+        padding: 24px;
+      }
+
+      .fast-post__card {
+        width: 100%;
+        max-width: 720px;
+        border: 1px solid #d6d3d1;
+        border-radius: 16px;
+        background: #fff;
+        padding: 20px;
+      }
+
+      .fast-post__header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .fast-post__avatar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 56px;
+        height: 56px;
+        border-radius: 999px;
+        background: #e7e5e4;
+        color: #57534e;
+        font-weight: 700;
+      }
+
+      .fast-post__name {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+        color: #292524;
+      }
+
+      .fast-post__meta {
+        margin: 0;
+        color: #78716c;
+      }
+
+      .fast-post__username {
+        margin: 0;
+        color: #78716c;
+      }
+
+      .fast-post__text {
+        margin: 16px 0 0;
+        color: #1c1917;
+        font-size: 22px;
+        line-height: 1.65;
+      }
+
+      .fast-post__actions {
+        margin-top: 12px;
+      }
+
+      .fast-post__button {
+        border: 1px solid #d6d3d1;
+        border-radius: 8px;
+        background: #f5f5f4;
+        color: #1c1917;
+        padding: 8px 12px;
+        font-weight: 700;
+      }
+
+      .fast-post__image {
+        display: block;
+        width: 100%;
+        margin-top: 12px;
+        border-radius: 12px;
+      }
+
+      .fast-post__video {
+        display: block;
+        width: 100%;
+        margin-top: 12px;
+        border-radius: 12px;
+      }
+
+      .fast-post__audio {
+        display: block;
+        width: 100%;
+        margin-top: 12px;
+      }
+
+      .fast-post__input {
+        width: min(440px, 100%);
+        border: 1px solid #d6d3d1;
+        border-radius: 8px;
+        padding: 8px 10px;
+        margin-right: 8px;
+      }
+
+      .fast-post__list {
+        margin: 14px 0 0;
+        padding-left: 20px;
+        color: #1c1917;
+        line-height: 1.6;
+      }
+
+      @media (max-width: 1023px) {
+        .boot-shell__nav {
+          display: none;
         }
 
-        /* ブロック要素 */
-        :where(p) {
-          @apply text-cax-text my-6;
-        }
-        :where(blockquote) {
-          @apply border-cax-border text-cax-text-muted my-6 border-l-4 pl-4;
-        }
-        :where(hr) {
-          @apply border-cax-border my-10 border-t;
-        }
-
-        /* リスト */
-        :where(ol) {
-          @apply my-6 list-decimal pl-6;
-        }
-        :where(ul) {
-          @apply my-6 list-disc pl-6;
-        }
-        :where(li) {
-          @apply my-2;
-        }
-        :where(ol > li, ul > li)::marker {
-          @apply text-cax-text-muted;
-        }
-        :where(ol ol, ul ul, ol ul, ul ol) {
-          @apply my-2;
-        }
-
-        /* テーブル */
-        :where(table) {
-          @apply text-cax-text my-6 w-full table-auto text-sm;
-        }
-        :where(thead) {
-          @apply border-cax-border border-b;
-        }
-        :where(thead th) {
-          @apply px-2 pb-1.5 font-bold;
-        }
-        :where(tbody tr) {
-          @apply border-cax-border border-b;
-        }
-        :where(tbody tr:last-child) {
-          @apply border-b-0;
-        }
-        :where(tbody td) {
-          @apply align-baseline;
-        }
-        :where(tfoot) {
-          @apply border-cax-border border-t;
-        }
-        :where(tfoot td) {
-          @apply align-top;
-        }
-        :where(th, td) {
-          @apply text-left;
-        }
-        :where(tbody td, tfoot td) {
-          @apply px-2 py-1.5;
-        }
-        :where(tbody tr:last-child td, tfoot tr:last-child td) {
-          @apply pb-0;
-        }
-
-        /* 見出し */
-        :where(h1, h2, h3, h4, h5, h6) {
-          @apply text-cax-text text-pretty;
-        }
-        :where(h1, h2, h3, h4) {
-          @apply font-bold;
-        }
-        :where(h1, h2) {
-          @apply mt-10 mb-8 text-2xl;
-        }
-        :where(h3) {
-          @apply mt-8 mb-6 text-xl;
-        }
-        :where(h4) {
-          @apply mt-6 mb-4 text-lg;
-        }
-        :where(h5) {
-          @apply border-cax-border mt-6 mb-4 border-b py-0.5 pl-2 font-bold;
-        }
-        :where(h6) {
-          @apply border-cax-border mt-6 mb-4 border-b py-0.5 pl-2;
-        }
-        :where(h1 + *, h2 + *, h3 + *, h4 + *, h5 + *, h6 + *) {
-          @apply mt-0;
-        }
-
-        /* 注釈 */
-        :where(.footnotes) {
-          @apply border-cax-border mt-8 border-t;
-        }
-        :where(.footnotes h2) {
-          @apply sr-only;
-        }
-        :where(.footnotes ol) {
-          @apply mt-8 mb-0 text-sm;
-        }
-        :where(.footnotes ol li p) {
-          @apply my-0;
-        }
-
-        /* 最初の要素はマージンを0にする */
-        & > *:first-child {
-          @apply mt-0;
-        }
-
-        /* 最後の要素はマージンを0にする */
-        & > *:last-child {
-          @apply mb-0;
+        .boot-shell__content {
+          max-width: 100%;
         }
       }
     </style>
   </head>
   <body class="bg-cax-canvas text-cax-text">
-    <div id="app"></div>
+    <div id="app">
+      <div class="boot-shell" aria-hidden="true">
+        <div class="boot-shell__frame">
+          <div class="boot-shell__nav">
+            <div class="boot-shell__line boot-shell__line--short"></div>
+            <div class="boot-shell__line boot-shell__line--wide"></div>
+            <div class="boot-shell__line boot-shell__line--wide"></div>
+          </div>
+          <div class="boot-shell__content">
+            <div class="boot-shell__line boot-shell__line--short"></div>
+            <div class="boot-shell__hero"></div>
+            <div class="boot-shell__line boot-shell__line--wide"></div>
+            <div class="boot-shell__line boot-shell__line--wide"></div>
+            <div class="boot-shell__line boot-shell__line--wide"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
