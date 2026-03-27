@@ -1,31 +1,8 @@
-import _ from "lodash";
 import { useEffect, useRef, useState } from "react";
 
 interface ParsedData {
   max: number;
   peaks: number[];
-}
-
-async function calculate(data: ArrayBuffer): Promise<ParsedData> {
-  const audioCtx = new AudioContext();
-
-  // 音声をデコードする
-  const buffer = await audioCtx.decodeAudioData(data.slice(0));
-  // 左の音声データの絶対値を取る
-  const leftData = _.map(buffer.getChannelData(0), Math.abs);
-  // 右の音声データの絶対値を取る
-  const rightData = _.map(buffer.getChannelData(1), Math.abs);
-
-  // 左右の音声データの平均を取る
-  const normalized = _.map(_.zip(leftData, rightData), _.mean);
-  // 100 個の chunk に分ける
-  const chunks = _.chunk(normalized, Math.ceil(normalized.length / 100));
-  // chunk ごとに平均を取る
-  const peaks = _.map(chunks, _.mean);
-  // chunk の平均の中から最大値を取る
-  const max = _.max(peaks) ?? 0;
-
-  return { max, peaks };
 }
 
 interface Props {
@@ -34,15 +11,47 @@ interface Props {
 
 export const SoundWaveSVG = ({ soundData }: Props) => {
   const uniqueIdRef = useRef(Math.random().toString(16));
+  const workerRef = useRef<Worker | null>(null);
+  const requestIdRef = useRef(0);
   const [{ max, peaks }, setPeaks] = useState<ParsedData>({
     max: 0,
     peaks: [],
   });
 
   useEffect(() => {
-    calculate(soundData).then(({ max, peaks }) => {
-      setPeaks({ max, peaks });
-    });
+    const worker = new Worker(
+      new URL("./sound_wave.worker.ts", import.meta.url),
+      { type: "module" },
+    );
+    workerRef.current = worker;
+    return () => {
+      worker.terminate();
+      workerRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (workerRef.current === null) {
+      return;
+    }
+    setPeaks({ max: 0, peaks: [] });
+
+    const worker = workerRef.current;
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+
+    const handleMessage = (ev: MessageEvent<{ requestId: number; data: ParsedData }>) => {
+      if (ev.data.requestId === requestId) {
+        setPeaks(ev.data.data);
+      }
+    };
+    worker.addEventListener("message", handleMessage);
+
+    const transferableData = soundData.slice(0);
+    worker.postMessage({ requestId, soundData: transferableData }, [transferableData]);
+    return () => {
+      worker.removeEventListener("message", handleMessage);
+    };
   }, [soundData]);
 
   return (

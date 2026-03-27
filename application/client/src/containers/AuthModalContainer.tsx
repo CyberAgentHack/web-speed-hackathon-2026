@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { SubmissionError } from "redux-form";
 
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { AuthModalPage } from "@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage";
@@ -16,8 +15,11 @@ const ERROR_MESSAGES: Record<string, string> = {
   USERNAME_TAKEN: "ユーザー名が使われています",
 };
 
-function getErrorCode(err: JQuery.jqXHR<unknown>, type: "signin" | "signup"): string {
-  const responseJSON = err.responseJSON;
+function getErrorCode(err: unknown, type: "signin" | "signup"): string {
+  const responseJSON =
+    typeof err === "object" && err != null && "responseJSON" in err
+      ? (err as { responseJSON?: unknown }).responseJSON
+      : undefined;
   if (
     typeof responseJSON !== "object" ||
     responseJSON === null ||
@@ -68,10 +70,8 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
         }
         handleRequestCloseModal();
       } catch (err: unknown) {
-        const error = getErrorCode(err as JQuery.jqXHR<unknown>, values.type);
-        throw new SubmissionError({
-          _error: error,
-        });
+        const error = getErrorCode(err, values.type);
+        throw new Error(error);
       }
     },
     [handleRequestCloseModal, onUpdateActiveUser],

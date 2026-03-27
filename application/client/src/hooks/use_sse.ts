@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, type RefObject } from "react";
 
 interface SSEOptions<T> {
   onMessage: (data: T, prevContent: string) => string;
@@ -7,15 +7,14 @@ interface SSEOptions<T> {
 }
 
 interface ReturnValues {
-  content: string;
   isStreaming: boolean;
   start: (url: string) => void;
   stop: () => void;
   reset: () => void;
+  contentRef: RefObject<string>;
 }
 
 export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
-  const [content, setContent] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const contentRef = useRef("");
@@ -30,7 +29,6 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
 
   const reset = useCallback(() => {
     stop();
-    setContent("");
     contentRef.current = "";
   }, [stop]);
 
@@ -38,7 +36,6 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
     (url: string) => {
       stop();
       contentRef.current = "";
-      setContent("");
       setIsStreaming(true);
 
       const eventSource = new EventSource(url);
@@ -56,7 +53,6 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
 
         const newContent = options.onMessage(data, contentRef.current);
         contentRef.current = newContent;
-        setContent(newContent);
       };
 
       eventSource.onerror = (error) => {
@@ -67,5 +63,5 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
     [options, stop],
   );
 
-  return { content, isStreaming, start, stop, reset };
+  return { contentRef, isStreaming, start, stop, reset };
 }

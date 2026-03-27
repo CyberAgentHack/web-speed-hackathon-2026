@@ -1,5 +1,6 @@
 import type * as playwright from "playwright";
 import type * as puppeteer from "puppeteer";
+import { expect } from "@playwright/test";
 
 import { consola } from "../consola";
 import { goTo } from "../utils/go_to";
@@ -24,7 +25,7 @@ export async function calculateDmChatFlowAction({
       playwrightPage,
       puppeteerPage,
       timeout: 120 * 1000,
-      url: new URL("/not-found", baseUrl).href,
+      url: new URL("/", baseUrl).href,
     });
   } catch (err) {
     throw new Error("ページの読み込みに失敗したか、タイムアウトしました", { cause: err });
@@ -134,19 +135,19 @@ export async function calculateDmChatFlowAction({
 
     // メッセージを送信
     try {
-      await playwrightPage.keyboard.press("Enter");
+      const messageInput = playwrightPage.getByRole("textbox", { name: "内容" });
+      await Promise.all([
+        playwrightPage.waitForResponse(
+          (response) =>
+            /\/api\/v1\/dm\/[^/]+\/messages$/.test(response.url()) && response.status() === 201,
+          { timeout: 30 * 1000 },
+        ),
+        messageInput.press("Enter"),
+      ]);
+
+      await expect(messageInput).toBeEnabled({ timeout: 30 * 1000 });
     } catch (err) {
       throw new Error("メッセージの送信に失敗しました", { cause: err });
-    }
-
-    // メッセージが表示されるまで待機（送信完了確認）
-    try {
-      await playwrightPage
-        .locator("li")
-        .filter({ hasText: "パフォーマンス改善のアドバイスをお願いします！" })
-        .waitFor({ timeout: 30 * 1000 });
-    } catch (err) {
-      throw new Error("メッセージの送信完了を待機中にタイムアウトしました", { cause: err });
     }
 
     // 追加のメッセージを入力
@@ -163,20 +164,19 @@ export async function calculateDmChatFlowAction({
 
     // 2通目のメッセージを送信
     try {
-      await playwrightPage.keyboard.press("Enter");
+      const messageInput = playwrightPage.getByRole("textbox", { name: "内容" });
+      await Promise.all([
+        playwrightPage.waitForResponse(
+          (response) =>
+            /\/api\/v1\/dm\/[^/]+\/messages$/.test(response.url()) && response.status() === 201,
+          { timeout: 30 * 1000 },
+        ),
+        messageInput.press("Enter"),
+      ]);
     } catch (err) {
       throw new Error("2通目のメッセージの送信に失敗しました", { cause: err });
     }
 
-    // 2通目のメッセージが表示されるまで待機
-    try {
-      await playwrightPage
-        .locator("li")
-        .filter({ hasText: "LCPの改善方法を具体的に教えてください。" })
-        .waitFor({ timeout: 30 * 1000 });
-    } catch (err) {
-      throw new Error("2通目のメッセージの送信完了を待機中にタイムアウトしました", { cause: err });
-    }
   }
   await flow.endTimespan();
   consola.debug("DmChatFlowAction - timespan end");

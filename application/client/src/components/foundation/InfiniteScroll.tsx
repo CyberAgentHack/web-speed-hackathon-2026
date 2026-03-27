@@ -10,13 +10,13 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
   const latestItem = items[items.length - 1];
 
   const prevReachedRef = useRef(false);
+  const rafIdRef = useRef<number | null>(null);
+  const scheduledRef = useRef(false);
 
   useEffect(() => {
-    const handler = () => {
-      // 念の為 2の18乗 回、最下部かどうかを確認する
-      const hasReached = Array.from(Array(2 ** 18), () => {
-        return window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
-      }).every(Boolean);
+    const check = () => {
+      const hasReached =
+        window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
 
       // 画面最下部にスクロールしたタイミングで、登録したハンドラを呼び出す
       if (hasReached && !prevReachedRef.current) {
@@ -29,18 +29,34 @@ export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
       prevReachedRef.current = hasReached;
     };
 
+    const handler = () => {
+      if (scheduledRef.current) {
+        return;
+      }
+      scheduledRef.current = true;
+      rafIdRef.current = window.requestAnimationFrame(() => {
+        scheduledRef.current = false;
+        rafIdRef.current = null;
+        check();
+      });
+    };
+
     // 最初は実行されないので手動で呼び出す
     prevReachedRef.current = false;
-    handler();
+    check();
 
-    document.addEventListener("wheel", handler, { passive: false });
-    document.addEventListener("touchmove", handler, { passive: false });
-    document.addEventListener("resize", handler, { passive: false });
-    document.addEventListener("scroll", handler, { passive: false });
+    document.addEventListener("wheel", handler, { passive: true });
+    document.addEventListener("touchmove", handler, { passive: true });
+    window.addEventListener("resize", handler, { passive: true });
+    document.addEventListener("scroll", handler, { passive: true });
     return () => {
+      if (rafIdRef.current !== null) {
+        window.cancelAnimationFrame(rafIdRef.current);
+      }
+      scheduledRef.current = false;
       document.removeEventListener("wheel", handler);
       document.removeEventListener("touchmove", handler);
-      document.removeEventListener("resize", handler);
+      window.removeEventListener("resize", handler);
       document.removeEventListener("scroll", handler);
     };
   }, [latestItem, fetchMore]);

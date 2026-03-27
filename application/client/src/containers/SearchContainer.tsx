@@ -20,7 +20,7 @@ export const SearchContainer = () => {
       <Helmet>
         <title>検索 - CaX</title>
       </Helmet>
-      <SearchPage query={query} results={posts} initialValues={{ searchText: query }} />
+      <SearchPage query={query} results={posts} />
     </InfiniteScroll>
   );
 };

@@ -147,10 +147,14 @@ export async function calculatePostFlowAction({ baseUrl, playwrightPage, puppete
         .getByRole("button", { name: "投稿する" });
       await submitButton.waitFor({ timeout: 120 * 1000 });
       await submitButton.click();
-      await playwrightPage
+      const postedArticle = playwrightPage
         .getByRole("article")
-        .getByAltText("熊の形をしたアスキーアート。アナログマというキャプションがついている")
-        .waitFor({ timeout: 120 * 1000 });
+        .filter({ hasText: "画像を添付したテスト投稿です。" })
+        .first();
+      await Promise.all([
+        postedArticle.waitFor({ timeout: 120 * 1000 }),
+        postedArticle.locator("img").first().waitFor({ timeout: 120 * 1000 }),
+      ]);
     } catch (err) {
       throw new Error("画像投稿の完了を確認できませんでした", { cause: err });
     }

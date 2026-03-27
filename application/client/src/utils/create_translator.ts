@@ -1,8 +1,35 @@
 import { CreateMLCEngine } from "@mlc-ai/web-llm";
 import { stripIndents } from "common-tags";
-import * as JSONRepairJS from "json-repair-js";
 import langs from "langs";
 import invariant from "tiny-invariant";
+
+function parseTranslationResult(content: string): string {
+  const start = content.indexOf("{");
+  const end = content.lastIndexOf("}");
+
+  if (start >= 0 && end > start) {
+    const candidate = content.slice(start, end + 1);
+    try {
+      const parsed = JSON.parse(candidate) as { result?: unknown };
+      if (typeof parsed.result === "string") {
+        return parsed.result;
+      }
+    } catch {
+      // noop
+    }
+  }
+
+  try {
+    const parsed = JSON.parse(content) as { result?: unknown };
+    if (typeof parsed.result === "string") {
+      return parsed.result;
+    }
+  } catch {
+    // noop
+  }
+
+  throw new Error("The translation result is missing in the reply.");
+}
 
 interface Translator {
   translate(text: string): Promise<string>;
@@ -46,13 +73,7 @@ export async function createTranslator(params: Params): Promise<Translator> {
       const content = reply.choices[0]!.message.content;
       invariant(content, "No content in the reply from the translation engine.");
 
-      const parsed = JSONRepairJS.loads(content);
-      invariant(
-        parsed != null && "result" in parsed,
-        "The translation result is missing in the reply.",
-      );
-
-      return String(parsed.result);
+      return parseTranslationResult(content);
     },
     [Symbol.dispose]: () => {
       engine.unload();

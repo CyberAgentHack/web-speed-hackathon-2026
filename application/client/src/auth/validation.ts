@@ -1,9 +1,9 @@
-import { FormErrors } from "redux-form";
-
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 
-export const validate = (values: AuthFormData): FormErrors<AuthFormData> => {
-  const errors: FormErrors<AuthFormData> = {};
+export type AuthFormErrors = Partial<Record<keyof AuthFormData, string>>;
+
+export const validate = (values: AuthFormData): AuthFormErrors => {
+  const errors: AuthFormErrors = {};
 
   const normalizedName = values.name?.trim() || "";
   const normalizedPassword = values.password?.trim() || "";
@@ -13,7 +13,7 @@ export const validate = (values: AuthFormData): FormErrors<AuthFormData> => {
     errors.name = "名前を入力してください";
   }
 
-  if (/^(?:[^\P{Letter}&&\P{Number}]*){16,}$/v.test(normalizedPassword)) {
+  if (normalizedPassword.length >= 16 && /^[\p{Letter}\p{Number}]+$/u.test(normalizedPassword)) {
     errors.password = "パスワードには記号を含める必要があります";
   }
   if (normalizedPassword.length === 0) {

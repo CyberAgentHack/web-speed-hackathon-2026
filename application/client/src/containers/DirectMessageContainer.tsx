@@ -57,8 +57,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   }, [conversationId]);
 
   useEffect(() => {
-    void loadConversation();
-    void sendRead();
+    void Promise.all([loadConversation(), sendRead()]);
   }, [loadConversation, sendRead]);
 
   const handleSubmit = useCallback(
@@ -68,7 +67,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
         await sendJSON(`/api/v1/dm/${conversationId}/messages`, {
           body: params.body,
         });
-        loadConversation();
+        await loadConversation();
       } finally {
         setIsSubmitting(false);
       }

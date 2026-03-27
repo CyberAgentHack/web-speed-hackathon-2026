@@ -1,18 +1,18 @@
 import classNames from "classnames";
-import moment from "moment";
 import {
   ChangeEvent,
   useCallback,
+  useEffect,
   useId,
   useRef,
   useState,
   KeyboardEvent,
   FormEvent,
-  useEffect,
 } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
+import { formatTimeJa } from "@web-speed-hackathon-2026/client/src/utils/date_time";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
@@ -35,6 +35,7 @@ export const DirectMessagePage = ({
   onSubmit,
 }: Props) => {
   const formRef = useRef<HTMLFormElement>(null);
+  const previousScrollHeightRef = useRef(0);
   const textAreaId = useId();
 
   const peer =
@@ -43,7 +44,23 @@ export const DirectMessagePage = ({
   const [text, setText] = useState("");
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
-  const scrollHeightRef = useRef(0);
+
+  useEffect(() => {
+    const observer = new ResizeObserver(() => {
+      const nextHeight = document.body.scrollHeight;
+      if (nextHeight <= previousScrollHeightRef.current) {
+        return;
+      }
+      previousScrollHeightRef.current = nextHeight;
+      window.scrollTo(0, nextHeight);
+    });
+    previousScrollHeightRef.current = document.body.scrollHeight;
+    observer.observe(document.body);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -66,24 +83,13 @@ export const DirectMessagePage = ({
   const handleSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      void onSubmit({ body: text.trim() }).then(() => {
-        setText("");
+      const currentText = text;
+      void onSubmit({ body: currentText.trim() }).then(() => {
+        setText((latestText) => (latestText === currentText ? "" : latestText));
       });
     },
     [onSubmit, text],
   );
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
-      if (height !== scrollHeightRef.current) {
-        scrollHeightRef.current = height;
-        window.scrollTo(0, height);
-      }
-    }, 1);
-
-    return () => clearInterval(id);
-  }, []);
 
   if (conversationError != null) {
     return (
@@ -99,6 +105,8 @@ export const DirectMessagePage = ({
         <img
           alt={peer.profileImage.alt}
           className="h-12 w-12 rounded-full object-cover"
+          decoding="async"
+          loading="lazy"
           src={getProfileImagePath(peer.profileImage.id)}
         />
         <div className="min-w-0">
@@ -140,9 +148,7 @@ export const DirectMessagePage = ({
                   {message.body}
                 </p>
                 <div className="flex gap-1 text-xs">
-                  <time dateTime={message.createdAt}>
-                    {moment(message.createdAt).locale("ja").format("HH:mm")}
-                  </time>
+                  <time dateTime={message.createdAt}>{formatTimeJa(message.createdAt)}</time>
                   {isActiveUserSend && message.isRead && (
                     <span className="text-cax-text-muted">既読</span>
                   )}

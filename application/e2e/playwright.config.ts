@@ -37,5 +37,8 @@ export default defineConfig({
     trace: "off",
     navigationTimeout: 30_000,
     actionTimeout: 30_000,
+    launchOptions: {
+      executablePath: process.env["PLAYWRIGHT_LAUNCH_OPTIONS_EXECUTABLE_PATH"],
+    },
   },
 });

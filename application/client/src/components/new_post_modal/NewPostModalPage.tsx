@@ -55,9 +55,11 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
       Promise.all(
         files.map((file) =>
-          convertImage(file, { extension: MagickFormat.Jpg }).then(
-            (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
-          ),
+          file.type === "image/webp" || file.name.toLowerCase().endsWith(".webp")
+            ? Promise.resolve(file)
+            : convertImage(file, { extension: MagickFormat.WebP }).then(
+                (blob) => new File([blob], "converted.webp", { type: "image/webp" }),
+              ),
         ),
       )
         .then((convertedFiles) => {
@@ -70,7 +72,10 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
           setIsConverting(false);
         })
-        .catch(console.error);
+        .catch((error) => {
+          console.error(error);
+          setIsConverting(false);
+        });
     }
   }, []);
 

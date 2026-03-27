@@ -1,28 +1,34 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 export function useSearchParams(): [URLSearchParams] {
   const [searchParams, setSearchParams] = useState(
     () => new URLSearchParams(window.location.search),
   );
-  const lastSearchRef = useRef(window.location.search);
 
   useEffect(() => {
-    let active = true;
-
-    const poll = () => {
-      if (!active) return;
-      const currentSearch = window.location.search;
-      if (currentSearch !== lastSearchRef.current) {
-        lastSearchRef.current = currentSearch;
-        setSearchParams(new URLSearchParams(currentSearch));
-      }
-      scheduler.postTask(poll, { priority: "user-blocking", delay: 1 });
+    const handleLocationChange = () => {
+      setSearchParams(new URLSearchParams(window.location.search));
     };
 
-    scheduler.postTask(poll, { priority: "user-blocking", delay: 1 });
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+
+    history.pushState = function pushState(...args) {
+      originalPushState.apply(this, args);
+      handleLocationChange();
+    };
+
+    history.replaceState = function replaceState(...args) {
+      originalReplaceState.apply(this, args);
+      handleLocationChange();
+    };
+
+    window.addEventListener("popstate", handleLocationChange);
 
     return () => {
-      active = false;
+      history.pushState = originalPushState;
+      history.replaceState = originalReplaceState;
+      window.removeEventListener("popstate", handleLocationChange);
     };
   }, []);
 
