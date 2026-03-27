@@ -3,13 +3,33 @@ import { app } from "@web-speed-hackathon-2026/server/src/app";
 
 import { initializeSequelize } from "./sequelize";
 
+function resolveListenPort(): number {
+  const raw = process.env["PORT"];
+  if (raw === undefined || raw === "") {
+    return 3000;
+  }
+  const n = Number(raw);
+  return Number.isFinite(n) && n >= 0 ? n : 3000;
+}
+
 async function main() {
   await initializeSequelize();
 
-  const server = app.listen(Number(process.env["PORT"] || 3000), "0.0.0.0", () => {
+  const listenPort = resolveListenPort();
+  const listenHost = "0.0.0.0";
+
+  const server = app.listen(listenPort, listenHost);
+
+  server.once("listening", () => {
     const address = server.address();
-    if (typeof address === "object") {
-      console.log(`Listening on ${address?.address}:${address?.port}`);
+    if (address !== null && typeof address === "object" && address.port != null) {
+      const host =
+        address.address === "0.0.0.0" || address.address === "::"
+          ? "localhost"
+          : address.address;
+      console.log(`Listening on http://${host}:${address.port}/`);
+    } else {
+      console.log(`Listening on http://localhost:${listenPort}/`);
     }
   });
 }

@@ -9,12 +9,14 @@ export async function startFlow(page: puppeteer.Page) {
         disableFullPageScreenshot: true,
         disableStorageReset: true,
         formFactor: "desktop",
+        // 旧挙動に戻す（計測の取りこぼしを減らす）
         maxWaitForFcp: 120 * 1000,
         maxWaitForLoad: 180 * 1000,
         onlyAudits: [
           "first-contentful-paint",
           "speed-index",
           "largest-contentful-paint",
+          "largest-contentful-paint-element",
           "total-blocking-time",
           "cumulative-layout-shift",
           "interaction-to-next-paint",

@@ -220,3 +220,6 @@ $RECYCLE.BIN/
 application/upload/**
 !application/upload/**/
 !application/upload/**/.gitkeep
+
+# ローカル Lighthouse 計測の出力（任意）
+scoring-tool/lighthouse*.json

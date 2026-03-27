@@ -26,6 +26,9 @@ export async function createPage({ device }: Params) {
 
   const puppeteerBrowser = await puppeteer.connect({
     browserURL: "http://127.0.0.1:9222",
+    // Lighthouse(=puppeteer-core) の CDP コマンド `Page.enable` が
+    // 低速環境でタイムアウトすることがあるため、通信(プロトコル)の猶予を延ばす。
+    protocolTimeout: 120_000,
     defaultViewport: {
       deviceScaleFactor: device.deviceScaleFactor!,
       hasTouch: device.hasTouch!,

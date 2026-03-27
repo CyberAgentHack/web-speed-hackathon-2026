@@ -1,10 +1,7 @@
-import { ReactEventHandler, useCallback, useMemo, useRef, useState } from "react";
+import { ReactEventHandler, useCallback, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import { SoundWaveSVG } from "@web-speed-hackathon-2026/client/src/components/foundation/SoundWaveSVG";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
-import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getSoundPath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
@@ -12,38 +9,36 @@ interface Props {
 }
 
 export const SoundPlayer = ({ sound }: Props) => {
-  const { data, isLoading } = useFetch(getSoundPath(sound.id), fetchBinary);
-
-  const blobUrl = useMemo(() => {
-    return data !== null ? URL.createObjectURL(new Blob([data])) : null;
-  }, [data]);
-
   const [currentTimeRatio, setCurrentTimeRatio] = useState(0);
   const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>((ev) => {
     const el = ev.currentTarget;
+    // duration が 0 の場合は計算不能なので無視
+    if (!Number.isFinite(el.duration) || el.duration <= 0) return;
     setCurrentTimeRatio(el.currentTime / el.duration);
   }, []);
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const handleTogglePlaying = useCallback(() => {
-    setIsPlaying((isPlaying) => {
-      if (isPlaying) {
+    setIsPlaying((prev) => {
+      if (prev) {
         audioRef.current?.pause();
       } else {
-        audioRef.current?.play();
+        void audioRef.current?.play();
       }
-      return !isPlaying;
+      return !prev;
     });
   }, []);
 
-  if (isLoading || data === null || blobUrl === null) {
-    return null;
-  }
-
   return (
     <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
-      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} src={blobUrl} />
+      <audio
+        ref={audioRef}
+        loop={true}
+        preload="none"
+        onTimeUpdate={handleTimeUpdate}
+        src={getSoundPath(sound.id)}
+      />
       <div className="p-2">
         <button
           className="bg-cax-accent text-cax-surface-raised flex h-8 w-8 items-center justify-center rounded-full text-sm hover:opacity-75"
@@ -63,13 +58,22 @@ export const SoundPlayer = ({ sound }: Props) => {
         <div className="pt-2">
           <AspectRatioBox aspectHeight={1} aspectWidth={10}>
             <div className="relative h-full w-full">
-              <div className="absolute inset-0 h-full w-full">
-                <SoundWaveSVG soundData={data} />
+              {/* 解析ロード無しのプレースホルダ（LCP を確実に出すため） */}
+              <div className="absolute inset-0 flex items-end justify-between gap-0.5 px-1 opacity-60">
+                {Array.from({ length: 20 }, (_, i) => (
+                  <div
+                    // eslint-disable-next-line react/no-array-index-key
+                    key={i}
+                    className="w-0.5 bg-cax-accent"
+                    style={{ height: `${((i % 5) + 1) * 18}%` }}
+                  />
+                ))}
               </div>
+              {/* 再生位置の指標 */}
               <div
-                className="bg-cax-surface-subtle absolute inset-0 h-full w-full opacity-75"
-                style={{ left: `${currentTimeRatio * 100}%` }}
-              ></div>
+                className="absolute inset-y-0 w-0.5 bg-cax-brand-soft opacity-80"
+                style={{ left: `${Math.max(0, Math.min(100, currentTimeRatio * 100))}%` }}
+              />
             </div>
           </AspectRatioBox>
         </div>

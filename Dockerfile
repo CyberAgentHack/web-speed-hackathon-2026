@@ -21,7 +21,7 @@ RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile
 
 COPY ./application .
 
-RUN NODE_OPTIONS="--max-old-space-size=4096" pnpm build
+RUN NODE_OPTIONS="--max-old-space-size=4096" NODE_ENV=production pnpm build
 
 RUN --mount=type=cache,target=/pnpm/store CI=true pnpm install --frozen-lockfile --prod --filter @web-speed-hackathon-2026/server
 
