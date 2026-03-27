@@ -1,10 +1,8 @@
 import { useCallback, useState } from "react";
 
-import { createTranslator } from "@web-speed-hackathon-2026/client/src/utils/create_translator";
-
 type State =
   | { type: "idle"; text: string }
-  | { type: "loading" }
+  | { type: "loading"; original: string }
   | { type: "translated"; text: string; original: string };
 
 interface Props {
@@ -17,13 +15,19 @@ export const TranslatableText = ({ text }: Props) => {
   const handleClick = useCallback(() => {
     switch (state.type) {
       case "idle": {
-        (async () => {
-          updateState({ type: "loading" });
+        void (async () => {
+          updateState({ type: "loading", original: state.text });
+
           try {
+            const { createTranslator } = await import(
+              "@web-speed-hackathon-2026/client/src/utils/create_translator"
+            );
+
             using translator = await createTranslator({
               sourceLanguage: "ja",
               targetLanguage: "en",
             });
+
             const result = await translator.translate(state.text);
 
             updateState({
@@ -41,10 +45,12 @@ export const TranslatableText = ({ text }: Props) => {
         })();
         break;
       }
+
       case "translated": {
         updateState({ type: "idle", text: state.original });
         break;
       }
+
       default: {
         state.type satisfies "loading";
         break;
@@ -52,13 +58,20 @@ export const TranslatableText = ({ text }: Props) => {
     }
   }, [state]);
 
+  const displayText =
+    state.type === "idle"
+      ? state.text
+      : state.type === "translated"
+        ? state.text
+        : state.original;
+
   return (
     <>
       <p>
         {state.type !== "loading" ? (
-          <span>{state.text}</span>
+          <span>{displayText}</span>
         ) : (
-          <span className="bg-cax-surface-subtle text-cax-text-muted">{text}</span>
+          <span className="bg-cax-surface-subtle text-cax-text-muted">{displayText}</span>
         )}
       </p>
 
