@@ -4,11 +4,16 @@
   "license": "MPL-2.0",
   "author": "CyberAgent, Inc.",
   "type": "module",
+  "workspaces": [
+    "client/",
+    "server/",
+    "e2e/"
+  ],
   "scripts": {
-    "build": "pnpm --filter @web-speed-hackathon-2026/client build",
-    "start": "pnpm --filter @web-speed-hackathon-2026/server start",
-    "typecheck": "pnpm run --recursive typecheck",
-    "format": "pnpm run format:oxlint && pnpm run format:oxfmt",
+    "build": "bun run --cwd client build",
+    "start": "bun run --cwd server start",
+    "typecheck": "bun run --cwd client typecheck && bun run --cwd server typecheck",
+    "format": "bun run format:oxlint && bun run format:oxfmt",
     "format:oxlint": "oxlint --fix",
     "format:oxfmt": "oxfmt"
   },
@@ -16,8 +21,17 @@
     "oxfmt": "0.36.0",
     "oxlint": "1.43.0"
   },
+  "overrides": {
+    "gifler>omggif": "1.0.10",
+    "gifler>bluebird": "3.7.2"
+  },
+  "trustedDependencies": [
+    "core-js",
+    "esbuild",
+    "negaposi-analyzer-ja",
+    "sqlite3"
+  ],
   "engines": {
     "node": "24.14.0"
-  },
-  "packageManager": "pnpm@10.32.1"
+  }
 }

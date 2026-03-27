@@ -2,53 +2,54 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { Router } from "express";
-import httpErrors from "http-errors";
+import { Hono } from "hono";
+import { streamSSE } from "hono/streaming";
 
 import { QaSuggestion } from "@web-speed-hackathon-2026/server/src/models";
+import type { Env } from "@web-speed-hackathon-2026/server/src/types";
+import { unauthorized } from "@web-speed-hackathon-2026/server/src/utils/http_error";
 
-export const crokRouter = Router();
+export const crokRouter = new Hono<Env>();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-8");
 
-crokRouter.get("/crok/suggestions", async (_req, res) => {
+crokRouter.get("/crok/suggestions", async (_c) => {
   const suggestions = await QaSuggestion.findAll({ logging: false });
-  res.json({ suggestions: suggestions.map((s) => s.question) });
+  return _c.json({ suggestions: suggestions.map((s) => s.question) });
 });
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-crokRouter.get("/crok", async (req, res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
+crokRouter.get("/crok", async (c) => {
+  if (c.get("session").userId === undefined) {
+    unauthorized();
   }
 
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
-  res.flushHeaders();
+  c.header("Cache-Control", "no-cache, no-transform");
 
-  let messageId = 0;
+  return streamSSE(c, async (stream) => {
+    let messageId = 0;
 
-  // TTFT (Time to First Token)
-  await sleep(3000);
+    // TTFT (Time to First Token)
+    await stream.sleep(3000);
 
-  for (const char of response) {
-    if (res.closed) break;
+    for (const char of response) {
+      if (stream.aborted) break;
 
-    const data = JSON.stringify({ text: char, done: false });
-    res.write(`event: message\nid: ${messageId++}\ndata: ${data}\n\n`);
+      await stream.writeSSE({
+        data: JSON.stringify({ text: char, done: false }),
+        event: "message",
+        id: String(messageId++),
+      });
 
-    await sleep(10);
-  }
+      await stream.sleep(10);
+    }
 
-  if (!res.closed) {
-    const data = JSON.stringify({ text: "", done: true });
-    res.write(`event: message\nid: ${messageId}\ndata: ${data}\n\n`);
-  }
-
-  res.end();
+    if (!stream.aborted) {
+      await stream.writeSSE({
+        data: JSON.stringify({ text: "", done: true }),
+        event: "message",
+        id: String(messageId),
+      });
+    }
+  });
 });

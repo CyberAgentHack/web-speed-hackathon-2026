@@ -14,7 +14,11 @@ import { SearchContainer } from "@web-speed-hackathon-2026/client/src/containers
 import { TermContainer } from "@web-speed-hackathon-2026/client/src/containers/TermContainer";
 import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
 import { UserProfileContainer } from "@web-speed-hackathon-2026/client/src/containers/UserProfileContainer";
-import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import {
+  fetchJSON,
+  HTTPError,
+  sendJSON,
+} from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 export const AppContainer = () => {
   const { pathname } = useLocation();
@@ -29,6 +33,13 @@ export const AppContainer = () => {
     void fetchJSON<Models.User>("/api/v1/me")
       .then((user) => {
         setActiveUser(user);
+      })
+      .catch((error: unknown) => {
+        if (error instanceof HTTPError && error.status === 401) {
+          setActiveUser(null);
+          return;
+        }
+        throw error;
       })
       .finally(() => {
         setIsLoadingActiveUser(false);

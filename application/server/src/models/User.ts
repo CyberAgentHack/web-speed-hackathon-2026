@@ -1,4 +1,3 @@
-import bcrypt from "bcrypt";
 import {
   CreationOptional,
   DataTypes,
@@ -27,10 +26,10 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   declare profileImage?: NonAttribute<ProfileImage>;
 
   generateHash(password: string): string {
-    return bcrypt.hashSync(password, bcrypt.genSaltSync(8));
+    return Bun.password.hashSync(password, { algorithm: "bcrypt", cost: 8 });
   }
   validPassword(password: string): boolean {
-    return bcrypt.compareSync(password, this.getDataValue("password"));
+    return Bun.password.verifySync(password, this.getDataValue("password"));
   }
 }
 

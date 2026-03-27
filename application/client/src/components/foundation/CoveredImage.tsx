@@ -8,6 +8,15 @@ import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Mod
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
+function toBinaryString(data: ArrayBuffer): string {
+  const bytes = new Uint8Array(data);
+  let str = "";
+  for (let i = 0; i < bytes.length; i++) {
+    str += String.fromCharCode(bytes[i]!);
+  }
+  return str;
+}
+
 interface Props {
   src: string;
 }
@@ -25,13 +34,18 @@ export const CoveredImage = ({ src }: Props) => {
   const { data, isLoading } = useFetch(src, fetchBinary);
 
   const imageSize = useMemo(() => {
-    return data != null ? sizeOf(Buffer.from(data)) : { height: 0, width: 0 };
+    return data != null ? sizeOf(new Uint8Array(data)) : { height: 0, width: 0 };
   }, [data]);
 
   const alt = useMemo(() => {
-    const exif = data != null ? load(Buffer.from(data).toString("binary")) : null;
+    const exif = data != null ? load(toBinaryString(data)) : null;
     const raw = exif?.["0th"]?.[ImageIFD.ImageDescription];
-    return raw != null ? new TextDecoder().decode(Buffer.from(raw, "binary")) : "";
+    if (raw == null) return "";
+    const bytes = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) {
+      bytes[i] = raw.charCodeAt(i);
+    }
+    return new TextDecoder().decode(bytes);
   }, [data]);
 
   const blobUrl = useMemo(() => {
