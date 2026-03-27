@@ -34,13 +34,17 @@ export async function calculatePostVideoPage({ baseUrl, playwrightPage, puppetee
   const {
     steps: [result],
   } = await flow.createFlowResult();
+  const audits = result!.lhr.audits;
+  if (audits["first-contentful-paint"]?.numericValue == null) {
+    throw new Error("NO_FCP: 動画つき投稿詳細ページ (/posts/fff790f5-99ea-432f-8f79-21d3d49efd1a)");
+  }
 
-  const { breakdown, scoreX100 } = calculateHackathonScore(result!.lhr.audits, {
+  const { breakdown, scoreX100 } = calculateHackathonScore(audits, {
     isUserflow: false,
   });
 
   return {
-    audits: result!.lhr.audits,
+    audits,
     breakdown,
     scoreX100,
   };

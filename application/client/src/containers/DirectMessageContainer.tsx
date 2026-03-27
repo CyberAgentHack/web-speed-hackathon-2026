@@ -116,7 +116,16 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     if (conversationError != null) {
       return <NotFoundContainer />;
     }
-    return null;
+    return (
+      <>
+        <Helmet>
+          <title>読込中 - CaX</title>
+        </Helmet>
+        <section style={{ padding: '1.5rem 1rem', fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '14px', color: '#374151' }}>
+          <p style={{ margin: 0, lineHeight: '1.5' }}>DMを読み込み中です...</p>
+        </section>
+      </>
+    );
   }
 
   const peer =

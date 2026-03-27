@@ -8,9 +8,11 @@ async function main() {
 
   const server = app.listen(Number(process.env["PORT"] || 3000), "0.0.0.0", () => {
     const address = server.address();
-    if (typeof address === "object") {
-      console.log(`Listening on ${address?.address}:${address?.port}`);
+    if (address != null && typeof address === "object") {
+      console.log(`Listening on ${address.address}:${address.port}`);
+      return;
     }
+    console.log("Listening on 0.0.0.0:3000");
   });
 }
 

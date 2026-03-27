@@ -34,13 +34,17 @@ export async function calculatePostAudioPage({ baseUrl, playwrightPage, puppetee
   const {
     steps: [result],
   } = await flow.createFlowResult();
+  const audits = result!.lhr.audits;
+  if (audits["first-contentful-paint"]?.numericValue == null) {
+    throw new Error("NO_FCP: 音声つき投稿詳細ページ (/posts/fefe75bd-1b7a-478c-8ecc-2c1ab38b821e)");
+  }
 
-  const { breakdown, scoreX100 } = calculateHackathonScore(result!.lhr.audits, {
+  const { breakdown, scoreX100 } = calculateHackathonScore(audits, {
     isUserflow: false,
   });
 
   return {
-    audits: result!.lhr.audits,
+    audits,
     breakdown,
     scoreX100,
   };

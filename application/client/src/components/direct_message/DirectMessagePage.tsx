@@ -74,16 +74,12 @@ export const DirectMessagePage = ({
   );
 
   useEffect(() => {
-    const id = setInterval(() => {
-      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
-      if (height !== scrollHeightRef.current) {
-        scrollHeightRef.current = height;
-        window.scrollTo(0, height);
-      }
-    }, 1);
-
-    return () => clearInterval(id);
-  }, []);
+    const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
+    if (height !== scrollHeightRef.current) {
+      scrollHeightRef.current = height;
+      window.scrollTo(0, height);
+    }
+  }, [conversation.messages.length, isPeerTyping]);
 
   if (conversationError != null) {
     return (

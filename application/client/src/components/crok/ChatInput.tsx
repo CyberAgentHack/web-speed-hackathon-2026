@@ -1,5 +1,4 @@
 import Bluebird from "bluebird";
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
 import {
   useEffect,
   useLayoutEffect,
@@ -79,7 +78,7 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
+  const [tokenizer, setTokenizer] = useState<any | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
@@ -97,6 +96,8 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     let mounted = true;
 
     const init = async () => {
+      // 動的インポート
+      const kuromoji = await import("kuromoji");
       const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
       const nextTokenizer = await builder.buildAsync();
       if (mounted) {
