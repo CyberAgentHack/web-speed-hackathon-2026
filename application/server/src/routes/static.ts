@@ -7,6 +7,7 @@ import {
   PUBLIC_PATH,
   UPLOAD_PATH,
 } from "@web-speed-hackathon-2026/server/src/paths";
+import { precompressedBrotli } from "@web-speed-hackathon-2026/server/src/middleware/brotli";
 
 export const staticRouter = Router();
 
@@ -20,12 +21,16 @@ staticRouter.use(
   }),
 );
 
+staticRouter.use(precompressedBrotli(PUBLIC_PATH));
+
 staticRouter.use(
   serveStatic(PUBLIC_PATH, {
     etag: false,
     lastModified: false,
   }),
 );
+
+staticRouter.use(precompressedBrotli(CLIENT_DIST_PATH));
 
 staticRouter.use(
   serveStatic(CLIENT_DIST_PATH, {

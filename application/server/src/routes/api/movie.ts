@@ -1,15 +1,19 @@
+import { execFile } from "child_process";
 import { promises as fs } from "fs";
+import { tmpdir } from "os";
 import path from "path";
+import { promisify } from "util";
 
 import { Router } from "express";
-import { fileTypeFromBuffer } from "file-type";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
+const execFileAsync = promisify(execFile);
+
 // 変換した動画の拡張子
-const EXTENSION = "gif";
+const EXTENSION = "webm";
 
 export const movieRouter = Router();
 
@@ -21,16 +25,29 @@ movieRouter.post("/movies", async (req, res) => {
     throw new httpErrors.BadRequest();
   }
 
-  const type = await fileTypeFromBuffer(req.body);
-  if (type === undefined || type.ext !== EXTENSION) {
-    throw new httpErrors.BadRequest("Invalid file type");
-  }
-
+  const inputPath = path.resolve(tmpdir(), uuidv4());
   const movieId = uuidv4();
+  const outputPath = path.resolve(UPLOAD_PATH, `./movies/${movieId}.${EXTENSION}`);
 
-  const filePath = path.resolve(UPLOAD_PATH, `./movies/${movieId}.${EXTENSION}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "movies"), { recursive: true });
-  await fs.writeFile(filePath, req.body);
+  await fs.writeFile(inputPath, req.body);
+
+  try {
+    await execFileAsync("ffmpeg", [
+      "-i", inputPath,
+      "-t", "5",
+      "-r", "10",
+      "-vf", "crop=min(iw,ih):min(iw,ih)",
+      "-c:v", "libvpx",
+      "-b:v", "500k",
+      "-an",
+      outputPath,
+    ]);
+  } catch {
+    throw new httpErrors.BadRequest("Invalid video file");
+  } finally {
+    await fs.unlink(inputPath).catch(() => {});
+  }
 
   return res.status(200).type("application/json").send({ id: movieId });
 });

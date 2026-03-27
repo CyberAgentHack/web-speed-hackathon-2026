@@ -1,0 +1,172 @@
+# WSH 2026 対応状況
+
+発見した問題の対応状況と残 TODO を管理する。発見内容の詳細は [`findings.md`](./findings.md) を参照。現在のコードと [`checklist.md`](../checklist.md) を参考に、随時項目を追加・更新していくこと。
+
+チェックが付いているものは対応済み。**上から優先順。**
+
+---
+
+- [x] `webpack.config.js`: `mode: "none"` → `mode: "production"`、`devtool` 削除 (`f29812b`)
+- [x] `client/package.json` build script: `NODE_ENV=development webpack` → `webpack` (`43e0877`)
+- [x] `Dockerfile` build ステージ: `ENV NODE_ENV=production` を追加 (`aaffb61`)
+- [x] `index.html`: `<script defer>` を追加 (`b8c2c00`)
+- [x] Babel 設定改善 (`e72313b`)
+- [x] `@ffmpeg/core` + `@ffmpeg/ffmpeg` WASM → サーバー側 ffmpeg に移行 (`fa6ed03`)
+- [x] `@imagemagick/magick-wasm` WASM → サーバー側 sharp に移行 (`6eb432f`)
+- [x] `@mlc-ai/web-llm` → `POST /api/v1/translate` (MyMemory プロキシ) に移行、`langs`/`common-tags`/`json-repair-js`/`tiny-invariant`/`encoding-japanese` も削除
+- [x] デッドコード `extract_metadata_from_sound.ts` を削除
+- [x] `negaposi-analyzer-ja` + `kuromoji` + `bayesian-bm25` → サーバー側 `POST /api/v1/sentiment` + `GET /api/v1/crok/suggestions/search` に移行 (名詞ハイライト要件は `queryTokens` をレスポンスに含めて維持)
+- [x] `react-syntax-highlighter` → `React.lazy` + `Suspense` で遅延分離。`CrokContainer.sendMessage` 時に prefetch 開始 (full ビルドのまま — Light ビルドは自動言語検出結果が変わり挙動変更禁止に抵触するため)
+- [x] main.js: **107.8 MB → ~12 MiB → ~896 KiB → ~346 KiB** に削減 (Phase 4 ② 後)
+- [x] `DirectMessagePage.tsx`: `setInterval(..., 1)` → `useEffect` + `scrollTo` に置換 (`b2761b2`)
+- [x] `AspectRatioBox.tsx`: `setTimeout(calcStyle, 500)` → `ResizeObserver` に置換 (`b2761b2`)
+- [x] ReDoS: `validation.ts`・`services.ts` の 4 箇所を修正 (`1d7d824`)
+- [x] `standardized-audio-context` (466 KB) を除去 — `webpack.config.js` の `ProvidePlugin` から削除
+- [x] `fetchers.ts` を `fetch` に置き換え → `jquery` + `jquery-binarytransport` + `pako` + 同期 XHR (TBT) を除去
+- [x] `InfiniteScroll.tsx`: 2^18 ループ → `IntersectionObserver` に置換
+- [x] `use_infinite_fetch.ts`: `allData` キャッシュで毎回全件 re-fetch を排除
+- [x] `lodash` (544 KB) → ネイティブ JS に置き換え (`SoundWaveSVG.tsx`)
+- [x] `moment` (176 KB) → `dayjs` に置き換え (6 ファイル。plugin 設定は `index.tsx` で一括登録)
+- [x] **Phase 4 ①** GIF → WebM (VP9) 変換 + `PausableMovie.tsx` を native `<video>` 化
+  - `public/movies/*.gif` (15 本・180 MB) を ffmpeg VP9 **480px・CRF 40** で変換 → **2.3 MB** (99% 削減)
+    - 表示コンテナは `max-w-screen-sm` (640px) 内の `w-full` で実質最大 560px → 1080px はオーバースペック
+    - 解像度縮小はレギュ違反なし (テスト条件は「著しく劣化していないこと・激しいブロックノイズがないこと」のみ)
+    - CRF 55 は顔のパーツが認識できないレベルでアウト。CRF 40 が品質・サイズのバランス点
+    - `-cpu-used 4` は圧縮効率を下げるため逆効果。`-deadline good` (デフォルト) を使うこと
+  - `server/src/routes/api/movie.ts`: `EXTENSION = "webm"`、ffmpeg を VP8 出力に変更
+  - `get_path.ts`: `getMoviePath` の拡張子 `.gif` → `.webm`
+  - `PausableMovie.tsx`: `gifler` + canvas → native `<video autoplay loop muted playsInline>` に書き換え
+    - `gifler` / `omggif` / `bluebird` がバンドルから消える
+    - `aria-label="動画プレイヤー"` の button は維持 (E2E テスト要件)
+    - `prefers-reduced-motion` 対応維持
+- [x] **Phase 4 ②** `AppContainer.tsx` のルートレベル `React.lazy()` + `<Suspense>` 化
+  - Route コンテナ 9 個を `lazy()` に変更 (AuthModal・NewPostModal は常時 DOM なので静的のまま)
+  - main.js: **896 KiB → 346 KiB** (61% 削減)
+- [x] **Phase 4 ③** MP3 → Opus 変換 (WebM コンテナではなく `.opus` = Ogg/Opus)
+  - `public/sounds/*.mp3` (15 本・67 MB) を ffmpeg Opus 32k で変換 → **8.6 MB** (87% 削減)
+  - `server/src/routes/api/sound.ts`: `EXTENSION = "opus"`、ffmpeg に `-c:a libopus -b:a 32k` 追加
+  - `get_path.ts`: `getSoundPath` の拡張子 `.mp3` → `.opus`
+  - `SoundWaveSVG.tsx`: `AudioContext.decodeAudioData` はフォーマット非依存 → 変更不要
+- [x] **E2E 対応③** ホーム→投稿詳細 click timeout (ローカルのみ失敗・無視)
+  - `AppContainer` の `<Suspense fallback={null}>` → `<Suspense fallback={<div className="min-h-screen" />}>` に変更 (CLS 改善も兼ねる)
+  - 調査結果: タイムライン最上位は画像投稿 (動画ではない)。`PausableMovie.stopPropagation` は無関係
+  - 根本原因: `CoveredImage` が JS でバイナリ fetch → 画像表示まで重い → WSL 環境でタイムアウト
+  - ローカル固有の問題のため無視。Phase 4 ④ `CoveredImage` サーバー移行で根本解消される見込み
+- [x] **E2E 対応①** 検索バリデーション: redux-form × react-redux v9 の非互換バグ修正
+  - 根本原因: react-redux v9 が hooks ベースに移行したため class component の `UNSAFE_componentWillReceiveProps` が呼ばれなくなり、redux-form の `validateIfNeeded` が永遠に実行されなかった
+  - `pnpm patch` で `redux-form@8.3.10` の `es/createReduxForm.js` + `lib/createReduxForm.js` に `componentDidUpdate` を追加して修正
+  - `application/patches/redux-form@8.3.10.patch` として管理 (`pnpm-workspace.yaml` の `patchedDependencies` に登録済み)
+- [x] 検索フォーム: 未入力のまま送信してもエラーが表示されない問題を修正
+  - 原因: `Field` の `shouldComponentUpdate` (react-redux connect) が `meta.submitFailed` の変化を再描画に繋げなかった
+  - 対策: `handleFormSubmit` で `FormData` から値を直接取得して `validate` を手動呼び出し → エラーは `Field` の外側 (`<form>` 内) に `submitError` state で表示
+  - touch ベースの既存エラー表示 (`SearchInput` 内) はそのまま維持
+- [x] `mise.toml`: `dev` タスクの `depends + run` → `run` 配列形式に変更 (`seed` も同様)
+  - `depends = ["build"]` は mise 仕様上は正しいが、実際にビルドが先に完了することを保証できないケースがあった
+  - `run = ["pnpm build", "pnpm start"]` 配列形式は mise が直列実行・失敗時停止を保証する
+- [x] **E2E 対応②** DM一覧 VRT スナップショット更新
+  - `playwright test --update-snapshots --grep "DM一覧が表示される"` で更新済み
+- [x] `crok.ts`: `sleep(10)` × 文字数 を**削除** → Crok AIチャット（50 点）が採点対象になる（運営許可済み 2026-03-21）
+- [x] DM送信フロー計測不能の修正 → DM送信（50点）解禁
+  - 原因: `DirectMessageListPage.tsx` が `conversations === null` 中に `return null` しているため、「新しくDMを始める」ボタンが採点ツールのクリック時に DOM に存在しない
+  - 対策: `return null` を廃止してヘッダー（ボタン含む）を常に描画。リスト部分のみ `conversations == null` で非表示
+- [x] **Phase 4 ⑤** Tailwind CSS ブラウザランタイム → 静的ビルド化
+  - `tailwindcss` + `@tailwindcss/postcss` をインストール
+  - `postcss.config.js`: `postcss-import` + `postcss-preset-env` → `@tailwindcss/postcss` のみに (v4 は import・nesting・autoprefixer を内包)
+  - `index.css`: `@import "tailwindcss"` 追加、`@theme` / `@layer base` / `@utility markdown` を移植
+  - `index.html` の CDN script + `<style type="text/tailwindcss">` を削除
+  - 出力: `dist/styles/main.css` 42 KB として静的生成確認
+- [x] Crok の Markdown レンダリングをストリーミング中/完了後で切り替える
+  - ストリーミング中: `<p className="whitespace-pre-wrap">` で plain text 表示（Markdown パース・KaTeX コストをゼロに）
+  - ストリーム完了後: react-markdown + rehype-katex でレンダリング切り替え
+  - `key={content}` も除去（毎 character ごとの Markdown アンマウントが消える）
+  - `CrokPage.tsx`: 最後のメッセージに `isStreaming` prop を渡す形で実装
+- [x] **Phase 4 ④** 画像最適化
+  - **① `CoveredImage` のサーバー移行（LCP 改善・バンドル削減）**
+    - `CoveredImage` のバイナリ fetch + piexifjs EXIF 読み取り + image-size → `<img src alt>` + `object-fit: cover` CSS に置換
+    - `alt` は API レスポンス (`Image.alt`) から取得。アップロード時に EXIF `ImageDescription` をサーバー側の軽量パーサーで抽出して返却 (`{id, alt}`)
+    - `piexifjs`（79KB）・`image-size` をクライアントバンドルから除去
+    - `CoveredImage` の `isLoading` 中の `return null` も消え、ブラウザネイティブ読み込みで LCP 改善
+    - `server/seeds/images.jsonl`: 全 30 件の `alt` を EXIF `ImageDescription` から抽出して更新 (空文字 → 日本語 alt)
+  - **② AVIF 化 + リサイズ**
+    - `public/images/*.jpg` (30 枚) を sharp AVIF quality 30 / max-width 640px で変換 → **90 MB → 400 KB** (99.6% 削減、jpg は残存)
+    - `public/images/profiles/*.jpg` (30 枚) を sharp AVIF quality 30 / max-width 200px で変換
+    - `server/src/routes/api/image.ts`: `EXTENSION = "avif"`、`.avif({ quality: 30 })` 出力に変更
+    - `get_path.ts`: `getImagePath` / `getProfileImagePath` の拡張子 `.jpg` → `.avif`
+- [x] **Phase 4 ④ 補足** `generateSeeds.ts` の alt 空文字問題を修正 (詳細は findings.md)
+  - `generateImages()` が `alt: ""` をハードコードしており、`mise run seed` のたびに ALT が消える仕込みだった
+  - `EXISTING_IMAGES: Array<{id, alt}>` に変更し、EXIF から抽出した 30 件の alt を静的マップとして定義
+  - `database.sqlite` (マスター DB) も再生成済み
+- [x] **Phase 4 ⑧** `loading` / `preload` / `fetchpriority` による読み込み順最適化
+  - **`loading` 属性 (画像)**
+    - `CoveredImage`: `loading?: "eager" | "lazy"` prop 追加 (デフォルト `"lazy"`)
+    - `ImageArea`: `loading` prop を追加して `CoveredImage` に伝播
+    - `Timeline`: `index` を `TimelineItem` に渡すように変更
+    - `TimelineItem`: index === 0 のみ `eager`、それ以外 `lazy`
+      - index 0 は動画投稿のためコンテンツ画像なし → 競合しない
+      - index 1 以降を `lazy` にすることで動画フェッチを妨げない
+    - `PostItem` (投稿詳細): プロフィール画像・コンテンツ画像ともに `eager`
+    - `CommentItem`: `lazy`
+    - `DirectMessageListPage`: index < 5 は `eager`、それ以降 `lazy`
+    - `UserProfileHeader`: `eager` (ページ最上部 + FastAverageColor の `onLoad` トリガー)
+  - **`preload` 属性 (動画)**
+    - `PausableMovie`: `preload?: "auto" | "metadata" | "none"` prop 追加 (デフォルト `"none"`)
+    - `MovieArea`: `preload` prop を追加して `PausableMovie` に伝播
+    - `TimelineItem`: index === 0 → `"auto"`、それ以外 → `"none"`
+    - `PostItem` (投稿詳細): `"auto"`
+  - **`fetchpriority` / preload hint (LCP 対応)**
+    - `CoveredImage`: `fetchpriority?: "high" | "low" | "auto"` prop 追加
+    - `ImageArea`: `fetchpriority` prop を追加して `CoveredImage` に伝播
+    - `TimelineItem`: index === 0 の `ImageArea` に `fetchpriority="high"` (動画投稿なので実質無効だが将来の保険)
+    - `PostItem`: `fetchpriority="high"` を `ImageArea` に設定
+    - `index.html`: `<link rel="preload" as="script" href="/scripts/main.js">` を追加
+    - `PausableMovie`: `preload === "auto"` のとき `<link rel="preload" as="video" fetchPriority="high">` を React 19 の head 自動ホイストで render 時に挿入
+      - `useEffect` (非同期) では `<video src>` が先にキューに入って手遅れになる問題を回避
+      - React 19 は `<link>` を JSX 内に書くと自動的に `<head>` に巻き上げる
+      - Chrome の `as="video"` への `fetchpriority` サポートが限定的なため優先度は `Low` のまま
+      - ただしリクエスト順序は「動画 → 画像」に安定し、後続の重複リクエストも減少
+  - HAR 分析・Chrome の video 優先度制限の調査結果は findings.md を参照
+- [ ] 投稿フロー計測不能の修正 → 投稿（50点）解禁
+  - 「画像投稿の完了を確認できませんでした」→ 投稿後のUI状態変化（投稿完了表示・モーダルクローズ等）を採点ツールが認識できているか確認
+- [ ] `fast-average-color` がプロフィール画像バイナリをクライアント fetch していないか確認
+  - `CoveredImage` と同様の問題（バイナリfetch → 表示遅延）がユーザープロフィールページにある可能性
+  - サーバー側で dominant color を計算して API に含める方向で対応
+- [ ] **Phase 4 ⑥** デッドパッケージの bundle 残存確認
+  - `pnpm analyze` で bundle-report.html を確認
+  - `gifler` / `jquery` / `pako` / `standardized-audio-context` / `core-js` / `regenerator-runtime` がバンドルに含まれていたら除去
+  - `core-js` は browserslist を `last 2 Chrome versions` に絞れば大幅削減可能
+- [x] フォント最適化
+  - **Rei no Are Mincho サブセット + woff2 化**
+    - TermPage の見出しで使用される 96 文字のみにサブセット化 (`pyftsubset`)
+    - Regular: 6.3 MB OTF → 24 KB woff2 / Heavy: 6.4 MB OTF → 23 KB woff2 (合計 **270x 削減**)
+    - `public/fonts/subsetted/ReiNoAreMincho-{Regular,Heavy}.woff2` に配置
+    - `index.css`: `font-display: block` → `swap` に変更 (先行レンダリングで FCP 改善)
+  - **FontAwesome SVG スプライト サブセット化**
+    - 使用アイコン 17 種 (solid) + 1 種 (regular) のみを抽出
+    - solid.svg: 639 KB → 7.2 KB / regular.svg: 107 KB → 986 B (合計 **91x 削減**)
+    - `public/sprites/font-awesome-subsetted/` に配置
+    - `FontAwesomeIcon.tsx`: スプライトパスを新ディレクトリに変更
+- [x] `loading="lazy"` を LCP 以外の画像に追加 → Phase 4 ⑧ で対応済み
+- [x] **Phase 4 ⑦** ホーム CLS・LCP 改善 — `AspectRatioBox` を CSS `aspect-ratio` に置き換え
+  - 根本原因: JS (`ResizeObserver` + `useState`) で高さを計算するため、初期状態は `height: 0` でコンテンツ非表示 → ResizeObserver 発火後に高さ確定 → CLS 発生
+  - 副作用: video/image が遅れて DOM に追加されるため LCP 候補として認識されず LCP=0 になっていた
+  - 対策: CSS `aspect-ratio: {w} / {h}` に置き換え (useState/useEffect/useRef を完全除去)
+  - 影響範囲: `PausableMovie` (1:1)・`ImageArea` (16:9)・`SoundPlayer` 内 `SoundWaveSVG` (10:1)
+  - 期待効果: ホーム CLS 9.75 → ほぼ 0、LCP=0 → 改善
+- [x] AspectRatioBox CSS 化に伴う E2E テスト修正
+  - `CoveredImage` の `<img>` に `absolute inset-0` を追加 (position: static → absolute、テスト要件)
+  - `PausableMovie` の `<button>` に `data-navigable` 属性を追加し `stopPropagation` を除去 → CSS aspect-ratio で button が全高を占有してもタイムライン記事クリックで遷移できるよう修正
+  - `TimelineItem.isClickedAnchorOrButton`: `data-navigable` 属性の button はスキップ
+  - `UserProfileHeader` のバナー色: Tailwind v4 静的ビルドで動的クラス `bg-[${averageColor}]` が無効化されていたため `style={{ backgroundColor }}` に変更 + VRT スナップショット更新
+  - `SearchInput` から `meta.error` 表示を削除し `submitError` に一本化 (strict mode 重複解消)
+- [ ] **Phase 5** サーバー最適化
+  - [x] gzip 圧縮を有効化 (`compression` パッケージ) + `Cache-Control: no-transform` 仕込みを除去
+    - `main.js` 347 KB → 115 KB (67% 削減) を確認済み
+  - [x] Brotli 事前圧縮配信を導入 (`compression-webpack-plugin` + `precompressedBrotli` middleware)
+    - `client/webpack.config.js` で `.js/.css/.html/.svg` の `.br` をビルド時生成
+    - `server/src/middleware/brotli.ts` で `Accept-Encoding: br` の場合に静的 `.br` を優先配信
+    - 適用範囲は `PUBLIC_PATH` / `CLIENT_DIST_PATH` の静的配信のみ (`/api/v1` 非対象)
+    - **SSE プロトコルは未変更** (`GET /api/v1/crok` への影響なし)
+  - DB インデックスを追加（テーブルのリレーションを確認）
+  - N+1 クエリを一括クエリに変換
+  - API レスポンスの不要フィールド削除・limit 設定
+- [ ] `crok.ts`: `sleep(3000)` の削除は**任意**（許可済みだが E2E リスクあり。最後に試す）

@@ -13,7 +13,15 @@ export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
 ): ReturnValues<T> {
-  const internalRef = useRef({ isLoading: false, offset: 0 });
+  const internalRef = useRef<{
+    isLoading: boolean;
+    offset: number;
+    allData: T[] | null;
+  }>({
+    isLoading: false,
+    offset: 0,
+    allData: null,
+  });
 
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
     data: [],
@@ -22,8 +30,23 @@ export function useInfiniteFetch<T>(
   });
 
   const fetchMore = useCallback(() => {
-    const { isLoading, offset } = internalRef.current;
+    const { isLoading, offset, allData } = internalRef.current;
     if (isLoading) {
+      return;
+    }
+
+    if (allData !== null) {
+      const nextItems = allData.slice(offset, offset + LIMIT);
+      setResult((cur) => ({
+        ...cur,
+        data: [...cur.data, ...nextItems],
+        isLoading: false,
+      }));
+      internalRef.current = {
+        isLoading: false,
+        offset: offset + nextItems.length,
+        allData,
+      };
       return;
     }
 
@@ -34,18 +57,21 @@ export function useInfiniteFetch<T>(
     internalRef.current = {
       isLoading: true,
       offset,
+      allData,
     };
 
     void fetcher(apiPath).then(
       (allData) => {
+        const nextItems = allData.slice(offset, offset + LIMIT);
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...nextItems],
           isLoading: false,
         }));
         internalRef.current = {
           isLoading: false,
-          offset: offset + LIMIT,
+          offset: offset + nextItems.length,
+          allData,
         };
       },
       (error) => {
@@ -57,6 +83,7 @@ export function useInfiniteFetch<T>(
         internalRef.current = {
           isLoading: false,
           offset,
+          allData: null,
         };
       },
     );
@@ -71,6 +98,7 @@ export function useInfiniteFetch<T>(
     internalRef.current = {
       isLoading: false,
       offset: 0,
+      allData: null,
     };
 
     fetchMore();

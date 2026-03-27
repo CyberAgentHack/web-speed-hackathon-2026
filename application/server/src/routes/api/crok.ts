@@ -6,6 +6,11 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 
 import { QaSuggestion } from "@web-speed-hackathon-2026/server/src/models";
+import {
+  extractTokens,
+  filterSuggestionsBM25,
+  tokenizerPromise,
+} from "@web-speed-hackathon-2026/server/src/utils/kuromoji_tokenizer.js";
 
 export const crokRouter = Router();
 
@@ -15,6 +20,24 @@ const response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-
 crokRouter.get("/crok/suggestions", async (_req, res) => {
   const suggestions = await QaSuggestion.findAll({ logging: false });
   res.json({ suggestions: suggestions.map((s) => s.question) });
+});
+
+crokRouter.get("/crok/suggestions/search", async (req, res) => {
+  const q = req.query["q"];
+  if (typeof q !== "string" || q.trim() === "") {
+    return res.status(200).json({ suggestions: [] });
+  }
+
+  const [suggestionsData, tokenizer] = await Promise.all([
+    QaSuggestion.findAll({ logging: false }),
+    tokenizerPromise,
+  ]);
+
+  const candidates = (suggestionsData as QaSuggestion[]).map((s) => s.question);
+  const queryTokens = extractTokens(tokenizer.tokenize(q));
+  const results = filterSuggestionsBM25(tokenizer, candidates, queryTokens);
+
+  return res.status(200).json({ suggestions: results, queryTokens });
 });
 
 function sleep(ms: number): Promise<void> {
@@ -41,8 +64,6 @@ crokRouter.get("/crok", async (req, res) => {
 
     const data = JSON.stringify({ text: char, done: false });
     res.write(`event: message\nid: ${messageId++}\ndata: ${data}\n\n`);
-
-    await sleep(10);
   }
 
   if (!res.closed) {

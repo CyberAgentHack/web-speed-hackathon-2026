@@ -1,0 +1,54 @@
+diff --git a/es/createReduxForm.js b/es/createReduxForm.js
+index 40885be0d20d1490e2d524b4b6c340fe6ae5490d..2f528bbee0f3f5ce3fe544b4ef2abdf63b37ae56 100755
+--- a/es/createReduxForm.js
++++ b/es/createReduxForm.js
+@@ -536,6 +536,22 @@ export default function createReduxForm(structure) {
+           }
+         };
+ 
++        _proto.componentDidUpdate = function componentDidUpdate(prevProps) {
++          var isValueReset = this.initIfNeeded(this.props);
++          if (isValueReset) return;
++          this.validateIfNeeded(this.props);
++          this.warnIfNeeded(this.props);
++          this.clearSubmitPromiseIfNeeded(this.props);
++          this.submitIfNeeded(this.props);
++          var onChange = this.props.onChange,
++              values = this.props.values,
++              dispatch = this.props.dispatch;
++
++          if (onChange && !deepEqual(values, prevProps.values)) {
++            onChange(values, dispatch, this.props, prevProps.values);
++          }
++        };
++
+         _proto.shouldComponentUpdate = function shouldComponentUpdate(nextProps) {
+           var _this2 = this;
+ 
+diff --git a/lib/createReduxForm.js b/lib/createReduxForm.js
+index 2b29f4a857a89deddbac5aadf7b21d1d4345f047..18ecc0e7e99b28da6c8daf09e844b6a939e8e468 100755
+--- a/lib/createReduxForm.js
++++ b/lib/createReduxForm.js
+@@ -570,6 +570,22 @@ function createReduxForm(structure) {
+           }
+         };
+ 
++        _proto.componentDidUpdate = function componentDidUpdate(prevProps) {
++          var isValueReset = this.initIfNeeded(this.props);
++          if (isValueReset) return;
++          this.validateIfNeeded(this.props);
++          this.warnIfNeeded(this.props);
++          this.clearSubmitPromiseIfNeeded(this.props);
++          this.submitIfNeeded(this.props);
++          var onChange = this.props.onChange,
++              values = this.props.values,
++              dispatch = this.props.dispatch;
++
++          if (onChange && !deepEqual(values, prevProps.values)) {
++            onChange(values, dispatch, this.props, prevProps.values);
++          }
++        };
++
+         _proto.shouldComponentUpdate = function shouldComponentUpdate(nextProps) {
+           var _this2 = this;
+ 

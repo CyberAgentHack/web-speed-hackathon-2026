@@ -11,6 +11,8 @@ import { movieRouter } from "@web-speed-hackathon-2026/server/src/routes/api/mov
 import { postRouter } from "@web-speed-hackathon-2026/server/src/routes/api/post";
 import { searchRouter } from "@web-speed-hackathon-2026/server/src/routes/api/search";
 import { soundRouter } from "@web-speed-hackathon-2026/server/src/routes/api/sound";
+import { sentimentRouter } from "@web-speed-hackathon-2026/server/src/routes/api/sentiment";
+import { translateRouter } from "@web-speed-hackathon-2026/server/src/routes/api/translate";
 import { userRouter } from "@web-speed-hackathon-2026/server/src/routes/api/user";
 
 export const apiRouter = Router();
@@ -23,6 +25,8 @@ apiRouter.use(searchRouter);
 apiRouter.use(movieRouter);
 apiRouter.use(imageRouter);
 apiRouter.use(soundRouter);
+apiRouter.use(translateRouter);
+apiRouter.use(sentimentRouter);
 apiRouter.use(authRouter);
 apiRouter.use(crokRouter);
 

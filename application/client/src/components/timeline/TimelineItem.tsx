@@ -1,4 +1,4 @@
-import moment from "moment";
+import dayjs from "dayjs";
 import { MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
@@ -11,7 +11,7 @@ import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/
 const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Element): boolean => {
   while (target !== null && target instanceof Element) {
     const tagName = target.tagName.toLowerCase();
-    if (["button", "a"].includes(tagName)) {
+    if (["button", "a"].includes(tagName) && !target.hasAttribute("data-navigable")) {
       return true;
     }
     if (currentTarget === target) {
@@ -27,10 +27,12 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
  * @property {Models.Post} post
  */
 interface Props {
+  index: number;
   post: Models.Post;
 }
 
-export const TimelineItem = ({ post }: Props) => {
+export const TimelineItem = ({ index, post }: Props) => {
+  const loading = index === 0 ? "eager" : "lazy";
   const navigate = useNavigate();
 
   /**
@@ -47,7 +49,10 @@ export const TimelineItem = ({ post }: Props) => {
   );
 
   return (
-    <article className="hover:bg-cax-surface-subtle px-1 sm:px-4" onClick={handleClick}>
+    <article
+      className="hover:bg-cax-surface-subtle px-1 sm:px-4"
+      onClick={handleClick}
+    >
       <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
         <div className="shrink-0 grow-0 pr-2 sm:pr-4">
           <Link
@@ -56,6 +61,7 @@ export const TimelineItem = ({ post }: Props) => {
           >
             <img
               alt={post.user.profileImage.alt}
+              loading={loading}
               src={getProfileImagePath(post.user.profileImage.id)}
             />
           </Link>
@@ -75,9 +81,12 @@ export const TimelineItem = ({ post }: Props) => {
               @{post.user.username}
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
-            <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+            <Link
+              className="text-cax-text-muted pr-1 hover:underline"
+              to={`/posts/${post.id}`}
+            >
+              <time dateTime={new Date(post.createdAt).toISOString()}>
+                {dayjs(post.createdAt).format("LL")}
               </time>
             </Link>
           </p>
@@ -86,12 +95,12 @@ export const TimelineItem = ({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea fetchpriority={index === 0 ? "high" : undefined} images={post.images} loading={loading} />
             </div>
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
+              <MovieArea movie={post.movie} preload={index === 0 ? "auto" : "none"} />
             </div>
           ) : null}
           {post.sound ? (

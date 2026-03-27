@@ -1,4 +1,4 @@
-import moment from "moment";
+import dayjs from "dayjs";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -41,10 +41,6 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     void loadConversations();
   });
 
-  if (conversations == null) {
-    return null;
-  }
-
   return (
     <section>
       <header className="border-cax-border flex flex-col gap-4 border-b px-4 pt-6 pb-4">
@@ -60,7 +56,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
         </div>
       </header>
 
-      {error != null ? (
+      {conversations == null ? null : error != null ? (
         <p className="text-cax-danger px-4 py-6 text-center text-sm">DMの取得に失敗しました</p>
       ) : conversations.length === 0 ? (
         <p className="text-cax-text-muted px-4 py-6 text-center">
@@ -68,7 +64,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
         </p>
       ) : (
         <ul data-testid="dm-list">
-          {conversations.map((conversation) => {
+          {conversations.map((conversation, index) => {
             const { messages } = conversation;
             const peer =
               conversation.initiator.id !== activeUser.id
@@ -87,6 +83,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                     <img
                       alt={peer.profileImage.alt}
                       className="w-12 shrink-0 self-start rounded-full"
+                      loading={index < 5 ? "eager" : "lazy"}
                       src={getProfileImagePath(peer.profileImage.id)}
                     />
                     <div className="flex flex-1 flex-col">
@@ -100,7 +97,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {dayjs(lastMessage.createdAt).fromNow()}
                           </time>
                         )}
                       </div>

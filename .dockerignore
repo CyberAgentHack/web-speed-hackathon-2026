@@ -1,6 +1,13 @@
 node_modules
 .git
 *.log
+*.har
+_local
+scraps
+docs
+scoring-tool
 
 application/server/seeds
 application/server/upload
+application/e2e
+application/dist

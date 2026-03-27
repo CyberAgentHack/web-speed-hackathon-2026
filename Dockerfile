@@ -14,9 +14,12 @@ RUN --mount=type=cache,target=/root/.npm npm install -g pnpm@${PNPM_VERSION}
 
 FROM base AS build
 
+ENV NODE_ENV=production
+
 COPY ./application/package.json ./application/pnpm-lock.yaml ./application/pnpm-workspace.yaml ./
 COPY ./application/client/package.json ./client/package.json
 COPY ./application/server/package.json ./server/package.json
+COPY ./application/patches ./patches
 RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile
 
 COPY ./application .
@@ -27,7 +30,17 @@ RUN --mount=type=cache,target=/pnpm/store CI=true pnpm install --frozen-lockfile
 
 FROM base
 
-COPY --from=build /app /app
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
+
+ENV NODE_ENV=production
+
+COPY --from=build /app/package.json ./
+COPY --from=build /app/pnpm-workspace.yaml ./
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/server ./server
+COPY --from=build /app/client/package.json ./client/package.json
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/public ./public
 
 EXPOSE 8080
 CMD [ "pnpm", "start" ]
