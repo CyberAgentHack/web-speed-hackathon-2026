@@ -1,4 +1,4 @@
-import moment from "moment";
+import { fromNow } from "@web-speed-hackathon-2026/client/src/utils/date_utils";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -42,7 +42,47 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
   });
 
   if (conversations == null) {
-    return null;
+    // LCP 候補を遅延させないため、会話データ取得前でもヘッダと “p” を先に描画する
+    return (
+      <section>
+        <header className="border-cax-border flex flex-col gap-4 border-b px-4 pt-6 pb-4">
+          <h1 className="text-2xl font-bold">ダイレクトメッセージ</h1>
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="opacity-60" aria-hidden="true">
+              <Button command="show-modal" commandfor={newDmModalId} leftItem={<FontAwesomeIcon iconType="paper-plane" styleType="solid" />}>
+                新しくDMを始める
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        <ul data-testid="dm-list">
+          <li className="grid">
+            <a
+              className="hover:bg-cax-surface-subtle px-4"
+              href="#"
+              onClick={(e) => e.preventDefault()}
+              aria-label="DM一覧読み込み中"
+            >
+              <div className="border-cax-border flex gap-4 border-b px-4 pt-2 pb-4">
+                <div className="h-12 w-12 shrink-0 self-start rounded-full bg-cax-surface-subtle" />
+                <div className="flex flex-1 flex-col">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-bold">読込中...</p>
+                      <p className="text-cax-text-muted text-xs">@</p>
+                    </div>
+                  </div>
+                  <p className="mt-1 line-clamp-2 text-sm wrap-anywhere">
+                    読込中読込中読込中読込中読込中読込中
+                  </p>
+                </div>
+              </div>
+            </a>
+          </li>
+        </ul>
+      </section>
+    );
   }
 
   return (
@@ -100,7 +140,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {fromNow(lastMessage.createdAt)}
                           </time>
                         )}
                       </div>

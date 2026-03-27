@@ -11,6 +11,8 @@ const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
 
+const isProduction = process.env.NODE_ENV === "production";
+
 /** @type {import('webpack').Configuration} */
 const config = {
   devServer: {
@@ -25,18 +27,15 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: isProduction ? "source-map" : "inline-source-map",
   entry: {
     main: [
-      "core-js",
-      "regenerator-runtime/runtime",
-      "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: isProduction ? "production" : "development",
   module: {
     rules: [
       {
@@ -60,7 +59,8 @@ const config = {
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
+    // false にすると非同期チャンクが正しく分離されず 1 ファイルに寄せられることがある
+    chunkFormat: isProduction ? "array-push" : false,
     filename: "scripts/[name].js",
     path: DIST_PATH,
     publicPath: "auto",
@@ -77,7 +77,7 @@ const config = {
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
+      NODE_ENV: process.env.NODE_ENV || "development",
     }),
     new MiniCssExtractPlugin({
       filename: "styles/[name].css",
@@ -127,14 +127,20 @@ const config = {
       url: false,
     },
   },
-  optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
-  },
+  optimization: isProduction
+    ? {
+        // splitChunks で分割されたチャンクは数値ラベル形式になり、Terser がパースに失敗するため
+        // エントリは単一バンドルにまとめ、デフォルトの minimize を使う。
+        splitChunks: false,
+      }
+    : {
+        minimize: false,
+        splitChunks: false,
+        concatenateModules: false,
+        usedExports: false,
+        providedExports: false,
+        sideEffects: false,
+      },
   cache: false,
   ignoreWarnings: [
     {
