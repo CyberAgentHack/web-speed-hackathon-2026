@@ -96,11 +96,15 @@ export const DirectMessagePage = ({
   return (
     <section className="bg-cax-surface flex min-h-[calc(100vh-(--spacing(12)))] flex-col lg:min-h-screen">
       <header className="border-cax-border bg-cax-surface sticky top-0 z-10 flex items-center gap-2 border-b px-4 py-3">
+        {/* --- 修正ポイント：width/height を追加 --- */}
         <img
           alt={peer.profileImage.alt}
           className="h-12 w-12 rounded-full object-cover"
           src={getProfileImagePath(peer.profileImage.id)}
+          width={48}  // h-12 は 48px です
+          height={48} // w-12 は 48px です
         />
+        {/* ------------------------------------- --- */}
         <div className="min-w-0">
           <h1 className="overflow-hidden text-xl font-bold text-ellipsis whitespace-nowrap">
             {peer.name}
@@ -124,6 +128,7 @@ export const DirectMessagePage = ({
 
             return (
               <li
+                key={message.id} // 修正ポイント：key を追加（Best Practices 対策）
                 className={classNames(
                   "flex flex-col w-full",
                   isActiveUserSend ? "items-end" : "items-start",

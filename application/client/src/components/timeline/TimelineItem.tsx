@@ -22,10 +22,6 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
   return false;
 };
 
-/**
- * @typedef {object} Props
- * @property {Models.Post} post
- */
 interface Props {
   post: Models.Post;
 }
@@ -33,9 +29,6 @@ interface Props {
 export const TimelineItem = ({ post }: Props) => {
   const navigate = useNavigate();
 
-  /**
-   * ボタンやリンク以外の箇所をクリックしたとき かつ 文字が選択されてないとき、投稿詳細ページに遷移する
-   */
   const handleClick = useCallback<MouseEventHandler>(
     (ev) => {
       const isSelectedText = document.getSelection()?.isCollapsed === false;
@@ -54,10 +47,21 @@ export const TimelineItem = ({ post }: Props) => {
             className="border-cax-border bg-cax-surface-subtle block h-12 w-12 overflow-hidden rounded-full border hover:opacity-75 sm:h-16 sm:w-16"
             to={`/users/${post.user.username}`}
           >
+            {/* --- 修正ポイント：width/height を追加し、デコードを最適化 --- */}
             <img
               alt={post.user.profileImage.alt}
               src={getProfileImagePath(post.user.profileImage.id)}
+              // sm:h-16(64px) に合わせて 64 を指定（ブラウザが比率を計算できます）
+              width={64}
+              height={64}
+              // クラス名で見た目のサイズを固定
+              className="h-full w-full object-cover"
+              // 大量の投稿が並ぶので非同期デコードでカクつきを防止
+              decoding="async"
+              // 画面外の画像は後回しにする
+              loading="lazy"
             />
+            {/* ---------------------------------------------------- --- */}
           </Link>
         </div>
         <div className="min-w-0 shrink grow">

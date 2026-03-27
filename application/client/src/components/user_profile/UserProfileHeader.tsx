@@ -27,12 +27,21 @@ export const UserProfileHeader = ({ user }: Props) => {
         className={`h-32 ${averageColor ? `bg-[${averageColor}]` : "bg-cax-surface-subtle"}`}
       ></div>
       <div className="border-cax-border bg-cax-surface-subtle absolute left-2/4 m-0 h-28 w-28 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border sm:h-32 sm:w-32">
+        {/* --- 修正ポイント：width/height に加え、優先度とデコード設定を追加 --- */}
         <img
-          alt=""
+          alt={user.name} // alt を空にせず名前を入れるとアクセシビリティ（Best Practices）が向上します
           crossOrigin="anonymous"
           onLoad={handleLoadImage}
           src={getProfileImagePath(user.profileImage.id)}
+          width={128} // 32 * 4 = 128px
+          height={128}
+          // プロフィールページで最も重要な画像なので、優先的に読み込ませる
+          fetchpriority="high"
+          // 画像の展開を非同期にしてメインスレッドを止めない
+          decoding="async"
+          className="h-full w-full object-cover"
         />
+        {/* ----------------------------------------------------------- --- */}
       </div>
       <div className="px-4 pt-20">
         <h1 className="text-2xl font-bold">{user.name}</h1>
