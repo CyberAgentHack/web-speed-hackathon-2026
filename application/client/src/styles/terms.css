@@ -1,0 +1,30 @@
+@import "tailwindcss" source(none);
+@import "./shared.css";
+
+@font-face {
+  /* 利用規約見出し用サブセット Part 1: タイトル + 第1条〜第5条 */
+  font-family: "Rei no Are Mincho";
+  font-display: swap;
+  src: url(/fonts/ReiNoAreMincho-Heavy-subset-1.woff2) format("woff2");
+  font-weight: bold;
+}
+
+@font-face {
+  /* 利用規約見出し用サブセット Part 2: 第6条〜第16条 */
+  font-family: "Rei no Are Mincho Later";
+  font-display: swap;
+  src: url(/fonts/ReiNoAreMincho-Heavy-subset-2.woff2) format("woff2");
+  font-weight: bold;
+}
+
+@source inline("bg-cax-canvas");
+@source "../pages/create-page.tsx";
+@source "../containers/AuthModalContainer.tsx";
+@source "../containers/NewPostModalContainer.tsx";
+@source "../containers/TermContainer.tsx";
+@source "../components/direct_message/DirectMessageNotificationBadge.tsx";
+@source "../components/application/";
+@source "../components/auth_modal/";
+@source "../components/new_post_modal/";
+@source "../components/modal/";
+@source "../components/term/";

@@ -1,13 +1,11 @@
-import { MagickFormat } from "@imagemagick/magick-wasm";
 import { ChangeEventHandler, FormEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/components/modal/ModalErrorMessage";
 import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/components/modal/ModalSubmitButton";
 import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/AttachFileInputButton";
-import { convertImage } from "@web-speed-hackathon-2026/client/src/utils/convert_image";
-import { convertMovie } from "@web-speed-hackathon-2026/client/src/utils/convert_movie";
-import { convertSound } from "@web-speed-hackathon-2026/client/src/utils/convert_sound";
+const convertImage = (...args: Parameters<typeof import("@web-speed-hackathon-2026/client/src/utils/convert_image").convertImage>) =>
+  import("@web-speed-hackathon-2026/client/src/utils/convert_image").then((m) => m.convertImage(...args));
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
@@ -52,12 +50,11 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     setHasFileError(isValid !== true);
     if (isValid) {
       setIsConverting(true);
-
       Promise.all(
         files.map((file) =>
-          convertImage(file, { extension: MagickFormat.Jpg }).then(
-            (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
-          ),
+          convertImage(file, { extension: "jpg" })
+            .then((blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }))
+            .catch(() => file),
         ),
       )
         .then((convertedFiles) => {
@@ -67,10 +64,8 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
             movie: undefined,
             sound: undefined,
           }));
-
           setIsConverting(false);
-        })
-        .catch(console.error);
+        });
     }
   }, []);
 
@@ -80,18 +75,12 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
     setHasFileError(isValid !== true);
     if (isValid) {
-      setIsConverting(true);
-
-      convertSound(file, { extension: "mp3" }).then((converted) => {
-        setParams((params) => ({
-          ...params,
-          images: [],
-          movie: undefined,
-          sound: new File([converted], "converted.mp3", { type: "audio/mpeg" }),
-        }));
-
-        setIsConverting(false);
-      });
+      setParams((params) => ({
+        ...params,
+        images: [],
+        movie: undefined,
+        sound: file,
+      }));
     }
   }, []);
 
@@ -101,22 +90,12 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
     setHasFileError(isValid !== true);
     if (isValid) {
-      setIsConverting(true);
-
-      convertMovie(file, { extension: "gif", size: undefined })
-        .then((converted) => {
-          setParams((params) => ({
-            ...params,
-            images: [],
-            movie: new File([converted], "converted.gif", {
-              type: "image/gif",
-            }),
-            sound: undefined,
-          }));
-
-          setIsConverting(false);
-        })
-        .catch(console.error);
+      setParams((params) => ({
+        ...params,
+        images: [],
+        movie: file,
+        sound: undefined,
+      }));
     }
   }, []);
 
@@ -170,7 +149,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
         disabled={isConverting || isLoading || params.text === ""}
         loading={isConverting || isLoading}
       >
-        {isConverting || isLoading ? "変換中" : "投稿する"}
+        {isConverting ? "変換中" : isLoading ? "投稿中" : "投稿する"}
       </ModalSubmitButton>
 
       <ModalErrorMessage>

@@ -9,7 +9,7 @@ export const authRouter = Router();
 authRouter.post("/signup", async (req, res) => {
   try {
     const { id: userId } = await User.create(req.body);
-    const user = await User.findByPk(userId);
+    const user = await User.scope("withProfileImage").findByPk(userId);
 
     req.session.userId = userId;
     return res.status(200).type("application/json").send(user);
@@ -25,7 +25,7 @@ authRouter.post("/signup", async (req, res) => {
 });
 
 authRouter.post("/signin", async (req, res) => {
-  const user = await User.findOne({
+  const user = await User.scope("withProfileImage").findOne({
     where: {
       username: req.body.username,
     },

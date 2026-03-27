@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { useNavigate } from "react-router";
 
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { NewPostModalPage } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage";
@@ -40,7 +39,6 @@ export const NewPostModalContainer = ({ id }: Props) => {
     }
 
     const handleToggle = () => {
-      // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
       setResetKey((key) => key + 1);
     };
     element.addEventListener("toggle", handleToggle);
@@ -48,8 +46,6 @@ export const NewPostModalContainer = ({ id }: Props) => {
       element.removeEventListener("toggle", handleToggle);
     };
   }, []);
-
-  const navigate = useNavigate();
 
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -64,14 +60,14 @@ export const NewPostModalContainer = ({ id }: Props) => {
         setIsLoading(true);
         const post = await sendNewPost(params);
         ref.current?.close();
-        navigate(`/posts/${post.id}`);
+        window.location.href = `/posts/${post.id}`;
       } catch {
         setHasError(true);
       } finally {
         setIsLoading(false);
       }
     },
-    [navigate],
+    [],
   );
 
   return (

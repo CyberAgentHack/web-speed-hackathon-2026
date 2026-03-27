@@ -2,7 +2,8 @@
 const path = require("path");
 
 const CopyWebpackPlugin = require("copy-webpack-plugin");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
+const lightningcss = require("lightningcss");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const webpack = require("webpack");
 
@@ -10,6 +11,34 @@ const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
+
+class EntrypointsManifestPlugin {
+  apply(compiler) {
+    compiler.hooks.emit.tapAsync("EntrypointsManifestPlugin", (compilation, callback) => {
+      const manifest = {};
+      for (const [name, entrypoint] of compilation.entrypoints) {
+        const js = [];
+        const css = [];
+        for (const chunk of entrypoint.chunks) {
+          for (const file of chunk.files) {
+            if (file.endsWith(".js")) {
+              js.push("/" + file);
+            } else if (file.endsWith(".css")) {
+              css.push("/" + file);
+            }
+          }
+        }
+        manifest[name] = { js, css };
+      }
+      const json = JSON.stringify(manifest, null, 2);
+      compilation.assets["entrypoints.json"] = {
+        source: () => json,
+        size: () => json.length,
+      };
+      callback();
+    });
+  }
+}
 
 /** @type {import('webpack').Configuration} */
 const config = {
@@ -25,18 +54,19 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: false,
   entry: {
-    main: [
-      "core-js",
-      "regenerator-runtime/runtime",
-      "jquery-binarytransport",
-      path.resolve(SRC_PATH, "./index.css"),
-      path.resolve(SRC_PATH, "./buildinfo.ts"),
-      path.resolve(SRC_PATH, "./index.tsx"),
-    ],
+    timeline: path.resolve(SRC_PATH, "./pages/timeline.tsx"),
+    "dm-list": path.resolve(SRC_PATH, "./pages/dm-list.tsx"),
+    dm: path.resolve(SRC_PATH, "./pages/dm.tsx"),
+    search: path.resolve(SRC_PATH, "./pages/search.tsx"),
+    "user-profile": path.resolve(SRC_PATH, "./pages/user-profile.tsx"),
+    post: path.resolve(SRC_PATH, "./pages/post.tsx"),
+    terms: path.resolve(SRC_PATH, "./pages/terms.tsx"),
+    crok: path.resolve(SRC_PATH, "./pages/crok.tsx"),
+    "not-found": path.resolve(SRC_PATH, "./pages/not-found.tsx"),
   },
-  mode: "none",
+  mode: "production",
   module: {
     rules: [
       {
@@ -51,6 +81,15 @@ const config = {
           { loader: "css-loader", options: { url: false } },
           { loader: "postcss-loader" },
         ],
+        exclude: /katex/,
+      },
+      {
+        test: /katex.*\.css$/i,
+        use: [
+          { loader: MiniCssExtractPlugin.loader },
+          { loader: "css-loader", options: { url: false } },
+          { loader: path.resolve(__dirname, "strip-legacy-fonts-loader.js") },
+        ],
       },
       {
         resourceQuery: /binary/,
@@ -60,27 +99,23 @@ const config = {
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
-    filename: "scripts/[name].js",
+    filename: "scripts/[name]-[contenthash].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     clean: true,
   },
   plugins: [
     new webpack.ProvidePlugin({
-      $: "jquery",
-      AudioContext: ["standardized-audio-context", "AudioContext"],
       Buffer: ["buffer", "Buffer"],
-      "window.jQuery": "jquery",
     }),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
+      NODE_ENV: "production",
     }),
     new MiniCssExtractPlugin({
-      filename: "styles/[name].css",
+      filename: "styles/[name]-[contenthash].css",
     }),
     new CopyWebpackPlugin({
       patterns: [
@@ -90,31 +125,13 @@ const config = {
         },
       ],
     }),
-    new HtmlWebpackPlugin({
-      inject: false,
-      template: path.resolve(SRC_PATH, "./index.html"),
-    }),
+    new EntrypointsManifestPlugin(),
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
     alias: {
       "bayesian-bm25$": path.resolve(__dirname, "node_modules", "bayesian-bm25/dist/index.js"),
       ["kuromoji$"]: path.resolve(__dirname, "node_modules", "kuromoji/build/kuromoji.js"),
-      "@ffmpeg/ffmpeg$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/ffmpeg/dist/esm/index.js",
-      ),
-      "@ffmpeg/core$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/core/dist/umd/ffmpeg-core.js",
-      ),
-      "@ffmpeg/core/wasm$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/core/dist/umd/ffmpeg-core.wasm",
-      ),
       "@imagemagick/magick-wasm/magick.wasm$": path.resolve(
         __dirname,
         "node_modules",
@@ -128,20 +145,34 @@ const config = {
     },
   },
   optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
-  },
-  cache: false,
-  ignoreWarnings: [
-    {
-      module: /@ffmpeg/,
-      message: /Critical dependency: the request of a dependency is an expression/,
+    minimize: true,
+    minimizer: [
+      "...",
+      new CssMinimizerPlugin({
+        minify: CssMinimizerPlugin.lightningCssMinify,
+        minimizerOptions: {
+          targets: lightningcss.browserslistToTargets(["chrome >= 130", "firefox >= 130", "safari >= 18"]),
+        },
+      }),
+    ],
+    splitChunks: {
+      chunks: "all",
+      cacheGroups: {
+        framework: {
+          test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
+          name: "framework",
+          priority: 40,
+          enforce: true,
+        },
+      },
     },
-  ],
+    concatenateModules: true,
+    usedExports: true,
+    providedExports: true,
+    sideEffects: true,
+  },
+  cache: { type: "filesystem" },
+  ignoreWarnings: [],
 };
 
 module.exports = config;

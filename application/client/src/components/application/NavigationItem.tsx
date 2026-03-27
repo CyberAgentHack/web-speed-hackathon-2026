@@ -1,5 +1,4 @@
 import classNames from "classnames";
-import { useLocation } from "react-router";
 
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 
@@ -13,8 +12,7 @@ interface Props {
 }
 
 export const NavigationItem = ({ badge, href, icon, command, commandfor, text }: Props) => {
-  const location = useLocation();
-  const isActive = location.pathname === href;
+  const isActive = typeof window !== "undefined" && window.location.pathname === href;
   return (
     <li>
       {href !== undefined ? (
@@ -37,6 +35,14 @@ export const NavigationItem = ({ badge, href, icon, command, commandfor, text }:
           type="button"
           command={command}
           commandfor={commandfor}
+          onClick={() => {
+            if (commandfor) {
+              const dialog = document.getElementById(commandfor);
+              if (dialog && dialog instanceof HTMLDialogElement) {
+                dialog.showModal();
+              }
+            }
+          }}
         >
           <span className="relative text-xl lg:pr-2 lg:text-3xl">
             {icon}

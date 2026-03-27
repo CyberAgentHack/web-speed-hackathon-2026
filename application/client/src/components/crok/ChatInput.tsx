@@ -1,5 +1,4 @@
-import Bluebird from "bluebird";
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
+import type { Tokenizer, IpadicFeatures } from "kuromoji";
 import {
   useEffect,
   useLayoutEffect,
@@ -81,9 +80,11 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
   const [inputValue, setInputValue] = useState("");
+  const [debouncedInput, setDebouncedInput] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const cachedCandidatesRef = useRef<{ candidates: string[]; tokenized: string[][] } | null>(null);
 
   // サジェストが更新されたら一番下にスクロール
   useLayoutEffect(() => {
@@ -92,12 +93,24 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   }, [suggestions, showSuggestions]);
 
+  // 入力値のデバウンス
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedInput(inputValue);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [inputValue]);
+
   // 初回にkuromojiトークナイザーを構築
   useEffect(() => {
     let mounted = true;
 
     const init = async () => {
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
+      const [{ default: Bluebird }, { default: kuromojiModule }] = await Promise.all([
+        import("bluebird"),
+        import("kuromoji"),
+      ]);
+      const builder = Bluebird.promisifyAll(kuromojiModule.builder({ dicPath: "/dicts" }));
       const nextTokenizer = await builder.buildAsync();
       if (mounted) {
         setTokenizer(nextTokenizer);
@@ -114,26 +127,37 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     let cancelled = false;
 
     const updateSuggestions = async () => {
-      if (!tokenizer || !inputValue.trim()) {
+      if (!tokenizer || !debouncedInput.trim()) {
         setSuggestions([]);
         setQueryTokens([]);
         setShowSuggestions(false);
         return;
       }
 
-      const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-        "/api/v1/crok/suggestions",
-      );
-      if (cancelled) {
-        return;
+      let cached = cachedCandidatesRef.current;
+      if (!cached) {
+        const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
+          "/api/v1/crok/suggestions",
+        );
+        if (cancelled) return;
+        const tokenized = candidates.map((c) => extractTokens(tokenizer.tokenize(c)));
+        cached = { candidates, tokenized };
+        cachedCandidatesRef.current = cached;
       }
 
-      const tokens = extractTokens(tokenizer.tokenize(inputValue));
-      const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
+      const tokens = extractTokens(tokenizer.tokenize(debouncedInput));
+      const { BM25 } = await import("bayesian-bm25");
+      const bm25 = new BM25({ k1: 1.2, b: 0.75 });
+      bm25.index(cached.tokenized);
+      const scores = bm25.getScores(tokens);
+      const results = cached.candidates
+        .map((text, i) => ({ text, score: scores[i]! }))
+        .filter((s) => s.score > 0)
+        .sort((a, b) => a.score - b.score)
+        .slice(-10)
+        .map((s) => s.text);
 
-      if (cancelled) {
-        return;
-      }
+      if (cancelled) return;
 
       setQueryTokens(tokens);
       setSuggestions(results);
@@ -145,7 +169,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     return () => {
       cancelled = true;
     };
-  }, [inputValue, tokenizer]);
+  }, [debouncedInput, tokenizer]);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;

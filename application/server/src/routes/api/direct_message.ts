@@ -1,6 +1,6 @@
 import { Router } from "express";
 import httpErrors from "http-errors";
-import { col, where, Op } from "sequelize";
+import { Op, QueryTypes } from "sequelize";
 
 import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
 import {
@@ -9,6 +9,20 @@ import {
   User,
 } from "@web-speed-hackathon-2026/server/src/models";
 
+async function emitUnreadCount(userId: string): Promise<void> {
+  const sequelize = DirectMessage.sequelize!;
+  const rows = await sequelize.query<{ unreadCount: number }>(
+    `SELECT COUNT(*) as unreadCount FROM DirectMessages dm
+     INNER JOIN DirectMessageConversations c ON dm.conversationId = c.id
+     WHERE dm.senderId != :userId
+     AND dm.isRead = 0
+     AND (c.initiatorId = :userId OR c.memberId = :userId)`,
+    { replacements: { userId }, type: QueryTypes.SELECT },
+  );
+  const unreadCount = rows[0]?.unreadCount ?? 0;
+  eventhub.emit(`dm:unread/${userId}`, { unreadCount });
+}
+
 export const directMessageRouter = Router();
 
 directMessageRouter.get("/dm", async (req, res) => {
@@ -16,22 +30,74 @@ directMessageRouter.get("/dm", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversations = await DirectMessageConversation.findAll({
+  const userId = req.session.userId;
+  const limit = Math.min(Math.max(parseInt(String(req.query["limit"]), 10) || 50, 1), 50);
+  const offset = Math.max(parseInt(String(req.query["offset"]), 10) || 0, 0);
+
+  // Step 1: Get conversations with participants only (no messages)
+  const conversations = await DirectMessageConversation.scope("withParticipants").findAll({
     where: {
-      [Op.and]: [
-        { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
-        where(col("messages.id"), { [Op.not]: null }),
-      ],
+      [Op.or]: [{ initiatorId: userId }, { memberId: userId }],
     },
-    order: [[col("messages.createdAt"), "DESC"]],
   });
 
-  const sorted = conversations.map((c) => ({
-    ...c.toJSON(),
-    messages: c.messages?.reverse(),
-  }));
+  if (conversations.length === 0) {
+    return res.status(200).type("application/json").send([]);
+  }
 
-  return res.status(200).type("application/json").send(sorted);
+  const conversationIds = conversations.map((c) => c.id);
+
+  // Step 2: Get latest message ID per conversation using window function
+  const sequelize = DirectMessage.sequelize!;
+  const latestMessageRows = await sequelize.query<{ id: string; conversationId: string }>(
+    `SELECT id, conversationId FROM (
+       SELECT id, conversationId, ROW_NUMBER() OVER (PARTITION BY conversationId ORDER BY createdAt DESC) as rn
+       FROM DirectMessages
+       WHERE conversationId IN (:conversationIds)
+     ) sub WHERE rn = 1`,
+    { replacements: { conversationIds }, type: QueryTypes.SELECT },
+  );
+
+  if (latestMessageRows.length === 0) {
+    return res.status(200).type("application/json").send([]);
+  }
+
+  // Step 3: Fetch full latest messages with sender info
+  const latestMessages = await DirectMessage.scope("withSender").findAll({
+    where: { id: { [Op.in]: latestMessageRows.map((r) => r.id) } },
+  });
+
+  // Step 4: Get unread status per conversation (batch)
+  const unreadRows = await sequelize.query<{ conversationId: string; unreadCount: number }>(
+    `SELECT conversationId, COUNT(*) as unreadCount FROM DirectMessages
+     WHERE conversationId IN (:conversationIds)
+     AND senderId != :userId
+     AND isRead = 0
+     GROUP BY conversationId`,
+    { replacements: { conversationIds, userId }, type: QueryTypes.SELECT },
+  );
+
+  const latestMessageMap = new Map(latestMessages.map((m) => [m.conversationId, m]));
+  const unreadMap = new Map(unreadRows.map((r) => [r.conversationId, true]));
+
+  // Build response: only include conversations that have messages
+  const sorted = conversations
+    .filter((c) => latestMessageMap.has(c.id))
+    .map((c) => {
+      const latestMessage = latestMessageMap.get(c.id)!;
+      return {
+        ...c.toJSON(),
+        messages: [latestMessage],
+        hasUnread: unreadMap.get(c.id) ?? false,
+      };
+    })
+    .sort((a, b) => {
+      const aTime = new Date(a.messages[0]!.createdAt).getTime();
+      const bTime = new Date(b.messages[0]!.createdAt).getTime();
+      return bTime - aTime;
+    });
+
+  return res.status(200).type("application/json").send(sorted.slice(offset, offset + limit));
 });
 
 directMessageRouter.post("/dm", async (req, res) => {
@@ -56,9 +122,9 @@ directMessageRouter.post("/dm", async (req, res) => {
       memberId: peer.id,
     },
   });
-  await conversation.reload();
+  const fullConversation = await DirectMessageConversation.scope(["withParticipants", "withMessages"]).findByPk(conversation.id);
 
-  return res.status(200).type("application/json").send(conversation);
+  return res.status(200).type("application/json").send(fullConversation);
 });
 
 directMessageRouter.ws("/dm/unread", async (req, _res) => {
@@ -100,7 +166,7 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversation = await DirectMessageConversation.findOne({
+  const conversation = await DirectMessageConversation.scope("withParticipants").findOne({
     where: {
       id: req.params.conversationId,
       [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
@@ -111,6 +177,44 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
   }
 
   return res.status(200).type("application/json").send(conversation);
+});
+
+directMessageRouter.get("/dm/:conversationId/messages", async (req, res) => {
+  if (req.session.userId === undefined) {
+    throw new httpErrors.Unauthorized();
+  }
+
+  const conversation = await DirectMessageConversation.findOne({
+    where: {
+      id: req.params.conversationId,
+      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
+    },
+  });
+  if (conversation === null) {
+    throw new httpErrors.NotFound();
+  }
+
+  const limit = Math.min(Math.max(parseInt(String(req.query["limit"]), 10) || 20, 1), 50);
+  const before = typeof req.query["before"] === "string" ? req.query["before"] : undefined;
+
+  const whereClause: Record<string, unknown> = { conversationId: conversation.id };
+  if (before) {
+    const cursor = await DirectMessage.findByPk(before, { attributes: ["createdAt"] });
+    if (cursor) {
+      whereClause["createdAt"] = { [Op.lt]: cursor.createdAt };
+    }
+  }
+
+  const rows = await DirectMessage.scope("withSender").findAll({
+    where: whereClause,
+    order: [["createdAt", "DESC"]],
+    limit: limit + 1,
+  });
+
+  const hasMore = rows.length > limit;
+  const messages = rows.slice(0, limit).reverse();
+
+  return res.status(200).type("application/json").send({ messages, hasMore });
 });
 
 directMessageRouter.ws("/dm/:conversationId", async (req, _res) => {
@@ -175,9 +279,17 @@ directMessageRouter.post("/dm/:conversationId/messages", async (req, res) => {
     conversationId: conversation.id,
     senderId: req.session.userId,
   });
-  await message.reload();
+  const fullMessage = await DirectMessage.scope("withSender").findByPk(message.id);
 
-  return res.status(201).type("application/json").send(message);
+  // Emit WebSocket events (previously in afterSave hook)
+  const receiverId =
+    conversation.initiatorId === req.session.userId
+      ? conversation.memberId
+      : conversation.initiatorId;
+  eventhub.emit(`dm:conversation/${conversation.id}:message`, fullMessage);
+  void emitUnreadCount(receiverId);
+
+  return res.status(201).type("application/json").send(fullMessage);
 });
 
 directMessageRouter.post("/dm/:conversationId/read", async (req, res) => {
@@ -204,9 +316,11 @@ directMessageRouter.post("/dm/:conversationId/read", async (req, res) => {
     { isRead: true },
     {
       where: { conversationId: conversation.id, senderId: peerId, isRead: false },
-      individualHooks: true,
     },
   );
+
+  // Emit updated unread count for the current user (who just read the messages)
+  void emitUnreadCount(req.session.userId);
 
   return res.status(200).type("application/json").send({});
 });

@@ -7,9 +7,9 @@ import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+import { convertMovieToWebm, extractPosterFromVideo } from "@web-speed-hackathon-2026/server/src/utils/convert_media";
 
-// 変換した動画の拡張子
-const EXTENSION = "gif";
+const EXTENSION = "webm";
 
 export const movieRouter = Router();
 
@@ -22,15 +22,25 @@ movieRouter.post("/movies", async (req, res) => {
   }
 
   const type = await fileTypeFromBuffer(req.body);
-  if (type === undefined || type.ext !== EXTENSION) {
+  if (type === undefined || !(type.mime.startsWith("video/") || type.mime === "image/gif")) {
     throw new httpErrors.BadRequest("Invalid file type");
   }
 
   const movieId = uuidv4();
 
-  const filePath = path.resolve(UPLOAD_PATH, `./movies/${movieId}.${EXTENSION}`);
-  await fs.mkdir(path.resolve(UPLOAD_PATH, "movies"), { recursive: true });
-  await fs.writeFile(filePath, req.body);
+  const moviesDir = path.resolve(UPLOAD_PATH, "movies");
+  await fs.mkdir(moviesDir, { recursive: true });
+
+  // Run VP9 conversion and poster extraction in parallel from the original input
+  const [outputBuffer, posterBuffer] = await Promise.all([
+    convertMovieToWebm(req.body),
+    extractPosterFromVideo(req.body),
+  ]);
+
+  await Promise.all([
+    fs.writeFile(path.resolve(moviesDir, `${movieId}.${EXTENSION}`), outputBuffer),
+    fs.writeFile(path.resolve(moviesDir, `${movieId}-poster.webp`), posterBuffer),
+  ]);
 
   return res.status(200).type("application/json").send({ id: movieId });
 });

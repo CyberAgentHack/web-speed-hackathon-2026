@@ -1,50 +1,19 @@
-import moment from "moment";
-import { useCallback, useEffect, useState } from "react";
-
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
-import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
-import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+
+const rtf = new Intl.RelativeTimeFormat("ja", { numeric: "auto" });
 
 interface Props {
   activeUser: Models.User;
   newDmModalId: string;
+  conversations: Array<Models.DirectMessageConversation>;
+  error: Error | null;
+  isLoading: boolean;
 }
 
-export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
-  const [conversations, setConversations] =
-    useState<Array<Models.DirectMessageConversation> | null>(null);
-  const [error, setError] = useState<Error | null>(null);
-
-  const loadConversations = useCallback(async () => {
-    if (activeUser == null) {
-      return;
-    }
-
-    try {
-      const conversations = await fetchJSON<Array<Models.DirectMessageConversation>>("/api/v1/dm");
-      setConversations(conversations);
-      setError(null);
-    } catch (error) {
-      setConversations(null);
-      setError(error as Error);
-    }
-  }, [activeUser]);
-
-  useEffect(() => {
-    void loadConversations();
-  }, [loadConversations]);
-
-  useWs("/api/v1/dm/unread", () => {
-    void loadConversations();
-  });
-
-  if (conversations == null) {
-    return null;
-  }
-
+export const DirectMessageListPage = ({ activeUser, newDmModalId, conversations, error, isLoading }: Props) => {
   return (
     <section>
       <header className="border-cax-border flex flex-col gap-4 border-b px-4 pt-6 pb-4">
@@ -60,7 +29,13 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
         </div>
       </header>
 
-      {error != null ? (
+      {conversations.length === 0 && isLoading ? (
+        <div className="flex justify-center py-12">
+          <span className="text-cax-text-muted animate-spin text-2xl">
+            <FontAwesomeIcon iconType="circle-notch" styleType="solid" />
+          </span>
+        </div>
+      ) : error != null ? (
         <p className="text-cax-danger px-4 py-6 text-center text-sm">DMの取得に失敗しました</p>
       ) : conversations.length === 0 ? (
         <p className="text-cax-text-muted px-4 py-6 text-center">
@@ -69,16 +44,14 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
       ) : (
         <ul data-testid="dm-list">
           {conversations.map((conversation) => {
-            const { messages } = conversation;
+            const messages = conversation.messages ?? [];
             const peer =
               conversation.initiator.id !== activeUser.id
                 ? conversation.initiator
                 : conversation.member;
 
             const lastMessage = messages.at(-1);
-            const hasUnread = messages
-              .filter((m) => m.sender.id === peer.id)
-              .some((m) => !m.isRead);
+            const hasUnread = conversation.hasUnread ?? false;
 
             return (
               <li className="grid" key={conversation.id}>
@@ -87,7 +60,10 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                     <img
                       alt={peer.profileImage.alt}
                       className="w-12 shrink-0 self-start rounded-full"
-                      src={getProfileImagePath(peer.profileImage.id)}
+                      height={96}
+                      loading="lazy"
+                      src={getProfileImagePath(peer.profileImage.id, 96)}
+                      width={96}
                     />
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-center justify-between">
@@ -100,7 +76,17 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {(() => {
+                              const diff = Date.now() - new Date(lastMessage.createdAt).getTime();
+                              const seconds = Math.floor(diff / 1000);
+                              const minutes = Math.floor(seconds / 60);
+                              const hours = Math.floor(minutes / 60);
+                              const days = Math.floor(hours / 24);
+                              if (days > 0) return rtf.format(-days, "day");
+                              if (hours > 0) return rtf.format(-hours, "hour");
+                              if (minutes > 0) return rtf.format(-minutes, "minute");
+                              return rtf.format(-seconds, "second");
+                            })()}
                           </time>
                         )}
                       </div>

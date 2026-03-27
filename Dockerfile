@@ -11,6 +11,7 @@ ENV PNPM_HOME=/pnpm
 
 WORKDIR /app
 RUN --mount=type=cache,target=/root/.npm npm install -g pnpm@${PNPM_VERSION}
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
 
 FROM base AS build
 
@@ -20,6 +21,10 @@ COPY ./application/server/package.json ./server/package.json
 RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile
 
 COPY ./application .
+
+# Optimize seed images and remove unused GIFs
+RUN pnpm --filter @web-speed-hackathon-2026/server optimize:images
+RUN rm -f ./public/movies/*.gif
 
 RUN NODE_OPTIONS="--max-old-space-size=4096" pnpm build
 

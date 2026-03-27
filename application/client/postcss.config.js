@@ -1,11 +1,9 @@
-const postcssImport = require("postcss-import");
-const postcssPresetEnv = require("postcss-preset-env");
+const tailwindcss = require("@tailwindcss/postcss");
+const trimTailwind = require("./postcss-trim-tailwind");
 
 module.exports = {
   plugins: [
-    postcssImport(),
-    postcssPresetEnv({
-      stage: 3,
-    }),
+    tailwindcss(),
+    trimTailwind(),
   ],
 };
