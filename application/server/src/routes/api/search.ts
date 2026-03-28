@@ -21,8 +21,8 @@ searchRouter.get("/search", async (req, res) => {
   }
 
   const searchTerm = keywords ? `%${keywords}%` : null;
-  const limit = req.query["limit"] != null ? Number(req.query["limit"]) : undefined;
-  const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
+  const limit = req.query["limit"] != null ? Number(req.query["limit"]) : 30;
+  const offset = req.query["offset"] != null ? Number(req.query["offset"]) : 0;
 
   // 日付条件を構築
   const dateConditions: Record<symbol, Date>[] = [];
@@ -86,7 +86,5 @@ searchRouter.get("/search", async (req, res) => {
 
   mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-  const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
-
-  return res.status(200).type("application/json").send(result);
+  return res.status(200).type("application/json").send(mergedPosts.slice(0, limit));
 });

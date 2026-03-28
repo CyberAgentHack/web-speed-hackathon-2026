@@ -22,6 +22,16 @@ interface Props {
   onSendMessage: (message: string) => void;
 }
 
+let tokenizerPromise: Promise<Tokenizer<IpadicFeatures>> | null = null;
+
+function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
+  if (tokenizerPromise == null) {
+    const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
+    tokenizerPromise = builder.buildAsync();
+  }
+  return tokenizerPromise;
+}
+
 // トークン単位でハイライト
 function highlightMatchByTokens(text: string, queryTokens: string[]): React.ReactNode {
   if (queryTokens.length === 0) return text;
@@ -79,6 +89,7 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const suggestionsCacheRef = useRef<string[] | null>(null);
   const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -97,8 +108,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     let mounted = true;
 
     const init = async () => {
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
+      const nextTokenizer = await getTokenizer();
       if (mounted) {
         setTokenizer(nextTokenizer);
       }
@@ -121,9 +131,13 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
         return;
       }
 
-      const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-        "/api/v1/crok/suggestions",
-      );
+      const candidates =
+        suggestionsCacheRef.current ??
+        (
+          await fetchJSON<{ suggestions: string[] }>("/api/v1/crok/suggestions")
+        ).suggestions;
+      suggestionsCacheRef.current = candidates;
+
       if (cancelled) {
         return;
       }
@@ -140,9 +154,12 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
       setShowSuggestions(results.length > 0);
     };
 
-    void updateSuggestions();
+    const timerId = setTimeout(() => {
+      void updateSuggestions();
+    }, 180);
 
     return () => {
+      clearTimeout(timerId);
       cancelled = true;
     };
   }, [inputValue, tokenizer]);
