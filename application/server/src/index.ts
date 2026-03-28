@@ -1,17 +1,26 @@
-import "@web-speed-hackathon-2026/server/src/utils/express_websocket_support";
-import { app } from "@web-speed-hackathon-2026/server/src/app";
+import { serve } from "@hono/node-server";
 
-import { initializeSequelize } from "./sequelize";
+import { app } from "./app.js";
+import { initializeSequelize } from "./sequelize.js";
+import { initWebSocket, injectWebSocket } from "./ws.js";
 
 async function main() {
   await initializeSequelize();
 
-  const server = app.listen(Number(process.env["PORT"] || 3000), "0.0.0.0", () => {
-    const address = server.address();
-    if (typeof address === "object") {
-      console.log(`Listening on ${address?.address}:${address?.port}`);
-    }
-  });
+  initWebSocket(app);
+
+  const server = serve(
+    {
+      fetch: app.fetch,
+      port: Number(process.env["PORT"] || 3000),
+      hostname: "0.0.0.0",
+    },
+    (info) => {
+      console.log(`Listening on ${info.address}:${info.port}`);
+    },
+  );
+
+  injectWebSocket(server);
 }
 
 main().catch(console.error);

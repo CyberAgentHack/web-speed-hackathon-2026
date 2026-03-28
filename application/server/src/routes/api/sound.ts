@@ -1,39 +1,39 @@
 import { promises as fs } from "fs";
 import path from "path";
 
-import { Router } from "express";
-import { fileTypeFromBuffer } from "file-type";
-import httpErrors from "http-errors";
+import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+import type { AppEnv } from "@web-speed-hackathon-2026/server/src/types";
+import { convertToMp3 } from "@web-speed-hackathon-2026/server/src/utils/convert_to_mp3";
 import { extractMetadataFromSound } from "@web-speed-hackathon-2026/server/src/utils/extract_metadata_from_sound";
 
-// 変換した音声の拡張子
 const EXTENSION = "mp3";
 
-export const soundRouter = Router();
+export const soundRouter = new Hono<AppEnv>();
 
-soundRouter.post("/sounds", async (req, res) => {
-  if (req.session.userId === undefined) {
-    throw new httpErrors.Unauthorized();
-  }
-  if (Buffer.isBuffer(req.body) === false) {
-    throw new httpErrors.BadRequest();
+soundRouter.post("/sounds", async (c) => {
+  if (c.get("session").userId === undefined) {
+    throw new HTTPException(401);
   }
 
-  const type = await fileTypeFromBuffer(req.body);
-  if (type === undefined || type.ext !== EXTENSION) {
-    throw new httpErrors.BadRequest("Invalid file type");
+  const arrayBuffer = await c.req.arrayBuffer();
+  const body = Buffer.from(arrayBuffer);
+
+  if (body.length === 0) {
+    throw new HTTPException(400);
   }
+
+  const mp3Buffer = await convertToMp3(body);
 
   const soundId = uuidv4();
-
-  const { artist, title } = await extractMetadataFromSound(req.body);
+  const { artist, title } = await extractMetadataFromSound(mp3Buffer);
 
   const filePath = path.resolve(UPLOAD_PATH, `./sounds/${soundId}.${EXTENSION}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds"), { recursive: true });
-  await fs.writeFile(filePath, req.body);
+  await fs.writeFile(filePath, mp3Buffer);
 
-  return res.status(200).type("application/json").send({ artist, id: soundId, title });
+  return c.json({ artist, id: soundId, title }, 200);
 });

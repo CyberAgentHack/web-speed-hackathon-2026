@@ -1,6 +1,13 @@
-import { createWriteStream } from "node:fs";
+import { createWriteStream, readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+const require = createRequire(import.meta.url);
+const piexif = require("piexifjs") as {
+  load: (binary: string) => Record<string, Record<number, unknown>>;
+  ImageIFD: Record<string, number>;
+};
 
 import { faker } from "@faker-js/faker/locale/ja";
 
@@ -178,11 +185,28 @@ function pickRandomN<T>(arr: T[], n: number): T[] {
   return faker.helpers.arrayElements(arr, n);
 }
 
+const publicDir = path.resolve(__dirname, "../../public");
+
+function extractAltFromJpeg(filePath: string): string {
+  try {
+    const binary = readFileSync(filePath).toString("binary");
+    const exif = piexif.load(binary);
+    const raw = exif?.["0th"]?.[piexif.ImageIFD["ImageDescription"]!];
+    if (raw != null) {
+      return new TextDecoder().decode(Buffer.from(raw as string, "binary"));
+    }
+  } catch (err) {
+    console.log({err})
+    // EXIF が存在しない、または読み取りエラーの場合は空文字を返す
+  }
+  return "";
+}
+
 function generateProfileImages(): ProfileImageSeed[] {
   // Use existing profile image IDs from public/images/profiles/
   return EXISTING_PROFILE_IMAGE_IDS.map((id) => ({
     id,
-    alt: "",
+    alt: extractAltFromJpeg(path.join(publicDir, "images", "profiles", `${id}.jpg`)),
   }));
 }
 
@@ -222,7 +246,7 @@ function generateImages(): ImageSeed[] {
   const baseTime = now - ONE_WEEK_MS;
   return EXISTING_IMAGE_IDS.map((id, i) => ({
     id,
-    alt: "",
+    alt: extractAltFromJpeg(path.join(publicDir, "images", `${id}.jpg`)),
     createdAt: new Date(baseTime + i * 60 * 1000).toISOString(),
   }));
 }

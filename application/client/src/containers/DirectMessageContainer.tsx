@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Helmet } from "react-helmet";
+
 import { useParams } from "react-router";
 
 import { DirectMessageGate } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageGate";
@@ -34,6 +34,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const typingDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadConversation = useCallback(async () => {
     if (activeUser == null) {
@@ -61,6 +62,14 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     void sendRead();
   }, [loadConversation, sendRead]);
 
+  useEffect(() => {
+    return () => {
+      if (typingDebounceRef.current !== null) {
+        clearTimeout(typingDebounceRef.current);
+      }
+    };
+  }, []);
+
   const handleSubmit = useCallback(
     async (params: DirectMessageFormData) => {
       setIsSubmitting(true);
@@ -68,29 +77,36 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
         await sendJSON(`/api/v1/dm/${conversationId}/messages`, {
           body: params.body,
         });
-        loadConversation();
+        // WS が送信者にもメッセージをエコーバックするため再フェッチ不要
       } finally {
         setIsSubmitting(false);
       }
     },
-    [conversationId, loadConversation],
+    [conversationId],
   );
 
-  const handleTyping = useCallback(async () => {
-    void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
+  const handleTyping = useCallback(() => {
+    if (typingDebounceRef.current !== null) {
+      clearTimeout(typingDebounceRef.current);
+    }
+    typingDebounceRef.current = setTimeout(() => {
+      typingDebounceRef.current = null;
+      void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
+    }, 500);
   }, [conversationId]);
 
   useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {
     if (event.type === "dm:conversation:message") {
-      void loadConversation().then(() => {
-        if (event.payload.sender.id !== activeUser?.id) {
-          setIsPeerTyping(false);
-          if (peerTypingTimeoutRef.current !== null) {
-            clearTimeout(peerTypingTimeoutRef.current);
-          }
-          peerTypingTimeoutRef.current = null;
+      setConversation((prev) =>
+        prev ? { ...prev, messages: [...prev.messages, event.payload] } : prev,
+      );
+      if (event.payload.sender.id !== activeUser?.id) {
+        setIsPeerTyping(false);
+        if (peerTypingTimeoutRef.current !== null) {
+          clearTimeout(peerTypingTimeoutRef.current);
         }
-      });
+        peerTypingTimeoutRef.current = null;
+      }
       void sendRead();
     } else if (event.type === "dm:conversation:typing") {
       setIsPeerTyping(true);
@@ -124,9 +140,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
 
   return (
     <>
-      <Helmet>
-        <title>{peer.name} さんとのダイレクトメッセージ - CaX</title>
-      </Helmet>
+      <title>{`${peer.name} さんとのダイレクトメッセージ - CaX`}</title>
       <DirectMessagePage
         conversationError={conversationError}
         conversation={conversation}

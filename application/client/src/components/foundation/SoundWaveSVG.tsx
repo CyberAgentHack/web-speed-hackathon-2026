@@ -1,5 +1,4 @@
-import _ from "lodash";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 interface ParsedData {
   max: number;
@@ -9,23 +8,30 @@ interface ParsedData {
 async function calculate(data: ArrayBuffer): Promise<ParsedData> {
   const audioCtx = new AudioContext();
 
-  // 音声をデコードする
+  // 音声をデコードする（AudioContext はワーカー内では使えないためメインスレッドで実行）
   const buffer = await audioCtx.decodeAudioData(data.slice(0));
-  // 左の音声データの絶対値を取る
-  const leftData = _.map(buffer.getChannelData(0), Math.abs);
-  // 右の音声データの絶対値を取る
-  const rightData = _.map(buffer.getChannelData(1), Math.abs);
 
-  // 左右の音声データの平均を取る
-  const normalized = _.map(_.zip(leftData, rightData), _.mean);
-  // 100 個の chunk に分ける
-  const chunks = _.chunk(normalized, Math.ceil(normalized.length / 100));
-  // chunk ごとに平均を取る
-  const peaks = _.map(chunks, _.mean);
-  // chunk の平均の中から最大値を取る
-  const max = _.max(peaks) ?? 0;
+  // デコード済みの Float32Array をワーカーに転送してピーク計算をオフロードする
+  const left = new Float32Array(buffer.getChannelData(0));
+  const right = new Float32Array(
+    buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : buffer.getChannelData(0),
+  );
 
-  return { max, peaks };
+  return new Promise<ParsedData>((resolve, reject) => {
+    const worker = new Worker(
+      new URL("../../workers/sound_wave_worker.ts", import.meta.url),
+    );
+    worker.onmessage = (e: MessageEvent<ParsedData>) => {
+      resolve(e.data);
+      worker.terminate();
+    };
+    worker.onerror = (err) => {
+      reject(err);
+      worker.terminate();
+    };
+    // transferable として渡してコピーを省く
+    worker.postMessage({ left, right }, [left.buffer, right.buffer]);
+  });
 }
 
 interface Props {
@@ -39,11 +45,14 @@ export const SoundWaveSVG = ({ soundData }: Props) => {
     peaks: [],
   });
 
+  // soundData の参照が変わらない限り calculate() を再実行しない
+  const calculationPromise = useMemo(() => calculate(soundData), [soundData]);
+
   useEffect(() => {
-    calculate(soundData).then(({ max, peaks }) => {
+    calculationPromise.then(({ max, peaks }) => {
       setPeaks({ max, peaks });
     });
-  }, [soundData]);
+  }, [calculationPromise]);
 
   return (
     <svg className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1">
