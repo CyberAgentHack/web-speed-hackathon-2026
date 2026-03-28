@@ -1,18 +1,11 @@
-export const TypingIndicator = () => {
+import React from "react";
+
+export const TypingIndicator = React.memo(() => {
   return (
-    <div aria-label="応答中" className="flex items-center gap-1" role="status">
-      <span
-        className="bg-cax-border h-2 w-2 animate-bounce rounded-full"
-        style={{ animationDelay: "0ms" }}
-      />
-      <span
-        className="bg-cax-border h-2 w-2 animate-bounce rounded-full"
-        style={{ animationDelay: "150ms" }}
-      />
-      <span
-        className="bg-cax-border h-2 w-2 animate-bounce rounded-full"
-        style={{ animationDelay: "300ms" }}
-      />
+    <div role="status" aria-label="応答中" className="flex items-center gap-1">
+      <span className="dot delay-0" />
+      <span className="dot delay-150" />
+      <span className="dot delay-300" />
     </div>
   );
-};
+});

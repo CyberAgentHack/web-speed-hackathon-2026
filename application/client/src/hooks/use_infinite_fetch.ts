@@ -1,83 +1,42 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
-const LIMIT = 30;
+export const useInfiniteFetch = (path: string) => {
+  const [data, setData] = useState<any[]>([]);
+  const [offset, setOffset] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-interface ReturnValues<T> {
-  data: Array<T>;
-  error: Error | null;
-  isLoading: boolean;
-  fetchMore: () => void;
-}
+  const loadingRef = useRef(false);
 
-export function useInfiniteFetch<T>(
-  apiPath: string,
-  fetcher: (apiPath: string) => Promise<T[]>,
-): ReturnValues<T> {
-  const internalRef = useRef({ isLoading: false, offset: 0 });
+  const fetchMore = async () => {
+    if (loadingRef.current) return;
 
-  const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
-    data: [],
-    error: null,
-    isLoading: true,
-  });
+    loadingRef.current = true;
+    setLoading(true);
 
-  const fetchMore = useCallback(() => {
-    const { isLoading, offset } = internalRef.current;
-    if (isLoading) {
-      return;
+    try {
+      // （相対パス）
+      const res = await fetch(`${path}?offset=${offset}&limit=20`);
+
+      if (!res.ok) {
+        console.error("Fetch error:", res.status);
+        return;
+      }
+
+      const json = await res.json();
+
+      setData((prev) => [...prev, ...json]);
+      setOffset((prev) => prev + 20);
+    } catch (e) {
+      console.error("Fetch failed:", e);
     }
 
-    setResult((cur) => ({
-      ...cur,
-      isLoading: true,
-    }));
-    internalRef.current = {
-      isLoading: true,
-      offset,
-    };
-
-    void fetcher(apiPath).then(
-      (allData) => {
-        setResult((cur) => ({
-          ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
-          isLoading: false,
-        }));
-        internalRef.current = {
-          isLoading: false,
-          offset: offset + LIMIT,
-        };
-      },
-      (error) => {
-        setResult((cur) => ({
-          ...cur,
-          error,
-          isLoading: false,
-        }));
-        internalRef.current = {
-          isLoading: false,
-          offset,
-        };
-      },
-    );
-  }, [apiPath, fetcher]);
+    setLoading(false);
+    loadingRef.current = false;
+  };
 
   useEffect(() => {
-    setResult(() => ({
-      data: [],
-      error: null,
-      isLoading: true,
-    }));
-    internalRef.current = {
-      isLoading: false,
-      offset: 0,
-    };
-
     fetchMore();
-  }, [fetchMore]);
+  }, []); //  無限ループ防止
 
-  return {
-    ...result,
-    fetchMore,
-  };
-}
+  return { data, fetchMore, loading };
+};

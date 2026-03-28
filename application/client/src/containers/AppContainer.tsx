@@ -1,92 +1,56 @@
-import { useCallback, useEffect, useId, useState } from "react";
-import { Helmet, HelmetProvider } from "react-helmet";
-import { Route, Routes, useLocation, useNavigate } from "react-router";
+import { useState, useEffect, lazy, Suspense } from "react";
+import { Routes, Route } from "react-router";
+import { AppPage } from "../components/application/AppPage";
+import { fetchJSON } from "../utils/fetchers";
 
-import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
-import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
-import { CrokContainer } from "@web-speed-hackathon-2026/client/src/containers/CrokContainer";
-import { DirectMessageContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer";
-import { DirectMessageListContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer";
-import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
-import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
-import { PostContainer } from "@web-speed-hackathon-2026/client/src/containers/PostContainer";
-import { SearchContainer } from "@web-speed-hackathon-2026/client/src/containers/SearchContainer";
-import { TermContainer } from "@web-speed-hackathon-2026/client/src/containers/TermContainer";
-import { TimelineContainer } from "@web-speed-hackathon-2026/client/src/containers/TimelineContainer";
-import { UserProfileContainer } from "@web-speed-hackathon-2026/client/src/containers/UserProfileContainer";
-import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+const Timeline = lazy(() =>
+  import("./TimelineContainer").then(m => ({ default: m.TimelineContainer }))
+);
+const DMList = lazy(() =>
+  import("./DirectMessageListContainer").then(m => ({ default: m.DirectMessageListContainer }))
+);
+const DMChat = lazy(() =>
+  import("./DirectMessageContainer").then(m => ({ default: m.DirectMessageContainer }))
+);
+const Crok = lazy(() =>
+  import("./CrokContainer").then(m => ({ default: m.CrokContainer }))
+);
+const Search = lazy(() =>
+  import("./SearchContainer").then(m => ({ default: m.SearchContainer }))
+);
+const UserProfile = lazy(() =>
+  import("./UserProfileContainer").then(m => ({ default: m.UserProfileContainer }))
+);
+const Post = lazy(() =>
+  import("./PostContainer").then(m => ({ default: m.PostContainer }))
+);
 
 export const AppContainer = () => {
-  const { pathname } = useLocation();
-  const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+    fetchJSON("/api/v1/me")
+      .then(setUser)
+      .catch(() => setUser(null))
+      .finally(() => setLoading(false));
+  }, []);
 
-  const [activeUser, setActiveUser] = useState<Models.User | null>(null);
-  const [isLoadingActiveUser, setIsLoadingActiveUser] = useState(true);
-  useEffect(() => {
-    void fetchJSON<Models.User>("/api/v1/me")
-      .then((user) => {
-        setActiveUser(user);
-      })
-      .finally(() => {
-        setIsLoadingActiveUser(false);
-      });
-  }, [setActiveUser, setIsLoadingActiveUser]);
-  const handleLogout = useCallback(async () => {
-    await sendJSON("/api/v1/signout", {});
-    setActiveUser(null);
-    navigate("/");
-  }, [navigate]);
-
-  const authModalId = useId();
-  const newPostModalId = useId();
-
-  if (isLoadingActiveUser) {
-    return (
-      <HelmetProvider>
-        <Helmet>
-          <title>読込中 - CaX</title>
-        </Helmet>
-      </HelmetProvider>
-    );
-  }
+  if (loading) return <div className="p-10 text-center">読み込み中...</div>;
 
   return (
-    <HelmetProvider>
-      <AppPage
-        activeUser={activeUser}
-        authModalId={authModalId}
-        newPostModalId={newPostModalId}
-        onLogout={handleLogout}
-      >
+    <AppPage activeUser={user} authModalId="auth" newPostModalId="post" onLogout={() => {}}>
+      <Suspense fallback={<div className="p-10 text-center">読み込み中...</div>}>
         <Routes>
-          <Route element={<TimelineContainer />} path="/" />
-          <Route
-            element={
-              <DirectMessageListContainer activeUser={activeUser} authModalId={authModalId} />
-            }
-            path="/dm"
-          />
-          <Route
-            element={<DirectMessageContainer activeUser={activeUser} authModalId={authModalId} />}
-            path="/dm/:conversationId"
-          />
-          <Route element={<SearchContainer />} path="/search" />
-          <Route element={<UserProfileContainer />} path="/users/:username" />
-          <Route element={<PostContainer />} path="/posts/:postId" />
-          <Route element={<TermContainer />} path="/terms" />
-          <Route
-            element={<CrokContainer activeUser={activeUser} authModalId={authModalId} />}
-            path="/crok"
-          />
-          <Route element={<NotFoundContainer />} path="*" />
+          <Route path="/" element={<Timeline />} />
+          <Route path="/dm" element={<DMList activeUser={user} authModalId="auth" />} />
+          <Route path="/dm/:conversationId" element={<DMChat activeUser={user} authModalId="auth" />} />
+          <Route path="/crok" element={<Crok activeUser={user} authModalId="auth" />} />
+          <Route path="/search" element={<Search />} />
+          <Route path="/users/:username" element={<UserProfile />} />
+          <Route path="/posts/:postId" element={<Post />} />
         </Routes>
-      </AppPage>
-
-      <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
-      <NewPostModalContainer id={newPostModalId} />
-    </HelmetProvider>
+      </Suspense>
+    </AppPage>
   );
 };

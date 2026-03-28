@@ -1,77 +1,49 @@
-import { AccountMenu } from "@web-speed-hackathon-2026/client/src/components/application/AccountMenu";
-import { NavigationItem } from "@web-speed-hackathon-2026/client/src/components/application/NavigationItem";
-import { DirectMessageNotificationBadge } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageNotificationBadge";
-import { CrokLogo } from "@web-speed-hackathon-2026/client/src/components/foundation/CrokLogo";
-import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
+import { AccountMenu } from "./AccountMenu";
+import { NavigationItem } from "./NavigationItem";
+import { CrokLogo } from "../foundation/CrokLogo";
+import { FontAwesomeIcon } from "../foundation/FontAwesomeIcon";
 
-interface Props {
-  activeUser: Models.User | null;
-  authModalId: string;
-  newPostModalId: string;
-  onLogout: () => void;
-}
-
-export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }: Props) => {
+export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }: any) => {
   return (
-    <nav className="border-cax-border bg-cax-surface fixed right-0 bottom-0 left-0 z-10 h-12 border-t lg:relative lg:h-full lg:w-48 lg:border-t-0 lg:border-r">
-      <div className="relative grid grid-flow-col items-center justify-evenly lg:fixed lg:flex lg:h-full lg:w-48 lg:flex-col lg:justify-between lg:p-2">
-        <ul className="grid grid-flow-col items-center justify-evenly lg:grid-flow-row lg:auto-rows-min lg:justify-start lg:gap-2">
+    <nav className="border-cax-border bg-cax-surface fixed bottom-0 left-0 right-0 z-10 h-16 border-t lg:relative lg:h-full lg:w-64 lg:border-t-0 lg:border-r">
+      <div className="flex h-full items-center justify-around lg:flex-col lg:justify-start lg:p-4 lg:gap-4">
+        <NavigationItem href="/" icon={<FontAwesomeIcon iconType="home" styleType="solid" />} text="ホーム" />
+        <NavigationItem href="/search" icon={<FontAwesomeIcon iconType="search" styleType="solid" />} text="検索" />
+        <NavigationItem
+          href={activeUser ? "/dm" : undefined}
+          command={!activeUser ? "show-modal" : undefined}
+          commandfor={authModalId}
+          icon={<FontAwesomeIcon iconType="envelope" styleType="solid" />}
+          text="メッセージ"
+        />
+        <NavigationItem
+          href={activeUser ? "/crok" : undefined}
+          command={!activeUser ? "show-modal" : undefined}
+          commandfor={authModalId}
+          icon={<CrokLogo className="h-6 w-6" />}
+          text="AIチャット"
+        />
+        <button
+          popoverTarget={newPostModalId}
+          className="bg-teal-700 text-white p-2 rounded-full lg:w-full lg:rounded-lg lg:font-bold"
+        >
+          投稿
+        </button>
+        {activeUser && (
           <NavigationItem
-            href="/"
-            icon={<FontAwesomeIcon iconType="home" styleType="solid" />}
-            text="ホーム"
+            href={`/users/${activeUser.username}`}
+            icon={<FontAwesomeIcon iconType="user" styleType="solid" />}
+            text="マイページ"
           />
-          <NavigationItem
-            href="/search"
-            icon={<FontAwesomeIcon iconType="search" styleType="solid" />}
-            text="検索"
-          />
-          {activeUser !== null ? (
-            <NavigationItem
-              badge={<DirectMessageNotificationBadge />}
-              href="/dm"
-              icon={<FontAwesomeIcon iconType="envelope" styleType="solid" />}
-              text="DM"
-            />
-          ) : null}
-          {activeUser !== null ? (
-            <NavigationItem
-              icon={<FontAwesomeIcon iconType="edit" styleType="solid" />}
-              command="show-modal"
-              commandfor={newPostModalId}
-              text="投稿する"
-            />
-          ) : null}
-          {activeUser !== null ? (
-            <NavigationItem
-              href={`/users/${activeUser.username}`}
-              icon={<FontAwesomeIcon iconType="user" styleType="solid" />}
-              text="マイページ"
-            />
-          ) : null}
-          {activeUser === null ? (
-            <NavigationItem
-              icon={<FontAwesomeIcon iconType="sign-in-alt" styleType="solid" />}
-              text="サインイン"
-              command="show-modal"
-              commandfor={authModalId}
-            />
-          ) : null}
-          {activeUser !== null ? (
-            <NavigationItem
-              href="/crok"
-              icon={<CrokLogo className="h-[30px] w-[30px]" />}
-              text="Crok"
-            />
-          ) : null}
-          <NavigationItem
-            href="/terms"
-            icon={<FontAwesomeIcon iconType="balance-scale" styleType="solid" />}
-            text="利用規約"
-          />
-        </ul>
-
-        {activeUser !== null ? <AccountMenu user={activeUser} onLogout={onLogout} /> : null}
+        )}
+        {!activeUser && (
+          <button
+            popoverTarget={authModalId}
+            className="hidden lg:block w-full border border-teal-700 text-teal-700 rounded-lg p-2"
+          >
+            サインイン
+          </button>
+        )}
       </div>
     </nav>
   );

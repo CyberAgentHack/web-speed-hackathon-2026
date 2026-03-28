@@ -1,3 +1,4 @@
+@import "tailwindcss";
 @layer normalize, theme, base, components, utilities;
 
 @import "normalize.css" layer(normalize);

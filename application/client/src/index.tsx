@@ -1,16 +1,19 @@
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router";
+import { Suspense } from "react";
+import { AppContainer } from "./containers/AppContainer";
+import { store } from "./store";
 
-import { AppContainer } from "@web-speed-hackathon-2026/client/src/containers/AppContainer";
-import { store } from "@web-speed-hackathon-2026/client/src/store";
-
-window.addEventListener("load", () => {
-  createRoot(document.getElementById("app")!).render(
+const container = document.getElementById("app");
+if (container) {
+  createRoot(container).render(
     <Provider store={store}>
       <BrowserRouter>
-        <AppContainer />
+        <Suspense fallback={<div className="p-10 text-center">読み込み中...</div>}>
+          <AppContainer />
+        </Suspense>
       </BrowserRouter>
-    </Provider>,
+    </Provider>
   );
-});
+}

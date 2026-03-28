@@ -1,45 +1,39 @@
 import { useEffect, useState } from "react";
 
-interface ReturnValues<T> {
-  data: T | null;
-  error: Error | null;
-  isLoading: boolean;
-}
-
-export function useFetch<T>(
-  apiPath: string,
-  fetcher: (apiPath: string) => Promise<T>,
-): ReturnValues<T> {
-  const [result, setResult] = useState<ReturnValues<T>>({
-    data: null,
-    error: null,
-    isLoading: true,
-  });
+export const useFetch = (path: string) => {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setResult(() => ({
-      data: null,
-      error: null,
-      isLoading: true,
-    }));
+    let ignore = false;
 
-    void fetcher(apiPath).then(
-      (data) => {
-        setResult((cur) => ({
-          ...cur,
-          data,
-          isLoading: false,
-        }));
-      },
-      (error) => {
-        setResult((cur) => ({
-          ...cur,
-          error,
-          isLoading: false,
-        }));
-      },
-    );
-  }, [apiPath, fetcher]);
+    const fetchData = async () => {
+      try {
+        //  相対パスでAPIを叩く（Fly対応）
+        const res = await fetch(path);
 
-  return result;
-}
+        if (!res.ok) {
+          console.error("Fetch error:", res.status);
+          return;
+        }
+
+        const json = await res.json();
+
+        if (!ignore) {
+          setData(json);
+          setLoading(false);
+        }
+      } catch (e) {
+        console.error("Fetch failed:", e);
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      ignore = true;
+    };
+  }, [path]);
+
+  return { data, loading };
+};
