@@ -1,4 +1,3 @@
-import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -87,6 +86,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                     <img
                       alt={peer.profileImage.alt}
                       className="w-12 shrink-0 self-start rounded-full"
+                      loading="lazy"
                       src={getProfileImagePath(peer.profileImage.id)}
                     />
                     <div className="flex flex-1 flex-col">
@@ -100,7 +100,14 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {(() => {
+                              const diff = (new Date(lastMessage.createdAt).getTime() - Date.now()) / 1000;
+                              const rtf = new Intl.RelativeTimeFormat("ja", { numeric: "auto" });
+                              if (Math.abs(diff) < 60) return rtf.format(Math.round(diff), "second");
+                              if (Math.abs(diff) < 3600) return rtf.format(Math.round(diff / 60), "minute");
+                              if (Math.abs(diff) < 86400) return rtf.format(Math.round(diff / 3600), "hour");
+                              return rtf.format(Math.round(diff / 86400), "day");
+                            })()}
                           </time>
                         )}
                       </div>
