@@ -3,8 +3,22 @@ import { Op } from "sequelize";
 
 import { Post } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
+import { analyzeSentiment } from "@web-speed-hackathon-2026/server/src/utils/sentiment.js";
 
 export const searchRouter = Router();
+
+searchRouter.get("/sentiment", async (req, res) => {
+  const text = req.query["text"];
+  if (typeof text !== "string" || text.trim() === "") {
+    return res.status(200).type("application/json").send({ isNegative: false, score: 0 });
+  }
+  try {
+    const result = await analyzeSentiment(text);
+    return res.status(200).type("application/json").send(result);
+  } catch {
+    return res.status(200).type("application/json").send({ isNegative: false, score: 0 });
+  }
+});
 
 searchRouter.get("/search", async (req, res) => {
   const query = req.query["q"];
