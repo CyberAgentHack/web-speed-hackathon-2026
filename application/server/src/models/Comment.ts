@@ -53,6 +53,10 @@ export function initComment(sequelize: Sequelize) {
         ],
         order: [["createdAt", "ASC"]],
       },
+      indexes: [
+        { fields: ["userId"] },
+        { fields: ["postId"] },
+      ],
     },
   );
 }
