@@ -2,48 +2,57 @@ import { ReactNode, useEffect, useRef } from "react";
 
 interface Props {
   children: ReactNode;
-  items: any[];
+  items: unknown[];
   fetchMore: () => void;
+  isLoading?: boolean;
 }
 
-export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
-  const latestItem = items[items.length - 1];
-
+export const InfiniteScroll = ({
+  children,
+  fetchMore,
+  items,
+  isLoading = false,
+}: Props) => {
   const prevReachedRef = useRef(false);
 
+  const itemsLengthRef = useRef(items.length);
+  const isLoadingRef = useRef(isLoading);
+  const fetchMoreRef = useRef(fetchMore);
+
+  // 最新値を更新
+  useEffect(() => {
+    itemsLengthRef.current = items.length;
+    isLoadingRef.current = isLoading;
+    fetchMoreRef.current = fetchMore;
+  }, [items.length, isLoading, fetchMore]);
+
+  // listener は一度だけ登録
   useEffect(() => {
     const handler = () => {
-      // 念の為 2の18乗 回、最下部かどうかを確認する
-      const hasReached = Array.from(Array(2 ** 18), () => {
-        return window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight;
-      }).every(Boolean);
+      const hasReached =
+        window.innerHeight + Math.ceil(window.scrollY) >=
+        document.body.offsetHeight;
 
-      // 画面最下部にスクロールしたタイミングで、登録したハンドラを呼び出す
       if (hasReached && !prevReachedRef.current) {
-        // アイテムがないときは追加で読み込まない
-        if (latestItem !== undefined) {
-          fetchMore();
+        if (
+          itemsLengthRef.current > 0 &&
+          !isLoadingRef.current
+        ) {
+          fetchMoreRef.current();
         }
       }
 
       prevReachedRef.current = hasReached;
     };
 
-    // 最初は実行されないので手動で呼び出す
-    prevReachedRef.current = false;
-    handler();
+    window.addEventListener("scroll", handler, { passive: true });
+    window.addEventListener("resize", handler);
 
-    document.addEventListener("wheel", handler, { passive: false });
-    document.addEventListener("touchmove", handler, { passive: false });
-    document.addEventListener("resize", handler, { passive: false });
-    document.addEventListener("scroll", handler, { passive: false });
     return () => {
-      document.removeEventListener("wheel", handler);
-      document.removeEventListener("touchmove", handler);
-      document.removeEventListener("resize", handler);
-      document.removeEventListener("scroll", handler);
+      window.removeEventListener("scroll", handler);
+      window.removeEventListener("resize", handler);
     };
-  }, [latestItem, fetchMore]);
+  }, []);
 
   return <>{children}</>;
 };

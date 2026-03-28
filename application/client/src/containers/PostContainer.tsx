@@ -6,7 +6,10 @@ import { PostPage } from "@web-speed-hackathon-2026/client/src/components/post/P
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
-import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import {
+  fetchJSON,
+  fetchPaginatedJSON,
+} from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
   const { data: post, isLoading: isLoadingPost } = useFetch<Models.Post>(
@@ -16,14 +19,34 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
 
   const { data: comments, fetchMore } = useInfiniteFetch<Models.Comment>(
     `/api/v1/posts/${postId}/comments`,
-    fetchJSON,
+    fetchPaginatedJSON,
   );
 
   if (isLoadingPost) {
     return (
-      <Helmet>
-        <title>読込中 - CaX</title>
-      </Helmet>
+      <>
+        <Helmet>
+          <title>読込中 - CaX</title>
+        </Helmet>
+
+        <section className="px-1 sm:px-4">
+          <div className="border-cax-border border-b px-4 pt-4 pb-4">
+            <div className="flex items-center justify-center">
+              <div className="bg-cax-surface-subtle h-14 w-14 rounded-full sm:h-16 sm:w-16" />
+              <div className="min-w-0 grow pl-2">
+                <div className="bg-cax-surface-subtle h-5 w-32 rounded" />
+                <div className="bg-cax-surface-subtle mt-2 h-4 w-24 rounded" />
+              </div>
+            </div>
+
+            <div className="pt-4">
+              <div className="bg-cax-surface-subtle h-6 w-3/4 rounded" />
+              <div className="bg-cax-surface-subtle mt-2 h-6 w-2/3 rounded" />
+              <div className="bg-cax-surface-subtle mt-4 aspect-[16/9] w-full rounded-lg" />
+            </div>
+          </div>
+        </section>
+      </>
     );
   }
 

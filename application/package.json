@@ -10,11 +10,14 @@
     "typecheck": "pnpm run --recursive typecheck",
     "format": "pnpm run format:oxlint && pnpm run format:oxfmt",
     "format:oxlint": "oxlint --fix",
-    "format:oxfmt": "oxfmt"
+    "format:oxfmt": "oxfmt",
+    "generate:image-variants": "node scripts/generate-image-variants.mjs",
+    "convert:movies": "node scripts/convert-gif-to-mp4.mjs"
   },
   "devDependencies": {
     "oxfmt": "0.36.0",
-    "oxlint": "1.43.0"
+    "oxlint": "1.43.0",
+    "sharp": "0.34.5"
   },
   "engines": {
     "node": "24.14.0"
