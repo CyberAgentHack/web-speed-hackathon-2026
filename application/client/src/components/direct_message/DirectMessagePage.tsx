@@ -1,5 +1,4 @@
 import classNames from "classnames";
-import moment from "moment";
 import {
   ChangeEvent,
   useCallback,
@@ -25,6 +24,12 @@ interface Props {
   onSubmit: (params: DirectMessageFormData) => Promise<void>;
 }
 
+const jaTimeFormatter = new Intl.DateTimeFormat("ja-JP", {
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+
 export const DirectMessagePage = ({
   conversationError,
   conversation,
@@ -38,7 +43,9 @@ export const DirectMessagePage = ({
   const textAreaId = useId();
 
   const peer =
-    conversation.initiator.id !== activeUser.id ? conversation.initiator : conversation.member;
+    conversation.initiator.id !== activeUser.id
+      ? conversation.initiator
+      : conversation.member;
 
   const [text, setText] = useState("");
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
@@ -55,7 +62,11 @@ export const DirectMessagePage = ({
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLTextAreaElement>) => {
-      if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+      if (
+        event.key === "Enter" &&
+        !event.shiftKey &&
+        !event.nativeEvent.isComposing
+      ) {
         event.preventDefault();
         formRef.current?.requestSubmit();
       }
@@ -75,7 +86,9 @@ export const DirectMessagePage = ({
 
   useEffect(() => {
     const id = setInterval(() => {
-      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
+      const height = Number(
+        window.getComputedStyle(document.body).height.replace("px", ""),
+      );
       if (height !== scrollHeightRef.current) {
         scrollHeightRef.current = height;
         window.scrollTo(0, height);
@@ -88,7 +101,9 @@ export const DirectMessagePage = ({
   if (conversationError != null) {
     return (
       <section className="px-6 py-10">
-        <p className="text-cax-danger text-sm">メッセージの取得に失敗しました</p>
+        <p className="text-cax-danger text-sm">
+          メッセージの取得に失敗しました
+        </p>
       </section>
     );
   }
@@ -141,7 +156,7 @@ export const DirectMessagePage = ({
                 </p>
                 <div className="flex gap-1 text-xs">
                   <time dateTime={message.createdAt}>
-                    {moment(message.createdAt).locale("ja").format("HH:mm")}
+                    {jaTimeFormatter.format(new Date(message.createdAt))}
                   </time>
                   {isActiveUserSend && message.isRead && (
                     <span className="text-cax-text-muted">既読</span>

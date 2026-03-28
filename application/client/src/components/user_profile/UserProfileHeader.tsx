@@ -1,5 +1,4 @@
 import { FastAverageColor } from "fast-average-color";
-import moment from "moment";
 import { ReactEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -9,17 +8,24 @@ interface Props {
   user: Models.User;
 }
 
+const jaLongDateFormatter = new Intl.DateTimeFormat("ja-JP", {
+  dateStyle: "long",
+});
+
 export const UserProfileHeader = ({ user }: Props) => {
   const [averageColor, setAverageColor] = useState<string | null>(null);
 
   // 画像の平均色を取得します
   /** @type {React.ReactEventHandler<HTMLImageElement>} */
-  const handleLoadImage = useCallback<ReactEventHandler<HTMLImageElement>>((ev) => {
-    const fac = new FastAverageColor();
-    const { rgb } = fac.getColor(ev.currentTarget, { mode: "precision" });
-    setAverageColor(rgb);
-    fac.destroy();
-  }, []);
+  const handleLoadImage = useCallback<ReactEventHandler<HTMLImageElement>>(
+    (ev) => {
+      const fac = new FastAverageColor();
+      const { rgb } = fac.getColor(ev.currentTarget, { mode: "precision" });
+      setAverageColor(rgb);
+      fac.destroy();
+    },
+    [],
+  );
 
   return (
     <header className="relative">
@@ -43,8 +49,8 @@ export const UserProfileHeader = ({ user }: Props) => {
             <FontAwesomeIcon iconType="calendar-alt" styleType="regular" />
           </span>
           <span>
-            <time dateTime={moment(user.createdAt).toISOString()}>
-              {moment(user.createdAt).locale("ja").format("LL")}
+            <time dateTime={new Date(user.createdAt).toISOString()}>
+              {jaLongDateFormatter.format(new Date(user.createdAt))}
             </time>
             からサービスを利用しています
           </span>

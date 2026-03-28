@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { SubmissionError } from "redux-form";
 
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
@@ -16,7 +17,10 @@ const ERROR_MESSAGES: Record<string, string> = {
   USERNAME_TAKEN: "ユーザー名が使われています",
 };
 
-function getErrorCode(err: JQuery.jqXHR<unknown>, type: "signin" | "signup"): string {
+function getErrorCode(
+  err: JQuery.jqXHR<unknown>,
+  type: "signin" | "signup"
+): string {
   const responseJSON = err.responseJSON;
   if (
     typeof responseJSON !== "object" ||
@@ -38,34 +42,41 @@ function getErrorCode(err: JQuery.jqXHR<unknown>, type: "signin" | "signup"): st
 export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
+
   useEffect(() => {
     if (!ref.current) return;
     const element = ref.current;
 
     const handleToggle = () => {
-      // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
       setResetKey((key) => key + 1);
     };
     element.addEventListener("toggle", handleToggle);
     return () => {
       element.removeEventListener("toggle", handleToggle);
     };
-  }, [ref, setResetKey]);
+  }, []);
 
   const handleRequestCloseModal = useCallback(() => {
     ref.current?.close();
-  }, [ref]);
-
+  }, []);
   const handleSubmit = useCallback(
     async (values: AuthFormData) => {
       try {
+        let user: Models.User;
         if (values.type === "signup") {
-          const user = await sendJSON<Models.User>("/api/v1/signup", values);
-          onUpdateActiveUser(user);
+          user = await sendJSON<Models.User>("/api/v1/signup", values);
         } else {
-          const user = await sendJSON<Models.User>("/api/v1/signin", values);
-          onUpdateActiveUser(user);
+          user = await sendJSON<Models.User>("/api/v1/signin", values);
         }
+
+        flushSync(() => {
+          onUpdateActiveUser(user);
+        });
+
+        await new Promise<void>((resolve) => {
+          requestAnimationFrame(() => resolve());
+        });
+
         handleRequestCloseModal();
       } catch (err: unknown) {
         const error = getErrorCode(err as JQuery.jqXHR<unknown>, values.type);
@@ -74,7 +85,7 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
         });
       }
     },
-    [handleRequestCloseModal, onUpdateActiveUser],
+    [handleRequestCloseModal, onUpdateActiveUser]
   );
 
   return (

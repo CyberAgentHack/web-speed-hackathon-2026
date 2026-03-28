@@ -25,7 +25,7 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: false,
   entry: {
     main: [
       "core-js",
@@ -36,7 +36,7 @@ const config = {
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: "production",
   module: {
     rules: [
       {
@@ -98,8 +98,16 @@ const config = {
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
     alias: {
-      "bayesian-bm25$": path.resolve(__dirname, "node_modules", "bayesian-bm25/dist/index.js"),
-      ["kuromoji$"]: path.resolve(__dirname, "node_modules", "kuromoji/build/kuromoji.js"),
+      "bayesian-bm25$": path.resolve(
+        __dirname,
+        "node_modules",
+        "bayesian-bm25/dist/index.js",
+      ),
+      ["kuromoji$"]: path.resolve(
+        __dirname,
+        "node_modules",
+        "kuromoji/build/kuromoji.js",
+      ),
       "@ffmpeg/ffmpeg$": path.resolve(
         __dirname,
         "node_modules",
@@ -128,7 +136,7 @@ const config = {
     },
   },
   optimization: {
-    minimize: false,
+    minimize: true,
     splitChunks: false,
     concatenateModules: false,
     usedExports: false,
@@ -139,7 +147,8 @@ const config = {
   ignoreWarnings: [
     {
       module: /@ffmpeg/,
-      message: /Critical dependency: the request of a dependency is an expression/,
+      message:
+        /Critical dependency: the request of a dependency is an expression/,
     },
   ],
 };

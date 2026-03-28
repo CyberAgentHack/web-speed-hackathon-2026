@@ -1,5 +1,3 @@
-import moment from "moment";
-
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
 import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
@@ -10,6 +8,10 @@ import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/
 interface Props {
   post: Models.Post;
 }
+
+const jaLongDateFormatter = new Intl.DateTimeFormat("ja-JP", {
+  dateStyle: "long",
+});
 
 export const PostItem = ({ post }: Props) => {
   return (
@@ -24,6 +26,7 @@ export const PostItem = ({ post }: Props) => {
               <img
                 alt={post.user.profileImage.alt}
                 src={getProfileImagePath(post.user.profileImage.id)}
+                decoding="async"
               />
             </Link>
           </div>
@@ -66,9 +69,12 @@ export const PostItem = ({ post }: Props) => {
             </div>
           ) : null}
           <p className="mt-2 text-sm sm:mt-4">
-            <Link className="text-cax-text-muted hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+            <Link
+              className="text-cax-text-muted hover:underline"
+              to={`/posts/${post.id}`}
+            >
+              <time dateTime={new Date(post.createdAt).toISOString()}>
+                {jaLongDateFormatter.format(new Date(post.createdAt))}
               </time>
             </Link>
           </p>
