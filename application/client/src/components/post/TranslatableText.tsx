@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 
-import { createTranslator } from "@web-speed-hackathon-2026/client/src/utils/create_translator";
+// createTranslatorはボタンクリック時にのみdynamic importしてTBTを改善する
 
 type State =
   | { type: "idle"; text: string }
@@ -20,6 +20,7 @@ export const TranslatableText = ({ text }: Props) => {
         (async () => {
           updateState({ type: "loading" });
           try {
+            const { createTranslator } = await import("@web-speed-hackathon-2026/client/src/utils/create_translator");
             using translator = await createTranslator({
               sourceLanguage: "ja",
               targetLanguage: "en",

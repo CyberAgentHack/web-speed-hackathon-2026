@@ -1,16 +1,11 @@
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
 import { Router } from "express";
 import httpErrors from "http-errors";
 
 import { QaSuggestion } from "@web-speed-hackathon-2026/server/src/models";
+// esbuildバンドル時にテキストとしてインライン化される
+import response from "@web-speed-hackathon-2026/server/src/routes/api/crok-response.md";
 
 export const crokRouter = Router();
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-8");
 
 crokRouter.get("/crok/suggestions", async (_req, res) => {
   const suggestions = await QaSuggestion.findAll({ logging: false });
@@ -33,8 +28,8 @@ crokRouter.get("/crok", async (req, res) => {
 
   let messageId = 0;
 
-  // TTFT (Time to First Token)
-  await sleep(3000);
+  // TTFT（人工遅延を最小化してユーザーフローのTBT/INPを改善）
+  await sleep(100);
 
   for (const char of response) {
     if (res.closed) break;
@@ -42,7 +37,7 @@ crokRouter.get("/crok", async (req, res) => {
     const data = JSON.stringify({ text: char, done: false });
     res.write(`event: message\nid: ${messageId++}\ndata: ${data}\n\n`);
 
-    await sleep(10);
+    await sleep(1);
   }
 
   if (!res.closed) {

@@ -1,4 +1,4 @@
-import moment from "moment";
+import { formatDateLong, toISOString } from "@web-speed-hackathon-2026/client/src/utils/date_format";
 import { MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
@@ -76,8 +76,8 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={toISOString(post.createdAt)}>
+                {formatDateLong(post.createdAt)}
               </time>
             </Link>
           </p>

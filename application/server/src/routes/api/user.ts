@@ -2,6 +2,7 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 
 import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
+import { apiCache } from "@web-speed-hackathon-2026/server/src/utils/api_cache";
 
 export const userRouter = Router();
 
@@ -35,6 +36,12 @@ userRouter.put("/me", async (req, res) => {
 });
 
 userRouter.get("/users/:username", async (req, res) => {
+  const cacheKey = `user:${req.params.username}`;
+  const cached = apiCache.get(cacheKey);
+  if (cached) {
+    return res.status(200).type("application/json").send(cached);
+  }
+
   const user = await User.findOne({
     where: {
       username: req.params.username,
@@ -45,6 +52,7 @@ userRouter.get("/users/:username", async (req, res) => {
     throw new httpErrors.NotFound();
   }
 
+  apiCache.set(cacheKey, user);
   return res.status(200).type("application/json").send(user);
 });
 

@@ -1,9 +1,11 @@
-import { FormErrors } from "redux-form";
-
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 
-export const validate = (values: AuthFormData): FormErrors<AuthFormData> => {
-  const errors: FormErrors<AuthFormData> = {};
+/** フォームのバリデーションエラー（フィールド名→エラーメッセージ） */
+export type AuthFormErrors = Partial<Record<keyof AuthFormData, string>>;
+
+/** サインイン/新規登録フォームのバリデーション */
+export const validate = (values: AuthFormData): AuthFormErrors => {
+  const errors: AuthFormErrors = {};
 
   const normalizedName = values.name?.trim() || "";
   const normalizedPassword = values.password?.trim() || "";

@@ -4,176 +4,89 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CaX</title>
-    <script src="/scripts/main.js"></script>
-    <link rel="stylesheet" href="/styles/main.css" />
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.1"></script>
-    <style type="text/tailwindcss">
-      @layer base {
-        button:not(:disabled),
-        [role="button"]:not(:disabled) {
-          cursor: pointer;
-        }
-      }
-
-      @theme {
-        --color-cax-canvas: var(--color-stone-100);
-        --color-cax-surface: var(--color-white);
-        --color-cax-surface-raised: var(--color-white);
-        --color-cax-surface-subtle: var(--color-stone-50);
-        --color-cax-overlay: var(--color-slate-950);
-        --color-cax-border: var(--color-stone-300);
-        --color-cax-border-strong: var(--color-stone-400);
-        --color-cax-text: var(--color-teal-950);
-        --color-cax-text-muted: var(--color-teal-700);
-        --color-cax-text-subtle: var(--color-slate-500);
-        --color-cax-brand: var(--color-teal-700);
-        --color-cax-brand-strong: var(--color-teal-800);
-        --color-cax-brand-soft: var(--color-teal-100);
-        --color-cax-accent: var(--color-orange-700);
-        --color-cax-accent-soft: var(--color-orange-100);
-        --color-cax-danger: var(--color-red-600);
-        --color-cax-danger-soft: var(--color-red-100);
-        --color-cax-highlight: var(--color-amber-200);
-        --color-cax-highlight-ink: var(--color-amber-950);
-      }
-
-      @utility markdown {
-        @apply text-sm wrap-anywhere;
-        line-break: strict;
-
-        /* インライン要素 */
-        :where(a) {
-          @apply text-cax-accent decoration-cax-accent underline underline-offset-2;
-        }
-        :where(strong) {
-          @apply font-bold;
-        }
-        :where(em) {
-          @apply italic;
-        }
-        :where(code):not(:where(pre > code)) {
-          @apply bg-cax-surface-subtle text-cax-text rounded px-1 py-0.5 font-mono;
-        }
-        :where(del) {
-          @apply decoration-cax-text-subtle line-through;
-        }
-
-        /* ブロック要素 */
-        :where(p) {
-          @apply text-cax-text my-6;
-        }
-        :where(blockquote) {
-          @apply border-cax-border text-cax-text-muted my-6 border-l-4 pl-4;
-        }
-        :where(hr) {
-          @apply border-cax-border my-10 border-t;
-        }
-
-        /* リスト */
-        :where(ol) {
-          @apply my-6 list-decimal pl-6;
-        }
-        :where(ul) {
-          @apply my-6 list-disc pl-6;
-        }
-        :where(li) {
-          @apply my-2;
-        }
-        :where(ol > li, ul > li)::marker {
-          @apply text-cax-text-muted;
-        }
-        :where(ol ol, ul ul, ol ul, ul ol) {
-          @apply my-2;
-        }
-
-        /* テーブル */
-        :where(table) {
-          @apply text-cax-text my-6 w-full table-auto text-sm;
-        }
-        :where(thead) {
-          @apply border-cax-border border-b;
-        }
-        :where(thead th) {
-          @apply px-2 pb-1.5 font-bold;
-        }
-        :where(tbody tr) {
-          @apply border-cax-border border-b;
-        }
-        :where(tbody tr:last-child) {
-          @apply border-b-0;
-        }
-        :where(tbody td) {
-          @apply align-baseline;
-        }
-        :where(tfoot) {
-          @apply border-cax-border border-t;
-        }
-        :where(tfoot td) {
-          @apply align-top;
-        }
-        :where(th, td) {
-          @apply text-left;
-        }
-        :where(tbody td, tfoot td) {
-          @apply px-2 py-1.5;
-        }
-        :where(tbody tr:last-child td, tfoot tr:last-child td) {
-          @apply pb-0;
-        }
-
-        /* 見出し */
-        :where(h1, h2, h3, h4, h5, h6) {
-          @apply text-cax-text text-pretty;
-        }
-        :where(h1, h2, h3, h4) {
-          @apply font-bold;
-        }
-        :where(h1, h2) {
-          @apply mt-10 mb-8 text-2xl;
-        }
-        :where(h3) {
-          @apply mt-8 mb-6 text-xl;
-        }
-        :where(h4) {
-          @apply mt-6 mb-4 text-lg;
-        }
-        :where(h5) {
-          @apply border-cax-border mt-6 mb-4 border-b py-0.5 pl-2 font-bold;
-        }
-        :where(h6) {
-          @apply border-cax-border mt-6 mb-4 border-b py-0.5 pl-2;
-        }
-        :where(h1 + *, h2 + *, h3 + *, h4 + *, h5 + *, h6 + *) {
-          @apply mt-0;
-        }
-
-        /* 注釈 */
-        :where(.footnotes) {
-          @apply border-cax-border mt-8 border-t;
-        }
-        :where(.footnotes h2) {
-          @apply sr-only;
-        }
-        :where(.footnotes ol) {
-          @apply mt-8 mb-0 text-sm;
-        }
-        :where(.footnotes ol li p) {
-          @apply my-0;
-        }
-
-        /* 最初の要素はマージンを0にする */
-        & > *:first-child {
-          @apply mt-0;
-        }
-
-        /* 最後の要素はマージンを0にする */
-        & > *:last-child {
-          @apply mb-0;
-        }
-      }
+    <!--
+      先行fetchをCSSより前に配置してクリティカルパスを並列化する。
+      CSS→API→画像の直列チェーンを、CSS‖APIの並列にすることでLCPを改善。
+    -->
+    <script>window.__prefetch={};if(location.pathname==="/"){window.__prefetch.posts=fetch("/api/v1/posts").then(function(r){return r.ok?r.json():null}).catch(function(){return null})}</script>
+    <!-- カスタムフォントを事前ロードしてFOIT回避・LCP改善 -->
+    <link rel="preload" href="/fonts/ReiNoAreMincho-Regular.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/ReiNoAreMincho-Heavy.woff2" as="font" type="font/woff2" crossorigin />
+    <style>
+      /* スケルトンUI: Reactマウント前のLCP候補を提供しCLS/FCP/LCPを改善 */
+      .sk{display:flex;justify-content:center;background:#f5f5f4;min-height:100vh;font-family:sans-serif}
+      .sk-wrap{display:flex;background:#fff;min-height:100vh;max-width:100%;width:100%}
+      .sk-nav{width:192px;border-right:1px solid #d6d3d1;padding:8px;display:none}
+      .sk-main{flex:1;min-width:0;max-width:640px;padding:16px}
+      .sk-item{height:40px;border-radius:9999px;background:#f5f5f4;margin-bottom:8px}
+      .sk-card{border-bottom:1px solid #d6d3d1;padding:16px 0}
+      .sk-avatar{width:40px;height:40px;border-radius:9999px;background:#d6d3d1;flex-shrink:0}
+      .sk-line{height:14px;border-radius:4px;background:#e7e5e4;margin-bottom:8px}
+      .sk-line-short{width:40%}
+      .sk-line-medium{width:70%}
+      .sk-line-long{width:90%}
+      .sk-card-row{display:flex;gap:12px}
+      .sk-card-body{flex:1;min-width:0}
+      @media(min-width:1024px){.sk-nav{display:block}}
+      /* SSRコンテンツのFOUC防止: CSSロード前でもレイアウトが安定するよう最低限のスタイルを適用 */
+      #app{max-width:1280px;margin:0 auto}
+      #app article{max-width:640px;margin:0 auto;padding:8px 16px;line-height:1.625}
+      #app h1{font-size:1.875rem;font-weight:700;margin:16px 0 8px}
+      #app h2{font-size:1.5rem;font-weight:700;margin:16px 0 8px}
+      #app ol{list-style:decimal;padding-left:32px}
     </style>
   </head>
   <body class="bg-cax-canvas text-cax-text">
-    <div id="app"></div>
+    <div id="app">
+      <!--
+        スケルトンUI: JSバンドルのロード・パース・実行完了前に表示される。
+        ReactのcreateRoot().render()でこのDOM全体が置換される。
+        LCP候補としてテキストブロックを含め、CLS防止のためレイアウトを実ページに合わせる。
+      -->
+      <div class="sk">
+        <div class="sk-wrap">
+          <aside class="sk-nav">
+            <div style="padding-top:16px">
+              <div class="sk-item"></div>
+              <div class="sk-item"></div>
+              <div class="sk-item"></div>
+              <div class="sk-item"></div>
+            </div>
+          </aside>
+          <main class="sk-main">
+            <div class="sk-card">
+              <div class="sk-card-row">
+                <div class="sk-avatar"></div>
+                <div class="sk-card-body">
+                  <p style="color:#042f2e;font-size:14px;line-height:1.625">読み込み中...</p>
+                  <div class="sk-line sk-line-long"></div>
+                  <div class="sk-line sk-line-medium"></div>
+                </div>
+              </div>
+            </div>
+            <div class="sk-card">
+              <div class="sk-card-row">
+                <div class="sk-avatar"></div>
+                <div class="sk-card-body">
+                  <div class="sk-line sk-line-short"></div>
+                  <div class="sk-line sk-line-medium"></div>
+                  <div class="sk-line sk-line-long"></div>
+                </div>
+              </div>
+            </div>
+            <div class="sk-card">
+              <div class="sk-card-row">
+                <div class="sk-avatar"></div>
+                <div class="sk-card-body">
+                  <div class="sk-line sk-line-short"></div>
+                  <div class="sk-line sk-line-long"></div>
+                  <div class="sk-line sk-line-short"></div>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
   </body>
 </html>

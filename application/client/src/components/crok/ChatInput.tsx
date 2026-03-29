@@ -1,5 +1,4 @@
-import Bluebird from "bluebird";
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
+import type { Tokenizer, IpadicFeatures } from "kuromoji";
 import {
   useEffect,
   useLayoutEffect,
@@ -16,6 +15,7 @@ import {
   filterSuggestionsBM25,
 } from "@web-speed-hackathon-2026/client/src/utils/bm25_search";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { getKuromojiTokenizer } from "@web-speed-hackathon-2026/client/src/utils/kuromoji_tokenizer";
 
 interface Props {
   isStreaming: boolean;
@@ -92,18 +92,15 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   }, [suggestions, showSuggestions]);
 
-  // 初回にkuromojiトークナイザーを構築
+  // 初回にkuromojiトークナイザーを構築（シングルトンで共有）
   useEffect(() => {
     let mounted = true;
 
-    const init = async () => {
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
+    getKuromojiTokenizer().then((t) => {
       if (mounted) {
-        setTokenizer(nextTokenizer);
+        setTokenizer(t);
       }
-    };
-    init();
+    });
 
     return () => {
       mounted = false;

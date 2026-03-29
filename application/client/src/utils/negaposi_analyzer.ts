@@ -1,21 +1,22 @@
-import Bluebird from "bluebird";
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
-import analyze from "negaposi-analyzer-ja";
-
-async function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
-  const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-  return await builder.buildAsync();
-}
+/**
+ * テキストの感情分析ユーティリティ。
+ * kuromojiはシングルトンで共有し、negaposi-analyzer-jaは使用時のみ動的ロードする。
+ */
+import { getKuromojiTokenizer } from "@web-speed-hackathon-2026/client/src/utils/kuromoji_tokenizer";
 
 type SentimentResult = {
   score: number;
   label: "positive" | "negative" | "neutral";
 };
 
+/** テキストの感情分析を行い、スコアとラベルを返す */
 export async function analyzeSentiment(text: string): Promise<SentimentResult> {
-  const tokenizer = await getTokenizer();
-  const tokens = tokenizer.tokenize(text);
+  const [tokenizer, { default: analyze }] = await Promise.all([
+    getKuromojiTokenizer(),
+    import("negaposi-analyzer-ja"),
+  ]);
 
+  const tokens = tokenizer.tokenize(text);
   const score = analyze(tokens);
 
   let label: SentimentResult["label"];

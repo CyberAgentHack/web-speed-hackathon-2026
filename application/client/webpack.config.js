@@ -2,8 +2,10 @@
 const path = require("path");
 
 const CopyWebpackPlugin = require("copy-webpack-plugin");
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
 const webpack = require("webpack");
 
 const SRC_PATH = path.resolve(__dirname, "./src");
@@ -25,18 +27,15 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: false,
   entry: {
     main: [
-      "core-js",
-      "regenerator-runtime/runtime",
-      "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: "production",
   module: {
     rules: [
       {
@@ -54,30 +53,29 @@ const config = {
       },
       {
         resourceQuery: /binary/,
-        type: "asset/bytes",
+        type: "asset/resource",
+        generator: {
+          filename: "assets/[name]-[contenthash][ext]",
+        },
       },
     ],
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
-    filename: "scripts/[name].js",
+    filename: "scripts/[name]-[contenthash].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     clean: true,
   },
   plugins: [
     new webpack.ProvidePlugin({
-      $: "jquery",
-      AudioContext: ["standardized-audio-context", "AudioContext"],
       Buffer: ["buffer", "Buffer"],
-      "window.jQuery": "jquery",
     }),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
+      NODE_ENV: "production",
     }),
     new MiniCssExtractPlugin({
       filename: "styles/[name].css",
@@ -91,7 +89,7 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: "body",
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
   ],
@@ -128,14 +126,64 @@ const config = {
     },
   },
   optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          compress: {
+            drop_console: true,
+            passes: 2,
+          },
+          output: {
+            comments: false,
+          },
+        },
+        extractComments: false,
+      }),
+      new CssMinimizerPlugin(),
+    ],
+    splitChunks: {
+      chunks: "all",
+      cacheGroups: {
+        // React/Router/Redux: 初期ロード必須の軽量コアのみ
+        react: {
+          test: /[\\/]node_modules[\\/](react|react-dom|react-router|react-helmet)[\\/]/,
+          name: "vendor",
+          priority: 100,
+          enforce: true,
+        },
+        // Markdown/Math系: 投稿詳細ページでのみ使用
+        markdown: {
+          test: /[\\/]node_modules[\\/](katex|remark-|rehype-|react-syntax-highlighter|react-markdown|unified|micromark|mdast-|hast-|unist-)[\\/]/,
+          name: "markdown",
+          priority: 50,
+          chunks: "async",
+        },
+        // メディア処理: 投稿作成時のみ使用
+        media: {
+          test: /[\\/]node_modules[\\/](@ffmpeg|@imagemagick)[\\/]/,
+          name: "media",
+          priority: 50,
+          chunks: "async",
+        },
+        // その他のnode_modules（初期ロードチャンクのみ）
+        otherVendors: {
+          test: /[\\/]node_modules[\\/]/,
+          name: "otherVendors",
+          priority: 10,
+          chunks: "initial",
+          reuseExistingChunk: true,
+        },
+      },
+    },
+    concatenateModules: true,
+    usedExports: true,
+    providedExports: true,
+    sideEffects: true,
   },
-  cache: false,
+  cache: {
+    type: "filesystem",
+  },
   ignoreWarnings: [
     {
       module: /@ffmpeg/,

@@ -45,18 +45,32 @@ export function initDirectMessageConversation(sequelize: Sequelize) {
       },
     },
     {
+      indexes: [
+        { fields: ["initiatorId"] },
+        { fields: ["memberId"] },
+      ],
       sequelize,
       defaultScope: {
+        // DM一覧では会話参加者のみロードし、メッセージは個別エンドポイントで取得する
         include: [
           { association: "initiator", include: [{ association: "profileImage" }] },
           { association: "member", include: [{ association: "profileImage" }] },
-          {
-            association: "messages",
-            include: [{ association: "sender", include: [{ association: "profileImage" }] }],
-            order: [["createdAt", "ASC"]],
-            required: false,
-          },
         ],
+      },
+      scopes: {
+        // DM詳細・WebSocket接続時に全メッセージを含めてロードする
+        withMessages: {
+          include: [
+            { association: "initiator", include: [{ association: "profileImage" }] },
+            { association: "member", include: [{ association: "profileImage" }] },
+            {
+              association: "messages",
+              include: [{ association: "sender", include: [{ association: "profileImage" }] }],
+              order: [["createdAt", "ASC"]],
+              required: false,
+            },
+          ],
+        },
       },
     },
   );
