@@ -76,9 +76,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                 : conversation.member;
 
             const lastMessage = messages.at(-1);
-            const hasUnread = messages
-              .filter((m) => m.sender.id === peer.id)
-              .some((m) => !m.isRead);
+            const hasUnread = (conversation.unreadCount ?? 0) > 0;
 
             return (
               <li className="grid" key={conversation.id}>
@@ -87,6 +85,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                     <img
                       alt={peer.profileImage.alt}
                       className="w-12 shrink-0 self-start rounded-full"
+                      loading="lazy"
                       src={getProfileImagePath(peer.profileImage.id)}
                     />
                     <div className="flex flex-1 flex-col">

@@ -1,65 +1,88 @@
 import { Router } from "express";
-import { Op } from "sequelize";
+import { Op, literal } from "sequelize";
 
-import { Post } from "@web-speed-hackathon-2026/server/src/models";
+import { Image, Post } from "@web-speed-hackathon-2026/server/src/models";
+import { analyzeSentiment } from "@web-speed-hackathon-2026/server/src/utils/analyze_sentiment.js";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
 
 export const searchRouter = Router();
+
+function toNonNegativeInteger(value: unknown): number | undefined {
+  if (value == null) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return undefined;
+  }
+
+  return Math.max(0, Math.trunc(parsed));
+}
 
 searchRouter.get("/search", async (req, res) => {
   const query = req.query["q"];
 
   if (typeof query !== "string" || query.trim() === "") {
-    return res.status(200).type("application/json").send([]);
+    return res.status(200).type("application/json").send({ isNegative: false, posts: [] });
   }
 
   const { keywords, sinceDate, untilDate } = parseSearchQuery(query);
+  const sequelize = Post.sequelize;
 
   // キーワードも日付フィルターもない場合は空配列を返す
   if (!keywords && !sinceDate && !untilDate) {
-    return res.status(200).type("application/json").send([]);
+    return res.status(200).type("application/json").send({ isNegative: false, posts: [] });
+  }
+  if (sequelize == null) {
+    throw new Error("Post sequelize is not initialized");
   }
 
-  const searchTerm = keywords ? `%${keywords}%` : null;
-  const limit = req.query["limit"] != null ? Number(req.query["limit"]) : undefined;
-  const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
+  const limit = toNonNegativeInteger(req.query["limit"]);
+  const offset = toNonNegativeInteger(req.query["offset"]);
 
-  // 日付条件を構築
-  const dateConditions: Record<symbol, Date>[] = [];
+  const whereClauses: string[] = [];
+  if (keywords) {
+    const escapedSearchTerm = sequelize.escape(`%${keywords}%`);
+    whereClauses.push(
+      `("SearchPost"."text" LIKE ${escapedSearchTerm} OR "SearchUser"."username" LIKE ${escapedSearchTerm} OR "SearchUser"."name" LIKE ${escapedSearchTerm})`,
+    );
+  }
   if (sinceDate) {
-    dateConditions.push({ [Op.gte]: sinceDate });
+    whereClauses.push(`"SearchPost"."createdAt" >= ${sequelize.escape(sinceDate.toISOString())}`);
   }
   if (untilDate) {
-    dateConditions.push({ [Op.lte]: untilDate });
+    whereClauses.push(`"SearchPost"."createdAt" <= ${sequelize.escape(untilDate.toISOString())}`);
   }
-  const dateWhere =
-    dateConditions.length > 0 ? { createdAt: Object.assign({}, ...dateConditions) } : {};
 
-  // テキスト検索条件
-  const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
+  const paginationClauses: string[] = [];
+  if (limit != null) {
+    paginationClauses.push(`LIMIT ${limit}`);
+  } else if (offset != null) {
+    paginationClauses.push("LIMIT -1");
+  }
+  if (offset != null) {
+    paginationClauses.push(`OFFSET ${offset}`);
+  }
 
-  const postsByText = await Post.findAll({
-    limit,
-    offset,
-    where: {
-      ...textWhere,
-      ...dateWhere,
-    },
-  });
+  const subquery = [
+    'SELECT "SearchPost"."id"',
+    'FROM "Posts" AS "SearchPost"',
+    'INNER JOIN "Users" AS "SearchUser" ON "SearchUser"."id" = "SearchPost"."userId"',
+    whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "",
+    'ORDER BY "SearchPost"."createdAt" DESC, "SearchPost"."id" DESC',
+    paginationClauses.join(" "),
+  ]
+    .filter(Boolean)
+    .join(" ");
 
-  // ユーザー名/名前での検索（キーワードがある場合のみ）
-  let postsByUser: typeof postsByText = [];
-  if (searchTerm) {
-    postsByUser = await Post.findAll({
+  const [result, isNegative] = await Promise.all([
+    Post.unscoped().findAll({
       include: [
         {
           association: "user",
-          attributes: { exclude: ["profileImageId"] },
           include: [{ association: "profileImage" }],
           required: true,
-          where: {
-            [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
-          },
         },
         {
           association: "images",
@@ -68,25 +91,19 @@ searchRouter.get("/search", async (req, res) => {
         { association: "movie" },
         { association: "sound" },
       ],
-      limit,
-      offset,
-      where: dateWhere,
-    });
-  }
+      order: [
+        ["createdAt", "DESC"],
+        ["id", "DESC"],
+        [{ model: Image, as: "images" }, "createdAt", "ASC"],
+      ],
+      where: {
+        id: {
+          [Op.in]: literal(`(${subquery})`),
+        },
+      },
+    }),
+    analyzeSentiment(keywords ?? ""),
+  ]);
 
-  const postIdSet = new Set<string>();
-  const mergedPosts: typeof postsByText = [];
-
-  for (const post of [...postsByText, ...postsByUser]) {
-    if (!postIdSet.has(post.id)) {
-      postIdSet.add(post.id);
-      mergedPosts.push(post);
-    }
-  }
-
-  mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-
-  const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
-
-  return res.status(200).type("application/json").send(result);
+  return res.status(200).type("application/json").send({ isNegative, posts: result });
 });

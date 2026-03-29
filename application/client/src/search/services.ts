@@ -10,8 +10,8 @@ export const sanitizeSearchText = (input: string): string => {
 };
 
 export const parseSearchQuery = (query: string) => {
-  const sincePattern = /since:((\d|\d\d|\d\d\d\d-\d\d-\d\d)+)+$/;
-  const untilPattern = /until:((\d|\d\d|\d\d\d\d-\d\d-\d\d)+)+$/;
+  const sincePattern = /since:([\d-]+)$/;
+  const untilPattern = /until:([\d-]+)$/;
 
   const sincePart = query.match(/since:[^\s]*/)?.[0] || "";
   const untilPart = query.match(/until:[^\s]*/)?.[0] || "";
@@ -38,9 +38,6 @@ export const parseSearchQuery = (query: string) => {
 };
 
 export const isValidDate = (dateStr: string): boolean => {
-  const slowDateLike = /^(\d+)+-(\d+)+-(\d+)+$/;
-  if (!slowDateLike.test(dateStr)) return false;
-
   const date = new Date(dateStr);
   return !Number.isNaN(date.getTime());
 };

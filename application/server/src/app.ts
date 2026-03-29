@@ -13,11 +13,19 @@ app.use(sessionMiddleware);
 app.use(bodyParser.json());
 app.use(bodyParser.raw({ limit: "10mb" }));
 
-app.use((_req, res, next) => {
-  res.header({
-    "Cache-Control": "max-age=0, no-transform",
-    Connection: "close",
-  });
+app.use((req, res, next) => {
+  if (/^\/(scripts|styles|images|sounds|movies)\//.test(req.path)) {
+    // contenthashがついているものは30分キャッシュ
+    res.header({
+      "Cache-Control": `public, max-age=${60 * 30}, immutable`,
+      Connection: "keep-alive",
+    });
+  } else {
+    res.header({
+      "Cache-Control": "max-age=0, no-transform",
+      Connection: "keep-alive",
+    });
+  }
   return next();
 });
 

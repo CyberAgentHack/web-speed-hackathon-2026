@@ -4,6 +4,7 @@ import {
   ForeignKey,
   InferAttributes,
   InferCreationAttributes,
+  literal,
   Model,
   NonAttribute,
   Op,
@@ -74,7 +75,10 @@ export function initDirectMessage(sequelize: Sequelize) {
 
   DirectMessage.addHook("afterSave", "onDmSaved", async (message) => {
     const directMessage = await DirectMessage.findByPk(message.get().id);
-    const conversation = await DirectMessageConversation.findByPk(directMessage?.conversationId);
+    const conversation = await DirectMessageConversation.unscoped().findByPk(
+      directMessage?.conversationId,
+      { attributes: ["id", "initiatorId", "memberId"] },
+    );
 
     if (directMessage == null || conversation == null) {
       return;
@@ -85,21 +89,16 @@ export function initDirectMessage(sequelize: Sequelize) {
         ? conversation.memberId
         : conversation.initiatorId;
 
-    const unreadCount = await DirectMessage.count({
-      distinct: true,
+    const unreadCount = await DirectMessage.unscoped().count({
       where: {
         senderId: { [Op.ne]: receiverId },
         isRead: false,
-      },
-      include: [
-        {
-          association: "conversation",
-          where: {
-            [Op.or]: [{ initiatorId: receiverId }, { memberId: receiverId }],
-          },
-          required: true,
+        conversationId: {
+          [Op.in]: literal(
+            `(SELECT "id" FROM "DirectMessageConversations" WHERE "initiatorId" = ${sequelize.escape(receiverId)} OR "memberId" = ${sequelize.escape(receiverId)})`,
+          ),
         },
-      ],
+      },
     });
 
     eventhub.emit(`dm:conversation/${conversation.id}:message`, directMessage);

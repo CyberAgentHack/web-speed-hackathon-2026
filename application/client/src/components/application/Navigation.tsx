@@ -5,13 +5,14 @@ import { CrokLogo } from "@web-speed-hackathon-2026/client/src/components/founda
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 
 interface Props {
-  activeUser: Models.User | null;
+  activeUser: Models.User | null | "loading";
   authModalId: string;
   newPostModalId: string;
   onLogout: () => void;
 }
 
 export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }: Props) => {
+  const isSignedIn = activeUser !== null && activeUser !== "loading";
   return (
     <nav className="border-cax-border bg-cax-surface fixed right-0 bottom-0 left-0 z-10 h-12 border-t lg:relative lg:h-full lg:w-48 lg:border-t-0 lg:border-r">
       <div className="relative grid grid-flow-col items-center justify-evenly lg:fixed lg:flex lg:h-full lg:w-48 lg:flex-col lg:justify-between lg:p-2">
@@ -26,7 +27,7 @@ export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }
             icon={<FontAwesomeIcon iconType="search" styleType="solid" />}
             text="検索"
           />
-          {activeUser !== null ? (
+          {isSignedIn ? (
             <NavigationItem
               badge={<DirectMessageNotificationBadge />}
               href="/dm"
@@ -34,7 +35,7 @@ export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }
               text="DM"
             />
           ) : null}
-          {activeUser !== null ? (
+          {isSignedIn ? (
             <NavigationItem
               icon={<FontAwesomeIcon iconType="edit" styleType="solid" />}
               command="show-modal"
@@ -42,14 +43,14 @@ export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }
               text="投稿する"
             />
           ) : null}
-          {activeUser !== null ? (
+          {isSignedIn ? (
             <NavigationItem
               href={`/users/${activeUser.username}`}
               icon={<FontAwesomeIcon iconType="user" styleType="solid" />}
               text="マイページ"
             />
           ) : null}
-          {activeUser === null ? (
+          {!isSignedIn ? (
             <NavigationItem
               icon={<FontAwesomeIcon iconType="sign-in-alt" styleType="solid" />}
               text="サインイン"
@@ -57,7 +58,7 @@ export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }
               commandfor={authModalId}
             />
           ) : null}
-          {activeUser !== null ? (
+          {isSignedIn ? (
             <NavigationItem
               href="/crok"
               icon={<CrokLogo className="h-[30px] w-[30px]" />}
@@ -71,7 +72,7 @@ export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }
           />
         </ul>
 
-        {activeUser !== null ? <AccountMenu user={activeUser} onLogout={onLogout} /> : null}
+        {isSignedIn ? <AccountMenu user={activeUser} onLogout={onLogout} /> : null}
       </div>
     </nav>
   );
