@@ -9,7 +9,6 @@ import {
 } from "@web-speed-hackathon-2026/client/src/search/services";
 import { SearchFormData } from "@web-speed-hackathon-2026/client/src/search/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/search/validation";
-import { analyzeSentiment } from "@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer";
 
 import { Button } from "../foundation/Button";
 
@@ -18,23 +17,43 @@ interface Props {
   results: Models.Post[];
 }
 
-const SearchInput = ({ input, meta }: WrappedFieldProps) => (
-  <div className="flex flex-1 flex-col">
-    <input
-      {...input}
-      className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
-        meta.touched && meta.error
-          ? "border-cax-danger focus:border-cax-danger"
-          : "border-cax-border focus:border-cax-brand-strong"
-      }`}
-      placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
-      type="text"
-    />
-    {meta.touched && meta.error && (
-      <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>
-    )}
-  </div>
-);
+interface SearchInputProps {
+  forcedError?: string;
+  clearForcedError?: () => void;
+  showValidationError?: boolean;
+}
+
+const SearchInput = ({
+  input,
+  meta,
+  forcedError,
+  clearForcedError,
+  showValidationError = false,
+}: WrappedFieldProps & SearchInputProps) => {
+  const metaError = meta.error && (meta.touched || showValidationError) ? meta.error : undefined;
+  const errorMessage = forcedError || metaError;
+
+  return (
+    <div className="flex flex-1 flex-col">
+      <input
+        {...input}
+        aria-label="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
+        className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
+          errorMessage
+            ? "border-cax-danger focus:border-cax-danger"
+            : "border-cax-border focus:border-cax-brand-strong"
+        }`}
+        onChange={(event) => {
+          clearForcedError?.();
+          input.onChange(event);
+        }}
+        placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
+        type="text"
+      />
+      {errorMessage && <span className="text-cax-danger mt-1 text-xs">{errorMessage}</span>}
+    </div>
+  );
+};
 
 const SearchPageComponent = ({
   query,
@@ -43,6 +62,8 @@ const SearchPageComponent = ({
 }: Props & InjectedFormProps<SearchFormData, Props>) => {
   const navigate = useNavigate();
   const [isNegative, setIsNegative] = useState(false);
+  const [forcedError, setForcedError] = useState<string>();
+  const [hasTriedSubmit, setHasTriedSubmit] = useState(false);
 
   const parsed = parseSearchQuery(query);
 
@@ -53,20 +74,42 @@ const SearchPageComponent = ({
     }
 
     let isMounted = true;
-    analyzeSentiment(parsed.keywords)
-      .then((result) => {
-        if (isMounted) {
-          setIsNegative(result.label === "negative");
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setIsNegative(false);
-        }
-      });
+    const execute = () => {
+      import("@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer")
+        .then(({ analyzeSentiment }) => analyzeSentiment(parsed.keywords))
+        .then((result) => {
+          if (isMounted) {
+            setIsNegative(result.label === "negative");
+          }
+        })
+        .catch(() => {
+          if (isMounted) {
+            setIsNegative(false);
+          }
+        });
+    };
+
+    const idleCallbackId =
+      "requestIdleCallback" in window
+        ? window.requestIdleCallback(() => {
+            execute();
+          })
+        : null;
+    const timeoutId =
+      idleCallbackId == null
+        ? window.setTimeout(() => {
+            execute();
+          }, 0)
+        : null;
 
     return () => {
       isMounted = false;
+      if (idleCallbackId != null) {
+        window.cancelIdleCallback(idleCallbackId);
+      }
+      if (timeoutId != null) {
+        window.clearTimeout(timeoutId);
+      }
     };
   }, [parsed.keywords]);
 
@@ -90,11 +133,33 @@ const SearchPageComponent = ({
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="bg-cax-surface p-4 shadow">
-        <form onSubmit={handleSubmit(onSubmit)}>
+    <div className="search-page flex flex-col gap-4">
+      <div className="search-page__form bg-cax-surface p-4 shadow">
+        <form
+          onSubmit={(event) => {
+            setHasTriedSubmit(true);
+            const formData = new FormData(event.currentTarget);
+            const validationErrors = validate({
+              searchText: String(formData.get("searchText") ?? ""),
+            });
+            if (validationErrors.searchText) {
+              event.preventDefault();
+              setForcedError(validationErrors.searchText);
+              return;
+            }
+
+            setForcedError(undefined);
+            void handleSubmit(onSubmit)(event);
+          }}
+        >
           <div className="flex gap-2">
-            <Field name="searchText" component={SearchInput} />
+            <Field
+              clearForcedError={() => setForcedError(undefined)}
+              name="searchText"
+              component={SearchInput}
+              forcedError={forcedError}
+              showValidationError={hasTriedSubmit}
+            />
             <Button variant="primary" type="submit">
               検索
             </Button>

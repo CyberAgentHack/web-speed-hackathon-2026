@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useParams } from "react-router";
 
@@ -13,10 +14,30 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
     `/api/v1/posts/${postId}`,
     fetchJSON,
   );
+  const [isCommentsEnabled, setIsCommentsEnabled] = useState(false);
+
+  useEffect(() => {
+    setIsCommentsEnabled(false);
+  }, [postId]);
+
+  useEffect(() => {
+    if (post == null) {
+      return;
+    }
+
+    const animationFrameId = window.requestAnimationFrame(() => {
+      setIsCommentsEnabled(true);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(animationFrameId);
+    };
+  }, [post]);
 
   const { data: comments, fetchMore } = useInfiniteFetch<Models.Comment>(
-    `/api/v1/posts/${postId}/comments`,
+    isCommentsEnabled ? `/api/v1/posts/${postId}/comments` : "",
     fetchJSON,
+    10,
   );
 
   if (isLoadingPost) {
@@ -31,13 +52,21 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
     return <NotFoundContainer />;
   }
 
-  return (
-    <InfiniteScroll fetchMore={fetchMore} items={comments}>
+  const content = (
+    <>
       <Helmet>
         <title>{post.user.name} さんのつぶやき - CaX</title>
       </Helmet>
       <PostPage comments={comments} post={post} />
+    </>
+  );
+
+  return isCommentsEnabled ? (
+    <InfiniteScroll fetchMore={fetchMore} items={comments}>
+      {content}
     </InfiniteScroll>
+  ) : (
+    content
   );
 };
 

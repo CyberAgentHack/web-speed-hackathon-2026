@@ -1,5 +1,4 @@
-import Bluebird from "bluebird";
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
+import type { IpadicFeatures, Tokenizer } from "kuromoji";
 import {
   useEffect,
   useLayoutEffect,
@@ -20,6 +19,58 @@ import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 interface Props {
   isStreaming: boolean;
   onSendMessage: (message: string) => void;
+}
+
+let cachedSuggestions: string[] | null = null;
+let suggestionsRequest: Promise<string[]> | null = null;
+let cachedTokenizer: Tokenizer<IpadicFeatures> | null = null;
+let tokenizerRequest: Promise<Tokenizer<IpadicFeatures>> | null = null;
+
+async function buildTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
+  if (cachedTokenizer != null) {
+    return cachedTokenizer;
+  }
+
+  if (tokenizerRequest != null) {
+    return tokenizerRequest;
+  }
+
+  const kuromoji = await import("kuromoji");
+
+  tokenizerRequest = new Promise((resolve, reject) => {
+    kuromoji.default.builder({ dicPath: "/dicts" }).build((error, nextTokenizer) => {
+      if (error != null || nextTokenizer == null) {
+        tokenizerRequest = null;
+        reject(error ?? new Error("Tokenizer initialization failed"));
+        return;
+      }
+
+      cachedTokenizer = nextTokenizer;
+      tokenizerRequest = null;
+      resolve(nextTokenizer);
+    });
+  });
+
+  return tokenizerRequest;
+}
+
+async function getSuggestions(): Promise<string[]> {
+  if (cachedSuggestions != null) {
+    return cachedSuggestions;
+  }
+
+  if (suggestionsRequest == null) {
+    suggestionsRequest = fetchJSON<{ suggestions: string[] }>("/api/v1/crok/suggestions")
+      .then(({ suggestions }) => {
+        cachedSuggestions = suggestions;
+        return suggestions;
+      })
+      .finally(() => {
+        suggestionsRequest = null;
+      });
+  }
+
+  return suggestionsRequest;
 }
 
 // トークン単位でハイライト
@@ -80,7 +131,9 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
+  const [isTokenizerLoading, setIsTokenizerLoading] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const [allSuggestions, setAllSuggestions] = useState<string[] | null>(cachedSuggestions);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -92,18 +145,24 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   }, [suggestions, showSuggestions]);
 
-  // 初回にkuromojiトークナイザーを構築
   useEffect(() => {
     let mounted = true;
+    setIsTokenizerLoading(true);
 
-    const init = async () => {
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
-      if (mounted) {
-        setTokenizer(nextTokenizer);
-      }
-    };
-    init();
+    void buildTokenizer()
+      .then((nextTokenizer) => {
+        if (mounted) {
+          setTokenizer(nextTokenizer);
+        }
+      })
+      .catch((error: unknown) => {
+        console.error(error);
+      })
+      .finally(() => {
+        if (mounted) {
+          setIsTokenizerLoading(false);
+        }
+      });
 
     return () => {
       mounted = false;
@@ -113,23 +172,40 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   useEffect(() => {
     let cancelled = false;
 
+    if (allSuggestions != null) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    void getSuggestions()
+      .then((candidates) => {
+        if (!cancelled) {
+          setAllSuggestions(candidates);
+        }
+      })
+      .catch((error: unknown) => {
+        console.error(error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [allSuggestions]);
+
+  useEffect(() => {
+    let cancelled = false;
+
     const updateSuggestions = async () => {
-      if (!tokenizer || !inputValue.trim()) {
+      if (isTokenizerLoading || tokenizer == null || allSuggestions == null || !inputValue.trim()) {
         setSuggestions([]);
         setQueryTokens([]);
         setShowSuggestions(false);
         return;
       }
 
-      const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-        "/api/v1/crok/suggestions",
-      );
-      if (cancelled) {
-        return;
-      }
-
       const tokens = extractTokens(tokenizer.tokenize(inputValue));
-      const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
+      const results = filterSuggestionsBM25(tokenizer, allSuggestions, tokens);
 
       if (cancelled) {
         return;
@@ -140,12 +216,14 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
       setShowSuggestions(results.length > 0);
     };
 
-    void updateSuggestions();
+    void updateSuggestions().catch((error: unknown) => {
+      console.error(error);
+    });
 
     return () => {
       cancelled = true;
     };
-  }, [inputValue, tokenizer]);
+  }, [allSuggestions, inputValue, isTokenizerLoading, tokenizer]);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
@@ -246,3 +324,8 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     </div>
   );
 };
+
+export function warmCrokInputResources() {
+  void buildTokenizer().catch(() => {});
+  void getSuggestions().catch(() => {});
+}

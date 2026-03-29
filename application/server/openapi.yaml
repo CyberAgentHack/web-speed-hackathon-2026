@@ -646,7 +646,7 @@ paths:
       operationId: searchPosts
       description: |
         テキスト・ユーザー名・名前で投稿を検索する。
-        クエリ内に `from:YYYY-MM-DD` / `until:YYYY-MM-DD` を含めると日付フィルタが適用される。
+        クエリ内に `since:YYYY-MM-DD` / `until:YYYY-MM-DD` を含めると日付フィルタが適用される。
       parameters:
         - name: q
           in: query

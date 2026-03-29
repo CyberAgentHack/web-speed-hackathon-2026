@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const LIMIT = 30;
+const DEFAULT_LIMIT = 30;
 
 interface ReturnValues<T> {
   data: Array<T>;
@@ -12,6 +12,7 @@ interface ReturnValues<T> {
 export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
+  limit = DEFAULT_LIMIT,
 ): ReturnValues<T> {
   const internalRef = useRef({ isLoading: false, offset: 0 });
 
@@ -23,9 +24,13 @@ export function useInfiniteFetch<T>(
 
   const fetchMore = useCallback(() => {
     const { isLoading, offset } = internalRef.current;
-    if (isLoading) {
+    if (isLoading || !apiPath) {
       return;
     }
+
+    const requestUrl = new URL(apiPath, window.location.origin);
+    requestUrl.searchParams.set("limit", String(limit));
+    requestUrl.searchParams.set("offset", String(offset));
 
     setResult((cur) => ({
       ...cur,
@@ -36,16 +41,16 @@ export function useInfiniteFetch<T>(
       offset,
     };
 
-    void fetcher(apiPath).then(
-      (allData) => {
+    void fetcher(requestUrl.pathname + requestUrl.search).then(
+      (pageData) => {
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...pageData],
           isLoading: false,
         }));
         internalRef.current = {
           isLoading: false,
-          offset: offset + LIMIT,
+          offset: offset + pageData.length,
         };
       },
       (error) => {
@@ -60,9 +65,22 @@ export function useInfiniteFetch<T>(
         };
       },
     );
-  }, [apiPath, fetcher]);
+  }, [apiPath, fetcher, limit]);
 
   useEffect(() => {
+    if (!apiPath) {
+      setResult(() => ({
+        data: [],
+        error: null,
+        isLoading: false,
+      }));
+      internalRef.current = {
+        isLoading: false,
+        offset: 0,
+      };
+      return;
+    }
+
     setResult(() => ({
       data: [],
       error: null,

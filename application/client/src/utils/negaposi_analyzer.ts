@@ -1,31 +1,68 @@
-import Bluebird from "bluebird";
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
-import analyze from "negaposi-analyzer-ja";
-
-async function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
-  const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-  return await builder.buildAsync();
-}
-
-type SentimentResult = {
+export type SentimentResult = {
   score: number;
   label: "positive" | "negative" | "neutral";
 };
 
-export async function analyzeSentiment(text: string): Promise<SentimentResult> {
-  const tokenizer = await getTokenizer();
-  const tokens = tokenizer.tokenize(text);
+type WorkerRequest = {
+  requestId: number;
+  text: string;
+};
 
-  const score = analyze(tokens);
+type WorkerSuccessResponse = {
+  requestId: number;
+  result: SentimentResult;
+};
 
-  let label: SentimentResult["label"];
-  if (score > 0.1) {
-    label = "positive";
-  } else if (score < -0.1) {
-    label = "negative";
-  } else {
-    label = "neutral";
+type WorkerErrorResponse = {
+  requestId: number;
+  error: string;
+};
+
+type WorkerResponse = WorkerSuccessResponse | WorkerErrorResponse;
+
+let requestId = 0;
+let sentimentWorker: Worker | null = null;
+
+function getSentimentWorker(): Worker {
+  if (sentimentWorker === null) {
+    sentimentWorker = new Worker(new URL("./sentiment_analysis_worker.ts", import.meta.url), {
+      type: "module",
+    });
   }
 
-  return { score, label };
+  return sentimentWorker;
+}
+
+export async function analyzeSentiment(text: string): Promise<SentimentResult> {
+  const currentRequestId = requestId++;
+  const worker = getSentimentWorker();
+
+  return await new Promise<SentimentResult>((resolve, reject) => {
+    const handleMessage = (event: MessageEvent<WorkerResponse>) => {
+      if (event.data.requestId !== currentRequestId) {
+        return;
+      }
+
+      worker.removeEventListener("message", handleMessage as EventListener);
+      worker.removeEventListener("error", handleError);
+
+      if ("error" in event.data) {
+        reject(new Error(event.data.error));
+        return;
+      }
+
+      resolve(event.data.result);
+    };
+
+    const handleError = (error: ErrorEvent) => {
+      worker.removeEventListener("message", handleMessage as EventListener);
+      worker.removeEventListener("error", handleError);
+      reject(error.error ?? new Error(error.message));
+    };
+
+    worker.addEventListener("message", handleMessage as EventListener);
+    worker.addEventListener("error", handleError);
+    const request: WorkerRequest = { requestId: currentRequestId, text };
+    worker.postMessage(request);
+  });
 }

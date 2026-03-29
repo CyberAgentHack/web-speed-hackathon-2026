@@ -1,18 +1,16 @@
-import { MagickFormat } from "@imagemagick/magick-wasm";
 import { ChangeEventHandler, FormEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/components/modal/ModalErrorMessage";
 import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/components/modal/ModalSubmitButton";
 import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/AttachFileInputButton";
-import { convertImage } from "@web-speed-hackathon-2026/client/src/utils/convert_image";
-import { convertMovie } from "@web-speed-hackathon-2026/client/src/utils/convert_movie";
-import { convertSound } from "@web-speed-hackathon-2026/client/src/utils/convert_sound";
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
+const IMAGE_MAX_SIZE = 1280;
+const MOVIE_EXPORT_SIZE = 512;
 
 interface SubmitParams {
-  images: File[];
+  images: Array<{ alt: string; file: File }>;
   movie: File | undefined;
   sound: File | undefined;
   text: string;
@@ -53,13 +51,20 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     if (isValid) {
       setIsConverting(true);
 
-      Promise.all(
-        files.map((file) =>
-          convertImage(file, { extension: MagickFormat.Jpg }).then(
-            (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
+      import("@web-speed-hackathon-2026/client/src/utils/convert_image")
+        .then(({ convertImage }) =>
+          Promise.all(
+            files.map((file) =>
+              convertImage(file, { extension: "JPG", maxSize: IMAGE_MAX_SIZE }).then((blob) => {
+                const convertedFile = new File([blob.blob], "converted.jpg", { type: "image/jpeg" });
+                return {
+                  alt: blob.alt,
+                  file: convertedFile,
+                };
+              }),
+            ),
           ),
-        ),
-      )
+        )
         .then((convertedFiles) => {
           setParams((params) => ({
             ...params,
@@ -70,7 +75,10 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
           setIsConverting(false);
         })
-        .catch(console.error);
+        .catch(() => {
+          setHasFileError(true);
+          setIsConverting(false);
+        });
     }
   }, []);
 
@@ -82,16 +90,22 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     if (isValid) {
       setIsConverting(true);
 
-      convertSound(file, { extension: "mp3" }).then((converted) => {
-        setParams((params) => ({
-          ...params,
-          images: [],
-          movie: undefined,
-          sound: new File([converted], "converted.mp3", { type: "audio/mpeg" }),
-        }));
+      import("@web-speed-hackathon-2026/client/src/utils/convert_sound")
+        .then(({ convertSound }) => convertSound(file, { extension: "mp3" }))
+        .then((converted) => {
+          setParams((params) => ({
+            ...params,
+            images: [],
+            movie: undefined,
+            sound: new File([converted], "converted.mp3", { type: "audio/mpeg" }),
+          }));
 
-        setIsConverting(false);
-      });
+          setIsConverting(false);
+        })
+        .catch(() => {
+          setHasFileError(true);
+          setIsConverting(false);
+        });
     }
   }, []);
 
@@ -103,20 +117,24 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     if (isValid) {
       setIsConverting(true);
 
-      convertMovie(file, { extension: "gif", size: undefined })
+      import("@web-speed-hackathon-2026/client/src/utils/convert_movie")
+        .then(({ convertMovie }) => convertMovie(file, { extension: "webm", size: MOVIE_EXPORT_SIZE }))
         .then((converted) => {
           setParams((params) => ({
             ...params,
             images: [],
-            movie: new File([converted], "converted.gif", {
-              type: "image/gif",
+            movie: new File([converted], "converted.webm", {
+              type: "video/webm",
             }),
             sound: undefined,
           }));
 
           setIsConverting(false);
         })
-        .catch(console.error);
+        .catch(() => {
+          setHasFileError(true);
+          setIsConverting(false);
+        });
     }
   }, []);
 

@@ -4,9 +4,179 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CaX</title>
-    <script src="/scripts/main.js"></script>
-    <link rel="stylesheet" href="/styles/main.css" />
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.1"></script>
+    <% for (const href of htmlWebpackPlugin.files.css) { %>
+    <link rel="stylesheet" href="/<%= href.replace(/^\/+/, '') %>" />
+    <% } %>
+    <% for (const src of htmlWebpackPlugin.files.js) { %>
+    <script defer src="/<%= src.replace(/^\/+/, '') %>"></script>
+    <% } %>
+    <style>
+      :root {
+        color: #0f3d3e;
+        background: #f5f5f4;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body,
+      #app {
+        min-height: 100%;
+      }
+
+      body {
+        margin: 0;
+        background: #f5f5f4;
+        color: #0f3d3e;
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+      }
+
+      #app {
+        min-height: 100vh;
+      }
+
+      .app-shell {
+        position: relative;
+        z-index: 0;
+        display: flex;
+        justify-content: center;
+      }
+
+      .app-frame {
+        display: flex;
+        min-height: 100vh;
+        max-width: 100%;
+        background: #fff;
+        color: #0f3d3e;
+      }
+
+      .app-main {
+        width: 100vw;
+        max-width: 40rem;
+        min-width: 0;
+        padding-bottom: 3rem;
+      }
+
+      .app-nav {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 10;
+        height: 3rem;
+        border-top: 1px solid #d6d3d1;
+        background: #fff;
+      }
+
+      .timeline-list,
+      .search-page {
+        width: 100%;
+      }
+
+      .timeline-item {
+        padding-inline: 0.25rem;
+      }
+
+      .timeline-item__body {
+        display: flex;
+        border-bottom: 1px solid #d6d3d1;
+        padding: 0.5rem 0.5rem 1rem;
+      }
+
+      .timeline-item__avatar {
+        flex: 0 0 auto;
+        padding-right: 0.5rem;
+      }
+
+      .timeline-item__avatar-link {
+        display: block;
+        overflow: hidden;
+        width: 3rem;
+        height: 3rem;
+        border: 1px solid #d6d3d1;
+        border-radius: 9999px;
+        background: #fafaf9;
+      }
+
+      .timeline-item__main {
+        min-width: 0;
+        flex: 1 1 auto;
+      }
+
+      .timeline-item__meta {
+        overflow: hidden;
+        margin: 0;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-size: 0.875rem;
+      }
+
+      .timeline-item__text {
+        line-height: 1.625;
+      }
+
+      .timeline-item__media {
+        margin-top: 0.5rem;
+      }
+
+      .search-page__form {
+        padding: 1rem;
+        background: #fff;
+        box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+      }
+
+      @media (min-width: 64rem) {
+        .app-main {
+          padding-bottom: 0;
+        }
+
+        .app-nav {
+          position: relative;
+          width: 12rem;
+          height: auto;
+          border-top: 0;
+          border-right: 1px solid #d6d3d1;
+        }
+
+        .timeline-item {
+          padding-inline: 1rem;
+        }
+
+        .timeline-item__body {
+          padding-inline: 1rem;
+        }
+
+        .timeline-item__avatar {
+          padding-right: 1rem;
+        }
+
+        .timeline-item__avatar-link {
+          width: 4rem;
+          height: 4rem;
+        }
+      }
+    </style>
+    <script defer src="/vendor/tailwindcss-browser-4.2.1.js"></script>
     <style type="text/tailwindcss">
       @layer base {
         button:not(:disabled),
@@ -41,7 +211,6 @@
         @apply text-sm wrap-anywhere;
         line-break: strict;
 
-        /* インライン要素 */
         :where(a) {
           @apply text-cax-accent decoration-cax-accent underline underline-offset-2;
         }
@@ -58,7 +227,6 @@
           @apply decoration-cax-text-subtle line-through;
         }
 
-        /* ブロック要素 */
         :where(p) {
           @apply text-cax-text my-6;
         }
@@ -69,7 +237,6 @@
           @apply border-cax-border my-10 border-t;
         }
 
-        /* リスト */
         :where(ol) {
           @apply my-6 list-decimal pl-6;
         }
@@ -86,7 +253,6 @@
           @apply my-2;
         }
 
-        /* テーブル */
         :where(table) {
           @apply text-cax-text my-6 w-full table-auto text-sm;
         }
@@ -121,7 +287,6 @@
           @apply pb-0;
         }
 
-        /* 見出し */
         :where(h1, h2, h3, h4, h5, h6) {
           @apply text-cax-text text-pretty;
         }
@@ -147,7 +312,6 @@
           @apply mt-0;
         }
 
-        /* 注釈 */
         :where(.footnotes) {
           @apply border-cax-border mt-8 border-t;
         }
@@ -161,12 +325,10 @@
           @apply my-0;
         }
 
-        /* 最初の要素はマージンを0にする */
         & > *:first-child {
           @apply mt-0;
         }
 
-        /* 最後の要素はマージンを0にする */
         & > *:last-child {
           @apply mb-0;
         }

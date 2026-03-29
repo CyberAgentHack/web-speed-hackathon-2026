@@ -14,6 +14,7 @@ const response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-
 
 crokRouter.get("/crok/suggestions", async (_req, res) => {
   const suggestions = await QaSuggestion.findAll({ logging: false });
+  res.setHeader("Cache-Control", "private, max-age=300");
   res.json({ suggestions: suggestions.map((s) => s.question) });
 });
 

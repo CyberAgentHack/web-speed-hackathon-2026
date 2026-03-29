@@ -19,11 +19,29 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
   const [isStreaming, setIsStreaming] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const contentRef = useRef("");
+  const pendingContentRef = useRef("");
+  const animationFrameRef = useRef<number | null>(null);
+
+  const flushContent = useCallback(() => {
+    animationFrameRef.current = null;
+    setContent(pendingContentRef.current);
+  }, []);
+
+  const scheduleContentFlush = useCallback(() => {
+    if (animationFrameRef.current != null) {
+      return;
+    }
+    animationFrameRef.current = window.requestAnimationFrame(flushContent);
+  }, [flushContent]);
 
   const stop = useCallback(() => {
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
+    }
+    if (animationFrameRef.current != null) {
+      window.cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
     }
     setIsStreaming(false);
   }, []);
@@ -38,6 +56,7 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
     (url: string) => {
       stop();
       contentRef.current = "";
+      pendingContentRef.current = "";
       setContent("");
       setIsStreaming(true);
 
@@ -56,7 +75,8 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
 
         const newContent = options.onMessage(data, contentRef.current);
         contentRef.current = newContent;
-        setContent(newContent);
+        pendingContentRef.current = newContent;
+        scheduleContentFlush();
       };
 
       eventSource.onerror = (error) => {
@@ -64,7 +84,7 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
         stop();
       };
     },
-    [options, stop],
+    [options, scheduleContentFlush, stop],
   );
 
   return { content, isStreaming, start, stop, reset };

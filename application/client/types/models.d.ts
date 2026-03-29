@@ -37,6 +37,7 @@ declare namespace Models {
   }
 
   interface Movie {
+    extension?: "gif" | "mp4" | "webm";
     id: string;
   }
 
@@ -58,6 +59,8 @@ declare namespace Models {
   }
 
   interface DirectMessageConversation {
+    hasUnread?: boolean;
+    hasOlderMessages?: boolean;
     id: string;
     initiator: Models.User;
     member: Models.User;

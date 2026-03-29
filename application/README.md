@@ -11,6 +11,11 @@ CaX のアプリケーションコードです。
    - ```bash
      pnpm install --frozen-lockfile
      ```
+3. ローカル DB を再生成する場合は seed を投入します
+   - `application/server/database.sqlite` は Git 管理しません
+   - ```bash
+     pnpm --filter @web-speed-hackathon-2026/server seed:insert
+     ```
 
 ### ビルド・起動
 

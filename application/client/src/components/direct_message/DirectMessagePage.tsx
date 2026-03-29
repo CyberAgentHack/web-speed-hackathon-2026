@@ -1,26 +1,30 @@
 import classNames from "classnames";
-import moment from "moment";
 import {
   ChangeEvent,
   useCallback,
   useId,
+  useEffect,
   useRef,
   useState,
   KeyboardEvent,
   FormEvent,
-  useEffect,
 } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
+import { ProfileAvatar } from "@web-speed-hackathon-2026/client/src/components/foundation/ProfileAvatar";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { formatTime } from "@web-speed-hackathon-2026/client/src/utils/format_date";
 
 interface Props {
   conversationError: Error | null;
   conversation: Models.DirectMessageConversation;
   activeUser: Models.User;
+  isFetchingOlder: boolean;
+  previousScrollHeightBeforePrepend: number;
+  preserveScrollOnPrependToken: number;
   isPeerTyping: boolean;
   isSubmitting: boolean;
+  onFetchOlder: () => void;
   onTyping: () => void;
   onSubmit: (params: DirectMessageFormData) => Promise<void>;
 }
@@ -29,12 +33,17 @@ export const DirectMessagePage = ({
   conversationError,
   conversation,
   activeUser,
+  isFetchingOlder,
+  previousScrollHeightBeforePrepend,
+  preserveScrollOnPrependToken,
   isPeerTyping,
   isSubmitting,
+  onFetchOlder,
   onTyping,
   onSubmit,
 }: Props) => {
   const formRef = useRef<HTMLFormElement>(null);
+  const messageListRef = useRef<HTMLDivElement>(null);
   const textAreaId = useId();
 
   const peer =
@@ -43,7 +52,7 @@ export const DirectMessagePage = ({
   const [text, setText] = useState("");
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
-  const scrollHeightRef = useRef(0);
+  const previousMessageCountRef = useRef(0);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -74,16 +83,35 @@ export const DirectMessagePage = ({
   );
 
   useEffect(() => {
-    const id = setInterval(() => {
-      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
-      if (height !== scrollHeightRef.current) {
-        scrollHeightRef.current = height;
-        window.scrollTo(0, height);
-      }
-    }, 1);
+    const container = messageListRef.current;
 
-    return () => clearInterval(id);
-  }, []);
+    if (container == null) {
+      return;
+    }
+
+    const previousMessageCount = previousMessageCountRef.current;
+    previousMessageCountRef.current = conversation.messages.length;
+
+    if (preserveScrollOnPrependToken > 0 && conversation.messages.length > previousMessageCount) {
+      if (previousScrollHeightBeforePrepend > 0) {
+        const nextScrollHeight = container.scrollHeight;
+        const delta = nextScrollHeight - previousScrollHeightBeforePrepend;
+        container.scrollTop += delta;
+        return;
+      }
+    }
+
+    const scrollToBottom = () => {
+      container.scrollTop = container.scrollHeight;
+    };
+
+    scrollToBottom();
+    const frameId = window.requestAnimationFrame(scrollToBottom);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [conversation.messages.length, preserveScrollOnPrependToken]);
 
   if (conversationError != null) {
     return (
@@ -94,12 +122,12 @@ export const DirectMessagePage = ({
   }
 
   return (
-    <section className="bg-cax-surface flex min-h-[calc(100vh-(--spacing(12)))] flex-col lg:min-h-screen">
+    <section className="bg-cax-surface flex h-[calc(100vh-3rem)] min-h-0 flex-col lg:h-screen">
       <header className="border-cax-border bg-cax-surface sticky top-0 z-10 flex items-center gap-2 border-b px-4 py-3">
-        <img
+        <ProfileAvatar
           alt={peer.profileImage.alt}
           className="h-12 w-12 rounded-full object-cover"
-          src={getProfileImagePath(peer.profileImage.id)}
+          imageId={peer.profileImage.id}
         />
         <div className="min-w-0">
           <h1 className="overflow-hidden text-xl font-bold text-ellipsis whitespace-nowrap">
@@ -111,7 +139,22 @@ export const DirectMessagePage = ({
         </div>
       </header>
 
-      <div className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8">
+      <div
+        className="bg-cax-surface-subtle min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8"
+        ref={messageListRef}
+      >
+        {conversation.hasOlderMessages && (
+          <div className="flex justify-center">
+            <button
+              className="border-cax-border bg-cax-surface text-cax-text rounded-full border px-4 py-2 text-sm disabled:opacity-50"
+              disabled={isFetchingOlder}
+              onClick={onFetchOlder}
+              type="button"
+            >
+              {isFetchingOlder ? "読込中..." : "過去のメッセージを読み込む"}
+            </button>
+          </div>
+        )}
         {conversation.messages.length === 0 && (
           <p className="text-cax-text-muted text-center text-sm">
             まだメッセージはありません。最初のメッセージを送信してみましょう。
@@ -140,9 +183,7 @@ export const DirectMessagePage = ({
                   {message.body}
                 </p>
                 <div className="flex gap-1 text-xs">
-                  <time dateTime={message.createdAt}>
-                    {moment(message.createdAt).locale("ja").format("HH:mm")}
-                  </time>
+                  <time dateTime={message.createdAt}>{formatTime(message.createdAt)}</time>
                   {isActiveUserSend && message.isRead && (
                     <span className="text-cax-text-muted">既読</span>
                   )}

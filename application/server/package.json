@@ -8,6 +8,10 @@
   "main": "src/index.js",
   "scripts": {
     "start": "tsx src/index.ts",
+    "compress:assets": "node --import tsx ./scripts/compressStaticAssets.ts",
+    "images:generate-responsive": "node --import tsx ./scripts/generateResponsiveImages.ts",
+    "movies:generate-videos": "node --import tsx ./scripts/generateMovieVideos.ts",
+    "movies:resize": "node --import tsx ./scripts/resizeMovies.ts",
     "typecheck": "tsc --noEmit",
     "seed:generate": "tsx ./scripts/generateSeeds.ts",
     "seed:insert": "tsx ./scripts/insertSeeds.ts"
@@ -25,6 +29,7 @@
     "music-metadata": "11.10.3",
     "sequelize": "6.37.7",
     "serve-static": "2.2.0",
+    "sharp": "0.34.5",
     "sqlite3": "5.1.7",
     "tsx": "4.20.6",
     "uuid": "13.0.0",

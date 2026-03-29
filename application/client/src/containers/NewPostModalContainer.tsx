@@ -1,28 +1,55 @@
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useId, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
-import { NewPostModalPage } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage";
 import { sendFile, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
+const NewPostModalPage = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/components/new_post_modal/NewPostModalPage").then(
+    (module) => ({
+      default: module.NewPostModalPage,
+    }),
+  ),
+);
+
 interface SubmitParams {
-  images: File[];
+  images: Array<{ alt: string; file: File }>;
   movie: File | undefined;
   sound: File | undefined;
   text: string;
 }
 
 async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promise<Models.Post> {
+  const uploadedImages = images.length
+    ? await Promise.all(
+        images.map(async (image) => {
+          return sendFile<{ alt: string; id: string }>("/api/v1/images", image.file, {
+            "X-Image-Alt": encodeURIComponent(image.alt),
+          });
+        }),
+      )
+    : [];
+
+  const uploadedMovie = movie
+    ? await (async () => {
+        return sendFile<{ id: string }>("/api/v1/movies", movie);
+      })()
+    : undefined;
+
+  const uploadedSound = sound
+    ? await (async () => {
+        return sendFile<{ id: string }>("/api/v1/sounds", sound);
+      })()
+    : undefined;
+
   const payload = {
-    images: images
-      ? await Promise.all(images.map((image) => sendFile("/api/v1/images", image)))
-      : [],
-    movie: movie ? await sendFile("/api/v1/movies", movie) : undefined,
-    sound: sound ? await sendFile("/api/v1/sounds", sound) : undefined,
+    images: uploadedImages,
+    movie: uploadedMovie,
+    sound: uploadedSound,
     text,
   };
 
-  return sendJSON("/api/v1/posts", payload);
+  return sendJSON<Models.Post>("/api/v1/posts", payload);
 }
 
 interface Props {
@@ -76,14 +103,16 @@ export const NewPostModalContainer = ({ id }: Props) => {
 
   return (
     <Modal aria-labelledby={dialogId} id={id} ref={ref} closedby="any">
-      <NewPostModalPage
-        key={resetKey}
-        id={dialogId}
-        hasError={hasError}
-        isLoading={isLoading}
-        onResetError={handleResetError}
-        onSubmit={handleSubmit}
-      />
+      <Suspense fallback={<div className="p-4 text-center">読込中...</div>}>
+        <NewPostModalPage
+          key={resetKey}
+          id={dialogId}
+          hasError={hasError}
+          isLoading={isLoading}
+          onResetError={handleResetError}
+          onSubmit={handleSubmit}
+        />
+      </Suspense>
     </Modal>
   );
 };

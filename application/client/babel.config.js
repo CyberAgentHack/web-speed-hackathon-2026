@@ -1,19 +1,20 @@
+const isProduction = process.env.NODE_ENV === "production";
+
 module.exports = {
   presets: [
     ["@babel/preset-typescript"],
     [
       "@babel/preset-env",
       {
-        targets: "ie 11",
-        corejs: "3",
-        modules: "commonjs",
+        targets: "last 1 Chrome version",
+        modules: false,
         useBuiltIns: false,
       },
     ],
     [
       "@babel/preset-react",
       {
-        development: true,
+        development: !isProduction,
         runtime: "automatic",
       },
     ],

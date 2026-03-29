@@ -1,16 +1,58 @@
-import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
+import { ProfileAvatar } from "@web-speed-hackathon-2026/client/src/components/foundation/ProfileAvatar";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
+import { formatRelativeTime } from "@web-speed-hackathon-2026/client/src/utils/format_date";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   activeUser: Models.User;
   newDmModalId: string;
+}
+
+interface DmListMessageEvent {
+  type: "dm:list:update";
+  payload: {
+    conversationId: string;
+    hasUnread?: boolean;
+    message?: Models.DirectMessage;
+  };
+}
+
+function applyConversationUpdate(
+  conversations: Array<Models.DirectMessageConversation>,
+  event: DmListMessageEvent,
+): Array<Models.DirectMessageConversation> {
+  const conversationIndex = conversations.findIndex(
+    (conversation) => conversation.id === event.payload.conversationId,
+  );
+  if (conversationIndex < 0) {
+    return conversations;
+  }
+
+  const conversation = conversations[conversationIndex];
+  const updatedConversation: Models.DirectMessageConversation = {
+    ...conversation,
+    hasUnread: event.payload.hasUnread ?? conversation.hasUnread,
+    messages:
+      event.payload.message == null
+        ? conversation.messages
+        : [event.payload.message],
+  };
+
+  if (event.payload.message == null) {
+    return conversations.map((current, index) =>
+      index === conversationIndex ? updatedConversation : current,
+    );
+  }
+
+  return [
+    updatedConversation,
+    ...conversations.filter((current) => current.id !== updatedConversation.id),
+  ];
 }
 
 export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
@@ -24,7 +66,9 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     }
 
     try {
-      const conversations = await fetchJSON<Array<Models.DirectMessageConversation>>("/api/v1/dm");
+      const conversations = await fetchJSON<Array<Models.DirectMessageConversation>>("/api/v1/dm", {
+        cache: "no-store",
+      });
       setConversations(conversations);
       setError(null);
     } catch (error) {
@@ -37,8 +81,14 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     void loadConversations();
   }, [loadConversations]);
 
-  useWs("/api/v1/dm/unread", () => {
-    void loadConversations();
+  useWs("/api/v1/dm/list", (event: DmListMessageEvent) => {
+    setConversations((current) => {
+      if (current == null) {
+        return current;
+      }
+
+      return applyConversationUpdate(current, event);
+    });
   });
 
   if (conversations == null) {
@@ -76,18 +126,16 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                 : conversation.member;
 
             const lastMessage = messages.at(-1);
-            const hasUnread = messages
-              .filter((m) => m.sender.id === peer.id)
-              .some((m) => !m.isRead);
+            const hasUnread = conversation.hasUnread ?? false;
 
             return (
               <li className="grid" key={conversation.id}>
                 <Link className="hover:bg-cax-surface-subtle px-4" to={`/dm/${conversation.id}`}>
                   <div className="border-cax-border flex gap-4 border-b px-4 pt-2 pb-4">
-                    <img
+                    <ProfileAvatar
                       alt={peer.profileImage.alt}
                       className="w-12 shrink-0 self-start rounded-full"
-                      src={getProfileImagePath(peer.profileImage.id)}
+                      imageId={peer.profileImage.id}
                     />
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-center justify-between">
@@ -100,7 +148,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {formatRelativeTime(lastMessage.createdAt)}
                           </time>
                         )}
                       </div>

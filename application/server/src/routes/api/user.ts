@@ -2,6 +2,7 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 
 import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
+import { serializePosts } from "@web-speed-hackathon-2026/server/src/utils/serialize_post";
 
 export const userRouter = Router();
 
@@ -67,5 +68,5 @@ userRouter.get("/users/:username/posts", async (req, res) => {
     },
   });
 
-  return res.status(200).type("application/json").send(posts);
+  return res.status(200).type("application/json").send(serializePosts(posts));
 });
