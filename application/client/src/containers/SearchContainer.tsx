@@ -6,7 +6,7 @@ import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use
 import { useSearchParams } from "@web-speed-hackathon-2026/client/src/hooks/use_search_params";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
-export const SearchContainer = () => {
+const SearchContainer = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
 
@@ -24,3 +24,5 @@ export const SearchContainer = () => {
     </InfiniteScroll>
   );
 };
+
+export default SearchContainer;

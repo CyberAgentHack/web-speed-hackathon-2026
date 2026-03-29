@@ -1,4 +1,4 @@
-import { loadFFmpeg } from "@web-speed-hackathon-2026/client/src/utils/load_ffmpeg";
+// import { loadFFmpeg } from "@web-speed-hackathon-2026/client/src/utils/load_ffmpeg";
 
 interface Options {
   extension: string;
@@ -9,6 +9,7 @@ interface Options {
  * 先頭 5 秒のみ、正方形にくり抜かれた無音動画を作成します
  */
 export async function convertMovie(file: File, options: Options): Promise<Blob> {
+  const { loadFFmpeg } = await import("./load_ffmpeg");
   const ffmpeg = await loadFFmpeg();
 
   const cropOptions = [
@@ -36,7 +37,7 @@ export async function convertMovie(file: File, options: Options): Promise<Blob> 
 
   const output = (await ffmpeg.readFile(exportFile)) as Uint8Array<ArrayBuffer>;
 
-  ffmpeg.terminate();
+  // ffmpeg.terminate(); // Singleton インスタンスを維持するため削除
 
   const blob = new Blob([output]);
   return blob;

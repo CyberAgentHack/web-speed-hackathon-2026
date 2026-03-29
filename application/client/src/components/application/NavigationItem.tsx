@@ -15,6 +15,21 @@ interface Props {
 export const NavigationItem = ({ badge, href, icon, command, commandfor, text }: Props) => {
   const location = useLocation();
   const isActive = location.pathname === href;
+  const handleClick = () => {
+    if (command === "show-modal" && commandfor) {
+      const dialog = document.getElementById(commandfor) as HTMLDialogElement | null;
+      if (dialog && typeof dialog.showModal === "function") {
+        if (!dialog.open) {
+          try {
+            dialog.showModal();
+          } catch (e) {
+            console.error("Dialog error ignored", e);
+          }
+        }
+      }
+    }
+  };
+
   return (
     <li>
       {href !== undefined ? (
@@ -37,6 +52,7 @@ export const NavigationItem = ({ badge, href, icon, command, commandfor, text }:
           type="button"
           command={command}
           commandfor={commandfor}
+          onClick={handleClick}
         >
           <span className="relative text-xl lg:pr-2 lg:text-3xl">
             {icon}

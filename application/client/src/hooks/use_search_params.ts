@@ -16,10 +16,19 @@ export function useSearchParams(): [URLSearchParams] {
         lastSearchRef.current = currentSearch;
         setSearchParams(new URLSearchParams(currentSearch));
       }
-      scheduler.postTask(poll, { priority: "user-blocking", delay: 1 });
+
+      if (typeof scheduler !== "undefined") {
+        scheduler.postTask(poll, { priority: "user-blocking", delay: 1 });
+      } else {
+        setTimeout(poll, 1);
+      }
     };
 
-    scheduler.postTask(poll, { priority: "user-blocking", delay: 1 });
+    if (typeof scheduler !== "undefined") {
+      scheduler.postTask(poll, { priority: "user-blocking", delay: 1 });
+    } else {
+      setTimeout(poll, 1);
+    }
 
     return () => {
       active = false;

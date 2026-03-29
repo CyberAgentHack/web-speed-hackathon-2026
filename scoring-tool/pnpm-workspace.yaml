@@ -1,3 +1,9 @@
+packages:
+  - "application"
+  - "scoring-tool"
+  # ※もし "server" や "e2e" などのフォルダもプロジェクト直下にあれば、同じように追加してください。
+  # 分からなければ、単に - "*" （すべてのフォルダを対象にする）と書くこともできます。
+
 allowBuilds:
   esbuild: true
 patchedDependencies:

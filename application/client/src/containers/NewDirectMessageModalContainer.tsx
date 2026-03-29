@@ -11,7 +11,7 @@ interface Props {
   id: string;
 }
 
-export const NewDirectMessageModalContainer = ({ id }: Props) => {
+const NewDirectMessageModalContainer = ({ id }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
   useEffect(() => {
@@ -36,6 +36,7 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
         const conversation = await sendJSON<Models.DirectMessageConversation>(`/api/v1/dm`, {
           peerId: user.id,
         });
+        ref.current?.close();
         navigate(`/dm/${conversation.id}`);
       } catch {
         throw new SubmissionError({
@@ -52,3 +53,4 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
     </Modal>
   );
 };
+export default NewDirectMessageModalContainer;

@@ -1,6 +1,8 @@
-import { useCallback, useState } from "react";
+import { lazy, memo, Suspense, useCallback, useState, useEffect } from "react";
 
 import { createTranslator } from "@web-speed-hackathon-2026/client/src/utils/create_translator";
+ 
+ const LazyMarkdown = lazy(() => import(/* webpackChunkName: "MarkdownRenderer" */ "../crok/MarkdownRenderer"));
 
 type State =
   | { type: "idle"; text: string }
@@ -11,8 +13,25 @@ interface Props {
   text: string;
 }
 
-export const TranslatableText = ({ text }: Props) => {
+export const TranslatableText = memo(({ text }: Props) => {
   const [state, updateState] = useState<State>({ type: "idle", text });
+  const [isIdle, setIsIdle] = useState(false);
+
+  useEffect(() => {
+    let id: number;
+    if (typeof window.requestIdleCallback === "function") {
+      id = window.requestIdleCallback(() => setIsIdle(true), { timeout: 2000 });
+    } else {
+      id = window.setTimeout(() => setIsIdle(true), 100);
+    }
+    return () => {
+      if (typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(id);
+      } else {
+        window.clearTimeout(id);
+      }
+    };
+  }, []);
 
   const handleClick = useCallback(() => {
     switch (state.type) {
@@ -55,12 +74,14 @@ export const TranslatableText = ({ text }: Props) => {
   return (
     <>
       <p>
-        {state.type !== "loading" ? (
-          <span>{state.text}</span>
-        ) : (
-          <span className="bg-cax-surface-subtle text-cax-text-muted">{text}</span>
-        )}
-      </p>
+         <Suspense fallback={<div className="animate-pulse bg-cax-surface-subtle h-4 w-full rounded" />}>
+            {state.type !== "loading" ? (
+              isIdle ? <LazyMarkdown content={state.text} /> : <span className="bg-cax-surface-subtle text-cax-text-muted">{text}</span>
+            ) : (
+             <span className="bg-cax-surface-subtle text-cax-text-muted">{text}</span>
+           )}
+         </Suspense>
+       </p>
 
       <p>
         <button
@@ -76,4 +97,6 @@ export const TranslatableText = ({ text }: Props) => {
       </p>
     </>
   );
-};
+});
+
+TranslatableText.displayName = "TranslatableText";

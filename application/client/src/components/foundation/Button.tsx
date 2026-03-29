@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { ComponentPropsWithRef, ReactNode } from "react";
+import { ComponentPropsWithRef, forwardRef, ReactNode } from "react";
 
 interface Props extends ComponentPropsWithRef<"button"> {
   variant?: "primary" | "secondary";
@@ -7,33 +7,52 @@ interface Props extends ComponentPropsWithRef<"button"> {
   rightItem?: ReactNode;
 }
 
-export const Button = ({
-  variant = "primary",
-  leftItem,
-  rightItem,
-  className,
-  children,
-  ...props
-}: Props) => {
-  return (
-    <button
-      className={classNames(
-        "flex items-center justify-center gap-2 rounded-full px-4 py-2 border",
-        "disabled:opacity-50 disabled:cursor-not-allowed",
-        {
-          "bg-cax-brand text-cax-surface-raised hover:bg-cax-brand-strong border-transparent":
-            variant === "primary",
-          "bg-cax-surface text-cax-text-muted hover:bg-cax-surface-subtle border-cax-border":
-            variant === "secondary",
-        },
-        className,
-      )}
-      type="button"
-      {...props}
-    >
-      {leftItem}
-      <span>{children}</span>
-      {rightItem}
-    </button>
-  );
-};
+export const Button = forwardRef<HTMLButtonElement, Props>(
+  ({ variant = "primary", leftItem, rightItem, className, children, onClick, ...props }, ref) => {
+    const handleClick = (ev: React.MouseEvent<HTMLButtonElement>) => {
+      if (props.commandfor) {
+        const dialog = document.getElementById(props.commandfor) as HTMLDialogElement | null;
+        if (dialog && typeof dialog.showModal === "function") {
+          if (props.command === "show-modal") {
+            if (!dialog.open) {
+              try {
+                dialog.showModal();
+              } catch (e) {
+                console.error("Dialog error ignored", e);
+              }
+            }
+          } else if (props.command === "close") {
+            dialog.close();
+          }
+        }
+      }
+      onClick?.(ev);
+    };
+
+    return (
+      <button
+        ref={ref}
+        className={classNames(
+          "flex items-center justify-center gap-2 rounded-full px-4 py-2 border",
+          "disabled:opacity-50 disabled:cursor-not-allowed",
+          {
+            "bg-cax-brand text-cax-surface-raised hover:bg-cax-brand-strong border-transparent":
+              variant === "primary",
+            "bg-cax-surface text-cax-text-muted hover:bg-cax-surface-subtle border-cax-border":
+              variant === "secondary",
+          },
+          className,
+        )}
+        type="button"
+        {...props}
+        onClick={handleClick}
+      >
+        {leftItem}
+        <span>{children}</span>
+        {rightItem}
+      </button>
+    );
+  },
+);
+
+Button.displayName = "Button";

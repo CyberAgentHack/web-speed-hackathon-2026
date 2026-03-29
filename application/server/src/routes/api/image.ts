@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from "uuid";
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
 // 変換した画像の拡張子
-const EXTENSION = "jpg";
+const EXTENSION = "avif";
 
 export const imageRouter = Router();
 
@@ -22,7 +22,7 @@ imageRouter.post("/images", async (req, res) => {
   }
 
   const type = await fileTypeFromBuffer(req.body);
-  if (type === undefined || type.ext !== EXTENSION) {
+  if (type === undefined || (type.ext !== "avif" && type.ext !== "jpg")) {
     throw new httpErrors.BadRequest("Invalid file type");
   }
 

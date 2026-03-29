@@ -1,5 +1,7 @@
 import { ComponentProps, isValidElement, ReactElement, ReactNode } from "react";
-import SyntaxHighlighter from "react-syntax-highlighter";
+import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
+import js from "react-syntax-highlighter/dist/esm/languages/hljs/javascript";
+SyntaxHighlighter.registerLanguage("javascript", js);
 import { atomOneLight } from "react-syntax-highlighter/dist/esm/styles/hljs";
 
 const getLanguage = (children: ReactElement<ComponentProps<"code">>) => {

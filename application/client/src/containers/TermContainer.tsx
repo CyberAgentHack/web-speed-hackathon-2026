@@ -2,7 +2,7 @@ import { Helmet } from "react-helmet";
 
 import { TermPage } from "@web-speed-hackathon-2026/client/src/components/term/TermPage";
 
-export const TermContainer = () => {
+const TermContainer = () => {
   return (
     <>
       <Helmet>
@@ -12,3 +12,4 @@ export const TermContainer = () => {
     </>
   );
 };
+export default TermContainer;
