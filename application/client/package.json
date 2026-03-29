@@ -10,7 +10,6 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@imagemagick/magick-wasm": "0.0.37",
     "@mlc-ai/web-llm": "0.2.80",
     "@web-speed-hackathon-2026/client": "workspace:*",
     "bayesian-bm25": "0.4.0",
@@ -20,7 +19,6 @@
     "common-tags": "1.8.2",
     "core-js": "3.45.1",
     "fast-average-color": "9.5.0",
-    "image-size": "2.0.2",
     "jquery": "3.7.1",
     "jquery-binarytransport": "1.0.0",
     "json-repair-js": "1.0.0",
@@ -32,7 +30,6 @@
     "negaposi-analyzer-ja": "1.0.1",
     "normalize.css": "8.0.1",
     "pako": "2.1.0",
-    "piexifjs": "1.0.6",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-helmet": "npm:@dr.pogodin/react-helmet@3.0.4",
