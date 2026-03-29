@@ -1,4 +1,5 @@
 import moment from "moment";
+import React from "react";
 
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
@@ -6,14 +7,23 @@ import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/
 import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { useNavigate } from "react-router";
 
 interface Props {
   post: Models.Post;
 }
 
 export const PostItem = ({ post }: Props) => {
+  const navigate = useNavigate();
+
+  const handleOpen = (e: React.MouseEvent<HTMLElement>) => {
+    // ユーザー名など個別のリンクをクリックした場合はそちらを優先
+    if ((e.target as HTMLElement).closest("a")) return;
+    navigate(`/posts/${post.id}`);
+  };
+
   return (
-    <article className="px-1 sm:px-4">
+    <article className="px-1 sm:px-4" role="link" tabIndex={0} onClick={handleOpen}>
       <div className="border-cax-border border-b px-4 pt-4 pb-4">
         <div className="flex items-center justify-center">
           <div className="shrink-0 grow-0 pr-2">

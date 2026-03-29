@@ -13,7 +13,8 @@ module.exports = {
     [
       "@babel/preset-react",
       {
-        development: true,
+        // dev build only: enable jsxDEV to keep better errors; production uses jsx to avoid runtime mismatch
+        development: process.env.NODE_ENV !== "production",
         runtime: "automatic",
       },
     ],
