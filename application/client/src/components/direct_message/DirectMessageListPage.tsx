@@ -24,7 +24,8 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     }
 
     try {
-      const conversations = await fetchJSON<Array<Models.DirectMessageConversation>>("/api/v1/dm");
+      const conversations =
+        await fetchJSON<Array<Models.DirectMessageConversation>>("/api/v1/dm");
       setConversations(conversations);
       setError(null);
     } catch (error) {
@@ -53,7 +54,9 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
           <Button
             command="show-modal"
             commandfor={newDmModalId}
-            leftItem={<FontAwesomeIcon iconType="paper-plane" styleType="solid" />}
+            leftItem={
+              <FontAwesomeIcon iconType="paper-plane" styleType="solid" />
+            }
           >
             新しくDMを始める
           </Button>
@@ -61,7 +64,9 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
       </header>
 
       {error != null ? (
-        <p className="text-cax-danger px-4 py-6 text-center text-sm">DMの取得に失敗しました</p>
+        <p className="text-cax-danger px-4 py-6 text-center text-sm">
+          DMの取得に失敗しました
+        </p>
       ) : conversations.length === 0 ? (
         <p className="text-cax-text-muted px-4 py-6 text-center">
           まだDMで会話した相手がいません。
@@ -69,7 +74,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
       ) : (
         <ul data-testid="dm-list">
           {conversations.map((conversation) => {
-            const { messages } = conversation;
+            const messages = conversation.messages ?? [];
             const peer =
               conversation.initiator.id !== activeUser.id
                 ? conversation.initiator
@@ -82,29 +87,38 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
 
             return (
               <li className="grid" key={conversation.id}>
-                <Link className="hover:bg-cax-surface-subtle px-4" to={`/dm/${conversation.id}`}>
+                <Link
+                  className="hover:bg-cax-surface-subtle px-4"
+                  to={`/dm/${conversation.id}`}
+                >
                   <div className="border-cax-border flex gap-4 border-b px-4 pt-2 pb-4">
                     <img
                       alt={peer.profileImage.alt}
                       className="w-12 shrink-0 self-start rounded-full"
-                      src={getProfileImagePath(peer.profileImage.id)}
+                      src={getProfileImagePath(peer.profileImage.id, { w: 96, format: "webp" })}
                     />
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-bold">{peer.name}</p>
-                          <p className="text-cax-text-muted text-xs">@{peer.username}</p>
+                          <p className="text-cax-text-muted text-xs">
+                            @{peer.username}
+                          </p>
                         </div>
                         {lastMessage != null && (
                           <time
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {moment(lastMessage.createdAt)
+                              .locale("ja")
+                              .fromNow()}
                           </time>
                         )}
                       </div>
-                      <p className="mt-1 line-clamp-2 text-sm wrap-anywhere">{lastMessage?.body}</p>
+                      <p className="mt-1 line-clamp-2 text-sm wrap-anywhere">
+                        {lastMessage?.body}
+                      </p>
                       {hasUnread ? (
                         <span className="bg-cax-brand-soft text-cax-brand mt-2 inline-flex w-fit rounded-full px-3 py-0.5 text-xs">
                           未読

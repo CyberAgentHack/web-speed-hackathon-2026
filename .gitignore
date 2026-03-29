@@ -220,3 +220,7 @@ $RECYCLE.BIN/
 application/upload/**
 !application/upload/**/
 !application/upload/**/.gitkeep
+
+.claude/settings.local.json
+.turbo
+application/server/database.sqlite

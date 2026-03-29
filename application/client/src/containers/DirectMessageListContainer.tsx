@@ -10,7 +10,10 @@ interface Props {
   authModalId: string;
 }
 
-export const DirectMessageListContainer = ({ activeUser, authModalId }: Props) => {
+export const DirectMessageListContainer = ({
+  activeUser,
+  authModalId,
+}: Props) => {
   const newDmModalId = useId();
 
   if (activeUser === null) {
@@ -27,7 +30,10 @@ export const DirectMessageListContainer = ({ activeUser, authModalId }: Props) =
       <Helmet>
         <title>ダイレクトメッセージ - CaX</title>
       </Helmet>
-      <DirectMessageListPage activeUser={activeUser} newDmModalId={newDmModalId} />
+      <DirectMessageListPage
+        activeUser={activeUser}
+        newDmModalId={newDmModalId}
+      />
       <NewDirectMessageModalContainer id={newDmModalId} />
     </>
   );

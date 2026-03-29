@@ -1,23 +1,25 @@
 import classNames from "classnames";
 import moment from "moment";
-import {
+import type {
   ChangeEvent,
+  KeyboardEvent,
+  FormEvent} from "react";
+import {
   useCallback,
   useId,
   useRef,
   useState,
-  KeyboardEvent,
-  FormEvent,
   useEffect,
 } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
+import type { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   conversationError: Error | null;
   conversation: Models.DirectMessageConversation;
+  messages: Models.DirectMessage[];
   activeUser: Models.User;
   isPeerTyping: boolean;
   isSubmitting: boolean;
@@ -28,6 +30,7 @@ interface Props {
 export const DirectMessagePage = ({
   conversationError,
   conversation,
+  messages,
   activeUser,
   isPeerTyping,
   isSubmitting,
@@ -38,12 +41,13 @@ export const DirectMessagePage = ({
   const textAreaId = useId();
 
   const peer =
-    conversation.initiator.id !== activeUser.id ? conversation.initiator : conversation.member;
+    conversation.initiator.id !== activeUser.id
+      ? conversation.initiator
+      : conversation.member;
 
   const [text, setText] = useState("");
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
-  const scrollHeightRef = useRef(0);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -55,7 +59,11 @@ export const DirectMessagePage = ({
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLTextAreaElement>) => {
-      if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+      if (
+        event.key === "Enter" &&
+        !event.shiftKey &&
+        !event.nativeEvent.isComposing
+      ) {
         event.preventDefault();
         formRef.current?.requestSubmit();
       }
@@ -73,22 +81,19 @@ export const DirectMessagePage = ({
     [onSubmit, text],
   );
 
+  // Scroll to bottom when messages change
   useEffect(() => {
-    const id = setInterval(() => {
-      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
-      if (height !== scrollHeightRef.current) {
-        scrollHeightRef.current = height;
-        window.scrollTo(0, height);
-      }
-    }, 1);
-
-    return () => clearInterval(id);
-  }, []);
+    requestAnimationFrame(() => {
+      window.scrollTo(0, document.body.scrollHeight);
+    });
+  }, [messages.length]);
 
   if (conversationError != null) {
     return (
       <section className="px-6 py-10">
-        <p className="text-cax-danger text-sm">メッセージの取得に失敗しました</p>
+        <p className="text-cax-danger text-sm">
+          メッセージの取得に失敗しました
+        </p>
       </section>
     );
   }
@@ -99,7 +104,7 @@ export const DirectMessagePage = ({
         <img
           alt={peer.profileImage.alt}
           className="h-12 w-12 rounded-full object-cover"
-          src={getProfileImagePath(peer.profileImage.id)}
+          src={getProfileImagePath(peer.profileImage.id, { w: 96, format: "webp" })}
         />
         <div className="min-w-0">
           <h1 className="overflow-hidden text-xl font-bold text-ellipsis whitespace-nowrap">
@@ -112,18 +117,19 @@ export const DirectMessagePage = ({
       </header>
 
       <div className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8">
-        {conversation.messages.length === 0 && (
+        {messages.length === 0 && (
           <p className="text-cax-text-muted text-center text-sm">
             まだメッセージはありません。最初のメッセージを送信してみましょう。
           </p>
         )}
 
         <ul className="grid gap-3" data-testid="dm-message-list">
-          {conversation.messages.map((message) => {
+          {messages.map((message) => {
             const isActiveUserSend = message.sender.id === activeUser.id;
 
             return (
               <li
+                key={message.id}
                 className={classNames(
                   "flex flex-col w-full",
                   isActiveUserSend ? "items-end" : "items-start",

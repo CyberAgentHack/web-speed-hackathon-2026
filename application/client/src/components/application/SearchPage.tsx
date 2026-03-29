@@ -1,21 +1,27 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router";
-import { Field, InjectedFormProps, reduxForm, WrappedFieldProps } from "redux-form";
+import type {
+  InjectedFormProps,
+  WrappedFieldProps} from "redux-form";
+import {
+  Field,
+  reduxForm
+} from "redux-form";
 
 import { Timeline } from "@web-speed-hackathon-2026/client/src/components/timeline/Timeline";
 import {
   parseSearchQuery,
   sanitizeSearchText,
 } from "@web-speed-hackathon-2026/client/src/search/services";
-import { SearchFormData } from "@web-speed-hackathon-2026/client/src/search/types";
+import type { SearchFormData } from "@web-speed-hackathon-2026/client/src/search/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/search/validation";
-import { analyzeSentiment } from "@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer";
 
 import { Button } from "../foundation/Button";
 
 interface Props {
   query: string;
   results: Models.Post[];
+  isNegative: boolean;
 }
 
 const SearchInput = ({ input, meta }: WrappedFieldProps) => (
@@ -39,36 +45,12 @@ const SearchInput = ({ input, meta }: WrappedFieldProps) => (
 const SearchPageComponent = ({
   query,
   results,
+  isNegative,
   handleSubmit,
 }: Props & InjectedFormProps<SearchFormData, Props>) => {
   const navigate = useNavigate();
-  const [isNegative, setIsNegative] = useState(false);
 
   const parsed = parseSearchQuery(query);
-
-  useEffect(() => {
-    if (!parsed.keywords) {
-      setIsNegative(false);
-      return;
-    }
-
-    let isMounted = true;
-    analyzeSentiment(parsed.keywords)
-      .then((result) => {
-        if (isMounted) {
-          setIsNegative(result.label === "negative");
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setIsNegative(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [parsed.keywords]);
 
   const searchConditionText = useMemo(() => {
     const parts: string[] = [];
@@ -117,8 +99,12 @@ const SearchPageComponent = ({
         <article className="hover:bg-cax-surface-subtle px-1 sm:px-4">
           <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
             <div>
-              <p className="text-cax-text text-lg font-bold">どしたん話聞こうか?</p>
-              <p className="text-cax-text-muted">言わなくてもいいけど、言ってもいいよ。</p>
+              <p className="text-cax-text text-lg font-bold">
+                どしたん話聞こうか?
+              </p>
+              <p className="text-cax-text-muted">
+                言わなくてもいいけど、言ってもいいよ。
+              </p>
             </div>
           </div>
         </article>

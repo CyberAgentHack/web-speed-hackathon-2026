@@ -40,11 +40,18 @@ export const AccountMenu = ({ user, onLogout }: Props) => {
         <img
           alt={user.profileImage.alt}
           className="h-10 w-10 shrink-0 rounded-full object-cover"
-          src={getProfileImagePath(user.profileImage.id)}
+          src={getProfileImagePath(user.profileImage.id, {
+            w: 80,
+            format: "webp",
+          })}
         />
         <div className="hidden min-w-0 flex-1 text-left lg:block">
-          <div className="text-cax-text truncate text-sm font-bold">{user.name}</div>
-          <div className="text-cax-text-muted truncate text-sm">@{user.username}</div>
+          <div className="text-cax-text truncate text-sm font-bold">
+            {user.name}
+          </div>
+          <div className="text-cax-text-muted truncate text-sm">
+            @{user.username}
+          </div>
         </div>
         <span className="text-cax-text-muted hidden lg:block">···</span>
       </button>
