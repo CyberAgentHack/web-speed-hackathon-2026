@@ -9,9 +9,16 @@ interface Props {
   authModalId: string;
   newPostModalId: string;
   onLogout: () => void;
+  isLoading: boolean;
 }
 
-export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }: Props) => {
+export const Navigation = ({
+  activeUser,
+  authModalId,
+  newPostModalId,
+  onLogout,
+  isLoading,
+}: Props) => {
   return (
     <nav className="border-cax-border bg-cax-surface fixed right-0 bottom-0 left-0 z-10 h-12 border-t lg:relative lg:h-full lg:w-48 lg:border-t-0 lg:border-r">
       <div className="relative grid grid-flow-col items-center justify-evenly lg:fixed lg:flex lg:h-full lg:w-48 lg:flex-col lg:justify-between lg:p-2">
@@ -51,7 +58,9 @@ export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }
           ) : null}
           {activeUser === null ? (
             <NavigationItem
-              icon={<FontAwesomeIcon iconType="sign-in-alt" styleType="solid" />}
+              icon={
+                <FontAwesomeIcon iconType="sign-in-alt" styleType="solid" />
+              }
               text="サインイン"
               command="show-modal"
               commandfor={authModalId}
@@ -66,12 +75,16 @@ export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }
           ) : null}
           <NavigationItem
             href="/terms"
-            icon={<FontAwesomeIcon iconType="balance-scale" styleType="solid" />}
+            icon={
+              <FontAwesomeIcon iconType="balance-scale" styleType="solid" />
+            }
             text="利用規約"
           />
         </ul>
 
-        {activeUser !== null ? <AccountMenu user={activeUser} onLogout={onLogout} /> : null}
+        {activeUser !== null ? (
+          <AccountMenu user={activeUser} onLogout={onLogout} />
+        ) : null}
       </div>
     </nav>
   );

@@ -8,7 +8,10 @@ import {
   UUIDV4,
 } from "sequelize";
 
-export class Image extends Model<InferAttributes<Image>, InferCreationAttributes<Image>> {
+export class Image extends Model<
+  InferAttributes<Image>,
+  InferCreationAttributes<Image>
+> {
   declare id: string;
   declare alt: string;
   declare createdAt: CreationOptional<Date>;
@@ -35,6 +38,14 @@ export function initImage(sequelize: Sequelize) {
     },
     {
       sequelize,
+      indexes: [
+        {
+          fields: ["id"],
+        },
+        {
+          fields: ["createdAt"],
+        },
+      ],
     },
   );
 }

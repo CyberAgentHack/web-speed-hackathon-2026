@@ -1,9 +1,14 @@
 import { FastAverageColor } from "fast-average-color";
-import moment from "moment";
 import { ReactEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import dayjs from "dayjs";
+import "dayjs/locale/ja";
+import localizedFormat from "dayjs/plugin/localizedFormat";
+
+dayjs.locale("ja");
+dayjs.extend(localizedFormat);
 
 interface Props {
   user: Models.User;
@@ -43,8 +48,8 @@ export const UserProfileHeader = ({ user }: Props) => {
             <FontAwesomeIcon iconType="calendar-alt" styleType="regular" />
           </span>
           <span>
-            <time dateTime={moment(user.createdAt).toISOString()}>
-              {moment(user.createdAt).locale("ja").format("LL")}
+            <time dateTime={dayjs(user.createdAt).toISOString()}>
+              {dayjs(user.createdAt).format("LL")}
             </time>
             からサービスを利用しています
           </span>

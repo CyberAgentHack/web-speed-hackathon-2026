@@ -13,7 +13,10 @@ import { Movie } from "@web-speed-hackathon-2026/server/src/models/Movie";
 import { Sound } from "@web-speed-hackathon-2026/server/src/models/Sound";
 import { User } from "@web-speed-hackathon-2026/server/src/models/User";
 
-export class Post extends Model<InferAttributes<Post>, InferCreationAttributes<Post>> {
+export class Post extends Model<
+  InferAttributes<Post>,
+  InferCreationAttributes<Post>
+> {
   declare id: string;
   declare userId: ForeignKey<User["id"]>;
   declare movieId?: ForeignKey<Movie["id"]>;
@@ -42,6 +45,20 @@ export function initPost(sequelize: Sequelize) {
     },
     {
       sequelize,
+      indexes: [
+        {
+          fields: ["id"],
+        },
+        {
+          fields: ["userId"],
+        },
+        {
+          fields: ["movieId"],
+        },
+        {
+          fields: ["soundId"],
+        }
+      ],
       defaultScope: {
         attributes: {
           exclude: ["userId", "movieId", "soundId"],
