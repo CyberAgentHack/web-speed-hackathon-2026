@@ -42,13 +42,13 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
     if (!ref.current) return;
     const element = ref.current;
 
-    const handleToggle = () => {
-      // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
+    const handleClose = () => {
+      // dialog は close イベントが確実に発火するため、次回表示時にフォームを初期化する
       setResetKey((key) => key + 1);
     };
-    element.addEventListener("toggle", handleToggle);
+    element.addEventListener("close", handleClose);
     return () => {
-      element.removeEventListener("toggle", handleToggle);
+      element.removeEventListener("close", handleClose);
     };
   }, [ref, setResetKey]);
 

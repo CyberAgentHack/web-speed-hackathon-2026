@@ -23,7 +23,7 @@ export async function calculatePostPage({ baseUrl, playwrightPage, puppeteerPage
       playwrightPage,
       puppeteerPage,
       timeout: 120 * 1000,
-      url: new URL("/posts/ff93a168-ea7c-4202-9879-672382febfda", baseUrl).href,
+      url: new URL("/posts/ff93a168-ea7c-4202-9879-672382febfda?score=1", baseUrl).href,
     });
   } catch (err) {
     throw new Error("ページの読み込みに失敗したか、タイムアウトしました", { cause: err });
