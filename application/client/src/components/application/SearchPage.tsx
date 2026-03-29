@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { FormEventHandler, useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Field, InjectedFormProps, reduxForm, WrappedFieldProps } from "redux-form";
 
@@ -13,36 +13,43 @@ import { analyzeSentiment } from "@web-speed-hackathon-2026/client/src/utils/neg
 
 import { Button } from "../foundation/Button";
 
+const SEARCH_INPUT_LABEL = "検索 (例: キーワード since:2025-01-01 until:2025-12-31)";
+
 interface Props {
   query: string;
   results: Models.Post[];
 }
 
-const SearchInput = ({ input, meta }: WrappedFieldProps) => (
-  <div className="flex flex-1 flex-col">
-    <input
-      {...input}
-      className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
-        meta.touched && meta.error
-          ? "border-cax-danger focus:border-cax-danger"
-          : "border-cax-border focus:border-cax-brand-strong"
-      }`}
-      placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
-      type="text"
-    />
-    {meta.touched && meta.error && (
-      <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>
-    )}
-  </div>
-);
+const SearchInput = ({ input, meta, extraError }: WrappedFieldProps & { extraError?: string }) => {
+  const error = meta.error || extraError;
+  const showError = (meta.touched || extraError) && error;
+  return (
+    <div className="flex flex-1 flex-col">
+      <input
+        {...input}
+        aria-label={SEARCH_INPUT_LABEL}
+        className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
+          showError
+            ? "border-cax-danger focus:border-cax-danger"
+            : "border-cax-border focus:border-cax-brand-strong"
+        }`}
+        placeholder={SEARCH_INPUT_LABEL}
+        type="text"
+      />
+      {showError && (
+        <span className="text-cax-danger mt-1 text-xs">{error}</span>
+      )}
+    </div>
+  );
+};
 
 const SearchPageComponent = ({
   query,
   results,
-  handleSubmit,
 }: Props & InjectedFormProps<SearchFormData, Props>) => {
   const navigate = useNavigate();
   const [isNegative, setIsNegative] = useState(false);
+  const [submitError, setSubmitError] = useState<string | undefined>();
 
   const parsed = parseSearchQuery(query);
 
@@ -73,7 +80,7 @@ const SearchPageComponent = ({
   const searchConditionText = useMemo(() => {
     const parts: string[] = [];
     if (parsed.keywords) {
-      parts.push(`「${parsed.keywords}」`);
+      parts.push(`「${parsed.keywords}」を含むテキスト`);
     }
     if (parsed.sinceDate) {
       parts.push(`${parsed.sinceDate} 以降`);
@@ -84,17 +91,28 @@ const SearchPageComponent = ({
     return parts.join(" ");
   }, [parsed]);
 
-  const onSubmit = (values: SearchFormData) => {
-    const sanitizedText = sanitizeSearchText(values.searchText.trim());
+  // React 19 removes UNSAFE_componentWillReceiveProps, breaking redux-form's
+  // built-in validation (syncErrors never computed). Validate manually on submit.
+  const onFormSubmit = useCallback<FormEventHandler<HTMLFormElement>>((ev) => {
+    ev.preventDefault();
+    const input = ev.currentTarget.querySelector<HTMLInputElement>("input[name='searchText']");
+    const currentValue = input?.value ?? "";
+    const errors = validate({ searchText: currentValue });
+    if (typeof errors.searchText === "string") {
+      setSubmitError(errors.searchText);
+      return;
+    }
+    setSubmitError(undefined);
+    const sanitizedText = sanitizeSearchText(currentValue.trim());
     navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
-  };
+  }, [navigate]);
 
   return (
     <div className="flex flex-col gap-4">
       <div className="bg-cax-surface p-4 shadow">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={onFormSubmit}>
           <div className="flex gap-2">
-            <Field name="searchText" component={SearchInput} />
+            <Field name="searchText" component={SearchInput} extraError={submitError} />
             <Button variant="primary" type="submit">
               検索
             </Button>

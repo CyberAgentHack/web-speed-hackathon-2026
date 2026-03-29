@@ -11,8 +11,8 @@ interface Options {
 export async function convertMovie(file: File, options: Options): Promise<Blob> {
   const ffmpeg = await loadFFmpeg();
 
-  const cropOptions = [
-    "'min(iw,ih)':'min(iw,ih)'",
+  const filterOptions = [
+    "crop=min(iw\\,ih):min(iw\\,ih)",
     options.size ? `scale=${options.size}:${options.size}` : undefined,
   ]
     .filter(Boolean)
@@ -21,7 +21,7 @@ export async function convertMovie(file: File, options: Options): Promise<Blob> 
 
   await ffmpeg.writeFile("file", new Uint8Array(await file.arrayBuffer()));
 
-  await ffmpeg.exec([
+  const ffmpegArgs = [
     "-i",
     "file",
     "-t",
@@ -29,10 +29,24 @@ export async function convertMovie(file: File, options: Options): Promise<Blob> 
     "-r",
     "10",
     "-vf",
-    `crop=${cropOptions}`,
+    filterOptions,
     "-an",
+    ...(options.extension === "mp4"
+      ? [
+          "-c:v",
+          "libx264",
+          "-preset",
+          "ultrafast",
+          "-pix_fmt",
+          "yuv420p",
+          "-movflags",
+          "+faststart",
+        ]
+      : []),
     exportFile,
-  ]);
+  ];
+
+  await ffmpeg.exec(ffmpegArgs);
 
   const output = (await ffmpeg.readFile(exportFile)) as Uint8Array<ArrayBuffer>;
 

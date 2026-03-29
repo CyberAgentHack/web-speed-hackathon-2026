@@ -65,10 +65,23 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     async (params: DirectMessageFormData) => {
       setIsSubmitting(true);
       try {
-        await sendJSON(`/api/v1/dm/${conversationId}/messages`, {
-          body: params.body,
+        const message = await sendJSON<Models.DirectMessage>(
+          `/api/v1/dm/${conversationId}/messages`,
+          {
+            body: params.body,
+          },
+        );
+        setConversation((currentConversation) => {
+          if (currentConversation == null) {
+            return currentConversation;
+          }
+
+          return {
+            ...currentConversation,
+            messages: [...currentConversation.messages, message],
+          };
         });
-        loadConversation();
+        void loadConversation();
       } finally {
         setIsSubmitting(false);
       }
