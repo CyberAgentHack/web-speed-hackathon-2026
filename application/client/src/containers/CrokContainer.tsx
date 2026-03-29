@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet";
 
 import { CrokGate } from "@web-speed-hackathon-2026/client/src/components/crok/CrokGate";
@@ -32,7 +32,13 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
     [],
   );
 
-  const { content, isStreaming, start } = useSSE<Models.SSEChunk>(sseOptions);
+  const { content, isStreaming, start, stop } = useSSE<Models.SSEChunk>(sseOptions);
+
+  useEffect(() => {
+    return () => {
+      stop();
+    };
+  }, [stop]);
 
   const currentAssistantContent = isStreaming || content ? content : null;
 

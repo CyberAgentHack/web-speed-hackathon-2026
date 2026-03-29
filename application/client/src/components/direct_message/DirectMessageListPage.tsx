@@ -1,10 +1,10 @@
-import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
+import { formatFromNow } from "@web-speed-hackathon-2026/client/src/utils/format_date";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
@@ -42,7 +42,22 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
   });
 
   if (conversations == null) {
-    return null;
+    return (
+      <section>
+        <header className="border-cax-border flex flex-col gap-4 border-b px-4 pt-6 pb-4">
+          <h1 className="text-2xl font-bold">ダイレクトメッセージ</h1>
+          <div className="flex flex-wrap items-center gap-4">
+            <Button
+              command="show-modal"
+              commandfor={newDmModalId}
+              leftItem={<FontAwesomeIcon iconType="paper-plane" styleType="solid" />}
+            >
+              新しくDMを始める
+            </Button>
+          </div>
+        </header>
+      </section>
+    );
   }
 
   return (
@@ -100,7 +115,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {formatFromNow(lastMessage.createdAt)}
                           </time>
                         )}
                       </div>

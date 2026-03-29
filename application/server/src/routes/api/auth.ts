@@ -1,3 +1,4 @@
+import bcrypt from "bcrypt";
 import { Router } from "express";
 import httpErrors from "http-errors";
 import { UniqueConstraintError, ValidationError } from "sequelize";
@@ -34,7 +35,8 @@ authRouter.post("/signin", async (req, res) => {
   if (user === null) {
     throw new httpErrors.BadRequest();
   }
-  if (!user.validPassword(req.body.password)) {
+  const isValid = await bcrypt.compare(req.body.password, user.getDataValue("password"));
+  if (!isValid) {
     throw new httpErrors.BadRequest();
   }
 

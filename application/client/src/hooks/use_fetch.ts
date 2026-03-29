@@ -7,16 +7,18 @@ interface ReturnValues<T> {
 }
 
 export function useFetch<T>(
-  apiPath: string,
+  apiPath: string | null,
   fetcher: (apiPath: string) => Promise<T>,
 ): ReturnValues<T> {
   const [result, setResult] = useState<ReturnValues<T>>({
     data: null,
     error: null,
-    isLoading: true,
+    isLoading: false,
   });
 
   useEffect(() => {
+    if (apiPath == null) return;
+
     setResult(() => ({
       data: null,
       error: null,
