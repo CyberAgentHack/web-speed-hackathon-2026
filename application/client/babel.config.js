@@ -4,16 +4,16 @@ module.exports = {
     [
       "@babel/preset-env",
       {
-        targets: "ie 11",
+        targets: "> 0.5%, last 2 versions, not dead, not ie 11",
         corejs: "3",
-        modules: "commonjs",
-        useBuiltIns: false,
+        modules: false,
+        useBuiltIns: "usage",
       },
     ],
     [
       "@babel/preset-react",
       {
-        development: true,
+        development: false,
         runtime: "automatic",
       },
     ],

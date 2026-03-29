@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { Op } from "sequelize";
+import { Op, WhereOptions, Includeable } from "sequelize";
 
 import { Post } from "@web-speed-hackathon-2026/server/src/models";
 import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/parse_search_query.js";
@@ -32,61 +32,61 @@ searchRouter.get("/search", async (req, res) => {
   if (untilDate) {
     dateConditions.push({ [Op.lte]: untilDate });
   }
-  const dateWhere =
+  const dateWhere: WhereOptions =
     dateConditions.length > 0 ? { createdAt: Object.assign({}, ...dateConditions) } : {};
 
-  // テキスト検索条件
-  const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
+  // 検索条件を1つのクエリにまとめる
+  const whereConditions: WhereOptions[] = [];
 
-  const postsByText = await Post.findAll({
+  // テキスト検索条件
+  if (searchTerm) {
+    whereConditions.push({ text: { [Op.like]: searchTerm } });
+    // ユーザー名/名前はincludeのwhereで処理するため、ここでは追加しない
+  }
+
+  // キーワードがある場合: テキストまたはユーザー名/名前でマッチ
+  // キーワードがない場合: 日付フィルターのみ
+  const include: Includeable[] = [
+    {
+      association: "user",
+      attributes: { exclude: ["profileImageId"] },
+      include: [{ association: "profileImage" }],
+      // キーワードがある場合、ユーザー名/名前でもマッチさせるためにrequiredをfalseに
+      required: false,
+    },
+    {
+      association: "images",
+      through: { attributes: [] },
+    },
+    { association: "movie" },
+    { association: "sound" },
+  ];
+
+  // 最終的なwhere条件を構築
+  let finalWhere: WhereOptions;
+  if (searchTerm) {
+    // テキストまたはユーザー名/名前でマッチ + 日付条件
+    finalWhere = {
+      ...dateWhere,
+      [Op.or]: [
+        { text: { [Op.like]: searchTerm } },
+        { "$user.username$": { [Op.like]: searchTerm } },
+        { "$user.name$": { [Op.like]: searchTerm } },
+      ],
+    };
+  } else {
+    // 日付フィルターのみ
+    finalWhere = dateWhere;
+  }
+
+  const posts = await Post.findAll({
+    include,
     limit,
     offset,
-    where: {
-      ...textWhere,
-      ...dateWhere,
-    },
+    where: finalWhere,
+    order: [["createdAt", "DESC"]],
+    subQuery: false, // JOINを使用してパフォーマンス向上
   });
 
-  // ユーザー名/名前での検索（キーワードがある場合のみ）
-  let postsByUser: typeof postsByText = [];
-  if (searchTerm) {
-    postsByUser = await Post.findAll({
-      include: [
-        {
-          association: "user",
-          attributes: { exclude: ["profileImageId"] },
-          include: [{ association: "profileImage" }],
-          required: true,
-          where: {
-            [Op.or]: [{ username: { [Op.like]: searchTerm } }, { name: { [Op.like]: searchTerm } }],
-          },
-        },
-        {
-          association: "images",
-          through: { attributes: [] },
-        },
-        { association: "movie" },
-        { association: "sound" },
-      ],
-      limit,
-      offset,
-      where: dateWhere,
-    });
-  }
-
-  const postIdSet = new Set<string>();
-  const mergedPosts: typeof postsByText = [];
-
-  for (const post of [...postsByText, ...postsByUser]) {
-    if (!postIdSet.has(post.id)) {
-      postIdSet.add(post.id);
-      mergedPosts.push(post);
-    }
-  }
-
-  mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-
-  const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
-
-  return res.status(200).type("application/json").send(result);
+  return res.status(200).type("application/json").send(posts);
 });

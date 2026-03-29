@@ -64,6 +64,52 @@ export function initPost(sequelize: Sequelize) {
           ["images", "createdAt", "ASC"],
         ],
       },
+      scopes: {
+        // ユーザー情報のみ（検索API用の軽量版）
+        withUser: {
+          attributes: {
+            exclude: ["userId", "movieId", "soundId"],
+          },
+          include: [
+            {
+              association: "user",
+              attributes: { exclude: ["profileImageId"] },
+              include: [{ association: "profileImage" }],
+            },
+          ],
+          order: [["id", "DESC"]],
+        },
+        // メディアなし（一覧表示用）
+        minimal: {
+          attributes: {
+            exclude: ["userId", "movieId", "soundId"],
+          },
+          order: [["id", "DESC"]],
+        },
+        // 全関連あり（詳細表示用）
+        full: {
+          attributes: {
+            exclude: ["userId", "movieId", "soundId"],
+          },
+          include: [
+            {
+              association: "user",
+              attributes: { exclude: ["profileImageId"] },
+              include: [{ association: "profileImage" }],
+            },
+            {
+              association: "images",
+              through: { attributes: [] },
+            },
+            { association: "movie" },
+            { association: "sound" },
+          ],
+          order: [
+            ["id", "DESC"],
+            ["images", "createdAt", "ASC"],
+          ],
+        },
+      },
     },
   );
 }
