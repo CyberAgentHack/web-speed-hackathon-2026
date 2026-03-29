@@ -20,9 +20,16 @@ export async function initializeSequelize() {
   );
   await fs.copyFile(DATABASE_PATH, TEMP_PATH);
 
+  const SLOW_QUERY_THRESHOLD_MS = 100;
+
   _sequelize = new Sequelize({
+    benchmark: true,
     dialect: "sqlite",
-    logging: false,
+    logging: (sql: string, timing?: number) => {
+      if (timing !== undefined && timing >= SLOW_QUERY_THRESHOLD_MS) {
+        console.warn(`[SLOW QUERY] ${timing}ms\n${sql}`);
+      }
+    },
     storage: TEMP_PATH,
   });
   initModels(_sequelize);

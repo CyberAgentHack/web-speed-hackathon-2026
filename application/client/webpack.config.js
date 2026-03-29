@@ -1,6 +1,7 @@
 /// <reference types="webpack-dev-server" />
 const path = require("path");
 
+const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
@@ -25,18 +26,16 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: false,
   entry: {
     main: [
-      "core-js",
-      "regenerator-runtime/runtime",
       "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: "production",
   module: {
     rules: [
       {
@@ -54,13 +53,12 @@ const config = {
       },
       {
         resourceQuery: /binary/,
-        type: "asset/bytes",
+        type: "asset/resource",
       },
     ],
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
     filename: "scripts/[name].js",
     path: DIST_PATH,
     publicPath: "auto",
@@ -77,7 +75,7 @@ const config = {
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
+      NODE_ENV: "production",
     }),
     new MiniCssExtractPlugin({
       filename: "styles/[name].css",
@@ -98,8 +96,16 @@ const config = {
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
     alias: {
-      "bayesian-bm25$": path.resolve(__dirname, "node_modules", "bayesian-bm25/dist/index.js"),
-      ["kuromoji$"]: path.resolve(__dirname, "node_modules", "kuromoji/build/kuromoji.js"),
+      "bayesian-bm25$": path.resolve(
+        __dirname,
+        "node_modules",
+        "bayesian-bm25/dist/index.js",
+      ),
+      ["kuromoji$"]: path.resolve(
+        __dirname,
+        "node_modules",
+        "kuromoji/build/kuromoji.js",
+      ),
       "@ffmpeg/ffmpeg$": path.resolve(
         __dirname,
         "node_modules",
@@ -128,20 +134,34 @@ const config = {
     },
   },
   optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
+    minimize: true,
+    usedExports: true,
+    providedExports: true,
+    sideEffects: true,
+    splitChunks: {
+      chunks: "all",
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: "vendor",
+          chunks: "initial",
+          priority: 10,
+        },
+      },
+    },
   },
   cache: false,
   ignoreWarnings: [
     {
       module: /@ffmpeg/,
-      message: /Critical dependency: the request of a dependency is an expression/,
+      message:
+        /Critical dependency: the request of a dependency is an expression/,
     },
   ],
 };
+
+if (process.env.ANALYZE === "true") {
+  config.plugins.push(new BundleAnalyzerPlugin());
+}
 
 module.exports = config;

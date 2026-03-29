@@ -1,6 +1,6 @@
 import { Router } from "express";
 import httpErrors from "http-errors";
-import { col, where, Op } from "sequelize";
+import { Op } from "sequelize";
 
 import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
 import {
@@ -18,18 +18,25 @@ directMessageRouter.get("/dm", async (req, res) => {
 
   const conversations = await DirectMessageConversation.findAll({
     where: {
-      [Op.and]: [
-        { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
-        where(col("messages.id"), { [Op.not]: null }),
-      ],
+      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
-    order: [[col("messages.createdAt"), "DESC"]],
+    include: [
+      {
+        association: "messages",
+        include: [{ association: "sender", include: [{ association: "profileImage" }] }],
+        order: [["createdAt", "ASC"]],
+        separate: true,
+      },
+    ],
   });
 
-  const sorted = conversations.map((c) => ({
-    ...c.toJSON(),
-    messages: c.messages?.reverse(),
-  }));
+  const sorted = conversations
+    .filter((c) => c.messages && c.messages.length > 0)
+    .sort((a, b) => {
+      const aTime = new Date(a.messages![a.messages!.length - 1]!.createdAt).getTime();
+      const bTime = new Date(b.messages![b.messages!.length - 1]!.createdAt).getTime();
+      return bTime - aTime;
+    });
 
   return res.status(200).type("application/json").send(sorted);
 });
@@ -85,7 +92,10 @@ directMessageRouter.ws("/dm/unread", async (req, _res) => {
       {
         association: "conversation",
         where: {
-          [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
+          [Op.or]: [
+            { initiatorId: req.session.userId },
+            { memberId: req.session.userId },
+          ],
         },
         required: true,
       },
@@ -103,8 +113,19 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
   const conversation = await DirectMessageConversation.findOne({
     where: {
       id: req.params.conversationId,
-      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
+      [Op.or]: [
+        { initiatorId: req.session.userId },
+        { memberId: req.session.userId },
+      ],
     },
+    include: [
+      {
+        association: "messages",
+        include: [{ association: "sender", include: [{ association: "profileImage" }] }],
+        order: [["createdAt", "ASC"]],
+        separate: true,
+      },
+    ],
   });
   if (conversation === null) {
     throw new httpErrors.NotFound();
@@ -121,7 +142,10 @@ directMessageRouter.ws("/dm/:conversationId", async (req, _res) => {
   const conversation = await DirectMessageConversation.findOne({
     where: {
       id: req.params.conversationId,
-      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
+      [Op.or]: [
+        { initiatorId: req.session.userId },
+        { memberId: req.session.userId },
+      ],
     },
   });
   if (conversation == null) {
@@ -136,17 +160,29 @@ directMessageRouter.ws("/dm/:conversationId", async (req, _res) => {
   const handleMessageUpdated = (payload: unknown) => {
     req.ws.send(JSON.stringify({ type: "dm:conversation:message", payload }));
   };
-  eventhub.on(`dm:conversation/${conversation.id}:message`, handleMessageUpdated);
+  eventhub.on(
+    `dm:conversation/${conversation.id}:message`,
+    handleMessageUpdated,
+  );
   req.ws.on("close", () => {
-    eventhub.off(`dm:conversation/${conversation.id}:message`, handleMessageUpdated);
+    eventhub.off(
+      `dm:conversation/${conversation.id}:message`,
+      handleMessageUpdated,
+    );
   });
 
   const handleTyping = (payload: unknown) => {
     req.ws.send(JSON.stringify({ type: "dm:conversation:typing", payload }));
   };
-  eventhub.on(`dm:conversation/${conversation.id}:typing/${peerId}`, handleTyping);
+  eventhub.on(
+    `dm:conversation/${conversation.id}:typing/${peerId}`,
+    handleTyping,
+  );
   req.ws.on("close", () => {
-    eventhub.off(`dm:conversation/${conversation.id}:typing/${peerId}`, handleTyping);
+    eventhub.off(
+      `dm:conversation/${conversation.id}:typing/${peerId}`,
+      handleTyping,
+    );
   });
 });
 
@@ -163,7 +199,10 @@ directMessageRouter.post("/dm/:conversationId/messages", async (req, res) => {
   const conversation = await DirectMessageConversation.findOne({
     where: {
       id: req.params.conversationId,
-      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
+      [Op.or]: [
+        { initiatorId: req.session.userId },
+        { memberId: req.session.userId },
+      ],
     },
   });
   if (conversation === null) {
@@ -188,7 +227,10 @@ directMessageRouter.post("/dm/:conversationId/read", async (req, res) => {
   const conversation = await DirectMessageConversation.findOne({
     where: {
       id: req.params.conversationId,
-      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
+      [Op.or]: [
+        { initiatorId: req.session.userId },
+        { memberId: req.session.userId },
+      ],
     },
   });
   if (conversation === null) {
@@ -203,7 +245,11 @@ directMessageRouter.post("/dm/:conversationId/read", async (req, res) => {
   await DirectMessage.update(
     { isRead: true },
     {
-      where: { conversationId: conversation.id, senderId: peerId, isRead: false },
+      where: {
+        conversationId: conversation.id,
+        senderId: peerId,
+        isRead: false,
+      },
       individualHooks: true,
     },
   );
@@ -216,12 +262,17 @@ directMessageRouter.post("/dm/:conversationId/typing", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversation = await DirectMessageConversation.findByPk(req.params.conversationId);
+  const conversation = await DirectMessageConversation.findByPk(
+    req.params.conversationId,
+  );
   if (conversation === null) {
     throw new httpErrors.NotFound();
   }
 
-  eventhub.emit(`dm:conversation/${conversation.id}:typing/${req.session.userId}`, {});
+  eventhub.emit(
+    `dm:conversation/${conversation.id}:typing/${req.session.userId}`,
+    {},
+  );
 
   return res.status(200).type("application/json").send({});
 });

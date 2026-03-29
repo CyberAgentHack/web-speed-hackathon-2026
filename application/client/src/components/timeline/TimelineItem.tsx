@@ -1,4 +1,3 @@
-import moment from "moment";
 import { MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
@@ -47,16 +46,19 @@ export const TimelineItem = ({ post }: Props) => {
   );
 
   return (
-    <article className="hover:bg-cax-surface-subtle px-1 sm:px-4" onClick={handleClick}>
+    <article className="hover:bg-cax-surface-subtle px-1 sm:px-4" onClick={handleClick} style={{ contentVisibility: "auto", containIntrinsicBlockSize: "300px" }}>
       <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
         <div className="shrink-0 grow-0 pr-2 sm:pr-4">
           <Link
+            aria-label={`${post.user.name}のプロフィール`}
             className="border-cax-border bg-cax-surface-subtle block h-12 w-12 overflow-hidden rounded-full border hover:opacity-75 sm:h-16 sm:w-16"
             to={`/users/${post.user.username}`}
           >
             <img
               alt={post.user.profileImage.alt}
+              height={64}
               src={getProfileImagePath(post.user.profileImage.id)}
+              width={64}
             />
           </Link>
         </div>
@@ -76,8 +78,8 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={new Date(post.createdAt).toISOString()}>
+                {new Intl.DateTimeFormat("ja-JP", { year: "numeric", month: "long", day: "numeric" }).format(new Date(post.createdAt))}
               </time>
             </Link>
           </p>

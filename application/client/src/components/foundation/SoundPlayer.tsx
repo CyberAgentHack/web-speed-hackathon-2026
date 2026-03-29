@@ -12,7 +12,8 @@ interface Props {
 }
 
 export const SoundPlayer = ({ sound }: Props) => {
-  const { data, isLoading } = useFetch(getSoundPath(sound.id), fetchBinary);
+  const [shouldLoad, setShouldLoad] = useState(false);
+  const { data, isLoading } = useFetch(shouldLoad ? getSoundPath(sound.id) : null, fetchBinary);
 
   const blobUrl = useMemo(() => {
     return data !== null ? URL.createObjectURL(new Blob([data])) : null;
@@ -27,6 +28,7 @@ export const SoundPlayer = ({ sound }: Props) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const handleTogglePlaying = useCallback(() => {
+    setShouldLoad(true);
     setIsPlaying((isPlaying) => {
       if (isPlaying) {
         audioRef.current?.pause();
@@ -37,18 +39,18 @@ export const SoundPlayer = ({ sound }: Props) => {
     });
   }, []);
 
-  if (isLoading || data === null || blobUrl === null) {
-    return null;
-  }
-
   return (
     <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
-      <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} src={blobUrl} />
+      {blobUrl !== null && (
+        <audio ref={audioRef} loop={true} onTimeUpdate={handleTimeUpdate} src={blobUrl} />
+      )}
       <div className="p-2">
         <button
+          aria-label={isPlaying ? "一時停止" : "再生"}
           className="bg-cax-accent text-cax-surface-raised flex h-8 w-8 items-center justify-center rounded-full text-sm hover:opacity-75"
           onClick={handleTogglePlaying}
           type="button"
+          disabled={shouldLoad && isLoading}
         >
           <FontAwesomeIcon iconType={isPlaying ? "pause" : "play"} styleType="solid" />
         </button>
@@ -64,7 +66,7 @@ export const SoundPlayer = ({ sound }: Props) => {
           <AspectRatioBox aspectHeight={1} aspectWidth={10}>
             <div className="relative h-full w-full">
               <div className="absolute inset-0 h-full w-full">
-                <SoundWaveSVG soundData={data} />
+                {data !== null && <SoundWaveSVG soundData={data} />}
               </div>
               <div
                 className="bg-cax-surface-subtle absolute inset-0 h-full w-full opacity-75"
