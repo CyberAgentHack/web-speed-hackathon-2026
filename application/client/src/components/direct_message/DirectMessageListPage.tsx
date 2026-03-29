@@ -1,10 +1,10 @@
-import moment from "moment";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
+import { fromNow } from "@web-speed-hackathon-2026/client/src/utils/date_format";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
@@ -15,8 +15,9 @@ interface Props {
 
 export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
   const [conversations, setConversations] =
-    useState<Array<Models.DirectMessageConversation> | null>(null);
+    useState<Array<Models.DirectMessageConversationListItem> | null>(null);
   const [error, setError] = useState<Error | null>(null);
+  const hasHandledInitialUnreadSync = useRef(false);
 
   const loadConversations = useCallback(async () => {
     if (activeUser == null) {
@@ -24,7 +25,8 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     }
 
     try {
-      const conversations = await fetchJSON<Array<Models.DirectMessageConversation>>("/api/v1/dm");
+      const conversations =
+        await fetchJSON<Array<Models.DirectMessageConversationListItem>>("/api/v1/dm");
       setConversations(conversations);
       setError(null);
     } catch (error) {
@@ -38,6 +40,10 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
   }, [loadConversations]);
 
   useWs("/api/v1/dm/unread", () => {
+    if (!hasHandledInitialUnreadSync.current) {
+      hasHandledInitialUnreadSync.current = true;
+      return;
+    }
     void loadConversations();
   });
 
@@ -69,16 +75,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
       ) : (
         <ul data-testid="dm-list">
           {conversations.map((conversation) => {
-            const { messages } = conversation;
-            const peer =
-              conversation.initiator.id !== activeUser.id
-                ? conversation.initiator
-                : conversation.member;
-
-            const lastMessage = messages.at(-1);
-            const hasUnread = messages
-              .filter((m) => m.sender.id === peer.id)
-              .some((m) => !m.isRead);
+            const { peer, lastMessage, hasUnread } = conversation;
 
             return (
               <li className="grid" key={conversation.id}>
@@ -87,6 +84,8 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                     <img
                       alt={peer.profileImage.alt}
                       className="w-12 shrink-0 self-start rounded-full"
+                      decoding="async"
+                      loading="lazy"
                       src={getProfileImagePath(peer.profileImage.id)}
                     />
                     <div className="flex flex-1 flex-col">
@@ -95,14 +94,14 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                           <p className="font-bold">{peer.name}</p>
                           <p className="text-cax-text-muted text-xs">@{peer.username}</p>
                         </div>
-                        {lastMessage != null && (
+                        {lastMessage != null ? (
                           <time
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {fromNow(lastMessage.createdAt)}
                           </time>
-                        )}
+                        ) : null}
                       </div>
                       <p className="mt-1 line-clamp-2 text-sm wrap-anywhere">{lastMessage?.body}</p>
                       {hasUnread ? (

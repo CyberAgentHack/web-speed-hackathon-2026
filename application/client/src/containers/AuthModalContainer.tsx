@@ -1,10 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { SubmissionError } from "redux-form";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
-import { AuthModalPage } from "@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+
+const AuthModalPage = lazy(() =>
+  import("@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage").then((m) => ({
+    default: m.AuthModalPage,
+  })),
+);
 
 interface Props {
   id: string;
@@ -16,7 +20,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   USERNAME_TAKEN: "ユーザー名が使われています",
 };
 
-function getErrorCode(err: JQuery.jqXHR<unknown>, type: "signin" | "signup"): string {
+function getErrorCode(err: { responseJSON?: unknown }, type: "signin" | "signup"): string {
   const responseJSON = err.responseJSON;
   if (
     typeof responseJSON !== "object" ||
@@ -37,20 +41,26 @@ function getErrorCode(err: JQuery.jqXHR<unknown>, type: "signin" | "signup"): st
 
 export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
+  const [hasLoadedPage, setHasLoadedPage] = useState(false);
   const [resetKey, setResetKey] = useState(0);
+
   useEffect(() => {
-    if (!ref.current) return;
     const element = ref.current;
+    if (element == null) {
+      return;
+    }
 
     const handleToggle = () => {
-      // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
+      if (element.open) {
+        setHasLoadedPage(true);
+      }
       setResetKey((key) => key + 1);
     };
     element.addEventListener("toggle", handleToggle);
     return () => {
       element.removeEventListener("toggle", handleToggle);
     };
-  }, [ref, setResetKey]);
+  }, []);
 
   const handleRequestCloseModal = useCallback(() => {
     ref.current?.close();
@@ -67,11 +77,9 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
           onUpdateActiveUser(user);
         }
         handleRequestCloseModal();
+        return null;
       } catch (err: unknown) {
-        const error = getErrorCode(err as JQuery.jqXHR<unknown>, values.type);
-        throw new SubmissionError({
-          _error: error,
-        });
+        return getErrorCode(err as { responseJSON?: unknown }, values.type);
       }
     },
     [handleRequestCloseModal, onUpdateActiveUser],
@@ -79,11 +87,26 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
 
   return (
     <Modal id={id} ref={ref} closedby="any">
-      <AuthModalPage
-        key={resetKey}
-        onRequestCloseModal={handleRequestCloseModal}
-        onSubmit={handleSubmit}
-      />
+      {hasLoadedPage ? (
+        <Suspense
+          fallback={
+            <div className="animate-pulse space-y-6 p-2">
+              <h2 className="text-center text-2xl font-bold">サインイン</h2>
+              <div className="space-y-2">
+                <div className="bg-cax-border h-12 w-full rounded-full" />
+                <div className="bg-cax-border h-12 w-full rounded-full" />
+              </div>
+              <div className="bg-cax-border h-10 w-full rounded-full" />
+            </div>
+          }
+        >
+          <AuthModalPage
+            key={resetKey}
+            onRequestCloseModal={handleRequestCloseModal}
+            onSubmit={handleSubmit}
+          />
+        </Suspense>
+      ) : null}
     </Modal>
   );
 };

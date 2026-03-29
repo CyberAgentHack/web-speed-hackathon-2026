@@ -12,7 +12,7 @@ interface Props {
 
 export const AppPage = ({ activeUser, children, authModalId, newPostModalId, onLogout }: Props) => {
   return (
-    <div className="relative z-0 flex justify-center font-sans">
+    <div className="relative z-0 flex justify-center font-sans" data-app-shell="">
       <div className="bg-cax-surface text-cax-text flex min-h-screen max-w-full">
         <aside className="relative z-10">
           <Navigation

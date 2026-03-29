@@ -1,8 +1,8 @@
 import { useId } from "react";
-import { Helmet } from "react-helmet";
 
 import { DirectMessageGate } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageGate";
 import { DirectMessageListPage } from "@web-speed-hackathon-2026/client/src/components/direct_message/DirectMessageListPage";
+import { PageTitle } from "@web-speed-hackathon-2026/client/src/components/foundation/PageTitle";
 import { NewDirectMessageModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewDirectMessageModalContainer";
 
 interface Props {
@@ -24,9 +24,7 @@ export const DirectMessageListContainer = ({ activeUser, authModalId }: Props) =
 
   return (
     <>
-      <Helmet>
-        <title>ダイレクトメッセージ - CaX</title>
-      </Helmet>
+      <PageTitle title="ダイレクトメッセージ - CaX" />
       <DirectMessageListPage activeUser={activeUser} newDmModalId={newDmModalId} />
       <NewDirectMessageModalContainer id={newDmModalId} />
     </>

@@ -1,29 +1,49 @@
-import _ from "lodash";
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 
 interface ParsedData {
   max: number;
   peaks: number[];
 }
 
+const PEAK_COUNT = 64;
+const VIEWBOX_WIDTH = 100;
+const PRECISION_SCALE = 1000;
+
+function quantize(value: number): number {
+  return Math.round(value * PRECISION_SCALE) / PRECISION_SCALE;
+}
+
 async function calculate(data: ArrayBuffer): Promise<ParsedData> {
-  const audioCtx = new AudioContext();
+  const AudioContextClass = window.AudioContext;
+  if (!AudioContextClass) {
+    return { max: 0, peaks: [] };
+  }
 
-  // 音声をデコードする
+  const audioCtx = new AudioContextClass();
+
   const buffer = await audioCtx.decodeAudioData(data.slice(0));
-  // 左の音声データの絶対値を取る
-  const leftData = _.map(buffer.getChannelData(0), Math.abs);
-  // 右の音声データの絶対値を取る
-  const rightData = _.map(buffer.getChannelData(1), Math.abs);
+  const leftData = buffer.getChannelData(0);
+  const rightData = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : leftData;
 
-  // 左右の音声データの平均を取る
-  const normalized = _.map(_.zip(leftData, rightData), _.mean);
-  // 100 個の chunk に分ける
-  const chunks = _.chunk(normalized, Math.ceil(normalized.length / 100));
-  // chunk ごとに平均を取る
-  const peaks = _.map(chunks, _.mean);
-  // chunk の平均の中から最大値を取る
-  const max = _.max(peaks) ?? 0;
+  const len = leftData.length;
+  const chunkSize = Math.max(1, Math.ceil(len / PEAK_COUNT));
+  const peaks: number[] = [];
+  let max = 0;
+
+  for (let i = 0; i < len; i += chunkSize) {
+    let sum = 0;
+    const end = Math.min(i + chunkSize, len);
+    for (let j = i; j < end; j++) {
+      sum += (Math.abs(leftData[j]!) + Math.abs(rightData[j]!)) / 2;
+    }
+    const avg = quantize(sum / (end - i));
+    peaks.push(avg);
+    if (avg > max) {
+      max = avg;
+    }
+  }
+
+  await audioCtx.close().catch(() => {});
 
   return { max, peaks };
 }
@@ -32,34 +52,64 @@ interface Props {
   soundData: ArrayBuffer;
 }
 
-export const SoundWaveSVG = ({ soundData }: Props) => {
-  const uniqueIdRef = useRef(Math.random().toString(16));
+const SoundWaveSVGComponent = ({ soundData }: Props) => {
   const [{ max, peaks }, setPeaks] = useState<ParsedData>({
     max: 0,
     peaks: [],
   });
 
   useEffect(() => {
-    calculate(soundData).then(({ max, peaks }) => {
-      setPeaks({ max, peaks });
-    });
+    let mounted = true;
+    void calculate(soundData)
+      .then(({ max, peaks }) => {
+        if (mounted) {
+          setPeaks({ max, peaks });
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setPeaks({ max: 0, peaks: [] });
+        }
+      });
+    return () => {
+      mounted = false;
+    };
   }, [soundData]);
 
+  const cell = VIEWBOX_WIDTH / PEAK_COUNT;
+
+  const bars = useMemo(() => {
+    if (max <= 0) {
+      return [];
+    }
+    return peaks.map((peak, idx) => {
+      const ratio = quantize(peak / max);
+      return {
+        height: ratio,
+        idx,
+        width: cell * 0.8,
+        x: idx * cell + cell * 0.1,
+        y: quantize(1 - ratio),
+      };
+    });
+  }, [max, peaks, cell]);
+
   return (
-    <svg className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 1">
-      {peaks.map((peak, idx) => {
-        const ratio = peak / max;
+    <svg className="h-full w-full" preserveAspectRatio="none" viewBox={`0 0 ${VIEWBOX_WIDTH} 1`}>
+      {bars.map((bar) => {
         return (
           <rect
-            key={`${uniqueIdRef.current}#${idx}`}
+            key={bar.idx}
             fill="var(--color-cax-accent)"
-            height={ratio}
-            width="1"
-            x={idx}
-            y={1 - ratio}
+            height={bar.height}
+            width={bar.width}
+            x={bar.x}
+            y={bar.y}
           />
         );
       })}
     </svg>
   );
 };
+
+export const SoundWaveSVG = memo(SoundWaveSVGComponent);

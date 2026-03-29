@@ -1,20 +1,17 @@
-import Bluebird from "bluebird";
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
 import {
+  startTransition,
   useEffect,
   useLayoutEffect,
+  useCallback,
   useRef,
   useState,
+  type ReactNode,
   type ChangeEvent,
   type FormEvent,
   type KeyboardEvent,
 } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import {
-  extractTokens,
-  filterSuggestionsBM25,
-} from "@web-speed-hackathon-2026/client/src/utils/bm25_search";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
@@ -22,8 +19,20 @@ interface Props {
   onSendMessage: (message: string) => void;
 }
 
+interface SuggestionSearchRequest {
+  candidates: string[];
+  inputValue: string;
+  requestId: number;
+}
+
+interface SuggestionSearchResult {
+  queryTokens: string[];
+  requestId: number;
+  suggestions: string[];
+}
+
 // トークン単位でハイライト
-function highlightMatchByTokens(text: string, queryTokens: string[]): React.ReactNode {
+function highlightMatchByTokens(text: string, queryTokens: string[]): ReactNode {
   if (queryTokens.length === 0) return text;
 
   const lowerText = text.toLowerCase();
@@ -55,7 +64,7 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
     }
   }
 
-  const parts: React.ReactNode[] = [];
+  const parts: ReactNode[] = [];
   let lastEnd = 0;
   for (let i = 0; i < merged.length; i++) {
     const range = merged[i]!;
@@ -79,7 +88,10 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
+  const suggestionWorkerRef = useRef<Worker | null>(null);
+  const latestRequestIdRef = useRef(0);
+  const suggestionCandidatesRef = useRef<string[]>([]);
+  const inputValueRef = useRef("");
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
@@ -92,60 +104,87 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   }, [suggestions, showSuggestions]);
 
-  // 初回にkuromojiトークナイザーを構築
   useEffect(() => {
-    let mounted = true;
+    const worker = new Worker(new URL("./crok_suggestions.worker.ts", import.meta.url));
+    suggestionWorkerRef.current = worker;
 
-    const init = async () => {
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
-      if (mounted) {
-        setTokenizer(nextTokenizer);
+    worker.onmessage = (event: MessageEvent<SuggestionSearchResult>) => {
+      if (event.data.requestId !== latestRequestIdRef.current) {
+        return;
       }
+
+      startTransition(() => {
+        setQueryTokens(event.data.queryTokens);
+        setSuggestions(event.data.suggestions);
+        setShowSuggestions(event.data.suggestions.length > 0);
+      });
     };
-    init();
+
+    worker.onerror = (error) => {
+      console.error(error);
+    };
 
     return () => {
-      mounted = false;
+      worker.terminate();
+      suggestionWorkerRef.current = null;
     };
+  }, []);
+
+  const postSuggestionSearch = useCallback((nextInputValue: string) => {
+    const worker = suggestionWorkerRef.current;
+    if (worker == null || suggestionCandidatesRef.current.length === 0) {
+      return;
+    }
+
+    const requestId = latestRequestIdRef.current + 1;
+    latestRequestIdRef.current = requestId;
+
+    const payload: SuggestionSearchRequest = {
+      candidates: suggestionCandidatesRef.current,
+      inputValue: nextInputValue,
+      requestId,
+    };
+    worker.postMessage(payload);
   }, []);
 
   useEffect(() => {
     let cancelled = false;
 
-    const updateSuggestions = async () => {
-      if (!tokenizer || !inputValue.trim()) {
-        setSuggestions([]);
-        setQueryTokens([]);
-        setShowSuggestions(false);
-        return;
-      }
+    void fetchJSON<{ suggestions: string[] }>("/api/v1/crok/suggestions")
+      .then((data) => {
+        if (cancelled) {
+          return;
+        }
 
-      const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-        "/api/v1/crok/suggestions",
-      );
-      if (cancelled) {
-        return;
-      }
-
-      const tokens = extractTokens(tokenizer.tokenize(inputValue));
-      const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
-
-      if (cancelled) {
-        return;
-      }
-
-      setQueryTokens(tokens);
-      setSuggestions(results);
-      setShowSuggestions(results.length > 0);
-    };
-
-    void updateSuggestions();
+        suggestionCandidatesRef.current = data.suggestions;
+        if (inputValueRef.current.trim()) {
+          postSuggestionSearch(inputValueRef.current);
+        }
+      })
+      .catch(console.error);
 
     return () => {
       cancelled = true;
     };
-  }, [inputValue, tokenizer]);
+  }, [postSuggestionSearch]);
+
+  useEffect(() => {
+    if (!inputValue.trim()) {
+      latestRequestIdRef.current += 1;
+      setSuggestions([]);
+      setQueryTokens([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      postSuggestionSearch(inputValue);
+    }, 300);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [inputValue, postSuggestionSearch]);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
@@ -163,11 +202,13 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
 
   const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
+    inputValueRef.current = value;
     setInputValue(value);
     adjustTextareaHeight();
   };
 
   const handleSuggestionClick = (suggestion: string) => {
+    inputValueRef.current = suggestion;
     setInputValue(suggestion);
     setSuggestions([]);
     setQueryTokens([]);
@@ -178,6 +219,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     e.preventDefault();
     if (inputValue.trim() && !isStreaming) {
       onSendMessage(inputValue.trim());
+      inputValueRef.current = "";
       setInputValue("");
       setSuggestions([]);
       setQueryTokens([]);

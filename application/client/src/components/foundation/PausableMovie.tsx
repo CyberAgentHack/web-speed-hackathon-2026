@@ -1,83 +1,158 @@
 import classNames from "classnames";
-import { Animator, Decoder } from "gifler";
-import { GifReader } from "omggif";
-import { RefCallback, useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
-import { fetchBinary } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
+  autoPlayInViewport?: boolean;
+  eager?: boolean;
+  posterSrc: string;
   src: string;
 }
 
 /**
- * クリックすると再生・一時停止を切り替えます。
+ * 初回描画は軽い poster を表示し、クリック後にだけ GIF を読み込みます。
+ * 停止時は poster に戻して、初回表示のネットワーク負荷を抑えます。
  */
-export const PausableMovie = ({ src }: Props) => {
-  const { data, isLoading } = useFetch(src, fetchBinary);
+export const PausableMovie = ({
+  autoPlayInViewport = false,
+  eager = false,
+  posterSrc,
+  src,
+}: Props) => {
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isPausedByUser, setIsPausedByUser] = useState(false);
+  const [isMovieLoaded, setIsMovieLoaded] = useState(false);
+  const [shouldLoadMovie, setShouldLoadMovie] = useState(false);
+  const [displayPosterSrc, setDisplayPosterSrc] = useState(posterSrc);
 
-  const animatorRef = useRef<Animator>(null);
-  const canvasCallbackRef = useCallback<RefCallback<HTMLCanvasElement>>(
-    (el) => {
-      animatorRef.current?.stop();
+  useEffect(() => {
+    setDisplayPosterSrc(posterSrc);
+  }, [posterSrc]);
 
-      if (el === null || data === null) {
-        return;
-      }
+  useEffect(() => {
+    setIsMovieLoaded(false);
+    setShouldLoadMovie(false);
+    setIsPausedByUser(false);
+  }, [src]);
 
-      // GIF を解析する
-      const reader = new GifReader(new Uint8Array(data));
-      const frames = Decoder.decodeFramesSync(reader);
-      const animator = new Animator(reader, frames);
+  useEffect(() => {
+    if (!autoPlayInViewport) {
+      setIsVisible(false);
+      return;
+    }
 
-      animator.animateInCanvas(el);
-      animator.onFrame(frames[0]!);
+    const element = buttonRef.current;
+    if (element === null) {
+      return;
+    }
 
-      // 視覚効果 off のとき GIF を自動再生しない
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        setIsPlaying(false);
-        animator.stop();
-      } else {
-        setIsPlaying(true);
-        animator.start();
-      }
+    const updateVisibility = () => {
+      const rect = element.getBoundingClientRect();
+      setIsVisible(rect.bottom > 0 && rect.top < window.innerHeight);
+    };
 
-      animatorRef.current = animator;
-    },
-    [data],
-  );
+    updateVisibility();
 
-  const [isPlaying, setIsPlaying] = useState(true);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry?.isIntersecting === true);
+      },
+      {
+        threshold: 0.01,
+      },
+    );
+
+    observer.observe(element);
+    return () => {
+      observer.disconnect();
+    };
+  }, [autoPlayInViewport]);
+
+  useEffect(() => {
+    if (!autoPlayInViewport) {
+      return;
+    }
+
+    setIsPlaying(isVisible && !isPausedByUser);
+  }, [autoPlayInViewport, isPausedByUser, isVisible]);
+
+  useEffect(() => {
+    if (isPlaying) {
+      setShouldLoadMovie(true);
+    }
+  }, [isPlaying]);
+
   const handleClick = useCallback(() => {
-    setIsPlaying((isPlaying) => {
-      if (isPlaying) {
-        animatorRef.current?.stop();
-      } else {
-        animatorRef.current?.start();
+    setIsPlaying((current) => {
+      const nextIsPlaying = !current;
+      if (autoPlayInViewport) {
+        setIsPausedByUser(!nextIsPlaying);
       }
-      return !isPlaying;
+      return nextIsPlaying;
     });
-  }, []);
-
-  if (isLoading || data === null) {
-    return null;
-  }
+  }, [autoPlayInViewport]);
 
   return (
     <AspectRatioBox aspectHeight={1} aspectWidth={1}>
       <button
         aria-label="動画プレイヤー"
+        aria-pressed={isPlaying}
         className="group relative block h-full w-full"
         onClick={handleClick}
+        ref={buttonRef}
         type="button"
       >
-        <canvas ref={canvasCallbackRef} className="w-full" />
+        <img
+          alt=""
+          className="h-full w-full object-cover"
+          decoding="async"
+          fetchPriority={eager ? "high" : "auto"}
+          loading={eager ? "eager" : "lazy"}
+          onError={() => {
+            if (displayPosterSrc !== src) {
+              setDisplayPosterSrc(src);
+            }
+          }}
+          src={displayPosterSrc}
+        />
+        {shouldLoadMovie ? (
+          <img
+            alt=""
+            aria-hidden
+            className={classNames("pointer-events-none absolute object-cover transition-opacity", {
+              "opacity-100": isPlaying && isMovieLoaded,
+              "opacity-0": !isPlaying || !isMovieLoaded,
+            })}
+            decoding="async"
+            fetchPriority="low"
+            loading="eager"
+            onError={() => {
+              setIsPlaying(false);
+              setShouldLoadMovie(false);
+            }}
+            onLoad={() => {
+              setIsMovieLoaded(true);
+            }}
+            src={src}
+            // Keep the moving GIF slightly smaller than poster so poster remains stable LCP.
+            style={{
+              bottom: "1px",
+              left: "1px",
+              right: "1px",
+              top: "1px",
+            }}
+          />
+        ) : null}
+
         <div
           className={classNames(
-            "absolute left-1/2 top-1/2 flex items-center justify-center w-16 h-16 text-cax-surface-raised text-3xl bg-cax-overlay/50 rounded-full -translate-x-1/2 -translate-y-1/2",
+            "absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-cax-overlay/50 text-3xl text-cax-surface-raised",
             {
+              "opacity-100": !isPlaying,
               "opacity-0 group-hover:opacity-100": isPlaying,
             },
           )}

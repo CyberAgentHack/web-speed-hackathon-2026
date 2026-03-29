@@ -432,7 +432,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/DirectMessageConversation"
+                  $ref: "#/components/schemas/DirectMessageConversationListItem"
         "401":
           $ref: "#/components/responses/Unauthorized"
     post:
@@ -505,6 +505,11 @@ paths:
         - name: conversationId
           in: path
           required: true
+          schema:
+            type: string
+        - name: beforeMessageId
+          in: query
+          required: false
           schema:
             type: string
       responses:
@@ -884,7 +889,7 @@ components:
 
     DirectMessageConversation:
       type: object
-      required: [id, initiator, member]
+      required: [id, initiator, member, hasOlderMessages, messages]
       properties:
         id:
           type: string
@@ -892,10 +897,53 @@ components:
           $ref: "#/components/schemas/User"
         member:
           $ref: "#/components/schemas/User"
+        hasOlderMessages:
+          type: boolean
         messages:
           type: array
           items:
             $ref: "#/components/schemas/DirectMessage"
+
+    DirectMessageConversationListItem:
+      type: object
+      required: [id, peer, lastMessage, hasUnread]
+      properties:
+        id:
+          type: string
+          format: uuid
+        peer:
+          $ref: "#/components/schemas/DirectMessageConversationPeer"
+        lastMessage:
+          $ref: "#/components/schemas/DirectMessageConversationListLastMessage"
+        hasUnread:
+          type: boolean
+
+    DirectMessageConversationPeer:
+      type: object
+      required: [id, name, username, profileImage]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        username:
+          type: string
+        profileImage:
+          $ref: "#/components/schemas/ProfileImage"
+
+    DirectMessageConversationListLastMessage:
+      type: object
+      required: [id, body, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        body:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
 
     DirectMessage:
       type: object

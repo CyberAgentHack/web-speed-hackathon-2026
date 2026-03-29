@@ -2,6 +2,7 @@ import { Sequelize } from "sequelize";
 
 import { Comment, initComment } from "@web-speed-hackathon-2026/server/src/models/Comment";
 import {
+  countUnreadDirectMessagesForUser,
   DirectMessage,
   initDirectMessage,
 } from "@web-speed-hackathon-2026/server/src/models/DirectMessage";
@@ -25,7 +26,11 @@ import {
   QaSuggestion,
 } from "@web-speed-hackathon-2026/server/src/models/QaSuggestion";
 import { initSound, Sound } from "@web-speed-hackathon-2026/server/src/models/Sound";
-import { initUser, User } from "@web-speed-hackathon-2026/server/src/models/User";
+import {
+  DEFAULT_PROFILE_IMAGE_ID,
+  initUser,
+  User,
+} from "@web-speed-hackathon-2026/server/src/models/User";
 
 export function initModels(sequelize: Sequelize) {
   initUser(sequelize);
@@ -120,7 +125,8 @@ export function initModels(sequelize: Sequelize) {
     as: "profileImage",
     foreignKey: {
       allowNull: false,
-      defaultValue: "396fe4ce-aa36-4d96-b54e-6db40bae2eed",
+      defaultValue: DEFAULT_PROFILE_IMAGE_ID,
+      name: "profileImageId",
     },
   });
 
@@ -177,6 +183,7 @@ export {
   ProfileImage,
   PostsImagesRelation,
   DirectMessage,
+  countUnreadDirectMessagesForUser,
   DirectMessageConversation,
   QaSuggestion,
 };

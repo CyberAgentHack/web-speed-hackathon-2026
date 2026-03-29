@@ -1,6 +1,21 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 
-const LIMIT = 30;
+const LIMIT = 10;
+
+declare global {
+  interface Window {
+    __PRELOADED_POSTS__?: unknown[];
+  }
+}
+
+function consumePreloadedData<T>(apiPath: string): T[] | null {
+  if (apiPath === "/api/v1/posts" && window.__PRELOADED_POSTS__ != null) {
+    const data = window.__PRELOADED_POSTS__ as T[];
+    delete window.__PRELOADED_POSTS__;
+    return data;
+  }
+  return null;
+}
 
 interface ReturnValues<T> {
   data: Array<T>;
@@ -13,17 +28,34 @@ export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
 ): ReturnValues<T> {
-  const internalRef = useRef({ isLoading: false, offset: 0 });
+  const preloaded = useRef(consumePreloadedData<T>(apiPath));
+  const internalRef = useRef({
+    hasMore: true,
+    isLoading: false,
+    offset: preloaded.current?.length ?? 0,
+  });
 
-  const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
-    data: [],
-    error: null,
-    isLoading: true,
+  const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>(() => {
+    if (preloaded.current != null) {
+      return {
+        data: preloaded.current,
+        error: null,
+        isLoading: false,
+      };
+    }
+    return {
+      data: [],
+      error: null,
+      isLoading: true,
+    };
   });
 
   const fetchMore = useCallback(() => {
-    const { isLoading, offset } = internalRef.current;
-    if (isLoading) {
+    if (!apiPath) {
+      return;
+    }
+    const { hasMore, isLoading, offset } = internalRef.current;
+    if (isLoading || !hasMore) {
       return;
     }
 
@@ -32,21 +64,27 @@ export function useInfiniteFetch<T>(
       isLoading: true,
     }));
     internalRef.current = {
+      hasMore,
       isLoading: true,
       offset,
     };
 
-    void fetcher(apiPath).then(
-      (allData) => {
-        setResult((cur) => ({
-          ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
-          isLoading: false,
-        }));
+    const separator = apiPath.includes("?") ? "&" : "?";
+    const pagedUrl = `${apiPath}${separator}limit=${LIMIT}&offset=${offset}`;
+    void fetcher(pagedUrl).then(
+      (pageData) => {
         internalRef.current = {
+          hasMore: pageData.length >= LIMIT,
           isLoading: false,
-          offset: offset + LIMIT,
+          offset: offset + pageData.length,
         };
+        startTransition(() => {
+          setResult((cur) => ({
+            ...cur,
+            data: [...cur.data, ...pageData],
+            isLoading: false,
+          }));
+        });
       },
       (error) => {
         setResult((cur) => ({
@@ -55,6 +93,7 @@ export function useInfiniteFetch<T>(
           isLoading: false,
         }));
         internalRef.current = {
+          hasMore,
           isLoading: false,
           offset,
         };
@@ -63,18 +102,39 @@ export function useInfiniteFetch<T>(
   }, [apiPath, fetcher]);
 
   useEffect(() => {
+    if (!apiPath) {
+      setResult(() => ({
+        data: [],
+        error: null,
+        isLoading: false,
+      }));
+      internalRef.current = {
+        hasMore: false,
+        isLoading: false,
+        offset: 0,
+      };
+      return;
+    }
+
+    // プリロードデータがある場合はfetchをスキップ
+    if (preloaded.current != null) {
+      preloaded.current = null;
+      return;
+    }
+
     setResult(() => ({
       data: [],
       error: null,
       isLoading: true,
     }));
     internalRef.current = {
+      hasMore: true,
       isLoading: false,
       offset: 0,
     };
 
     fetchMore();
-  }, [fetchMore]);
+  }, [apiPath, fetchMore]);
 
   return {
     ...result,

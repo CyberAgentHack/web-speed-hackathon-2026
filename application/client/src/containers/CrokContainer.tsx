@@ -1,8 +1,8 @@
-import { useCallback, useMemo, useState } from "react";
-import { Helmet } from "react-helmet";
+import { startTransition, useCallback, useMemo, useState } from "react";
 
 import { CrokGate } from "@web-speed-hackathon-2026/client/src/components/crok/CrokGate";
 import { CrokPage } from "@web-speed-hackathon-2026/client/src/components/crok/CrokPage";
+import { PageTitle } from "@web-speed-hackathon-2026/client/src/components/foundation/PageTitle";
 import { useSSE } from "@web-speed-hackathon-2026/client/src/hooks/use_sse";
 
 type Props = {
@@ -20,12 +20,14 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
       },
       onDone: (data: Models.SSEChunk) => data.done === true,
       onComplete: (finalContent: string) => {
-        setMessages((prev) => {
-          const lastMessage = prev[prev.length - 1];
-          if (lastMessage?.role === "assistant") {
-            return [...prev.slice(0, -1), { ...lastMessage, content: finalContent }];
-          }
-          return prev;
+        startTransition(() => {
+          setMessages((prev) => {
+            const lastMessage = prev[prev.length - 1];
+            if (lastMessage?.role === "assistant") {
+              return [...prev.slice(0, -1), { ...lastMessage, content: finalContent }];
+            }
+            return prev;
+          });
         });
       },
     }),
@@ -62,7 +64,9 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
         content: "",
       };
 
-      setMessages((prev) => [...prev, userMessage, assistantMessage]);
+      startTransition(() => {
+        setMessages((prev) => [...prev, userMessage, assistantMessage]);
+      });
 
       const encodedPrompt = encodeURIComponent(userInput);
       start(`/api/v1/crok?prompt=${encodedPrompt}`);
@@ -78,9 +82,7 @@ export const CrokContainer = ({ activeUser, authModalId }: Props) => {
 
   return (
     <>
-      <Helmet>
-        <title>Crok - CaX</title>
-      </Helmet>
+      <PageTitle title="Crok - CaX" />
       <CrokPage isStreaming={isStreaming} messages={displayMessages} onSendMessage={sendMessage} />
     </>
   );

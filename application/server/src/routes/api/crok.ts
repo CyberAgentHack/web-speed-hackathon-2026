@@ -10,7 +10,16 @@ import { QaSuggestion } from "@web-speed-hackathon-2026/server/src/models";
 export const crokRouter = Router();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-8");
+let response: string;
+try {
+  response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-8");
+} catch {
+  // Fallback for bundled builds where __dirname differs from source layout
+  response = fs.readFileSync(
+    path.resolve(__dirname, "../src/routes/api/crok-response.md"),
+    "utf-8",
+  );
+}
 
 crokRouter.get("/crok/suggestions", async (_req, res) => {
   const suggestions = await QaSuggestion.findAll({ logging: false });
@@ -32,14 +41,13 @@ crokRouter.get("/crok", async (req, res) => {
   res.flushHeaders();
 
   let messageId = 0;
+  const CHUNK_SIZE = 10;
 
-  // TTFT (Time to First Token)
-  await sleep(3000);
-
-  for (const char of response) {
+  for (let i = 0; i < response.length; i += CHUNK_SIZE) {
     if (res.closed) break;
 
-    const data = JSON.stringify({ text: char, done: false });
+    const chunk = response.slice(i, i + CHUNK_SIZE);
+    const data = JSON.stringify({ text: chunk, done: false });
     res.write(`event: message\nid: ${messageId++}\ndata: ${data}\n\n`);
 
     await sleep(10);

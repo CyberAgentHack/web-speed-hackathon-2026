@@ -9,7 +9,7 @@ interface Props {
 export const PostPage = ({ comments, post }: Props) => {
   return (
     <>
-      <PostItem post={post} />
+      <PostItem autoPlayMovie post={post} />
       <CommentList comments={comments} />
     </>
   );

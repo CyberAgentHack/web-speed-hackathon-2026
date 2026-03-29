@@ -2,7 +2,7 @@ export const sanitizeSearchText = (input: string): string => {
   let text = input;
 
   text = text.replace(
-    /\b(from|until)\s*:?\s*(\d{4}-\d{2}-\d{2})\d*/gi,
+    /\b(since|until)\s*:?\s*(\d{4}-\d{2}-\d{2})\d*/gi,
     (_m, key, date) => `${key}:${date}`,
   );
 
@@ -10,37 +10,32 @@ export const sanitizeSearchText = (input: string): string => {
 };
 
 export const parseSearchQuery = (query: string) => {
-  const sincePattern = /since:((\d|\d\d|\d\d\d\d-\d\d-\d\d)+)+$/;
-  const untilPattern = /until:((\d|\d\d|\d\d\d\d-\d\d-\d\d)+)+$/;
+  const extractToken = (key: "since" | "until") =>
+    new RegExp(`(?:^|\\s)${key}:([^\\s]*)`, "i").exec(query)?.[1] ?? null;
+  const extractDate = (value: string | null) =>
+    /(\d{4}-\d{2}-\d{2})/.exec(value ?? "")?.[1] ?? null;
 
-  const sincePart = query.match(/since:[^\s]*/)?.[0] || "";
-  const untilPart = query.match(/until:[^\s]*/)?.[0] || "";
-
-  const sinceMatch = sincePattern.exec(sincePart);
-  const untilMatch = untilPattern.exec(untilPart);
-
-  const keywords = query
-    .replace(/since:.*(\d{4}-\d{2}-\d{2}).*/g, "")
-    .replace(/until:.*(\d{4}-\d{2}-\d{2}).*/g, "")
-    .trim();
-
-  const extractDate = (s: string | null) => {
-    if (!s) return null;
-    const m = /(\d{4}-\d{2}-\d{2})/.exec(s);
-    return m ? m[1] : null;
-  };
+  const keywords = query.replace(/(?:^|\s)(?:since|until):[^\s]*/gi, " ").trim();
 
   return {
     keywords,
-    sinceDate: extractDate(sinceMatch ? sinceMatch[1]! : null),
-    untilDate: extractDate(untilMatch ? untilMatch[1]! : null),
+    sinceDate: extractDate(extractToken("since")),
+    untilDate: extractDate(extractToken("until")),
   };
 };
 
 export const isValidDate = (dateStr: string): boolean => {
-  const slowDateLike = /^(\d+)+-(\d+)+-(\d+)+$/;
-  if (!slowDateLike.test(dateStr)) return false;
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
+  if (match == null) {
+    return false;
+  }
 
-  const date = new Date(dateStr);
-  return !Number.isNaN(date.getTime());
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  return (
+    date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
+  );
 };
