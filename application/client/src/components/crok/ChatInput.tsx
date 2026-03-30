@@ -1,6 +1,6 @@
-import Bluebird from "bluebird";
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
+import type { Tokenizer, IpadicFeatures } from "kuromoji";
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -11,10 +11,6 @@ import {
 } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import {
-  extractTokens,
-  filterSuggestionsBM25,
-} from "@web-speed-hackathon-2026/client/src/utils/bm25_search";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
@@ -79,6 +75,7 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const tokenizerPromiseRef = useRef<Promise<Tokenizer<IpadicFeatures>> | null>(null);
   const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -92,32 +89,40 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   }, [suggestions, showSuggestions]);
 
-  // 初回にkuromojiトークナイザーを構築
-  useEffect(() => {
-    let mounted = true;
+  const ensureTokenizer = useCallback(async (): Promise<Tokenizer<IpadicFeatures>> => {
+    if (tokenizer != null) {
+      return tokenizer;
+    }
 
-    const init = async () => {
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
-      if (mounted) {
-        setTokenizer(nextTokenizer);
-      }
-    };
-    init();
+    if (tokenizerPromiseRef.current == null) {
+      tokenizerPromiseRef.current = Promise.all([import("bluebird"), import("kuromoji")]).then(
+        async ([bluebirdModule, kuromojiModule]) => {
+          const Bluebird = bluebirdModule.default;
+          const kuromoji = kuromojiModule.default;
+          const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
+          return await builder.buildAsync();
+        },
+      );
+    }
 
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    const nextTokenizer = await tokenizerPromiseRef.current;
+    setTokenizer((currentTokenizer) => currentTokenizer ?? nextTokenizer);
+    return nextTokenizer;
+  }, [tokenizer]);
 
   useEffect(() => {
     let cancelled = false;
 
     const updateSuggestions = async () => {
-      if (!tokenizer || !inputValue.trim()) {
+      if (!inputValue.trim()) {
         setSuggestions([]);
         setQueryTokens([]);
         setShowSuggestions(false);
+        return;
+      }
+
+      const currentTokenizer = await ensureTokenizer();
+      if (cancelled) {
         return;
       }
 
@@ -128,8 +133,15 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
         return;
       }
 
-      const tokens = extractTokens(tokenizer.tokenize(inputValue));
-      const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
+      const { extractTokens, filterSuggestionsBM25 } = await import(
+        "@web-speed-hackathon-2026/client/src/utils/bm25_search"
+      );
+      if (cancelled) {
+        return;
+      }
+
+      const tokens = extractTokens(currentTokenizer.tokenize(inputValue));
+      const results = filterSuggestionsBM25(currentTokenizer, candidates, tokens);
 
       if (cancelled) {
         return;
@@ -145,7 +157,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     return () => {
       cancelled = true;
     };
-  }, [inputValue, tokenizer]);
+  }, [ensureTokenizer, inputValue]);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
@@ -165,6 +177,10 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     const value = e.target.value;
     setInputValue(value);
     adjustTextareaHeight();
+  };
+
+  const handleFocus = () => {
+    void ensureTokenizer();
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -220,6 +236,7 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
             ref={textareaRef}
             className="text-cax-text placeholder-cax-text-subtle max-h-[200px] min-h-[52px] flex-1 resize-none overflow-y-auto bg-transparent py-3 pr-2 pl-4 focus:outline-none"
             onChange={handleInputChange}
+            onFocus={handleFocus}
             onKeyDown={handleKeyDown}
             placeholder="メッセージを入力..."
             lang="ja"

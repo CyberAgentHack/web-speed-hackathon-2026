@@ -1,5 +1,5 @@
 import { ComponentProps, isValidElement, ReactElement, ReactNode } from "react";
-import SyntaxHighlighter from "react-syntax-highlighter";
+import { LightAsync } from "react-syntax-highlighter";
 import { atomOneLight } from "react-syntax-highlighter/dist/esm/styles/hljs";
 
 const getLanguage = (children: ReactElement<ComponentProps<"code">>) => {
@@ -20,7 +20,7 @@ export const CodeBlock = ({ children }: ComponentProps<"pre">) => {
   const code = children.props.children?.toString() ?? "";
 
   return (
-    <SyntaxHighlighter
+    <LightAsync
       customStyle={{
         fontSize: "14px",
         padding: "24px 16px",
@@ -31,6 +31,6 @@ export const CodeBlock = ({ children }: ComponentProps<"pre">) => {
       style={atomOneLight}
     >
       {code}
-    </SyntaxHighlighter>
+    </LightAsync>
   );
 };

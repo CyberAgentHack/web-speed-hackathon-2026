@@ -27,9 +27,10 @@ async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promis
 
 interface Props {
   id: string;
+  openOnMount?: boolean;
 }
 
-export const NewPostModalContainer = ({ id }: Props) => {
+export const NewPostModalContainer = ({ id, openOnMount = false }: Props) => {
   const dialogId = useId();
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
@@ -73,6 +74,12 @@ export const NewPostModalContainer = ({ id }: Props) => {
     },
     [navigate],
   );
+
+  useEffect(() => {
+    if (openOnMount) {
+      ref.current?.showModal();
+    }
+  }, [openOnMount]);
 
   return (
     <Modal aria-labelledby={dialogId} id={id} ref={ref} closedby="any">
