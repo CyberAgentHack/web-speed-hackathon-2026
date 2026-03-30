@@ -12,7 +12,14 @@ interface Props {
   commandfor?: string;
 }
 
-export const NavigationItem = ({ badge, href, icon, command, commandfor, text }: Props) => {
+export const NavigationItem = ({
+  badge,
+  href,
+  icon,
+  command,
+  commandfor,
+  text,
+}: Props) => {
   const location = useLocation();
   const isActive = location.pathname === href;
   return (

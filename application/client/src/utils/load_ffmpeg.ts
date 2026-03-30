@@ -1,6 +1,6 @@
-import { FFmpeg } from "@ffmpeg/ffmpeg";
-
-export async function loadFFmpeg(): Promise<FFmpeg> {
+export async function loadFFmpeg() {
+  // Dynamic import: @ffmpeg/ffmpeg is only loaded when video/audio processing is needed
+  const { FFmpeg } = await import("@ffmpeg/ffmpeg");
   const ffmpeg = new FFmpeg();
 
   await ffmpeg.load({

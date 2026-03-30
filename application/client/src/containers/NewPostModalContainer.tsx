@@ -13,12 +13,26 @@ interface SubmitParams {
 }
 
 async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promise<Models.Post> {
+  const uploadedSound = sound ? await sendFile<Models.Sound>("/api/v1/sounds", sound) : undefined;
+  if (uploadedSound != null) {
+    try {
+      const { generateSoundWaveSvg } = await import(
+        "@web-speed-hackathon-2026/client/src/utils/generate_sound_wave_svg"
+      );
+      const waveformSvg = await generateSoundWaveSvg(sound!);
+      await sendFile(`/api/v1/sounds/${uploadedSound.id}/waveform`, new File([waveformSvg], "waveform.svg", { type: "image/svg+xml" }));
+    } catch (error) {
+      // 波形のアップロードに失敗しても投稿自体は継続する
+      console.error(error);
+    }
+  }
+
   const payload = {
     images: images
       ? await Promise.all(images.map((image) => sendFile("/api/v1/images", image)))
       : [],
     movie: movie ? await sendFile("/api/v1/movies", movie) : undefined,
-    sound: sound ? await sendFile("/api/v1/sounds", sound) : undefined,
+    sound: uploadedSound,
     text,
   };
 

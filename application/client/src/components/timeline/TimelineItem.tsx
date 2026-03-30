@@ -1,4 +1,3 @@
-import moment from "moment";
 import { MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
@@ -6,7 +5,8 @@ import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/
 import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
 import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
-import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { formatJaDate, toIsoString } from "@web-speed-hackathon-2026/client/src/utils/date_time";
+import { getProfileImageThumbnailPath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Element): boolean => {
   while (target !== null && target instanceof Element) {
@@ -25,12 +25,14 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
 /**
  * @typedef {object} Props
  * @property {Models.Post} post
+ * @property {boolean} [priority]
  */
 interface Props {
   post: Models.Post;
+  priority?: boolean;
 }
 
-export const TimelineItem = ({ post }: Props) => {
+export const TimelineItem = ({ post, priority = false }: Props) => {
   const navigate = useNavigate();
 
   /**
@@ -56,7 +58,11 @@ export const TimelineItem = ({ post }: Props) => {
           >
             <img
               alt={post.user.profileImage.alt}
-              src={getProfileImagePath(post.user.profileImage.id)}
+              className="h-full w-full object-cover"
+              height={128}
+              loading="lazy"
+              src={getProfileImageThumbnailPath(post.user.profileImage.id)}
+              width={128}
             />
           </Link>
         </div>
@@ -76,9 +82,7 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
-              </time>
+              <time dateTime={toIsoString(post.createdAt)}>{formatJaDate(post.createdAt)}</time>
             </Link>
           </p>
           <div className="text-cax-text leading-relaxed">
@@ -86,12 +90,12 @@ export const TimelineItem = ({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea images={post.images} priority={priority} />
             </div>
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
+              <MovieArea movie={post.movie} deferInitialLoad={true} poster="/images/icons/crok.svg" />
             </div>
           ) : null}
           {post.sound ? (
