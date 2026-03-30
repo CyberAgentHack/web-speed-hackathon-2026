@@ -15,21 +15,29 @@ staticRouter.use(history());
 
 staticRouter.use(
   serveStatic(UPLOAD_PATH, {
-    etag: false,
-    lastModified: false,
+    // etag: false,
+    // lastModified: false,
   }),
 );
 
 staticRouter.use(
   serveStatic(PUBLIC_PATH, {
-    etag: false,
-    lastModified: false,
+    // etag: false,
+    // lastModified: false,
   }),
 );
 
 staticRouter.use(
   serveStatic(CLIENT_DIST_PATH, {
-    etag: false,
-    lastModified: false,
+    // etag: false,
+    // lastModified: false,
   }),
 );
+
+staticRouter.use((_req, res, next) => {
+  res.header({
+    // TODO: Do something
+    "Cache-Control": "max-age=120",
+  });
+  return next();
+});

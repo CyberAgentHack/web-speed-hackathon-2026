@@ -6,11 +6,13 @@ import {
   Sequelize,
   UUIDV4,
 } from "sequelize";
+import { SoundWavePoints } from "../medias/audio";
 
 export class Sound extends Model<InferAttributes<Sound>, InferCreationAttributes<Sound>> {
   declare id: string;
   declare title: string;
   declare artist: string;
+  declare soundWave: SoundWavePoints;
 }
 
 export function initSound(sequelize: Sequelize) {
@@ -32,6 +34,10 @@ export function initSound(sequelize: Sequelize) {
         defaultValue: "Unknown",
         type: DataTypes.STRING,
       },
+      soundWave: {
+        allowNull: false,
+        type: DataTypes.JSON,
+      }
     },
     {
       sequelize,

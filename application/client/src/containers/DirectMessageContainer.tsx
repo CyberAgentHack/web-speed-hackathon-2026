@@ -8,6 +8,7 @@ import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containe
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { useDebounce } from "../utils/use_debounced";
 
 interface DmUpdateEvent {
   type: "dm:conversation:message";
@@ -76,9 +77,12 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     [conversationId, loadConversation],
   );
 
-  const handleTyping = useCallback(async () => {
-    void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
-  }, [conversationId]);
+  const handleTyping = useDebounce(
+    useCallback(async () => {
+      void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
+    }, [conversationId]),
+    5000
+  );
 
   useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {
     if (event.type === "dm:conversation:message") {

@@ -1,4 +1,5 @@
-import moment from "moment";
+import { format } from "date-fns";
+import { ja } from "date-fns/locale";
 import { MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
@@ -57,6 +58,7 @@ export const TimelineItem = ({ post }: Props) => {
             <img
               alt={post.user.profileImage.alt}
               src={getProfileImagePath(post.user.profileImage.id)}
+              loading="lazy"
             />
           </Link>
         </div>
@@ -76,8 +78,8 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={new Date(post.createdAt).toISOString()}>
+                {format(new Date(post.createdAt), "PPP", { locale: ja })}
               </time>
             </Link>
           </p>

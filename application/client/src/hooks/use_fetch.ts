@@ -32,6 +32,7 @@ export function useFetch<T>(
         }));
       },
       (error) => {
+        console.error(error);
         setResult((cur) => ({
           ...cur,
           error,

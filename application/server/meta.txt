@@ -1,0 +1,4 @@
+;FFMETADATA1
+artist=山田太郎
+title=テスト音声タイトル
+encoder=Lavf62.12.100

@@ -7,7 +7,7 @@ import { parseSearchQuery } from "@web-speed-hackathon-2026/server/src/utils/par
 export const searchRouter = Router();
 
 searchRouter.get("/search", async (req, res) => {
-  const query = req.query["q"];
+  const query = req.query["q"] && decodeURI(req.query["q"]);
 
   if (typeof query !== "string" || query.trim() === "") {
     return res.status(200).type("application/json").send([]);
@@ -39,8 +39,9 @@ searchRouter.get("/search", async (req, res) => {
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
   const postsByText = await Post.findAll({
-    limit,
-    offset,
+    // FIXME: We are merging later
+    // limit,
+    // offset,
     where: {
       ...textWhere,
       ...dateWhere,
@@ -54,7 +55,6 @@ searchRouter.get("/search", async (req, res) => {
       include: [
         {
           association: "user",
-          attributes: { exclude: ["profileImageId"] },
           include: [{ association: "profileImage" }],
           required: true,
           where: {
@@ -68,8 +68,9 @@ searchRouter.get("/search", async (req, res) => {
         { association: "movie" },
         { association: "sound" },
       ],
-      limit,
-      offset,
+      // FIXME: We are merging later
+      // limit,
+      // offset,
       where: dateWhere,
     });
   }

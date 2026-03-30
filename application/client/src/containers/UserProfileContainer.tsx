@@ -5,8 +5,9 @@ import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/
 import { UserProfilePage } from "@web-speed-hackathon-2026/client/src/components/user_profile/UserProfilePage";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { useFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_fetch";
-import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
+import { Pagination, useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { useCallback } from "react";
 
 export const UserProfileContainer = () => {
   const { username } = useParams();
@@ -15,10 +16,11 @@ export const UserProfileContainer = () => {
     `/api/v1/users/${username}`,
     fetchJSON,
   );
-  const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>(
-    `/api/v1/users/${username}/posts`,
-    fetchJSON,
-  );
+
+  const fetchPosts = useCallback((page: Pagination) => {
+    return fetchJSON<Models.Post[]>(`/api/v1/users/${username}/posts`, page)
+  }, [username]);
+  const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>(fetchPosts);
 
   if (isLoadingUser) {
     return (

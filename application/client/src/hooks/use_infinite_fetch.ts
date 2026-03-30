@@ -2,6 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const LIMIT = 30;
 
+export type Pagination = {
+  limit: number;
+  offset: number;
+};
+
 interface ReturnValues<T> {
   data: Array<T>;
   error: Error | null;
@@ -10,8 +15,7 @@ interface ReturnValues<T> {
 }
 
 export function useInfiniteFetch<T>(
-  apiPath: string,
-  fetcher: (apiPath: string) => Promise<T[]>,
+  fetcher: (page: Pagination) => Promise<T[]>,
 ): ReturnValues<T> {
   const internalRef = useRef({ isLoading: false, offset: 0 });
 
@@ -36,11 +40,11 @@ export function useInfiniteFetch<T>(
       offset,
     };
 
-    void fetcher(apiPath).then(
-      (allData) => {
+    void fetcher({ offset, limit: LIMIT }).then(
+      (receivedPage) => {
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...receivedPage],
           isLoading: false,
         }));
         internalRef.current = {
@@ -49,6 +53,7 @@ export function useInfiniteFetch<T>(
         };
       },
       (error) => {
+        console.error(error);
         setResult((cur) => ({
           ...cur,
           error,
@@ -60,7 +65,7 @@ export function useInfiniteFetch<T>(
         };
       },
     );
-  }, [apiPath, fetcher]);
+  }, [fetcher]);
 
   useEffect(() => {
     setResult(() => ({

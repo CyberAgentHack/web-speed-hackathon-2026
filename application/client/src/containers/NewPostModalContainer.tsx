@@ -22,6 +22,8 @@ async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promis
     text,
   };
 
+  console.log(payload);
+
   return sendJSON("/api/v1/posts", payload);
 }
 

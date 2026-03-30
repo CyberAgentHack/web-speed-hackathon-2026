@@ -1,3 +1,5 @@
+
+
 declare namespace Models {
   interface User {
     createdAt: string;
@@ -34,6 +36,11 @@ declare namespace Models {
     artist: string;
     id: string;
     title: string;
+    soundWave: SoundWavePoints;
+  }
+  interface SoundWavePoints {
+    max: number;
+    peaks: number[]
   }
 
   interface Movie {
@@ -62,6 +69,7 @@ declare namespace Models {
     initiator: Models.User;
     member: Models.User;
     messages: Array<Models.DirectMessage>;
+    hasUnread?: boolean;
   }
 
   interface ChatMessage {
