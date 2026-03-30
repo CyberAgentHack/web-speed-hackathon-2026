@@ -665,6 +665,36 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Post"
+  /sentiment:
+    get:
+      tags:
+        - Search
+      summary: 感情分析
+      operationId: analyzeSentiment
+      description: テキストのポジティブ・ネガティブ度を分析する
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: 分析対象のテキスト
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [score, label]
+                properties:
+                  score:
+                    type: number
+                  label:
+                    type: string
+                    enum: [positive, negative, neutral]
+        "400":
+          $ref: "#/components/responses/BadRequest"
   /crok/suggestions:
     get:
       tags:
@@ -816,13 +846,17 @@ components:
 
     Image:
       type: object
-      required: [id, alt]
+      required: [id, alt, width, height]
       properties:
         id:
           type: string
           format: uuid
         alt:
           type: string
+        width:
+          type: integer
+        height:
+          type: integer
 
     Movie:
       type: object

@@ -3,6 +3,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { faker } from "@faker-js/faker/locale/ja";
+import exifr from "exifr";
+import sharp from "sharp";
 
 // Set seed for reproducible results
 faker.seed(123);
@@ -217,14 +219,38 @@ function generateUsers(count: number, profileImages: ProfileImageSeed[]): UserSe
   return users;
 }
 
-function generateImages(): ImageSeed[] {
+async function generateImages(): Promise<ImageSeed[]> {
   // Use existing image IDs from public/images/
   const baseTime = now - ONE_WEEK_MS;
-  return EXISTING_IMAGE_IDS.map((id, i) => ({
-    id,
-    alt: "",
-    createdAt: new Date(baseTime + i * 60 * 1000).toISOString(),
+  const imagesDir = path.resolve(__dirname, "../../public/images");
+  
+  const seeds = await Promise.all(EXISTING_IMAGE_IDS.map(async (id, i) => {
+    let alt = "";
+    let width = 0;
+    let height = 0;
+    
+    try {
+      const imagePath = path.resolve(imagesDir, `${id}.jpg`);
+      const metadata = await sharp(imagePath).metadata();
+      const exif = await exifr.parse(imagePath);
+      
+      width = metadata.width || 0;
+      height = metadata.height || 0;
+      alt = exif?.ImageDescription || "";
+    } catch (e) {
+      console.warn(`Failed to process metadata for image ${id}:`, e);
+    }
+
+    return {
+      id,
+      alt,
+      width,
+      height,
+      createdAt: new Date(baseTime + i * 60 * 1000).toISOString(),
+    };
   }));
+
+  return seeds;
 }
 
 function generateMovies(): MovieSeed[] {
@@ -701,7 +727,7 @@ async function main() {
   const users = generateUsers(CONFIG.USER_COUNT, profileImages);
 
   console.log("3. Generating Images (using existing assets)...");
-  const images = generateImages();
+  const images = await generateImages();
 
   console.log("4. Generating Movies (using existing assets)...");
   const movies = generateMovies();

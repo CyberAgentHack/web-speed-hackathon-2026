@@ -24,7 +24,12 @@ export const ImageArea = ({ images }: Props) => {
                 "row-span-2": images.length <= 2 || (images.length === 3 && idx === 0),
               })}
             >
-              <CoveredImage src={getImagePath(image.id)} />
+              <CoveredImage
+                src={getImagePath(image.id)}
+                alt={image.alt}
+                width={image.width}
+                height={image.height}
+              />
             </div>
           );
         })}

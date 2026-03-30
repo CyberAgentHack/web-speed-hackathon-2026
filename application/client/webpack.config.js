@@ -4,6 +4,7 @@ const path = require("path");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 const webpack = require("webpack");
 
 const SRC_PATH = path.resolve(__dirname, "./src");
@@ -25,7 +26,7 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: "source-map",
   entry: {
     main: [
       "core-js",
@@ -36,7 +37,7 @@ const config = {
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: "production",
   module: {
     rules: [
       {
@@ -60,7 +61,6 @@ const config = {
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
     filename: "scripts/[name].js",
     path: DIST_PATH,
     publicPath: "auto",
@@ -77,7 +77,7 @@ const config = {
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
+      NODE_ENV: "production",
     }),
     new MiniCssExtractPlugin({
       filename: "styles/[name].css",
@@ -91,15 +91,24 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: true,
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
-  ],
+    process.env.ANALYZE && new BundleAnalyzerPlugin(),
+  ].filter(Boolean),
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
     alias: {
-      "bayesian-bm25$": path.resolve(__dirname, "node_modules", "bayesian-bm25/dist/index.js"),
-      ["kuromoji$"]: path.resolve(__dirname, "node_modules", "kuromoji/build/kuromoji.js"),
+      "bayesian-bm25$": path.resolve(
+        __dirname,
+        "node_modules",
+        "bayesian-bm25/dist/index.js",
+      ),
+      ["kuromoji$"]: path.resolve(
+        __dirname,
+        "node_modules",
+        "kuromoji/build/kuromoji.js",
+      ),
       "@ffmpeg/ffmpeg$": path.resolve(
         __dirname,
         "node_modules",
@@ -128,8 +137,10 @@ const config = {
     },
   },
   optimization: {
-    minimize: false,
-    splitChunks: false,
+    minimize: true,
+    splitChunks: {
+      chunks: "all",
+    },
     concatenateModules: false,
     usedExports: false,
     providedExports: false,
@@ -139,7 +150,8 @@ const config = {
   ignoreWarnings: [
     {
       module: /@ffmpeg/,
-      message: /Critical dependency: the request of a dependency is an expression/,
+      message:
+        /Critical dependency: the request of a dependency is an expression/,
     },
   ],
 };
