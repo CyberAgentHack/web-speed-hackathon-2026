@@ -9,7 +9,7 @@ import {
 } from "@web-speed-hackathon-2026/client/src/search/services";
 import { SearchFormData } from "@web-speed-hackathon-2026/client/src/search/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/search/validation";
-import { analyzeSentiment } from "@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer";
+import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 import { Button } from "../foundation/Button";
 
@@ -30,7 +30,7 @@ const SearchInput = ({ input, meta }: WrappedFieldProps) => (
       placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
       type="text"
     />
-    {meta.touched && meta.error && (
+    {(meta.touched || meta.submitFailed) && meta.error && (
       <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>
     )}
   </div>
@@ -53,7 +53,7 @@ const SearchPageComponent = ({
     }
 
     let isMounted = true;
-    analyzeSentiment(parsed.keywords)
+    fetchJSON<{ label: string }>(`/api/v1/sentiment?text=${encodeURIComponent(parsed.keywords)}`)
       .then((result) => {
         if (isMounted) {
           setIsNegative(result.label === "negative");
@@ -86,7 +86,9 @@ const SearchPageComponent = ({
 
   const onSubmit = (values: SearchFormData) => {
     const sanitizedText = sanitizeSearchText(values.searchText.trim());
-    navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
+    navigate(`/search?q=${encodeURIComponent(sanitizedText)}`, {
+      state: { submittedAt: Date.now() },
+    });
   };
 
   return (

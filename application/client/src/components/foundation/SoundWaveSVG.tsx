@@ -1,4 +1,3 @@
-import _ from "lodash";
 import { useEffect, useRef, useState } from "react";
 
 interface ParsedData {
@@ -6,26 +5,66 @@ interface ParsedData {
   peaks: number[];
 }
 
+const PEAK_COUNT = 100;
+const parsedDataCache = new Map<ArrayBuffer, ParsedData>();
+const EMPTY_PARSED_DATA: ParsedData = {
+  max: 1,
+  peaks: Array.from({ length: PEAK_COUNT }, () => 0),
+};
+
+let sharedAudioContext: AudioContext | null = null;
+
+function getAudioContext(): AudioContext | null {
+  if (sharedAudioContext) return sharedAudioContext;
+
+  const AudioContextCtor =
+    window.AudioContext ?? (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (AudioContextCtor == null) return null;
+
+  sharedAudioContext = new AudioContextCtor();
+  return sharedAudioContext;
+}
+
 async function calculate(data: ArrayBuffer): Promise<ParsedData> {
-  const audioCtx = new AudioContext();
+  const cached = parsedDataCache.get(data);
+  if (cached) {
+    return cached;
+  }
+
+  const audioCtx = getAudioContext();
+  if (audioCtx == null) {
+    parsedDataCache.set(data, EMPTY_PARSED_DATA);
+    return EMPTY_PARSED_DATA;
+  }
 
   // 音声をデコードする
   const buffer = await audioCtx.decodeAudioData(data.slice(0));
-  // 左の音声データの絶対値を取る
-  const leftData = _.map(buffer.getChannelData(0), Math.abs);
-  // 右の音声データの絶対値を取る
-  const rightData = _.map(buffer.getChannelData(1), Math.abs);
 
-  // 左右の音声データの平均を取る
-  const normalized = _.map(_.zip(leftData, rightData), _.mean);
-  // 100 個の chunk に分ける
-  const chunks = _.chunk(normalized, Math.ceil(normalized.length / 100));
-  // chunk ごとに平均を取る
-  const peaks = _.map(chunks, _.mean);
+  const leftData = buffer.getChannelData(0);
+  const rightData = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : leftData;
+
+  // 左右の平均振幅を 100 chunk に圧縮する
+  const chunkSize = Math.ceil(leftData.length / PEAK_COUNT);
+  const peaks: number[] = [];
+  for (let i = 0; i < leftData.length; i += chunkSize) {
+    const end = Math.min(i + chunkSize, leftData.length);
+    let sum = 0;
+    let count = 0;
+
+    for (let j = i; j < end; j++) {
+      sum += (Math.abs(leftData[j] ?? 0) + Math.abs(rightData[j] ?? 0)) / 2;
+      count++;
+    }
+
+    peaks.push(count > 0 ? sum / count : 0);
+  }
   // chunk の平均の中から最大値を取る
-  const max = _.max(peaks) ?? 0;
+  const max = Math.max(...peaks, 0);
 
-  return { max, peaks };
+  const parsed = { max, peaks };
+  parsedDataCache.set(data, parsed);
+
+  return parsed;
 }
 
 interface Props {
@@ -40,9 +79,19 @@ export const SoundWaveSVG = ({ soundData }: Props) => {
   });
 
   useEffect(() => {
+    let isMounted = true;
+
     calculate(soundData).then(({ max, peaks }) => {
+      if (!isMounted) {
+        return;
+      }
+
       setPeaks({ max, peaks });
     });
+
+    return () => {
+      isMounted = false;
+    };
   }, [soundData]);
 
   return (

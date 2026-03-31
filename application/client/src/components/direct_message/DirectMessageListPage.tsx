@@ -1,4 +1,3 @@
-import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -86,7 +85,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                   <div className="border-cax-border flex gap-4 border-b px-4 pt-2 pb-4">
                     <img
                       alt={peer.profileImage.alt}
-                      className="w-12 shrink-0 self-start rounded-full"
+                      className="w-12 shrink-0 self-start rounded-full object-cover"
                       src={getProfileImagePath(peer.profileImage.id)}
                     />
                     <div className="flex flex-1 flex-col">
@@ -100,7 +99,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {(() => { const diff = Date.now() - new Date(lastMessage.createdAt).getTime(); const sec = Math.floor(diff / 1000); if (sec < 60) return `${sec}秒前`; const min = Math.floor(sec / 60); if (min < 60) return `${min}分前`; const hr = Math.floor(min / 60); if (hr < 24) return `${hr}時間前`; const days = Math.floor(hr / 24); return `${days}日前`; })()}
                           </time>
                         )}
                       </div>

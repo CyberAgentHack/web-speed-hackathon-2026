@@ -42,28 +42,10 @@ export function initPost(sequelize: Sequelize) {
     },
     {
       sequelize,
-      defaultScope: {
-        attributes: {
-          exclude: ["userId", "movieId", "soundId"],
-        },
-        include: [
-          {
-            association: "user",
-            attributes: { exclude: ["profileImageId"] },
-            include: [{ association: "profileImage" }],
-          },
-          {
-            association: "images",
-            through: { attributes: [] },
-          },
-          { association: "movie" },
-          { association: "sound" },
-        ],
-        order: [
-          ["id", "DESC"],
-          ["images", "createdAt", "ASC"],
-        ],
-      },
+      indexes: [
+        { fields: ["userId"] },
+        { fields: ["createdAt"] },
+      ],
     },
   );
 }

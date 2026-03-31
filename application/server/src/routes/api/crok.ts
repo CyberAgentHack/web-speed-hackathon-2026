@@ -6,20 +6,39 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 
 import { QaSuggestion } from "@web-speed-hackathon-2026/server/src/models";
+import {
+  extractTokens,
+  filterSuggestionsBM25,
+  getTokenizer,
+} from "@web-speed-hackathon-2026/server/src/utils/nlp";
 
 export const crokRouter = Router();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-8");
 
-crokRouter.get("/crok/suggestions", async (_req, res) => {
-  const suggestions = await QaSuggestion.findAll({ logging: false });
-  res.json({ suggestions: suggestions.map((s) => s.question) });
-});
+// In-memory cache for QaSuggestions
+let cachedSuggestions: string[] = [];
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+export async function initializeCrokCache(): Promise<void> {
+  const suggestions = await QaSuggestion.findAll({ logging: false });
+  cachedSuggestions = suggestions.map((s) => s.question);
 }
+
+crokRouter.get("/crok/suggestions", async (req, res) => {
+  const query = typeof req.query["query"] === "string" ? req.query["query"].trim() : "";
+
+  if (!query) {
+    res.json({ suggestions: cachedSuggestions });
+    return;
+  }
+
+  const tokenizer = await getTokenizer();
+  const queryTokens = extractTokens(tokenizer.tokenize(query));
+  const filtered = filterSuggestionsBM25(tokenizer, cachedSuggestions, queryTokens);
+
+  res.json({ suggestions: filtered, queryTokens });
+});
 
 crokRouter.get("/crok", async (req, res) => {
   if (req.session.userId === undefined) {
@@ -34,7 +53,6 @@ crokRouter.get("/crok", async (req, res) => {
   let messageId = 0;
 
   // TTFT (Time to First Token)
-  await sleep(3000);
 
   for (const char of response) {
     if (res.closed) break;
@@ -42,7 +60,6 @@ crokRouter.get("/crok", async (req, res) => {
     const data = JSON.stringify({ text: char, done: false });
     res.write(`event: message\nid: ${messageId++}\ndata: ${data}\n\n`);
 
-    await sleep(10);
   }
 
   if (!res.closed) {

@@ -26,8 +26,8 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   declare posts?: NonAttribute<Post>[];
   declare profileImage?: NonAttribute<ProfileImage>;
 
-  generateHash(password: string): string {
-    return bcrypt.hashSync(password, bcrypt.genSaltSync(8));
+  async generateHash(password: string): Promise<string> {
+    return bcrypt.hash(password, 10);
   }
   validPassword(password: string): boolean {
     return bcrypt.compareSync(password, this.getDataValue("password"));
@@ -57,9 +57,6 @@ export function initUser(sequelize: Sequelize) {
         get() {
           return undefined;
         },
-        set(value: string) {
-          this.setDataValue("password", this.generateHash(value));
-        },
         type: DataTypes.STRING,
       },
       username: {
@@ -80,6 +77,18 @@ export function initUser(sequelize: Sequelize) {
       defaultScope: {
         attributes: { exclude: ["profileImageId"] },
         include: { association: "profileImage" },
+      },
+      hooks: {
+        beforeCreate: async (user: User) => {
+          if (user.changed("password")) {
+            user.setDataValue("password", await user.generateHash(user.getDataValue("password")));
+          }
+        },
+        beforeUpdate: async (user: User) => {
+          if (user.changed("password")) {
+            user.setDataValue("password", await user.generateHash(user.getDataValue("password")));
+          }
+        },
       },
     },
   );

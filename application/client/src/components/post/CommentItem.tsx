@@ -1,4 +1,4 @@
-import moment from "moment";
+import { memo } from "react";
 
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
@@ -8,7 +8,7 @@ interface Props {
   comment: Models.Comment;
 }
 
-export const CommentItem = ({ comment }: Props) => {
+export const CommentItem = memo(({ comment }: Props) => {
   return (
     <article className="hover:bg-cax-surface-subtle px-1 sm:px-4">
       <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
@@ -19,6 +19,7 @@ export const CommentItem = ({ comment }: Props) => {
           >
             <img
               alt={comment.user.profileImage.alt}
+              className="h-full w-full object-cover"
               src={getProfileImagePath(comment.user.profileImage.id)}
             />
           </Link>
@@ -42,12 +43,12 @@ export const CommentItem = ({ comment }: Props) => {
             <TranslatableText text={comment.text} />
           </div>
           <p className="text-cax-text-muted pt-1 text-xs">
-            <time dateTime={moment(comment.createdAt).toISOString()}>
-              {moment(comment.createdAt).locale("ja").format("LL")}
+            <time dateTime={new Date(comment.createdAt).toISOString()}>
+              {new Date(comment.createdAt).toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" })}
             </time>
           </p>
         </div>
       </div>
     </article>
   );
-};
+});

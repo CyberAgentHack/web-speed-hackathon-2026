@@ -32,7 +32,7 @@ interface Props {
 export const NewPostModalContainer = ({ id }: Props) => {
   const dialogId = useId();
   const ref = useRef<HTMLDialogElement>(null);
-  const [resetKey, setResetKey] = useState(0);
+  const [resetSignal, setResetSignal] = useState(0);
   useEffect(() => {
     const element = ref.current;
     if (element == null) {
@@ -40,8 +40,10 @@ export const NewPostModalContainer = ({ id }: Props) => {
     }
 
     const handleToggle = () => {
-      // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
-      setResetKey((key) => key + 1);
+      // モーダルが閉じた時にフォームの状態をリセットする
+      if (!element.open) {
+        setResetSignal((s) => s + 1);
+      }
     };
     element.addEventListener("toggle", handleToggle);
     return () => {
@@ -77,10 +79,10 @@ export const NewPostModalContainer = ({ id }: Props) => {
   return (
     <Modal aria-labelledby={dialogId} id={id} ref={ref} closedby="any">
       <NewPostModalPage
-        key={resetKey}
         id={dialogId}
         hasError={hasError}
         isLoading={isLoading}
+        resetSignal={resetSignal}
         onResetError={handleResetError}
         onSubmit={handleSubmit}
       />

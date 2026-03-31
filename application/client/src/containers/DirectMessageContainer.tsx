@@ -53,12 +53,15 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   }, [activeUser, conversationId]);
 
   const sendRead = useCallback(async () => {
+    if (activeUser == null) return;
     await sendJSON(`/api/v1/dm/${conversationId}/read`, {});
-  }, [conversationId]);
+  }, [activeUser, conversationId]);
 
   useEffect(() => {
     void loadConversation();
-    void sendRead();
+    void sendRead().catch(() => {
+      // 認証前は 401 になるため、UI維持のために握りつぶす
+    });
   }, [loadConversation, sendRead]);
 
   const handleSubmit = useCallback(
@@ -68,30 +71,47 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
         await sendJSON(`/api/v1/dm/${conversationId}/messages`, {
           body: params.body,
         });
-        loadConversation();
       } finally {
         setIsSubmitting(false);
       }
     },
-    [conversationId, loadConversation],
+    [conversationId],
   );
 
   const handleTyping = useCallback(async () => {
-    void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
+    void sendJSON(`/api/v1/dm/${conversationId}/typing`, {}).catch(() => {
+      // 入力通知失敗は会話本体に影響させない
+    });
   }, [conversationId]);
 
   useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {
     if (event.type === "dm:conversation:message") {
-      void loadConversation().then(() => {
-        if (event.payload.sender.id !== activeUser?.id) {
-          setIsPeerTyping(false);
-          if (peerTypingTimeoutRef.current !== null) {
-            clearTimeout(peerTypingTimeoutRef.current);
-          }
-          peerTypingTimeoutRef.current = null;
+      setConversation((prev) => {
+        if (prev == null) return prev;
+        if (prev.messages.some((message) => message.id === event.payload.id)) {
+          // 既存メッセージの更新（isRead 変更など）
+          return {
+            ...prev,
+            messages: prev.messages.map((m) =>
+              m.id === event.payload.id ? event.payload : m,
+            ),
+          };
         }
+        return {
+          ...prev,
+          messages: [...prev.messages, event.payload],
+        };
       });
-      void sendRead();
+      if (event.payload.sender.id !== activeUser?.id) {
+        setIsPeerTyping(false);
+        if (peerTypingTimeoutRef.current !== null) {
+          clearTimeout(peerTypingTimeoutRef.current);
+        }
+        peerTypingTimeoutRef.current = null;
+      }
+      void sendRead().catch(() => {
+        // 既読送信失敗は表示継続を優先
+      });
     } else if (event.type === "dm:conversation:typing") {
       setIsPeerTyping(true);
       if (peerTypingTimeoutRef.current !== null) {

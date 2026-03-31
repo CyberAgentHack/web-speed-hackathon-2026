@@ -12,6 +12,7 @@ interface ReturnValues<T> {
 export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
+  refreshTrigger?: string,
 ): ReturnValues<T> {
   const internalRef = useRef({ isLoading: false, offset: 0 });
 
@@ -74,7 +75,7 @@ export function useInfiniteFetch<T>(
     };
 
     fetchMore();
-  }, [fetchMore]);
+  }, [fetchMore, refreshTrigger]);
 
   return {
     ...result,

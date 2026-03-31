@@ -1,13 +1,9 @@
-import { MagickFormat } from "@imagemagick/magick-wasm";
-import { ChangeEventHandler, FormEventHandler, useCallback, useState } from "react";
+import { ChangeEventHandler, FormEventHandler, useCallback, useEffect, useRef, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/components/modal/ModalErrorMessage";
 import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/components/modal/ModalSubmitButton";
 import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/AttachFileInputButton";
-import { convertImage } from "@web-speed-hackathon-2026/client/src/utils/convert_image";
-import { convertMovie } from "@web-speed-hackathon-2026/client/src/utils/convert_movie";
-import { convertSound } from "@web-speed-hackathon-2026/client/src/utils/convert_sound";
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
@@ -22,11 +18,12 @@ interface Props {
   id: string;
   hasError: boolean;
   isLoading: boolean;
+  resetSignal: number;
   onResetError: () => void;
   onSubmit: (params: SubmitParams) => void;
 }
 
-export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubmit }: Props) => {
+export const NewPostModalPage = ({ id, hasError, isLoading, resetSignal, onResetError, onSubmit }: Props) => {
   const [params, setParams] = useState<SubmitParams>({
     images: [],
     movie: undefined,
@@ -35,7 +32,27 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
   });
 
   const [hasFileError, setHasFileError] = useState(false);
-  const [isConverting, setIsConverting] = useState(false);
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    setParams({ images: [], movie: undefined, sound: undefined, text: "" });
+    setHasFileError(false);
+    if (textareaRef.current) {
+      textareaRef.current.value = "";
+    }
+  }, [resetSignal]);
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    const id = setInterval(() => {
+      setParams((p) => {
+        if (p.text !== el.value) return { ...p, text: el.value };
+        return p;
+      });
+    }, 100);
+    return () => clearInterval(id);
+  }, []);
 
   const handleChangeText = useCallback<ChangeEventHandler<HTMLTextAreaElement>>((ev) => {
     const value = ev.currentTarget.value;
@@ -51,26 +68,12 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
     setHasFileError(isValid !== true);
     if (isValid) {
-      setIsConverting(true);
-
-      Promise.all(
-        files.map((file) =>
-          convertImage(file, { extension: MagickFormat.Jpg }).then(
-            (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
-          ),
-        ),
-      )
-        .then((convertedFiles) => {
-          setParams((params) => ({
-            ...params,
-            images: convertedFiles,
-            movie: undefined,
-            sound: undefined,
-          }));
-
-          setIsConverting(false);
-        })
-        .catch(console.error);
+      setParams((params) => ({
+        ...params,
+        images: files,
+        movie: undefined,
+        sound: undefined,
+      }));
     }
   }, []);
 
@@ -80,18 +83,12 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
     setHasFileError(isValid !== true);
     if (isValid) {
-      setIsConverting(true);
-
-      convertSound(file, { extension: "mp3" }).then((converted) => {
-        setParams((params) => ({
-          ...params,
-          images: [],
-          movie: undefined,
-          sound: new File([converted], "converted.mp3", { type: "audio/mpeg" }),
-        }));
-
-        setIsConverting(false);
-      });
+      setParams((params) => ({
+        ...params,
+        images: [],
+        movie: undefined,
+        sound: file,
+      }));
     }
   }, []);
 
@@ -101,22 +98,12 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
     setHasFileError(isValid !== true);
     if (isValid) {
-      setIsConverting(true);
-
-      convertMovie(file, { extension: "gif", size: undefined })
-        .then((converted) => {
-          setParams((params) => ({
-            ...params,
-            images: [],
-            movie: new File([converted], "converted.gif", {
-              type: "image/gif",
-            }),
-            sound: undefined,
-          }));
-
-          setIsConverting(false);
-        })
-        .catch(console.error);
+      setParams((params) => ({
+        ...params,
+        images: [],
+        movie: file,
+        sound: undefined,
+      }));
     }
   }, []);
 
@@ -136,6 +123,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       </h2>
 
       <textarea
+        ref={textareaRef}
         className="border-cax-border placeholder-cax-text-subtle focus:outline-cax-brand w-full resize-none rounded-xl border px-3 py-2 focus:outline-2 focus:outline-offset-2"
         rows={4}
         onChange={handleChangeText}
@@ -167,10 +155,10 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       </div>
 
       <ModalSubmitButton
-        disabled={isConverting || isLoading || params.text === ""}
-        loading={isConverting || isLoading}
+        disabled={isLoading || params.text === ""}
+        loading={isLoading}
       >
-        {isConverting || isLoading ? "変換中" : "投稿する"}
+        {isLoading ? "投稿中" : "投稿する"}
       </ModalSubmitButton>
 
       <ModalErrorMessage>

@@ -7,15 +7,52 @@ export const postRouter = Router();
 
 postRouter.get("/posts", async (req, res) => {
   const posts = await Post.findAll({
+    attributes: {
+      exclude: ["userId", "movieId", "soundId"],
+    },
+    include: [
+      {
+        association: "user",
+        attributes: { exclude: ["profileImageId"] },
+        include: [{ association: "profileImage" }],
+      },
+      {
+        association: "images",
+        through: { attributes: [] },
+      },
+      { association: "movie" },
+      { association: "sound" },
+    ],
     limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
     offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
+    order: [
+      ["id", "DESC"],
+      ["images", "createdAt", "ASC"],
+    ],
   });
 
   return res.status(200).type("application/json").send(posts);
 });
 
 postRouter.get("/posts/:postId", async (req, res) => {
-  const post = await Post.findByPk(req.params.postId);
+  const post = await Post.findByPk(req.params.postId, {
+    attributes: {
+      exclude: ["userId", "movieId", "soundId"],
+    },
+    include: [
+      {
+        association: "user",
+        attributes: { exclude: ["profileImageId"] },
+        include: [{ association: "profileImage" }],
+      },
+      {
+        association: "images",
+        through: { attributes: [] },
+      },
+      { association: "movie" },
+      { association: "sound" },
+    ],
+  });
 
   if (post === null) {
     throw new httpErrors.NotFound();
