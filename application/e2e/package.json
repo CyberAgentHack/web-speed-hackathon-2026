@@ -8,6 +8,8 @@
   "scripts": {
     "typecheck": "tsc",
     "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "testx": "playwright test -x",
     "test:update": "playwright test --update-snapshots"
   },
   "devDependencies": {

@@ -64,6 +64,40 @@ export function initPost(sequelize: Sequelize) {
           ["images", "createdAt", "ASC"],
         ],
       },
+      scopes: {
+        timeline: {
+          attributes: ["id", "text", "createdAt"],
+          include: [
+            {
+              association: "user",
+              attributes: ["id", "username", "name"],
+              include: [
+                {
+                  association: "profileImage",
+                  attributes: ["id", "alt"],
+                },
+              ],
+            },
+            {
+              association: "images",
+              attributes: ["id", "alt", "width", "height"],
+              through: { attributes: [] },
+            },
+            {
+              association: "movie",
+              attributes: ["id", "width", "height"],
+            },
+            {
+              association: "sound",
+              attributes: ["id", "title", "artist", "waveform"],
+            },
+          ],
+          order: [
+            ["id", "DESC"],
+            ["images", "createdAt", "ASC"],
+          ],
+        },
+      },
     },
   );
 }

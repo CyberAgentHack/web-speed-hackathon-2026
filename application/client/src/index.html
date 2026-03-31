@@ -4,176 +4,135 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CaX</title>
-    <script src="/scripts/main.js"></script>
-    <link rel="stylesheet" href="/styles/main.css" />
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.1"></script>
-    <style type="text/tailwindcss">
-      @layer base {
-        button:not(:disabled),
-        [role="button"]:not(:disabled) {
-          cursor: pointer;
-        }
+    <link
+      rel="preload"
+      href="/styles/main.css"
+      as="style"
+      onload="
+        this.onload = null;
+        this.rel = 'stylesheet';
+      "
+    />
+    <noscript>
+      <link rel="stylesheet" href="/styles/main.css" />
+    </noscript>
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
       }
 
-      @theme {
-        --color-cax-canvas: var(--color-stone-100);
-        --color-cax-surface: var(--color-white);
-        --color-cax-surface-raised: var(--color-white);
-        --color-cax-surface-subtle: var(--color-stone-50);
-        --color-cax-overlay: var(--color-slate-950);
-        --color-cax-border: var(--color-stone-300);
-        --color-cax-border-strong: var(--color-stone-400);
-        --color-cax-text: var(--color-teal-950);
-        --color-cax-text-muted: var(--color-teal-700);
-        --color-cax-text-subtle: var(--color-slate-500);
-        --color-cax-brand: var(--color-teal-700);
-        --color-cax-brand-strong: var(--color-teal-800);
-        --color-cax-brand-soft: var(--color-teal-100);
-        --color-cax-accent: var(--color-orange-700);
-        --color-cax-accent-soft: var(--color-orange-100);
-        --color-cax-danger: var(--color-red-600);
-        --color-cax-danger-soft: var(--color-red-100);
-        --color-cax-highlight: var(--color-amber-200);
-        --color-cax-highlight-ink: var(--color-amber-950);
+      body {
+        background: #f5f5f4;
+        color: #042f2e;
+        font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
       }
 
-      @utility markdown {
-        @apply text-sm wrap-anywhere;
-        line-break: strict;
+      .app-shell {
+        min-height: 100vh;
+      }
 
-        /* インライン要素 */
-        :where(a) {
-          @apply text-cax-accent decoration-cax-accent underline underline-offset-2;
-        }
-        :where(strong) {
-          @apply font-bold;
-        }
-        :where(em) {
-          @apply italic;
-        }
-        :where(code):not(:where(pre > code)) {
-          @apply bg-cax-surface-subtle text-cax-text rounded px-1 py-0.5 font-mono;
-        }
-        :where(del) {
-          @apply decoration-cax-text-subtle line-through;
-        }
+      .app-shell__nav {
+        box-sizing: border-box;
+        border-bottom: 1px solid #d6d3d1;
+        background: #fff;
+        padding: 20px 24px;
+      }
 
-        /* ブロック要素 */
-        :where(p) {
-          @apply text-cax-text my-6;
-        }
-        :where(blockquote) {
-          @apply border-cax-border text-cax-text-muted my-6 border-l-4 pl-4;
-        }
-        :where(hr) {
-          @apply border-cax-border my-10 border-t;
-        }
+      .app-shell__brand {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+      }
 
-        /* リスト */
-        :where(ol) {
-          @apply my-6 list-decimal pl-6;
-        }
-        :where(ul) {
-          @apply my-6 list-disc pl-6;
-        }
-        :where(li) {
-          @apply my-2;
-        }
-        :where(ol > li, ul > li)::marker {
-          @apply text-cax-text-muted;
-        }
-        :where(ol ol, ul ul, ol ul, ul ol) {
-          @apply my-2;
-        }
+      .app-shell__main {
+        box-sizing: border-box;
+        margin: 0 auto;
+        max-width: 640px;
+        padding: 32px 16px 96px;
+      }
 
-        /* テーブル */
-        :where(table) {
-          @apply text-cax-text my-6 w-full table-auto text-sm;
-        }
-        :where(thead) {
-          @apply border-cax-border border-b;
-        }
-        :where(thead th) {
-          @apply px-2 pb-1.5 font-bold;
-        }
-        :where(tbody tr) {
-          @apply border-cax-border border-b;
-        }
-        :where(tbody tr:last-child) {
-          @apply border-b-0;
-        }
-        :where(tbody td) {
-          @apply align-baseline;
-        }
-        :where(tfoot) {
-          @apply border-cax-border border-t;
-        }
-        :where(tfoot td) {
-          @apply align-top;
-        }
-        :where(th, td) {
-          @apply text-left;
-        }
-        :where(tbody td, tfoot td) {
-          @apply px-2 py-1.5;
-        }
-        :where(tbody tr:last-child td, tfoot tr:last-child td) {
-          @apply pb-0;
-        }
+      .app-shell__eyebrow {
+        margin: 0;
+        color: #0f766e;
+        font-size: 14px;
+        font-weight: 700;
+      }
 
-        /* 見出し */
-        :where(h1, h2, h3, h4, h5, h6) {
-          @apply text-cax-text text-pretty;
-        }
-        :where(h1, h2, h3, h4) {
-          @apply font-bold;
-        }
-        :where(h1, h2) {
-          @apply mt-10 mb-8 text-2xl;
-        }
-        :where(h3) {
-          @apply mt-8 mb-6 text-xl;
-        }
-        :where(h4) {
-          @apply mt-6 mb-4 text-lg;
-        }
-        :where(h5) {
-          @apply border-cax-border mt-6 mb-4 border-b py-0.5 pl-2 font-bold;
-        }
-        :where(h6) {
-          @apply border-cax-border mt-6 mb-4 border-b py-0.5 pl-2;
-        }
-        :where(h1 + *, h2 + *, h3 + *, h4 + *, h5 + *, h6 + *) {
-          @apply mt-0;
-        }
+      .app-shell__title {
+        margin: 12px 0 0;
+        font-size: clamp(40px, 8vw, 72px);
+        font-weight: 800;
+        line-height: 0.95;
+        letter-spacing: -0.06em;
+      }
 
-        /* 注釈 */
-        :where(.footnotes) {
-          @apply border-cax-border mt-8 border-t;
-        }
-        :where(.footnotes h2) {
-          @apply sr-only;
-        }
-        :where(.footnotes ol) {
-          @apply mt-8 mb-0 text-sm;
-        }
-        :where(.footnotes ol li p) {
-          @apply my-0;
-        }
+      .app-shell__description {
+        margin: 16px 0 0;
+        color: #115e59;
+        font-size: 16px;
+        line-height: 1.7;
+      }
 
-        /* 最初の要素はマージンを0にする */
-        & > *:first-child {
-          @apply mt-0;
-        }
+      .app-shell__card {
+        box-sizing: border-box;
+        margin-top: 28px;
+        border: 1px solid #d6d3d1;
+        border-radius: 20px;
+        background: #fff;
+        padding: 20px;
+      }
 
-        /* 最後の要素はマージンを0にする */
-        & > *:last-child {
-          @apply mb-0;
-        }
+      .app-shell__line {
+        display: block;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #e7e5e4 0%, #f5f5f4 100%);
+      }
+
+      .app-shell__line + .app-shell__line {
+        margin-top: 10px;
+      }
+
+      .app-shell__line--lg {
+        height: 18px;
+        width: 72%;
+      }
+
+      .app-shell__line--md {
+        height: 14px;
+        width: 100%;
+      }
+
+      .app-shell__line--sm {
+        height: 14px;
+        width: 64%;
       }
     </style>
   </head>
   <body class="bg-cax-canvas text-cax-text">
-    <div id="app"></div>
+    <div id="app">
+      <div class="app-shell">
+        <header class="app-shell__nav">
+          <p class="app-shell__brand">CaX</p>
+        </header>
+        <main class="app-shell__main">
+          <p class="app-shell__eyebrow">CaX timeline</p>
+          <h1 class="app-shell__title">読込中</h1>
+          <p class="app-shell__description">
+            タイムラインと投稿データを準備しています。しばらくお待ちください。
+          </p>
+          <section class="app-shell__card" aria-hidden="true">
+            <span class="app-shell__line app-shell__line--lg"></span>
+            <span class="app-shell__line app-shell__line--md"></span>
+            <span class="app-shell__line app-shell__line--md"></span>
+            <span class="app-shell__line app-shell__line--sm"></span>
+          </section>
+        </main>
+      </div>
+    </div>
   </body>
 </html>

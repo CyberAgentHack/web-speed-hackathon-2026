@@ -6,10 +6,16 @@ import { fileTypeFromBuffer } from "file-type";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
+import { Image } from "@web-speed-hackathon-2026/server/src/models";
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+import {
+  OPTIMIZED_IMAGE_EXTENSION,
+  optimizeImageToWebp,
+} from "@web-speed-hackathon-2026/server/src/utils/optimize_image";
+import { extractImageAlt } from "@web-speed-hackathon-2026/server/src/utils/image_alt";
+import { readImageDimensionsFromBuffer } from "@web-speed-hackathon-2026/server/src/utils/media_dimensions";
 
-// 変換した画像の拡張子
-const EXTENSION = "jpg";
+const EXTENSION = OPTIMIZED_IMAGE_EXTENSION;
 
 export const imageRouter = Router();
 
@@ -20,17 +26,22 @@ imageRouter.post("/images", async (req, res) => {
   if (Buffer.isBuffer(req.body) === false) {
     throw new httpErrors.BadRequest();
   }
+  const body = req.body;
 
-  const type = await fileTypeFromBuffer(req.body);
-  if (type === undefined || type.ext !== EXTENSION) {
+  const type = await fileTypeFromBuffer(body);
+  if (type === undefined || type.mime.startsWith("image/") === false) {
     throw new httpErrors.BadRequest("Invalid file type");
   }
 
+  const alt = await extractImageAlt(body);
+  const converted = await optimizeImageToWebp(body);
+  const dimensions = await readImageDimensionsFromBuffer(converted);
   const imageId = uuidv4();
 
   const filePath = path.resolve(UPLOAD_PATH, `./images/${imageId}.${EXTENSION}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
-  await fs.writeFile(filePath, req.body);
+  await fs.writeFile(filePath, converted);
+  await Image.create({ alt, id: imageId, ...dimensions });
 
-  return res.status(200).type("application/json").send({ id: imageId });
+  return res.status(200).type("application/json").send({ alt, id: imageId, ...dimensions });
 });

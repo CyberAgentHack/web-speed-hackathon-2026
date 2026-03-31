@@ -1,22 +1,23 @@
-import moment from "moment";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { formatJaRelativeTime } from "@web-speed-hackathon-2026/client/src/utils/format_datetime";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
   activeUser: Models.User;
-  newDmModalId: string;
+  onRequestNewDmModal: () => void;
 }
 
-export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
+export const DirectMessageListPage = ({ activeUser, onRequestNewDmModal }: Props) => {
   const [conversations, setConversations] =
     useState<Array<Models.DirectMessageConversation> | null>(null);
   const [error, setError] = useState<Error | null>(null);
+  const hasLoadedRef = useRef(false);
 
   const loadConversations = useCallback(async () => {
     if (activeUser == null) {
@@ -30,6 +31,8 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     } catch (error) {
       setConversations(null);
       setError(error as Error);
+    } finally {
+      hasLoadedRef.current = true;
     }
   }, [activeUser]);
 
@@ -38,6 +41,9 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
   }, [loadConversations]);
 
   useWs("/api/v1/dm/unread", () => {
+    if (!hasLoadedRef.current) {
+      return;
+    }
     void loadConversations();
   });
 
@@ -51,9 +57,8 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
         <h1 className="text-2xl font-bold">ダイレクトメッセージ</h1>
         <div className="flex flex-wrap items-center gap-4">
           <Button
-            command="show-modal"
-            commandfor={newDmModalId}
             leftItem={<FontAwesomeIcon iconType="paper-plane" styleType="solid" />}
+            onClick={onRequestNewDmModal}
           >
             新しくDMを始める
           </Button>
@@ -69,16 +74,13 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
       ) : (
         <ul data-testid="dm-list">
           {conversations.map((conversation) => {
-            const { messages } = conversation;
             const peer =
               conversation.initiator.id !== activeUser.id
                 ? conversation.initiator
                 : conversation.member;
 
-            const lastMessage = messages.at(-1);
-            const hasUnread = messages
-              .filter((m) => m.sender.id === peer.id)
-              .some((m) => !m.isRead);
+            const lastMessage = conversation.lastMessage;
+            const hasUnread = conversation.hasUnread ?? false;
 
             return (
               <li className="grid" key={conversation.id}>
@@ -87,6 +89,8 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                     <img
                       alt={peer.profileImage.alt}
                       className="w-12 shrink-0 self-start rounded-full"
+                      decoding="async"
+                      loading="lazy"
                       src={getProfileImagePath(peer.profileImage.id)}
                     />
                     <div className="flex flex-1 flex-col">
@@ -100,7 +104,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {formatJaRelativeTime(lastMessage.createdAt)}
                           </time>
                         )}
                       </div>

@@ -4,11 +4,12 @@ import { SubmissionError } from "redux-form";
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { AuthModalPage } from "@web-speed-hackathon-2026/client/src/components/auth_modal/AuthModalPage";
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
-import { sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { FetchError, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
   id: string;
   onUpdateActiveUser: (user: Models.User) => void;
+  openRequestKey?: number;
 }
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -16,7 +17,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   USERNAME_TAKEN: "ユーザー名が使われています",
 };
 
-function getErrorCode(err: JQuery.jqXHR<unknown>, type: "signin" | "signup"): string {
+function getErrorCode(err: FetchError, type: "signin" | "signup"): string {
   const responseJSON = err.responseJSON;
   if (
     typeof responseJSON !== "object" ||
@@ -35,7 +36,7 @@ function getErrorCode(err: JQuery.jqXHR<unknown>, type: "signin" | "signup"): st
   return ERROR_MESSAGES[responseJSON.code]!;
 }
 
-export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
+export const AuthModalContainer = ({ id, onUpdateActiveUser, openRequestKey = 0 }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
   useEffect(() => {
@@ -51,6 +52,32 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
       element.removeEventListener("toggle", handleToggle);
     };
   }, [ref, setResetKey]);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (element == null || openRequestKey === 0 || element.open) {
+      return;
+    }
+    element.showModal();
+  }, [openRequestKey]);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (element == null || !element.open) {
+      return;
+    }
+
+    const animationFrameId = window.requestAnimationFrame(() => {
+      const usernameInput = element.querySelector<HTMLInputElement>(
+        'input[data-auth-input="username"]',
+      );
+      usernameInput?.focus({ preventScroll: true });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(animationFrameId);
+    };
+  }, [resetKey]);
 
   const handleRequestCloseModal = useCallback(() => {
     ref.current?.close();
@@ -68,7 +95,8 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
         }
         handleRequestCloseModal();
       } catch (err: unknown) {
-        const error = getErrorCode(err as JQuery.jqXHR<unknown>, values.type);
+        const error =
+          err instanceof FetchError ? getErrorCode(err, values.type) : "認証に失敗しました";
         throw new SubmissionError({
           _error: error,
         });

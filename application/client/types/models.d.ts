@@ -27,17 +27,22 @@ declare namespace Models {
 
   interface Image {
     alt: string;
+    height?: number | null;
     id: string;
+    width?: number | null;
   }
 
   interface Sound {
     artist: string;
     id: string;
     title: string;
+    waveform?: number[];
   }
 
   interface Movie {
+    height?: number | null;
     id: string;
+    width?: number | null;
   }
 
   interface Comment {
@@ -57,11 +62,22 @@ declare namespace Models {
     updatedAt: string;
   }
 
+  interface DirectMessageSummary {
+    id: string;
+    senderId: string;
+    body: string;
+    isRead: boolean;
+    createdAt: string;
+    updatedAt: string;
+  }
+
   interface DirectMessageConversation {
     id: string;
     initiator: Models.User;
     member: Models.User;
     messages: Array<Models.DirectMessage>;
+    lastMessage?: Models.DirectMessageSummary;
+    hasUnread?: boolean;
   }
 
   interface ChatMessage {

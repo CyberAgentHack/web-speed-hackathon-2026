@@ -6,6 +6,10 @@ export function useWs<T>(url: string, onMessage: (event: T) => void) {
   });
 
   useEffect(() => {
+    if (url === "") {
+      return;
+    }
+
     const ws = new WebSocket(url);
     ws.addEventListener("message", handleMessage);
 

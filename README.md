@@ -1,4 +1,4 @@
-# Web Speed Hackathon 2026
+# Web Speed Hackathon 2026 team pythonista
 
 **"Web Speed Hackathon 2026" は、非常に重たい Web アプリをチューニングして、いかに高速にするかを競う競技です。**
 
@@ -56,3 +56,4 @@ https://github.com/CyberAgentHack/web-speed-hackathon-2026-scoring/issues/new?te
     - (Original Font) Source Han Serif JP: OFT 1.1 by Adobe http://www.adobe.com/
 - Text
   - 太宰治『走れメロス』（1940年）
+

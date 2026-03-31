@@ -1,6 +1,43 @@
+# 依存・VCS
 node_modules
 .git
 *.log
 
+# 本番イメージに不要なリポジトリ直下（COPY は application のみだがコンテキスト転送を削る）
+scoring-tool
+docs
+fly.toml
+README.md
+AGENTS.md
+
+# エディタ・ローカル
+.cursor
+.vscode
+.idea
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# 秘密・ローカル環境（誤って送らない）
+.env
+.env.*
+
+# テスト・計測成果物
+application/e2e
+**/coverage
+**/.nyc_output
+**/playwright-report
+**/test-results
+**/*.lcov
+
+# ローカルビルド・キャッシュ（コンテナ内で再生成）
+application/dist
+**/.cache
+.eslintcache
+*.tsbuildinfo
+
+# ランタイム用アップロード（空でよい／本番は別ストレージ想定）
 application/server/seeds
 application/server/upload
+application/upload

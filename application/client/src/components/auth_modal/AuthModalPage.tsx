@@ -48,6 +48,7 @@ const AuthModalPageComponent = ({
           name="username"
           component={FormInputField}
           props={{
+            "data-auth-input": "username",
             label: "ユーザー名",
             leftItem: <span className="text-cax-text-subtle leading-none">@</span>,
             autoComplete: "username",

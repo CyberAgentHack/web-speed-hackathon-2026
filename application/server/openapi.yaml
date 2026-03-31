@@ -333,10 +333,19 @@ paths:
                 type: object
                 required:
                   - id
+                  - alt
+                  - width
+                  - height
                 properties:
                   id:
                     type: string
                     format: uuid
+                  alt:
+                    type: string
+                  width:
+                    type: integer
+                  height:
+                    type: integer
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -348,7 +357,7 @@ paths:
         - Assets
       summary: 動画アップロード
       operationId: uploadMovie
-      description: バイナリデータを直接送信（上限 10 MB、GIF のみ）
+      description: バイナリデータを直接送信（上限 10 MB、動画ファイルをサーバー側で WebM に変換）
       security:
         - session: []
       requestBody:
@@ -367,10 +376,16 @@ paths:
                 type: object
                 required:
                   - id
+                  - width
+                  - height
                 properties:
                   id:
                     type: string
                     format: uuid
+                  width:
+                    type: integer
+                  height:
+                    type: integer
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -382,7 +397,7 @@ paths:
         - Assets
       summary: 音声アップロード
       operationId: uploadSound
-      description: バイナリデータを直接送信（上限 10 MB、MP3 のみ）
+      description: バイナリデータを直接送信（上限 10 MB、音声ファイルをサーバー側で MP3 に変換）
       security:
         - session: []
       requestBody:
@@ -415,6 +430,44 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+  /translate:
+    post:
+      tags:
+        - Utility
+      summary: テキスト翻訳
+      operationId: translateText
+      description: Groq API を使ってテキストを翻訳する
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - sourceLanguage
+                - targetLanguage
+                - text
+              properties:
+                sourceLanguage:
+                  type: string
+                targetLanguage:
+                  type: string
+                text:
+                  type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - result
+                properties:
+                  result:
+                    type: string
+        "400":
+          $ref: "#/components/responses/BadRequest"
   /dm:
     get:
       tags:
@@ -662,15 +715,30 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Post"
+                type: object
+                required:
+                  - isNegativeQuery
+                  - posts
+                properties:
+                  isNegativeQuery:
+                    type: boolean
+                  posts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Post"
   /crok/suggestions:
     get:
       tags:
         - Crok
       summary: チャット候補取得
       operationId: getCrokSuggestions
+      parameters:
+        - name: q
+          in: query
+          required: false
+          description: 絞り込みクエリ。省略時は全件返却。
+          schema:
+            type: string
       responses:
         "200":
           description: OK
@@ -816,21 +884,29 @@ components:
 
     Image:
       type: object
-      required: [id, alt]
+      required: [id, alt, width, height]
       properties:
         id:
           type: string
           format: uuid
         alt:
           type: string
+        width:
+          type: integer
+        height:
+          type: integer
 
     Movie:
       type: object
-      required: [id]
+      required: [id, width, height]
       properties:
         id:
           type: string
           format: uuid
+        width:
+          type: integer
+        height:
+          type: integer
 
     Sound:
       type: object

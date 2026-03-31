@@ -2,6 +2,7 @@ import { Router } from "express";
 import httpErrors from "http-errors";
 
 import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
+import { augmentPostsResponse } from "@web-speed-hackathon-2026/server/src/utils/augment_post_response";
 
 export const userRouter = Router();
 
@@ -59,7 +60,7 @@ userRouter.get("/users/:username/posts", async (req, res) => {
     throw new httpErrors.NotFound();
   }
 
-  const posts = await Post.findAll({
+  const posts = await Post.scope("timeline").findAll({
     limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
     offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
     where: {
@@ -67,5 +68,5 @@ userRouter.get("/users/:username/posts", async (req, res) => {
     },
   });
 
-  return res.status(200).type("application/json").send(posts);
+  return res.status(200).type("application/json").send(await augmentPostsResponse(posts));
 });

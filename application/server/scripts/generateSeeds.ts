@@ -1,8 +1,11 @@
-import { createWriteStream } from "node:fs";
+import { createWriteStream, promises as fs } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { faker } from "@faker-js/faker/locale/ja";
+import { PUBLIC_PATH } from "@web-speed-hackathon-2026/server/src/paths";
+import { extractImageAlt } from "@web-speed-hackathon-2026/server/src/utils/image_alt";
+import { OPTIMIZED_IMAGE_EXTENSION } from "@web-speed-hackathon-2026/server/src/utils/optimize_image";
 
 // Set seed for reproducible results
 faker.seed(123);
@@ -26,7 +29,7 @@ const seedsDir = path.resolve(__dirname, "../seeds");
 // ========== Existing Asset IDs from public directory ==========
 // These IDs correspond to actual files in the public directory
 
-// public/images/*.jpg (30 files)
+// public/images/*.webp (30 files)
 const EXISTING_IMAGE_IDS = [
   "029b4b75-bbcc-4aa5-8bd7-e4bb12a33cd3",
   "078c4d42-12e3-4c1d-823c-9ba552f6b066",
@@ -110,7 +113,7 @@ const EXISTING_SOUNDS = [
   { id: "93b848fe-24c8-4597-a515-463a910f6ceb", title: "Midnight Jazz", artist: "Blue Note" },
 ];
 
-// public/images/profiles/*.jpg (30 files)
+// public/images/profiles/*.webp (30 files)
 const EXISTING_PROFILE_IMAGE_IDS = [
   "09d52cbb-28a2-4413-b220-1f8c9e80a440",
   "0aba06a6-1b56-4ebd-8218-951aaba173af",
@@ -178,12 +181,20 @@ function pickRandomN<T>(arr: T[], n: number): T[] {
   return faker.helpers.arrayElements(arr, n);
 }
 
-function generateProfileImages(): ProfileImageSeed[] {
+async function readImageAltFromPublicPath(relativePath: string): Promise<string> {
+  const filePath = path.resolve(PUBLIC_PATH, relativePath);
+  const input = await fs.readFile(filePath);
+  return await extractImageAlt(input);
+}
+
+async function generateProfileImages(): Promise<ProfileImageSeed[]> {
   // Use existing profile image IDs from public/images/profiles/
-  return EXISTING_PROFILE_IMAGE_IDS.map((id) => ({
-    id,
-    alt: "",
-  }));
+  return await Promise.all(
+    EXISTING_PROFILE_IMAGE_IDS.map(async (id) => ({
+      id,
+      alt: await readImageAltFromPublicPath(`images/profiles/${id}.${OPTIMIZED_IMAGE_EXTENSION}`),
+    })),
+  );
 }
 
 function generateUsers(count: number, profileImages: ProfileImageSeed[]): UserSeed[] {
@@ -217,14 +228,20 @@ function generateUsers(count: number, profileImages: ProfileImageSeed[]): UserSe
   return users;
 }
 
-function generateImages(): ImageSeed[] {
+async function generateImages(): Promise<ImageSeed[]> {
   // Use existing image IDs from public/images/
   const baseTime = now - ONE_WEEK_MS;
-  return EXISTING_IMAGE_IDS.map((id, i) => ({
-    id,
-    alt: "",
-    createdAt: new Date(baseTime + i * 60 * 1000).toISOString(),
-  }));
+  return await Promise.all(
+    EXISTING_IMAGE_IDS.map(async (id, i) => {
+      const alt = await readImageAltFromPublicPath(`images/${id}.${OPTIMIZED_IMAGE_EXTENSION}`);
+
+      return {
+        id,
+        alt: alt || "投稿画像",
+        createdAt: new Date(baseTime + i * 60 * 1000).toISOString(),
+      };
+    }),
+  );
 }
 
 function generateMovies(): MovieSeed[] {
@@ -695,13 +712,13 @@ async function main() {
   console.log("Generating seed data...");
 
   console.log("1. Generating ProfileImages (using existing assets)...");
-  const profileImages = generateProfileImages();
+  const profileImages = await generateProfileImages();
 
   console.log("2. Generating Users...");
   const users = generateUsers(CONFIG.USER_COUNT, profileImages);
 
   console.log("3. Generating Images (using existing assets)...");
-  const images = generateImages();
+  const images = await generateImages();
 
   console.log("4. Generating Movies (using existing assets)...");
   const movies = generateMovies();
