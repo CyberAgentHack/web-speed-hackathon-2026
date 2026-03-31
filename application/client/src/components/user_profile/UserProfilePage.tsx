@@ -10,7 +10,7 @@ export const UserProfilePage = ({ timeline, user }: Props) => {
   return (
     <>
       <UserProfileHeader user={user} />
-      <div className="border-cax-border mt-6 border-t">
+      <div className="border-cax-border border-t">
         <Timeline timeline={timeline} />
       </div>
     </>

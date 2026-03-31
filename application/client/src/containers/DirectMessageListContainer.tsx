@@ -7,17 +7,20 @@ import { NewDirectMessageModalContainer } from "@web-speed-hackathon-2026/client
 
 interface Props {
   activeUser: Models.User | null;
-  authModalId: string;
+  onOpenAuthModal: () => void;
 }
 
-export const DirectMessageListContainer = ({ activeUser, authModalId }: Props) => {
+export const DirectMessageListContainer = ({ activeUser, onOpenAuthModal }: Props) => {
   const newDmModalId = useId();
+  const handleOpenNewDmModal = () => {
+    (document.getElementById(newDmModalId) as HTMLDialogElement | null)?.showModal();
+  };
 
   if (activeUser === null) {
     return (
       <DirectMessageGate
         headline="DMを利用するにはサインインが必要です"
-        authModalId={authModalId}
+        onOpenAuthModal={onOpenAuthModal}
       />
     );
   }
@@ -27,7 +30,7 @@ export const DirectMessageListContainer = ({ activeUser, authModalId }: Props) =
       <Helmet>
         <title>ダイレクトメッセージ - CaX</title>
       </Helmet>
-      <DirectMessageListPage activeUser={activeUser} newDmModalId={newDmModalId} />
+      <DirectMessageListPage activeUser={activeUser} onOpenNewDmModal={handleOpenNewDmModal} />
       <NewDirectMessageModalContainer id={newDmModalId} />
     </>
   );

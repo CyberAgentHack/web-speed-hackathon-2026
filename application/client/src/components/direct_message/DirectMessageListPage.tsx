@@ -1,21 +1,30 @@
-import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
+import { formatRelativeTime } from "@web-speed-hackathon-2026/client/src/utils/date";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
-interface Props {
-  activeUser: Models.User;
-  newDmModalId: string;
+interface DirectMessageConversationSummary {
+  id: string;
+  initiator: Models.User;
+  member: Models.User;
+  lastMessage: Models.DirectMessage | null;
+  hasUnread: boolean;
 }
 
-export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
-  const [conversations, setConversations] =
-    useState<Array<Models.DirectMessageConversation> | null>(null);
+interface Props {
+  activeUser: Models.User;
+  onOpenNewDmModal: () => void;
+}
+
+export const DirectMessageListPage = ({ activeUser, onOpenNewDmModal }: Props) => {
+  const [conversations, setConversations] = useState<Array<DirectMessageConversationSummary> | null>(
+    null,
+  );
   const [error, setError] = useState<Error | null>(null);
 
   const loadConversations = useCallback(async () => {
@@ -24,7 +33,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     }
 
     try {
-      const conversations = await fetchJSON<Array<Models.DirectMessageConversation>>("/api/v1/dm");
+      const conversations = await fetchJSON<Array<DirectMessageConversationSummary>>("/api/v1/dm");
       setConversations(conversations);
       setError(null);
     } catch (error) {
@@ -41,9 +50,11 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     void loadConversations();
   });
 
-  if (conversations == null) {
+  if (conversations == null && error == null) {
     return null;
   }
+
+  const conversationList = conversations ?? [];
 
   return (
     <section>
@@ -51,9 +62,8 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
         <h1 className="text-2xl font-bold">ダイレクトメッセージ</h1>
         <div className="flex flex-wrap items-center gap-4">
           <Button
-            command="show-modal"
-            commandfor={newDmModalId}
             leftItem={<FontAwesomeIcon iconType="paper-plane" styleType="solid" />}
+            onClick={onOpenNewDmModal}
           >
             新しくDMを始める
           </Button>
@@ -62,23 +72,18 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
 
       {error != null ? (
         <p className="text-cax-danger px-4 py-6 text-center text-sm">DMの取得に失敗しました</p>
-      ) : conversations.length === 0 ? (
+      ) : conversationList.length === 0 ? (
         <p className="text-cax-text-muted px-4 py-6 text-center">
           まだDMで会話した相手がいません。
         </p>
       ) : (
         <ul data-testid="dm-list">
-          {conversations.map((conversation) => {
-            const { messages } = conversation;
+          {conversationList.map((conversation) => {
             const peer =
               conversation.initiator.id !== activeUser.id
                 ? conversation.initiator
                 : conversation.member;
-
-            const lastMessage = messages.at(-1);
-            const hasUnread = messages
-              .filter((m) => m.sender.id === peer.id)
-              .some((m) => !m.isRead);
+            const { hasUnread, lastMessage } = conversation;
 
             return (
               <li className="grid" key={conversation.id}>
@@ -100,7 +105,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {formatRelativeTime(lastMessage.createdAt)}
                           </time>
                         )}
                       </div>

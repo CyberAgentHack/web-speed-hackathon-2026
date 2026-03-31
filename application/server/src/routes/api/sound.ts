@@ -6,6 +6,7 @@ import { fileTypeFromBuffer } from "file-type";
 import httpErrors from "http-errors";
 import { v4 as uuidv4 } from "uuid";
 
+import { Sound } from "@web-speed-hackathon-2026/server/src/models";
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 import { extractMetadataFromSound } from "@web-speed-hackathon-2026/server/src/utils/extract_metadata_from_sound";
 
@@ -29,11 +30,14 @@ soundRouter.post("/sounds", async (req, res) => {
 
   const soundId = uuidv4();
 
-  const { artist, title } = await extractMetadataFromSound(req.body);
+  const metadata = await extractMetadataFromSound(req.body);
+  const artist = metadata.artist ?? "Unknown";
+  const title = metadata.title ?? "Unknown";
 
   const filePath = path.resolve(UPLOAD_PATH, `./sounds/${soundId}.${EXTENSION}`);
   await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds"), { recursive: true });
   await fs.writeFile(filePath, req.body);
+  await Sound.create({ artist, id: soundId, title });
 
   return res.status(200).type("application/json").send({ artist, id: soundId, title });
 });

@@ -1,18 +1,18 @@
 import classNames from "classnames";
-import moment from "moment";
 import {
   ChangeEvent,
   useCallback,
+  useEffect,
   useId,
-  useRef,
-  useState,
   KeyboardEvent,
   FormEvent,
-  useEffect,
+  useRef,
+  useState,
 } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
+import { formatShortTime } from "@web-speed-hackathon-2026/client/src/utils/date";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
@@ -35,19 +35,21 @@ export const DirectMessagePage = ({
   onSubmit,
 }: Props) => {
   const formRef = useRef<HTMLFormElement>(null);
+  const messageListRef = useRef<HTMLDivElement>(null);
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const textAreaId = useId();
 
   const peer =
     conversation.initiator.id !== activeUser.id ? conversation.initiator : conversation.member;
 
-  const [text, setText] = useState("");
-  const textAreaRows = Math.min((text || "").split("\n").length, 5);
-  const isInvalid = text.trim().length === 0;
-  const scrollHeightRef = useRef(0);
+  const [textAreaRows, setTextAreaRows] = useState(1);
+  const [isInvalid, setIsInvalid] = useState(true);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
-      setText(event.target.value);
+      const nextText = event.target.value;
+      setTextAreaRows(Math.min((nextText || "").split("\n").length, 5));
+      setIsInvalid(nextText.trim().length === 0);
       onTyping();
     },
     [onTyping],
@@ -66,24 +68,28 @@ export const DirectMessagePage = ({
   const handleSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      void onSubmit({ body: text.trim() }).then(() => {
-        setText("");
+      const body = textAreaRef.current?.value.trim() ?? "";
+      if (body.length === 0) {
+        return;
+      }
+
+      void onSubmit({ body }).then(() => {
+        if (textAreaRef.current !== null) {
+          textAreaRef.current.value = "";
+        }
+        setTextAreaRows(1);
+        setIsInvalid(true);
       });
     },
-    [onSubmit, text],
+    [onSubmit],
   );
 
   useEffect(() => {
-    const id = setInterval(() => {
-      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
-      if (height !== scrollHeightRef.current) {
-        scrollHeightRef.current = height;
-        window.scrollTo(0, height);
-      }
-    }, 1);
-
-    return () => clearInterval(id);
-  }, []);
+    messageListRef.current?.scrollTo({
+      top: messageListRef.current.scrollHeight,
+      behavior: "auto",
+    });
+  }, [conversation.messages.length, isPeerTyping]);
 
   if (conversationError != null) {
     return (
@@ -111,7 +117,10 @@ export const DirectMessagePage = ({
         </div>
       </header>
 
-      <div className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8">
+      <div
+        className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8"
+        ref={messageListRef}
+      >
         {conversation.messages.length === 0 && (
           <p className="text-cax-text-muted text-center text-sm">
             まだメッセージはありません。最初のメッセージを送信してみましょう。
@@ -124,6 +133,7 @@ export const DirectMessagePage = ({
 
             return (
               <li
+                key={message.id}
                 className={classNames(
                   "flex flex-col w-full",
                   isActiveUserSend ? "items-end" : "items-start",
@@ -141,7 +151,7 @@ export const DirectMessagePage = ({
                 </p>
                 <div className="flex gap-1 text-xs">
                   <time dateTime={message.createdAt}>
-                    {moment(message.createdAt).locale("ja").format("HH:mm")}
+                    {formatShortTime(message.createdAt)}
                   </time>
                   {isActiveUserSend && message.isRead && (
                     <span className="text-cax-text-muted">既読</span>
@@ -172,9 +182,9 @@ export const DirectMessagePage = ({
             <textarea
               id={textAreaId}
               className="border-cax-border placeholder-cax-text-subtle focus:outline-cax-brand w-full resize-none rounded-xl border px-3 py-2 focus:outline-2 focus:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              value={text}
               onChange={handleChange}
               onKeyDown={handleKeyDown}
+              ref={textAreaRef}
               rows={textAreaRows}
               disabled={isSubmitting}
             />

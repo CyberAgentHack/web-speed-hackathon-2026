@@ -6,12 +6,19 @@ import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components
 
 interface Props {
   activeUser: Models.User | null;
-  authModalId: string;
-  newPostModalId: string;
+  isLoadingActiveUser: boolean;
+  onOpenAuthModal: () => void;
+  onOpenNewPostModal: () => void;
   onLogout: () => void;
 }
 
-export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }: Props) => {
+export const Navigation = ({
+  activeUser,
+  isLoadingActiveUser,
+  onOpenAuthModal,
+  onOpenNewPostModal,
+  onLogout,
+}: Props) => {
   return (
     <nav className="border-cax-border bg-cax-surface fixed right-0 bottom-0 left-0 z-10 h-12 border-t lg:relative lg:h-full lg:w-48 lg:border-t-0 lg:border-r">
       <div className="relative grid grid-flow-col items-center justify-evenly lg:fixed lg:flex lg:h-full lg:w-48 lg:flex-col lg:justify-between lg:p-2">
@@ -37,8 +44,7 @@ export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }
           {activeUser !== null ? (
             <NavigationItem
               icon={<FontAwesomeIcon iconType="edit" styleType="solid" />}
-              command="show-modal"
-              commandfor={newPostModalId}
+              onClick={onOpenNewPostModal}
               text="投稿する"
             />
           ) : null}
@@ -49,12 +55,11 @@ export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }
               text="マイページ"
             />
           ) : null}
-          {activeUser === null ? (
+          {activeUser === null && !isLoadingActiveUser ? (
             <NavigationItem
               icon={<FontAwesomeIcon iconType="sign-in-alt" styleType="solid" />}
               text="サインイン"
-              command="show-modal"
-              commandfor={authModalId}
+              onClick={onOpenAuthModal}
             />
           ) : null}
           {activeUser !== null ? (

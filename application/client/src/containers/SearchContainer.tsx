@@ -1,13 +1,14 @@
 import { Helmet } from "react-helmet";
+import { useLocation } from "react-router";
 
 import { SearchPage } from "@web-speed-hackathon-2026/client/src/components/application/SearchPage";
 import { InfiniteScroll } from "@web-speed-hackathon-2026/client/src/components/foundation/InfiniteScroll";
 import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use_infinite_fetch";
-import { useSearchParams } from "@web-speed-hackathon-2026/client/src/hooks/use_search_params";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 export const SearchContainer = () => {
-  const [searchParams] = useSearchParams();
+  const { search } = useLocation();
+  const searchParams = new URLSearchParams(search);
   const query = searchParams.get("q") || "";
 
   const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>(

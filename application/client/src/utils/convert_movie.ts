@@ -6,7 +6,7 @@ interface Options {
 }
 
 /**
- * 先頭 5 秒のみ、正方形にくり抜かれた無音動画を作成します
+ * 先頭 1 秒のみ、正方形にくり抜かれた軽量な無音 GIF を作成します
  */
 export async function convertMovie(file: File, options: Options): Promise<Blob> {
   const ffmpeg = await loadFFmpeg();
@@ -17,6 +17,7 @@ export async function convertMovie(file: File, options: Options): Promise<Blob> 
   ]
     .filter(Boolean)
     .join(",");
+  const filter = [`fps=4`, `crop=${cropOptions}`].join(",");
   const exportFile = `export.${options.extension}`;
 
   await ffmpeg.writeFile("file", new Uint8Array(await file.arrayBuffer()));
@@ -25,18 +26,14 @@ export async function convertMovie(file: File, options: Options): Promise<Blob> 
     "-i",
     "file",
     "-t",
-    "5",
-    "-r",
-    "10",
+    "1",
     "-vf",
-    `crop=${cropOptions}`,
+    filter,
     "-an",
     exportFile,
   ]);
 
   const output = (await ffmpeg.readFile(exportFile)) as Uint8Array<ArrayBuffer>;
-
-  ffmpeg.terminate();
 
   const blob = new Blob([output]);
   return blob;

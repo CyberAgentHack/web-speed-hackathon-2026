@@ -1,13 +1,14 @@
-import { initializeImageMagick, ImageMagick, MagickFormat } from "@imagemagick/magick-wasm";
-import magickWasm from "@imagemagick/magick-wasm/magick.wasm?binary";
+import { ImageMagick, MagickFormat } from "@imagemagick/magick-wasm";
 import { dump, insert, ImageIFD } from "piexifjs";
+
+import { preloadImageMagick } from "@web-speed-hackathon-2026/client/src/utils/load_image_magick";
 
 interface Options {
   extension: MagickFormat;
 }
 
 export async function convertImage(file: File, options: Options): Promise<Blob> {
-  await initializeImageMagick(magickWasm);
+  await preloadImageMagick();
 
   const byteArray = new Uint8Array(await file.arrayBuffer());
 

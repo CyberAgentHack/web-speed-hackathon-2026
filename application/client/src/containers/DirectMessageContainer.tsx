@@ -19,34 +19,94 @@ interface DmTypingEvent {
 }
 
 const TYPING_INDICATOR_DURATION_MS = 10 * 1000;
+const TYPING_REQUEST_DEBOUNCE_MS = 300;
 
 interface Props {
   activeUser: Models.User | null;
-  authModalId: string;
+  onOpenAuthModal: () => void;
 }
 
-export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
+function consumeInitialConversation(
+  conversationId: string,
+): Models.DirectMessageConversation | null {
+  if (conversationId === "") {
+    return null;
+  }
+
+  const key = `dm:conversation:${conversationId}`;
+  const raw = sessionStorage.getItem(key);
+  if (raw === null) {
+    return null;
+  }
+
+  sessionStorage.removeItem(key);
+
+  try {
+    return JSON.parse(raw) as Models.DirectMessageConversation;
+  } catch {
+    return null;
+  }
+}
+
+function upsertConversationMessage(
+  conversation: Models.DirectMessageConversation | null,
+  message: Models.DirectMessage,
+): Models.DirectMessageConversation | null {
+  if (conversation === null) {
+    return conversation;
+  }
+
+  const messageIndex = conversation.messages.findIndex(({ id }) => id === message.id);
+  if (messageIndex === -1) {
+    return {
+      ...conversation,
+      messages: [...conversation.messages, message],
+    };
+  }
+
+  const nextMessages = [...conversation.messages];
+  nextMessages[messageIndex] = message;
+
+  return {
+    ...conversation,
+    messages: nextMessages,
+  };
+}
+
+export const DirectMessageContainer = ({ activeUser, onOpenAuthModal }: Props) => {
   const { conversationId = "" } = useParams<{ conversationId: string }>();
 
-  const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(null);
+  const [conversation, setConversation] = useState<Models.DirectMessageConversation | null>(() =>
+    consumeInitialConversation(conversationId),
+  );
   const [conversationError, setConversationError] = useState<Error | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const loadConversationRequestRef = useRef(0);
 
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const typingRequestTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadConversation = useCallback(async () => {
     if (activeUser == null) {
       return;
     }
 
+    const requestId = ++loadConversationRequestRef.current;
+
     try {
       const data = await fetchJSON<Models.DirectMessageConversation>(
         `/api/v1/dm/${conversationId}`,
       );
+      if (loadConversationRequestRef.current !== requestId) {
+        return;
+      }
       setConversation(data);
       setConversationError(null);
     } catch (error) {
+      if (loadConversationRequestRef.current !== requestId) {
+        return;
+      }
       setConversation(null);
       setConversationError(error as Error);
     }
@@ -65,33 +125,51 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     async (params: DirectMessageFormData) => {
       setIsSubmitting(true);
       try {
-        await sendJSON(`/api/v1/dm/${conversationId}/messages`, {
+        const message = await sendJSON<Models.DirectMessage>(`/api/v1/dm/${conversationId}/messages`, {
           body: params.body,
         });
-        loadConversation();
+        setConversation((currentConversation) =>
+          upsertConversationMessage(currentConversation, message),
+        );
       } finally {
         setIsSubmitting(false);
       }
     },
-    [conversationId, loadConversation],
+    [conversationId],
   );
 
-  const handleTyping = useCallback(async () => {
-    void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
+  useEffect(() => {
+    return () => {
+      if (typingRequestTimeoutRef.current !== null) {
+        clearTimeout(typingRequestTimeoutRef.current);
+      }
+    };
+  }, [conversationId]);
+
+  const handleTyping = useCallback(() => {
+    if (typingRequestTimeoutRef.current !== null) {
+      clearTimeout(typingRequestTimeoutRef.current);
+    }
+
+    typingRequestTimeoutRef.current = setTimeout(() => {
+      typingRequestTimeoutRef.current = null;
+      void sendJSON(`/api/v1/dm/${conversationId}/typing`, {});
+    }, TYPING_REQUEST_DEBOUNCE_MS);
   }, [conversationId]);
 
   useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {
     if (event.type === "dm:conversation:message") {
-      void loadConversation().then(() => {
-        if (event.payload.sender.id !== activeUser?.id) {
-          setIsPeerTyping(false);
-          if (peerTypingTimeoutRef.current !== null) {
-            clearTimeout(peerTypingTimeoutRef.current);
-          }
-          peerTypingTimeoutRef.current = null;
+      setConversation((currentConversation) =>
+        upsertConversationMessage(currentConversation, event.payload),
+      );
+      if (event.payload.sender.id !== activeUser?.id) {
+        setIsPeerTyping(false);
+        if (peerTypingTimeoutRef.current !== null) {
+          clearTimeout(peerTypingTimeoutRef.current);
         }
-      });
-      void sendRead();
+        peerTypingTimeoutRef.current = null;
+        void sendRead();
+      }
     } else if (event.type === "dm:conversation:typing") {
       setIsPeerTyping(true);
       if (peerTypingTimeoutRef.current !== null) {
@@ -107,7 +185,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     return (
       <DirectMessageGate
         headline="DMを利用するにはサインインしてください"
-        authModalId={authModalId}
+        onOpenAuthModal={onOpenAuthModal}
       />
     );
   }

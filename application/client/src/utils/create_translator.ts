@@ -6,7 +6,7 @@ import invariant from "tiny-invariant";
 
 interface Translator {
   translate(text: string): Promise<string>;
-  [Symbol.dispose](): void;
+  dispose(): void;
 }
 
 interface Params {
@@ -54,7 +54,7 @@ export async function createTranslator(params: Params): Promise<Translator> {
 
       return String(parsed.result);
     },
-    [Symbol.dispose]: () => {
+    dispose: () => {
       engine.unload();
     },
   };

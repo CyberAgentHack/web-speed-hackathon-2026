@@ -1,3 +1,4 @@
+import type { Request } from "express";
 import { Router } from "express";
 import httpErrors from "http-errors";
 import { UniqueConstraintError, ValidationError } from "sequelize";
@@ -6,12 +7,50 @@ import { User } from "@web-speed-hackathon-2026/server/src/models";
 
 export const authRouter = Router();
 
+async function regenerateSession(req: Request): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    req.session.regenerate((error) => {
+      if (error != null) {
+        reject(error);
+        return;
+      }
+      resolve();
+    });
+  });
+}
+
+async function saveSession(req: Request): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    req.session.save((error) => {
+      if (error != null) {
+        reject(error);
+        return;
+      }
+      resolve();
+    });
+  });
+}
+
+async function destroySession(req: Request): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    req.session.destroy((error) => {
+      if (error != null) {
+        reject(error);
+        return;
+      }
+      resolve();
+    });
+  });
+}
+
 authRouter.post("/signup", async (req, res) => {
   try {
     const { id: userId } = await User.create(req.body);
     const user = await User.findByPk(userId);
 
+    await regenerateSession(req);
     req.session.userId = userId;
+    await saveSession(req);
     return res.status(200).type("application/json").send(user);
   } catch (err) {
     if (err instanceof UniqueConstraintError) {
@@ -38,11 +77,14 @@ authRouter.post("/signin", async (req, res) => {
     throw new httpErrors.BadRequest();
   }
 
+  await regenerateSession(req);
   req.session.userId = user.id;
+  await saveSession(req);
   return res.status(200).type("application/json").send(user);
 });
 
 authRouter.post("/signout", async (req, res) => {
-  req.session.userId = undefined;
+  await destroySession(req);
+  res.clearCookie("connect.sid");
   return res.status(200).type("application/json").send({});
 });

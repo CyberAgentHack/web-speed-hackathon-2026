@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { Field, InjectedFormProps, reduxForm, WrappedFieldProps } from "redux-form";
+import {
+  Field,
+  InjectedFormProps,
+  reduxForm,
+  SubmissionError,
+  WrappedFieldProps,
+} from "redux-form";
 
 import { Timeline } from "@web-speed-hackathon-2026/client/src/components/timeline/Timeline";
 import {
@@ -8,8 +14,7 @@ import {
   sanitizeSearchText,
 } from "@web-speed-hackathon-2026/client/src/search/services";
 import { SearchFormData } from "@web-speed-hackathon-2026/client/src/search/types";
-import { validate } from "@web-speed-hackathon-2026/client/src/search/validation";
-import { analyzeSentiment } from "@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer";
+import { validate as validateSearchForm } from "@web-speed-hackathon-2026/client/src/search/validation";
 
 import { Button } from "../foundation/Button";
 
@@ -18,23 +23,28 @@ interface Props {
   results: Models.Post[];
 }
 
-const SearchInput = ({ input, meta }: WrappedFieldProps) => (
-  <div className="flex flex-1 flex-col">
-    <input
-      {...input}
-      className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
-        meta.touched && meta.error
-          ? "border-cax-danger focus:border-cax-danger"
-          : "border-cax-border focus:border-cax-brand-strong"
-      }`}
-      placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
-      type="text"
-    />
-    {meta.touched && meta.error && (
-      <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>
-    )}
-  </div>
-);
+type SentimentLabel = "positive" | "negative" | "neutral";
+
+const SearchInput = ({ input, meta }: WrappedFieldProps) => {
+  const showError = (meta.touched || meta.submitFailed) && meta.error;
+
+  return (
+    <div className="flex flex-1 flex-col">
+      <input
+        {...input}
+        aria-label="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
+        className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
+          showError
+            ? "border-cax-danger focus:border-cax-danger"
+            : "border-cax-border focus:border-cax-brand-strong"
+        }`}
+        placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
+        type="text"
+      />
+      {showError && <span className="text-cax-danger mt-1 text-xs">{meta.error}</span>}
+    </div>
+  );
+};
 
 const SearchPageComponent = ({
   query,
@@ -42,31 +52,34 @@ const SearchPageComponent = ({
   handleSubmit,
 }: Props & InjectedFormProps<SearchFormData, Props>) => {
   const navigate = useNavigate();
-  const [isNegative, setIsNegative] = useState(false);
 
   const parsed = parseSearchQuery(query);
+  const [sentimentLabel, setSentimentLabel] = useState<SentimentLabel>("neutral");
 
   useEffect(() => {
+    let active = true;
+
     if (!parsed.keywords) {
-      setIsNegative(false);
+      setSentimentLabel("neutral");
       return;
     }
 
-    let isMounted = true;
-    analyzeSentiment(parsed.keywords)
+    void import("@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer")
+      .then(({ analyzeSentiment }) => analyzeSentiment(parsed.keywords))
       .then((result) => {
-        if (isMounted) {
-          setIsNegative(result.label === "negative");
+        if (active) {
+          setSentimentLabel(result.label);
         }
       })
-      .catch(() => {
-        if (isMounted) {
-          setIsNegative(false);
+      .catch((error) => {
+        console.error(error);
+        if (active) {
+          setSentimentLabel("neutral");
         }
       });
 
     return () => {
-      isMounted = false;
+      active = false;
     };
   }, [parsed.keywords]);
 
@@ -85,6 +98,11 @@ const SearchPageComponent = ({
   }, [parsed]);
 
   const onSubmit = (values: SearchFormData) => {
+    const errors = validateSearchForm(values);
+    if (errors.searchText) {
+      throw new SubmissionError(errors);
+    }
+
     const sanitizedText = sanitizeSearchText(values.searchText.trim());
     navigate(`/search?q=${encodeURIComponent(sanitizedText)}`);
   };
@@ -113,20 +131,17 @@ const SearchPageComponent = ({
         </div>
       )}
 
-      {isNegative && (
-        <article className="hover:bg-cax-surface-subtle px-1 sm:px-4">
-          <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
-            <div>
-              <p className="text-cax-text text-lg font-bold">どしたん話聞こうか?</p>
-              <p className="text-cax-text-muted">言わなくてもいいけど、言ってもいいよ。</p>
-            </div>
-          </div>
-        </article>
-      )}
-
       {query && results.length === 0 ? (
-        <div className="text-cax-text-muted flex items-center justify-center p-8">
-          検索結果が見つかりませんでした
+        <div className="flex flex-col items-center justify-center gap-3 p-8 text-center">
+          {sentimentLabel === "negative" ? (
+            <>
+              <p className="text-cax-brand text-xl font-bold">どしたん話聞こうか?</p>
+              <p className="text-cax-text-muted text-sm">
+                言わなくてもいいけど、言ってもいいよ。
+              </p>
+            </>
+          ) : null}
+          <p className="text-cax-text-muted">検索結果が見つかりませんでした</p>
         </div>
       ) : (
         <Timeline timeline={results} />
@@ -138,5 +153,5 @@ const SearchPageComponent = ({
 export const SearchPage = reduxForm<SearchFormData, Props>({
   form: "search",
   enableReinitialize: true,
-  validate,
+  validate: validateSearchForm,
 })(SearchPageComponent);

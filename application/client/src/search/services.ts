@@ -2,44 +2,53 @@ export const sanitizeSearchText = (input: string): string => {
   let text = input;
 
   text = text.replace(
-    /\b(from|until)\s*:?\s*(\d{4}-\d{2}-\d{2})\d*/gi,
+    /\b(from|since|until)\s*:?\s*(\d{4}-\d{2}-\d{2})\d*/gi,
     (_m, key, date) => `${key}:${date}`,
   );
 
   return text;
 };
 
+function extractDateTokenValue(token: string, prefix: "since:" | "until:"): string | null {
+  if (!token.startsWith(prefix)) {
+    return null;
+  }
+
+  const match = token.slice(prefix.length).match(/\d{4}-\d{2}-\d{2}/);
+  return match?.[0] ?? null;
+}
+
 export const parseSearchQuery = (query: string) => {
-  const sincePattern = /since:((\d|\d\d|\d\d\d\d-\d\d-\d\d)+)+$/;
-  const untilPattern = /until:((\d|\d\d|\d\d\d\d-\d\d-\d\d)+)+$/;
+  const tokens = query.split(/\s+/).filter(Boolean);
+  const keywords: string[] = [];
+  let sinceDate: string | null = null;
+  let untilDate: string | null = null;
 
-  const sincePart = query.match(/since:[^\s]*/)?.[0] || "";
-  const untilPart = query.match(/until:[^\s]*/)?.[0] || "";
+  for (const token of tokens) {
+    const nextSinceDate = extractDateTokenValue(token, "since:");
+    if (nextSinceDate !== null) {
+      sinceDate = nextSinceDate;
+      continue;
+    }
 
-  const sinceMatch = sincePattern.exec(sincePart);
-  const untilMatch = untilPattern.exec(untilPart);
+    const nextUntilDate = extractDateTokenValue(token, "until:");
+    if (nextUntilDate !== null) {
+      untilDate = nextUntilDate;
+      continue;
+    }
 
-  const keywords = query
-    .replace(/since:.*(\d{4}-\d{2}-\d{2}).*/g, "")
-    .replace(/until:.*(\d{4}-\d{2}-\d{2}).*/g, "")
-    .trim();
-
-  const extractDate = (s: string | null) => {
-    if (!s) return null;
-    const m = /(\d{4}-\d{2}-\d{2})/.exec(s);
-    return m ? m[1] : null;
-  };
+    keywords.push(token);
+  }
 
   return {
-    keywords,
-    sinceDate: extractDate(sinceMatch ? sinceMatch[1]! : null),
-    untilDate: extractDate(untilMatch ? untilMatch[1]! : null),
+    keywords: keywords.join(" "),
+    sinceDate,
+    untilDate,
   };
 };
 
 export const isValidDate = (dateStr: string): boolean => {
-  const slowDateLike = /^(\d+)+-(\d+)+-(\d+)+$/;
-  if (!slowDateLike.test(dateStr)) return false;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;
 
   const date = new Date(dateStr);
   return !Number.isNaN(date.getTime());
