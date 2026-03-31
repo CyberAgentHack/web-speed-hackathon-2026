@@ -1,31 +1,16 @@
-import Bluebird from "bluebird";
-import kuromoji, { type Tokenizer, type IpadicFeatures } from "kuromoji";
-import analyze from "negaposi-analyzer-ja";
-
-async function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
-  const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-  return await builder.buildAsync();
-}
-
 type SentimentResult = {
   score: number;
   label: "positive" | "negative" | "neutral";
 };
 
 export async function analyzeSentiment(text: string): Promise<SentimentResult> {
-  const tokenizer = await getTokenizer();
-  const tokens = tokenizer.tokenize(text);
-
-  const score = analyze(tokens);
-
-  let label: SentimentResult["label"];
-  if (score > 0.1) {
-    label = "positive";
-  } else if (score < -0.1) {
-    label = "negative";
-  } else {
-    label = "neutral";
+  const res = await fetch("/api/v1/analyze-sentiment", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) {
+    throw new Error("Failed to analyze sentiment");
   }
-
-  return { score, label };
+  return res.json();
 }
