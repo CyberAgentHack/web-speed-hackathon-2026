@@ -1,4 +1,4 @@
-import moment from "moment";
+import { formatRelativeTime } from "@web-speed-hackathon-2026/client/src/utils/format_date";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -76,7 +76,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                 : conversation.member;
 
             const lastMessage = messages.at(-1);
-            const hasUnread = messages
+            const hasUnread = (conversation as any).hasUnread ?? messages
               .filter((m) => m.sender.id === peer.id)
               .some((m) => !m.isRead);
 
@@ -87,6 +87,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                     <img
                       alt={peer.profileImage.alt}
                       className="w-12 shrink-0 self-start rounded-full"
+                      decoding="async"
                       src={getProfileImagePath(peer.profileImage.id)}
                     />
                     <div className="flex flex-1 flex-col">
@@ -100,7 +101,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {formatRelativeTime(lastMessage.createdAt)}
                           </time>
                         )}
                       </div>

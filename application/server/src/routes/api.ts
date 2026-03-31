@@ -10,8 +10,11 @@ import { initializeRouter } from "@web-speed-hackathon-2026/server/src/routes/ap
 import { movieRouter } from "@web-speed-hackathon-2026/server/src/routes/api/movie";
 import { postRouter } from "@web-speed-hackathon-2026/server/src/routes/api/post";
 import { searchRouter } from "@web-speed-hackathon-2026/server/src/routes/api/search";
+import { sentimentRouter } from "@web-speed-hackathon-2026/server/src/routes/api/sentiment";
 import { soundRouter } from "@web-speed-hackathon-2026/server/src/routes/api/sound";
+import { translateRouter } from "@web-speed-hackathon-2026/server/src/routes/api/translate";
 import { userRouter } from "@web-speed-hackathon-2026/server/src/routes/api/user";
+import { waveformRouter } from "@web-speed-hackathon-2026/server/src/routes/api/waveform";
 
 export const apiRouter = Router();
 
@@ -23,8 +26,11 @@ apiRouter.use(searchRouter);
 apiRouter.use(movieRouter);
 apiRouter.use(imageRouter);
 apiRouter.use(soundRouter);
+apiRouter.use(waveformRouter);
 apiRouter.use(authRouter);
 apiRouter.use(crokRouter);
+apiRouter.use(sentimentRouter);
+apiRouter.use(translateRouter);
 
 apiRouter.use(async (err: Error, _req: Request, _res: Response, _next: NextFunction) => {
   if (err instanceof ValidationError) {

@@ -1,15 +1,64 @@
 /// <reference types="webpack-dev-server" />
 const path = require("path");
 
+const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const HTMLInlineCSSWebpackPlugin = require("html-inline-css-webpack-plugin").default;
 const webpack = require("webpack");
+
+const REACT_ROUTER_PACKAGE_PATH = path.dirname(require.resolve("react-router/package.json"));
+const REACT_ROUTER_PRODUCTION_ENTRY = path.resolve(REACT_ROUTER_PACKAGE_PATH, "dist/production/index.mjs");
 
 const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
+const ANALYZE_MODE =
+  process.env.ANALYZE === "static" ? "static" : process.env.ANALYZE ? "server" : null;
+
+const plugins = [
+  new webpack.DefinePlugin({
+    "process.env.NODE_ENV": JSON.stringify("production"),
+    "process.env.BUILD_DATE": JSON.stringify(new Date().toISOString()),
+    // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
+    "process.env.COMMIT_HASH": JSON.stringify(process.env.SOURCE_VERSION || ""),
+  }),
+  new MiniCssExtractPlugin({
+    filename: "styles/[name].css",
+  }),
+  new CopyWebpackPlugin({
+    patterns: [
+      {
+        from: path.resolve(__dirname, "node_modules/katex/dist/fonts"),
+        to: path.resolve(DIST_PATH, "styles/fonts"),
+        globOptions: {
+          ignore: ["**/*.woff", "**/*.ttf"],
+        },
+      },
+    ],
+  }),
+  new HtmlWebpackPlugin({
+    inject: true,
+    scriptLoading: "defer",
+    template: path.resolve(SRC_PATH, "./index.html"),
+  }),
+  new HTMLInlineCSSWebpackPlugin({ leaveCSSFile: true }),
+];
+
+if (ANALYZE_MODE) {
+  plugins.push(
+    new BundleAnalyzerPlugin({
+      analyzerMode: ANALYZE_MODE,
+      analyzerPort: 8888,
+      generateStatsFile: true,
+      openAnalyzer: true,
+      reportFilename: "bundle-report.html",
+      statsFilename: "bundle-stats.json",
+    }),
+  );
+}
 
 /** @type {import('webpack').Configuration} */
 const config = {
@@ -25,18 +74,15 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: false,
   entry: {
     main: [
-      "core-js",
-      "regenerator-runtime/runtime",
-      "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: "production",
   module: {
     rules: [
       {
@@ -52,74 +98,21 @@ const config = {
           { loader: "postcss-loader" },
         ],
       },
-      {
-        resourceQuery: /binary/,
-        type: "asset/bytes",
-      },
     ],
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
+    chunkFormat: "array-push",
     filename: "scripts/[name].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     clean: true,
   },
-  plugins: [
-    new webpack.ProvidePlugin({
-      $: "jquery",
-      AudioContext: ["standardized-audio-context", "AudioContext"],
-      Buffer: ["buffer", "Buffer"],
-      "window.jQuery": "jquery",
-    }),
-    new webpack.EnvironmentPlugin({
-      BUILD_DATE: new Date().toISOString(),
-      // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
-      COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
-    }),
-    new MiniCssExtractPlugin({
-      filename: "styles/[name].css",
-    }),
-    new CopyWebpackPlugin({
-      patterns: [
-        {
-          from: path.resolve(__dirname, "node_modules/katex/dist/fonts"),
-          to: path.resolve(DIST_PATH, "styles/fonts"),
-        },
-      ],
-    }),
-    new HtmlWebpackPlugin({
-      inject: false,
-      template: path.resolve(SRC_PATH, "./index.html"),
-    }),
-  ],
+  plugins,
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
     alias: {
-      "bayesian-bm25$": path.resolve(__dirname, "node_modules", "bayesian-bm25/dist/index.js"),
-      ["kuromoji$"]: path.resolve(__dirname, "node_modules", "kuromoji/build/kuromoji.js"),
-      "@ffmpeg/ffmpeg$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/ffmpeg/dist/esm/index.js",
-      ),
-      "@ffmpeg/core$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/core/dist/umd/ffmpeg-core.js",
-      ),
-      "@ffmpeg/core/wasm$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/core/dist/umd/ffmpeg-core.wasm",
-      ),
-      "@imagemagick/magick-wasm/magick.wasm$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@imagemagick/magick-wasm/dist/magick.wasm",
-      ),
+      "react-router$": REACT_ROUTER_PRODUCTION_ENTRY,
     },
     fallback: {
       fs: false,
@@ -128,20 +121,35 @@ const config = {
     },
   },
   optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
-  },
-  cache: false,
-  ignoreWarnings: [
-    {
-      module: /@ffmpeg/,
-      message: /Critical dependency: the request of a dependency is an expression/,
+    minimize: true,
+    splitChunks: {
+      chunks: "async",
+      maxAsyncSize: 160000,
+      minRemainingSize: 0,
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: "vendor",
+          chunks: "initial",
+          reuseExistingChunk: true,
+          priority: -10,
+        },
+        default: {
+          minChunks: 2,
+          reuseExistingChunk: true,
+          priority: -20,
+        },
+      },
     },
-  ],
+    concatenateModules: true,
+    usedExports: true,
+    providedExports: true,
+    sideEffects: true,
+  },
+  cache: {
+    type: "filesystem",
+  },
+  ignoreWarnings: [],
 };
 
 module.exports = config;

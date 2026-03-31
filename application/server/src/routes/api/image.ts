@@ -2,14 +2,13 @@ import { promises as fs } from "fs";
 import path from "path";
 
 import { Router } from "express";
-import { fileTypeFromBuffer } from "file-type";
 import httpErrors from "http-errors";
+import sharp from "sharp";
 import { v4 as uuidv4 } from "uuid";
 
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
-// 変換した画像の拡張子
-const EXTENSION = "jpg";
+const OUTPUT_EXTENSION = "avif";
 
 export const imageRouter = Router();
 
@@ -21,16 +20,26 @@ imageRouter.post("/images", async (req, res) => {
     throw new httpErrors.BadRequest();
   }
 
-  const type = await fileTypeFromBuffer(req.body);
-  if (type === undefined || type.ext !== EXTENSION) {
-    throw new httpErrors.BadRequest("Invalid file type");
-  }
-
   const imageId = uuidv4();
 
-  const filePath = path.resolve(UPLOAD_PATH, `./images/${imageId}.${EXTENSION}`);
-  await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
-  await fs.writeFile(filePath, req.body);
+  // Extract EXIF ImageDescription as alt text
+  let alt = "";
+  try {
+    const exifr = await import("exifr");
+    const exif = await exifr.parse(req.body, { pick: ["ImageDescription"] });
+    if (exif?.ImageDescription) {
+      alt = String(exif.ImageDescription);
+    }
+  } catch {
+    // No EXIF or parse error
+  }
 
-  return res.status(200).type("application/json").send({ id: imageId });
+  // Convert any image format (TIFF, PNG, WebP, etc.) to AVIF using sharp
+  const avifBuffer = await sharp(req.body).avif({ quality: 50 }).toBuffer();
+
+  const filePath = path.resolve(UPLOAD_PATH, `./images/${imageId}.${OUTPUT_EXTENSION}`);
+  await fs.mkdir(path.resolve(UPLOAD_PATH, "images"), { recursive: true });
+  await fs.writeFile(filePath, avifBuffer);
+
+  return res.status(200).type("application/json").send({ id: imageId, alt });
 });

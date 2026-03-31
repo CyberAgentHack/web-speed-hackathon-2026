@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import moment from "moment";
+import { formatTime } from "@web-speed-hackathon-2026/client/src/utils/format_date";
 import {
   ChangeEvent,
   useCallback,
@@ -43,7 +43,7 @@ export const DirectMessagePage = ({
   const [text, setText] = useState("");
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
-  const scrollHeightRef = useRef(0);
+  const scrollBottomRef = useRef<HTMLDivElement>(null);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -74,16 +74,8 @@ export const DirectMessagePage = ({
   );
 
   useEffect(() => {
-    const id = setInterval(() => {
-      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
-      if (height !== scrollHeightRef.current) {
-        scrollHeightRef.current = height;
-        window.scrollTo(0, height);
-      }
-    }, 1);
-
-    return () => clearInterval(id);
-  }, []);
+    scrollBottomRef.current?.scrollIntoView();
+  }, [conversation.messages.length, isPeerTyping]);
 
   if (conversationError != null) {
     return (
@@ -99,6 +91,7 @@ export const DirectMessagePage = ({
         <img
           alt={peer.profileImage.alt}
           className="h-12 w-12 rounded-full object-cover"
+          decoding="async"
           src={getProfileImagePath(peer.profileImage.id)}
         />
         <div className="min-w-0">
@@ -141,7 +134,7 @@ export const DirectMessagePage = ({
                 </p>
                 <div className="flex gap-1 text-xs">
                   <time dateTime={message.createdAt}>
-                    {moment(message.createdAt).locale("ja").format("HH:mm")}
+                    {formatTime(message.createdAt)}
                   </time>
                   {isActiveUserSend && message.isRead && (
                     <span className="text-cax-text-muted">既読</span>
@@ -151,6 +144,7 @@ export const DirectMessagePage = ({
             );
           })}
         </ul>
+        <div ref={scrollBottomRef} />
       </div>
 
       <div className="sticky bottom-12 z-10 lg:bottom-0">

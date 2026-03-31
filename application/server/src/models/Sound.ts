@@ -1,4 +1,5 @@
 import {
+  CreationOptional,
   DataTypes,
   InferAttributes,
   InferCreationAttributes,
@@ -11,6 +12,7 @@ export class Sound extends Model<InferAttributes<Sound>, InferCreationAttributes
   declare id: string;
   declare title: string;
   declare artist: string;
+  declare extension: CreationOptional<string>;
 }
 
 export function initSound(sequelize: Sequelize) {
@@ -31,6 +33,12 @@ export function initSound(sequelize: Sequelize) {
         allowNull: false,
         defaultValue: "Unknown",
         type: DataTypes.STRING,
+      },
+      extension: {
+        type: DataTypes.VIRTUAL,
+        get() {
+          return this.getDataValue("extension") || "mp3";
+        },
       },
     },
     {

@@ -1,5 +1,5 @@
-import moment from "moment";
-import { MouseEventHandler, useCallback } from "react";
+import { formatLongDate } from "@web-speed-hackathon-2026/client/src/utils/format_date";
+import { MouseEventHandler, useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
@@ -8,10 +8,13 @@ import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
-const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Element): boolean => {
+const isClickedInteractiveElement = (target: EventTarget | null, currentTarget: Element): boolean => {
   while (target !== null && target instanceof Element) {
     const tagName = target.tagName.toLowerCase();
-    if (["button", "a"].includes(tagName)) {
+    if (tagName === "a") {
+      return true;
+    }
+    if (tagName === "button" && (target as HTMLElement).getAttribute("aria-label") !== "動画プレイヤー") {
       return true;
     }
     if (currentTarget === target) {
@@ -22,32 +25,50 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
   return false;
 };
 
-/**
- * @typedef {object} Props
- * @property {Models.Post} post
- */
 interface Props {
   post: Models.Post;
+  isPriority?: boolean;
 }
 
-export const TimelineItem = ({ post }: Props) => {
+export const TimelineItem = ({ post, isPriority = false }: Props) => {
   const navigate = useNavigate();
+  const ref = useRef<HTMLElement>(null);
+  const [isVisible, setIsVisible] = useState(isPriority);
 
-  /**
-   * ボタンやリンク以外の箇所をクリックしたとき かつ 文字が選択されてないとき、投稿詳細ページに遷移する
-   */
+  useEffect(() => {
+    if (isPriority) return;
+    const el = ref.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [isPriority]);
+
   const handleClick = useCallback<MouseEventHandler>(
     (ev) => {
       const isSelectedText = document.getSelection()?.isCollapsed === false;
-      if (!isClickedAnchorOrButton(ev.target, ev.currentTarget) && !isSelectedText) {
+      if (!isClickedInteractiveElement(ev.target, ev.currentTarget) && !isSelectedText) {
         navigate(`/posts/${post.id}`);
       }
     },
     [post, navigate],
   );
 
+  if (!isVisible) {
+    return <article ref={ref} className="px-1 sm:px-4" style={{ minHeight: "120px" }} />;
+  }
+
   return (
-    <article className="hover:bg-cax-surface-subtle px-1 sm:px-4" onClick={handleClick}>
+    <article ref={ref} className="hover:bg-cax-surface-subtle px-1 sm:px-4" onClick={handleClick}>
       <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
         <div className="shrink-0 grow-0 pr-2 sm:pr-4">
           <Link
@@ -56,6 +77,9 @@ export const TimelineItem = ({ post }: Props) => {
           >
             <img
               alt={post.user.profileImage.alt}
+              decoding={isPriority ? "sync" : "async"}
+              fetchPriority={isPriority ? "high" : "auto"}
+              loading={isPriority ? "eager" : "lazy"}
               src={getProfileImagePath(post.user.profileImage.id)}
             />
           </Link>
@@ -76,8 +100,8 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={new Date(post.createdAt).toISOString()}>
+                {formatLongDate(post.createdAt)}
               </time>
             </Link>
           </p>
@@ -86,12 +110,12 @@ export const TimelineItem = ({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea images={post.images} isPriority={isPriority} />
             </div>
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
+              <MovieArea movie={post.movie} showControls={false} />
             </div>
           ) : null}
           {post.sound ? (

@@ -15,7 +15,12 @@ interface SubmitParams {
 async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promise<Models.Post> {
   const payload = {
     images: images
-      ? await Promise.all(images.map((image) => sendFile("/api/v1/images", image)))
+      ? await Promise.all(
+          images.map(async (image) => {
+            const result = await sendFile<{ id: string; alt?: string }>("/api/v1/images", image);
+            return { id: result.id, alt: result.alt || "" };
+          }),
+        )
       : [],
     movie: movie ? await sendFile("/api/v1/movies", movie) : undefined,
     sound: sound ? await sendFile("/api/v1/sounds", sound) : undefined,
@@ -40,7 +45,6 @@ export const NewPostModalContainer = ({ id }: Props) => {
     }
 
     const handleToggle = () => {
-      // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
       setResetKey((key) => key + 1);
     };
     element.addEventListener("toggle", handleToggle);

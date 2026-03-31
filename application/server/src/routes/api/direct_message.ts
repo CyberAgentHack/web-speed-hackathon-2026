@@ -1,6 +1,6 @@
 import { Router } from "express";
 import httpErrors from "http-errors";
-import { col, where, Op } from "sequelize";
+import { Op } from "sequelize";
 
 import { eventhub } from "@web-speed-hackathon-2026/server/src/eventhub";
 import {
@@ -16,20 +16,55 @@ directMessageRouter.get("/dm", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversations = await DirectMessageConversation.findAll({
+  const conversations = await DirectMessageConversation.unscoped().findAll({
     where: {
-      [Op.and]: [
-        { [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }] },
-        where(col("messages.id"), { [Op.not]: null }),
-      ],
+      [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
-    order: [[col("messages.createdAt"), "DESC"]],
+    include: [
+      { association: "initiator", include: [{ association: "profileImage" }] },
+      { association: "member", include: [{ association: "profileImage" }] },
+    ],
+    order: [["createdAt", "DESC"]],
   });
 
-  const sorted = conversations.map((c) => ({
-    ...c.toJSON(),
-    messages: c.messages?.reverse(),
-  }));
+  // 各会話の最新メッセージと未読フラグを個別に取得
+  const results = await Promise.all(
+    conversations.map(async (conv) => {
+      const lastMessage = await DirectMessage.findOne({
+        attributes: ["id", "body", "createdAt", "isRead", "senderId"],
+        include: [{ association: "sender", attributes: ["id"] }],
+        where: { conversationId: conv.id },
+        order: [["createdAt", "DESC"]],
+      });
+
+      if (!lastMessage) return null;
+
+      const peerId =
+        conv.initiatorId !== req.session.userId ? conv.initiatorId : conv.memberId;
+      const hasUnread = await DirectMessage.count({
+        where: {
+          conversationId: conv.id,
+          senderId: peerId,
+          isRead: false,
+        },
+      });
+
+      return {
+        ...conv.toJSON(),
+        messages: [lastMessage.toJSON()],
+        hasUnread: hasUnread > 0,
+      };
+    }),
+  );
+
+  // メッセージがない会話を除外し、最新メッセージの日時でソート
+  const sorted = results
+    .filter((r) => r !== null)
+    .sort((a, b) => {
+      const aTime = new Date(a.messages[0].createdAt).getTime();
+      const bTime = new Date(b.messages[0].createdAt).getTime();
+      return bTime - aTime;
+    });
 
   return res.status(200).type("application/json").send(sorted);
 });
@@ -56,7 +91,6 @@ directMessageRouter.post("/dm", async (req, res) => {
       memberId: peer.id,
     },
   });
-  await conversation.reload();
 
   return res.status(200).type("application/json").send(conversation);
 });
@@ -100,17 +134,42 @@ directMessageRouter.get("/dm/:conversationId", async (req, res) => {
     throw new httpErrors.Unauthorized();
   }
 
-  const conversation = await DirectMessageConversation.findOne({
+  const limit = req.query["limit"] != null ? Number(req.query["limit"]) : 30;
+  const offset = req.query["offset"] != null ? Number(req.query["offset"]) : undefined;
+
+  const conversation = await DirectMessageConversation.unscoped().findOne({
     where: {
       id: req.params.conversationId,
       [Op.or]: [{ initiatorId: req.session.userId }, { memberId: req.session.userId }],
     },
+    include: [
+      { association: "initiator", include: [{ association: "profileImage" }] },
+      { association: "member", include: [{ association: "profileImage" }] },
+    ],
   });
   if (conversation === null) {
     throw new httpErrors.NotFound();
   }
 
-  return res.status(200).type("application/json").send(conversation);
+  // メッセージを別クエリで取得（最新N件を降順で取得し、昇順に並べ替え）
+  const messages = await DirectMessage.findAll({
+    attributes: ["id", "body", "createdAt", "isRead", "senderId"],
+    include: [{ association: "sender", attributes: ["id"] }],
+    where: { conversationId: req.params.conversationId },
+    order: [["createdAt", "DESC"]],
+    limit,
+    offset,
+  });
+
+  const messagesJson = messages.map((m) => m.toJSON());
+  messagesJson.sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+  const result = {
+    ...conversation.toJSON(),
+    messages: messagesJson,
+  };
+
+  return res.status(200).type("application/json").send(result);
 });
 
 directMessageRouter.ws("/dm/:conversationId", async (req, _res) => {
@@ -175,7 +234,7 @@ directMessageRouter.post("/dm/:conversationId/messages", async (req, res) => {
     conversationId: conversation.id,
     senderId: req.session.userId,
   });
-  await message.reload();
+  await message.reload({ include: [{ association: "sender", attributes: ["id"] }] });
 
   return res.status(201).type("application/json").send(message);
 });
