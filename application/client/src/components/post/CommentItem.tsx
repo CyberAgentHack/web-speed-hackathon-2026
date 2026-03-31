@@ -1,4 +1,4 @@
-import moment from "moment";
+import { formatLongDate, toISOString } from "@web-speed-hackathon-2026/client/src/utils/date";
 
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
@@ -18,8 +18,8 @@ export const CommentItem = ({ comment }: Props) => {
             to={`/users/${comment.user.username}`}
           >
             <img
-              alt={comment.user.profileImage.alt}
-              src={getProfileImagePath(comment.user.profileImage.id)}
+              alt={comment.user.profileImage?.alt ?? ""}
+              src={comment.user.profileImage ? getProfileImagePath(comment.user.profileImage.id) : ""}
             />
           </Link>
         </div>
@@ -42,8 +42,8 @@ export const CommentItem = ({ comment }: Props) => {
             <TranslatableText text={comment.text} />
           </div>
           <p className="text-cax-text-muted pt-1 text-xs">
-            <time dateTime={moment(comment.createdAt).toISOString()}>
-              {moment(comment.createdAt).locale("ja").format("LL")}
+            <time dateTime={toISOString(comment.createdAt)}>
+              {formatLongDate(comment.createdAt)}
             </time>
           </p>
         </div>

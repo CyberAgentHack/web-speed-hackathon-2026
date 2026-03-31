@@ -12,7 +12,8 @@ interface Props {
 }
 
 export const SoundPlayer = ({ sound }: Props) => {
-  const { data, isLoading } = useFetch(getSoundPath(sound.id), fetchBinary);
+  const soundPath = getSoundPath(sound.id);
+  const { data, isLoading } = useFetch(soundPath, fetchBinary);
 
   const blobUrl = useMemo(() => {
     return data !== null ? URL.createObjectURL(new Blob([data])) : null;
@@ -21,7 +22,7 @@ export const SoundPlayer = ({ sound }: Props) => {
   const [currentTimeRatio, setCurrentTimeRatio] = useState(0);
   const handleTimeUpdate = useCallback<ReactEventHandler<HTMLAudioElement>>((ev) => {
     const el = ev.currentTarget;
-    setCurrentTimeRatio(el.currentTime / el.duration);
+    setCurrentTimeRatio((el.currentTime || 0) / (el.duration || 1));
   }, []);
 
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -31,7 +32,7 @@ export const SoundPlayer = ({ sound }: Props) => {
       if (isPlaying) {
         audioRef.current?.pause();
       } else {
-        audioRef.current?.play();
+        audioRef.current?.play().catch(() => {});
       }
       return !isPlaying;
     });

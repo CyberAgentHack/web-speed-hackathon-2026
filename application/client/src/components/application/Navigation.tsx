@@ -26,29 +26,23 @@ export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }
             icon={<FontAwesomeIcon iconType="search" styleType="solid" />}
             text="検索"
           />
-          {activeUser !== null ? (
-            <NavigationItem
-              badge={<DirectMessageNotificationBadge />}
-              href="/dm"
-              icon={<FontAwesomeIcon iconType="envelope" styleType="solid" />}
-              text="DM"
-            />
-          ) : null}
-          {activeUser !== null ? (
-            <NavigationItem
-              icon={<FontAwesomeIcon iconType="edit" styleType="solid" />}
-              command="show-modal"
-              commandfor={newPostModalId}
-              text="投稿する"
-            />
-          ) : null}
-          {activeUser !== null ? (
-            <NavigationItem
-              href={`/users/${activeUser.username}`}
-              icon={<FontAwesomeIcon iconType="user" styleType="solid" />}
-              text="マイページ"
-            />
-          ) : null}
+          <NavigationItem
+            badge={activeUser !== null ? <DirectMessageNotificationBadge /> : null}
+            href={activeUser !== null ? "/dm" : undefined}
+            icon={<FontAwesomeIcon iconType="envelope" styleType="solid" />}
+            text="DM"
+          />
+          <NavigationItem
+            icon={<FontAwesomeIcon iconType="edit" styleType="solid" />}
+            command={activeUser !== null ? "show-modal" : undefined}
+            commandfor={activeUser !== null ? newPostModalId : undefined}
+            text="投稿する"
+          />
+          <NavigationItem
+            href={activeUser !== null ? `/users/${activeUser.username}` : undefined}
+            icon={<FontAwesomeIcon iconType="user" styleType="solid" />}
+            text="マイページ"
+          />
           {activeUser === null ? (
             <NavigationItem
               icon={<FontAwesomeIcon iconType="sign-in-alt" styleType="solid" />}
@@ -56,14 +50,14 @@ export const Navigation = ({ activeUser, authModalId, newPostModalId, onLogout }
               command="show-modal"
               commandfor={authModalId}
             />
-          ) : null}
-          {activeUser !== null ? (
+          ) : (
             <NavigationItem
               href="/crok"
               icon={<CrokLogo className="h-[30px] w-[30px]" />}
               text="Crok"
             />
-          ) : null}
+          )}
+
           <NavigationItem
             href="/terms"
             icon={<FontAwesomeIcon iconType="balance-scale" styleType="solid" />}

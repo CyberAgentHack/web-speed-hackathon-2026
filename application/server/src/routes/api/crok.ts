@@ -34,15 +34,13 @@ crokRouter.get("/crok", async (req, res) => {
   let messageId = 0;
 
   // TTFT (Time to First Token)
-  await sleep(3000);
+  // 遅延工作を撤去
 
   for (const char of response) {
     if (res.closed) break;
 
     const data = JSON.stringify({ text: char, done: false });
     res.write(`event: message\nid: ${messageId++}\ndata: ${data}\n\n`);
-
-    await sleep(10);
   }
 
   if (!res.closed) {

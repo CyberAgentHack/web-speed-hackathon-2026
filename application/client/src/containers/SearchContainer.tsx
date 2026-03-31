@@ -10,7 +10,7 @@ export const SearchContainer = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
 
-  const { data: posts, fetchMore } = useInfiniteFetch<Models.Post>(
+    const { data: posts, isLoading, fetchMore } = useInfiniteFetch<Models.Post>(
     query ? `/api/v1/search?q=${encodeURIComponent(query)}` : "",
     fetchJSON,
   );
@@ -21,6 +21,11 @@ export const SearchContainer = () => {
         <title>検索 - CaX</title>
       </Helmet>
       <SearchPage query={query} results={posts} initialValues={{ searchText: query }} />
+      {isLoading && posts.length === 0 && (
+        <div className="text-cax-text-muted animate-pulse py-10 text-center">
+          検索結果を読み込んでいます...
+        </div>
+      )}
     </InfiniteScroll>
   );
 };

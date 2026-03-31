@@ -15,21 +15,18 @@ staticRouter.use(history());
 
 staticRouter.use(
   serveStatic(UPLOAD_PATH, {
-    etag: false,
-    lastModified: false,
+    maxAge: "30d",
   }),
 );
 
 staticRouter.use(
   serveStatic(PUBLIC_PATH, {
-    etag: false,
-    lastModified: false,
+    maxAge: "1y",
   }),
 );
 
 staticRouter.use(
   serveStatic(CLIENT_DIST_PATH, {
-    etag: false,
-    lastModified: false,
+    maxAge: "1y",
   }),
 );

@@ -1,5 +1,5 @@
-import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
+import { fromNow } from "@web-speed-hackathon-2026/client/src/utils/date";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -51,8 +51,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
         <h1 className="text-2xl font-bold">ダイレクトメッセージ</h1>
         <div className="flex flex-wrap items-center gap-4">
           <Button
-            command="show-modal"
-            commandfor={newDmModalId}
+            onClick={() => (document.getElementById(newDmModalId) as HTMLDialogElement)?.showModal()}
             leftItem={<FontAwesomeIcon iconType="paper-plane" styleType="solid" />}
           >
             新しくDMを始める
@@ -85,9 +84,9 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                 <Link className="hover:bg-cax-surface-subtle px-4" to={`/dm/${conversation.id}`}>
                   <div className="border-cax-border flex gap-4 border-b px-4 pt-2 pb-4">
                     <img
-                      alt={peer.profileImage.alt}
+                      alt={peer.profileImage?.alt ?? ""}
                       className="w-12 shrink-0 self-start rounded-full"
-                      src={getProfileImagePath(peer.profileImage.id)}
+                      src={peer.profileImage ? getProfileImagePath(peer.profileImage.id) : ""}
                     />
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-center justify-between">
@@ -100,7 +99,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {fromNow(lastMessage.createdAt)}
                           </time>
                         )}
                       </div>

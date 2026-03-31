@@ -4,10 +4,10 @@ import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
 import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
+import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
 import { CrokContainer } from "@web-speed-hackathon-2026/client/src/containers/CrokContainer";
 import { DirectMessageContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer";
 import { DirectMessageListContainer } from "@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer";
-import { NewPostModalContainer } from "@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer";
 import { NotFoundContainer } from "@web-speed-hackathon-2026/client/src/containers/NotFoundContainer";
 import { PostContainer } from "@web-speed-hackathon-2026/client/src/containers/PostContainer";
 import { SearchContainer } from "@web-speed-hackathon-2026/client/src/containers/SearchContainer";
@@ -49,6 +49,11 @@ export const AppContainer = () => {
         <Helmet>
           <title>読込中 - CaX</title>
         </Helmet>
+        <div className="bg-cax-canvas text-cax-text flex h-screen items-center justify-center">
+          <span className="font-serif animate-pulse text-2xl font-bold italic tracking-tighter text-cax-brand">
+            CaX
+          </span>
+        </div>
       </HelmetProvider>
     );
   }
