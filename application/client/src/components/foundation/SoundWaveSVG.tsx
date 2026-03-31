@@ -1,31 +1,8 @@
-import _ from "lodash";
 import { useEffect, useRef, useState } from "react";
 
 interface ParsedData {
   max: number;
   peaks: number[];
-}
-
-async function calculate(data: ArrayBuffer): Promise<ParsedData> {
-  const audioCtx = new AudioContext();
-
-  // 音声をデコードする
-  const buffer = await audioCtx.decodeAudioData(data.slice(0));
-  // 左の音声データの絶対値を取る
-  const leftData = _.map(buffer.getChannelData(0), Math.abs);
-  // 右の音声データの絶対値を取る
-  const rightData = _.map(buffer.getChannelData(1), Math.abs);
-
-  // 左右の音声データの平均を取る
-  const normalized = _.map(_.zip(leftData, rightData), _.mean);
-  // 100 個の chunk に分ける
-  const chunks = _.chunk(normalized, Math.ceil(normalized.length / 100));
-  // chunk ごとに平均を取る
-  const peaks = _.map(chunks, _.mean);
-  // chunk の平均の中から最大値を取る
-  const max = _.max(peaks) ?? 0;
-
-  return { max, peaks };
 }
 
 interface Props {
@@ -40,9 +17,37 @@ export const SoundWaveSVG = ({ soundData }: Props) => {
   });
 
   useEffect(() => {
-    calculate(soundData).then(({ max, peaks }) => {
-      setPeaks({ max, peaks });
+    let cancelled = false;
+
+    const AudioContextClass = window.AudioContext || (window as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextClass) return;
+
+    const audioCtx = new AudioContextClass();
+    audioCtx.decodeAudioData(soundData.slice(0)).then((buffer) => {
+      if (cancelled) return;
+
+      const leftData = buffer.getChannelData(0);
+      const rightData = buffer.getChannelData(buffer.numberOfChannels > 1 ? 1 : 0);
+
+      const worker = new Worker(new URL("./sound_wave_worker", import.meta.url));
+      worker.onmessage = (e: MessageEvent<ParsedData>) => {
+        if (!cancelled) {
+          setPeaks(e.data);
+        }
+        worker.terminate();
+      };
+
+      const leftCopy = leftData.slice(0);
+      const rightCopy = rightData.slice(0);
+      worker.postMessage({ leftData: leftCopy, rightData: rightCopy }, [
+        leftCopy.buffer,
+        rightCopy.buffer,
+      ]);
     });
+
+    return () => {
+      cancelled = true;
+    };
   }, [soundData]);
 
   return (

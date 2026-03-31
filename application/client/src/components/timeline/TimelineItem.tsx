@@ -1,4 +1,8 @@
-import moment from "moment";
+import dayjs from "dayjs";
+import "dayjs/locale/ja";
+import localizedFormat from "dayjs/plugin/localizedFormat";
+
+dayjs.extend(localizedFormat);
 import { MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
@@ -55,8 +59,11 @@ export const TimelineItem = ({ post }: Props) => {
             to={`/users/${post.user.username}`}
           >
             <img
-              alt={post.user.profileImage.alt}
-              src={getProfileImagePath(post.user.profileImage.id)}
+              alt={post.user.profileImage?.alt ?? ""}
+              height={64}
+              loading="lazy"
+              src={post.user.profileImage ? getProfileImagePath(post.user.profileImage.id) : ""}
+              width={64}
             />
           </Link>
         </div>
@@ -76,8 +83,8 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={dayjs(post.createdAt).toISOString()}>
+                {dayjs(post.createdAt).locale("ja").format("LL")}
               </time>
             </Link>
           </p>
@@ -91,12 +98,12 @@ export const TimelineItem = ({ post }: Props) => {
           ) : null}
           {post.movie ? (
             <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
+              <MovieArea movie={post.movie} lazy />
             </div>
           ) : null}
           {post.sound ? (
             <div className="relative mt-2 w-full">
-              <SoundArea sound={post.sound} />
+              <SoundArea sound={post.sound} lazy />
             </div>
           ) : null}
         </div>

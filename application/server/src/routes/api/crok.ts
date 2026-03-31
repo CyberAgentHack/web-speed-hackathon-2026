@@ -13,13 +13,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-8");
 
 crokRouter.get("/crok/suggestions", async (_req, res) => {
-  const suggestions = await QaSuggestion.findAll({ logging: false });
+  res.setHeader("Cache-Control", "public, max-age=3600");
+  const suggestions = await QaSuggestion.findAll({ attributes: ["question"], logging: false });
   res.json({ suggestions: suggestions.map((s) => s.question) });
 });
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+
+const CHUNK_SIZE = 50;
 
 crokRouter.get("/crok", async (req, res) => {
   if (req.session.userId === undefined) {
@@ -33,16 +33,21 @@ crokRouter.get("/crok", async (req, res) => {
 
   let messageId = 0;
 
-  // TTFT (Time to First Token)
-  await sleep(3000);
+  // TypingIndicator の描画を保証するため、最初に空チャンクを送信
+  {
+    const data = JSON.stringify({ text: "", done: false });
+    res.write(`event: message\nid: ${messageId++}\ndata: ${data}\n\n`);
+    await new Promise<void>((resolve) => setTimeout(resolve, 100));
+  }
 
-  for (const char of response) {
+  for (let i = 0; i < response.length; i += CHUNK_SIZE) {
     if (res.closed) break;
 
-    const data = JSON.stringify({ text: char, done: false });
+    const text = response.slice(i, i + CHUNK_SIZE);
+    const data = JSON.stringify({ text, done: false });
     res.write(`event: message\nid: ${messageId++}\ndata: ${data}\n\n`);
 
-    await sleep(10);
+    await new Promise<void>((resolve) => setImmediate(resolve));
   }
 
   if (!res.closed) {
