@@ -684,7 +684,17 @@ paths:
                   suggestions:
                     type: array
                     items:
-                      type: string
+                      type: object
+                      required:
+                        - text
+                        - tokens
+                      properties:
+                        text:
+                          type: string
+                        tokens:
+                          type: array
+                          items:
+                            type: string
   /crok:
     get:
       tags:

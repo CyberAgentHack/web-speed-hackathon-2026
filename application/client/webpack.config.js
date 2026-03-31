@@ -4,6 +4,7 @@ const path = require("path");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 const webpack = require("webpack");
 
 const SRC_PATH = path.resolve(__dirname, "./src");
@@ -25,18 +26,15 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  devtool: false,
   entry: {
     main: [
-      "core-js",
-      "regenerator-runtime/runtime",
-      "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: "production",
   module: {
     rules: [
       {
@@ -60,24 +58,21 @@ const config = {
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
     filename: "scripts/[name].js",
     path: DIST_PATH,
-    publicPath: "auto",
+    publicPath: "/",
     clean: true,
   },
   plugins: [
     new webpack.ProvidePlugin({
-      $: "jquery",
       AudioContext: ["standardized-audio-context", "AudioContext"],
       Buffer: ["buffer", "Buffer"],
-      "window.jQuery": "jquery",
     }),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
+      NODE_ENV: "production",
     }),
     new MiniCssExtractPlugin({
       filename: "styles/[name].css",
@@ -91,8 +86,13 @@ const config = {
       ],
     }),
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: "head",
       template: path.resolve(SRC_PATH, "./index.html"),
+    }),
+    new BundleAnalyzerPlugin({
+      analyzerMode: "static",
+      openAnalyzer: false,
+      reportFilename: path.resolve(DIST_PATH, "bundle-report.html"),
     }),
   ],
   resolve: {
@@ -128,12 +128,27 @@ const config = {
     },
   },
   optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
+    minimize: true,
+    splitChunks: {
+      chunks: "all",
+      cacheGroups: {
+        reactVendor: {
+          // Keep React runtime out of main.js so app code can be cached independently.
+          test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
+          name: "react-vendor",
+          chunks: "all",
+          priority: 30,
+          enforce: true,
+        },
+      },
+    },
+    concatenateModules: true,
+    usedExports: true,
+    providedExports: true,
+    sideEffects: true,
+    runtimeChunk: false,
+    moduleIds: "deterministic",
+    chunkIds: "deterministic",
   },
   cache: false,
   ignoreWarnings: [

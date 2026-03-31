@@ -50,7 +50,8 @@ declare namespace Models {
 
   interface DirectMessage {
     id: string;
-    sender: Models.User;
+    senderId: string;
+    sender?: Models.User;
     body: string;
     isRead: boolean;
     createdAt: string;

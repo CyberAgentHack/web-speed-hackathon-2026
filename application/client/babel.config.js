@@ -4,16 +4,17 @@ module.exports = {
     [
       "@babel/preset-env",
       {
-        targets: "ie 11",
-        corejs: "3",
-        modules: "commonjs",
+        // Only support the latest Chrome to minimize transpilation output.
+        targets: "last 1 Chrome version",
+        bugfixes: true,
+        modules: false,
         useBuiltIns: false,
       },
     ],
     [
       "@babel/preset-react",
       {
-        development: true,
+        development: false,
         runtime: "automatic",
       },
     ],

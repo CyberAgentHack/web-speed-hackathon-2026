@@ -4,17 +4,54 @@ import { fileURLToPath } from "node:url";
 
 import { Router } from "express";
 import httpErrors from "http-errors";
+import kuromoji, { type IpadicFeatures, type Tokenizer } from "kuromoji";
 
 import { QaSuggestion } from "@web-speed-hackathon-2026/server/src/models";
+import { PUBLIC_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
 export const crokRouter = Router();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-8");
 
+const STOP_POS = new Set(["助詞", "助動詞", "記号"]);
+let tokenizerPromise: Promise<Tokenizer<IpadicFeatures>> | null = null;
+
+function extractTokens(tokens: IpadicFeatures[]): string[] {
+  return tokens
+    .filter((t) => t.surface_form !== "" && t.pos !== "" && !STOP_POS.has(t.pos))
+    .map((t) => t.surface_form.toLowerCase());
+}
+
+async function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
+  if (tokenizerPromise == null) {
+    tokenizerPromise = new Promise((resolve, reject) => {
+      kuromoji.builder({ dicPath: path.join(PUBLIC_PATH, "dicts") }).build((err, tokenizer) => {
+        if (err != null || tokenizer == null) {
+          reject(err ?? new Error("failed to initialize kuromoji tokenizer"));
+          return;
+        }
+
+        resolve(tokenizer);
+      });
+    });
+  }
+
+  return await tokenizerPromise;
+}
+
 crokRouter.get("/crok/suggestions", async (_req, res) => {
+  const tokenizer = await getTokenizer();
   const suggestions = await QaSuggestion.findAll({ logging: false });
-  res.json({ suggestions: suggestions.map((s) => s.question) });
+  res.json({
+    suggestions: suggestions.map((s) => {
+      const text = s.question;
+      return {
+        text,
+        tokens: extractTokens(tokenizer.tokenize(text)),
+      };
+    }),
+  });
 });
 
 function sleep(ms: number): Promise<void> {

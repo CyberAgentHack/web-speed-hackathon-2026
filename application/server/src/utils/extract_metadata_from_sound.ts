@@ -1,4 +1,5 @@
-import * as MusicMetadata from "music-metadata";
+import * as musicMetadata from 'music-metadata';
+import iconv from 'iconv-lite';
 
 interface SoundMetadata {
   artist?: string;
@@ -7,10 +8,21 @@ interface SoundMetadata {
 
 export async function extractMetadataFromSound(data: Buffer): Promise<SoundMetadata> {
   try {
-    const metadata = await MusicMetadata.parseBuffer(data);
+    const metadata = await musicMetadata.parseBuffer(data);
+
+    // music-metadata はテキストを Unicode として扱うが、
+    // SHIFT_JIS の場合そのままでは文字化けするため明示的に変換する。
+    const decodeIfNeeded = (value?: string | null): string | undefined => {
+      if (!value) return undefined;
+
+      // バイト列に戻してから SHIFT_JIS として再デコード
+      const sjisBuffer = Buffer.from(value, 'binary');
+      return iconv.decode(sjisBuffer, 'shift_jis');
+    };
+
     return {
-      artist: metadata.common.artist,
-      title: metadata.common.title,
+      artist: decodeIfNeeded(metadata.common.artist),
+      title: decodeIfNeeded(metadata.common.title),
     };
   } catch {
     return {

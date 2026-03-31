@@ -14,12 +14,35 @@ import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components
 import {
   extractTokens,
   filterSuggestionsBM25,
+  type TokenizedSuggestion,
 } from "@web-speed-hackathon-2026/client/src/utils/bm25_search";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 interface Props {
   isStreaming: boolean;
   onSendMessage: (message: string) => void;
+}
+
+let suggestionsCache: TokenizedSuggestion[] | null = null;
+let suggestionsRequest: Promise<TokenizedSuggestion[]> | null = null;
+
+async function getCachedSuggestions(): Promise<TokenizedSuggestion[]> {
+  if (suggestionsCache != null) {
+    return suggestionsCache;
+  }
+
+  if (suggestionsRequest == null) {
+    suggestionsRequest = fetchJSON<{ suggestions: TokenizedSuggestion[] }>("/api/v1/crok/suggestions")
+      .then(({ suggestions }) => {
+        suggestionsCache = suggestions;
+        return suggestions;
+      })
+      .finally(() => {
+        suggestionsRequest = null;
+      });
+  }
+
+  return await suggestionsRequest;
 }
 
 // トークン単位でハイライト
@@ -121,15 +144,13 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
         return;
       }
 
-      const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-        "/api/v1/crok/suggestions",
-      );
+      const candidates = await getCachedSuggestions();
       if (cancelled) {
         return;
       }
 
       const tokens = extractTokens(tokenizer.tokenize(inputValue));
-      const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
+      const results = filterSuggestionsBM25(candidates, tokens);
 
       if (cancelled) {
         return;

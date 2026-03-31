@@ -83,7 +83,7 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
   useWs(`/api/v1/dm/${conversationId}`, (event: DmUpdateEvent | DmTypingEvent) => {
     if (event.type === "dm:conversation:message") {
       void loadConversation().then(() => {
-        if (event.payload.sender.id !== activeUser?.id) {
+        if (event.payload.senderId !== activeUser?.id) {
           setIsPeerTyping(false);
           if (peerTypingTimeoutRef.current !== null) {
             clearTimeout(peerTypingTimeoutRef.current);

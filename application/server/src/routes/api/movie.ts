@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from "uuid";
 import { UPLOAD_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
 // 変換した動画の拡張子
-const EXTENSION = "gif";
+const EXTENSION = "mp4";
 
 export const movieRouter = Router();
 
