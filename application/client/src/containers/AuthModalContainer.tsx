@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { SubmissionError } from "redux-form";
 
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
@@ -36,6 +36,7 @@ function getErrorCode(err: JQuery.jqXHR<unknown>, type: "signin" | "signup"): st
 }
 
 export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
+  const dialogId = useId();
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
   useEffect(() => {
@@ -78,9 +79,10 @@ export const AuthModalContainer = ({ id, onUpdateActiveUser }: Props) => {
   );
 
   return (
-    <Modal id={id} ref={ref} closedby="any">
+    <Modal id={id} ref={ref} closedby="any" aria-labelledby={dialogId}>
       <AuthModalPage
         key={resetKey}
+        id={dialogId}
         onRequestCloseModal={handleRequestCloseModal}
         onSubmit={handleSubmit}
       />

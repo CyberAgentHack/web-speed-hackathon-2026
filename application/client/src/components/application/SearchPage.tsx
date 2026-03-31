@@ -28,6 +28,7 @@ const SearchInput = ({ input, meta }: WrappedFieldProps) => (
           : "border-cax-border focus:border-cax-brand-strong"
       }`}
       placeholder="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
+      aria-label="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
       type="text"
     />
     {meta.touched && meta.error && (

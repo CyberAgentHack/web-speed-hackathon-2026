@@ -38,9 +38,13 @@ export const AccountMenu = ({ user, onLogout }: Props) => {
         onClick={() => setOpen((prev) => !prev)}
       >
         <img
-          alt={user.profileImage.alt}
+          alt={user.profileImage?.alt ?? ""}
           className="h-10 w-10 shrink-0 rounded-full object-cover"
-          src={getProfileImagePath(user.profileImage.id)}
+          src={user.profileImage ? getProfileImagePath(user.profileImage.id) : ""}
+          loading="lazy"
+          width={40}
+          height={40}
+          decoding="async"
         />
         <div className="hidden min-w-0 flex-1 text-left lg:block">
           <div className="text-cax-text truncate text-sm font-bold">{user.name}</div>

@@ -140,6 +140,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
         rows={4}
         onChange={handleChangeText}
         placeholder="いまなにしてる？"
+        aria-label="いまなにしてる？"
       />
 
       <div className="text-cax-text flex w-full items-center justify-evenly">

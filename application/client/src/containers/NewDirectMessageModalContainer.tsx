@@ -47,7 +47,7 @@ export const NewDirectMessageModalContainer = ({ id }: Props) => {
   );
 
   return (
-    <Modal id={id} ref={ref} closedby="any">
+    <Modal id={id} ref={ref} closedby="any" aria-labelledby={id}>
       <NewDirectMessageModalPage key={resetKey} id={id} onSubmit={handleSubmit} />
     </Modal>
   );

@@ -9,10 +9,12 @@ import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/componen
 import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/components/modal/ModalSubmitButton";
 
 interface Props {
+  id?: string;
   onRequestCloseModal: () => void;
 }
 
 const AuthModalPageComponent = ({
+  id,
   onRequestCloseModal,
   handleSubmit,
   error,
@@ -29,7 +31,7 @@ const AuthModalPageComponent = ({
 
   return (
     <form className="grid gap-y-6" onSubmit={handleSubmit}>
-      <h2 className="text-center text-2xl font-bold">
+      <h2 id={id} className="text-center text-2xl font-bold">
         {type === "signin" ? "サインイン" : "新規登録"}
       </h2>
 

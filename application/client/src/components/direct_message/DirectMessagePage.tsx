@@ -1,5 +1,4 @@
 import classNames from "classnames";
-import moment from "moment";
 import {
   ChangeEvent,
   useCallback,
@@ -80,7 +79,7 @@ export const DirectMessagePage = ({
         scrollHeightRef.current = height;
         window.scrollTo(0, height);
       }
-    }, 1);
+    }, 100);
 
     return () => clearInterval(id);
   }, []);
@@ -97,9 +96,13 @@ export const DirectMessagePage = ({
     <section className="bg-cax-surface flex min-h-[calc(100vh-(--spacing(12)))] flex-col lg:min-h-screen">
       <header className="border-cax-border bg-cax-surface sticky top-0 z-10 flex items-center gap-2 border-b px-4 py-3">
         <img
-          alt={peer.profileImage.alt}
+          alt={peer.profileImage?.alt ?? ""}
           className="h-12 w-12 rounded-full object-cover"
-          src={getProfileImagePath(peer.profileImage.id)}
+          src={peer.profileImage ? getProfileImagePath(peer.profileImage.id) : ""}
+          loading="lazy"
+          width={48}
+          height={48}
+          decoding="async"
         />
         <div className="min-w-0">
           <h1 className="overflow-hidden text-xl font-bold text-ellipsis whitespace-nowrap">
@@ -131,7 +134,7 @@ export const DirectMessagePage = ({
               >
                 <p
                   className={classNames(
-                    "max-w-3/4 rounded-xl border px-4 py-2 text-sm whitespace-pre-wrap leading-relaxed wrap-anywhere",
+                    "max-w-[75%] rounded-xl border px-4 py-2 text-sm whitespace-pre-wrap leading-relaxed break-words",
                     isActiveUserSend
                       ? "rounded-br-sm border-transparent bg-cax-brand text-cax-surface-raised"
                       : "rounded-bl-sm border-cax-border bg-cax-surface text-cax-text",
@@ -141,7 +144,7 @@ export const DirectMessagePage = ({
                 </p>
                 <div className="flex gap-1 text-xs">
                   <time dateTime={message.createdAt}>
-                    {moment(message.createdAt).locale("ja").format("HH:mm")}
+                    {new Intl.DateTimeFormat("ja-JP", { hour: "2-digit", minute: "2-digit" }).format(new Date(message.createdAt))}
                   </time>
                   {isActiveUserSend && message.isRead && (
                     <span className="text-cax-text-muted">既読</span>
