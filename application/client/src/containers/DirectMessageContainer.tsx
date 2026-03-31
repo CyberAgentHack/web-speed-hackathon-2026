@@ -116,7 +116,37 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     if (conversationError != null) {
       return <NotFoundContainer />;
     }
-    return null;
+    return (
+      <>
+        <Helmet>
+          <title>DM 読み込み中 - CaX</title>
+        </Helmet>
+        <section className="bg-cax-surface flex min-h-screen flex-col lg:min-h-screen">
+          <div className="border-cax-border bg-cax-surface sticky top-0 z-10 flex items-center gap-2 border-b px-4 py-3">
+            <div className="bg-cax-surface-subtle h-12 w-12 animate-pulse rounded-full" />
+            <div className="flex min-w-0 flex-col gap-2">
+              <div className="bg-cax-surface-subtle h-4 w-32 animate-pulse rounded" />
+              <div className="bg-cax-surface-subtle h-3 w-24 animate-pulse rounded" />
+            </div>
+          </div>
+
+          <div className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8">
+            {[0, 1, 2].map((key) => (
+              <div key={key} className="flex justify-start">
+                <div className="bg-cax-surface-subtle border-cax-border animate-pulse max-w-[70%] rounded-xl border px-4 py-3">
+                  <div className="bg-cax-surface h-4 w-32 rounded" />
+                  <div className="bg-cax-surface mt-2 h-3 w-20 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="border-cax-border bg-cax-surface border-t p-4">
+            <div className="bg-cax-surface-subtle h-12 w-full animate-pulse rounded-xl" />
+          </div>
+        </section>
+      </>
+    );
   }
 
   const peer =

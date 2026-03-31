@@ -9,7 +9,7 @@ import { useInfiniteFetch } from "@web-speed-hackathon-2026/client/src/hooks/use
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
-  const { data: post, isLoading: isLoadingPost } = useFetch<Models.Post>(
+  const { data: post, error: postError, isLoading: isLoadingPost } = useFetch<Models.Post>(
     `/api/v1/posts/${postId}`,
     fetchJSON,
   );
@@ -21,9 +21,31 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
 
   if (isLoadingPost) {
     return (
-      <Helmet>
-        <title>読込中 - CaX</title>
-      </Helmet>
+      <InfiniteScroll fetchMore={() => {}} items={[]}>
+        <Helmet>
+          <title>読込中 - CaX</title>
+        </Helmet>
+        <section className="px-4 py-6">
+          <div className="bg-cax-surface-subtle border-cax-border animate-pulse h-6 w-32 rounded border" />
+          <div className="bg-cax-surface-subtle border-cax-border animate-pulse mt-4 h-6 w-48 rounded border" />
+          <div className="bg-cax-surface-subtle border-cax-border animate-pulse mt-4 h-40 rounded border" />
+          <div className="bg-cax-surface-subtle border-cax-border animate-pulse mt-4 h-48 rounded border" />
+          <div className="bg-cax-surface-subtle border-cax-border animate-pulse mt-6 h-24 rounded border" />
+        </section>
+      </InfiniteScroll>
+    );
+  }
+
+  if (postError) {
+    return (
+      <InfiniteScroll fetchMore={() => {}} items={[]}>
+        <Helmet>
+          <title>読み込みエラー - CaX</title>
+        </Helmet>
+        <section className="px-4 py-6">
+          <p className="text-cax-danger text-sm">投稿の取得に失敗しました。再読み込みしてください。</p>
+        </section>
+      </InfiniteScroll>
     );
   }
 

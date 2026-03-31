@@ -1,5 +1,6 @@
 import bodyParser from "body-parser";
 import Express from "express";
+import compression from "compression";
 
 import { apiRouter } from "@web-speed-hackathon-2026/server/src/routes/api";
 import { staticRouter } from "@web-speed-hackathon-2026/server/src/routes/static";
@@ -10,14 +11,24 @@ export const app = Express();
 app.set("trust proxy", true);
 
 app.use(sessionMiddleware);
+app.use(
+  compression({
+    threshold: 1024,
+    filter: (req, res) => {
+      if (req.headers["x-no-compress"]) return false;
+      return compression.filter(req, res);
+    },
+  }),
+);
 app.use(bodyParser.json());
 app.use(bodyParser.raw({ limit: "10mb" }));
 
-app.use((_req, res, next) => {
-  res.header({
-    "Cache-Control": "max-age=0, no-transform",
-    Connection: "close",
-  });
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api/")) {
+    res.header({
+      "Cache-Control": "max-age=0, no-transform",
+    });
+  }
   return next();
 });
 
