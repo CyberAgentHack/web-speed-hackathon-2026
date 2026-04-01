@@ -1,4 +1,4 @@
-import classNames from "classnames";
+import { clsx } from "clsx";
 import { ChangeEventHandler, ReactNode } from "react";
 
 interface Props {
@@ -13,7 +13,7 @@ export const AttachFileInputButton = ({ accept, active, icon, label, onChange }:
   return (
     <label className="focus-within:outline-cax-brand relative flex cursor-pointer items-center justify-center overflow-hidden rounded-full focus-within:outline-2 focus-within:outline-offset-2">
       <span
-        className={classNames("flex items-center justify-center w-12 h-12", {
+        className={clsx("flex items-center justify-center w-12 h-12", {
           "bg-cax-surface-subtle": !active,
           "bg-cax-brand-soft": active,
         })}

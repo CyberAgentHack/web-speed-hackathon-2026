@@ -12,6 +12,7 @@ declare namespace Models {
 
   interface ProfileImage {
     alt: string;
+    averageColor: string;
     id: string;
   }
 
@@ -33,6 +34,7 @@ declare namespace Models {
   interface Sound {
     artist: string;
     id: string;
+    peaks: { max: number; peaks: number[] };
     title: string;
   }
 

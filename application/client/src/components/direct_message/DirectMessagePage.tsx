@@ -1,5 +1,4 @@
-import classNames from "classnames";
-import moment from "moment";
+import { clsx } from "clsx";
 import {
   ChangeEvent,
   useCallback,
@@ -13,6 +12,7 @@ import {
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { DirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
+import { formatTime } from "@web-speed-hackathon-2026/client/src/utils/date_format";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 interface Props {
@@ -124,13 +124,13 @@ export const DirectMessagePage = ({
 
             return (
               <li
-                className={classNames(
+                className={clsx(
                   "flex flex-col w-full",
                   isActiveUserSend ? "items-end" : "items-start",
                 )}
               >
                 <p
-                  className={classNames(
+                  className={clsx(
                     "max-w-3/4 rounded-xl border px-4 py-2 text-sm whitespace-pre-wrap leading-relaxed wrap-anywhere",
                     isActiveUserSend
                       ? "rounded-br-sm border-transparent bg-cax-brand text-cax-surface-raised"
@@ -141,7 +141,7 @@ export const DirectMessagePage = ({
                 </p>
                 <div className="flex gap-1 text-xs">
                   <time dateTime={message.createdAt}>
-                    {moment(message.createdAt).locale("ja").format("HH:mm")}
+                    {formatTime(message.createdAt)}
                   </time>
                   {isActiveUserSend && message.isRead && (
                     <span className="text-cax-text-muted">既読</span>

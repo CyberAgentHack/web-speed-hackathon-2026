@@ -1,20 +1,17 @@
-import { MagickFormat } from "@imagemagick/magick-wasm";
 import { ChangeEventHandler, FormEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { ModalErrorMessage } from "@web-speed-hackathon-2026/client/src/components/modal/ModalErrorMessage";
 import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/components/modal/ModalSubmitButton";
 import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/components/new_post_modal/AttachFileInputButton";
-import { convertImage } from "@web-speed-hackathon-2026/client/src/utils/convert_image";
-import { convertMovie } from "@web-speed-hackathon-2026/client/src/utils/convert_movie";
-import { convertSound } from "@web-speed-hackathon-2026/client/src/utils/convert_sound";
+import { sendFile } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
-interface SubmitParams {
-  images: File[];
-  movie: File | undefined;
-  sound: File | undefined;
+export interface SubmitParams {
+  images: { id: string; alt: string }[];
+  movie: Record<string, unknown> | undefined;
+  sound: Record<string, unknown> | undefined;
   text: string;
 }
 
@@ -54,16 +51,12 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       setIsConverting(true);
 
       Promise.all(
-        files.map((file) =>
-          convertImage(file, { extension: MagickFormat.Jpg }).then(
-            (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
-          ),
-        ),
+        files.map((file) => sendFile<{ id: string; alt: string }>("/api/v1/images", file)),
       )
-        .then((convertedFiles) => {
+        .then((results) => {
           setParams((params) => ({
             ...params,
-            images: convertedFiles,
+            images: results,
             movie: undefined,
             sound: undefined,
           }));
@@ -82,16 +75,18 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     if (isValid) {
       setIsConverting(true);
 
-      convertSound(file, { extension: "mp3" }).then((converted) => {
-        setParams((params) => ({
-          ...params,
-          images: [],
-          movie: undefined,
-          sound: new File([converted], "converted.mp3", { type: "audio/mpeg" }),
-        }));
+      sendFile<Record<string, unknown>>("/api/v1/sounds", file)
+        .then((result) => {
+          setParams((params) => ({
+            ...params,
+            images: [],
+            movie: undefined,
+            sound: result,
+          }));
 
-        setIsConverting(false);
-      });
+          setIsConverting(false);
+        })
+        .catch(console.error);
     }
   }, []);
 
@@ -103,14 +98,12 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     if (isValid) {
       setIsConverting(true);
 
-      convertMovie(file, { extension: "gif", size: undefined })
-        .then((converted) => {
+      sendFile<Record<string, unknown>>("/api/v1/movies", file)
+        .then((result) => {
           setParams((params) => ({
             ...params,
             images: [],
-            movie: new File([converted], "converted.gif", {
-              type: "image/gif",
-            }),
+            movie: result,
             sound: undefined,
           }));
 

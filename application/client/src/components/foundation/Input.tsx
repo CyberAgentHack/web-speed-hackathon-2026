@@ -1,4 +1,4 @@
-import classNames from "classnames";
+import { clsx } from "clsx";
 import { ComponentPropsWithRef, ReactNode } from "react";
 
 interface Props extends ComponentPropsWithRef<"input"> {
@@ -11,7 +11,7 @@ export const Input = ({ className, leftItem, rightItem, ...props }: Props) => {
     <div className="border-cax-border focus-within:outline-cax-brand flex items-center gap-2 rounded-full border px-4 py-2 focus-within:outline-2 focus-within:outline-offset-2">
       {leftItem}
       <input
-        className={classNames("flex-1 placeholder-cax-text-subtle focus:outline-none", className)}
+        className={clsx("flex-1 placeholder-cax-text-subtle focus:outline-none", className)}
         {...props}
       />
       {rightItem}

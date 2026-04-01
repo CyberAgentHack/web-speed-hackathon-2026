@@ -1,4 +1,4 @@
-import { CreateMLCEngine } from "@mlc-ai/web-llm";
+import { type MLCEngine, CreateMLCEngine } from "@mlc-ai/web-llm";
 import { stripIndents } from "common-tags";
 import * as JSONRepairJS from "json-repair-js";
 import langs from "langs";
@@ -14,6 +14,28 @@ interface Params {
   targetLanguage: string;
 }
 
+let cachedEngine: MLCEngine | null = null;
+let enginePromise: Promise<MLCEngine> | null = null;
+
+async function getEngine(): Promise<MLCEngine> {
+  if (cachedEngine) {
+    return cachedEngine;
+  }
+  if (!enginePromise) {
+    enginePromise = CreateMLCEngine("gemma-2-2b-jpn-it-q4f16_1-MLC").then(
+      (engine) => {
+        cachedEngine = engine;
+        return engine;
+      },
+      (error) => {
+        enginePromise = null;
+        throw error;
+      },
+    );
+  }
+  return enginePromise;
+}
+
 export async function createTranslator(params: Params): Promise<Translator> {
   const sourceLang = langs.where("1", params.sourceLanguage);
   invariant(sourceLang, `Unsupported source language code: ${params.sourceLanguage}`);
@@ -21,7 +43,7 @@ export async function createTranslator(params: Params): Promise<Translator> {
   const targetLang = langs.where("1", params.targetLanguage);
   invariant(targetLang, `Unsupported target language code: ${params.targetLanguage}`);
 
-  const engine = await CreateMLCEngine("gemma-2-2b-jpn-it-q4f16_1-MLC");
+  const engine = await getEngine();
 
   return {
     async translate(text: string): Promise<string> {
@@ -55,7 +77,7 @@ export async function createTranslator(params: Params): Promise<Translator> {
       return String(parsed.result);
     },
     [Symbol.dispose]: () => {
-      engine.unload();
+      // No-op: engine is cached for reuse
     },
   };
 }

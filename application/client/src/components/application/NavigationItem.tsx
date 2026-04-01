@@ -1,4 +1,4 @@
-import classNames from "classnames";
+import { clsx } from "clsx";
 import { useLocation } from "react-router";
 
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
@@ -19,7 +19,7 @@ export const NavigationItem = ({ badge, href, icon, command, commandfor, text }:
     <li>
       {href !== undefined ? (
         <Link
-          className={classNames(
+          className={clsx(
             "flex flex-col items-center justify-center w-12 h-12 hover:bg-cax-brand-soft rounded-full sm:px-2 sm:w-24 sm:h-auto sm:rounded-sm lg:flex-row lg:justify-start lg:px-4 lg:py-2 lg:w-auto lg:h-auto lg:rounded-full",
             { "text-cax-brand": isActive },
           )}

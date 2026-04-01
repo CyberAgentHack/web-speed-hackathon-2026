@@ -3,6 +3,9 @@ import httpErrors from "http-errors";
 
 import { Post, User } from "@web-speed-hackathon-2026/server/src/models";
 
+const DEFAULT_LIMIT = 10;
+const DEFAULT_OFFSET = 0;
+
 export const userRouter = Router();
 
 userRouter.get("/me", async (req, res) => {
@@ -60,8 +63,8 @@ userRouter.get("/users/:username/posts", async (req, res) => {
   }
 
   const posts = await Post.findAll({
-    limit: req.query["limit"] != null ? Number(req.query["limit"]) : undefined,
-    offset: req.query["offset"] != null ? Number(req.query["offset"]) : undefined,
+    limit: req.query["limit"] != null ? Number(req.query["limit"]) : DEFAULT_LIMIT,
+    offset: req.query["offset"] != null ? Number(req.query["offset"]) : DEFAULT_OFFSET,
     where: {
       userId: user.id,
     },

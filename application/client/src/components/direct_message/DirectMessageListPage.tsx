@@ -1,10 +1,10 @@
-import moment from "moment";
-import { useCallback, useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
+import { formatRelativeTime } from "@web-speed-hackathon-2026/client/src/utils/date_format";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
@@ -13,32 +13,19 @@ interface Props {
   newDmModalId: string;
 }
 
+const DM_QUERY_KEY = ["v1", "dm"];
+
 export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
-  const [conversations, setConversations] =
-    useState<Array<Models.DirectMessageConversation> | null>(null);
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient();
 
-  const loadConversations = useCallback(async () => {
-    if (activeUser == null) {
-      return;
-    }
-
-    try {
-      const conversations = await fetchJSON<Array<Models.DirectMessageConversation>>("/api/v1/dm");
-      setConversations(conversations);
-      setError(null);
-    } catch (error) {
-      setConversations(null);
-      setError(error as Error);
-    }
-  }, [activeUser]);
-
-  useEffect(() => {
-    void loadConversations();
-  }, [loadConversations]);
+  const { data: conversations, error } = useQuery({
+    queryKey: DM_QUERY_KEY,
+    queryFn: () => fetchJSON<Array<Models.DirectMessageConversation>>("/api/v1/dm"),
+    enabled: activeUser != null,
+  });
 
   useWs("/api/v1/dm/unread", () => {
-    void loadConversations();
+    queryClient.invalidateQueries({ queryKey: DM_QUERY_KEY });
   });
 
   if (conversations == null) {
@@ -88,6 +75,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                       alt={peer.profileImage.alt}
                       className="w-12 shrink-0 self-start rounded-full"
                       src={getProfileImagePath(peer.profileImage.id)}
+                      loading="lazy"
                     />
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-center justify-between">
@@ -100,7 +88,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {formatRelativeTime(lastMessage.createdAt)}
                           </time>
                         )}
                       </div>

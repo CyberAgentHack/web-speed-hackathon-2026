@@ -21,11 +21,14 @@ RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile
 
 COPY ./application .
 
+ENV NODE_ENV=production
 RUN NODE_OPTIONS="--max-old-space-size=4096" pnpm build
 
 RUN --mount=type=cache,target=/pnpm/store CI=true pnpm install --frozen-lockfile --prod --filter @web-speed-hackathon-2026/server
 
 FROM base
+
+RUN apt-get update -qq && apt-get install -y --no-install-recommends ffmpeg imagemagick && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app /app
 

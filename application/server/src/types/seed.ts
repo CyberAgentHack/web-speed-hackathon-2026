@@ -22,7 +22,7 @@ type DateToString<T> = {
         : T[K];
 };
 
-export type ProfileImageSeed = Pick<InferAttributes<ProfileImage>, "id" | "alt">;
+export type ProfileImageSeed = Pick<InferAttributes<ProfileImage>, "id" | "alt" | "averageColor">;
 
 export type UserSeed = DateToString<
   Pick<
@@ -35,7 +35,7 @@ export type ImageSeed = DateToString<Pick<InferAttributes<Image>, "id" | "alt" |
 
 export type MovieSeed = Pick<InferAttributes<Movie>, "id">;
 
-export type SoundSeed = Pick<InferAttributes<Sound>, "id" | "title" | "artist">;
+export type SoundSeed = Pick<InferAttributes<Sound>, "id" | "title" | "artist" | "peaks">;
 
 export type PostSeed = DateToString<
   Pick<InferAttributes<Post>, "id" | "userId" | "movieId" | "soundId" | "text" | "createdAt">
