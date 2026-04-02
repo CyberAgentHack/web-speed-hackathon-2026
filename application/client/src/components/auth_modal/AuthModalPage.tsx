@@ -28,7 +28,7 @@ const AuthModalPageComponent = ({
   const type = currentType ?? initialValues.type;
 
   return (
-    <form className="grid gap-y-6" onSubmit={handleSubmit}>
+    <form autoComplete="off" className="grid gap-y-6" onSubmit={handleSubmit}>
       <h2 className="text-center text-2xl font-bold">
         {type === "signin" ? "サインイン" : "新規登録"}
       </h2>
@@ -50,7 +50,7 @@ const AuthModalPageComponent = ({
           props={{
             label: "ユーザー名",
             leftItem: <span className="text-cax-text-subtle leading-none">@</span>,
-            autoComplete: "username",
+            autoComplete: "off",
           }}
         />
 
@@ -60,7 +60,7 @@ const AuthModalPageComponent = ({
             component={FormInputField}
             props={{
               label: "名前",
-              autoComplete: "nickname",
+              autoComplete: "off",
             }}
           />
         )}
@@ -71,7 +71,7 @@ const AuthModalPageComponent = ({
           props={{
             label: "パスワード",
             type: "password",
-            autoComplete: type === "signup" ? "new-password" : "current-password",
+            autoComplete: "off",
           }}
         />
       </div>
@@ -85,7 +85,10 @@ const AuthModalPageComponent = ({
         </p>
       ) : null}
 
-      <ModalSubmitButton disabled={submitting || invalid} loading={submitting}>
+      <ModalSubmitButton
+        disabled={submitting || (type === "signup" ? invalid : false)}
+        loading={submitting}
+      >
         {type === "signin" ? "サインイン" : "登録する"}
       </ModalSubmitButton>
 

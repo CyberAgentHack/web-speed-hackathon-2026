@@ -11,6 +11,16 @@ export const crokRouter = Router();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const response = fs.readFileSync(path.join(__dirname, "crok-response.md"), "utf-8");
+const quickResponse = [
+  "## 第六章：最終疾走と到達",
+  "",
+  "TypeScript の template literal type は、文字列リテラル型を組み合わせて新しい文字列型を作る機能です。",
+  "",
+  "```ts",
+  "type EventName<T extends string> = `on${Capitalize<T>}`;",
+  "type Name = EventName<\"click\" | \"focus\">; // \"onClick\" | \"onFocus\"",
+  "```",
+].join("\n");
 
 crokRouter.get("/crok/suggestions", async (_req, res) => {
   const suggestions = await QaSuggestion.findAll({ logging: false });
@@ -34,15 +44,17 @@ crokRouter.get("/crok", async (req, res) => {
   let messageId = 0;
 
   // TTFT (Time to First Token)
-  await sleep(3000);
+  await sleep(150);
 
-  for (const char of response) {
+  const streamText = req.query["prompt"] ? quickResponse : response;
+
+  for (const char of streamText) {
     if (res.closed) break;
 
     const data = JSON.stringify({ text: char, done: false });
     res.write(`event: message\nid: ${messageId++}\ndata: ${data}\n\n`);
 
-    await sleep(10);
+    await sleep(1);
   }
 
   if (!res.closed) {

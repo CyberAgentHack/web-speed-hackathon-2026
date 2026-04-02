@@ -19,11 +19,29 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
   const [isStreaming, setIsStreaming] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const contentRef = useRef("");
+  const rafIdRef = useRef<number | null>(null);
+  const pendingContentRef = useRef<string | null>(null);
+
+  const flushContent = useCallback(() => {
+    rafIdRef.current = null;
+    if (pendingContentRef.current !== null) {
+      setContent(pendingContentRef.current);
+      pendingContentRef.current = null;
+    }
+  }, []);
 
   const stop = useCallback(() => {
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
+    }
+    if (rafIdRef.current !== null) {
+      window.cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+    }
+    if (pendingContentRef.current !== null) {
+      setContent(pendingContentRef.current);
+      pendingContentRef.current = null;
     }
     setIsStreaming(false);
   }, []);
@@ -56,7 +74,10 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
 
         const newContent = options.onMessage(data, contentRef.current);
         contentRef.current = newContent;
-        setContent(newContent);
+        pendingContentRef.current = newContent;
+        if (rafIdRef.current === null) {
+          rafIdRef.current = window.requestAnimationFrame(flushContent);
+        }
       };
 
       eventSource.onerror = (error) => {
@@ -64,7 +85,7 @@ export function useSSE<T>(options: SSEOptions<T>): ReturnValues {
         stop();
       };
     },
-    [options, stop],
+    [flushContent, options, stop],
   );
 
   return { content, isStreaming, start, stop, reset };

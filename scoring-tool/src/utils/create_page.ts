@@ -15,7 +15,6 @@ export async function createPage({ device }: Params) {
 
   const playwrightContext = await playwright.chromium.launchPersistentContext(userDataDir, {
     args: ["--remote-debugging-port=9222"],
-    channel: "chrome",
     devtools: false,
     headless: !debug.enabled("wsh:browser"),
     ...device,

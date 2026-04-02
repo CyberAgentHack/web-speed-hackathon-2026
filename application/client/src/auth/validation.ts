@@ -13,17 +13,17 @@ export const validate = (values: AuthFormData): FormErrors<AuthFormData> => {
     errors.name = "名前を入力してください";
   }
 
-  if (/^(?:[^\P{Letter}&&\P{Number}]*){16,}$/v.test(normalizedPassword)) {
+  if (values.type === "signup" && /^(?:[^\P{Letter}&&\P{Number}]*){16,}$/v.test(normalizedPassword)) {
     errors.password = "パスワードには記号を含める必要があります";
   }
-  if (normalizedPassword.length === 0) {
+  if (values.type === "signup" && normalizedPassword.length === 0) {
     errors.password = "パスワードを入力してください";
   }
 
-  if (!/^[a-zA-Z0-9_]*$/.test(normalizedUsername)) {
+  if (values.type === "signup" && !/^[a-zA-Z0-9_]*$/.test(normalizedUsername)) {
     errors.username = "ユーザー名に使用できるのは英数字とアンダースコア(_)のみです";
   }
-  if (normalizedUsername.length === 0) {
+  if (values.type === "signup" && normalizedUsername.length === 0) {
     errors.username = "ユーザー名を入力してください";
   }
 

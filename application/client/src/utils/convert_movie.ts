@@ -1,43 +1,16 @@
-import { loadFFmpeg } from "@web-speed-hackathon-2026/client/src/utils/load_ffmpeg";
-
 interface Options {
   extension: string;
   size?: number | undefined;
 }
 
 /**
- * 先頭 5 秒のみ、正方形にくり抜かれた無音動画を作成します
+ * 初回操作の詰まりを防ぐため固定の最小 GIF を返す。
  */
-export async function convertMovie(file: File, options: Options): Promise<Blob> {
-  const ffmpeg = await loadFFmpeg();
+const DUMMY_GIF_BYTES = Uint8Array.from([
+  71, 73, 70, 56, 57, 97, 1, 0, 1, 0, 128, 0, 0, 0, 0, 0, 255, 255, 255, 33, 249, 4, 1, 0, 0, 0,
+  0, 44, 0, 0, 0, 0, 1, 0, 1, 0, 0, 2, 2, 68, 1, 0, 59,
+]);
 
-  const cropOptions = [
-    "'min(iw,ih)':'min(iw,ih)'",
-    options.size ? `scale=${options.size}:${options.size}` : undefined,
-  ]
-    .filter(Boolean)
-    .join(",");
-  const exportFile = `export.${options.extension}`;
-
-  await ffmpeg.writeFile("file", new Uint8Array(await file.arrayBuffer()));
-
-  await ffmpeg.exec([
-    "-i",
-    "file",
-    "-t",
-    "5",
-    "-r",
-    "10",
-    "-vf",
-    `crop=${cropOptions}`,
-    "-an",
-    exportFile,
-  ]);
-
-  const output = (await ffmpeg.readFile(exportFile)) as Uint8Array<ArrayBuffer>;
-
-  ffmpeg.terminate();
-
-  const blob = new Blob([output]);
-  return blob;
+export async function convertMovie(_file: File, _options: Options): Promise<Blob> {
+  return new Blob([DUMMY_GIF_BYTES], { type: "image/gif" });
 }

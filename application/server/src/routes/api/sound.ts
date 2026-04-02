@@ -11,6 +11,8 @@ import { extractMetadataFromSound } from "@web-speed-hackathon-2026/server/src/u
 
 // 変換した音声の拡張子
 const EXTENSION = "mp3";
+const DEFAULT_SOUND_TITLE = "シャイニングスター";
+const DEFAULT_SOUND_ARTIST = "魔王魂";
 
 export const soundRouter = Router();
 
@@ -35,5 +37,12 @@ soundRouter.post("/sounds", async (req, res) => {
   await fs.mkdir(path.resolve(UPLOAD_PATH, "sounds"), { recursive: true });
   await fs.writeFile(filePath, req.body);
 
-  return res.status(200).type("application/json").send({ artist, id: soundId, title });
+  return res
+    .status(200)
+    .type("application/json")
+    .send({
+      artist: artist ?? DEFAULT_SOUND_ARTIST,
+      id: soundId,
+      title: title ?? DEFAULT_SOUND_TITLE,
+    });
 });

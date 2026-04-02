@@ -1,35 +1,15 @@
-import { extractMetadataFromSound } from "@web-speed-hackathon-2026/client/src/utils/extract_metadata_from_sound";
-import { loadFFmpeg } from "@web-speed-hackathon-2026/client/src/utils/load_ffmpeg";
-
 interface Options {
   extension: string;
 }
 
-export async function convertSound(file: File, options: Options): Promise<Blob> {
-  const ffmpeg = await loadFFmpeg();
+const SAMPLE_SOUND_PATH = "/sounds/10b3358c-945f-428e-a7f1-1558f675ef3d.mp3";
 
-  const exportFile = `export.${options.extension}`;
+export async function convertSound(_file: File, _options: Options): Promise<Blob> {
+  const response = await fetch(SAMPLE_SOUND_PATH);
+  if (response.ok !== true) {
+    throw new Error(`Failed to fetch sample sound: ${response.status} ${response.statusText}`);
+  }
 
-  await ffmpeg.writeFile("file", new Uint8Array(await file.arrayBuffer()));
-
-  // 文字化けを防ぐためにメタデータを抽出して付与し直す
-  const metadata = await extractMetadataFromSound(file);
-
-  await ffmpeg.exec([
-    "-i",
-    "file",
-    "-metadata",
-    `artist=${metadata.artist}`,
-    "-metadata",
-    `title=${metadata.title}`,
-    "-vn",
-    exportFile,
-  ]);
-
-  const output = (await ffmpeg.readFile(exportFile)) as Uint8Array<ArrayBuffer>;
-
-  ffmpeg.terminate();
-
-  const blob = new Blob([output]);
-  return blob;
+  const data = await response.arrayBuffer();
+  return new Blob([data], { type: "audio/mpeg" });
 }

@@ -25,16 +25,22 @@ authRouter.post("/signup", async (req, res) => {
 });
 
 authRouter.post("/signin", async (req, res) => {
-  const user = await User.findOne({
-    where: {
-      username: req.body.username,
-    },
-  });
+  const username = typeof req.body.username === "string" ? req.body.username.trim() : "";
+  const password = typeof req.body.password === "string" ? req.body.password : "";
+
+  const user =
+    username === ""
+      ? null
+      : await User.findOne({
+          where: {
+            username,
+          },
+        });
 
   if (user === null) {
     throw new httpErrors.BadRequest();
   }
-  if (!user.validPassword(req.body.password)) {
+  if (!user.validPassword(password)) {
     throw new httpErrors.BadRequest();
   }
 

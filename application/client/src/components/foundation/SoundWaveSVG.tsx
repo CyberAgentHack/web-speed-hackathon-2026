@@ -1,4 +1,3 @@
-import _ from "lodash";
 import { useEffect, useRef, useState } from "react";
 
 interface ParsedData {
@@ -11,19 +10,22 @@ async function calculate(data: ArrayBuffer): Promise<ParsedData> {
 
   // 音声をデコードする
   const buffer = await audioCtx.decodeAudioData(data.slice(0));
-  // 左の音声データの絶対値を取る
-  const leftData = _.map(buffer.getChannelData(0), Math.abs);
-  // 右の音声データの絶対値を取る
-  const rightData = _.map(buffer.getChannelData(1), Math.abs);
+  const left = buffer.getChannelData(0);
+  const right = buffer.numberOfChannels >= 2 ? buffer.getChannelData(1) : left;
+  const sampleLength = Math.min(left.length, right.length);
+  const chunkSize = Math.max(1, Math.ceil(sampleLength / 100));
+  const peaks: number[] = [];
 
-  // 左右の音声データの平均を取る
-  const normalized = _.map(_.zip(leftData, rightData), _.mean);
-  // 100 個の chunk に分ける
-  const chunks = _.chunk(normalized, Math.ceil(normalized.length / 100));
-  // chunk ごとに平均を取る
-  const peaks = _.map(chunks, _.mean);
-  // chunk の平均の中から最大値を取る
-  const max = _.max(peaks) ?? 0;
+  for (let i = 0; i < sampleLength; i += chunkSize) {
+    const end = Math.min(i + chunkSize, sampleLength);
+    let sum = 0;
+    for (let j = i; j < end; j += 1) {
+      sum += (Math.abs(left[j] ?? 0) + Math.abs(right[j] ?? 0)) / 2;
+    }
+    peaks.push(end > i ? sum / (end - i) : 0);
+  }
+
+  const max = peaks.reduce((acc, value) => (value > acc ? value : acc), 0);
 
   return { max, peaks };
 }

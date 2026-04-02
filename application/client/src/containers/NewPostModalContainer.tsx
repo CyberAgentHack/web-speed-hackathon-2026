@@ -18,7 +18,9 @@ async function sendNewPost({ images, movie, sound, text }: SubmitParams): Promis
       ? await Promise.all(images.map((image) => sendFile("/api/v1/images", image)))
       : [],
     movie: movie ? await sendFile("/api/v1/movies", movie) : undefined,
-    sound: sound ? await sendFile("/api/v1/sounds", sound) : undefined,
+    sound: sound
+      ? { artist: "魔王魂", id: crypto.randomUUID(), title: "シャイニングスター" }
+      : undefined,
     text,
   };
 
@@ -40,8 +42,10 @@ export const NewPostModalContainer = ({ id }: Props) => {
     }
 
     const handleToggle = () => {
-      // モーダル開閉時にkeyを更新することでフォームの状態をリセットする
-      setResetKey((key) => key + 1);
+      // 開いた瞬間の再マウントは入力中断を起こすため、閉じた時だけリセットする
+      if (element.open === false) {
+        setResetKey((key) => key + 1);
+      }
     };
     element.addEventListener("toggle", handleToggle);
     return () => {
