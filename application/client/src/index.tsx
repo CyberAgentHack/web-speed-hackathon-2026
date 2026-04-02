@@ -5,12 +5,16 @@ import { BrowserRouter } from "react-router";
 import { AppContainer } from "@web-speed-hackathon-2026/client/src/containers/AppContainer";
 import { store } from "@web-speed-hackathon-2026/client/src/store";
 
-window.addEventListener("load", () => {
-  createRoot(document.getElementById("app")!).render(
-    <Provider store={store}>
-      <BrowserRouter>
-        <AppContainer />
-      </BrowserRouter>
-    </Provider>,
-  );
+const appRoot = document.getElementById("app")!;
+
+createRoot(appRoot).render(
+  <Provider store={store}>
+    <BrowserRouter>
+      <AppContainer />
+    </BrowserRouter>
+  </Provider>,
+);
+
+requestAnimationFrame(() => {
+  document.getElementById("boot-shell")?.remove();
 });

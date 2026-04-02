@@ -12,6 +12,7 @@ interface ReturnValues<T> {
 export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
+  pageSize: number = LIMIT,
 ): ReturnValues<T> {
   const internalRef = useRef({ isLoading: false, offset: 0 });
 
@@ -22,6 +23,10 @@ export function useInfiniteFetch<T>(
   });
 
   const fetchMore = useCallback(() => {
+    if (!apiPath) {
+      return;
+    }
+
     const { isLoading, offset } = internalRef.current;
     if (isLoading) {
       return;
@@ -40,12 +45,12 @@ export function useInfiniteFetch<T>(
       (allData) => {
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...allData.slice(offset, offset + pageSize)],
           isLoading: false,
         }));
         internalRef.current = {
           isLoading: false,
-          offset: offset + LIMIT,
+          offset: offset + pageSize,
         };
       },
       (error) => {
@@ -60,9 +65,22 @@ export function useInfiniteFetch<T>(
         };
       },
     );
-  }, [apiPath, fetcher]);
+  }, [apiPath, fetcher, pageSize]);
 
   useEffect(() => {
+    if (!apiPath) {
+      setResult(() => ({
+        data: [],
+        error: null,
+        isLoading: false,
+      }));
+      internalRef.current = {
+        isLoading: false,
+        offset: 0,
+      };
+      return;
+    }
+
     setResult(() => ({
       data: [],
       error: null,

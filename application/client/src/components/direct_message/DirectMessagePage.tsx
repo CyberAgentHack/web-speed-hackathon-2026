@@ -35,6 +35,7 @@ export const DirectMessagePage = ({
   onSubmit,
 }: Props) => {
   const formRef = useRef<HTMLFormElement>(null);
+  const messageListEndRef = useRef<HTMLDivElement>(null);
   const textAreaId = useId();
 
   const peer =
@@ -43,8 +44,6 @@ export const DirectMessagePage = ({
   const [text, setText] = useState("");
   const textAreaRows = Math.min((text || "").split("\n").length, 5);
   const isInvalid = text.trim().length === 0;
-  const scrollHeightRef = useRef(0);
-
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
       setText(event.target.value);
@@ -74,16 +73,10 @@ export const DirectMessagePage = ({
   );
 
   useEffect(() => {
-    const id = setInterval(() => {
-      const height = Number(window.getComputedStyle(document.body).height.replace("px", ""));
-      if (height !== scrollHeightRef.current) {
-        scrollHeightRef.current = height;
-        window.scrollTo(0, height);
-      }
-    }, 1);
-
-    return () => clearInterval(id);
-  }, []);
+    messageListEndRef.current?.scrollIntoView({
+      block: "end",
+    });
+  }, [conversation.messages.length]);
 
   if (conversationError != null) {
     return (
@@ -151,6 +144,7 @@ export const DirectMessagePage = ({
             );
           })}
         </ul>
+        <div aria-hidden="true" ref={messageListEndRef} />
       </div>
 
       <div className="sticky bottom-12 z-10 lg:bottom-0">
@@ -180,6 +174,7 @@ export const DirectMessagePage = ({
             />
           </div>
           <button
+            aria-label="送信"
             className="bg-cax-brand text-cax-surface-raised hover:bg-cax-brand-strong rounded-full px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={isInvalid || isSubmitting}
             type="submit"

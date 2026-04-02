@@ -5,6 +5,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type ReactNode,
   type ChangeEvent,
   type FormEvent,
   type KeyboardEvent,
@@ -23,9 +24,11 @@ interface Props {
 }
 
 // トークン単位でハイライト
-function highlightMatchByTokens(text: string, queryTokens: string[]): React.ReactNode {
+function highlightMatchByTokens(
+  text: string,
+  queryTokens: string[],
+): ReactNode {
   if (queryTokens.length === 0) return text;
-
   const lowerText = text.toLowerCase();
 
   // テキスト内でクエリトークンにマッチする範囲を収集
@@ -55,7 +58,7 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
     }
   }
 
-  const parts: React.ReactNode[] = [];
+  const parts: ReactNode[] = [];
   let lastEnd = 0;
   for (let i = 0; i < merged.length; i++) {
     const range = merged[i]!;
@@ -79,11 +82,56 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
+  const suggestionsCacheRef = useRef<string[] | null>(null);
+  const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(
+    null,
+  );
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isTokenizerLoading, setIsTokenizerLoading] = useState(false);
+  const getSuggestionCandidates = async () => {
+    if (suggestionsCacheRef.current) {
+      return suggestionsCacheRef.current;
+    }
+
+    const { suggestions } = await fetchJSON<{ suggestions: string[] }>(
+      "/api/v1/crok/suggestions",
+    );
+
+    suggestionsCacheRef.current = suggestions;
+    return suggestions;
+  };
+
+  const submitMessage = () => {
+  if (inputValue.trim() && !isStreaming) {
+    onSendMessage(inputValue.trim());
+    setInputValue("");
+    setSuggestions([]);
+    setQueryTokens([]);
+    setShowSuggestions(false);
+    resetTextareaHeight();
+  }
+};
+  const initializeTokenizer = async () => {
+    if (tokenizer || isTokenizerLoading) {
+      return;
+    }
+
+    try {
+      setIsTokenizerLoading(true);
+      const builder = Bluebird.promisifyAll(
+        kuromoji.builder({ dicPath: "/dicts" }),
+      );
+      const nextTokenizer = await builder.buildAsync();
+      setTokenizer(nextTokenizer);
+    } catch (error) {
+      console.error("Failed to initialize tokenizer:", error);
+    } finally {
+      setIsTokenizerLoading(false);
+    }
+  };
 
   // サジェストが更新されたら一番下にスクロール
   useLayoutEffect(() => {
@@ -92,58 +140,54 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     }
   }, [suggestions, showSuggestions]);
 
-  // 初回にkuromojiトークナイザーを構築
-  useEffect(() => {
-    let mounted = true;
-
-    const init = async () => {
-      const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
-      if (mounted) {
-        setTokenizer(nextTokenizer);
-      }
-    };
-    init();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
   useEffect(() => {
     let cancelled = false;
 
-    const updateSuggestions = async () => {
-      if (!tokenizer || !inputValue.trim()) {
-        setSuggestions([]);
-        setQueryTokens([]);
-        setShowSuggestions(false);
-        return;
+    const timerId = window.setTimeout(async () => {
+      try {
+        if (!tokenizer || !inputValue.trim()) {
+          setSuggestions([]);
+          setQueryTokens([]);
+          setShowSuggestions(false);
+          return;
+        }
+
+        if (inputValue.trim().length < 2) {
+          setSuggestions([]);
+          setQueryTokens([]);
+          setShowSuggestions(false);
+          return;
+        }
+
+        const candidates = await getSuggestionCandidates();
+
+        if (cancelled) {
+          return;
+        }
+
+        const tokens = extractTokens(tokenizer.tokenize(inputValue));
+        const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
+
+        if (cancelled) {
+          return;
+        }
+
+        setQueryTokens(tokens);
+        setSuggestions(results);
+        setShowSuggestions(results.length > 0);
+      } catch (error) {
+        console.error("Failed to update suggestions:", error);
+        if (!cancelled) {
+          setSuggestions([]);
+          setQueryTokens([]);
+          setShowSuggestions(false);
+        }
       }
-
-      const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-        "/api/v1/crok/suggestions",
-      );
-      if (cancelled) {
-        return;
-      }
-
-      const tokens = extractTokens(tokenizer.tokenize(inputValue));
-      const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
-
-      if (cancelled) {
-        return;
-      }
-
-      setQueryTokens(tokens);
-      setSuggestions(results);
-      setShowSuggestions(results.length > 0);
-    };
-
-    void updateSuggestions();
+    }, 300);
 
     return () => {
       cancelled = true;
+      window.clearTimeout(timerId);
     };
   }, [inputValue, tokenizer]);
 
@@ -165,6 +209,10 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
     const value = e.target.value;
     setInputValue(value);
     adjustTextareaHeight();
+
+    if (value.trim().length >= 2 && !tokenizer && !isTokenizerLoading) {
+      void initializeTokenizer();
+    }
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -176,20 +224,13 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (inputValue.trim() && !isStreaming) {
-      onSendMessage(inputValue.trim());
-      setInputValue("");
-      setSuggestions([]);
-      setQueryTokens([]);
-      setShowSuggestions(false);
-      resetTextareaHeight();
-    }
+    submitMessage();
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
-      handleSubmit(e);
+      submitMessage();
     }
   };
 
@@ -240,7 +281,9 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
           </div>
         </div>
         <p className="text-cax-text-subtle mt-2 text-center text-xs">
-          {isStreaming ? "AIが応答を生成中..." : "Crok AIは間違いを起こす可能性があります。"}
+          {isStreaming
+            ? "AIが応答を生成中..."
+            : "Crok AIは間違いを起こす可能性があります。"}
         </p>
       </form>
     </div>

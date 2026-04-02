@@ -21,9 +21,17 @@ const PostContainerContent = ({ postId }: { postId: string | undefined }) => {
 
   if (isLoadingPost) {
     return (
-      <Helmet>
-        <title>読込中 - CaX</title>
-      </Helmet>
+      <>
+        <Helmet>
+          <title>読込中 - CaX</title>
+        </Helmet>
+        <section className="px-4 py-6">
+          <div className="border-cax-border bg-cax-surface-subtle rounded-2xl border p-4">
+            <p className="text-sm font-bold">投稿を読み込み中です...</p>
+            <p className="text-cax-text-muted mt-2 text-sm">表示までしばらくお待ちください。</p>
+          </div>
+        </section>
+      </>
     );
   }
 

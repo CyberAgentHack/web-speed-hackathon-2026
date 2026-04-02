@@ -69,7 +69,7 @@ export const SoundPlayer = ({ sound }: Props) => {
               <div
                 className="bg-cax-surface-subtle absolute inset-0 h-full w-full opacity-75"
                 style={{ left: `${currentTimeRatio * 100}%` }}
-              ></div>
+              />
             </div>
           </AspectRatioBox>
         </div>
