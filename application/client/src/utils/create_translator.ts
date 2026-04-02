@@ -1,4 +1,3 @@
-import { CreateMLCEngine } from "@mlc-ai/web-llm";
 import { stripIndents } from "common-tags";
 import * as JSONRepairJS from "json-repair-js";
 import langs from "langs";
@@ -15,6 +14,7 @@ interface Params {
 }
 
 export async function createTranslator(params: Params): Promise<Translator> {
+  const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
   const sourceLang = langs.where("1", params.sourceLanguage);
   invariant(sourceLang, `Unsupported source language code: ${params.sourceLanguage}`);
 

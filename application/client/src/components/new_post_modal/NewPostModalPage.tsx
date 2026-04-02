@@ -1,4 +1,3 @@
-import { MagickFormat } from "@imagemagick/magick-wasm";
 import { ChangeEventHandler, FormEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -8,6 +7,7 @@ import { AttachFileInputButton } from "@web-speed-hackathon-2026/client/src/comp
 import { convertImage } from "@web-speed-hackathon-2026/client/src/utils/convert_image";
 import { convertMovie } from "@web-speed-hackathon-2026/client/src/utils/convert_movie";
 import { convertSound } from "@web-speed-hackathon-2026/client/src/utils/convert_sound";
+import { MAGICK_FORMAT } from "@web-speed-hackathon-2026/client/src/utils/magick_format";
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
 
@@ -55,7 +55,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
       Promise.all(
         files.map((file) =>
-          convertImage(file, { extension: MagickFormat.Jpg }).then(
+          convertImage(file, { extension: MAGICK_FORMAT.Jpg }).then(
             (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
           ),
         ),
