@@ -5,12 +5,13 @@ import { BrowserRouter } from "react-router";
 import { AppContainer } from "@web-speed-hackathon-2026/client/src/containers/AppContainer";
 import { store } from "@web-speed-hackathon-2026/client/src/store";
 
-window.addEventListener("load", () => {
-  createRoot(document.getElementById("app")!).render(
-    <Provider store={store}>
-      <BrowserRouter>
-        <AppContainer />
-      </BrowserRouter>
-    </Provider>,
-  );
-});
+const rootElement = document.getElementById("app");
+if (!rootElement) throw new Error("Root element not found");
+
+createRoot(rootElement).render(
+  <Provider store={store}>
+    <BrowserRouter>
+      <AppContainer />
+    </BrowserRouter>
+  </Provider>,
+);

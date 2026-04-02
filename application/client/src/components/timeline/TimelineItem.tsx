@@ -1,11 +1,15 @@
-import moment from "moment";
-import { MouseEventHandler, useCallback } from "react";
+import { useCallback } from "react";
+import type { PointerEventHandler } from "react";
 import { Link, useNavigate } from "react-router";
 
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
 import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
 import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
+import {
+  formatDateLongJa,
+  formatISODateTime,
+} from "@web-speed-hackathon-2026/client/src/utils/date_time";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
 
 const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Element): boolean => {
@@ -28,15 +32,21 @@ const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Elem
  */
 interface Props {
   post: Models.Post;
+  prioritizeFirstImage?: boolean;
+  prioritizeProfileImage?: boolean;
 }
 
-export const TimelineItem = ({ post }: Props) => {
+export const TimelineItem = ({
+  post,
+  prioritizeFirstImage = false,
+  prioritizeProfileImage = false,
+}: Props) => {
   const navigate = useNavigate();
 
   /**
    * ボタンやリンク以外の箇所をクリックしたとき かつ 文字が選択されてないとき、投稿詳細ページに遷移する
    */
-  const handleClick = useCallback<MouseEventHandler>(
+  const handlePointerUp = useCallback<PointerEventHandler<HTMLElement>>(
     (ev) => {
       const isSelectedText = document.getSelection()?.isCollapsed === false;
       if (!isClickedAnchorOrButton(ev.target, ev.currentTarget) && !isSelectedText) {
@@ -47,7 +57,7 @@ export const TimelineItem = ({ post }: Props) => {
   );
 
   return (
-    <article className="hover:bg-cax-surface-subtle px-1 sm:px-4" onClick={handleClick}>
+    <article className="hover:bg-cax-surface-subtle px-1 sm:px-4" onPointerUp={handlePointerUp}>
       <div className="border-cax-border flex border-b px-2 pt-2 pb-4 sm:px-4">
         <div className="shrink-0 grow-0 pr-2 sm:pr-4">
           <Link
@@ -56,7 +66,13 @@ export const TimelineItem = ({ post }: Props) => {
           >
             <img
               alt={post.user.profileImage.alt}
+              className="h-full w-full object-cover"
+              decoding="async"
+              fetchPriority={prioritizeProfileImage ? "high" : "auto"}
+              height={256}
+              loading={prioritizeProfileImage ? "eager" : "lazy"}
               src={getProfileImagePath(post.user.profileImage.id)}
+              width={256}
             />
           </Link>
         </div>
@@ -76,8 +92,8 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={formatISODateTime(post.createdAt)}>
+                {formatDateLongJa(post.createdAt)}
               </time>
             </Link>
           </p>
@@ -86,7 +102,7 @@ export const TimelineItem = ({ post }: Props) => {
           </div>
           {post.images?.length > 0 ? (
             <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
+              <ImageArea images={post.images} prioritizeFirstImage={prioritizeFirstImage} />
             </div>
           ) : null}
           {post.movie ? (

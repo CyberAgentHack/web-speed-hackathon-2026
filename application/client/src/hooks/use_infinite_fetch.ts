@@ -13,7 +13,8 @@ export function useInfiniteFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T[]>,
 ): ReturnValues<T> {
-  const internalRef = useRef({ isLoading: false, offset: 0 });
+  const normalizedApiPath = apiPath.trim();
+  const internalRef = useRef({ isLoading: false, offset: 0, hasMore: true });
 
   const [result, setResult] = useState<Omit<ReturnValues<T>, "fetchMore">>({
     data: [],
@@ -22,8 +23,8 @@ export function useInfiniteFetch<T>(
   });
 
   const fetchMore = useCallback(() => {
-    const { isLoading, offset } = internalRef.current;
-    if (isLoading) {
+    const { isLoading, offset, hasMore } = internalRef.current;
+    if (normalizedApiPath === "" || isLoading || !hasMore) {
       return;
     }
 
@@ -34,18 +35,24 @@ export function useInfiniteFetch<T>(
     internalRef.current = {
       isLoading: true,
       offset,
+      hasMore,
     };
 
-    void fetcher(apiPath).then(
-      (allData) => {
+    const separator = normalizedApiPath.includes("?") ? "&" : "?";
+    const path = `${normalizedApiPath}${separator}limit=${LIMIT}&offset=${offset}`;
+
+    void fetcher(path).then(
+      (pageData) => {
         setResult((cur) => ({
           ...cur,
-          data: [...cur.data, ...allData.slice(offset, offset + LIMIT)],
+          data: [...cur.data, ...pageData],
           isLoading: false,
         }));
+        const nextOffset = offset + pageData.length;
         internalRef.current = {
           isLoading: false,
-          offset: offset + LIMIT,
+          offset: nextOffset,
+          hasMore: pageData.length === LIMIT,
         };
       },
       (error) => {
@@ -57,10 +64,11 @@ export function useInfiniteFetch<T>(
         internalRef.current = {
           isLoading: false,
           offset,
+          hasMore,
         };
       },
     );
-  }, [apiPath, fetcher]);
+  }, [normalizedApiPath, fetcher]);
 
   useEffect(() => {
     setResult(() => ({
@@ -71,10 +79,20 @@ export function useInfiniteFetch<T>(
     internalRef.current = {
       isLoading: false,
       offset: 0,
+      hasMore: true,
     };
 
+    if (normalizedApiPath === "") {
+      setResult(() => ({
+        data: [],
+        error: null,
+        isLoading: false,
+      }));
+      return;
+    }
+
     fetchMore();
-  }, [fetchMore]);
+  }, [fetchMore, normalizedApiPath]);
 
   return {
     ...result,

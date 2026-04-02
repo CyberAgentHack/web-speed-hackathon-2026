@@ -20,18 +20,33 @@ export const TranslatableText = ({ text }: Props) => {
         (async () => {
           updateState({ type: "loading" });
           try {
-            using translator = await createTranslator({
+            const translator = await createTranslator({
               sourceLanguage: "ja",
               targetLanguage: "en",
             });
-            const result = await translator.translate(state.text);
+            try {
+              const result = await translator.translate(state.text);
 
-            updateState({
-              type: "translated",
-              text: result,
-              original: state.text,
-            });
-          } catch {
+              updateState({
+                type: "translated",
+                text: result,
+                original: state.text,
+              });
+            } finally {
+              try {
+                // Dispose translator if it exposes a dispose method or Symbol.dispose
+                if (typeof (translator as any).dispose === "function") {
+                  await (translator as any).dispose();
+                } else if (typeof (translator as any)[Symbol.dispose] === "function") {
+                  await (translator as any)[Symbol.dispose]();
+                }
+              } catch (disposeErr) {
+                // ignore dispose errors but log for debugging
+                console.error("translator dispose failed:", disposeErr);
+              }
+            }
+          } catch (err) {
+            console.error("translation failed:", err);
             updateState({
               type: "translated",
               text: "翻訳に失敗しました",

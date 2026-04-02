@@ -4,6 +4,7 @@ ARG NODE_VERSION=24.14.0
 ARG PNPM_VERSION=10.32.1
 
 FROM node:${NODE_VERSION}-slim AS base
+RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
 
 LABEL fly_launch_runtime="Node.js"
 

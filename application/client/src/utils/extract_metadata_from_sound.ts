@@ -1,3 +1,4 @@
+import type { FFmpeg } from "@ffmpeg/ffmpeg";
 import Encoding from "encoding-japanese";
 
 import { loadFFmpeg } from "@web-speed-hackathon-2026/client/src/utils/load_ffmpeg";
@@ -11,9 +12,13 @@ interface SoundMetadata {
 const UNKNOWN_ARTIST = "Unknown Artist";
 const UNKNOWN_TITLE = "Unknown Title";
 
-export async function extractMetadataFromSound(data: File): Promise<SoundMetadata> {
+export async function extractMetadataFromSound(
+  data: File,
+  ffmpegArg?: FFmpeg,
+): Promise<SoundMetadata> {
   try {
-    const ffmpeg = await loadFFmpeg();
+    const ffmpeg = ffmpegArg ?? (await loadFFmpeg());
+    const shouldTerminate = ffmpegArg === undefined;
 
     const exportFile = "meta.txt";
 
@@ -23,7 +28,9 @@ export async function extractMetadataFromSound(data: File): Promise<SoundMetadat
 
     const output = (await ffmpeg.readFile(exportFile)) as Uint8Array<ArrayBuffer>;
 
-    ffmpeg.terminate();
+    if (shouldTerminate) {
+      ffmpeg.terminate();
+    }
 
     const outputUtf8 = Encoding.convert(output, {
       to: "UNICODE",
@@ -50,7 +57,10 @@ function parseFFmetadata(ffmetadata: string): Partial<SoundMetadata> {
     ffmetadata
       .split("\n")
       .filter((line) => !line.startsWith(";") && line.includes("="))
-      .map((line) => line.split("="))
-      .map(([key, value]) => [key!.trim(), value!.trim()]),
+      .map((line) => {
+        const [rawKey = "", ...rest] = line.split("=");
+        return [rawKey.trim(), rest.join("=").trim()] as const;
+      })
+      .filter(([key]) => key !== ""),
   ) as Partial<SoundMetadata>;
 }

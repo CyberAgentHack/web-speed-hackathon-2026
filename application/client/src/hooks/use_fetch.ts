@@ -6,17 +6,34 @@ interface ReturnValues<T> {
   isLoading: boolean;
 }
 
+interface Options {
+  enabled?: boolean;
+}
+
 export function useFetch<T>(
   apiPath: string,
   fetcher: (apiPath: string) => Promise<T>,
+  options: Options = {},
 ): ReturnValues<T> {
+  const { enabled = true } = options;
   const [result, setResult] = useState<ReturnValues<T>>({
     data: null,
     error: null,
-    isLoading: true,
+    isLoading: enabled,
   });
 
   useEffect(() => {
+    if (!enabled) {
+      setResult({
+        data: null,
+        error: null,
+        isLoading: false,
+      });
+      return;
+    }
+
+    let cancelled = false;
+
     setResult(() => ({
       data: null,
       error: null,
@@ -25,6 +42,9 @@ export function useFetch<T>(
 
     void fetcher(apiPath).then(
       (data) => {
+        if (cancelled) {
+          return;
+        }
         setResult((cur) => ({
           ...cur,
           data,
@@ -32,6 +52,9 @@ export function useFetch<T>(
         }));
       },
       (error) => {
+        if (cancelled) {
+          return;
+        }
         setResult((cur) => ({
           ...cur,
           error,
@@ -39,7 +62,11 @@ export function useFetch<T>(
         }));
       },
     );
-  }, [apiPath, fetcher]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [apiPath, enabled, fetcher]);
 
   return result;
 }
