@@ -1,6 +1,6 @@
 import { setTimeout } from "node:timers/promises";
 
-import _ from "lodash";
+import { sum, map, round } from 'es-toolkit/compat';
 import mergeErrorCause from "merge-error-cause";
 import type * as playwright from "playwright";
 import type * as puppeteer from "puppeteer";
@@ -214,8 +214,8 @@ export async function* calculate({
     yield result;
   }
 
-  const landingTotalScore = _.round(
-    _.sum(_.map(landingResults, ({ scoreX100 }) => scoreX100)) / 100,
+  const landingTotalScore = round(
+    sum(map(landingResults, ({ scoreX100 }) => scoreX100)) / 100,
     2,
   );
 

@@ -10,14 +10,19 @@
     "typecheck": "pnpm run --recursive typecheck",
     "format": "pnpm run format:oxlint && pnpm run format:oxfmt",
     "format:oxlint": "oxlint --fix",
-    "format:oxfmt": "oxfmt"
+    "format:oxfmt": "oxfmt",
+    "bundle": "pnpm webpack-bundle-analyzer dist/stats.json dist -m static"
   },
   "devDependencies": {
     "oxfmt": "0.36.0",
-    "oxlint": "1.43.0"
+    "oxlint": "1.43.0",
+    "webpack-bundle-analyzer": "5.2.0"
   },
   "engines": {
     "node": "24.14.0"
   },
-  "packageManager": "pnpm@10.32.1"
+  "packageManager": "pnpm@10.32.1",
+  "dependencies": {
+    "es-toolkit": "1.45.1"
+  }
 }

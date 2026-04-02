@@ -1,8 +1,10 @@
-import moment from "moment";
+// import moment from "moment";
 
-import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
+// import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import dayjs from "dayjs";
+import { Link } from "react-router";
 
 interface Props {
   comment: Models.Comment;
@@ -42,8 +44,11 @@ export const CommentItem = ({ comment }: Props) => {
             <TranslatableText text={comment.text} />
           </div>
           <p className="text-cax-text-muted pt-1 text-xs">
-            <time dateTime={moment(comment.createdAt).toISOString()}>
+            {/* <time dateTime={moment(comment.createdAt).toISOString()}>
               {moment(comment.createdAt).locale("ja").format("LL")}
+            </time> */}
+            <time dateTime={dayjs(comment.createdAt).toISOString()}>
+              {dayjs(comment.createdAt).locale("ja").format('YYYY年MM月DD日')}
             </time>
           </p>
         </div>

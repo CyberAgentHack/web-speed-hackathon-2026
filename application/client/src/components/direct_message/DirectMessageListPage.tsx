@@ -1,12 +1,15 @@
-import moment from "moment";
-import { useCallback, useEffect, useState } from "react";
+// import moment from "moment";
+import 'dayjs/locale/ja';
+import dayjs, { locale, extend } from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
-import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
+// import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+import { Link } from 'react-router';
 
 interface Props {
   activeUser: Models.User;
@@ -44,6 +47,9 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
   if (conversations == null) {
     return null;
   }
+
+  locale('ja');
+  extend(relativeTime);
 
   return (
     <section>
@@ -100,7 +106,8 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {/* {moment(lastMessage.createdAt).locale("ja").fromNow()} */}
+                            {dayjs(lastMessage.createdAt).locale("ja").fromNow()}
                           </time>
                         )}
                       </div>
