@@ -38,6 +38,7 @@ searchRouter.get("/search", async (req, res) => {
   // テキスト検索条件
   const textWhere = searchTerm ? { text: { [Op.like]: searchTerm } } : {};
 
+
   const postsByText = await Post.findAll({
     limit,
     offset,
@@ -51,6 +52,7 @@ searchRouter.get("/search", async (req, res) => {
   let postsByUser: typeof postsByText = [];
   if (searchTerm) {
     postsByUser = await Post.findAll({
+      subQuery: false,
       include: [
         {
           association: "user",
@@ -86,7 +88,6 @@ searchRouter.get("/search", async (req, res) => {
 
   mergedPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-  const result = mergedPosts.slice(offset || 0, (offset || 0) + (limit || mergedPosts.length));
-
-  return res.status(200).type("application/json").send(result);
+  res.set("X-Total-Count", String(mergedPosts.length));
+  return res.status(200).type("application/json").send(mergedPosts);
 });

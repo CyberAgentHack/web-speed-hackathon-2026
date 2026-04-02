@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { faker } from "@faker-js/faker/locale/ja";
+import { extractAltFromImage } from "../src/utils/extract_alt_from_image";
 
 // Set seed for reproducible results
 faker.seed(123);
@@ -180,9 +181,10 @@ function pickRandomN<T>(arr: T[], n: number): T[] {
 
 function generateProfileImages(): ProfileImageSeed[] {
   // Use existing profile image IDs from public/images/profiles/
+  const imagesDir = path.resolve(__dirname, "../../public/images/profiles");
   return EXISTING_PROFILE_IMAGE_IDS.map((id) => ({
     id,
-    alt: "",
+    alt: extractAltFromImage(path.join(imagesDir, `${id}.jpg`)),
   }));
 }
 
@@ -219,10 +221,11 @@ function generateUsers(count: number, profileImages: ProfileImageSeed[]): UserSe
 
 function generateImages(): ImageSeed[] {
   // Use existing image IDs from public/images/
+  const imagesDir = path.resolve(__dirname, "../../public/images");
   const baseTime = now - ONE_WEEK_MS;
   return EXISTING_IMAGE_IDS.map((id, i) => ({
     id,
-    alt: "",
+    alt: extractAltFromImage(path.join(imagesDir, `${id}.jpg`)),
     createdAt: new Date(baseTime + i * 60 * 1000).toISOString(),
   }));
 }

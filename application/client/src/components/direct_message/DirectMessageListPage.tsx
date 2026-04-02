@@ -1,7 +1,17 @@
-import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
+
+const rtf = new Intl.RelativeTimeFormat("ja", { numeric: "auto" });
+function timeAgo(dateStr: string): string {
+  const sec = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (sec < 60) return rtf.format(-sec, "second");
+  const min = Math.floor(sec / 60);
+  if (min < 60) return rtf.format(-min, "minute");
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return rtf.format(-hr, "hour");
+  return rtf.format(-Math.floor(hr / 24), "day");
+}
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { useWs } from "@web-speed-hackathon-2026/client/src/hooks/use_ws";
@@ -100,7 +110,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {timeAgo(lastMessage.createdAt)}
                           </time>
                         )}
                       </div>

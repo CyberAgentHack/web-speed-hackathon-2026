@@ -1,5 +1,4 @@
-import moment from "moment";
-import { MouseEventHandler, useCallback } from "react";
+import { memo, MouseEventHandler, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
@@ -30,7 +29,7 @@ interface Props {
   post: Models.Post;
 }
 
-export const TimelineItem = ({ post }: Props) => {
+export const TimelineItem = memo(({ post }: Props) => {
   const navigate = useNavigate();
 
   /**
@@ -56,6 +55,7 @@ export const TimelineItem = ({ post }: Props) => {
           >
             <img
               alt={post.user.profileImage.alt}
+              loading="lazy"
               src={getProfileImagePath(post.user.profileImage.id)}
             />
           </Link>
@@ -76,8 +76,8 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={new Date(post.createdAt).toISOString()}>
+                {new Date(post.createdAt).toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" })}
               </time>
             </Link>
           </p>
@@ -103,4 +103,4 @@ export const TimelineItem = ({ post }: Props) => {
       </div>
     </article>
   );
-};
+});

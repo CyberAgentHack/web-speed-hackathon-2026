@@ -4,7 +4,7 @@ import * as path from "node:path";
 
 import { Sequelize } from "sequelize";
 
-import { initModels } from "@web-speed-hackathon-2026/server/src/models";
+import { addIndexes, initModels } from "@web-speed-hackathon-2026/server/src/models";
 import { DATABASE_PATH } from "@web-speed-hackathon-2026/server/src/paths";
 
 let _sequelize: Sequelize | null = null;
@@ -26,4 +26,5 @@ export async function initializeSequelize() {
     storage: TEMP_PATH,
   });
   initModels(_sequelize);
+  await addIndexes(_sequelize);
 }
