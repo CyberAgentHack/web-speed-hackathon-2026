@@ -1,5 +1,4 @@
-import { useSelector } from "react-redux";
-import { Field, formValueSelector, InjectedFormProps, reduxForm } from "redux-form";
+import { ChangeEvent, FormEvent, useState } from "react";
 
 import { AuthFormData } from "@web-speed-hackathon-2026/client/src/auth/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/auth/validation";
@@ -10,22 +9,43 @@ import { ModalSubmitButton } from "@web-speed-hackathon-2026/client/src/componen
 
 interface Props {
   onRequestCloseModal: () => void;
+  onSubmit: (values: AuthFormData) => Promise<void>;
 }
 
-const AuthModalPageComponent = ({
-  onRequestCloseModal,
-  handleSubmit,
-  error,
-  invalid,
-  submitting,
-  initialValues,
-  change,
-}: Props & InjectedFormProps<AuthFormData, Props>) => {
-  const currentType: "signin" | "signup" = useSelector((state) =>
-    // @ts-ignore: formValueSelectorの型付けが弱いため、型に嘘をつく
-    formValueSelector("auth")(state, "type"),
-  );
-  const type = currentType ?? initialValues.type;
+export const AuthModalPage = ({ onRequestCloseModal, onSubmit }: Props) => {
+  const [type, setType] = useState<"signin" | "signup">("signin");
+  const [username, setUsername] = useState("");
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | undefined>();
+
+  const values: AuthFormData = { type, username, name, password };
+  const errors = validate(values);
+  const invalid = Object.keys(errors).length > 0;
+
+  const handleBlur = (field: string) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setTouched({ username: true, name: true, password: true });
+
+    if (invalid) return;
+
+    setSubmitting(true);
+    setError(undefined);
+    try {
+      await onSubmit(values);
+    } catch (err: unknown) {
+      const submissionErr = err as { errors?: { _error?: string } };
+      setError(submissionErr?.errors?._error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <form className="grid gap-y-6" onSubmit={handleSubmit}>
@@ -36,7 +56,7 @@ const AuthModalPageComponent = ({
       <div className="flex justify-center">
         <button
           className="text-cax-brand underline"
-          onClick={() => change("type", type === "signin" ? "signup" : "signin")}
+          onClick={() => setType(type === "signin" ? "signup" : "signin")}
           type="button"
         >
           {type === "signin" ? "初めての方はこちら" : "サインインはこちら"}
@@ -44,35 +64,41 @@ const AuthModalPageComponent = ({
       </div>
 
       <div className="grid gap-y-2">
-        <Field
+        <FormInputField
           name="username"
-          component={FormInputField}
-          props={{
-            label: "ユーザー名",
-            leftItem: <span className="text-cax-text-subtle leading-none">@</span>,
-            autoComplete: "username",
-          }}
+          label="ユーザー名"
+          value={username}
+          error={errors.username}
+          touched={touched.username}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
+          onBlur={() => handleBlur("username")}
+          leftItem={<span className="text-cax-text-subtle leading-none">@</span>}
+          autoComplete="username"
         />
 
         {type === "signup" && (
-          <Field
+          <FormInputField
             name="name"
-            component={FormInputField}
-            props={{
-              label: "名前",
-              autoComplete: "nickname",
-            }}
+            label="名前"
+            value={name}
+            error={errors.name}
+            touched={touched.name}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+            onBlur={() => handleBlur("name")}
+            autoComplete="nickname"
           />
         )}
 
-        <Field
+        <FormInputField
           name="password"
-          component={FormInputField}
-          props={{
-            label: "パスワード",
-            type: "password",
-            autoComplete: type === "signup" ? "new-password" : "current-password",
-          }}
+          label="パスワード"
+          value={password}
+          error={errors.password}
+          touched={touched.password}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+          onBlur={() => handleBlur("password")}
+          type="password"
+          autoComplete={type === "signup" ? "new-password" : "current-password"}
         />
       </div>
 
@@ -93,11 +119,3 @@ const AuthModalPageComponent = ({
     </form>
   );
 };
-
-export const AuthModalPage = reduxForm<AuthFormData, Props>({
-  form: "auth",
-  validate,
-  initialValues: {
-    type: "signin",
-  },
-})(AuthModalPageComponent);
