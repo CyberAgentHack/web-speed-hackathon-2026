@@ -348,7 +348,7 @@ paths:
         - Assets
       summary: 動画アップロード
       operationId: uploadMovie
-      description: バイナリデータを直接送信（上限 10 MB、GIF のみ）
+      description: バイナリデータを直接送信（上限 10 MB、MP4 のみ）
       security:
         - session: []
       requestBody:

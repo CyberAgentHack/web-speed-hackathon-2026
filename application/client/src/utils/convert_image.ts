@@ -1,42 +1,82 @@
-import { initializeImageMagick, ImageMagick, MagickFormat } from "@imagemagick/magick-wasm";
-import magickWasm from "@imagemagick/magick-wasm/magick.wasm?binary";
-import { dump, insert, ImageIFD } from "piexifjs";
+import type { MagickFormat } from "@imagemagick/magick-wasm";
 
 interface Options {
   extension: MagickFormat;
 }
 
+type ConvertImageWorkerRequest = {
+  id: number;
+  type: "convert";
+  fileBuffer: ArrayBuffer;
+  extension: MagickFormat;
+};
+
+type ConvertImageWorkerResponse =
+  | {
+      id: number;
+      type: "success";
+      outputBuffer: ArrayBuffer;
+    }
+  | {
+      id: number;
+      type: "error";
+      message: string;
+    };
+
+let workerPromise: Promise<Worker> | undefined;
+let nextRequestId = 1;
+
+function getWorker(): Promise<Worker> {
+  if (workerPromise) {
+    return workerPromise;
+  }
+
+  workerPromise = Promise.resolve(
+    new Worker(new URL("../workers/image_convert.worker.ts", import.meta.url), { type: "module" }),
+  );
+
+  return workerPromise;
+}
+
 export async function convertImage(file: File, options: Options): Promise<Blob> {
-  await initializeImageMagick(magickWasm);
+  const worker = await getWorker();
+  const requestId = nextRequestId++;
+  const fileBuffer = await file.arrayBuffer();
 
-  const byteArray = new Uint8Array(await file.arrayBuffer());
+  return await new Promise((resolve, reject) => {
+    const handleMessage = (event: MessageEvent<ConvertImageWorkerResponse>) => {
+      const response = event.data;
+      if (response.id !== requestId) {
+        return;
+      }
 
-  return new Promise((resolve) => {
-    ImageMagick.read(byteArray, (img) => {
-      img.format = options.extension;
+      worker.removeEventListener("message", handleMessage);
+      worker.removeEventListener("error", handleError);
 
-      const comment = img.comment;
+      if (response.type === "error") {
+        reject(new Error(response.message));
+        return;
+      }
 
-      img.write((output) => {
-        if (comment == null) {
-          resolve(new Blob([output as Uint8Array<ArrayBuffer>]));
-          return;
-        }
+      resolve(new Blob([response.outputBuffer]));
+    };
 
-        // ImageMagick では EXIF の ImageDescription フィールドに保存されているデータが
-        // 非標準の Comment フィールドに移されてしまうため
-        // piexifjs を使って ImageDescription フィールドに書き込む
-        const binary = Array.from(output as Uint8Array<ArrayBuffer>)
-          .map((b) => String.fromCharCode(b))
-          .join("");
-        const descriptionBinary = Array.from(new TextEncoder().encode(comment))
-          .map((b) => String.fromCharCode(b))
-          .join("");
-        const exifStr = dump({ "0th": { [ImageIFD.ImageDescription]: descriptionBinary } });
-        const outputWithExif = insert(exifStr, binary);
-        const bytes = Uint8Array.from(outputWithExif.split("").map((c) => c.charCodeAt(0)));
-        resolve(new Blob([bytes]));
-      });
-    });
+    const handleError = () => {
+      worker.removeEventListener("message", handleMessage);
+      worker.removeEventListener("error", handleError);
+      reject(new Error("Image conversion worker failed"));
+    };
+
+    worker.addEventListener("message", handleMessage);
+    worker.addEventListener("error", handleError);
+
+    const request: ConvertImageWorkerRequest = {
+      id: requestId,
+      type: "convert",
+      fileBuffer,
+      extension: options.extension,
+    };
+
+    worker.postMessage(request, [fileBuffer]);
   });
 }

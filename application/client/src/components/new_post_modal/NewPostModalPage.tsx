@@ -1,4 +1,4 @@
-import { MagickFormat } from "@imagemagick/magick-wasm";
+import type { MagickFormat } from "@imagemagick/magick-wasm";
 import { ChangeEventHandler, FormEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -10,6 +10,7 @@ import { convertMovie } from "@web-speed-hackathon-2026/client/src/utils/convert
 import { convertSound } from "@web-speed-hackathon-2026/client/src/utils/convert_sound";
 
 const MAX_UPLOAD_BYTES_LIMIT = 10 * 1024 * 1024;
+const JPEG_FORMAT: MagickFormat = "JPG";
 
 interface SubmitParams {
   images: File[];
@@ -55,7 +56,7 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
 
       Promise.all(
         files.map((file) =>
-          convertImage(file, { extension: MagickFormat.Jpg }).then(
+          convertImage(file, { extension: JPEG_FORMAT }).then(
             (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
           ),
         ),
@@ -103,13 +104,13 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
     if (isValid) {
       setIsConverting(true);
 
-      convertMovie(file, { extension: "gif", size: undefined })
+      convertMovie(file, { extension: "mp4", size: undefined })
         .then((converted) => {
           setParams((params) => ({
             ...params,
             images: [],
-            movie: new File([converted], "converted.gif", {
-              type: "image/gif",
+            movie: new File([converted], "converted.mp4", {
+              type: "video/mp4",
             }),
             sound: undefined,
           }));
