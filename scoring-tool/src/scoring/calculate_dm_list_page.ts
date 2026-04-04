@@ -3,6 +3,7 @@ import type * as puppeteer from "puppeteer";
 
 import { consola } from "../consola";
 import { goTo } from "../utils/go_to";
+import { signInWithDefaultUser } from "../utils/signin_with_default_user";
 import { startFlow } from "../utils/start_flow";
 
 import { calculateHackathonScore } from "./utils/calculate_hackathon_score";
@@ -30,37 +31,7 @@ export async function calculateDmListPage({ baseUrl, playwrightPage, puppeteerPa
   // サインイン
   consola.debug("DMListPage - signin");
   try {
-    const signinButton = playwrightPage.getByRole("button", { name: "サインイン" });
-    await signinButton.click();
-    await playwrightPage
-      .getByRole("dialog")
-      .getByRole("heading", { name: "サインイン" })
-      .waitFor({ timeout: 10 * 1000 });
-  } catch (err) {
-    throw new Error("サインインモーダルの表示に失敗しました", { cause: err });
-  }
-  try {
-    const usernameInput = playwrightPage
-      .getByRole("dialog")
-      .getByRole("textbox", { name: "ユーザー名" });
-    await usernameInput.pressSequentially("o6yq16leo");
-  } catch (err) {
-    throw new Error("ユーザー名の入力に失敗しました", { cause: err });
-  }
-  try {
-    const passwordInput = playwrightPage
-      .getByRole("dialog")
-      .getByRole("textbox", { name: "パスワード" });
-    await passwordInput.pressSequentially("wsh-2026");
-  } catch (err) {
-    throw new Error("パスワードの入力に失敗しました", { cause: err });
-  }
-  try {
-    const submitButton = playwrightPage
-      .getByRole("dialog")
-      .getByRole("button", { name: "サインイン" });
-    await submitButton.click();
-    await playwrightPage.getByRole("link", { name: "マイページ" }).waitFor({ timeout: 10 * 1000 });
+    await signInWithDefaultUser({ page: playwrightPage });
   } catch (err) {
     throw new Error("サインインに失敗しました", { cause: err });
   }

@@ -1,14 +1,9 @@
-import "katex/dist/katex.min.css";
-import Markdown from "react-markdown";
-import rehypeKatex from "rehype-katex";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-
-import { CodeBlock } from "@web-speed-hackathon-2026/client/src/components/crok/CodeBlock";
+import { SimpleMarkdown } from "@web-speed-hackathon-2026/client/src/components/crok/SimpleMarkdown";
 import { TypingIndicator } from "@web-speed-hackathon-2026/client/src/components/crok/TypingIndicator";
 import { CrokLogo } from "@web-speed-hackathon-2026/client/src/components/foundation/CrokLogo";
 
 interface Props {
+  isStreaming?: boolean;
   message: Models.ChatMessage;
 }
 
@@ -22,7 +17,13 @@ const UserMessage = ({ content }: { content: string }) => {
   );
 };
 
-const AssistantMessage = ({ content }: { content: string }) => {
+const AssistantMessage = ({
+  content,
+  isStreaming = false,
+}: {
+  content: string;
+  isStreaming?: boolean;
+}) => {
   return (
     <div className="mb-6 flex gap-4">
       <div className="h-8 w-8 shrink-0">
@@ -30,16 +31,13 @@ const AssistantMessage = ({ content }: { content: string }) => {
       </div>
       <div className="min-w-0 flex-1">
         <div className="text-cax-text mb-1 text-sm font-medium">Crok</div>
-        <div className="markdown text-cax-text max-w-none">
+        <div className="text-cax-text max-w-none">
           {content ? (
-            <Markdown
-              components={{ pre: CodeBlock }}
-              key={content}
-              rehypePlugins={[rehypeKatex]}
-              remarkPlugins={[remarkMath, remarkGfm]}
-            >
-              {content}
-            </Markdown>
+            isStreaming ? (
+              <p className="mb-4 whitespace-pre-wrap leading-relaxed">{content}</p>
+            ) : (
+              <SimpleMarkdown content={content} />
+            )
           ) : (
             <TypingIndicator />
           )}
@@ -49,9 +47,9 @@ const AssistantMessage = ({ content }: { content: string }) => {
   );
 };
 
-export const ChatMessage = ({ message }: Props) => {
+export const ChatMessage = ({ isStreaming = false, message }: Props) => {
   if (message.role === "user") {
     return <UserMessage content={message.content} />;
   }
-  return <AssistantMessage content={message.content} />;
+  return <AssistantMessage content={message.content} isStreaming={isStreaming} />;
 };

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useParams } from "react-router";
 
@@ -44,11 +44,15 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
       const data = await fetchJSON<Models.DirectMessageConversation>(
         `/api/v1/dm/${conversationId}`,
       );
-      setConversation(data);
-      setConversationError(null);
+      startTransition(() => {
+        setConversation(data);
+        setConversationError(null);
+      });
     } catch (error) {
-      setConversation(null);
-      setConversationError(error as Error);
+      startTransition(() => {
+        setConversation(null);
+        setConversationError(error as Error);
+      });
     }
   }, [activeUser, conversationId]);
 
@@ -116,7 +120,32 @@ export const DirectMessageContainer = ({ activeUser, authModalId }: Props) => {
     if (conversationError != null) {
       return <NotFoundContainer />;
     }
-    return null;
+    // データ取得待ちの間も LCP 候補（<p>）を描画して、Lighthouse が最初期に
+    // 「最大コンテンツ」を見つけられるようにする
+    return (
+      <>
+        <Helmet>
+          <title>読込中 - CaX</title>
+        </Helmet>
+        <section className="bg-cax-surface flex min-h-[calc(100vh-(--spacing(12)))] flex-col">
+          <header className="border-cax-border bg-cax-surface sticky top-0 z-10 flex items-center gap-2 border-b px-4 py-3">
+            <div className="h-12 w-12 rounded-full bg-cax-surface-subtle" aria-hidden="true" />
+            <div className="min-w-0">
+              <h1 className="overflow-hidden text-xl font-bold text-ellipsis whitespace-nowrap">読込中...</h1>
+              <p className="text-cax-text-muted overflow-hidden text-xs text-ellipsis whitespace-nowrap">
+                @...
+              </p>
+            </div>
+          </header>
+
+          <div className="bg-cax-surface-subtle flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-8">
+            <p className="max-w-3/4 rounded-xl border px-4 py-2 text-sm whitespace-pre-wrap leading-relaxed wrap-anywhere">
+              読込中...
+            </p>
+          </div>
+        </section>
+      </>
+    );
   }
 
   const peer =

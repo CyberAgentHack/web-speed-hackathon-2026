@@ -1,5 +1,7 @@
 import classNames from "classnames";
-import { ComponentPropsWithRef, ReactNode } from "react";
+import { ComponentPropsWithRef, MouseEventHandler, ReactNode, useCallback } from "react";
+
+import { closeDialog, showDialog } from "@web-speed-hackathon-2026/client/src/utils/dialog";
 
 interface Props extends ComponentPropsWithRef<"button"> {
   variant?: "primary" | "secondary";
@@ -13,8 +15,27 @@ export const Button = ({
   rightItem,
   className,
   children,
+  command,
+  commandfor,
+  onClick,
   ...props
 }: Props) => {
+  const handleClick = useCallback<MouseEventHandler<HTMLButtonElement>>(
+    (event) => {
+      onClick?.(event);
+      if (event.defaultPrevented || typeof commandfor !== "string") {
+        return;
+      }
+
+      if (command === "show-modal") {
+        showDialog(commandfor);
+      } else if (command === "close") {
+        closeDialog(commandfor);
+      }
+    },
+    [command, commandfor, onClick],
+  );
+
   return (
     <button
       className={classNames(
@@ -28,6 +49,9 @@ export const Button = ({
         },
         className,
       )}
+      command={command}
+      commandfor={commandfor}
+      onClick={handleClick}
       type="button"
       {...props}
     >

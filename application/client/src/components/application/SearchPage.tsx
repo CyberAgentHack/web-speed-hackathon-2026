@@ -9,7 +9,6 @@ import {
 } from "@web-speed-hackathon-2026/client/src/search/services";
 import { SearchFormData } from "@web-speed-hackathon-2026/client/src/search/types";
 import { validate } from "@web-speed-hackathon-2026/client/src/search/validation";
-import { analyzeSentiment } from "@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer";
 
 import { Button } from "../foundation/Button";
 
@@ -22,6 +21,7 @@ const SearchInput = ({ input, meta }: WrappedFieldProps) => (
   <div className="flex flex-1 flex-col">
     <input
       {...input}
+      aria-label="検索 (例: キーワード since:2025-01-01 until:2025-12-31)"
       className={`flex-1 rounded border px-4 py-2 focus:outline-none ${
         meta.touched && meta.error
           ? "border-cax-danger focus:border-cax-danger"
@@ -53,20 +53,40 @@ const SearchPageComponent = ({
     }
 
     let isMounted = true;
-    analyzeSentiment(parsed.keywords)
-      .then((result) => {
-        if (isMounted) {
-          setIsNegative(result.label === "negative");
+    let idleHandle: number | undefined;
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+
+    const run = () => {
+      void (async () => {
+        try {
+          const mod = await import("@web-speed-hackathon-2026/client/src/utils/negaposi_analyzer");
+          const result = await mod.analyzeSentiment(parsed.keywords);
+          if (isMounted) {
+            setIsNegative(result.label === "negative");
+          }
+        } catch {
+          if (isMounted) {
+            setIsNegative(false);
+          }
         }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setIsNegative(false);
-        }
-      });
+      })();
+    };
+
+    // 検索直後の INP を落とさないよう、ネガポジ判定はアイドル時に回す
+    if (typeof requestIdleCallback !== "undefined") {
+      idleHandle = requestIdleCallback(run, { timeout: 2500 });
+    } else {
+      timeoutHandle = setTimeout(run, 1);
+    }
 
     return () => {
       isMounted = false;
+      if (idleHandle !== undefined && typeof cancelIdleCallback !== "undefined") {
+        cancelIdleCallback(idleHandle);
+      }
+      if (timeoutHandle !== undefined) {
+        clearTimeout(timeoutHandle);
+      }
     };
   }, [parsed.keywords]);
 

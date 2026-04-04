@@ -14,10 +14,14 @@ CaX のアプリケーションコードです。
 
 ### ビルド・起動
 
-1. アプリケーションをビルドします
+1. アプリケーションをビルドします（本番相当の最適化。Docker ビルドと同じ `NODE_ENV=production` です）
    - ```bash
      pnpm run build
      ```
+   - 以前の「非最小化・`mode: none`」に近いビルドが必要な場合のみ（デバッグ用）:
+     - ```bash
+       pnpm --filter @web-speed-hackathon-2026/client run build:dev
+       ```
 2. サーバーを起動します
    - ```bash
      pnpm run start

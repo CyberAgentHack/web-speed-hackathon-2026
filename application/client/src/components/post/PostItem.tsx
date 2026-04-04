@@ -1,4 +1,4 @@
-import moment from "moment";
+import { formatDate, toISOString } from "@web-speed-hackathon-2026/client/src/utils/date_utils";
 
 import { Link } from "@web-speed-hackathon-2026/client/src/components/foundation/Link";
 import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
@@ -23,6 +23,8 @@ export const PostItem = ({ post }: Props) => {
             >
               <img
                 alt={post.user.profileImage.alt}
+                decoding="async"
+                fetchPriority="low"
                 src={getProfileImagePath(post.user.profileImage.id)}
               />
             </Link>
@@ -67,8 +69,8 @@ export const PostItem = ({ post }: Props) => {
           ) : null}
           <p className="mt-2 text-sm sm:mt-4">
             <Link className="text-cax-text-muted hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={toISOString(post.createdAt)}>
+                {formatDate(post.createdAt)}
               </time>
             </Link>
           </p>

@@ -6,6 +6,7 @@ import { NewDirectMessageModalPage } from "@web-speed-hackathon-2026/client/src/
 import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { NewDirectMessageFormData } from "@web-speed-hackathon-2026/client/src/direct_message/types";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+import { observeDialogOpen } from "@web-speed-hackathon-2026/client/src/utils/observe_dialog_open";
 
 interface Props {
   id: string;
@@ -14,18 +15,19 @@ interface Props {
 export const NewDirectMessageModalContainer = ({ id }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
   const [resetKey, setResetKey] = useState(0);
-  useEffect(() => {
-    if (!ref.current) return;
-    const element = ref.current;
 
-    const handleToggle = () => {
-      setResetKey((key) => key + 1);
-    };
-    element.addEventListener("toggle", handleToggle);
-    return () => {
-      element.removeEventListener("toggle", handleToggle);
-    };
-  }, [ref]);
+  useEffect(() => {
+    const element = ref.current;
+    if (element == null) {
+      return;
+    }
+
+    return observeDialogOpen(element, (isOpen) => {
+      if (!isOpen) {
+        setResetKey((key) => key + 1);
+      }
+    });
+  }, []);
 
   const navigate = useNavigate();
 
