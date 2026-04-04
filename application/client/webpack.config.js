@@ -25,18 +25,17 @@ const config = {
     ],
     static: [PUBLIC_PATH, UPLOAD_PATH],
   },
-  devtool: "inline-source-map",
+  // devtool: "inline-source-map",
   entry: {
     main: [
-      "core-js",
-      "regenerator-runtime/runtime",
+      // "regenerator-runtime/runtime",
       "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: "production",
   module: {
     rules: [
       {
@@ -59,8 +58,7 @@ const config = {
     ],
   },
   output: {
-    chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
+    chunkFilename: "scripts/[name]-[contenthash].js",
     filename: "scripts/[name].js",
     path: DIST_PATH,
     publicPath: "auto",
@@ -77,7 +75,7 @@ const config = {
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
+      NODE_ENV: "production",
     }),
     new MiniCssExtractPlugin({
       filename: "styles/[name].css",
@@ -115,11 +113,11 @@ const config = {
         "node_modules",
         "@ffmpeg/core/dist/umd/ffmpeg-core.wasm",
       ),
-      "@imagemagick/magick-wasm/magick.wasm$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@imagemagick/magick-wasm/dist/magick.wasm",
-      ),
+      // "@imagemagick/magick-wasm/magick.wasm$": path.resolve(
+      //   __dirname,
+      //   "node_modules",
+      //   "@imagemagick/magick-wasm/dist/magick.wasm",
+      // ),
     },
     fallback: {
       fs: false,
@@ -128,12 +126,27 @@ const config = {
     },
   },
   optimization: {
-    minimize: false,
-    splitChunks: false,
+    minimize: true,
+    splitChunks: {
+  cacheGroups: {
+    webllm: {
+      test: /[\\/]node_modules[\\/]@mlc-ai[\\/]web-llm[\\/]/,
+      name: "webllm",
+      chunks: "async",
+      priority: 50,
+    },
+    ffmpeg: {
+  test: /[\\/]node_modules[\\/]@ffmpeg[\\/]/,
+  name: "ffmpeg",
+  chunks: "async",
+  priority: 60,
+}
+  },
+},
     concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
+    usedExports: true,
+    providedExports: true,
+    // sideEffects: false,
   },
   cache: false,
   ignoreWarnings: [

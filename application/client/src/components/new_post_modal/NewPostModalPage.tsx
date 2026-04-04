@@ -1,4 +1,4 @@
-import { MagickFormat } from "@imagemagick/magick-wasm";
+// import { MagickFormat } from "@imagemagick/magick-wasm";
 import { ChangeEventHandler, FormEventHandler, useCallback, useState } from "react";
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
@@ -24,6 +24,10 @@ interface Props {
   isLoading: boolean;
   onResetError: () => void;
   onSubmit: (params: SubmitParams) => void;
+}
+
+function isTiffFile(file: File): boolean {
+  return file.type === "image/tiff" || /\.tiff?$/i.test(file.name);
 }
 
 export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubmit }: Props) => {
@@ -54,11 +58,14 @@ export const NewPostModalPage = ({ id, hasError, isLoading, onResetError, onSubm
       setIsConverting(true);
 
       Promise.all(
-        files.map((file) =>
-          convertImage(file, { extension: MagickFormat.Jpg }).then(
-            (blob) => new File([blob], "converted.jpg", { type: "image/jpeg" }),
-          ),
-        ),
+        files.map(async (file) => {
+          if (isTiffFile(file)) {
+            return file;
+          }
+
+          const blob = await convertImage(file, { extension: "image/webp" });
+          return new File([blob], "converted.webp", { type: "image/webp" });
+        }),
       )
         .then((convertedFiles) => {
           setParams((params) => ({

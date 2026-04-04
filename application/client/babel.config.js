@@ -4,16 +4,16 @@ module.exports = {
     [
       "@babel/preset-env",
       {
-        targets: "ie 11",
-        corejs: "3",
-        modules: "commonjs",
+        targets: "defaults",
+        modules: false,
         useBuiltIns: false,
+        exclude: ["proposal-dynamic-import"],
       },
     ],
     [
       "@babel/preset-react",
       {
-        development: true,
+        // development: true,
         runtime: "automatic",
       },
     ],

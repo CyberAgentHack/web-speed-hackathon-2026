@@ -1,4 +1,4 @@
-import moment from "moment";
+// import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@web-speed-hackathon-2026/client/src/components/foundation/Button";
@@ -12,7 +12,28 @@ interface Props {
   activeUser: Models.User;
   newDmModalId: string;
 }
+function fromNow(date: string | number | Date) {
+  const diff = Date.now() - new Date(date).getTime();
+  const rtf = new Intl.RelativeTimeFormat("ja", { numeric: "auto" });
 
+  const seconds = Math.floor(diff / 1000);
+  if (seconds < 60) return rtf.format(-seconds, "second");
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return rtf.format(-minutes, "minute");
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return rtf.format(-hours, "hour");
+
+  const days = Math.floor(hours / 24);
+  if (days < 30) return rtf.format(-days, "day");
+
+  const months = Math.floor(days / 30);
+  if (months < 12) return rtf.format(-months, "month");
+
+  const years = Math.floor(months / 12);
+  return rtf.format(-years, "year");
+}
 export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
   const [conversations, setConversations] =
     useState<Array<Models.DirectMessageConversation> | null>(null);
@@ -41,9 +62,9 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
     void loadConversations();
   });
 
-  if (conversations == null) {
-    return null;
-  }
+  // if (conversations == null) {
+  //   return null;
+  // }
 
   return (
     <section>
@@ -62,7 +83,11 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
 
       {error != null ? (
         <p className="text-cax-danger px-4 py-6 text-center text-sm">DMの取得に失敗しました</p>
-      ) : conversations.length === 0 ? (
+      ) : 
+      conversations == null ? (
+        <p className="text-cax-text-muted px-4 py-6 text-center">DMを読み込んでいます...</p>
+      ):
+      conversations.length === 0 ? (
         <p className="text-cax-text-muted px-4 py-6 text-center">
           まだDMで会話した相手がいません。
         </p>
@@ -88,6 +113,7 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                       alt={peer.profileImage.alt}
                       className="w-12 shrink-0 self-start rounded-full"
                       src={getProfileImagePath(peer.profileImage.id)}
+                      loading="lazy"
                     />
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-center justify-between">
@@ -100,7 +126,8 @@ export const DirectMessageListPage = ({ activeUser, newDmModalId }: Props) => {
                             className="text-cax-text-subtle text-xs"
                             dateTime={lastMessage.createdAt}
                           >
-                            {moment(lastMessage.createdAt).locale("ja").fromNow()}
+                            {/* {moment(lastMessage.createdAt).locale("ja").fromNow()} */
+                            fromNow(lastMessage.createdAt)}
                           </time>
                         )}
                       </div>

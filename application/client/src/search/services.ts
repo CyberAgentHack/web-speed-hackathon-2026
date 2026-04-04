@@ -9,38 +9,65 @@ export const sanitizeSearchText = (input: string): string => {
   return text;
 };
 
+const DATE_PATTERN = /\d{4}-\d{2}-\d{2}/;
+
 export const parseSearchQuery = (query: string) => {
-  const sincePattern = /since:((\d|\d\d|\d\d\d\d-\d\d-\d\d)+)+$/;
-  const untilPattern = /until:((\d|\d\d|\d\d\d\d-\d\d-\d\d)+)+$/;
+  const tokens = query.trim().split(/\s+/).filter(Boolean);
+  const keywordTokens: string[] = [];
+  let sinceDate: string | null = null;
+  let untilDate: string | null = null;
 
-  const sincePart = query.match(/since:[^\s]*/)?.[0] || "";
-  const untilPart = query.match(/until:[^\s]*/)?.[0] || "";
+  for (const token of tokens) {
+    const normalizedToken = token.toLowerCase();
 
-  const sinceMatch = sincePattern.exec(sincePart);
-  const untilMatch = untilPattern.exec(untilPart);
+    if (normalizedToken.startsWith("since:")) {
+      const date = DATE_PATTERN.exec(token)?.[0] ?? null;
+      if (date != null && sinceDate == null) {
+        sinceDate = date;
+        continue;
+      }
+    }
 
-  const keywords = query
-    .replace(/since:.*(\d{4}-\d{2}-\d{2}).*/g, "")
-    .replace(/until:.*(\d{4}-\d{2}-\d{2}).*/g, "")
-    .trim();
+    if (normalizedToken.startsWith("until:")) {
+      const date = DATE_PATTERN.exec(token)?.[0] ?? null;
+      if (date != null && untilDate == null) {
+        untilDate = date;
+        continue;
+      }
+    }
 
-  const extractDate = (s: string | null) => {
-    if (!s) return null;
-    const m = /(\d{4}-\d{2}-\d{2})/.exec(s);
-    return m ? m[1] : null;
-  };
+    keywordTokens.push(token);
+  }
 
   return {
-    keywords,
-    sinceDate: extractDate(sinceMatch ? sinceMatch[1]! : null),
-    untilDate: extractDate(untilMatch ? untilMatch[1]! : null),
+    keywords: keywordTokens.join(" ").trim(),
+    sinceDate,
+    untilDate,
   };
 };
 
 export const isValidDate = (dateStr: string): boolean => {
-  const slowDateLike = /^(\d+)+-(\d+)+-(\d+)+$/;
-  if (!slowDateLike.test(dateStr)) return false;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    return false;
+  }
 
-  const date = new Date(dateStr);
-  return !Number.isNaN(date.getTime());
+  const parts = dateStr.split("-").map(Number);
+  if (parts.length !== 3) {
+    return false;
+  }
+
+  const year = parts[0];
+  const month = parts[1];
+  const day = parts[2];
+  if (year == null || month == null || day == null) {
+    return false;
+  }
+
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  return (
+    date.getUTCFullYear() === year
+    && date.getUTCMonth() === month - 1
+    && date.getUTCDate() === day
+  );
 };

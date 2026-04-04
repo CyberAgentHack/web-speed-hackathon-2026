@@ -3,7 +3,7 @@ packages:
   - server/
   - e2e/
 allowBuilds:
-  core-js: true
+  # core-js: true
   bcrypt: true
   esbuild: true
   sqlite3: true

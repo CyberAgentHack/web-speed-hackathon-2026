@@ -4,6 +4,11 @@ import _ from "lodash";
 
 const STOP_POS = new Set(["助詞", "助動詞", "記号"]);
 
+export interface SuggestionSearchIndex {
+  bm25: BM25;
+  candidates: string[];
+}
+
 /**
  * 形態素解析で内容語トークン（名詞、動詞、形容詞など）を抽出
  */
@@ -38,5 +43,39 @@ export function filterSuggestionsBM25(
     .sortBy(["score"])
     .slice(-10)
     .map((s) => s.text)
+    .value();
+}
+
+export function createSuggestionSearchIndex(
+  tokenizer: Tokenizer<IpadicFeatures>,
+  candidates: string[],
+): SuggestionSearchIndex {
+  const bm25 = new BM25({ k1: 1.2, b: 0.75 });
+  const tokenizedCandidates = candidates.map((candidate) => extractTokens(tokenizer.tokenize(candidate)));
+
+  bm25.index(tokenizedCandidates);
+
+  return { bm25, candidates };
+}
+
+export function searchSuggestionIndex(
+  searchIndex: SuggestionSearchIndex,
+  queryTokens: string[],
+): string[] {
+  if (queryTokens.length === 0) return [];
+
+  const results = _.zipWith(
+    searchIndex.candidates,
+    searchIndex.bm25.getScores(queryTokens),
+    (text, score) => {
+      return { text, score };
+    },
+  );
+
+  return _(results)
+    .filter((suggestion) => suggestion.score > 0)
+    .sortBy(["score"])
+    .slice(-10)
+    .map((suggestion) => suggestion.text)
     .value();
 }

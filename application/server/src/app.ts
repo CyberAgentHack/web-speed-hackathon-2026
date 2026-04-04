@@ -8,18 +8,17 @@ import { sessionMiddleware } from "@web-speed-hackathon-2026/server/src/session"
 export const app = Express();
 
 app.set("trust proxy", true);
+app.use(staticRouter);
 
-app.use(sessionMiddleware);
-app.use(bodyParser.json());
-app.use(bodyParser.raw({ limit: "10mb" }));
+app.use("/api/v1", sessionMiddleware);
+app.use("/api/v1", bodyParser.json());
+app.use("/api/v1", bodyParser.raw({ limit: "10mb" }));
 
 app.use((_req, res, next) => {
   res.header({
-    "Cache-Control": "max-age=0, no-transform",
-    Connection: "close",
+    "Cache-Control": "no-store",
   });
   return next();
 });
 
 app.use("/api/v1", apiRouter);
-app.use(staticRouter);

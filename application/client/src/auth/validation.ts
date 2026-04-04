@@ -13,8 +13,9 @@ export const validate = (values: AuthFormData): FormErrors<AuthFormData> => {
     errors.name = "名前を入力してください";
   }
 
-  if (/^(?:[^\P{Letter}&&\P{Number}]*){16,}$/v.test(normalizedPassword)) {
-    errors.password = "パスワードには記号を含める必要があります";
+  // if (/^(?:[^\P{Letter}&&\P{Number}]*){16,}$/v.test(normalizedPassword)) {
+  if (!/[^a-zA-Z0-9]/.test(normalizedPassword)) {
+  errors.password = "パスワードには記号を含める必要があります";
   }
   if (normalizedPassword.length === 0) {
     errors.password = "パスワードを入力してください";

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useSelector } from "react-redux";
 import { Field, formValueSelector, InjectedFormProps, reduxForm } from "redux-form";
 
@@ -12,6 +13,49 @@ interface Props {
   onRequestCloseModal: () => void;
 }
 
+const selectAuthField = formValueSelector("auth");
+
+const usernameLeftItem = <span className="text-cax-text-subtle leading-none">@</span>;
+
+const usernameFieldProps = {
+  autoComplete: "username",
+  label: "ユーザー名",
+  leftItem: usernameLeftItem,
+} as const;
+
+const nameFieldProps = {
+  autoComplete: "nickname",
+  label: "名前",
+} as const;
+
+const signinPasswordFieldProps = {
+  autoComplete: "current-password",
+  label: "パスワード",
+  type: "password",
+} as const;
+
+const signupPasswordFieldProps = {
+  autoComplete: "new-password",
+  label: "パスワード",
+  type: "password",
+} as const;
+
+const AuthFieldGroup = memo(({ type }: { type: "signin" | "signup" }) => {
+  return (
+    <div className="grid gap-y-2">
+      <Field name="username" component={FormInputField} props={usernameFieldProps} />
+
+      {type === "signup" && <Field name="name" component={FormInputField} props={nameFieldProps} />}
+
+      <Field
+        name="password"
+        component={FormInputField}
+        props={type === "signup" ? signupPasswordFieldProps : signinPasswordFieldProps}
+      />
+    </div>
+  );
+});
+
 const AuthModalPageComponent = ({
   onRequestCloseModal,
   handleSubmit,
@@ -23,7 +67,7 @@ const AuthModalPageComponent = ({
 }: Props & InjectedFormProps<AuthFormData, Props>) => {
   const currentType: "signin" | "signup" = useSelector((state) =>
     // @ts-ignore: formValueSelectorの型付けが弱いため、型に嘘をつく
-    formValueSelector("auth")(state, "type"),
+    selectAuthField(state, "type"),
   );
   const type = currentType ?? initialValues.type;
 
@@ -43,38 +87,7 @@ const AuthModalPageComponent = ({
         </button>
       </div>
 
-      <div className="grid gap-y-2">
-        <Field
-          name="username"
-          component={FormInputField}
-          props={{
-            label: "ユーザー名",
-            leftItem: <span className="text-cax-text-subtle leading-none">@</span>,
-            autoComplete: "username",
-          }}
-        />
-
-        {type === "signup" && (
-          <Field
-            name="name"
-            component={FormInputField}
-            props={{
-              label: "名前",
-              autoComplete: "nickname",
-            }}
-          />
-        )}
-
-        <Field
-          name="password"
-          component={FormInputField}
-          props={{
-            label: "パスワード",
-            type: "password",
-            autoComplete: type === "signup" ? "new-password" : "current-password",
-          }}
-        />
-      </div>
+      <AuthFieldGroup type={type} />
 
       {type === "signup" ? (
         <p>

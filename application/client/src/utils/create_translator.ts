@@ -1,4 +1,4 @@
-import { CreateMLCEngine } from "@mlc-ai/web-llm";
+// import { CreateMLCEngine } from "@mlc-ai/web-llm";
 import { stripIndents } from "common-tags";
 import * as JSONRepairJS from "json-repair-js";
 import langs from "langs";
@@ -21,7 +21,9 @@ export async function createTranslator(params: Params): Promise<Translator> {
   const targetLang = langs.where("1", params.targetLanguage);
   invariant(targetLang, `Unsupported target language code: ${params.targetLanguage}`);
 
-  const engine = await CreateMLCEngine("gemma-2-2b-jpn-it-q4f16_1-MLC");
+  const webllm = await import("@mlc-ai/web-llm");
+
+  const engine = await webllm.CreateMLCEngine("gemma-2-2b-jpn-it-q4f16_1-MLC");
 
   return {
     async translate(text: string): Promise<string> {

@@ -1,4 +1,3 @@
-import _ from "lodash";
 import { useEffect, useRef, useState } from "react";
 
 interface ParsedData {
@@ -6,24 +5,47 @@ interface ParsedData {
   peaks: number[];
 }
 
+const PEAK_COUNT = 100;
+
+let sharedAudioContext: AudioContext | null = null;
+
+function getAudioContext(): AudioContext {
+  if (sharedAudioContext === null) {
+    sharedAudioContext = new AudioContext();
+  }
+
+  return sharedAudioContext;
+}
+
 async function calculate(data: ArrayBuffer): Promise<ParsedData> {
-  const audioCtx = new AudioContext();
+  const audioCtx = getAudioContext();
 
   // 音声をデコードする
   const buffer = await audioCtx.decodeAudioData(data.slice(0));
-  // 左の音声データの絶対値を取る
-  const leftData = _.map(buffer.getChannelData(0), Math.abs);
-  // 右の音声データの絶対値を取る
-  const rightData = _.map(buffer.getChannelData(1), Math.abs);
 
-  // 左右の音声データの平均を取る
-  const normalized = _.map(_.zip(leftData, rightData), _.mean);
-  // 100 個の chunk に分ける
-  const chunks = _.chunk(normalized, Math.ceil(normalized.length / 100));
-  // chunk ごとに平均を取る
-  const peaks = _.map(chunks, _.mean);
-  // chunk の平均の中から最大値を取る
-  const max = _.max(peaks) ?? 0;
+  const leftData = buffer.getChannelData(0);
+  const rightData = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : leftData;
+
+  const sums = new Array<number>(PEAK_COUNT).fill(0);
+  const counts = new Array<number>(PEAK_COUNT).fill(0);
+
+  for (let index = 0; index < leftData.length; index += 1) {
+    const peakIndex = Math.min(PEAK_COUNT - 1, Math.floor((index * PEAK_COUNT) / leftData.length));
+    const mixedAmplitude = (Math.abs(leftData[index] ?? 0) + Math.abs(rightData[index] ?? 0)) / 2;
+
+    sums[peakIndex] = (sums[peakIndex] ?? 0) + mixedAmplitude;
+    counts[peakIndex] = (counts[peakIndex] ?? 0) + 1;
+  }
+
+  let max = 0;
+  const peaks = sums.map((sum, index) => {
+    const count = counts[index] ?? 0;
+    const peak = count === 0 ? 0 : sum / count;
+    if (peak > max) {
+      max = peak;
+    }
+    return peak;
+  });
 
   return { max, peaks };
 }
@@ -40,9 +62,17 @@ export const SoundWaveSVG = ({ soundData }: Props) => {
   });
 
   useEffect(() => {
+    let cancelled = false;
+
     calculate(soundData).then(({ max, peaks }) => {
-      setPeaks({ max, peaks });
+      if (!cancelled) {
+        setPeaks({ max, peaks });
+      }
     });
+
+    return () => {
+      cancelled = true;
+    };
   }, [soundData]);
 
   return (

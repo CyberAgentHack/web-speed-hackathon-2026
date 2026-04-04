@@ -12,10 +12,14 @@ import {
 
 import { FontAwesomeIcon } from "@web-speed-hackathon-2026/client/src/components/foundation/FontAwesomeIcon";
 import {
+  createSuggestionSearchIndex,
   extractTokens,
-  filterSuggestionsBM25,
+  searchSuggestionIndex,
+  type SuggestionSearchIndex,
 } from "@web-speed-hackathon-2026/client/src/utils/bm25_search";
 import { fetchJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
+
+const SUGGESTION_DEBOUNCE_MS = 120;
 
 interface Props {
   isStreaming: boolean;
@@ -79,9 +83,11 @@ function highlightMatchByTokens(text: string, queryTokens: string[]): React.Reac
 export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const searchIndexRef = useRef<SuggestionSearchIndex | null>(null);
   const [tokenizer, setTokenizer] = useState<Tokenizer<IpadicFeatures> | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [candidates, setCandidates] = useState<string[]>([]);
   const [queryTokens, setQueryTokens] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
@@ -98,9 +104,14 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
 
     const init = async () => {
       const builder = Bluebird.promisifyAll(kuromoji.builder({ dicPath: "/dicts" }));
-      const nextTokenizer = await builder.buildAsync();
+      const [nextTokenizer, { suggestions: nextCandidates }] = await Promise.all([
+        builder.buildAsync(),
+        fetchJSON<{ suggestions: string[] }>("/api/v1/crok/suggestions"),
+      ]);
+
       if (mounted) {
         setTokenizer(nextTokenizer);
+        setCandidates(nextCandidates);
       }
     };
     init();
@@ -111,41 +122,45 @@ export const ChatInput = ({ isStreaming, onSendMessage }: Props) => {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
+    if (!tokenizer || candidates.length === 0) {
+      searchIndexRef.current = null;
+      return;
+    }
 
-    const updateSuggestions = async () => {
-      if (!tokenizer || !inputValue.trim()) {
+    searchIndexRef.current = createSuggestionSearchIndex(tokenizer, candidates);
+  }, [candidates, tokenizer]);
+
+  useEffect(() => {
+    const trimmedInput = inputValue.trim();
+
+    if (!tokenizer || !searchIndexRef.current || !trimmedInput) {
+      setSuggestions([]);
+      setQueryTokens([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      const activeSearchIndex = searchIndexRef.current;
+      if (!activeSearchIndex) {
         setSuggestions([]);
         setQueryTokens([]);
         setShowSuggestions(false);
         return;
       }
 
-      const { suggestions: candidates } = await fetchJSON<{ suggestions: string[] }>(
-        "/api/v1/crok/suggestions",
-      );
-      if (cancelled) {
-        return;
-      }
-
-      const tokens = extractTokens(tokenizer.tokenize(inputValue));
-      const results = filterSuggestionsBM25(tokenizer, candidates, tokens);
-
-      if (cancelled) {
-        return;
-      }
+      const tokens = extractTokens(tokenizer.tokenize(trimmedInput));
+      const results = searchSuggestionIndex(activeSearchIndex, tokens);
 
       setQueryTokens(tokens);
       setSuggestions(results);
       setShowSuggestions(results.length > 0);
-    };
-
-    void updateSuggestions();
+    }, SUGGESTION_DEBOUNCE_MS);
 
     return () => {
-      cancelled = true;
+      window.clearTimeout(timeoutId);
     };
-  }, [inputValue, tokenizer]);
+  }, [inputValue, tokenizer, candidates]);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
