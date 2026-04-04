@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
-
 import { createTranslator } from "@web-speed-hackathon-2026/client/src/utils/create_translator";
 
+// Stateの定義を1箇所にまとめました
 type State =
   | { type: "idle"; text: string }
   | { type: "loading" }
@@ -20,6 +20,7 @@ export const TranslatableText = ({ text }: Props) => {
         (async () => {
           updateState({ type: "loading" });
           try {
+            // Using宣言を使用してリソースを自動解放
             using translator = await createTranslator({
               sourceLanguage: "ja",
               targetLanguage: "en",
