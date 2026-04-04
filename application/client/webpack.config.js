@@ -4,12 +4,21 @@ const path = require("path");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 const webpack = require("webpack");
 
 const SRC_PATH = path.resolve(__dirname, "./src");
 const PUBLIC_PATH = path.resolve(__dirname, "../public");
 const UPLOAD_PATH = path.resolve(__dirname, "../upload");
 const DIST_PATH = path.resolve(__dirname, "../dist");
+const FFMPEG_CORE_UMD = path.resolve(
+  __dirname,
+  "node_modules/@ffmpeg/core/dist/umd",
+);
+
+const isProd = process.env.NODE_ENV === "production";
+const analyze =
+  process.env.ANALYZE === "1" || process.env.ANALYZE === "true";
 
 /** @type {import('webpack').Configuration} */
 const config = {
@@ -23,20 +32,25 @@ const config = {
         target: "http://localhost:3000",
       },
     ],
-    static: [PUBLIC_PATH, UPLOAD_PATH],
+    static: [
+      PUBLIC_PATH,
+      UPLOAD_PATH,
+      {
+        directory: FFMPEG_CORE_UMD,
+        publicPath: "/ffmpeg",
+      },
+    ],
   },
-  devtool: "inline-source-map",
+  devtool: isProd ? false : "inline-source-map",
   entry: {
     main: [
-      "core-js",
       "regenerator-runtime/runtime",
-      "jquery-binarytransport",
       path.resolve(SRC_PATH, "./index.css"),
       path.resolve(SRC_PATH, "./buildinfo.ts"),
       path.resolve(SRC_PATH, "./index.tsx"),
     ],
   },
-  mode: "none",
+  mode: isProd ? "production" : "development",
   module: {
     rules: [
       {
@@ -60,7 +74,6 @@ const config = {
   },
   output: {
     chunkFilename: "scripts/chunk-[contenthash].js",
-    chunkFormat: false,
     filename: "scripts/[name].js",
     path: DIST_PATH,
     publicPath: "auto",
@@ -68,16 +81,14 @@ const config = {
   },
   plugins: [
     new webpack.ProvidePlugin({
-      $: "jquery",
       AudioContext: ["standardized-audio-context", "AudioContext"],
       Buffer: ["buffer", "Buffer"],
-      "window.jQuery": "jquery",
     }),
     new webpack.EnvironmentPlugin({
       BUILD_DATE: new Date().toISOString(),
       // Heroku では SOURCE_VERSION 環境変数から commit hash を参照できます
       COMMIT_HASH: process.env.SOURCE_VERSION || "",
-      NODE_ENV: "development",
+      NODE_ENV: process.env.NODE_ENV || "development",
     }),
     new MiniCssExtractPlugin({
       filename: "styles/[name].css",
@@ -88,12 +99,28 @@ const config = {
           from: path.resolve(__dirname, "node_modules/katex/dist/fonts"),
           to: path.resolve(DIST_PATH, "styles/fonts"),
         },
+        {
+          from: FFMPEG_CORE_UMD,
+          to: path.join(DIST_PATH, "ffmpeg"),
+          filter: (resourcePath) =>
+            /ffmpeg-core\.(js|wasm)$/.test(resourcePath),
+        },
       ],
     }),
     new HtmlWebpackPlugin({
       inject: false,
       template: path.resolve(SRC_PATH, "./index.html"),
     }),
+    ...(analyze
+      ? [
+          new BundleAnalyzerPlugin({
+            analyzerMode: "static",
+            defaultSizes: "gzip",
+            openAnalyzer: process.env.CI !== "true" && process.env.CI !== "1",
+            reportFilename: path.join(DIST_PATH, "bundle-report.html"),
+          }),
+        ]
+      : []),
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".mjs", ".cjs", ".jsx", ".js"],
@@ -104,16 +131,6 @@ const config = {
         __dirname,
         "node_modules",
         "@ffmpeg/ffmpeg/dist/esm/index.js",
-      ),
-      "@ffmpeg/core$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/core/dist/umd/ffmpeg-core.js",
-      ),
-      "@ffmpeg/core/wasm$": path.resolve(
-        __dirname,
-        "node_modules",
-        "@ffmpeg/core/dist/umd/ffmpeg-core.wasm",
       ),
       "@imagemagick/magick-wasm/magick.wasm$": path.resolve(
         __dirname,
@@ -126,14 +143,6 @@ const config = {
       path: false,
       url: false,
     },
-  },
-  optimization: {
-    minimize: false,
-    splitChunks: false,
-    concatenateModules: false,
-    usedExports: false,
-    providedExports: false,
-    sideEffects: false,
   },
   cache: false,
   ignoreWarnings: [

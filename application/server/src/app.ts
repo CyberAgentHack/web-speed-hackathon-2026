@@ -1,6 +1,7 @@
 import bodyParser from "body-parser";
 import Express from "express";
 
+import { optimizeRasterImages } from "@web-speed-hackathon-2026/server/src/middleware/optimize_raster_images";
 import { apiRouter } from "@web-speed-hackathon-2026/server/src/routes/api";
 import { staticRouter } from "@web-speed-hackathon-2026/server/src/routes/static";
 import { sessionMiddleware } from "@web-speed-hackathon-2026/server/src/session";
@@ -12,6 +13,8 @@ app.set("trust proxy", true);
 app.use(sessionMiddleware);
 app.use(bodyParser.json());
 app.use(bodyParser.raw({ limit: "10mb" }));
+
+app.use(optimizeRasterImages);
 
 app.use((_req, res, next) => {
   res.header({

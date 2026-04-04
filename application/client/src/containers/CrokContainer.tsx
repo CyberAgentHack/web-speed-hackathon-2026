@@ -3,14 +3,15 @@ import { Helmet } from "react-helmet";
 
 import { CrokGate } from "@web-speed-hackathon-2026/client/src/components/crok/CrokGate";
 import { CrokPage } from "@web-speed-hackathon-2026/client/src/components/crok/CrokPage";
+import { useActiveUser } from "@web-speed-hackathon-2026/client/src/contexts/ActiveUserContext";
 import { useSSE } from "@web-speed-hackathon-2026/client/src/hooks/use_sse";
 
 type Props = {
-  activeUser: Models.User | null;
   authModalId: string;
 };
 
-export const CrokContainer = ({ activeUser, authModalId }: Props) => {
+export const CrokContainer = ({ authModalId }: Props) => {
+  const { activeUser } = useActiveUser();
   const [messages, setMessages] = useState<Models.ChatMessage[]>([]);
 
   const sseOptions = useMemo(

@@ -1,5 +1,3 @@
-import { loadFFmpeg } from "@web-speed-hackathon-2026/client/src/utils/load_ffmpeg";
-
 interface Options {
   extension: string;
   size?: number | undefined;
@@ -9,6 +7,7 @@ interface Options {
  * 先頭 5 秒のみ、正方形にくり抜かれた無音動画を作成します
  */
 export async function convertMovie(file: File, options: Options): Promise<Blob> {
+  const { loadFFmpeg } = await import("@web-speed-hackathon-2026/client/src/utils/load_ffmpeg");
   const ffmpeg = await loadFFmpeg();
 
   const cropOptions = [
@@ -21,7 +20,7 @@ export async function convertMovie(file: File, options: Options): Promise<Blob> 
 
   await ffmpeg.writeFile("file", new Uint8Array(await file.arrayBuffer()));
 
-  await ffmpeg.exec([
+  const baseArgs = [
     "-i",
     "file",
     "-t",
@@ -31,8 +30,14 @@ export async function convertMovie(file: File, options: Options): Promise<Blob> 
     "-vf",
     `crop=${cropOptions}`,
     "-an",
-    exportFile,
-  ]);
+  ] as const;
+
+  const encodeArgs =
+    options.extension === "mp4"
+      ? [...baseArgs, "-c:v", "libx264", "-pix_fmt", "yuv420p", "-movflags", "+faststart", exportFile]
+      : [...baseArgs, exportFile];
+
+  await ffmpeg.exec(encodeArgs);
 
   const output = (await ffmpeg.readFile(exportFile)) as Uint8Array<ArrayBuffer>;
 

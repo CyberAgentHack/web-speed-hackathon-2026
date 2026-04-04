@@ -525,6 +525,12 @@ paths:
       operationId: connectDirectMessageConversation
       security:
         - session: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         "200":
           description: OK

@@ -1,6 +1,5 @@
+import type { FFmpeg } from "@ffmpeg/ffmpeg";
 import Encoding from "encoding-japanese";
-
-import { loadFFmpeg } from "@web-speed-hackathon-2026/client/src/utils/load_ffmpeg";
 
 interface SoundMetadata {
   artist: string;
@@ -11,9 +10,21 @@ interface SoundMetadata {
 const UNKNOWN_ARTIST = "Unknown Artist";
 const UNKNOWN_TITLE = "Unknown Title";
 
-export async function extractMetadataFromSound(data: File): Promise<SoundMetadata> {
+export async function extractMetadataFromSound(
+  data: File,
+  existingFfmpeg?: FFmpeg,
+): Promise<SoundMetadata> {
+  let ownFfmpeg = false;
+  let ffmpeg: FFmpeg | undefined;
+
   try {
-    const ffmpeg = await loadFFmpeg();
+    if (existingFfmpeg != null) {
+      ffmpeg = existingFfmpeg;
+    } else {
+      const { loadFFmpeg } = await import("@web-speed-hackathon-2026/client/src/utils/load_ffmpeg");
+      ffmpeg = await loadFFmpeg();
+      ownFfmpeg = true;
+    }
 
     const exportFile = "meta.txt";
 
@@ -22,8 +33,6 @@ export async function extractMetadataFromSound(data: File): Promise<SoundMetadat
     await ffmpeg.exec(["-i", "file", "-f", "ffmetadata", exportFile]);
 
     const output = (await ffmpeg.readFile(exportFile)) as Uint8Array<ArrayBuffer>;
-
-    ffmpeg.terminate();
 
     const outputUtf8 = Encoding.convert(output, {
       to: "UNICODE",
@@ -42,6 +51,14 @@ export async function extractMetadataFromSound(data: File): Promise<SoundMetadat
       artist: UNKNOWN_ARTIST,
       title: UNKNOWN_TITLE,
     };
+  } finally {
+    if (ownFfmpeg && ffmpeg != null) {
+      try {
+        ffmpeg.terminate();
+      } catch {
+        /* ignore */
+      }
+    }
   }
 }
 

@@ -42,6 +42,10 @@ export function initPost(sequelize: Sequelize) {
     },
     {
       sequelize,
+      indexes: [
+        { fields: ["createdAt"] },
+        { fields: ["userId", "createdAt"] },
+      ],
       defaultScope: {
         attributes: {
           exclude: ["userId", "movieId", "soundId"],
@@ -59,8 +63,9 @@ export function initPost(sequelize: Sequelize) {
           { association: "movie" },
           { association: "sound" },
         ],
+        // id は UUID v4 のため時間順と一致しない。フィードは createdAt 基準に揃える
         order: [
-          ["id", "DESC"],
+          ["createdAt", "DESC"],
           ["images", "createdAt", "ASC"],
         ],
       },

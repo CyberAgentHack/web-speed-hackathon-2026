@@ -38,7 +38,26 @@ export const SoundPlayer = ({ sound }: Props) => {
   }, []);
 
   if (isLoading || data === null || blobUrl === null) {
-    return null;
+    return (
+      <div className="bg-cax-surface-subtle flex h-full w-full items-center justify-center">
+        <div className="p-2">
+          <div aria-hidden className="h-8 w-8 shrink-0 rounded-full bg-cax-border/60" />
+        </div>
+        <div className="flex h-full min-w-0 shrink grow flex-col pt-2">
+          <p className="h-5 overflow-hidden">
+            <span aria-hidden className="inline-block h-4 w-32 rounded-sm bg-cax-border/60" />
+          </p>
+          <p className="text-cax-text-muted h-5 overflow-hidden">
+            <span aria-hidden className="inline-block h-3 w-24 rounded-sm bg-cax-border/50" />
+          </p>
+          <div className="pt-2">
+            <AspectRatioBox aspectHeight={1} aspectWidth={10}>
+              <div aria-hidden className="h-full w-full bg-cax-border/25" />
+            </AspectRatioBox>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
