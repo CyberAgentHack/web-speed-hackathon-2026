@@ -1,12 +1,13 @@
-import moment from "moment";
-import { MouseEventHandler, useCallback } from "react";
+import { MouseEventHandler, Suspense, lazy, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 
-import { ImageArea } from "@web-speed-hackathon-2026/client/src/components/post/ImageArea";
-import { MovieArea } from "@web-speed-hackathon-2026/client/src/components/post/MovieArea";
-import { SoundArea } from "@web-speed-hackathon-2026/client/src/components/post/SoundArea";
+import { formatDateJa } from "@web-speed-hackathon-2026/client/src/utils/format_date";
 import { TranslatableText } from "@web-speed-hackathon-2026/client/src/components/post/TranslatableText";
 import { getProfileImagePath } from "@web-speed-hackathon-2026/client/src/utils/get_path";
+
+const ImageArea = lazy(() => import("@web-speed-hackathon-2026/client/src/components/post/ImageArea").then(m => ({ default: m.ImageArea })));
+const MovieArea = lazy(() => import("@web-speed-hackathon-2026/client/src/components/post/MovieArea").then(m => ({ default: m.MovieArea })));
+const SoundArea = lazy(() => import("@web-speed-hackathon-2026/client/src/components/post/SoundArea").then(m => ({ default: m.SoundArea })));
 
 const isClickedAnchorOrButton = (target: EventTarget | null, currentTarget: Element): boolean => {
   while (target !== null && target instanceof Element) {
@@ -76,29 +77,31 @@ export const TimelineItem = ({ post }: Props) => {
             </Link>
             <span className="text-cax-text-muted pr-1">-</span>
             <Link className="text-cax-text-muted pr-1 hover:underline" to={`/posts/${post.id}`}>
-              <time dateTime={moment(post.createdAt).toISOString()}>
-                {moment(post.createdAt).locale("ja").format("LL")}
+              <time dateTime={new Date(post.createdAt).toISOString()}>
+                {formatDateJa(post.createdAt)}
               </time>
             </Link>
           </p>
           <div className="text-cax-text leading-relaxed">
             <TranslatableText text={post.text} />
           </div>
-          {post.images?.length > 0 ? (
-            <div className="relative mt-2 w-full">
-              <ImageArea images={post.images} />
-            </div>
-          ) : null}
-          {post.movie ? (
-            <div className="relative mt-2 w-full">
-              <MovieArea movie={post.movie} />
-            </div>
-          ) : null}
-          {post.sound ? (
-            <div className="relative mt-2 w-full">
-              <SoundArea sound={post.sound} />
-            </div>
-          ) : null}
+          <Suspense>
+            {post.images?.length > 0 ? (
+              <div className="relative mt-2 w-full">
+                <ImageArea images={post.images} />
+              </div>
+            ) : null}
+            {post.movie ? (
+              <div className="relative mt-2 w-full">
+                <MovieArea movie={post.movie} />
+              </div>
+            ) : null}
+            {post.sound ? (
+              <div className="relative mt-2 w-full">
+                <SoundArea sound={post.sound} />
+              </div>
+            ) : null}
+          </Suspense>
         </div>
       </div>
     </article>
